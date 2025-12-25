@@ -1,0 +1,67 @@
+AddPatientVisit
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "AppointmentID":0,
+    "PatientID":2000000,
+    "DoctorID":1000001,
+    "VisitDate": "2025-11-25",  
+    "VisitTime":"10:00:00",
+    "Reason": "having high fever",
+   "Symptoms":"Fever cold and head ache",
+    "BPSystolic":130,
+   "BPDiastolic": 90,
+   "Temperature":100.2,
+   "Weight":88.5
+
+   
+}
+
+UpdatePatientVisit
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "VisitID":4000000,    
+    "AppointmentID":1,    
+    "DoctorID":1000001,
+    "VisitDate": "2025-11-25",  
+    "VisitTime":"10:00:00",
+    "Reason": "having high fever",
+   "Symptoms":"Fever cold and head ache",
+    "BPSystolic":130,
+   "BPDiastolic": 90,
+   "Temperature":100.2,
+   "Weight":88.5
+
+   
+}
+
+
+GetPatientVisitList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20, 
+    "VisitID":0,
+    "ClinicID": 1,
+    "BranchID":1,
+    "PatientID":0,
+    "PatientName":"",
+    "DoctorID":0,
+    "DoctorName":"",   
+    "AppointmentID":0,   
+     "VisitDate":"",
+    "FromVisitDate":"",
+    "ToVisitDate":"",
+    "Reason":""
+   
+}

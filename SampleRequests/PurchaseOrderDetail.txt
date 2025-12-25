@@ -1,0 +1,65 @@
+AddPurchaseOrderDetail
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,
+    "BranchID":1,
+    "POID":1,    
+    "MedicineID":1,
+    "Quantity":100,
+    "UnitPrice":8.00
+   
+   
+}
+
+UpdatePurchaseOrderDetail
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,
+    "BranchID":1,
+    "PODetailID":1,    
+    "Quantity":100,
+    "UnitPrice":8.00,
+    "Status":1
+   
+   
+}
+--  Status Text Table #31: 1-Ordered, 2-Partially Received, 3-Fully Received, 4-Cancelled
+DeletePurchaseOrderDetail
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "PODetailID":1
+    
+    
+   
+}
+
+
+GetPurchaseOrderDetailList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "PODetailID":0,    
+    "ClinicID": 1,
+    "BranchID":1,   
+    "POID":0,
+    "PONumber":"",
+    "VendorID":0,
+    "MedicineID":0,
+    "MedicineName":"",   
+    "Status":-1
+    
+   
+}

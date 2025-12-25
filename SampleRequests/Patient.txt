@@ -1,0 +1,261 @@
+AddPatient
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,    
+    "ClinicID":1,
+    "BranchID":1,    
+    "FirstName":"Gopi",
+    "LastName":"Nath",   
+    "Gender":1,
+    "BirthDate":"2003-04-17",
+    "Age": 33, 
+    "BloodGroup":5,
+    "PhotoFileID":0,
+    "MaritalStatus":1,
+    "Mobile":"8765894765",
+    "AltMobile": "8765694765",
+    "Email":"sivashankarandeveloper@gmail.com",
+    "Address":"Gomathipuram , Madurai",    
+    "EmergencyContactNo": "8741258714",   
+    "Allergies": "No Allergies",
+    "ExistingMedicalConditions":"Not reported",
+    "PastSurgeries":"Nothing",
+    "CurrentMedications":"NA",
+    "FamilyMedicalHistory":"Sugar",
+    "ImmunizationRecords":"NOt Available",
+    "FamilyPatientID":0    
+   
+}
+-- Gender Text Table #1
+-- Blood Group text table tabke id  #2
+-- Marital Status text table tabke id  #3
+
+
+UpdatePatient
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,   
+    "PatientID":2000000,
+    "ClinicID":1,
+    "BranchID":1,
+    "FirstName":"Gopi",
+    "LastName":"Nath",   
+    "Gender":1,
+    "BirthDate":"2003-04-17",
+    "Age": 33, 
+    "BloodGroup":5,
+    "PhotoFileID":0,
+    "MaritalStatus":1,
+    "Mobile":"8765894765",
+    "AltMobile": "8765694765",
+    "Email":"sivashankarandeveloper@gmail.com",
+    "Address":"Gomathipuram , Madurai",    
+    "EmergencyContactNo": "8741258714",   
+    "Allergies": "No Allergies",
+    "ExistingMedicalConditions":"Not reported",
+    "PastSurgeries":"Nothing",
+    "CurrentMedications":"NA",
+    "FamilyMedicalHistory":"Sugar",
+    "ImmunizationRecords":"NOt Available",
+    "FamilyPatientID":0 ,
+    "Status":1   
+   
+}
+-- Status Text Table #10
+
+DeletePatient
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "PatientID": 2000000  
+}
+
+
+GetPatientList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "PatientID":2000000,
+    "ClinicID":1,
+    "BranchID":0,
+    "FirstName":"",
+    "LastName":"",  
+    "FileNo":"",
+    "Name":"",
+    "Mobile":"",
+    "Gender":0,
+    "BloodGroup":0,
+    "FamilyPatientID":0 ,
+    "Status":-1 
+}
+
+_______________________________________________________________________________________________________________________
+
+GetPatientList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "PatientID":2000000,
+    "ClinicID":0,
+    "BranchID":0,
+    "FirstName":"",
+    "LastName":"",  
+    "FileNo":"",
+    "Name":"",
+    "Mobile":"",
+    "Gender":0,
+    "BloodGroup":0,
+    "FamilyPatientID":0 ,
+    "Status":-1 
+}
+
+{
+    "result": [
+        {
+            "patient_id": 2000000,
+            "unique_seq": 2000001,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "file_no": "CPT200002",
+            "patient_name": "Gopi Nath",
+            "first_name": "Gopi",
+            "last_name": "Nath",
+            "gender": 1,
+            "gender_desc": "Male",
+            "birth_date": "2003-04-16T18:30:00.000Z",
+            "age": 38,
+            "blood_group": 5,
+            "blood_group_desc": "AB+",
+            "marital_status": 1,
+            "marital_status_desc": "Single",
+            "mobile": "8765894765",
+            "alt_mobile": "8765694765",
+            "email": "sivashankarandeveloper@gmail.com",
+            "address": "Gomathipuram , Madurai",
+            "emergency_contact_no": "8741258714",
+            "allergies": "No Allergies",
+            "existing_medical_conditions": "Not reported",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-22T08:37:16.000Z",
+            "date_modified": "2025-11-22T08:43:37.000Z"
+        }
+    ]
+}
+
+------------------------------------------------------------
+
+AddPatient
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,    
+    "ClinicID":2,
+    "BranchID":3,
+    "FirstName":"Siva",
+    "LastName":"Shankar",   
+    "Gender":1,
+    "BirthDate":"2003-04-17",
+    "Age": 33, 
+    "BloodGroup":5,
+    "PhotoFileID":0,
+    "MaritalStatus":1,
+    "Mobile":"8765894765",
+    "AltMobile": "8765694765",
+    "Email":"sivashankarandeveloper@gmail.com",
+    "Address":"Gomathipuram , Madurai",    
+    "EmergencyContactNo": "8741258714",   
+    "Allergies": "No Allergies",
+    "ExistingMedicalConditions":"Not reported",
+    "PastSurgeries":"Nothing",
+    "CurrentMedications":"NA",
+    "FamilyMedicalHistory":"Sugar",
+    "ImmunizationRecords":"NOt Available",
+    "FamilyPatientID":0    
+}
+
+{
+    "result": {
+        "OUT_PATIENT_ID": 2000001,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+--------------------------------------
+
+UpdatePatient
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,   
+    "PatientID":2000000,
+    "ClinicID":1,
+    "BranchID":1,
+    "FirstName":"Gopi",
+    "LastName":"Nath",   
+    "Gender":1,
+    "BirthDate":"2003-04-17",
+    "Age": 33, 
+    "BloodGroup":5,
+    "PhotoFileID":0,
+    "MaritalStatus":1,
+    "Mobile":"8765894765",
+    "AltMobile": "8765694765",
+    "Email":"sivashankarandeveloper@gmail.com",
+    "Address":"Gomathipuram , Madurai",    
+    "EmergencyContactNo": "8741258714",   
+    "Allergies": "No Allergies",
+    "ExistingMedicalConditions":"Not reported",
+    "PastSurgeries":"Nothing",
+    "CurrentMedications":"NA",
+    "FamilyMedicalHistory":"Sugar",
+    "ImmunizationRecords":"NOt Available",
+    "FamilyPatientID":0 ,
+    "Status":1   
+   
+}
+
+{
+    "result": {
+        "IN_PATIENT_ID": 2000000,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-----------------------------------------
+DeletePatient
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "PatientID": 2000001 
+}
+
+{
+    "result": {
+        "IN_PATIENT_ID": 2000001,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}

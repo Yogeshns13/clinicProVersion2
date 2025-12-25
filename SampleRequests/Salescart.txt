@@ -1,0 +1,47 @@
+AddSalesCart
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,
+    "BranchID":1,
+    "PatientID":2000000,
+    "Name":"Gopi",
+    "ConsultationID":5000000,
+    "VisitID":4000000
+   
+   
+}
+
+
+DeleteSalesCart
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "CartID":1
+    
+    
+   
+}
+-- Status Text Table #42 1- Created  2-Processed 3- Cancelled
+
+GetSalesCartList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "CartID":0,
+    "ClinicID": 1,
+    "BranchID":1,
+    "PatientID":0,    
+    "PatientName":"",  
+    "Status":-1
+    
+   
+}

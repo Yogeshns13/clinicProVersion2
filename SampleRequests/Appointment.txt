@@ -1,0 +1,199 @@
+AddAppointment
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "PatientID":2000000,
+    "DoctorID":1000001,
+    "SlotID":  2,  
+    "Reason": "having high fever"
+   
+}
+
+
+
+
+CancelAppointment
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+   "AppointmentID":3000000
+   
+}
+
+GetAppointmentList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,     
+    "AppointmentID":0,
+    "ClinicID": 1,
+    "BranchID":1,
+    "PatientID":0,
+    "PatientName":"",
+    "DoctorID":0,
+    "DoctorName":"",   
+    "AppointmentDate":"",    
+    "FromDate":"",
+    "ToDate":"",
+    "SlotID":0,
+    "Status":-1
+   
+   
+}
+
+_________________________________________________________________________________________________________________________
+
+GetAppointmentList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,     
+    "AppointmentID":0,
+    "ClinicID": 0,
+    "BranchID":0,
+    "PatientID":0,
+    "PatientName":"",
+    "DoctorID":0,
+    "DoctorName":"",   
+    "AppointmentDate":"",    
+    "FromDate":"",
+    "ToDate":"",
+    "SlotID":0,
+    "Status":-1
+}
+
+{
+    "result": [
+        {
+            "appointment_id": 3000002,
+            "unique_seq": 3000002,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "appointment_date": "2025-11-24T18:30:00.000Z",
+            "appointment_time": "10:00:00",
+            "reason": "having fever and cold",
+            "slot_id": 3,
+            "status": 1,
+            "status_desc": "Scheduled",
+            "date_created": "2025-11-24T10:00:05.000Z",
+            "date_modified": "2025-11-24T10:00:05.000Z"
+        },
+        {
+            "appointment_id": 3000001,
+            "unique_seq": 3000001,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "appointment_date": "2025-11-24T18:30:00.000Z",
+            "appointment_time": "09:30:00",
+            "reason": "having high fever",
+            "slot_id": 2,
+            "status": 1,
+            "status_desc": "Scheduled",
+            "date_created": "2025-11-24T09:52:37.000Z",
+            "date_modified": "2025-11-24T09:52:37.000Z"
+        },
+        {
+            "appointment_id": 3000000,
+            "unique_seq": 3000000,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "appointment_date": "2025-11-24T18:30:00.000Z",
+            "appointment_time": "09:00:00",
+            "reason": "having high fever",
+            "slot_id": 1,
+            "status": 5,
+            "status_desc": "Cancelled",
+            "date_created": "2025-11-24T09:47:17.000Z",
+            "date_modified": "2025-11-24T09:59:09.000Z"
+        }
+    ]
+}
+
+---------------
+
+AddAppointment
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "PatientID":2000000,
+    "DoctorID":1000001,
+    "SlotID":  92,  
+    "Reason": "having high stomach ache"
+   
+}
+
+{
+    "result": {
+        "OUT_APPOINTMENT_ID": 3000003,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+--------------
+
+CancelAppointment
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+   "AppointmentID":3000003
+   
+}
+
+{
+    "result": {
+        "IN_APPOINTMENT_ID": 3000003,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+

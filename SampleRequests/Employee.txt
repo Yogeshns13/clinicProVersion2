@@ -1,0 +1,341 @@
+AddEmployee
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,
+    "BranchID":1,
+    "EmployeeCode":"EMP001",
+    "FirstName":"Gopi",
+    "LastName":"Nath",
+    "PhotoFileID":0,
+    "Gender":1,
+    "BirthDate":"2003-04-17",
+    "BloodGroup":5,
+    "MaritalStatus":2,
+    "Address":"Gomathipuram , Madurai",
+    "Mobile":"8765894765",
+    "AltMobile": "8765694765",
+    "Email":"sivashankarandeveloper@gmail.com",
+    "IdProofType": 1,   
+    "IdNumber": "3724 2785 1754",
+    "IdExpiry":"2028-10-30",
+    "DepartmentID":1,
+    "Designation":1,
+    "Qualification":"MBBS, MS, FRCS",
+    "Specialization":"Cardiology",
+    "LicenseNo":"IMA-45789654",
+    "LicenseExpiryDate":"2040-01-01",
+    "ExperienceYears":10,
+    "UniversityName" : "Madurai Medical College",
+    "PFNo":"78412578",
+    "ESINo":"1457854",
+    "ShiftID":1
+   
+}
+-- Gender Text Table #1
+-- Blood Group text table tabke id  #2
+-- Marital Status text table tabke id  #3
+-- Id Proof Type text table id #4
+-- Designation Text Table #5
+
+UpdateEmployee
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "EmployeeID":1000001,
+    "ClinicID":1,
+    "BranchID":1,
+    "EmployeeCode":"EMP001",
+    "FirstName":"Gopi",
+    "LastName":"Nath",
+    "PhotoFileID":0,
+    "Gender":1,
+    "BirthDate":"2003-04-17",
+    "BloodGroup":5,
+    "MaritalStatus":2,
+    "Address":"Gomathipuram , Madurai",
+    "Mobile":"8765894765",
+    "AltMobile": "8765694765",
+   "Email":"sivashankarandeveloper@gmail.com",
+    "IdProofType": 1,   
+    "IdNumber": "3724 2785 1754",
+    "IdExpiry":"2028-10-30",
+    "DepartmentID":1,
+    "Designation":1,
+    "Qualification":"MBBS, MS, FRCS",
+    "Specialization":"Cardiology",
+    "LicenseNo":"IMA-45789654",
+    "LicenseExpiryDate":"2040-01-01",
+    "ExperienceYears":10,
+    "UniversityName" : "Madurai Medical College",
+    "PFNo":"78412578",
+    "ESINo":"1457854",
+    "ShiftID":1,
+    "Status":1
+    
+   
+}
+-- Status from text table #6
+DeleteEmployee
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+   "EmployeeID":1000004
+}
+
+
+GetEmployeeList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "EmployeeID":0,
+    "ClinicID": 1,
+    "BranchID":0,
+    "DepartmentID":0,
+    "Designation":0,
+    "Name":"",
+    "Mobile":"",
+    "EmployeeCode":"",    
+    "Status":-1
+    
+    
+   
+}
+
+_____________________________________________________________________________________________________________________
+
+GetEmployeeList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "EmployeeID":0,
+    "ClinicID": 1,
+    "BranchID":0,
+    "DepartmentID":0,
+    "Designation":0,
+    "Name":"",
+    "Mobile":"",
+    "EmployeeCode":"",    
+    "Status":-1
+}
+
+{
+    "result": [
+        {
+            "employee_id": 1000003,
+            "unique_seq": 1000001,
+            "clinic_id": 5,
+            "clinic_name": "Apollo Clinic",
+            "branch_id": 3,
+            "branch_name": "Apollo - Villapuram Branch",
+            "employee_code": "TCB001",
+            "employee_name": "Siva Shankaran",
+            "first_name": "Siva",
+            "last_name": "Shankaran",
+            "gender": 1,
+            "gender_desc": "Male",
+            "mobile": "8778522370",
+            "email": "sivashankarandeveloper@gmail.com",
+            "department_id": 1,
+            "department_name": "Consultation Services",
+            "designation": 1,
+            "designation_desc": "Doctor",
+            "shift_id": 1,
+            "shift_name": "Day Shift 1",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-12-05T06:57:41.000Z",
+            "date_modified": "2025-12-05T06:57:41.000Z"
+        },
+        {
+            "employee_id": 1000002,
+            "unique_seq": 1000000,
+            "clinic_id": 5,
+            "clinic_name": "Apollo Clinic",
+            "branch_id": 3,
+            "branch_name": "Apollo - Villapuram Branch",
+            "employee_code": "TCB003",
+            "employee_name": "Thivaa kar",
+            "first_name": "Thivaa",
+            "last_name": "kar",
+            "gender": 1,
+            "gender_desc": "Male",
+            "mobile": "6369926149",
+            "email": "thivaakard@gmail.com",
+            "department_id": 1,
+            "department_name": "Consultation Services",
+            "designation": 1,
+            "designation_desc": "Doctor",
+            "shift_id": 1,
+            "shift_name": "Day Shift 1",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-12-05T06:32:37.000Z",
+            "date_modified": "2025-12-05T06:32:37.000Z"
+        },
+        {
+            "employee_id": 1000001,
+            "unique_seq": 1000001,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "employee_code": "EMP001",
+            "employee_name": "Gopi Nath",
+            "first_name": "Gopi",
+            "last_name": "Nath",
+            "gender": 1,
+            "gender_desc": "Male",
+            "mobile": "8765894765",
+            "email": "sivashankarandeveloper@gmail.com",
+            "department_id": 1,
+            "department_name": "Consultation Services",
+            "designation": 1,
+            "designation_desc": "Doctor",
+            "shift_id": 1,
+            "shift_name": "Day Shift 1",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-21T14:07:01.000Z",
+            "date_modified": "2025-11-21T14:12:08.000Z"
+        }
+    ]
+}
+
+------
+
+AddEmployee
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,
+    "BranchID":1,
+    "EmployeeCode":"EMP001",
+    "FirstName":"Gopi",
+    "LastName":"Nath",
+    "PhotoFileID":0,
+    "Gender":1,
+    "BirthDate":"2003-04-17",
+    "BloodGroup":5,
+    "MaritalStatus":2,
+    "Address":"Gomathipuram , Madurai",
+    "Mobile":"8765894765",
+    "AltMobile": "8765694765",
+    "Email":"sivashankarandeveloper@gmail.com",
+    "IdProofType": 1,   
+    "IdNumber": "3724 2785 1754",
+    "IdExpiry":"2028-10-30",
+    "DepartmentID":1,
+    "Designation":1,
+    "Qualification":"MBBS, MS, FRCS",
+    "Specialization":"Cardiology",
+    "LicenseNo":"IMA-45789654",
+    "LicenseExpiryDate":"2040-01-01",
+    "ExperienceYears":10,
+    "UniversityName" : "Madurai Medical College",
+    "PFNo":"78412578",
+    "ESINo":"1457854",
+    "ShiftID":1
+   
+}
+
+{
+    "result": {
+        "OUT_EMPLOYEE_ID": 2,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+if OUT_ERROR
+
+{
+    "result": {
+        "OUT_EMPLOYEE_ID": null,
+        "OUT_OK": 0,
+        "OUT_ERROR": "INSERT_EMPLOYEE: ID NUMBER ALREADY EXISTS: 3724 2785 1754"
+    }
+}
+
+-------------------------
+
+UpdateEmployee
+
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "EmployeeID":1000001,
+    "ClinicID":1,
+    "BranchID":1,
+    "EmployeeCode":"EMP001",
+    "FirstName":"Gopi",
+    "LastName":"Nath",
+    "PhotoFileID":0,
+    "Gender":2,
+    "BirthDate":"2003-04-17",
+    "BloodGroup":5,
+    "MaritalStatus":2,
+    "Address":"Gomathipuram , Madurai",
+    "Mobile":"8765894765",
+    "AltMobile": "8765694765",
+    "Email":"sivashankarandeveloper@gmail.com",
+    "IdProofType": 1,   
+    "IdNumber": "3724 2785 1754",
+    "IdExpiry":"2028-10-30",
+    "DepartmentID":1,
+    "Designation":1,
+    "Qualification":"MBBS, MS, FRCS",
+    "Specialization":"Cardiology",
+    "LicenseNo":"IMA-45789654",
+    "LicenseExpiryDate":"2040-01-01",
+    "ExperienceYears":10,
+    "UniversityName" : "Madurai Medical College",
+    "PFNo":"78412578",
+    "ESINo":"1457854",
+    "ShiftID":1,
+    "Status":1
+}
+
+{
+    "result": {
+        "IN_EMPLOYEE_ID": 1000001,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-----
+DeleteEmployee
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+   "EmployeeID":1000004
+}
+
+{
+    "result": {
+        "IN_EMPLOYEE_ID": 1000004,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}

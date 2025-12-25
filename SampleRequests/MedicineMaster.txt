@@ -1,0 +1,94 @@
+AddMedicineMaster
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "Name":"P 500",
+    "GenericName":"Parametamol 500",
+    "Composition":"Parametamol 500 mg",
+    "Manufacturer":"Apec Lab",   
+    "Type": 1,  
+    "DosageForm":"500 mg",
+    "Unit": 1,
+   "HSNCode":"2924.29.90",
+    "ReorderLevelQty":100,
+   "MRP": 10.00,
+   "PurchasePrice":8.00,
+   "SellPrice":9.00,
+   "StockQuantity":1000,   
+   "CGSTPercentage":6.00,
+   "SGSTPercentage":6.00,
+   "Barcode":"WIll BE LATER"
+
+
+   
+
+   
+}
+
+-- Type Text Table 22 1- Tablet 2-Capsule 3-Syrup 4-Injection 5-Oinment 6-Drops 7-Powder 8-Gel 9-Cream 10-Inhaler
+-- Unit Text Table 27 1- Strip 2-Bottle 3-Vial 4-Tybe 5- Boxx 6- Ampoule 7-Sachet 8-Blister Pack 9 - Jar 10 - roll
+
+UpdateMedicineMaster
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID":1,
+    "MedicineID":1,
+    "Name":"P 500",
+    "GenericName":"Parametamol 500",
+    "Composition":"Parametamol 500 mg",
+    "Manufacturer":"Apec Lab",   
+    "Type": 1,  
+    "DosageForm":"500 mg",
+    "Unit": 1,
+   "HSNCode":"2924.29.90",
+    "ReorderLevelQty":100,
+   "MRP": 11.00,
+   "PurchasePrice":8.00,
+   "SellPrice":9.00,
+   "StockQuantity":1000,   
+   "CGSTPercentage":6.00,
+   "SGSTPercentage":6.00,
+   "Barcode":"WIll BE LATER",
+   "Status":1
+
+   
+}
+
+DeleteMedicineMaster
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "MedicineID":1
+}
+
+GetMedicineMasterList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "MedicineID":0,
+    "ClinicID": 1,
+    "BranchID":1,
+    "Name":"",   
+    "Manufacturer":"",   
+    "Type": 0,    
+    "Unit": 0,
+    "HSNCode":"",
+    "Barcode":"",
+    "LowStockOnly":1,  
+   "Status":-1
+    
+}

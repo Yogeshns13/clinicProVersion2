@@ -1,0 +1,18 @@
+WebUserLogin
+{
+    
+
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,  
+    "UserName":"admin",
+    "Password":"admin@123"
+    
+    
+   
+}
+
+
+

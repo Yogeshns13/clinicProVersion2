@@ -1,0 +1,194 @@
+AddBranch
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,  
+    "ClinicID": 1,
+    "BranchName"  :"Test Main",
+    "Address":"Anna Nagar",
+    "Location":"Test Branch Coordinates",
+    "BranchType":1
+}
+-- Branch Type Text Table #7 
+
+UpdateBranch
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "BranchID":1, 
+    "ClinicID": 1,
+    "BranchName"  :"Test Main",
+    "Address":"Anna Nagar",
+    "Location":"Test Branch Coordinates",
+    "BranchType":1,
+    "Status":1  
+}
+-- Status Text Table #38
+
+DeleteBranch
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "BranchID":1
+   
+}
+GetBranchList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "ClinicID": 1,
+    "BranchID":1,
+    "BranchName"  :"",
+    "Location":"",
+    "BranchType":1,
+    "Status":1
+   
+}
+
+__________________________________________________________________________________________________________________
+
+AddBranch
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,  
+    "ClinicID": 2,
+    "BranchName"  :"BalarengaPuram Branch",
+    "Address":"Munisalai",
+    "Location":"Balarengapuram",
+    "BranchType":1
+}
+
+{
+    "result": {
+        "OUT_BRANCH_ID": 4,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+
+UpdateBranch
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "BranchID":1, 
+    "ClinicID": 1,
+    "BranchName"  :"Test Main",
+    "Address":"Anna Nagar",
+    "Location":"Test Branch Coordinates",
+    "BranchType":1,
+    "Status":1  
+}
+
+{
+    "result": {
+        "IN_BRANCH_ID": 1,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+
+DeleteBranch
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "BranchID":1
+}
+
+{
+    "result": {
+        "IN_BRANCH_ID": 3,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+GetBranchList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "ClinicID": 0,
+    "BranchID":0,
+    "BranchName"  :"",
+    "Location":"",
+    "BranchType":1,
+    "Status":1
+   
+}
+
+{
+    "result": [
+        {
+            "branch_id": 4,
+            "unique_seq": 1,
+            "clinic_id": 2,
+            "clinic_name": "ClinicPro Main",
+            "branch_name": "BalarengaPuram Branch",
+            "address": "Munisalai",
+            "location": "Balarengapuram",
+            "branch_type": 1,
+            "branch_type_desc": "Main",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-12-05T12:36:10.000Z",
+            "date_modified": "2025-12-05T12:36:10.000Z"
+        },
+        {
+            "branch_id": 2,
+            "unique_seq": 2,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_name": "Test Main two",
+            "address": "Vandiyur",
+            "location": "Test Branch Coordinates Madurai",
+            "branch_type": 1,
+            "branch_type_desc": "Main",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-28T11:33:38.000Z",
+            "date_modified": "2025-11-28T11:33:38.000Z"
+        },
+        {
+            "branch_id": 1,
+            "unique_seq": 1,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_name": "Test Main Branch",
+            "address": "Anna Nagar",
+            "location": "Test Branch Coordinates",
+            "branch_type": 1,
+            "branch_type_desc": "Main",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-21T12:03:46.000Z",
+            "date_modified": "2025-12-05T12:37:55.000Z"
+        }
+    ]
+}
+
+
+
+
+
+
+

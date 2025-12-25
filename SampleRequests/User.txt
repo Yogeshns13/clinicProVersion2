@@ -1,0 +1,99 @@
+AddUser
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,
+    "BranchID":1,
+    "EmployeeID":1,
+    "UserName":"User1",
+    "Mobile": "8220485398",   
+    "EMail": "hameedsha21@gmail.com",  
+    "Password" : "1qaz2wsx",
+    "ProfileName":"admin"
+}
+
+UpdateUser 
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,    
+    "UserID":1,  
+    "Mobile": "8220485398",   
+    "EMail": "hameedsha21@gmail.com",
+    "ProfileName":"admin"
+   
+}
+
+
+UpdatePassword
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,    
+    "UserID":1,  
+    "Password" : "1qaz2wsx"
+   
+}
+
+DeleteUser 
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,    
+    "UserID":1
+    
+   
+}
+SuspendUser 
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,    
+    "UserName":"admin"
+    
+   
+}
+WebUserLogin
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 0,   
+    "UserName":"hameedsha21@gmail.com",
+    "Password":"admin@123"
+}
+
+UserLogin
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,    
+    "UserName":"admin",
+    "Password":"admin@123"
+    
+   
+}
+ForgetPassword
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,    
+    "UserName":"admin",
+    "Email":"siva@gmail.com"
+    
+   
+}

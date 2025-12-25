@@ -1,0 +1,42 @@
+GeneratePharmacyInvoice
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID": 1,    
+    "BranchID"  :1,
+    "CartID":1,
+    "InvoiceDate":"2025-11-28",
+    "Discount":10   
+  
+
+   
+}
+
+
+
+GetPharmacyInvoiceDetailList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "OrderID":0,
+    "Page":1,
+    "PageSize":20,
+    "InvDetailID":0,   
+    "ClinicID": 1,    
+    "BranchID":1,
+    "InvoiceID"  :0,    
+    "InvoiceNo":"",
+     "PatientID":0,
+    "PatientName":"",
+    "MedicineID":0,  
+    "MedicineName":0,
+    "BatchNo":"",
+    "FromDate":"",
+    "ToDate":""
+    
+   
+}

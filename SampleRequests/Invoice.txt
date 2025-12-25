@@ -1,0 +1,54 @@
+
+
+
+CancelInvoice
+{
+     "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "InvoiceID"  :1    
+     
+}
+
+UpdateInvoiceStatus
+{
+     "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+     "InvoiceID"  :1,    
+     "Status":3
+ 
+    
+   
+}
+GetInvoiceList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "OrderID":0,
+    "Page":1,
+    "PageSize":20,
+     "InvoiceID"  :0,    
+    "ClinicID": 1,    
+    "BranchID":1,
+    "InvoiceNo":"",
+     "PatientID":0,
+    "PatientName":"",
+    "VisitID":0,  
+    "InvoiceType":0,
+    "FromDate":"",
+    "ToDate":"",
+    "Status":-1
+  
+
+    
+   
+   
+}

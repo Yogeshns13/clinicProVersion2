@@ -1,0 +1,55 @@
+AddConsultationCharge
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,    
+    "ClinicID":1,
+    "BranchID":1,
+    "ConsultationID":5000000,
+    "ChargeID":1,  
+    "ChargeAmount": 0 
+    
+}
+-- if charge amount is 0 , then the default amount will be considered from the config table.
+
+
+
+CancelConsultationCharge
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ConsChargeID": 1
+    
+    
+   
+}
+
+
+GetConsultationChargeList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "ConsChargeID":0,
+     "ClinicID": 1,
+    "BranchID":1,
+     "ConsultationID":0,
+    "VisitID":0,   
+    "PatientID":0,
+    "PatientName":"",
+    "DoctorID":0,
+    "ChargeID":1,  
+    "ChargeName":"", 
+    "InvoiceID":0,
+    "InvoicedOnly":0,
+    "Status":-1
+    
+    
+   
+}

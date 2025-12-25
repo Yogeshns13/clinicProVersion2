@@ -1,0 +1,623 @@
+AddSlot
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "DoctorID":1000001,
+    "SlotDate":"2025-12-01",
+    "SlotTime":"10:00:00"
+    
+   
+}
+UpdateSlot
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "SlotID": 1,
+    "AppointmentID"  :1,
+    "IsBooked":1
+   
+    
+   
+}
+
+
+
+DeleteSlot
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+   "SlotID":1
+   
+}
+GetSlotList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "SlotConfigID":1,
+    "ClinicID": 1,
+    "BranchID":1,
+    "DoctorID":0,
+    "DoctorName":"",   
+    "SlotDate":"",    
+    "FromSlotDate":"",
+    "ToSlotDate":"",
+    "IsBooked":-1,
+    "Status":-1
+   
+   
+}
+
+-- SlotDate (exact slot date) pass null to ignore
+-- FromSlotDate , ToSlotDate pass null to ignore
+-- IsBooked pass 
+
+GenerateSlots
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+     "ClinicID": 1,
+    "BranchID":1,
+    "DaysAhead":10,
+    "FromSlotDate":"",
+    "ToSlotDate":"",
+        
+}
+-- DaysAhead is to define for how many days the slots should be prepared.
+
+
+_________________________________________________________________________________________________________________________
+
+GetSlotList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "SlotConfigID":1,
+    "ClinicID": 1,
+    "BranchID":1,
+    "DoctorID":0,
+    "DoctorName":"",   
+    "SlotDate":"",    
+    "FromSlotDate":"",
+    "ToSlotDate":"",
+    "IsBooked":-1,
+    "Status":-1
+   
+   
+}
+
+{
+    "result": [
+        {
+            "slot_id": 91,
+            "unique_seq": 291,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-03T18:30:00.000Z",
+            "slot_time": "09:00:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:54.000Z",
+            "date_modified": "2025-11-24T09:26:54.000Z"
+        },
+        {
+            "slot_id": 92,
+            "unique_seq": 292,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-03T18:30:00.000Z",
+            "slot_time": "09:30:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:54.000Z",
+            "date_modified": "2025-12-10T10:23:23.000Z"
+        },
+        {
+            "slot_id": 93,
+            "unique_seq": 293,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-03T18:30:00.000Z",
+            "slot_time": "10:00:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:54.000Z",
+            "date_modified": "2025-11-24T09:26:54.000Z"
+        },
+        {
+            "slot_id": 94,
+            "unique_seq": 294,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-03T18:30:00.000Z",
+            "slot_time": "10:30:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:55.000Z",
+            "date_modified": "2025-11-24T09:26:55.000Z"
+        },
+        {
+            "slot_id": 95,
+            "unique_seq": 295,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-03T18:30:00.000Z",
+            "slot_time": "11:00:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:55.000Z",
+            "date_modified": "2025-11-24T09:26:55.000Z"
+        },
+        {
+            "slot_id": 96,
+            "unique_seq": 296,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-03T18:30:00.000Z",
+            "slot_time": "11:30:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:55.000Z",
+            "date_modified": "2025-11-24T09:26:55.000Z"
+        },
+        {
+            "slot_id": 97,
+            "unique_seq": 297,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-03T18:30:00.000Z",
+            "slot_time": "12:00:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:55.000Z",
+            "date_modified": "2025-11-24T09:26:55.000Z"
+        },
+        {
+            "slot_id": 98,
+            "unique_seq": 298,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-03T18:30:00.000Z",
+            "slot_time": "12:30:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:55.000Z",
+            "date_modified": "2025-11-24T09:26:55.000Z"
+        },
+        {
+            "slot_id": 99,
+            "unique_seq": 299,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-03T18:30:00.000Z",
+            "slot_time": "13:00:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:55.000Z",
+            "date_modified": "2025-11-24T09:26:55.000Z"
+        },
+        {
+            "slot_id": 100,
+            "unique_seq": 300,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-03T18:30:00.000Z",
+            "slot_time": "13:30:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:55.000Z",
+            "date_modified": "2025-11-24T09:26:55.000Z"
+        },
+        {
+            "slot_id": 81,
+            "unique_seq": 281,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-02T18:30:00.000Z",
+            "slot_time": "09:00:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:54.000Z",
+            "date_modified": "2025-11-24T09:26:54.000Z"
+        },
+        {
+            "slot_id": 82,
+            "unique_seq": 282,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-02T18:30:00.000Z",
+            "slot_time": "09:30:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:54.000Z",
+            "date_modified": "2025-11-24T09:26:54.000Z"
+        },
+        {
+            "slot_id": 83,
+            "unique_seq": 283,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-02T18:30:00.000Z",
+            "slot_time": "10:00:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:54.000Z",
+            "date_modified": "2025-11-24T09:26:54.000Z"
+        },
+        {
+            "slot_id": 84,
+            "unique_seq": 284,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-02T18:30:00.000Z",
+            "slot_time": "10:30:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:54.000Z",
+            "date_modified": "2025-11-24T09:26:54.000Z"
+        },
+        {
+            "slot_id": 85,
+            "unique_seq": 285,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-02T18:30:00.000Z",
+            "slot_time": "11:00:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:54.000Z",
+            "date_modified": "2025-11-24T09:26:54.000Z"
+        },
+        {
+            "slot_id": 86,
+            "unique_seq": 286,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-02T18:30:00.000Z",
+            "slot_time": "11:30:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:54.000Z",
+            "date_modified": "2025-11-24T09:26:54.000Z"
+        },
+        {
+            "slot_id": 87,
+            "unique_seq": 287,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-02T18:30:00.000Z",
+            "slot_time": "12:00:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:54.000Z",
+            "date_modified": "2025-11-24T09:26:54.000Z"
+        },
+        {
+            "slot_id": 88,
+            "unique_seq": 288,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-02T18:30:00.000Z",
+            "slot_time": "12:30:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:54.000Z",
+            "date_modified": "2025-11-24T09:26:54.000Z"
+        },
+        {
+            "slot_id": 89,
+            "unique_seq": 289,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-02T18:30:00.000Z",
+            "slot_time": "13:00:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:54.000Z",
+            "date_modified": "2025-11-24T09:26:54.000Z"
+        },
+        {
+            "slot_id": 90,
+            "unique_seq": 290,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "slot_date": "2025-12-02T18:30:00.000Z",
+            "slot_time": "13:30:00",
+            "is_booked": 0,
+            "booked_desc": "Available",
+            "appointment_id": null,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T09:26:54.000Z",
+            "date_modified": "2025-11-24T09:26:54.000Z"
+        }
+    ]
+}
+
+--------------
+
+AddSlot
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "DoctorID":1000001,
+    "SlotDate":"2025-12-10",
+    "SlotTime":"10:00:00"
+}
+
+{
+    "result": {
+        "OUT_SLOT_ID": 101,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-----------
+
+UpdateSlot
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "SlotID": 101,
+    "AppointmentID"  :1,
+    "IsBooked":0
+}
+
+{
+    "result": {
+        "IN_SLOT_ID": 101,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+----------
+
+DeleteSlot
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "SlotID":101
+   
+}
+
+
+{
+    "result": {
+        "IN_SLOT_ID": 101,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+---------
+
+GenerateSlots
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+     "ClinicID": 1,
+    "BranchID":1,
+    "DaysAhead":2,
+    "FromSlotDate":"2025-12-10",
+    "ToSlotDate":"2025-12-11"
+        
+}
+
+{
+    "result": {
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+
+
+
+
+

@@ -1,0 +1,10 @@
+{
+    "CHANNEL_ID":2,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 1000002
+    "Token":"",
+    "RefreshToken":"",
+}
+-- token and RefreshToken are for Mobile APP
+

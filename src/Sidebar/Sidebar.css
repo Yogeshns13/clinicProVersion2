@@ -1,0 +1,343 @@
+/* src/components/layout/Sidebar.css */
+/* FULL COMPLETE SIDEBAR CSS WITH CLINIC DETAILS DROPDOWN */
+
+.sidebar {
+  width: 280px;
+  height: 100vh;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 4px 0 30px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 78px;
+}
+
+/* Top Section - Logo & Collapse Button */
+.sidebar-top {
+  padding: 24px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+}
+
+.logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.logo-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  object-fit: contain;
+  background: white;
+  padding: 4px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.brand-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #30b2b5;
+  white-space: nowrap;
+  background: linear-gradient(90deg, #30b2b5, #6ee7eb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.collapse-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.collapse-btn:hover {
+  background: #30b2b5;
+  transform: scale(1.08);
+  box-shadow: 0 8px 20px rgba(48, 178, 181, 0.4);
+}
+
+/* Navigation */
+.nav {
+  flex: 1;
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transform: translateX(4px);
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, #30b2b5, #207d9c);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(48, 178, 181, 0.4);
+  transform: translateX(2px);
+}
+
+.nav-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.nav-item:hover .nav-icon {
+  transform: scale(1.15);
+}
+
+.nav-label {
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* Tooltip (when collapsed) */
+.tooltip {
+  position: absolute;
+  left: 78px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1e293b;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+  z-index: 10;
+  pointer-events: none;
+  border: 1px solid rgba(48, 178, 181, 0.3);
+}
+
+.nav-item:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
+  left: 85px;
+}
+
+/* Dropdown: Clinic Details */
+.dropdown-wrapper {
+  position: relative;
+}
+
+.dropdown-toggle {
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.dropdown-arrow {
+  margin-left: auto;
+  transition: transform 0.35s ease;
+  color: #94a3b8;
+}
+
+.dropdown-toggle.open .dropdown-arrow {
+  transform: rotate(180deg);
+  color: #30b2b5;
+}
+
+.dropdown-toggle:hover .dropdown-arrow {
+  color: white;
+}
+
+.dropdown-menu {
+  margin-top: 8px;
+  padding-left: 12px;
+  border-left: 3px solid #30b2b5;
+  animation: slideDown 0.35s ease-out;
+  overflow: hidden;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    padding-left: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 200px;
+    padding-left: 12px;
+  }
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  border-radius: 12px;
+  color: #cbd5e1;
+  font-size: 14.5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.dropdown-item::before {
+  content: '';
+  position: absolute;
+  left: -15px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  background: #30b2b5;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.dropdown-item:hover {
+  background: rgba(48, 178, 181, 0.18);
+  color: white;
+  padding-left: 28px;
+}
+
+.dropdown-item:hover::before {
+  opacity: 1;
+}
+
+.dropdown-item.active {
+  background: rgba(48, 178, 181, 0.3);
+  color: #30b2b5;
+  font-weight: 600;
+  padding-left: 32px;
+  border-left: 4px solid #30b2b5;
+}
+
+.dropdown-item.active::before {
+  opacity: 1;
+  background: #30b2b5;
+  box-shadow: 0 0 15px rgba(48, 178, 181, 0.6);
+}
+
+.dropdown-label {
+  white-space: nowrap;
+}
+
+/* Hide dropdown when sidebar collapsed */
+.sidebar.collapsed .dropdown-menu {
+  display: none;
+}
+
+/* Logout Button */
+.nav-item.logout {
+  margin-top: auto;
+  color: #fca5a5;
+  border-top: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.nav-item.logout:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #ff6b6b;
+  transform: translateX(4px);
+}
+
+.nav-item.logout .nav-icon {
+  color: #fca5a5;
+}
+
+.nav-item.logout:hover .nav-icon {
+  color: #ff6b6b;
+  transform: rotate(10deg) scale(1.2);
+}
+
+/* Footer */
+.sidebar-footer {
+  padding: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+/* Collapsed Mode - Hide Text */
+.sidebar.collapsed .nav-label,
+.sidebar.collapsed .brand-name,
+.sidebar.collapsed .sidebar-footer small,
+.sidebar.collapsed .dropdown-label {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 78px;
+  }
+  .sidebar:not(.collapsed) {
+    width: 280px;
+  }
+}
+
+/* Scrollbar (optional) */
+.nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.nav::-webkit-scrollbar-thumb:hover {
+  background: #30b2b5;
+}

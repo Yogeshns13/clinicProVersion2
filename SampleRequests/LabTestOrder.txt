@@ -1,0 +1,73 @@
+AddLabTestOrder
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,    
+    "BranchID"  :1,
+    "ConsultationID":5000000,
+    "VisitID":4000000,
+    "PatientID":2000000,    
+    "DoctorID":1000001,
+    "Priority":1,    
+    "Notes":"CBC for the blood culture"
+
+   
+}
+-- Priority is a int from Text Table #15 1-Regular 2 -Urgent (refer text table for other values) 
+
+UpdateLabTestOrder
+{
+     "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+     "BranchID"  :1,
+     "OrderID":1,
+     "Priority":1, 
+    "Notes":"CBC for the blood culture",
+     "FileID":1,
+     "Status":1,
+     "TestApprovedBy":1000001
+    
+   
+}
+
+DeleteLabTestOrder
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+   "OrderID": 1
+   
+}
+GetLabTestOrderList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "OrderID":0,
+    "Page":1,
+    "PageSize":20,
+    "ClinicID": 1,
+    "BranchID":1,
+    "ConsultationID":0,    
+    "VisitID":0,  
+    "PatientID":0,
+    "PatientName":"",
+    "DoctorID":0,
+    "DoctorName":"",
+    "TestID":0,
+    "TestName":"",
+    "Status":-1,
+    "Priority":0
+
+    
+   
+   
+}
+

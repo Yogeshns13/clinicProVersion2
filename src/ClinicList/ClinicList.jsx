@@ -1,0 +1,447 @@
+// src/components/ClinicList.jsx
+import React, { useState, useEffect, useMemo } from 'react';
+import { getClinicList, addClinic, updateClinic } from '../api/api.js';
+import './ClinicList.css';
+import { FiSearch, FiPlus, FiX } from "react-icons/fi";
+import ErrorHandler from "../hooks/Errorhandler.jsx"
+
+const ClinicList = () => {
+  const [clinics, setClinics] = useState([]);
+  const [allClinics, setAllClinics] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);           // Will hold full error object for 400+
+  const [searchInput, setSearchInput] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedClinic, setSelectedClinic] = useState(null);
+
+  // Form Modal State
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [clinicIdForUpdate, setClinicIdForUpdate] = useState(null);
+
+  const [formData, setFormData] = useState({
+    clinicName: '',
+    ownerName: '',
+    mobile: '',
+    altMobile: '',
+    email: '',
+    address: '',
+    location: '',
+    clinicType: 'General Clinic',
+    gstNo: '',
+    cgstPercentage: 9,
+    sgstPercentage: 9,
+    fileNoPrefix: 'CL-',
+    invoicePrefix: 'INV-',
+    status: 'active'
+  });
+
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [formSuccess, setFormSuccess] = useState(false);
+
+  useEffect(() => {
+    fetchClinics();
+  }, []);
+
+  // Fetch clinic list with proper status-code error handling
+  const fetchClinics = async () => {
+    try {
+      setLoading(true);
+      setError(null); // clear previous error
+      const data = await getClinicList();
+      setClinics(data);
+      setAllClinics(data);
+    } catch (err) {
+      // If it's a 400+ error, keep the full error object
+      if (err?.status >= 400 || err?.code >= 400) {
+        setError(err);
+      } else {
+        setError({ message: err.message || 'Failed to load clinics' });
+      }
+      console.error('fetchClinics error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredClinics = useMemo(() => {
+    if (!searchTerm.trim()) return allClinics;
+    const term = searchTerm.toLowerCase();
+    return allClinics.filter(clinic =>
+      clinic.name?.toLowerCase().includes(term) ||
+      clinic.mobile?.includes(searchTerm) ||
+      clinic.gstNo?.toLowerCase().includes(term) ||
+      clinic.ownerName?.toLowerCase().includes(term)
+    );
+  }, [allClinics, searchTerm]);
+
+  const handleSearch = () => setSearchTerm(searchInput.trim());
+  const handleKeyPress = (e) => { if (e.key === 'Enter') handleSearch(); };
+
+  const openDetails = (clinic) => setSelectedClinic(clinic);
+  const closeModal = () => setSelectedClinic(null);
+
+  const openAddForm = () => {
+    setIsUpdateMode(false);
+    setClinicIdForUpdate(null);
+    setFormData({
+      clinicName: '', ownerName: '', mobile: '', altMobile: '', email: '',
+      address: '', location: '', clinicType: 'General Clinic',
+      gstNo: '', cgstPercentage: 9, sgstPercentage: 9,
+      fileNoPrefix: 'CL-', invoicePrefix: 'INV-', status: 'active'
+    });
+    setFormError('');
+    setFormSuccess(false);
+    setIsFormOpen(true);
+  };
+
+  const openUpdateForm = (clinic) => {
+    setIsUpdateMode(true);
+    setClinicIdForUpdate(clinic.id);
+
+    setFormData({
+      clinicName: clinic.name || '',
+      ownerName: clinic.ownerName || '',
+      mobile: clinic.mobile || '',
+      altMobile: clinic.altMobile || '',
+      email: clinic.email || '',
+      address: clinic.address || '',
+      location: clinic.location || '',
+      clinicType: clinic.clinicType || 'General Clinic',
+      gstNo: clinic.gstNo || '',
+      cgstPercentage: clinic.cgstPercentage ?? 9,
+      sgstPercentage: clinic.sgstPercentage ?? 9,
+      fileNoPrefix: clinic.fileNoPrefix || 'CL-',
+      invoicePrefix: clinic.invoicePrefix || 'INV-',
+      status: clinic.status || 'active'
+    });
+
+    setFormError('');
+    setFormSuccess(false);
+    setSelectedClinic(null);
+    setIsFormOpen(true);
+  };
+
+  const closeForm = () => {
+    setIsFormOpen(false);
+    setFormLoading(false);
+    setFormError('');
+    setFormSuccess(false);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setFormError('');
+    setFormSuccess(false);
+    setError(null); // clear any previous global error
+
+    try {
+      if (isUpdateMode) {
+        await updateClinic({
+          clinicId: clinicIdForUpdate,
+          ClinicName: formData.clinicName.trim(),
+          OwnerName: formData.ownerName.trim(),
+          Mobile: formData.mobile.trim(),
+          AltMobile: formData.altMobile.trim() || "",
+          Email: formData.email.trim() || "",
+          Address: formData.address.trim(),
+          Location: formData.location.trim(),
+          ClinicType: formData.clinicType.trim(),
+          GstNo: formData.gstNo.trim(),
+          CgstPercentage: Number(formData.cgstPercentage) || 0,
+          SgstPercentage: Number(formData.sgstPercentage) || 0,
+          FileNoPrefix: formData.fileNoPrefix.trim() || "",
+          InvoicePrefix: formData.invoicePrefix.trim() || "",
+          Status: formData.status === 'active' ? 1 : 2
+        });
+      } else {
+        await addClinic({
+          clinicName: formData.clinicName.trim(),
+          ownerName: formData.ownerName.trim(),
+          mobile: formData.mobile.trim(),
+          altMobile: formData.altMobile.trim() || "",
+          email: formData.email.trim() || "",
+          address: formData.address.trim(),
+          location: formData.location.trim(),
+          clinicType: formData.clinicType.trim(),
+          gstNo: formData.gstNo.trim(),
+          cgstPercentage: Number(formData.cgstPercentage),
+          sgstPercentage: Number(formData.sgstPercentage),
+          fileNoPrefix: formData.fileNoPrefix.trim(),
+          invoicePrefix: formData.invoicePrefix.trim(),
+        });
+      }
+
+      setFormSuccess(true);
+      setTimeout(() => {
+        closeForm();
+        fetchClinics();
+      }, 1500);
+
+    } catch (err) {
+      console.error("Save failed:", err);
+
+      // If it's a 400+ error from backend, show via ErrorHandler
+      if (err?.status >= 400 || err?.code >= 400) {
+        setError(err);           // This will trigger the global ErrorHandler
+      } else {
+        setFormError(err.message || "Failed to save clinic.");
+      }
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleHold = (clinic) => {
+    const toggled = {
+      ...clinic,
+      status: clinic.status === 'active' ? 'inactive' : 'active'
+    };
+    openUpdateForm(toggled);
+  };
+
+  // Show global ErrorHandler for 400+ errors
+  if (error && (error?.status >= 400 || error?.code >= 400)) {
+    return <ErrorHandler error={error} />;
+  }
+
+  if (loading) return <div className="clinic-loading">Loading clinics...</div>;
+
+  // Fallback for non-400 errors (network, etc.)
+  if (error) return <div className="clinic-error">Error: {error.message || error}</div>;
+
+  return (
+    <div className="clinic-list-wrapper">
+      {/* Global Error Handler (only renders when needed) */}
+      <ErrorHandler error={error} />
+
+      {/* Header */}
+      <div className="clinic-list-header">
+        <h1>Clinic Management</h1>
+        <p>Manage and monitor all registered clinics</p>
+      </div>
+
+      {/* Search */}
+      <div className="clinic-search-section">
+        <div className="clinic-search-container">
+          <input
+            type="text"
+            placeholder="Search by name, mobile, GST no, owner..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className="clinic-search-input"
+          />
+          <button onClick={handleSearch} className="clinic-search-btn">
+            <FiSearch size={20} />
+          </button>
+        </div>
+      </div>
+
+      {/* Add Button */}
+      <div className="clinic-add-section">
+        <button onClick={openAddForm} className="clinic-add-btn-full">
+          <FiPlus size={22} /> Add Clinic
+        </button>
+      </div>
+
+      {/* Table */}
+      <div className="clinic-table-container">
+        <table className="clinic-table">
+          <thead>
+            <tr>
+              <th>Clinic Name</th>
+              <th>Owner</th>
+              <th>Mobile</th>
+              <th>Location</th>
+              <th>GST No</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredClinics.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="clinic-no-data">
+                  {searchTerm ? 'No clinics found.' : 'No clinics registered yet.'}
+                </td>
+              </tr>
+            ) : (
+              filteredClinics.map((clinic) => (
+                <tr key={clinic.id}>
+                  <td>
+                    <div className="clinic-name-cell">
+                      <div className="clinic-avatar">
+                        {clinic.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="clinic-name">{clinic.name}</div>
+                        <div className="clinic-type">{clinic.clinicType || 'General Clinic'}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{clinic.ownerName || '—'}</td>
+                  <td>{clinic.mobile}</td>
+                  <td>{clinic.location || clinic.address?.split(',')[0] || '—'}</td>
+                  <td className="gst-cell">{clinic.gstNo || '—'}</td>
+                  <td>
+                    <span className={`status-badge ${clinic.status}`}>
+                      {clinic.status.toUpperCase()}
+                    </span>
+                  </td>
+                  <td>
+                    <button onClick={() => openDetails(clinic)} className="clinic-details-btn">
+                      View Details
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Details Modal */}
+      {selectedClinic && (
+        <div className="clinic-modal-overlay" onClick={closeModal}>
+          <div className="clinic-modal" onClick={e => e.stopPropagation()}>
+            <div className="clinic-modal-header">
+              <h2>{selectedClinic.name}</h2>
+              <button onClick={closeModal} className="clinic-modal-close">×</button>
+            </div>
+            <div className="clinic-modal-body">
+              <div className="clinic-info-grid">
+                <div className="info-item"><label>Owner Name</label><p>{selectedClinic.ownerName || '—'}</p></div>
+                <div className="info-item"><label>Mobile</label><p>{selectedClinic.mobile}</p></div>
+                <div className="info-item"><label>Alternate Mobile</label><p>{selectedClinic.altMobile || '—'}</p></div>
+                <div className="info-item"><label>Email</label><p>{selectedClinic.email || '—'}</p></div>
+                <div className="info-item"><label>Address</label><p>{selectedClinic.address || '—'}</p></div>
+                <div className="info-item"><label>GST No</label><p>{selectedClinic.gstNo || '—'}</p></div>
+                <div className="info-item"><label>Status</label>
+                  <span className={`status-badge large ${selectedClinic.status}`}>
+                    {selectedClinic.status.toUpperCase()}
+                  </span>
+                </div>
+                <div className="info-item"><label>Clinic ID</label><p>#{selectedClinic.id}</p></div>
+              </div>
+            </div>
+            <div className="clinic-modal-footer">
+              <button onClick={() => handleHold(selectedClinic)} className="btn-hold">
+                {selectedClinic.status === 'active' ? 'Hold Clinic' : 'Activate Clinic'}
+              </button>
+              <button onClick={() => openUpdateForm(selectedClinic)} className="btn-update">
+                Update Clinic
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add / Update Form Modal */}
+      {isFormOpen && (
+        <div className="clinic-modal-overlay" onClick={closeForm}>
+          <div className="clinic-modal form-modal" onClick={e => e.stopPropagation()}>
+            <div className="clinic-modal-header">
+              <h2>{isUpdateMode ? 'Update Clinic' : 'Add New Clinic'}</h2>
+              <button onClick={closeForm} className="clinic-modal-close">
+                <FiX size={28} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="clinic-modal-body">
+              {formError && <div className="form-error">{formError}</div>}
+              {formSuccess && <div className="form-success">Clinic {isUpdateMode ? 'updated' : 'added'} successfully!</div>}
+
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Clinic Name <span className="required">*</span></label>
+                  <input required name="clinicName" value={formData.clinicName} onChange={handleInputChange} />
+                </div>
+                <div className="form-group">
+                  <label>Owner Name</label>
+                  <input name="ownerName" value={formData.ownerName} onChange={handleInputChange} />
+                </div>
+
+                <div className="form-group">
+                  <label>Mobile <span className="required">*</span></label>
+                  <input required name="mobile" value={formData.mobile} onChange={handleInputChange} />
+                </div>
+                <div className="form-group">
+                  <label>Alternate Mobile</label>
+                  <input name="altMobile" value={formData.altMobile} onChange={handleInputChange} />
+                </div>
+
+                <div className="form-group">
+                  <label>Email</label>
+                  <input type="email" name="email" value={formData.email} onChange={handleInputChange} />
+                </div>
+                <div className="form-group">
+                  <label>Clinic Type</label>
+                  <input name="clinicType" value={formData.clinicType} onChange={handleInputChange} placeholder="e.g. Dental, Ayurvedic" />
+                </div>
+
+                <div className="form-group">
+                  <label>Full Address</label>
+                  <textarea name="address" rows="2" value={formData.address} onChange={handleInputChange} />
+                </div>
+                <div className="form-group">
+                  <label>Location (Area/City)</label>
+                  <input name="location" value={formData.location} onChange={handleInputChange} />
+                </div>
+
+                <div className="form-group">
+                  <label>GST No</label>
+                  <input name="gstNo" value={formData.gstNo} onChange={handleInputChange} />
+                </div>
+
+                <div className="form-group">
+                  <label>CGST %</label>
+                  <input type="number" step="0.01" min="0" name="cgstPercentage" value={formData.cgstPercentage} onChange={handleInputChange} />
+                </div>
+                <div className="form-group">
+                  <label>SGST %</label>
+                  <input type="number" step="0.01" min="0" name="sgstPercentage" value={formData.sgstPercentage} onChange={handleInputChange} />
+                </div>
+
+                <div className="form-group">
+                  <label>File No Prefix</label>
+                  <input name="fileNoPrefix" value={formData.fileNoPrefix} onChange={handleInputChange} />
+                </div>
+                <div className="form-group">
+                  <label>Invoice Prefix</label>
+                  <input name="invoicePrefix" value={formData.invoicePrefix} onChange={handleInputChange} />
+                </div>
+
+                {isUpdateMode && (
+                  <div className="form-group full-width">
+                    <label>Status</label>
+                    <select name="status" value={formData.status} onChange={handleInputChange}>
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              <div className="clinic-modal-footer">
+                <button type="button" onClick={closeForm} className="btn-cancel">Cancel</button>
+                <button type="submit" disabled={formLoading} className="btn-submit">
+                  {formLoading ? 'Saving...' : (isUpdateMode ? 'Update Clinic' : 'Add Clinic')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ClinicList;

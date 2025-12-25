@@ -1,0 +1,195 @@
+AddEmployeeProof
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,
+    "BranchID":1,
+    "EmployeeID":1000001,
+    "FileID":0,
+    "ProofType":1,
+    "PhotoFileID":0,
+    "IdNumber":"1457 2587 2365",
+    "Detail":"Aadhar card",
+    "ExpiryDate":"2033-04-17"
+}
+
+-- Id Proof Type text table id #4
+-- Designation Text Table #5
+
+UpdateEmployeeProof
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ProofID":1,
+    "ClinicID":1,
+    "BranchID":1,
+   "EmployeeID":1000001,
+    "FileID":0,
+    "ProofType":1,
+    "PhotoFileID":0,
+    "IdNumber":"1457 2587 1365",
+    "Detail":"Aadhar card",
+    "ExpiryDate":"2033-04-17",
+    "Status":1
+}
+
+-- Status from text table #6
+DeleteEmployeeProof
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ProofID":1
+}
+
+
+GetEmployeeProofList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "ClinicID": 1,
+    "BranchID":0,
+    "EmployeeID":0,
+     "ProofType":0,
+    "IdNumber":"",
+    "Status":-1
+}
+
+___________________________________________________________________________________________________________
+
+GetEmployeeProofList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "ClinicID": 0,
+    "BranchID":0,
+    "EmployeeID":0,
+     "ProofType":0,
+    "IdNumber":"",
+    "Status":-1
+}
+
+{
+    "result": [
+        {
+            "proof_id": 1,
+            "unique_seq": 1,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "employee_id": 1000001,
+            "employee_name": "Gopi Nath",
+            "employee_code": "EMP001",
+            "file_id": null,
+            "proof_type": 1,
+            "proof_type_desc": "Aadhar",
+            "id_number": "1457 2587 1365",
+            "detail": "Aadhar card",
+            "expiry_date": "2033-04-16T18:30:00.000Z",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-22T08:16:34.000Z",
+            "date_modified": "2025-11-22T08:21:43.000Z"
+        }
+    ]
+}
+
+---------------------------------------
+
+AddEmployeeProof
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":5,
+    "BranchID":3,
+    "EmployeeID":1000003,
+    "FileID":0,
+    "ProofType":1,
+    "PhotoFileID":0,
+    "IdNumber":"1457 2587 2367",
+    "Detail":"Aadhar card",
+    "ExpiryDate":"2033-04-17"
+}
+
+{
+    "result": {
+        "OUT_PROOF_ID": 2,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+
+if error
+
+{
+    "result": {
+        "OUT_PROOF_ID": null,
+        "OUT_OK": 0,
+        "OUT_ERROR": "INSERT_EMPLOYEE_PROOF: INVALID EMPLOYEE_ID 1000003"
+    }
+}
+
+----------------
+
+UpdateEmployeeProof
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ProofID":1,
+    "ClinicID":1,
+    "BranchID":1,
+    "EmployeeID":1000001,
+    "FileID":0,
+    "ProofType":1,
+    "PhotoFileID":0,
+    "IdNumber":"1457 2587 1365",
+    "Detail":"Aadhar card",
+    "ExpiryDate":"2033-04-17",
+    "Status":1
+}
+
+{
+    "result": {
+        "IN_PROOF_ID": 1,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-----------------
+
+DeleteEmployeeProof
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ProofID":1
+}
+
+{
+    "result": {
+        "IN_PROOF_ID": 1,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}

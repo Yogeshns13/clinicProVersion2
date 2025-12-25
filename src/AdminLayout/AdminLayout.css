@@ -1,0 +1,124 @@
+/* src/components/layout/AdminLayout.css */
+
+.dashboard-container {
+  min-height: 100vh;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #e2e8f0;
+}
+
+/* Floating Medical Icons (Stethoscope & Heart Rate) */
+.floating-icon {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.12;
+  animation: float 18s ease-in-out infinite;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.5));
+  z-index: 1;
+}
+
+.floating-icon.scope {
+  width: 280px;
+  top: 10%;
+  left: 75%;
+  animation-delay: 0s;
+}
+
+.floating-icon.meter {
+  width: 220px;
+  top: 60%;
+  left: 5%;
+  animation-delay: 6s;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-30px) rotate(5deg);
+  }
+}
+
+/* Main Layout */
+.main-content {
+  flex: 1;
+  margin-left: 280px; /* Same as Sidebar width when open */
+  padding: 28px 32px;
+  min-height: 100vh;
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+  position: relative;
+}
+
+/* When Sidebar is collapsed */
+.sidebar-collapsed + .main-content {
+  margin-left: 78px; /* Collapsed sidebar width */
+}
+
+/* Optional: Add subtle overlay glow */
+.main-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.6), transparent);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Page Title Style (used in Dashboard, Patients, etc.) */
+.page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  font-size: 15px;
+  color: #94a3b8;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 78px; /* Force collapsed sidebar on tablet */
+    padding: 20px;
+  }
+
+  .floating-icon.scope {
+    width: 220px;
+    left: 65%;
+  }
+
+  .floating-icon.meter {
+    width: 180px;
+    top: 70%;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+    padding: 16px;
+  }
+
+  .floating-icon {
+    display: none; /* Hide on mobile for performance */
+  }
+}

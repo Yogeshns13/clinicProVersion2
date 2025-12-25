@@ -1,0 +1,112 @@
+AddEmployeeShift
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,
+    "EmployeeID":1000001,
+    "ShiftID":1
+   
+}
+-- Gender Text Table #1
+-- Blood Group text table tabke id  #2
+-- Marital Status text table tabke id  #3
+-- Id Proof Type text table id #4
+
+
+
+DeleteEmployeeShift
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ShiftMapID": 1
+}
+
+
+GetEmployeeShiftList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "ClinicID": 1,
+    "EmployeeID":1000001,
+    "ShiftID":1
+}
+
+-------------------------------------------------------
+
+GetEmployeeShiftList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "ClinicID": 1, (Should be give a ClinicID)
+    "EmployeeID":1000001,
+    "ShiftID":1
+}
+
+{
+    "result": [
+        {
+            "ShiftMapID": 1,
+            "ClinicID": 1,
+            "EmployeeID": 1000001,
+            "EmployeeName": "Gopi Nath",
+            "EmployeeCode": "EMP001",
+            "ShiftID": 1,
+            "ShiftName": "Day Shift 1",
+            "ShiftStartTime": "09:00:00",
+            "ShiftEndTime": "14:00:00"
+        }
+    ]
+}
+
+------------------------------------------------------
+
+AddEmployeeShift
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":5,
+    "EmployeeID":1000003,
+    "ShiftID":1
+}
+
+{
+    "result": {
+        "OUT_SHIFT_MAP_ID": 4,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+------------------------------------------------------
+
+DeleteEmployeeShift
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ShiftMapID": 1
+}
+
+{
+    "result": {
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+

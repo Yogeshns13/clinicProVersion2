@@ -1,0 +1,22 @@
+AddUser
+{
+   
+
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "EmployeeID":1000001,
+    "UserName":"admin",
+    "Password":"admin@123",
+    "Mobile":"8220485398",
+    "EMail":"sivashankarandeveloper@gmail.com"
+    "ProfileName": "admin"  
+    
+   
+}
+
+
+

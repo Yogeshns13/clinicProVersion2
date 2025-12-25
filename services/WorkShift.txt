@@ -1,0 +1,58 @@
+AddWorkShift
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "ShiftName"  :"Day Shift 1",
+    "ShiftTimeStart":"9:00:00",
+    "ShiftTimeEnd":"14:00:00",
+    "WorkingHours":5
+   
+}
+-- Time is 24HH format
+
+UpdateWorkShift
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ShiftID":1, 
+    "ClinicID": 1,
+    "ShiftName"  :"Day Shift 1",
+    "ShiftTimeStart":"9:00:00",
+    "ShiftTimeEnd":"14:00:00",
+    "WorkingHours":5,
+    "Status":1
+        
+     
+   
+}
+-- Status Text Table #8
+
+DeleteWorkShift
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+   "ShiftID":1 
+   
+}
+GetWorkShiftList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+   "ShiftID":1, 
+    "ClinicID": 1,
+    "ShiftName"  :"Day Shift 1",
+     "Status":1
+   
+}
+

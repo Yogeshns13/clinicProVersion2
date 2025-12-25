@@ -1,0 +1,55 @@
+AddLabTestOrderItem
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,    
+    "BranchID"  :1,
+    "OrderID":1,
+    "PatientID":2000000,    
+    "DoctorID":1000001,
+    "TestID":1,   
+    "PackageID": 0
+    
+
+   
+}
+-- Priority is a int from Text Table #15 1-Regular 2 -Urgent (refer text table for other values) 
+
+UpdateLabTestOrderItem
+{
+     "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+     "BranchID"  :1,
+     "ItemID":1,
+     "Status":1
+     
+    
+   
+}
+
+
+GetLabTestOrderItemList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,    
+    "Page":1,
+    "PageSize":20,  
+    "ClinicID": 1,
+    "BranchID":1,
+    "OrderID":0, 
+    "PatientID":0,    
+    "DoctorID":0,    
+    "Status":-1,
+    "Search":""
+   
+   
+   
+}
+

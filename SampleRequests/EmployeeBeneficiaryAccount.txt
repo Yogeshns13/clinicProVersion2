@@ -1,0 +1,206 @@
+AddEmployeeBeneficiaryAccount
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,
+    "BranchID":1,
+    "EmployeeID":1000001,
+    "AccountHolderName":"Gopi",
+    "AccountNo":"6540002150",
+    "IFSCCode":"SBIN0002234",
+    "BankName":"SBI",
+    "BankAddress":"anna nagar",
+    "IsDefault":1    
+}
+
+UpdateEmployeeBeneficiaryAccount
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "BeneficiaryID":1,
+    "ClinicID":1,
+    "BranchID":1,
+    "EmployeeID":1000001,
+    "AccountHolderName":"Gopi",
+    "AccountNo":"6540002150",
+    "IFSCCode":"SBIN0002234",
+    "BankName":"SBI",
+    "BankAddress":"anna nagar",
+    "IsDefault":0  ,
+    "Status":1
+}
+
+DeleteEmployeeBeneficiaryAccount
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+   "BeneficiaryID":1
+}
+
+GetEmployeeBeneficiaryAccountList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,     
+    "BeneficiaryID":0,
+    "ClinicID": 1,
+    "BranchID":1,
+    "EmployeeID":0,
+    "AccountNo":"",
+    "IFSCCode":"",
+    "IsDefault":0,        
+    "Status":-1
+}
+
+_______________________________________________________________________________________________________________________
+
+/GetEmployeeBeneficiaryAccountList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,     
+    "BeneficiaryID":0,
+    "ClinicID": 0,
+    "BranchID":0,
+    "EmployeeID":0,
+    "AccountNo":"",
+    "IFSCCode":"",
+    "IsDefault":0,        
+    "Status":-1
+}
+
+{
+    "result": [
+        {
+            "beneficiary_id": 1,
+            "unique_seq": 1,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "employee_id": 1000001,
+            "employee_name": "Gopi Nath",
+            "employee_code": "EMP001",
+            "account_holder_name": "Gopi",
+            "account_no": "6540002150",
+            "ifsc_code": "SBIN0002234",
+            "bank_name": "SBI",
+            "bank_address": "anna nagar",
+            "is_default": 0,
+            "is_default_desc": "No",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-22T07:58:44.000Z",
+            "date_modified": "2025-11-22T08:05:20.000Z"
+        }
+    ]
+}
+
+if errors
+{
+    "errors": [
+        {
+            "type": "field",
+            "value": null,
+            "msg": "Invalid value",
+            "path": "IsDefault",
+            "location": "body"
+        }
+    ]
+}
+
+---------------------
+
+AddEmployeeBeneficiaryAccount
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":5,
+    "BranchID":3,
+    "EmployeeID":1000003,
+    "AccountHolderName":"Yogesh",
+    "AccountNo":"6540002160",
+    "IFSCCode":"IOBN0002235",
+    "BankName":"IOB",
+    "BankAddress":"anna nagar",
+    "IsDefault":1    
+}
+
+{
+    "result": {
+        "OUT_BENEFICIARY_ID": 4,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+if error
+{
+    "result": {
+        "OUT_BENEFICIARY_ID": null,
+        "OUT_OK": 0,
+        "OUT_ERROR": "INSERT_EMPLOYEE_BENEFICIARY_ACCOUNT: INVALID OR INACTIVE EMPLOYEE_ID 1000003"
+    }
+}
+
+--------------------------
+
+UpdateEmployeeBeneficiaryAccount
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "BeneficiaryID":1,
+    "ClinicID":1,
+    "BranchID":1,
+    "EmployeeID":1000001,
+    "AccountHolderName":"Gopi",
+    "AccountNo":"6540002150",
+    "IFSCCode":"SBIN0002234",
+    "BankName":"SBI",
+    "BankAddress":"anna nagar",
+    "IsDefault":0  ,
+    "Status":1
+}
+
+{
+    "result": {
+        "IN_BENEFICIARY_ID": 1,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+_________________________________
+
+DeleteEmployeeBeneficiaryAccount
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+   "BeneficiaryID":2
+}
+
+{
+    "result": {
+        "IN_BENEFICIARY_ID": 2,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}

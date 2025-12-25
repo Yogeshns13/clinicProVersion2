@@ -1,0 +1,91 @@
+AddPrescriptionDetail
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "PrescriptionID":1,
+    "MedicineID":1,    
+    "MedicineName":"P 500",
+    "Form":1,
+    "Strength":"500mg",
+    "Dosage":"1 tablet",
+    "Frequency":"3 times a day",
+    "Duration":"7 days",
+    "Route":1,
+    "FoodTiming":2,
+    "Instructions":"7 days course 3 times per day",
+    "Quantity":21,    
+    "RefillAllowed":0,
+    "RefillCount":0,
+    "StartDate":"2025-11-29",
+    "EndDate":"2025-12-05"
+
+}
+-- Form Text Table 22 1- Tablet 2-Capsule 3-Syrup 4-Injection 5-Oinment 6-Drops 7-Powder 8-Gel 9-Cream 10-Inhaler
+-- Route Text Tale 23 1- Oral 2- IV 3-IM 4-Topical 5-Nosal 6-Opthalmic 7-Sublinqual 8-Rectal 9-Inhalidation 10-Transdermal 
+-- FoodTiming Text table 24 1- Before Food 2-After Food 3-With Food 4-Empty Stomach
+
+UpdatePrescriptionDetail
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "PrescriptionDetailID":1,
+    "Form":1,
+    "Strength":"500mg",
+    "Dosage":"1 tablet",
+    "Frequency":"3 times a day",
+    "Duration":"7 days",
+    "Route":1,
+    "FoodTiming":2,
+    "Instructions":"7 days course 3 times per day",
+    "Quantity":21,    
+    "RefillAllowed":0,
+    "RefillCount":0,
+    "StartDate":"2025-11-29",
+    "EndDate":"2025-12-05"   ,
+    "Status":1
+}
+
+DeletePrescriptionDetail
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "PrescriptionDetailID":1
+}
+
+GetPrescriptionDetailList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20, 
+    "PrescriptionDetailID":0,
+     "ClinicID": 1,
+    "BranchID"  :1,
+    "PrescriptionID":0,
+    "ConsultationID":0,
+    "VisitID":0,
+    "PatientID":0,
+    "PatientName":"",
+    "DoctorID":0,
+    "DoctorName":"",
+     "MedicineID":0,    
+    "MedicineName":"",
+    "Form":0,   
+    "Route":0,
+    "FoodTiming":0,   
+    "RefillAllowed":0,   
+    "Status":-1
+    
+}

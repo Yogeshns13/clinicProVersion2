@@ -1,0 +1,83 @@
+CreateWorkItemsForOrder
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1  ,    
+    "OrderID":1
+   
+    
+
+   
+}
+-- Priority is a int from Text Table #15 1-Regular 2 -Urgent (refer text table for other values) 
+
+UpdateSampleCollection
+{
+     "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+     "BranchID"  :1,
+     "WorkID":1,
+     "SampleCollectedTime":"2025-11-27 18:58:00",
+     "SampleCollectedPlace":"madurai"
+     
+    
+   
+}
+UpdateLabWorkItemResult
+{
+     "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+     "BranchID"  :1,
+      "WorkID":1,
+     "ResultValue":"Negative 4.7 + ",
+     "ResultUnits":"mg/dL",
+     "NormalRange":"4.0–5.6 %",
+     "Interpretation":1,
+     "Remarks":"Normal findings",
+     "TestDoneBy":1000001
+     
+    
+   
+}
+ApproveLabWorkItem
+{
+     "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "WorkID":1,
+    "TestApprovedBy":1000001,    
+    "ApprovalRemarks":"Normal findings"
+     
+     
+    
+   
+}
+RejectLabWorkItem
+{
+     "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "WorkID":2,     
+    "TestApprovedBy":1000001,    
+    "RejectReason":"sample spoiled"
+     
+     
+    
+   
+}
+
+

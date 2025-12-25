@@ -1,0 +1,57 @@
+
+AddInvoicePayment
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID": 1,    
+    "BranchID"  :1,
+    "InvoiceID":3,
+    "PaymentDate":"2025-12-02",
+    "PaymentMode":1  ,
+    "Amount":1000,    
+    "ReferenceNo":"ICIC6547365",
+    "Remarks":"Paid by CASH"
+   
+}
+-- PaymentMode Text Table #33 1-Cash 2-Card 3- UPI 4-Net Banking 5-Wallet 6-Cheque 7-Insurance 8- Credit
+
+UpdateInvoicePayment
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID": 1,    
+    "BranchID"  :1,
+    "PaymentID":4,
+    "Status":5
+    "Remarks":"Paid by CASH"
+   
+}
+--  possible status to be 4-refunded 5-reversed
+
+
+GetInvoicePaymentList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "OrderID":0,
+    "Page":1,
+    "PageSize":20,
+    "PaymentID":0,   
+    "ClinicID": 1,    
+    "BranchID":1,
+    "InvoiceID"  :0,    
+    "InvoiceNo":"",
+     "PatientID":0,
+    "PatientName":"",
+    "PaymentMode":0,
+    "FromDate":"",
+    "ToDate":""
+    
+   
+}

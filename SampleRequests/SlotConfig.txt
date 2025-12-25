@@ -1,0 +1,143 @@
+AddSlotConfig
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "DoctorID":1000001,
+    "ShiftID":1,
+    "Duration":1,
+    "SlotDate":"2025-11-30",
+    "SlotInterval":30,
+    "CreateSlotDays":30
+   
+}
+-- Duration text table #39  1-daily, 2-week end, 3- specific date. if 3, then get the date.
+-- Slot Interval in minutes (how long a single slot will be)
+-- Slot Date mandatory for Duration 3
+
+
+
+DeleteSlotConfig
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+   "SlotConfigID":1
+   
+}
+GetSlotConfigList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "SlotConfigID":1,
+    "ClinicID": 1,
+    "BranchID":1,
+    "DoctorID":0,
+    "DoctorName":"",
+    "ShiftID":0,    
+    "Duration":0,
+    "Status":-1
+}
+
+
+_________________________________________________________________________________________________________________________
+
+GetSlotConfigList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "SlotConfigID":1,
+    "ClinicID": 1,
+    "BranchID":1,
+    "DoctorID":0,
+    "DoctorName":"",
+    "ShiftID":0,    
+    "Duration":0,
+    "Status":-1
+}
+
+{
+    "result": [
+        {
+            "slot_config_id": 1,
+            "unique_seq": 3,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP001",
+            "doctor_name": "Gopi Nath",
+            "shift_id": 1,
+            "shift_name": "Day Shift 1",
+            "duration": 1,
+            "duration_desc": "Daily",
+            "slot_specific_date": null,
+            "slot_date": "2025-11-29T18:30:00.000Z",
+            "slot_interval": 30,
+            "create_slot_days": 30,
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-24T08:13:40.000Z",
+            "date_modified": "2025-11-24T08:14:01.000Z"
+        }
+    ]
+}
+
+-------------------
+
+AddSlotConfig
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "DoctorID":1000001,
+    "ShiftID":1,
+    "Duration":2,
+    "SlotDate":"",
+    "SlotInterval":15,
+    "CreateSlotDays":5
+}
+
+{
+    "result": {
+        "OUT_SLOT_CONFIG_ID": 2,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-----------
+
+DeleteSlotConfig
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+   "SlotConfigID":2
+   
+}
+
+
+
+
+
+
+
