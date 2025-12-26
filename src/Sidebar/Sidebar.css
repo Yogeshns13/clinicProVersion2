@@ -1,10 +1,10 @@
 /* src/components/layout/Sidebar.css */
-/* FULL COMPLETE SIDEBAR CSS WITH CLINIC DETAILS DROPDOWN */
+/* FULL COMPLETE SIDEBAR CSS - SIZES REDUCED ~15% */
 
 .sidebar {
-  width: 280px;
+  width: 238px;                    /* was 280px → ~15% smaller */
   height: 100vh;
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  background: linear-gradient(180deg, var(--accent-start), var(--primary-end));
   color: #e2e8f0;
   position: fixed;
   left: 0;
@@ -13,17 +13,17 @@
   display: flex;
   flex-direction: column;
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 4px 0 30px rgba(0, 0, 0, 0.4);
+  box-shadow: 3px 0 26px rgba(0, 0, 0, 0.4);   /* slightly softer shadow */
   overflow: hidden;
 }
 
 .sidebar.collapsed {
-  width: 78px;
+  width: 66px;                     /* was 78px */
 }
 
 /* Top Section - Logo & Collapse Button */
 .sidebar-top {
-  padding: 24px 20px;
+  padding: 20px 17px;              /* was 24px 20px */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -34,40 +34,36 @@
 .logo-wrap {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;                       /* was 14px */
   overflow: hidden;
   transition: all 0.3s ease;
 }
 
 .logo-img {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 38px;                     /* was 44px */
+  height: 38px;
+  border-radius: 10px;             /* was 12px */
   object-fit: contain;
   background: white;
-  padding: 4px;
+  padding: 3px;                    /* was 4px */
   flex-shrink: 0;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 3px 13px rgba(0, 0, 0, 0.3);
 }
 
 .brand-name {
-  font-size: 20px;
+  font-size: 17px;                 /* was 20px */
   font-weight: 700;
-  color: #30b2b5;
+  color: #ffffff;
   white-space: nowrap;
-  background: linear-gradient(90deg, #30b2b5, #6ee7eb);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .collapse-btn {
   background: rgba(255, 255, 255, 0.1);
   border: none;
   color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 34px;                     /* was 40px */
+  height: 34px;
+  border-radius: 10px;             /* was 12px */
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -79,16 +75,16 @@
 .collapse-btn:hover {
   background: #30b2b5;
   transform: scale(1.08);
-  box-shadow: 0 8px 20px rgba(48, 178, 181, 0.4);
+  box-shadow: 0 7px 17px rgba(48, 178, 181, 0.4);
 }
 
 /* Navigation */
 .nav {
   flex: 1;
-  padding: 20px 12px;
+  padding: 17px 10px;              /* was 20px 12px */
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;                        /* was 8px */
   overflow-y: auto;
 }
 
@@ -96,9 +92,9 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 14px 18px;
-  border-radius: 14px;
+  gap: 14px;                       /* was 16px */
+  padding: 12px 16px;              /* was 14px 18px */
+  border-radius: 12px;             /* was 14px */
   color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
   font-weight: 500;
@@ -109,20 +105,20 @@
 .nav-item:hover {
   background: rgba(255, 255, 255, 0.1);
   color: white;
-  transform: translateX(4px);
+  transform: translateX(3px);      /* was 4px */
 }
 
 .nav-item.active {
   background: linear-gradient(135deg, #30b2b5, #207d9c);
   color: white;
   font-weight: 600;
-  box-shadow: 0 6px 20px rgba(48, 178, 181, 0.4);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.4);
   transform: translateX(2px);
 }
 
 .nav-icon {
-  width: 26px;
-  height: 26px;
+  width: 22px;                     /* was 26px */
+  height: 22px;
   flex-shrink: 0;
   transition: transform 0.3s ease;
 }
@@ -133,27 +129,28 @@
 
 .nav-label {
   white-space: nowrap;
-  font-size: 15px;
+  font-size: 13px;                 /* was 15px */
   font-weight: 500;
+  color: #ffffff;
 }
 
 /* Tooltip (when collapsed) */
 .tooltip {
   position: absolute;
-  left: 78px;
+  left: 66px;                      /* match collapsed width */
   top: 50%;
   transform: translateY(-50%);
   background: #1e293b;
   color: white;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-size: 13.5px;
+  padding: 8px 14px;               /* was 10px 16px */
+  border-radius: 9px;              /* was 10px */
+  font-size: 12px;                 /* was 13.5px */
   font-weight: 500;
   white-space: nowrap;
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 7px 22px rgba(0, 0, 0, 0.6);
   z-index: 10;
   pointer-events: none;
   border: 1px solid rgba(48, 178, 181, 0.3);
@@ -162,7 +159,7 @@
 .nav-item:hover .tooltip {
   opacity: 1;
   visibility: visible;
-  left: 85px;
+  left: 72px;                      /* was 85px – adjusted proportionally */
 }
 
 /* Dropdown: Clinic Details */
@@ -191,8 +188,8 @@
 }
 
 .dropdown-menu {
-  margin-top: 8px;
-  padding-left: 12px;
+  margin-top: 7px;                 /* was 8px */
+  padding-left: 10px;              /* was 12px */
   border-left: 3px solid #30b2b5;
   animation: slideDown 0.35s ease-out;
   overflow: hidden;
@@ -206,60 +203,102 @@
   }
   to {
     opacity: 1;
-    max-height: 200px;
-    padding-left: 12px;
+    max-height: 170px;             /* was 200px */
+    padding-left: 10px;
   }
 }
 
+/* ===== VIEW DETAILS ITEMS - PREMIUM HOVER GLOW EFFECT ===== */
 .dropdown-item {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  padding: 12px 20px;
-  border-radius: 12px;
-  color: #cbd5e1;
-  font-size: 14.5px;
+  padding: 10px 17px;              /* was 12px 20px */
+  border-radius: 10px;             /* was 12px */
+  color: #ffffff;
+  font-size: 12.5px;               /* was 14.5px */
   font-weight: 500;
   text-decoration: none;
   transition: all 0.3s ease;
-  margin-bottom: 4px;
-  position: relative;
+  margin-bottom: 3px;              /* was 4px */
+  cursor: pointer;
 }
 
+/* Glow effect pseudo-element */
 .dropdown-item::before {
   content: '';
   position: absolute;
-  left: -15px;
   top: 50%;
-  width: 8px;
-  height: 8px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.4);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Dot indicator */
+.dropdown-item::after {
+  content: '';
+  position: absolute;
+  left: -13px;                     /* was -15px */
+  top: 50%;
+  width: 7px;                      /* was 8px */
+  height: 7px;
   background: #30b2b5;
   border-radius: 50%;
   opacity: 0;
   transition: opacity 0.3s ease;
+  transform: translateY(-50%);
+  z-index: 2;
 }
 
+/* Content stays on top */
+.dropdown-item > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hover Effect */
 .dropdown-item:hover {
   background: rgba(48, 178, 181, 0.18);
   color: white;
-  padding-left: 28px;
+  padding-left: 24px;              /* was 28px */
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
 }
 
 .dropdown-item:hover::before {
+  width: 170px;                    /* was 200px – scaled down */
+  height: 170px;
+}
+
+.dropdown-item:hover::after {
   opacity: 1;
 }
 
+/* Active (pressed) state */
+.dropdown-item:active {
+  transform: translateY(-1px);
+}
+
+/* Active (selected) item */
 .dropdown-item.active {
   background: rgba(48, 178, 181, 0.3);
-  color: #30b2b5;
+  color: #ffffff;
   font-weight: 600;
-  padding-left: 32px;
-  border-left: 4px solid #30b2b5;
+  padding-left: 27px;              /* was 32px */
+  border-left: 3px solid #30b2b5;  /* was 4px */
 }
 
-.dropdown-item.active::before {
+.dropdown-item.active::after {
   opacity: 1;
   background: #30b2b5;
-  box-shadow: 0 0 15px rgba(48, 178, 181, 0.6);
+  box-shadow: 0 0 13px rgba(48, 178, 181, 0.6);
 }
 
 .dropdown-label {
@@ -281,7 +320,7 @@
 .nav-item.logout:hover {
   background: rgba(239, 68, 68, 0.25);
   color: #ff6b6b;
-  transform: translateX(4px);
+  transform: translateX(3px);      /* was 4px */
 }
 
 .nav-item.logout .nav-icon {
@@ -295,9 +334,9 @@
 
 /* Footer */
 .sidebar-footer {
-  padding: 20px;
+  padding: 17px;                   /* was 20px */
   text-align: center;
-  font-size: 12px;
+  font-size: 10.5px;               /* was 12px */
   color: rgba(255, 255, 255, 0.5);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   transition: all 0.3s ease;
@@ -317,16 +356,16 @@
 /* Responsive */
 @media (max-width: 1024px) {
   .sidebar {
-    width: 78px;
+    width: 66px;
   }
   .sidebar:not(.collapsed) {
-    width: 280px;
+    width: 238px;
   }
 }
 
 /* Scrollbar (optional) */
 .nav::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;                      /* was 6px */
 }
 
 .nav::-webkit-scrollbar-track {
@@ -335,7 +374,7 @@
 
 .nav::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
+  border-radius: 2.5px;            /* was 3px */
 }
 
 .nav::-webkit-scrollbar-thumb:hover {

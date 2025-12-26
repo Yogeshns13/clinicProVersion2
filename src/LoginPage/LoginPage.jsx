@@ -8,6 +8,8 @@ import scope from "../assets/scope.svg";
 import reff from "../assets/refresh.png";
 import { loginUser, renewToken } from "../api/api";
 import { useAuth } from "../context/AuthContext";
+import doctor from "../assets/doc.png";
+
 
 // SVG ICONS
 const LockIcon = () => (
@@ -512,6 +514,7 @@ const LoginPage = () => {
                 </p>
               </form>
             )}
+            <img src={doctor} alt="doctor" className="doctor"></img>
           </div>
 
           {/* RIGHT PROMO PANEL */}

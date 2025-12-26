@@ -9,7 +9,7 @@ const ClinicList = () => {
   const [clinics, setClinics] = useState([]);
   const [allClinics, setAllClinics] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);           // Will hold full error object for 400+
+  const [error, setError] = useState(null);
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClinic, setSelectedClinic] = useState(null);
@@ -44,16 +44,14 @@ const ClinicList = () => {
     fetchClinics();
   }, []);
 
-  // Fetch clinic list with proper status-code error handling
   const fetchClinics = async () => {
     try {
       setLoading(true);
-      setError(null); // clear previous error
+      setError(null);
       const data = await getClinicList();
       setClinics(data);
       setAllClinics(data);
     } catch (err) {
-      // If it's a 400+ error, keep the full error object
       if (err?.status >= 400 || err?.code >= 400) {
         setError(err);
       } else {
@@ -140,7 +138,7 @@ const ClinicList = () => {
     setFormLoading(true);
     setFormError('');
     setFormSuccess(false);
-    setError(null); // clear any previous global error
+    setError(null);
 
     try {
       if (isUpdateMode) {
@@ -187,10 +185,8 @@ const ClinicList = () => {
 
     } catch (err) {
       console.error("Save failed:", err);
-
-      // If it's a 400+ error from backend, show via ErrorHandler
       if (err?.status >= 400 || err?.code >= 400) {
-        setError(err);           // This will trigger the global ErrorHandler
+        setError(err);
       } else {
         setFormError(err.message || "Failed to save clinic.");
       }
@@ -207,29 +203,24 @@ const ClinicList = () => {
     openUpdateForm(toggled);
   };
 
-  // Show global ErrorHandler for 400+ errors
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
   if (loading) return <div className="clinic-loading">Loading clinics...</div>;
-
-  // Fallback for non-400 errors (network, etc.)
   if (error) return <div className="clinic-error">Error: {error.message || error}</div>;
 
   return (
     <div className="clinic-list-wrapper">
-      {/* Global Error Handler (only renders when needed) */}
       <ErrorHandler error={error} />
 
       {/* Header */}
       <div className="clinic-list-header">
         <h1>Clinic Management</h1>
-        <p>Manage and monitor all registered clinics</p>
       </div>
 
-      {/* Search */}
-      <div className="clinic-search-section">
+      {/* Toolbar: Search + Add Button in Same Line */}
+      <div className="clinic-toolbar">
         <div className="clinic-search-container">
           <input
             type="text"
@@ -243,11 +234,8 @@ const ClinicList = () => {
             <FiSearch size={20} />
           </button>
         </div>
-      </div>
 
-      {/* Add Button */}
-      <div className="clinic-add-section">
-        <button onClick={openAddForm} className="clinic-add-btn-full">
+        <button onClick={openAddForm} className="clinic-add-btn">
           <FiPlus size={22} /> Add Clinic
         </button>
       </div>
@@ -308,30 +296,82 @@ const ClinicList = () => {
         </table>
       </div>
 
-      {/* Details Modal */}
+      {/* NEW PROFESSIONAL DETAILS MODAL */}
       {selectedClinic && (
         <div className="clinic-modal-overlay" onClick={closeModal}>
-          <div className="clinic-modal" onClick={e => e.stopPropagation()}>
-            <div className="clinic-modal-header">
-              <h2>{selectedClinic.name}</h2>
+          <div className="clinic-modal details-modal" onClick={e => e.stopPropagation()}>
+            {/* Header with Avatar & Name */}
+            <div className="details-modal-header">
+              <div className="details-header-content">
+                <div className="clinic-avatar-large">
+                  {selectedClinic.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h2>{selectedClinic.name}</h2>
+                  <p className="clinic-subtitle">{selectedClinic.clinicType || 'General Clinic'}</p>
+                </div>
+              </div>
+              <div className="status-badge-large-wrapper">
+                <span className={`status-badge large ${selectedClinic.status}`}>
+                  {selectedClinic.status.toUpperCase()}
+                </span>
+              </div>
               <button onClick={closeModal} className="clinic-modal-close">×</button>
             </div>
-            <div className="clinic-modal-body">
-              <div className="clinic-info-grid">
-                <div className="info-item"><label>Owner Name</label><p>{selectedClinic.ownerName || '—'}</p></div>
-                <div className="info-item"><label>Mobile</label><p>{selectedClinic.mobile}</p></div>
-                <div className="info-item"><label>Alternate Mobile</label><p>{selectedClinic.altMobile || '—'}</p></div>
-                <div className="info-item"><label>Email</label><p>{selectedClinic.email || '—'}</p></div>
-                <div className="info-item"><label>Address</label><p>{selectedClinic.address || '—'}</p></div>
-                <div className="info-item"><label>GST No</label><p>{selectedClinic.gstNo || '—'}</p></div>
-                <div className="info-item"><label>Status</label>
-                  <span className={`status-badge large ${selectedClinic.status}`}>
-                    {selectedClinic.status.toUpperCase()}
-                  </span>
-                </div>
-                <div className="info-item"><label>Clinic ID</label><p>#{selectedClinic.id}</p></div>
-              </div>
+
+            {/* Professional Table Body */}
+            <div className="details-modal-body">
+              <table className="details-table">
+                <tbody>
+                  <tr>
+                    <td className="label">Owner Name</td>
+                    <td className="value">{selectedClinic.ownerName || '—'}</td>
+                  </tr>
+                  <tr>
+                    <td className="label">Mobile</td>
+                    <td className="value">{selectedClinic.mobile}</td>
+                  </tr>
+                  <tr>
+                    <td className="label">Alternate Mobile</td>
+                    <td className="value">{selectedClinic.altMobile || '—'}</td>
+                  </tr>
+                  <tr>
+                    <td className="label">Email</td>
+                    <td className="value">{selectedClinic.email || '—'}</td>
+                  </tr>
+                  <tr>
+                    <td className="label">Full Address</td>
+                    <td className="value">{selectedClinic.address || '—'}</td>
+                  </tr>
+                  <tr>
+                    <td className="label">Location</td>
+                    <td className="value">{selectedClinic.location || '—'}</td>
+                  </tr>
+                  <tr>
+                    <td className="label">GST No</td>
+                    <td className="value gst-value">{selectedClinic.gstNo || '—'}</td>
+                  </tr>
+                  <tr>
+                    <td className="label">File No Prefix</td>
+                    <td className="value">{selectedClinic.fileNoPrefix || 'CL-'}</td>
+                  </tr>
+                  <tr>
+                    <td className="label">Invoice Prefix</td>
+                    <td className="value">{selectedClinic.invoicePrefix || 'INV-'}</td>
+                  </tr>
+                  <tr>
+                    <td className="label">CGST %</td>
+                    <td className="value">{selectedClinic.cgstPercentage ?? 9}%</td>
+                  </tr>
+                  <tr>
+                    <td className="label">SGST %</td>
+                    <td className="value">{selectedClinic.sgstPercentage ?? 9}%</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+
+            {/* Action Footer */}
             <div className="clinic-modal-footer">
               <button onClick={() => handleHold(selectedClinic)} className="btn-hold">
                 {selectedClinic.status === 'active' ? 'Hold Clinic' : 'Activate Clinic'}
@@ -344,7 +384,7 @@ const ClinicList = () => {
         </div>
       )}
 
-      {/* Add / Update Form Modal */}
+      {/* Add / Update Form Modal (unchanged) */}
       {isFormOpen && (
         <div className="clinic-modal-overlay" onClick={closeForm}>
           <div className="clinic-modal form-modal" onClick={e => e.stopPropagation()}>

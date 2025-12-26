@@ -99,6 +99,14 @@ html::before,body::before{
 .input-group select::placeholder{ color:rgba(255,255,255,.7); }
 .input-group select option{ color:#1e293b; background:white; }
 
+
+.doctor{
+  height: 200px;
+  display: flex;
+  position: relative;
+  top: -3%;
+}
+
 /* Select arrow */
 select{
   appearance:none;

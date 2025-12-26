@@ -90,11 +90,8 @@ const Sidebar = () => {
       <div className="sidebar-top">
         <div className="logo-wrap">
           <img src={logo} alt="MedCare Pro" className="logo-img" />
-          {!isCollapsed && <span className="brand-name">MedCare Pro</span>}
+          {!isCollapsed && <span className="brand-name">Clinic Pro</span>}
         </div>
-        <button className="collapse-btn" onClick={() => setIsCollapsed(!isCollapsed)}>
-          {isCollapsed ? <HiOutlineChevronRight size={22} /> : <HiOutlineChevronLeft size={22} />}
-        </button>
       </div>
       
       {/* Navigation */}
@@ -169,7 +166,7 @@ const Sidebar = () => {
       </nav>
 
       <div className="sidebar-footer">
-        {!isCollapsed && <small>© {new Date().getFullYear()} MedCare Pro</small>}
+        {!isCollapsed && <small>© {new Date().getFullYear()} Clinic Pro</small>}
         {isCollapsed && <div className="tooltip">© {new Date().getFullYear()}</div>}
       </div>
     </aside>
