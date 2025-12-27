@@ -10,6 +10,8 @@ import {
   FiSettings,
   FiLogOut,
   FiChevronDown,
+  FiLayers,
+  FiBriefcase,
   FiChevronRight,
 } from "react-icons/fi";
 import { HiOutlineChevronLeft, HiOutlineChevronRight } from "react-icons/hi";
@@ -43,8 +45,8 @@ const Sidebar = () => {
     { to: "/dashboard", icon: FiHome, label: "Dashboard" },
     {
       id: "clinic",
-      icon: FiUsers,
-      label: "Clinic Details",
+      icon: FiLayers,
+      label: "Clinic",
       hasDropdown: true,
       subItems: [
         { to: "/clinic-list", label: "Clinic List" },
@@ -55,8 +57,8 @@ const Sidebar = () => {
     },
     {
       id: "employee",
-      icon: AiFillProfile,
-      label: "Employee Details",
+      icon: FiBriefcase,
+      label: "Employee",
       hasDropdown: true,
       subItems: [
         { to: "/employee-list", label: "Employee List" },
@@ -89,8 +91,7 @@ const Sidebar = () => {
       {/* Logo & Collapse Button */}
       <div className="sidebar-top">
         <div className="logo-wrap">
-          <img src={logo} alt="MedCare Pro" className="logo-img" />
-          {!isCollapsed && <span className="brand-name">Clinic Pro</span>}
+          <img src={logo} alt="Clinic Pro" className="logo-img" />
         </div>
       </div>
       

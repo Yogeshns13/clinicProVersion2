@@ -391,7 +391,7 @@ const ClinicList = () => {
             <div className="clinic-modal-header">
               <h2>{isUpdateMode ? 'Update Clinic' : 'Add New Clinic'}</h2>
               <button onClick={closeForm} className="clinic-modal-close">
-                <FiX size={28} />
+                <FiX/>
               </button>
             </div>
 
