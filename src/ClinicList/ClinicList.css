@@ -702,25 +702,201 @@
   /* rest of your existing header styles remain */
 }
 
+/* Add these at the END of ClinicList.css */
+
+/* Profile Dropdown */
+.header-profile-container {
+  position: relative;
+}
+
 .header-profile {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  border-radius: 16px;
+  padding: 3px 3px;
+  border-radius: 50px;
   cursor: pointer;
   color: white;
   font-size: 0.9rem;
   font-weight: 500;
   background-color: var(--accent-start);
+  transition: all 0.2s ease;
 }
 
 .header-profile:hover {
   background: var(--accent-end);
+  transform: translateY(-1px);
 }
 
-.header-profile svg {
-  opacity: 0.9;
+.profile-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+  min-width: 180px;
+  z-index: 100;
+  overflow: hidden;
+  border: 1px solid rgba(34,43,108,0.1);
+}
+
+.profile-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  color: #1e293b;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.profile-dropdown-item:hover {
+  background: #f1f5f9;
+}
+
+.profile-dropdown-item svg {
+  color: #64748b;
+}
+
+.username-item {
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+}
+
+/* Profile Details Modal */
+.profile-details-modal {
+  max-width: 460px;
+  text-align: center;
+}
+
+.profile-avatar-large {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: white;
+  font-size: 2.2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(32,125,156,0.3);
+}
+
+.profile-details-body h3 {
+  margin: 0 0 6px;
+  font-size: 1.4rem;
+  color: var(--primary-start);
+}
+
+.profile-role {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+}
+
+.profile-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+  text-align: left;
+}
+
+.profile-info-item label {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+/* In your CSS file (e.g. ClinicList.css or Sidebar.css or global styles) */
+.user-icon-wrapper {
+  width: 30px;           /* slightly larger than icon size */
+  height: 30px;
+  border-radius: 50%;    /* 50% = perfect circle */
+  /* or border-radius: 40px; if you prefer fixed px */
+  overflow: hidden;      /* important when using background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-start);   /* light background – optional */
+}
+
+.user-icon-wrapper svg {
+  color: #ffffff;        /* icon color – adjust to your theme */
+  stroke-width: 2;       /* optional: make icon bolder */
+}
+
+.profile-info-item p {
+  margin: 0;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+/* Dark Mode Support */
+:root {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+}
+
+.dark-mode {
+  --glass-bg: rgba(30, 41, 59, 0.92);
+  --text-dark: #e2e8f0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+}
+
+.dark-mode .clinic-list-header {
+  background: linear-gradient(135deg, #1e293b, #334155);
+}
+
+.dark-mode .clinic-modal-footer{
+  background: linear-gradient(135deg, #1e293b, #334155);
+}
+
+.dark-mode .clinic-toolbar .clinic-search-input {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark-mode .clinic-table-container {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.dark-mode .clinic-table th {
+  background: linear-gradient(135deg, #334155, #475569);
+}
+
+.dark-mode .clinic-table td {
+  border-bottom-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark-mode .clinic-table tbody tr:nth-child(even) {
+  background-color: #334155;
+}
+
+.dark-mode .clinic-modal {
+  background: rgba(30, 41, 59, 0.94);
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark-mode .form-group input,
+.dark-mode .form-group textarea,
+.dark-mode .form-group select {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
 }
 
 

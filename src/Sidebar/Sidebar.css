@@ -385,3 +385,122 @@
 .nav::-webkit-scrollbar-thumb:hover {
   background: #30b2b5;
 }
+
+/* ============================================= */
+/*               DARK MODE SUPPORT               */
+/* ============================================= */
+
+:root {
+  --sidebar-bg-start: #207d9c;
+  --sidebar-bg-end:   #225ca0;
+  --text-primary:     #e2e8f0;
+  --text-secondary:   rgba(255,255,255,0.7);
+  --hover-bg:         rgba(255,255,255,0.1);
+  --active-bg-start:  #30b2b5;
+  --active-bg-end:    #207d9c;
+  --border-light:     rgba(255,255,255,0.08);
+  --tooltip-bg:       #1e293b;
+  --logout-color:     #fca5a5;
+  --logout-hover:     #ff6b6b;
+}
+
+html.dark-mode .sidebar {
+  --sidebar-bg-start: #0f172a;
+  --sidebar-bg-end:   #1e293b;
+  --text-primary:     #f1f5f9;
+  --text-secondary:   rgba(241,245,249,0.8);
+  --hover-bg:         rgba(241,245,249,0.08);
+  --active-bg-start:  #334155;
+  --active-bg-end:    #475569;
+  --border-light:     rgba(241,245,249,0.06);
+  --tooltip-bg:       #0f172a;
+  --logout-color:     #f87171;
+  --logout-hover:     #ef4444;
+}
+
+html.dark-mode .sidebar {
+  background: linear-gradient(180deg, var(--sidebar-bg-start), var(--sidebar-bg-end));
+}
+
+html.dark-mode .sidebar-top {
+  border-bottom-color: var(--border-light);
+}
+
+html.dark-mode .logo-wrap {
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+}
+
+html.dark-mode .nav-item {
+  color: var(--text-secondary);
+}
+
+html.dark-mode .nav-item:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+html.dark-mode .nav-item.active {
+  background: linear-gradient(135deg, var(--active-bg-start), var(--active-bg-end));
+  color: white;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+}
+
+html.dark-mode .nav-label {
+  color: var(--text-primary);
+}
+
+html.dark-mode .dropdown-arrow {
+  color: #94a3b8;
+}
+
+html.dark-mode .dropdown-toggle.open .dropdown-arrow {
+  color: #60a5fa;
+}
+
+html.dark-mode .dropdown-menu {
+  border-left-color: #60a5fa;
+}
+
+html.dark-mode .dropdown-item {
+  color: #e2e8f0;
+}
+
+html.dark-mode .dropdown-item:hover {
+  background: rgba(96,165,250,0.12);
+  color: white;
+}
+
+html.dark-mode .dropdown-item.active {
+  background: rgba(96,165,250,0.18);
+  border-left-color: #60a5fa;
+}
+
+html.dark-mode .tooltip {
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #f1f5f9;
+}
+
+html.dark-mode .sidebar-footer {
+  color: rgba(241,245,249,0.45);
+  border-top-color: var(--border-light);
+}
+
+html.dark-mode .nav-item.logout {
+  color: var(--logout-color);
+  border-top-color: rgba(239,68,68,0.15);
+}
+
+html.dark-mode .nav-item.logout:hover {
+  background: rgba(239,68,68,0.18);
+  color: var(--logout-hover);
+}
+
+html.dark-mode .nav-item.logout .nav-icon {
+  color: var(--logout-color);
+}
+
+html.dark-mode .nav-item.logout:hover .nav-icon {
+  color: var(--logout-hover);
+}

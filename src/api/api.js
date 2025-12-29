@@ -339,7 +339,7 @@ export const getBranchList = async (clinicId = 0, options = {}) => {
     USER_ID: parseInt(userId),
     Page: options.Page || 1,
     PageSize: options.PageSize || 50,
-    ClinicID: getClinicId(),
+    ClinicID: clinicId,
     BranchID: options.BranchID || 0,
     BranchName: options.BranchName || "",
     Location: options.Location || "",

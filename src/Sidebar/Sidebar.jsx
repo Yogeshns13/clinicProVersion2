@@ -22,7 +22,7 @@ import { AiFillProfile } from "react-icons/ai";
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [openDropdowns, setOpenDropdowns] = useState({}); // Track multiple open states
+  const [openDropdowns, setOpenDropdowns] = useState({});
   const { logout, profileName } = useAuth();
   const navigate = useNavigate();
 
@@ -100,7 +100,6 @@ const Sidebar = () => {
         {mainMenuItems.map((item) => {
           const Icon = item.icon;
 
-          // Regular menu item
           if (!item.hasDropdown) {
             return (
               <NavLink
@@ -116,7 +115,6 @@ const Sidebar = () => {
             );
           }
 
-          // Dropdown menu item (dynamic)
           const isOpen = openDropdowns[item.id] || false;
 
           return (
@@ -139,7 +137,6 @@ const Sidebar = () => {
                 {isCollapsed && <div className="tooltip">{item.label}</div>}
               </div>
 
-              {/* Submenu - only show when expanded and sidebar is not collapsed */}
               {!isCollapsed && isOpen && (
                 <div className="dropdown-menu">
                   {item.subItems.map((sub) => (
@@ -158,7 +155,6 @@ const Sidebar = () => {
           );
         })}
 
-        {/* Logout */}
         <NavLink to="/login" className="nav-item logout" onClick={handleLogout}>
           <FiLogOut className="nav-icon" size={24} />
           {!isCollapsed && <span className="nav-label">Logout</span>}

@@ -1,8 +1,9 @@
 // src/components/ClinicList.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { getClinicList, addClinic, updateClinic } from '../api/api.js';
 import './ClinicList.css';
-import { FiSearch, FiPlus, FiX, FiUser } from "react-icons/fi";
+import { FiSearch, FiPlus, FiX, FiUser, FiLogOut, FiMoon, FiSun, FiKey } from "react-icons/fi";
+import { FaUserCircle } from "react-icons/fa";
 import ErrorHandler from "../hooks/Errorhandler.jsx";
 import { useNavigate } from 'react-router-dom';
 
@@ -43,11 +44,38 @@ const ClinicList = () => {
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
 
-  // Profile name from localStorage
-  const profileName = localStorage.getItem("profileName") || "User";
+  // Profile & Dropdown & Dark Mode
+  const profileName = localStorage.getItem("profileName") || "Admin";
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isProfileDetailsOpen, setIsProfileDetailsOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem('darkMode') === 'true';
+  });
+
+  const profileRef = useRef(null);
 
   useEffect(() => {
     fetchClinics();
+  }, []);
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark-mode');
+      localStorage.setItem('darkMode', 'true');
+    } else {
+      document.documentElement.classList.remove('dark-mode');
+      localStorage.setItem('darkMode', 'false');
+    }
+  }, [isDarkMode]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const fetchClinics = async () => {
@@ -209,6 +237,21 @@ const ClinicList = () => {
     openUpdateForm(toggled);
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode(prev => !prev);
+    setIsProfileOpen(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/login');
+  };
+
+  const openProfileDetails = () => {
+    setIsProfileDetailsOpen(true);
+    setIsProfileOpen(false);
+  };
+
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
@@ -220,22 +263,52 @@ const ClinicList = () => {
     <div className="clinic-list-wrapper">
       <ErrorHandler error={error} />
 
-      {/* Header with Profile on right */}
+      {/* Header with Profile Dropdown */}
       <div className="clinic-list-header">
         <h1>Clinic Management</h1>
 
-        <div 
-          className="header-profile"
-          onClick={() => navigate('/settings')}
-          role="button"
-          tabIndex={0}
-        >
-          <FiUser size={20} />
-          <span>{profileName}</span>
+        <div className="header-profile-container" ref={profileRef}>
+          <div
+            className="header-profile"
+            onClick={() => setIsProfileOpen(prev => !prev)}
+            role="button"
+            tabIndex={0}
+          >
+<div className="user-icon-wrapper">
+  <FaUserCircle size={30} />
+</div>
+          </div>
+
+          {isProfileOpen && (
+            <div className="profile-dropdown">
+              <div 
+                className="profile-dropdown-item username-item"
+                onClick={openProfileDetails}
+              >
+                <FiUser size={18} />
+                <span>Profile</span>
+              </div>
+
+              <div className="profile-dropdown-item" onClick={toggleDarkMode}>
+                {isDarkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
+                <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+              </div>
+
+              <div className="profile-dropdown-item" onClick={handleLogout}>
+                <FiLogOut size={18} />
+                <span>Logout</span>
+              </div>
+
+              <div className="profile-dropdown-item">
+                <FiKey size={18} />
+                <span>Forget Password</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Toolbar: Search + Add Button in Same Line */}
+      {/* Toolbar */}
       <div className="clinic-toolbar">
         <div className="clinic-search-container">
           <input
@@ -490,6 +563,60 @@ const ClinicList = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Profile Details Modal */}
+      {isProfileDetailsOpen && (
+        <div className="clinic-modal-overlay" onClick={() => setIsProfileDetailsOpen(false)}>
+          <div className="clinic-modal profile-details-modal" onClick={e => e.stopPropagation()}>
+            <div className="clinic-modal-header">
+              <h2>Admin Profile</h2>
+              <button 
+                onClick={() => setIsProfileDetailsOpen(false)} 
+                className="clinic-modal-close"
+              >
+                <FiX />
+              </button>
+            </div>
+
+            <div className="clinic-modal-body profile-details-body">
+              <div className="profile-avatar-large">
+                {profileName.charAt(0).toUpperCase()}
+              </div>
+              
+              <h3>{profileName}</h3>
+              <p className="profile-role">Administrator</p>
+
+              <div className="profile-info-grid">
+                <div className="profile-info-item">
+                  <label>Full Name</label>
+                  <p>{profileName}</p>
+                </div>
+                <div className="profile-info-item">
+                  <label>Email</label>
+                  <p>admin@example.com</p> {/* Replace with real data if available */}
+                </div>
+                <div className="profile-info-item">
+                  <label>Role</label>
+                  <p>Super Admin</p>
+                </div>
+                <div className="profile-info-item">
+                  <label>Last Login</label>
+                  <p>December 29, 2025</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="clinic-modal-footer">
+              <button 
+                className="btn-cancel" 
+                onClick={() => setIsProfileDetailsOpen(false)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
