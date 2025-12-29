@@ -2,10 +2,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { getClinicList, addClinic, updateClinic } from '../api/api.js';
 import './ClinicList.css';
-import { FiSearch, FiPlus, FiX } from "react-icons/fi";
-import ErrorHandler from "../hooks/Errorhandler.jsx"
+import { FiSearch, FiPlus, FiX, FiUser } from "react-icons/fi";
+import ErrorHandler from "../hooks/Errorhandler.jsx";
+import { useNavigate } from 'react-router-dom';
 
 const ClinicList = () => {
+  const navigate = useNavigate();
+
   const [clinics, setClinics] = useState([]);
   const [allClinics, setAllClinics] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +42,9 @@ const ClinicList = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
+
+  // Profile name from localStorage
+  const profileName = localStorage.getItem("profileName") || "User";
 
   useEffect(() => {
     fetchClinics();
@@ -214,9 +220,19 @@ const ClinicList = () => {
     <div className="clinic-list-wrapper">
       <ErrorHandler error={error} />
 
-      {/* Header */}
+      {/* Header with Profile on right */}
       <div className="clinic-list-header">
         <h1>Clinic Management</h1>
+
+        <div 
+          className="header-profile"
+          onClick={() => navigate('/settings')}
+          role="button"
+          tabIndex={0}
+        >
+          <FiUser size={20} />
+          <span>{profileName}</span>
+        </div>
       </div>
 
       {/* Toolbar: Search + Add Button in Same Line */}
@@ -296,11 +312,10 @@ const ClinicList = () => {
         </table>
       </div>
 
-      {/* NEW PROFESSIONAL DETAILS MODAL */}
+      {/* DETAILS MODAL */}
       {selectedClinic && (
         <div className="clinic-modal-overlay" onClick={closeModal}>
           <div className="clinic-modal details-modal" onClick={e => e.stopPropagation()}>
-            {/* Header with Avatar & Name */}
             <div className="details-modal-header">
               <div className="details-header-content">
                 <div className="clinic-avatar-large">
@@ -319,7 +334,6 @@ const ClinicList = () => {
               <button onClick={closeModal} className="clinic-modal-close">×</button>
             </div>
 
-            {/* Professional Table Body */}
             <div className="details-modal-body">
               <table className="details-table">
                 <tbody>
@@ -371,7 +385,6 @@ const ClinicList = () => {
               </table>
             </div>
 
-            {/* Action Footer */}
             <div className="clinic-modal-footer">
               <button onClick={() => handleHold(selectedClinic)} className="btn-hold">
                 {selectedClinic.status === 'active' ? 'Hold Clinic' : 'Activate Clinic'}
@@ -384,14 +397,14 @@ const ClinicList = () => {
         </div>
       )}
 
-      {/* Add / Update Form Modal (unchanged) */}
+      {/* Add / Update Form Modal */}
       {isFormOpen && (
         <div className="clinic-modal-overlay" onClick={closeForm}>
           <div className="clinic-modal form-modal" onClick={e => e.stopPropagation()}>
             <div className="clinic-modal-header">
               <h2>{isUpdateMode ? 'Update Clinic' : 'Add New Clinic'}</h2>
               <button onClick={closeForm} className="clinic-modal-close">
-                <FiX/>
+                <FiX />
               </button>
             </div>
 

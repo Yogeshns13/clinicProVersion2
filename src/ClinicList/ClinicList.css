@@ -691,6 +691,40 @@
   background: rgba(34, 43, 108, 0.05);
 }
 
+/* Add these at the END of your existing ClinicList.css */
+
+/* Profile in header */
+.clinic-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 17px;
+  /* rest of your existing header styles remain */
+}
+
+.header-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background-color: var(--accent-start);
+}
+
+.header-profile:hover {
+  background: var(--accent-end);
+}
+
+.header-profile svg {
+  opacity: 0.9;
+}
+
+
+
 @media (max-width: 768px) {
   .clinic-toolbar {
     flex-direction: column;
