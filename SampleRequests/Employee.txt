@@ -76,8 +76,6 @@ UpdateEmployee
     "ESINo":"1457854",
     "ShiftID":1,
     "Status":1
-    
-   
 }
 -- Status from text table #6
 DeleteEmployee
@@ -129,7 +127,7 @@ GetEmployeeList
     "Designation":0,
     "Name":"",
     "Mobile":"",
-    "EmployeeCode":"",    
+    "EmployeeCode":"",   
     "Status":-1
 }
 
@@ -276,7 +274,6 @@ if OUT_ERROR
 -------------------------
 
 UpdateEmployee
-
 {
     "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",

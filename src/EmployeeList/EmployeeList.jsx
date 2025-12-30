@@ -1,47 +1,68 @@
 // src/components/EmployeeList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { getEmployeeList, addEmployee, updateEmployee } from '../api/api.js';
+import {
+  getEmployeeList,
+  addEmployee,
+  updateEmployee,
+  deleteEmployee,
+  getClinicList,
+  getDepartmentList
+} from '../api/api.js';
 import './EmployeeList.css';
-import { FiSearch, FiPlus, FiX, FiUser, FiMail, FiPhone, FiMapPin } from "react-icons/fi";
-import ErrorHandler from "../hooks/Errorhandler.jsx";
+import { FiSearch, FiPlus, FiUser, FiX, FiEdit2, FiTrash2 } from "react-icons/fi";
+import ErrorHandler from '../hooks/Errorhandler.jsx';
+
+const GENDER_MAP = {
+  1: "Male",
+  2: "Female",
+  0: "Not Specified"
+};
 
 const EmployeeList = () => {
   const [employees, setEmployees] = useState([]);
   const [allEmployees, setAllEmployees] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [clinics, setClinics] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [selectedClinicId, setSelectedClinicId] = useState("all");
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Form Modal State
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [employeeIdForUpdate, setEmployeeIdForUpdate] = useState(null);
+
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    clinicId: '',
+    FirstName: '',
+    LastName: '',
     employeeCode: '',
-    gender: '1',
-    birthDate: '',
-    bloodGroup: '',
-    maritalStatus: '1',
     mobile: '',
     altMobile: '',
     email: '',
+    gender: 0,
+    departmentId: 0,
+    designation: 0,
+    birthDate: '',
+    bloodGroup: 0,
+    maritalStatus: 0,
     address: '',
-    idProofType: '0',
+    idProofType: 0,
     idNumber: '',
     idExpiry: '',
-    departmentId: '',
-    designation: '1',
     qualification: '',
     specialization: '',
     licenseNo: '',
     licenseExpiryDate: '',
-    experienceYears: '',
+    experienceYears: 0,
     universityName: '',
     pfNo: '',
     esiNo: '',
-    shiftId: '',
+    shiftId: 0,
     status: 'active'
   });
 
@@ -49,36 +70,67 @@ const EmployeeList = () => {
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
 
+  // Load clinics
   useEffect(() => {
-    fetchEmployees();
+    const fetchClinics = async () => {
+      try {
+        const data = await getClinicList();
+        setClinics(data);
+      } catch (err) {
+        console.error("Failed to load clinics:", err);
+      }
+    };
+    fetchClinics();
   }, []);
 
-  const fetchEmployees = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getEmployeeList();
-      setEmployees(data);
-      setAllEmployees(data);
-    } catch (err) {
-      if (err?.status >= 400 || err?.code >= 400) {
-        setError(err);
-      } else {
-        setError({ message: err.message || 'Failed to load employees' });
+  // Load departments whenever the clinic filter changes
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        setLoadingDepartments(true);
+        const clinicId = selectedClinicId === "all" ? 0 : parseInt(selectedClinicId) || 0;
+        const deptData = await getDepartmentList(clinicId);
+        setDepartments(deptData);
+      } catch (err) {
+        console.error("Failed to load departments:", err);
+        setDepartments([]);
+      } finally {
+        setLoadingDepartments(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    fetchDepartments();
+  }, [selectedClinicId]);
+
+  // Load employees
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const clinicId = selectedClinicId === "all" ? 0 : parseInt(selectedClinicId) || 0;
+        const data = await getEmployeeList(clinicId);
+        setEmployees(data);
+        setAllEmployees(data);
+      } catch (err) {
+        setError(err);
+        console.error('fetchEmployees error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEmployees();
+  }, [selectedClinicId]);
 
   const filteredEmployees = useMemo(() => {
     if (!searchTerm.trim()) return allEmployees;
     const term = searchTerm.toLowerCase();
     return allEmployees.filter(emp =>
-      emp.fullName?.toLowerCase().includes(term) ||
+      emp.name?.toLowerCase().includes(term) ||
       emp.employeeCode?.toLowerCase().includes(term) ||
-      emp.mobile?.includes(searchTerm) ||
-      emp.email?.toLowerCase().includes(term)
+      emp.mobile?.includes(term) ||
+      emp.email?.toLowerCase().includes(term) ||
+      emp.clinicName?.toLowerCase().includes(term) ||
+      emp.departmentName?.toLowerCase().includes(term)
     );
   }, [allEmployees, searchTerm]);
 
@@ -86,19 +138,38 @@ const EmployeeList = () => {
   const handleKeyPress = (e) => { if (e.key === 'Enter') handleSearch(); };
 
   const openDetails = (emp) => setSelectedEmployee(emp);
-  const closeDetails = () => setSelectedEmployee(null);
+  const closeModal = () => setSelectedEmployee(null);
 
   const openAddForm = () => {
     setIsUpdateMode(false);
     setEmployeeIdForUpdate(null);
     setFormData({
-      firstName: '', lastName: '', employeeCode: '', gender: '1',
-      birthDate: '', bloodGroup: '', maritalStatus: '1',
-      mobile: '', altMobile: '', email: '', address: '',
-      idProofType: '0', idNumber: '', idExpiry: '',
-      departmentId: '', designation: '1', qualification: '',
-      specialization: '', licenseNo: '', licenseExpiryDate: '',
-      experienceYears: '', universityName: '', pfNo: '', esiNo: '', shiftId: '',
+      clinicId: '',
+      FirstName: '',
+      LastName: '',
+      employeeCode: '',
+      mobile: '',
+      altMobile: '',
+      email: '',
+      gender: 0,
+      departmentId: 0,
+      designation: 0,
+      birthDate: '',
+      bloodGroup: 0,
+      maritalStatus: 0,
+      address: '',
+      idProofType: 0,
+      idNumber: '',
+      idExpiry: '',
+      qualification: '',
+      specialization: '',
+      licenseNo: '',
+      licenseExpiryDate: '',
+      experienceYears: 0,
+      universityName: '',
+      pfNo: '',
+      esiNo: '',
+      shiftId: 0,
       status: 'active'
     });
     setFormError('');
@@ -109,34 +180,37 @@ const EmployeeList = () => {
   const openUpdateForm = (emp) => {
     setIsUpdateMode(true);
     setEmployeeIdForUpdate(emp.id);
+
     setFormData({
-      firstName: emp.firstName || '',
-      lastName: emp.lastName || '',
+      clinicId: emp.clinicId || '',
+      FirstName: emp.firstName || '',
+      LastName: emp.lastName || '',
       employeeCode: emp.employeeCode || '',
-      gender: emp.gender === 'Male' ? '1' : emp.gender === 'Female' ? '2' : '3',
-      birthDate: emp.birthDate || '',
-      bloodGroup: emp.bloodGroup?.toString() || '',
-      maritalStatus: emp.maritalStatus?.toString() || '1',
       mobile: emp.mobile || '',
       altMobile: emp.altMobile || '',
       email: emp.email || '',
+      gender: emp.gender || 0,
+      departmentId: emp.departmentId || 0,
+      designation: emp.designation || 0,
+      birthDate: emp.birthDate || '',
+      bloodGroup: emp.bloodGroup || 0,
+      maritalStatus: emp.maritalStatus || 0,
       address: emp.address || '',
-      idProofType: emp.idProofType?.toString() || '0',
+      idProofType: emp.idProofType || 0,
       idNumber: emp.idNumber || '',
       idExpiry: emp.idExpiry || '',
-      departmentId: emp.departmentId || '',
-      designation: emp.designationId?.toString() || '1',
       qualification: emp.qualification || '',
       specialization: emp.specialization || '',
       licenseNo: emp.licenseNo || '',
       licenseExpiryDate: emp.licenseExpiryDate || '',
-      experienceYears: emp.experienceYears || '',
+      experienceYears: emp.experienceYears || 0,
       universityName: emp.universityName || '',
       pfNo: emp.pfNo || '',
       esiNo: emp.esiNo || '',
-      shiftId: emp.shiftId || '',
-      status: emp.status || 'active'
+      shiftId: emp.shiftId || 0,
+      status: emp.status
     });
+
     setFormError('');
     setFormSuccess(false);
     setSelectedEmployee(null);
@@ -160,97 +234,137 @@ const EmployeeList = () => {
     setFormLoading(true);
     setFormError('');
     setFormSuccess(false);
+    setError(null);
 
     try {
       const payload = {
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        employeeCode: formData.employeeCode.trim(),
-        gender: Number(formData.gender),
-        birthDate: formData.birthDate || null,
-        bloodGroup: formData.bloodGroup ? Number(formData.bloodGroup) : 0,
-        maritalStatus: Number(formData.maritalStatus),
-        mobile: formData.mobile.trim(),
-        altMobile: formData.altMobile.trim(),
-        email: formData.email.trim(),
-        address: formData.address.trim(),
-        idProofType: Number(formData.idProofType),
-        idNumber: formData.idNumber.trim(),
-        idExpiry: formData.idExpiry || null,
-        departmentId: Number(formData.departmentId) || 0,
-        designation: Number(formData.designation),
-        qualification: formData.qualification.trim(),
-        specialization: formData.specialization.trim(),
-        licenseNo: formData.licenseNo.trim(),
-        licenseExpiryDate: formData.licenseExpiryDate || null,
-        experienceYears: Number(formData.experienceYears) || 0,
-        universityName: formData.universityName.trim(),
-        pfNo: formData.pfNo.trim(),
-        esiNo: formData.esiNo.trim(),
-        shiftId: Number(formData.shiftId) || 0,
+        EmployeeCode: formData.employeeCode.trim(),
+        FirstName: formData.FirstName.trim(),
+        LastName: formData.LastName.trim(),
+        PhotoFileID: 0,
+        Gender: parseInt(formData.gender),
+        BirthDate: formData.birthDate || "",
+        BloodGroup: parseInt(formData.bloodGroup),
+        MaritalStatus: parseInt(formData.maritalStatus),
+        Address: formData.address.trim(),
+        Mobile: formData.mobile.trim(),
+        AltMobile: formData.altMobile.trim(),
+        Email: formData.email.trim(),
+        IdProofType: parseInt(formData.idProofType),
+        IdNumber: formData.idNumber.trim(),
+        IdExpiry: formData.idExpiry || "",
+        DepartmentID: parseInt(formData.departmentId),
+        Designation: parseInt(formData.designation),
+        Qualification: formData.qualification.trim(),
+        Specialization: formData.specialization.trim(),
+        LicenseNo: formData.licenseNo.trim(),
+        LicenseExpiryDate: formData.licenseExpiryDate || "",
+        ExperienceYears: parseInt(formData.experienceYears),
+        UniversityName: formData.universityName.trim(),
+        PFNo: formData.pfNo.trim(),
+        ESINo: formData.esiNo.trim(),
+        ShiftID: parseInt(formData.shiftId),
       };
 
       if (isUpdateMode) {
-        await updateEmployee({
-          employeeId: employeeIdForUpdate,
-          ...payload,
-          status: formData.status === 'active' ? 1 : 2
-        });
+        payload.EmployeeID = employeeIdForUpdate;  // Correct key name required by updateEmployee
+        payload.ClinicID = parseInt(formData.clinicId);
+        payload.BranchID = parseInt(selectedClinicId) || 0;
+        payload.Status = formData.status === 'active' ? 1 : 0;
+        await updateEmployee(payload);
       } else {
+        payload.ClinicID = parseInt(formData.clinicId);
+        payload.BranchID = parseInt(selectedClinicId) || 0;
         await addEmployee(payload);
       }
 
       setFormSuccess(true);
       setTimeout(() => {
         closeForm();
-        fetchEmployees();
-      }, 1500);
+        const clinicId = selectedClinicId === "all" ? 0 : parseInt(selectedClinicId) || 0;
+        getEmployeeList(clinicId).then(data => {
+          setEmployees(data);
+          setAllEmployees(data);
+        });
+      }, 1400);
+
     } catch (err) {
-      console.error("Save failed:", err);
-      if (err?.status >= 400 || err?.code >= 400) {
-        setError(err);
-      } else {
-        setFormError(err.message || "Failed to save employee.");
-      }
+      console.error("Save employee failed:", err);
+      setFormError(err.message || "Failed to save employee.");
     } finally {
       setFormLoading(false);
     }
   };
 
-  const handleStatusToggle = (emp) => {
-    openUpdateForm({ ...emp, status: emp.status === 'active' ? 'inactive' : 'active' });
+  const handleDelete = async (employeeId) => {
+    if (!window.confirm("Are you sure you want to delete this employee?")) return;
+    try {
+      await deleteEmployee(employeeId);
+      const clinicId = selectedClinicId === "all" ? 0 : parseInt(selectedClinicId) || 0;
+      const updated = await getEmployeeList(clinicId);
+      setEmployees(updated);
+      setAllEmployees(updated);
+      setSelectedEmployee(null);
+    } catch (err) {
+      setError(err);
+      console.error("Delete failed:", err);
+    }
   };
 
-  if (error && (error.status >= 400 || error.code >= 400)) return <ErrorHandler error={error} />;
+  if (error && (error?.status >= 400 || error?.code >= 400)) {
+    return <ErrorHandler error={error} />;
+  }
+
   if (loading) return <div className="employee-loading">Loading employees...</div>;
-  if (error) return <div className="employee-error">Error: {error.message}</div>;
+  if (error) return <div className="employee-error">Error: {error.message || error}</div>;
 
   return (
     <div className="employee-list-wrapper">
-
       <div className="employee-list-header">
-        <h1>Employee Management</h1>
-        <p>Manage doctors, nurses, and staff across clinics</p>
+        <div>
+          <h1>Employee Management</h1>
+          <p>Manage staff members across all clinics</p>
+        </div>
       </div>
 
-      <div className="employee-search-section">
-        <div className="employee-search-container">
-          <input
-            type="text"
-            placeholder="Search by name, code, mobile, email..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="employee-search-input"
-          />
-          <button onClick={handleSearch} className="employee-search-btn">
-            <FiSearch size={20} />
-          </button>
+      <div className="employee-controls">
+        <div className="employee-clinic-filter">
+          <div className="clinic-select-wrapper">
+            <FiUser className="clinic-select-icon" size={20} />
+            <select
+              value={selectedClinicId}
+              onChange={(e) => setSelectedClinicId(e.target.value)}
+              className="clinic-select"
+            >
+              <option value="all">All Clinics</option>
+              {clinics.map(clinic => (
+                <option key={clinic.id} value={clinic.id}>
+                  {clinic.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="employee-search-section">
+          <div className="employee-search-container">
+            <input
+              type="text"
+              placeholder="Search by name, code, mobile, email..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="employee-search-input"
+            />
+            <button onClick={handleSearch} className="employee-search-btn">
+              <FiSearch size={20} />
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="employee-add-section">
-        <button onClick={openAddForm} className="employee-add-btn">
+        <button onClick={openAddForm} className="employee-add-btn-full">
           <FiPlus size={22} /> Add Employee
         </button>
       </div>
@@ -259,12 +373,11 @@ const EmployeeList = () => {
         <table className="employee-table">
           <thead>
             <tr>
-              <th>Employee</th>
+              <th>Name</th>
               <th>Code</th>
-              <th>Mobile</th>
-              <th>Email</th>
+              <th>Clinic</th>
               <th>Department</th>
-              <th>Role</th>
+              <th>Mobile</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -272,8 +385,8 @@ const EmployeeList = () => {
           <tbody>
             {filteredEmployees.length === 0 ? (
               <tr>
-                <td colSpan="8" className="employee-no-data">
-                  {searchTerm ? 'No employees found.' : 'No employees registered yet.'}
+                <td colSpan="7" className="employee-no-data">
+                  {searchTerm ? 'No employees match your search.' : 'No employees found.'}
                 </td>
               </tr>
             ) : (
@@ -281,18 +394,19 @@ const EmployeeList = () => {
                 <tr key={emp.id}>
                   <td>
                     <div className="employee-name-cell">
-                      <div className="employee-avatar"><FiUser size={22} /></div>
+                      <div className="employee-avatar">
+                        {emp.name?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
                       <div>
-                        <div className="employee-name">{emp.fullName}</div>
-                        <div className="employee-subtitle">{emp.designationDesc || 'Staff'}</div>
+                        <div className="employee-name">{emp.name}</div>
+                        <div className="employee-code">#{emp.employeeCode || '—'}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="mono">{emp.employeeCode || '—'}</td>
-                  <td>{emp.mobile || '—'}</td>
-                  <td>{emp.email || '—'}</td>
+                  <td>{emp.employeeCode || '—'}</td>
+                  <td>{emp.clinicName || '—'}</td>
                   <td>{emp.departmentName || '—'}</td>
-                  <td>{emp.designationDesc || '—'}</td>
+                  <td>{emp.mobile || '—'}</td>
                   <td>
                     <span className={`status-badge ${emp.status}`}>
                       {emp.status.toUpperCase()}
@@ -300,7 +414,7 @@ const EmployeeList = () => {
                   </td>
                   <td>
                     <button onClick={() => openDetails(emp)} className="employee-details-btn">
-                      View Details
+                      View
                     </button>
                   </td>
                 </tr>
@@ -310,203 +424,143 @@ const EmployeeList = () => {
         </table>
       </div>
 
-      {/* Details Modal */}
       {selectedEmployee && (
-        <div className="employee-modal-overlay" onClick={closeDetails}>
-          <div className="employee-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="employee-modal-overlay" onClick={closeModal}>
+          <div className="employee-modal" onClick={e => e.stopPropagation()}>
             <div className="employee-modal-header">
-              <h2>{selectedEmployee.fullName}</h2>
-              <button onClick={closeDetails} className="employee-modal-close">×</button>
+              <h2>{selectedEmployee.name}</h2>
+              <button onClick={closeModal} className="employee-modal-close">×</button>
             </div>
             <div className="employee-modal-body">
               <div className="employee-info-grid">
                 <div className="info-item"><label>Employee Code</label><p>{selectedEmployee.employeeCode || '—'}</p></div>
-                <div className="info-item"><label>Gender</label><p>{selectedEmployee.gender || '—'}</p></div>
-                <div className="info-item"><label>Date of Birth</label><p>{selectedEmployee.birthDate || '—'}</p></div>
-                <div className="info-item"><label>Blood Group</label><p>{selectedEmployee.bloodGroup || '—'}</p></div>
-                <div className="info-item"><label>Mobile</label><p><FiPhone /> {selectedEmployee.mobile || '—'}</p></div>
-                <div className="info-item"><label>Alt Mobile</label><p>{selectedEmployee.altMobile || '—'}</p></div>
-                <div className="info-item"><label>Email</label><p><FiMail /> {selectedEmployee.email || '—'}</p></div>
-                <div className="info-item"><label>Address</label><p><FiMapPin /> {selectedEmployee.address || '—'}</p></div>
-                <div className="info-item"><label>ID Proof</label><p>{selectedEmployee.idNumber || '—'}</p></div>
+                <div className="info-item"><label>Clinic</label><p>{selectedEmployee.clinicName || '—'}</p></div>
                 <div className="info-item"><label>Department</label><p>{selectedEmployee.departmentName || '—'}</p></div>
                 <div className="info-item"><label>Designation</label><p>{selectedEmployee.designationDesc || '—'}</p></div>
-                <div className="info-item"><label>Qualification</label><p>{selectedEmployee.qualification || '—'}</p></div>
-                <div className="info-item"><label>Specialization</label><p>{selectedEmployee.specialization || '—'}</p></div>
-                <div className="info-item"><label>License No</label><p>{selectedEmployee.licenseNo || '—'}</p></div>
-                <div className="info-item"><label>Experience</label><p>{selectedEmployee.experienceYears ? `${selectedEmployee.experienceYears} years` : '—'}</p></div>
+                <div className="info-item"><label>Mobile</label><p>{selectedEmployee.mobile || '—'}</p></div>
+                <div className="info-item"><label>Email</label><p>{selectedEmployee.email || '—'}</p></div>
+                <div className="info-item"><label>Gender</label><p>{GENDER_MAP[selectedEmployee.gender] || '—'}</p></div>
                 <div className="info-item"><label>Status</label>
                   <span className={`status-badge large ${selectedEmployee.status}`}>
                     {selectedEmployee.status.toUpperCase()}
                   </span>
                 </div>
-                <div className="info-item"><label>Employee ID</label><p>#{selectedEmployee.id}</p></div>
               </div>
             </div>
             <div className="employee-modal-footer">
-              <button onClick={() => handleStatusToggle(selectedEmployee)} className="btn-hold">
-                {selectedEmployee.status === 'active' ? 'Deactivate' : 'Activate'}
-              </button>
               <button onClick={() => openUpdateForm(selectedEmployee)} className="btn-update">
-                Update Employee
+                <FiEdit2 /> Update
+              </button>
+              <button onClick={() => handleDelete(selectedEmployee.id)} className="btn-delete">
+                <FiTrash2 /> Delete
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Add / Update Form Modal */}
       {isFormOpen && (
         <div className="employee-modal-overlay" onClick={closeForm}>
-          <div className="employee-modal form-modal wide" onClick={(e) => e.stopPropagation()}>
+          <div className="employee-modal form-modal" onClick={e => e.stopPropagation()}>
             <div className="employee-modal-header">
               <h2>{isUpdateMode ? 'Update Employee' : 'Add New Employee'}</h2>
-              <button onClick={closeForm} className="employee-modal-close"><FiX size={28} /></button>
+              <button onClick={closeForm} className="employee-modal-close">
+                <FiX size={28} />
+              </button>
             </div>
 
             <form onSubmit={handleSubmit} className="employee-modal-body">
               {formError && <div className="form-error">{formError}</div>}
-              {formSuccess && <div className="form-success">Employee {isUpdateMode ? 'updated' : 'added'} successfully!</div>}
+              {formSuccess && <div className="form-success">Employee successfully {isUpdateMode ? 'updated' : 'added'}!</div>}
 
               <div className="form-grid">
+                <div className="form-group full-width">
+                  <label>Clinic <span className="required">*</span></label>
+                  <select
+                    name="clinicId"
+                    value={formData.clinicId}
+                    onChange={handleInputChange}
+                    required
+                    disabled={isUpdateMode}
+                  >
+                    <option value="">Select Clinic</option>
+                    {clinics.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="form-group">
                   <label>First Name <span className="required">*</span></label>
-                  <input required name="firstName" value={formData.firstName} onChange={handleInputChange} />
+                  <input required name="FirstName" value={formData.FirstName} onChange={handleInputChange} />
                 </div>
+
                 <div className="form-group">
-                  <label>Last Name</label>
-                  <input name="lastName" value={formData.lastName} onChange={handleInputChange} />
+                  <label>Last Name <span className="required">*</span></label>
+                  <input required name="LastName" value={formData.LastName} onChange={handleInputChange} />
                 </div>
+
                 <div className="form-group">
                   <label>Employee Code</label>
                   <input name="employeeCode" value={formData.employeeCode} onChange={handleInputChange} />
                 </div>
+
                 <div className="form-group">
-                  <label>Gender</label>
-                  <select name="gender" value={formData.gender} onChange={handleInputChange}>
-                    <option value="1">Male</option>
-                    <option value="2">Female</option>
-                    <option value="3">Other</option>
-                  </select>
+                  <label>Mobile</label>
+                  <input name="mobile" value={formData.mobile} onChange={handleInputChange} />
                 </div>
+
                 <div className="form-group">
-                  <label>Date of Birth</label>
-                  <input type="date" name="birthDate" value={formData.birthDate} onChange={handleInputChange} />
-                </div>
-                <div className="form-group">
-                  <label>Blood Group</label>
-                  <select name="bloodGroup" value={formData.bloodGroup} onChange={handleInputChange}>
-                    <option value="">Select</option>
-                    <option value="1">A+</option>
-                    <option value="2">A-</option>
-                    <option value="3">B+</option>
-                    <option value="4">B-</option>
-                    <option value="5">AB+</option>
-                    <option value="6">AB-</option>
-                    <option value="7">O+</option>
-                    <option value="8">O-</option>
-                    <option value="9">Others</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Marital Status</label>
-                  <select name="maritalStatus" value={formData.maritalStatus} onChange={handleInputChange}>
-                    <option value="1">Single</option>
-                    <option value="2">Married</option>
-                    <option value="3">Widowed</option>
-                    <option value="4">Divorced</option>
-                    <option value="5">Separated</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Mobile <span className="required">*</span></label>
-                  <input required name="mobile" value={formData.mobile} onChange={handleInputChange} />
-                </div>
-                <div className="form-group">
-                  <label>Alternate Mobile</label>
+                  <label>Alt Mobile</label>
                   <input name="altMobile" value={formData.altMobile} onChange={handleInputChange} />
                 </div>
+
                 <div className="form-group">
                   <label>Email</label>
                   <input type="email" name="email" value={formData.email} onChange={handleInputChange} />
                 </div>
+
+                <div className="form-group">
+                  <label>Gender</label>
+                  <select name="gender" value={formData.gender} onChange={handleInputChange}>
+                    <option value={0}>Not Specified</option>
+                    <option value={1}>Male</option>
+                    <option value={2}>Female</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Department</label>
+                  {loadingDepartments ? (
+                    <div className="loading-select">Loading departments...</div>
+                  ) : departments.length === 0 ? (
+                    <select disabled>
+                      <option value={0}>No departments available</option>
+                    </select>
+                  ) : (
+                    <select
+                      name="departmentId"
+                      value={formData.departmentId}
+                      onChange={handleInputChange}
+                    >
+                      <option value={0}>— Select Department —</option>
+                      {departments.map(dept => (
+                        <option key={dept.id} value={dept.id}>
+                          {dept.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Designation</label>
+                  <input type="number" name="designation" value={formData.designation} onChange={handleInputChange} min="0" />
+                </div>
+
                 <div className="form-group full-width">
                   <label>Address</label>
                   <textarea name="address" rows="2" value={formData.address} onChange={handleInputChange} />
-                </div>
-                <div className="form-group">
-                  <label>ID Proof Type</label>
-                  <select name="idProofType" value={formData.idProofType} onChange={handleInputChange}>
-                    <option value="0">None</option>
-                    <option value="1">Aadhaar Card</option>
-                    <option value="2">Passport</option>
-                    <option value="3">Driving License</option>
-                    <option value="4">Voter ID</option>
-                    <option value="5">PAN Card</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>ID Number</label>
-                  <input name="idNumber" value={formData.idNumber} onChange={handleInputChange} />
-                </div>
-                <div className="form-group">
-                  <label>ID Expiry Date</label>
-                  <input type="date" name="idExpiry" value={formData.idExpiry} onChange={handleInputChange} />
-                </div>
-                <div className="form-group">
-                  <label>Department ID</label>
-                  <input type="number" name="departmentId" value={formData.departmentId} onChange={handleInputChange} />
-                </div>
-                <div className="form-group">
-                  <label>Designation</label>
-                  <select name="designation" value={formData.designation} onChange={handleInputChange}>
-                    <option value="1">Doctor</option>
-                    <option value="2">Nurse</option>
-                    <option value="3">Receptionist</option>
-                    <option value="4">Pharmacist</option>
-                    <option value="5">Lab Technician</option>
-                    <option value="6">Billing Staff</option>
-                    <option value="7">Manager</option>
-                    <option value="8">Attendant</option>
-                    <option value="9">Cleaner</option>
-                    <option value="10">Others</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Qualification</label>
-                  <input name="qualification" value={formData.qualification} onChange={handleInputChange} />
-                </div>
-                <div className="form-group">
-                  <label>Specialization</label>
-                  <input name="specialization" value={formData.specialization} onChange={handleInputChange} />
-                </div>
-                <div className="form-group">
-                  <label>License No</label>
-                  <input name="licenseNo" value={formData.licenseNo} onChange={handleInputChange} />
-                </div>
-                <div className="form-group">
-                  <label>License Expiry</label>
-                  <input type="date" name="licenseExpiryDate" value={formData.licenseExpiryDate} onChange={handleInputChange} />
-                </div>
-                <div className="form-group">
-                  <label>Experience (Years)</label>
-                  <input type="number" name="experienceYears" value={formData.experienceYears} onChange={handleInputChange} />
-                </div>
-                <div className="form-group">
-                  <label>University / College</label>
-                  <input name="universityName" value={formData.universityName} onChange={handleInputChange} />
-                </div>
-                <div className="form-group">
-                  <label>PF Number</label>
-                  <input name="pfNo" value={formData.pfNo} onChange={handleInputChange} />
-                </div>
-                <div className="form-group">
-                  <label>ESI Number</label>
-                  <input name="esiNo" value={formData.esiNo} onChange={handleInputChange} />
-                </div>
-                <div className="form-group">
-                  <label>Shift ID</label>
-                  <input type="number" name="shiftId" value={formData.shiftId} onChange={handleInputChange} />
                 </div>
 
                 {isUpdateMode && (
@@ -534,4 +588,4 @@ const EmployeeList = () => {
   );
 };
 
-export default EmployeeList
+export default EmployeeList;

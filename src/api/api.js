@@ -3,6 +3,7 @@ import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 
 const CHANNEL_ID = 1;
+const PRODUCTION_MODE = 0;
 
 const getSessionRef = () => localStorage.getItem("SESSION_REF");
 const storeSessionRef = (sessionRef) => localStorage.setItem("SESSION_REF", sessionRef);
@@ -30,6 +31,11 @@ const generateRefKey = () => {
 export const getClinicId = () => {
   const clinicId = localStorage.getItem('clinicID');
   return clinicId ? parseInt(clinicId, 10) : null;
+};
+
+export const getBranchId = () => {
+  const branchId = localStorage.getItem('branchID');
+  return branchId ? parseInt(branchId, 10) : null;
 };
 
 export const checkSession = async () => {
@@ -324,13 +330,17 @@ export const getBranchList = async (clinicId = 0, options = {}) => {
     throw authError;
   }
 
-  // ALLOW clinicId = 0 → means "All Clinics"
-  // Only reject if clinicId is negative or not a number (except 0)
-  if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
-    const error = new Error("Invalid Clinic ID");
-    error.status = 400;
-    throw error;
+ 
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
   }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
 
   const payload = {
     CHANNEL_ID,
@@ -339,18 +349,17 @@ export const getBranchList = async (clinicId = 0, options = {}) => {
     USER_ID: parseInt(userId),
     Page: options.Page || 1,
     PageSize: options.PageSize || 50,
-    ClinicID: clinicId,
-    BranchID: options.BranchID || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
     BranchName: options.BranchName || "",
     Location: options.Location || "",
     BranchType: options.BranchType ?? 1,
-    Status: options.Status ?? -1               // -1 = All statuses
+    Status: options.Status ?? -1 // -1 = All statuses
   };
 
   try {
     const response = await API.post("/GetBranchList", payload);
     const results = Array.isArray(response.data?.result) ? response.data.result : [];
-
     console.log("GetBranchList response:", results);
 
     return results.map((branch) => ({
@@ -388,14 +397,22 @@ export const addBranch = async (branchData) => {
     throw authError;
   }
 
-  // Base payload with required auth fields
+   if (PRODUCTION_MODE !== true) {
+    if (branchData.clinicId < 0 || (branchData.clinicId !== 0 && isNaN(branchData.clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : branchData.clinicId;
+
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
-    ClinicID: getClinicId(),
-    // Branch fields from input
+    ClinicID: finalClinicId,
     BranchName: branchData.branchName || "",
     Address: branchData.address || "",
     Location: branchData.location || "",
@@ -468,14 +485,25 @@ export const updateBranch = async (branchData) => {
     throw validationError;
   }
 
+  if (PRODUCTION_MODE !== true) {
+    if (branchData.clinicId < 0 || (branchData.clinicId !== 0 && isNaN(branchData.clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : branchData.clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (branchData.branchId || 0);
+
+
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
-    BranchID: branchData.branchId,
-    ClinicID: getClinicId(),
-
+    BranchID: finalBranchId,
+    ClinicID: finalClinicId,
     BranchName: branchData.BranchName?.trim() || "",
     Address: branchData.Address?.trim() || "",
     Location: branchData.Location?.trim() || "",
@@ -534,6 +562,17 @@ export const getDepartmentList = async (clinicId = 0, branchId = 0, options = {}
     throw error;
   }
 
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (branchId || 0);
+
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
@@ -541,8 +580,8 @@ export const getDepartmentList = async (clinicId = 0, branchId = 0, options = {}
     USER_ID: parseInt(userId),
     Page: options.Page || 1,
     PageSize: options.PageSize || 50,
-    ClinicID: getClinicId(),
-    BranchID: parseInt(branchId) || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
     DepartmentID: options.DepartmentID || 0,
     DepartmentName: options.DepartmentName || ""
   };
@@ -585,14 +624,25 @@ export const addDepartment = async (departmentData) => {
     throw authError;
   }
 
+  if (PRODUCTION_MODE !== true) {
+    if (departmentData.clinicId < 0 || (departmentData.clinicId !== 0 && isNaN(departmentData.clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (departmentData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (departmentData.branchId || 0);
+
   // Base payload with required auth fields
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
-    ClinicID: getClinicId(),
-    BranchID: departmentData.branchId || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
     // Department fields from input
     DepartmentName: departmentData.departmentName || "",
     Profile: departmentData.profile || "" // Description / full name
@@ -648,7 +698,6 @@ export const updateDepartment = async (departmentData) => {
     throw authError;
   }
 
-  // DepartmentID is mandatory for update
   if (!departmentData?.departmentId && departmentData?.departmentId !== 0) {
     const validationError = new Error("DepartmentID is required to update a department.");
     validationError.status = 400;
@@ -664,13 +713,23 @@ export const updateDepartment = async (departmentData) => {
     throw validationError;
   }
 
+  if (PRODUCTION_MODE !== true) {
+    if (departmentData.clinicId < 0 || (departmentData.clinicId !== 0 && isNaN(departmentData.clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : departmentData.clinicId;
+
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
     DepartmentID: departmentData.departmentId,
-    ClinicID: getClinicId(),
+    ClinicID: finalClinicId,
 
     DepartmentName: departmentData.DepartmentName?.trim() || "",
     Profile: departmentData.Profile?.trim() || ""
@@ -712,7 +771,7 @@ export const updateDepartment = async (departmentData) => {
 };
 
 
-export const getEmployeeList = async (options = {}) => {
+export const getEmployeeList = async (clinicId = 0, options = {}) => {
   const userId = getUserId();
   if (!userId) {
     const authError = new Error("User ID is missing. Please log in again.");
@@ -721,35 +780,42 @@ export const getEmployeeList = async (options = {}) => {
     throw authError;
   }
 
-  // Default payload — can be overridden via options param
+  // Optional: stricter validation in non-production (same pattern as your branch function)
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  // Determine final IDs based on environment (same logic as getBranchList)
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
+
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
-    Page: 1,
-    PageSize: 20,
-    EmployeeID: 0,
-    ClinicID: getClinicId(),           // 0 = all clinics (adjust if needed)
-    BranchID: 0,
-    DepartmentID: 0,
-    Designation: 0,
-    Name: "",
-    Mobile: "",
-    EmployeeCode: "",
-    Status: -1,            // -1 = all statuses
-    ...options             // allows overriding any field (e.g. ClinicID, Page, search filters)
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,       
+    EmployeeID: options.EmployeeID || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    DepartmentID: options.DepartmentID || 0,
+    Designation: options.Designation || 0,
+    Name: options.Name || "",
+    Mobile: options.Mobile || "",
+    EmployeeCode: options.EmployeeCode || "",
+    Status: options.Status ?? -1          
   };
 
   try {
     const response = await API.post("/GetEmployeeList", payload);
-
-    // Safety: ensure result is an array
     const results = Array.isArray(response.data?.result) ? response.data.result : [];
-
     console.log("GetEmployeeList response:", results);
 
-    // Map backend fields → clean frontend shape
     return results.map((emp) => ({
       id: emp.employee_id,
       uniqueSeq: emp.unique_seq,
@@ -761,33 +827,31 @@ export const getEmployeeList = async (options = {}) => {
       name: emp.employee_name,
       firstName: emp.first_name,
       lastName: emp.last_name,
-      fullName: `${emp.first_name || ""} ${emp.last_name || ""}`.trim(),
-      gender: emp.gender === 1 ? "Male" : emp.gender === 2 ? "Female" : "Other",
-      genderDesc: emp.gender_desc,
-      mobile: emp.mobile,
-      email: emp.email,
+      gender: emp.gender,
+      genderDesc: emp.gender_desc || "Unknown",
+      mobile: emp.mobile || null,
+      email: emp.email || null,
       departmentId: emp.department_id,
       departmentName: emp.department_name,
-      designationId: emp.designation,
-      designationDesc: emp.designation_desc,
+      designation: emp.designation,
+      designationDesc: emp.designation_desc || "Unknown",
       shiftId: emp.shift_id,
-      shiftName: emp.shift_name,
-      status: emp.status === 1 ? "active" : "inactive", // normalized like in clinic list
-      statusDesc: emp.status_desc,
+      shiftName: emp.shift_name || null,
+      status: emp.status === 1 ? "active" : "inactive",
+      statusDesc: emp.status_desc || "Unknown",
       dateCreated: emp.date_created,
       dateModified: emp.date_modified
     }));
   } catch (error) {
     console.error("getEmployeeList failed:", error);
 
-    const errorWithStatus = {
+    const err = {
       ...error,
       status: error.response?.status || 500,
-      code: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch employee list"
+      message: error.response?.data?.message || error.message || "Failed to fetch employees"
     };
 
-    throw errorWithStatus;
+    throw err;
   }
 };
 
@@ -801,21 +865,38 @@ export const addEmployee = async (employeeData) => {
     throw authError;
   }
 
-  // Base payload with required auth fields + employee data
+  // Basic required-field validation (adjust required fields as per your backend rules)
+  if (!employeeData?.FirstName || !employeeData?.LastName) {
+    const validationError = new Error("First name and last name are required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  // In dev mode you might want to validate ClinicID / BranchID more strictly
+  if (PRODUCTION_MODE !== true) {
+    if (employeeData.clinicId < 0 || (employeeData.clinicId !== 0 && isNaN(employeeData.clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (employeeData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (employeeData.branchID || 0);
+
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
-
-    ClinicID: getClinicId(),
-    BranchID: employeeData.branchId || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
     EmployeeCode: employeeData.employeeCode || "",
-    FirstName: employeeData.firstName || "",
-    LastName: employeeData.lastName || "",
+    FirstName: employeeData.firstName || employeeData.FirstName || "",
+    LastName: employeeData.lastName || employeeData.LastName || "",
     PhotoFileID: employeeData.photoFileId ?? 0,
-    Gender: employeeData.gender ?? 1,
-    BirthDate: employeeData.birthDate || null,
+    Gender: employeeData.gender ?? 0,                
+    BirthDate: employeeData.birthDate || "",         
     BloodGroup: employeeData.bloodGroup ?? 0,
     MaritalStatus: employeeData.maritalStatus ?? 0,
     Address: employeeData.address || "",
@@ -824,18 +905,18 @@ export const addEmployee = async (employeeData) => {
     Email: employeeData.email || "",
     IdProofType: employeeData.idProofType ?? 0,
     IdNumber: employeeData.idNumber || "",
-    IdExpiry: employeeData.idExpiry || null,
-    DepartmentID: employeeData.departmentId || 0,
-    Designation: employeeData.designation || 0,
+    IdExpiry: employeeData.idExpiry || "",  
+    DepartmentID: employeeData.departmentId ?? 0,
+    Designation: employeeData.designation ?? 0,
     Qualification: employeeData.qualification || "",
     Specialization: employeeData.specialization || "",
     LicenseNo: employeeData.licenseNo || "",
-    LicenseExpiryDate: employeeData.licenseExpiryDate || null,
+    LicenseExpiryDate: employeeData.licenseExpiryDate || "",
     ExperienceYears: employeeData.experienceYears ?? 0,
     UniversityName: employeeData.universityName || "",
     PFNo: employeeData.pfNo || "",
     ESINo: employeeData.esiNo || "",
-    ShiftID: employeeData.shiftId || 0
+    ShiftID: employeeData.shiftId ?? 0
   };
 
   try {
@@ -845,7 +926,7 @@ export const addEmployee = async (employeeData) => {
 
     const result = response.data?.result;
 
-    // Validate response structure
+    // Validate expected response structure (matches your sample)
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
     }
@@ -854,11 +935,11 @@ export const addEmployee = async (employeeData) => {
       throw new Error(result.OUT_ERROR || "Failed to add employee");
     }
 
-    // Success — return new employee ID
+    // Return success with new employee ID
     return {
       success: true,
       employeeId: result.OUT_EMPLOYEE_ID,
-      message: result.OUT_ERROR // usually "OK"
+      message: result.OUT_ERROR || "OK"
     };
 
   } catch (error) {
@@ -868,10 +949,10 @@ export const addEmployee = async (employeeData) => {
       ...error,
       status: error.response?.status || 500,
       code: error.response?.status || 500,
-      message:
-        error.response?.data?.message ||
+      message: 
+        error.response?.data?.message || 
         error.response?.data?.result?.OUT_ERROR ||
-        error.message ||
+        error.message || 
         "Failed to add employee"
     };
 
@@ -896,75 +977,94 @@ export const updateEmployee = async (employeeData) => {
     throw validationError;
   }
 
+  // ClinicID is also typically required
+  if (!employeeData?.clinicId && employeeData?.clinicId !== 0) {
+    const validationError = new Error("ClinicID is required to update an employee.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  if (PRODUCTION_MODE !== true) {
+    if (employeeData.clinicId < 0 || (employeeData.clinicId !== 0 && isNaN(employeeData.clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (employeeData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (employeeData.branchId || 0);
+
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
-
-    EmployeeID: employeeData.employeeId,
-    ClinicID: getClinicId(),
-    BranchID: employeeData.branchId || 0,
-    EmployeeCode: (employeeData.employeeCode || "").trim(),
-    FirstName: (employeeData.firstName || "").trim(),
-    LastName: (employeeData.lastName || "").trim(),
+    EmployeeID: employeeData.employeeId || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    EmployeeCode: employeeData.employeeCode?.trim() || "",
+    FirstName: employeeData.firstName?.trim() || employeeData.FirstName?.trim() || "",
+    LastName: employeeData.lastName?.trim() || employeeData.LastName?.trim() || "",
     PhotoFileID: employeeData.photoFileId ?? 0,
-    Gender: Number(employeeData.gender) || 0,
-    BirthDate: employeeData.birthDate || null,
-    BloodGroup: Number(employeeData.bloodGroup) || 0,
-    MaritalStatus: Number(employeeData.maritalStatus) || 0,
-    Address: (employeeData.address || "").trim(),
-    Mobile: (employeeData.mobile || "").trim(),
-    AltMobile: (employeeData.altMobile || "").trim(),
-    Email: (employeeData.email || "").trim(),
-    IdProofType: Number(employeeData.idProofType) || 0,
-    IdNumber: (employeeData.idNumber || "").trim(),
-    IdExpiry: employeeData.idExpiry || null,
-    DepartmentID: Number(employeeData.departmentId) || 0,
-    Designation: Number(employeeData.designation) || 0,
-    Qualification: (employeeData.qualification || "").trim(),
-    Specialization: (employeeData.specialization || "").trim(),
-    LicenseNo: (employeeData.licenseNo || "").trim(),
-    LicenseExpiryDate: employeeData.licenseExpiryDate || null,
-    ExperienceYears: Number(employeeData.experienceYears) || 0,
-    UniversityName: (employeeData.universityName || "").trim(),
-    PFNo: (employeeData.pfNo || "").trim(),
-    ESINo: (employeeData.esiNo || "").trim(),
-    ShiftID: Number(employeeData.shiftId) || 0,
-    Status: employeeData.status !== undefined ? Number(employeeData.status) : 1 // default active
+    Gender: employeeData.gender ?? 0,
+    BirthDate: employeeData.birthDate?.trim() || "",
+    BloodGroup: employeeData.bloodGroup ?? 0,
+    MaritalStatus: employeeData.maritalStatus ?? 0,
+    Address: employeeData.address?.trim() || "",
+    Mobile: employeeData.mobile?.trim() || "",
+    AltMobile: employeeData.altMobile?.trim() || "",
+    Email: employeeData.email?.trim() || "",
+    IdProofType: employeeData.idProofType ?? 0,
+    IdNumber: employeeData.idNumber?.trim() || "",
+    IdExpiry: employeeData.idExpiry?.trim() || "",
+    DepartmentID: employeeData.departmentId ?? 0,
+    Designation: employeeData.designation ?? 0,
+    Qualification: employeeData.qualification?.trim() || "",
+    Specialization: employeeData.specialization?.trim() || "",
+    LicenseNo: employeeData.licenseNo?.trim() || "",
+    LicenseExpiryDate: employeeData.licenseExpiryDate?.trim() || "",
+    ExperienceYears: employeeData.experienceYears ?? 0,
+    UniversityName: employeeData.universityName?.trim() || "",
+    PFNo: employeeData.pfNo?.trim() || "",
+    ESINo: employeeData.esiNo?.trim() || "",
+    ShiftID: employeeData.shiftId ?? 0,
+    Status: employeeData.status ?? 1     // usually 1 = active
   };
 
   console.log("updateEmployee payload:", payload);
 
   try {
     const response = await API.post("/UpdateEmployee", payload);
+    console.log("UpdateEmployee response:", response.data);
+
     const result = response.data?.result;
 
-    // Validate backend response
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update employee");
     }
 
     return {
       success: true,
-      employeeId: result.IN_EMPLOYEE_ID || employeeData.employeeId,
+      employeeId: result.IN_EMPLOYEE_ID || finalEmployeeId,  // echo back or use input
       message: "Employee updated successfully"
     };
 
   } catch (error) {
     console.error("updateEmployee error:", error);
 
-    const errorMsg =
+    const errorMessage =
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
       "Failed to update employee";
 
-    const enhancedError = new Error(errorMsg);
-    enhancedError.status = error.response?.status || 500;
-    enhancedError.code = error.response?.status || 500;
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
 
-    throw enhancedError;
+    throw formattedError;
   }
 };
 

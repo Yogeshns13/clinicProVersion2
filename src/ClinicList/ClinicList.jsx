@@ -1,11 +1,11 @@
 // src/components/ClinicList.jsx
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getClinicList, addClinic, updateClinic } from '../api/api.js';
 import './ClinicList.css';
-import { FiSearch, FiPlus, FiX, FiUser, FiLogOut, FiMoon, FiSun, FiKey } from "react-icons/fi";
-import { FaUserCircle } from "react-icons/fa";
+import { FiSearch, FiPlus, FiX, FiUser } from "react-icons/fi";
 import ErrorHandler from "../hooks/Errorhandler.jsx";
 import { useNavigate } from 'react-router-dom';
+import Header from '../Header/Header.jsx';
 
 const ClinicList = () => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const ClinicList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClinic, setSelectedClinic] = useState(null);
 
-  // Form Modal State
+  // Form Modal
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [clinicIdForUpdate, setClinicIdForUpdate] = useState(null);
@@ -44,38 +44,8 @@ const ClinicList = () => {
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
 
-  // Profile & Dropdown & Dark Mode
-  const profileName = localStorage.getItem("profileName") || "Admin";
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isProfileDetailsOpen, setIsProfileDetailsOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('darkMode') === 'true';
-  });
-
-  const profileRef = useRef(null);
-
   useEffect(() => {
     fetchClinics();
-  }, []);
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark-mode');
-      localStorage.setItem('darkMode', 'true');
-    } else {
-      document.documentElement.classList.remove('dark-mode');
-      localStorage.setItem('darkMode', 'false');
-    }
-  }, [isDarkMode]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (profileRef.current && !profileRef.current.contains(event.target)) {
-        setIsProfileOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const fetchClinics = async () => {
@@ -86,11 +56,7 @@ const ClinicList = () => {
       setClinics(data);
       setAllClinics(data);
     } catch (err) {
-      if (err?.status >= 400 || err?.code >= 400) {
-        setError(err);
-      } else {
-        setError({ message: err.message || 'Failed to load clinics' });
-      }
+      setError(err?.status >= 400 ? err : { message: err.message || 'Failed to load clinics' });
       console.error('fetchClinics error:', err);
     } finally {
       setLoading(false);
@@ -99,6 +65,7 @@ const ClinicList = () => {
 
   const filteredClinics = useMemo(() => {
     if (!searchTerm.trim()) return allClinics;
+
     const term = searchTerm.toLowerCase();
     return allClinics.filter(clinic =>
       clinic.name?.toLowerCase().includes(term) ||
@@ -109,7 +76,9 @@ const ClinicList = () => {
   }, [allClinics, searchTerm]);
 
   const handleSearch = () => setSearchTerm(searchInput.trim());
-  const handleKeyPress = (e) => { if (e.key === 'Enter') handleSearch(); };
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') handleSearch();
+  };
 
   const openDetails = (clinic) => setSelectedClinic(clinic);
   const closeModal = () => setSelectedClinic(null);
@@ -118,10 +87,20 @@ const ClinicList = () => {
     setIsUpdateMode(false);
     setClinicIdForUpdate(null);
     setFormData({
-      clinicName: '', ownerName: '', mobile: '', altMobile: '', email: '',
-      address: '', location: '', clinicType: 'General Clinic',
-      gstNo: '', cgstPercentage: 9, sgstPercentage: 9,
-      fileNoPrefix: 'CL-', invoicePrefix: 'INV-', status: 'active'
+      clinicName: '',
+      ownerName: '',
+      mobile: '',
+      altMobile: '',
+      email: '',
+      address: '',
+      location: '',
+      clinicType: 'General Clinic',
+      gstNo: '',
+      cgstPercentage: 9,
+      sgstPercentage: 9,
+      fileNoPrefix: 'CL-',
+      invoicePrefix: 'INV-',
+      status: 'active'
     });
     setFormError('');
     setFormSuccess(false);
@@ -172,43 +151,28 @@ const ClinicList = () => {
     setFormLoading(true);
     setFormError('');
     setFormSuccess(false);
-    setError(null);
 
     try {
+      const payload = {
+        ClinicName: formData.clinicName.trim(),
+        OwnerName: formData.ownerName.trim(),
+        Mobile: formData.mobile.trim(),
+        AltMobile: formData.altMobile.trim() || "",
+        Email: formData.email.trim() || "",
+        Address: formData.address.trim(),
+        Location: formData.location.trim(),
+        ClinicType: formData.clinicType.trim(),
+        GstNo: formData.gstNo.trim(),
+        CgstPercentage: Number(formData.cgstPercentage) || 0,
+        SgstPercentage: Number(formData.sgstPercentage) || 0,
+        FileNoPrefix: formData.fileNoPrefix.trim() || "",
+        InvoicePrefix: formData.invoicePrefix.trim() || "",
+      };
+
       if (isUpdateMode) {
-        await updateClinic({
-          clinicId: clinicIdForUpdate,
-          ClinicName: formData.clinicName.trim(),
-          OwnerName: formData.ownerName.trim(),
-          Mobile: formData.mobile.trim(),
-          AltMobile: formData.altMobile.trim() || "",
-          Email: formData.email.trim() || "",
-          Address: formData.address.trim(),
-          Location: formData.location.trim(),
-          ClinicType: formData.clinicType.trim(),
-          GstNo: formData.gstNo.trim(),
-          CgstPercentage: Number(formData.cgstPercentage) || 0,
-          SgstPercentage: Number(formData.sgstPercentage) || 0,
-          FileNoPrefix: formData.fileNoPrefix.trim() || "",
-          InvoicePrefix: formData.invoicePrefix.trim() || "",
-          Status: formData.status === 'active' ? 1 : 2
-        });
+        await updateClinic({ clinicId: clinicIdForUpdate, ...payload, Status: formData.status === 'active' ? 1 : 2 });
       } else {
-        await addClinic({
-          clinicName: formData.clinicName.trim(),
-          ownerName: formData.ownerName.trim(),
-          mobile: formData.mobile.trim(),
-          altMobile: formData.altMobile.trim() || "",
-          email: formData.email.trim() || "",
-          address: formData.address.trim(),
-          location: formData.location.trim(),
-          clinicType: formData.clinicType.trim(),
-          gstNo: formData.gstNo.trim(),
-          cgstPercentage: Number(formData.cgstPercentage),
-          sgstPercentage: Number(formData.sgstPercentage),
-          fileNoPrefix: formData.fileNoPrefix.trim(),
-          invoicePrefix: formData.invoicePrefix.trim(),
-        });
+        await addClinic(payload);
       }
 
       setFormSuccess(true);
@@ -219,94 +183,25 @@ const ClinicList = () => {
 
     } catch (err) {
       console.error("Save failed:", err);
-      if (err?.status >= 400 || err?.code >= 400) {
-        setError(err);
-      } else {
-        setFormError(err.message || "Failed to save clinic.");
-      }
+      setFormError(err.message || "Failed to save clinic.");
     } finally {
       setFormLoading(false);
     }
   };
 
-  const handleHold = (clinic) => {
-    const toggled = {
-      ...clinic,
-      status: clinic.status === 'active' ? 'inactive' : 'active'
-    };
-    openUpdateForm(toggled);
+  const toggleClinicStatus = (clinic) => {
+    const newStatus = clinic.status === 'active' ? 'inactive' : 'active';
+    openUpdateForm({ ...clinic, status: newStatus });
   };
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(prev => !prev);
-    setIsProfileOpen(false);
-  };
-
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate('/login');
-  };
-
-  const openProfileDetails = () => {
-    setIsProfileDetailsOpen(true);
-    setIsProfileOpen(false);
-  };
-
-  if (error && (error?.status >= 400 || error?.code >= 400)) {
-    return <ErrorHandler error={error} />;
-  }
 
   if (loading) return <div className="clinic-loading">Loading clinics...</div>;
-  if (error) return <div className="clinic-error">Error: {error.message || error}</div>;
+  if (error) return <ErrorHandler error={error} />;
 
   return (
     <div className="clinic-list-wrapper">
       <ErrorHandler error={error} />
 
-      {/* Header with Profile Dropdown */}
-      <div className="clinic-list-header">
-        <h1>Clinic Management</h1>
-
-        <div className="header-profile-container" ref={profileRef}>
-          <div
-            className="header-profile"
-            onClick={() => setIsProfileOpen(prev => !prev)}
-            role="button"
-            tabIndex={0}
-          >
-<div className="user-icon-wrapper">
-  <FaUserCircle size={30} />
-</div>
-          </div>
-
-          {isProfileOpen && (
-            <div className="profile-dropdown">
-              <div 
-                className="profile-dropdown-item username-item"
-                onClick={openProfileDetails}
-              >
-                <FiUser size={18} />
-                <span>Profile</span>
-              </div>
-
-              <div className="profile-dropdown-item" onClick={toggleDarkMode}>
-                {isDarkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
-                <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-              </div>
-
-              <div className="profile-dropdown-item" onClick={handleLogout}>
-                <FiLogOut size={18} />
-                <span>Logout</span>
-              </div>
-
-              <div className="profile-dropdown-item">
-                <FiKey size={18} />
-                <span>Forget Password</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      <Header title="Clinic Management" />
 
       {/* Toolbar */}
       <div className="clinic-toolbar">
@@ -346,18 +241,16 @@ const ClinicList = () => {
           <tbody>
             {filteredClinics.length === 0 ? (
               <tr>
-                <td colSpan="7" className="clinic-no-data">
+                <td colSpan={7} className="clinic-no-data">
                   {searchTerm ? 'No clinics found.' : 'No clinics registered yet.'}
                 </td>
               </tr>
             ) : (
-              filteredClinics.map((clinic) => (
+              filteredClinics.map(clinic => (
                 <tr key={clinic.id}>
                   <td>
                     <div className="clinic-name-cell">
-                      <div className="clinic-avatar">
-                        {clinic.name.charAt(0).toUpperCase()}
-                      </div>
+                      <div className="clinic-avatar">{clinic.name.charAt(0).toUpperCase()}</div>
                       <div>
                         <div className="clinic-name">{clinic.name}</div>
                         <div className="clinic-type">{clinic.clinicType || 'General Clinic'}</div>
@@ -385,7 +278,7 @@ const ClinicList = () => {
         </table>
       </div>
 
-      {/* DETAILS MODAL */}
+      {/* Details Modal */}
       {selectedClinic && (
         <div className="clinic-modal-overlay" onClick={closeModal}>
           <div className="clinic-modal details-modal" onClick={e => e.stopPropagation()}>
@@ -399,67 +292,36 @@ const ClinicList = () => {
                   <p className="clinic-subtitle">{selectedClinic.clinicType || 'General Clinic'}</p>
                 </div>
               </div>
+
               <div className="status-badge-large-wrapper">
                 <span className={`status-badge large ${selectedClinic.status}`}>
                   {selectedClinic.status.toUpperCase()}
                 </span>
               </div>
+
               <button onClick={closeModal} className="clinic-modal-close">×</button>
             </div>
 
             <div className="details-modal-body">
               <table className="details-table">
                 <tbody>
-                  <tr>
-                    <td className="label">Owner Name</td>
-                    <td className="value">{selectedClinic.ownerName || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className="label">Mobile</td>
-                    <td className="value">{selectedClinic.mobile}</td>
-                  </tr>
-                  <tr>
-                    <td className="label">Alternate Mobile</td>
-                    <td className="value">{selectedClinic.altMobile || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className="label">Email</td>
-                    <td className="value">{selectedClinic.email || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className="label">Full Address</td>
-                    <td className="value">{selectedClinic.address || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className="label">Location</td>
-                    <td className="value">{selectedClinic.location || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className="label">GST No</td>
-                    <td className="value gst-value">{selectedClinic.gstNo || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className="label">File No Prefix</td>
-                    <td className="value">{selectedClinic.fileNoPrefix || 'CL-'}</td>
-                  </tr>
-                  <tr>
-                    <td className="label">Invoice Prefix</td>
-                    <td className="value">{selectedClinic.invoicePrefix || 'INV-'}</td>
-                  </tr>
-                  <tr>
-                    <td className="label">CGST %</td>
-                    <td className="value">{selectedClinic.cgstPercentage ?? 9}%</td>
-                  </tr>
-                  <tr>
-                    <td className="label">SGST %</td>
-                    <td className="value">{selectedClinic.sgstPercentage ?? 9}%</td>
-                  </tr>
+                  <tr><td className="label">Owner Name</td><td className="value">{selectedClinic.ownerName || '—'}</td></tr>
+                  <tr><td className="label">Mobile</td><td className="value">{selectedClinic.mobile}</td></tr>
+                  <tr><td className="label">Alternate Mobile</td><td className="value">{selectedClinic.altMobile || '—'}</td></tr>
+                  <tr><td className="label">Email</td><td className="value">{selectedClinic.email || '—'}</td></tr>
+                  <tr><td className="label">Full Address</td><td className="value">{selectedClinic.address || '—'}</td></tr>
+                  <tr><td className="label">Location</td><td className="value">{selectedClinic.location || '—'}</td></tr>
+                  <tr><td className="label">GST No</td><td className="value gst-value">{selectedClinic.gstNo || '—'}</td></tr>
+                  <tr><td className="label">File No Prefix</td><td className="value">{selectedClinic.fileNoPrefix || 'CL-'}</td></tr>
+                  <tr><td className="label">Invoice Prefix</td><td className="value">{selectedClinic.invoicePrefix || 'INV-'}</td></tr>
+                  <tr><td className="label">CGST %</td><td className="value">{selectedClinic.cgstPercentage ?? 9}%</td></tr>
+                  <tr><td className="label">SGST %</td><td className="value">{selectedClinic.sgstPercentage ?? 9}%</td></tr>
                 </tbody>
               </table>
             </div>
 
             <div className="clinic-modal-footer">
-              <button onClick={() => handleHold(selectedClinic)} className="btn-hold">
+              <button onClick={() => toggleClinicStatus(selectedClinic)} className="btn-hold">
                 {selectedClinic.status === 'active' ? 'Hold Clinic' : 'Activate Clinic'}
               </button>
               <button onClick={() => openUpdateForm(selectedClinic)} className="btn-update">
@@ -470,15 +332,13 @@ const ClinicList = () => {
         </div>
       )}
 
-      {/* Add / Update Form Modal */}
+      {/* Add/Update Form Modal */}
       {isFormOpen && (
         <div className="clinic-modal-overlay" onClick={closeForm}>
           <div className="clinic-modal form-modal" onClick={e => e.stopPropagation()}>
             <div className="clinic-modal-header">
               <h2>{isUpdateMode ? 'Update Clinic' : 'Add New Clinic'}</h2>
-              <button onClick={closeForm} className="clinic-modal-close">
-                <FiX />
-              </button>
+              <button onClick={closeForm} className="clinic-modal-close"><FiX /></button>
             </div>
 
             <form onSubmit={handleSubmit} className="clinic-modal-body">
@@ -490,6 +350,7 @@ const ClinicList = () => {
                   <label>Clinic Name <span className="required">*</span></label>
                   <input required name="clinicName" value={formData.clinicName} onChange={handleInputChange} />
                 </div>
+
                 <div className="form-group">
                   <label>Owner Name</label>
                   <input name="ownerName" value={formData.ownerName} onChange={handleInputChange} />
@@ -499,6 +360,7 @@ const ClinicList = () => {
                   <label>Mobile <span className="required">*</span></label>
                   <input required name="mobile" value={formData.mobile} onChange={handleInputChange} />
                 </div>
+
                 <div className="form-group">
                   <label>Alternate Mobile</label>
                   <input name="altMobile" value={formData.altMobile} onChange={handleInputChange} />
@@ -508,6 +370,7 @@ const ClinicList = () => {
                   <label>Email</label>
                   <input type="email" name="email" value={formData.email} onChange={handleInputChange} />
                 </div>
+
                 <div className="form-group">
                   <label>Clinic Type</label>
                   <input name="clinicType" value={formData.clinicType} onChange={handleInputChange} placeholder="e.g. Dental, Ayurvedic" />
@@ -515,8 +378,9 @@ const ClinicList = () => {
 
                 <div className="form-group">
                   <label>Full Address</label>
-                  <textarea name="address" rows="2" value={formData.address} onChange={handleInputChange} />
+                  <textarea name="address" rows={2} value={formData.address} onChange={handleInputChange} />
                 </div>
+
                 <div className="form-group">
                   <label>Location (Area/City)</label>
                   <input name="location" value={formData.location} onChange={handleInputChange} />
@@ -531,6 +395,7 @@ const ClinicList = () => {
                   <label>CGST %</label>
                   <input type="number" step="0.01" min="0" name="cgstPercentage" value={formData.cgstPercentage} onChange={handleInputChange} />
                 </div>
+
                 <div className="form-group">
                   <label>SGST %</label>
                   <input type="number" step="0.01" min="0" name="sgstPercentage" value={formData.sgstPercentage} onChange={handleInputChange} />
@@ -540,6 +405,7 @@ const ClinicList = () => {
                   <label>File No Prefix</label>
                   <input name="fileNoPrefix" value={formData.fileNoPrefix} onChange={handleInputChange} />
                 </div>
+
                 <div className="form-group">
                   <label>Invoice Prefix</label>
                   <input name="invoicePrefix" value={formData.invoicePrefix} onChange={handleInputChange} />
@@ -567,59 +433,8 @@ const ClinicList = () => {
         </div>
       )}
 
-      {/* Admin Profile Details Modal */}
-      {isProfileDetailsOpen && (
-        <div className="clinic-modal-overlay" onClick={() => setIsProfileDetailsOpen(false)}>
-          <div className="clinic-modal profile-details-modal" onClick={e => e.stopPropagation()}>
-            <div className="clinic-modal-header">
-              <h2>Admin Profile</h2>
-              <button 
-                onClick={() => setIsProfileDetailsOpen(false)} 
-                className="clinic-modal-close"
-              >
-                <FiX />
-              </button>
-            </div>
-
-            <div className="clinic-modal-body profile-details-body">
-              <div className="profile-avatar-large">
-                {profileName.charAt(0).toUpperCase()}
-              </div>
-              
-              <h3>{profileName}</h3>
-              <p className="profile-role">Administrator</p>
-
-              <div className="profile-info-grid">
-                <div className="profile-info-item">
-                  <label>Full Name</label>
-                  <p>{profileName}</p>
-                </div>
-                <div className="profile-info-item">
-                  <label>Email</label>
-                  <p>admin@example.com</p> {/* Replace with real data if available */}
-                </div>
-                <div className="profile-info-item">
-                  <label>Role</label>
-                  <p>Super Admin</p>
-                </div>
-                <div className="profile-info-item">
-                  <label>Last Login</label>
-                  <p>December 29, 2025</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="clinic-modal-footer">
-              <button 
-                className="btn-cancel" 
-                onClick={() => setIsProfileDetailsOpen(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Profile Details Modal - kept here as it was in original */}
+      {/* (you can move it later to Header or a separate Profile component if desired) */}
     </div>
   );
 };

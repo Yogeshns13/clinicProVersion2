@@ -1,0 +1,30 @@
+.clinic-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  text-align: left;
+  background: linear-gradient(135deg, var(--accent-start), #ffffff);
+  padding: 8px 17px;
+  border-radius: 8px;
+  color: #ffffff;
+}
+
+.clinic-list-header h1 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.35px;
+}
+
+.clinic-list-header p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.dark-mode .clinic-list-header {
+  background: linear-gradient(135deg, #1e293b, #334155);
+}
