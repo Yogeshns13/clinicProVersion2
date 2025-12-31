@@ -316,16 +316,16 @@ const BranchList = () => {
               onKeyPress={handleKeyPress}
               className="clinic-search-input"
             />
-            <button onClick={handleSearch} className="clinic-search-btn">
+            <button onClick={handleSearch} className="branch-search-btn">
               <FiSearch size={20} />
             </button>
           </div>
-        <div className="clinic-add-section">
-          <button onClick={openAddForm} className="clinic-add-btn">
+       
+          <button onClick={openAddForm} className="branch-add-btn">
             <FiPlus size={22} /> Add Branch
           </button>
         </div>
-      </div>
+      
 
 
 

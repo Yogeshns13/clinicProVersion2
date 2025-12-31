@@ -780,7 +780,7 @@ export const getEmployeeList = async (clinicId = 0, options = {}) => {
     throw authError;
   }
 
-  // Optional: stricter validation in non-production (same pattern as your branch function)
+  // Optional: stricter validation in non-production
   if (PRODUCTION_MODE !== true) {
     if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
       const error = new Error("Invalid Clinic ID");
@@ -789,7 +789,7 @@ export const getEmployeeList = async (clinicId = 0, options = {}) => {
     }
   }
 
-  // Determine final IDs based on environment (same logic as getBranchList)
+  // Determine final IDs based on environment
   const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
   const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
 
@@ -827,10 +827,31 @@ export const getEmployeeList = async (clinicId = 0, options = {}) => {
       name: emp.employee_name,
       firstName: emp.first_name,
       lastName: emp.last_name,
-      gender: emp.gender,
+
+      // ── New / expanded fields ───────────────────────────────────────────────
+      photoFileId: emp.photo_file_id ?? null,
+      gender: emp.gender,                   // usually 1/2 or similar
       genderDesc: emp.gender_desc || "Unknown",
+      birthDate: emp.birth_date || null,
+      bloodGroup: emp.blood_group || null,  // code or ID
+      maritalStatus: emp.marital_status || null,
+      address: emp.address || null,
       mobile: emp.mobile || null,
+      altMobile: emp.alt_mobile || null,
       email: emp.email || null,
+      idProofType: emp.id_proof_type || null,
+      idNumber: emp.id_number || null,
+      idExpiry: emp.id_expiry || null,
+      qualification: emp.qualification || null,
+      specialization: emp.specialization || null,
+      licenseNo: emp.license_no || null,
+      licenseExpiryDate: emp.license_expiry_date || null,
+      experienceYears: emp.experience_years || null,   // string or number
+      universityName: emp.university_name || null,
+      pfNo: emp.pf_no || null,
+      esiNo: emp.esi_no || null,
+
+      // ── Existing continued ─────────────────────────────────────────────────
       departmentId: emp.department_id,
       departmentName: emp.department_name,
       designation: emp.designation,

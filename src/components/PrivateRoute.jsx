@@ -9,6 +9,7 @@ const ROUTE_PERMISSIONS = {
   "/branch-list": ["admin", "doctor", "receptionist"],
   "/dept-list": ["admin", "doctor", "receptionist"],
   "/employee-list": ["admin", "doctor", "receptionist"],
+  "/update-employee/:id": ["admin", "doctor", "receptionist"],
   "/patients": ["admin", "doctor", "receptionist"],
   "/appointments": ["admin", "doctor", "receptionist"],
   "/prescriptions": ["admin", "doctor"],

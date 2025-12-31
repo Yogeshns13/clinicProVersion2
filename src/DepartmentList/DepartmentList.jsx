@@ -1,30 +1,52 @@
 // src/components/DepartmentList.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  FiSearch,
+  FiPlus,
+  FiX,
+  FiUser,
+  FiLogOut,
+  FiMoon,
+  FiSun,
+  FiKey,
+  FiHome,
+  FiLayers,
+} from 'react-icons/fi';
+import { FaUserCircle } from 'react-icons/fa';
+
 import {
   getDepartmentList,
   getClinicList,
   getBranchList,
   addDepartment,
-  updateDepartment
+  updateDepartment,
 } from '../api/api.js';
-import './DepartmentList.css';
-import { FiSearch, FiPlus, FiHome, FiLayers, FiX } from "react-icons/fi";
-import ErrorHandler from "../hooks/Errorhandler.jsx";
+import ErrorHandler from '../hooks/Errorhandler.jsx';
+import Header from '../Header/Header.jsx';
+import './DepartmentList.css'; // Keep for any custom overrides
 
 const DepartmentList = () => {
+  const navigate = useNavigate();
+
+  // Data & Filters
   const [departments, setDepartments] = useState([]);
   const [allDepartments, setAllDepartments] = useState([]);
   const [clinics, setClinics] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [modalBranches, setModalBranches] = useState([]);
+  const [branches, setBranches] = useState([]); // for filter
+  const [modalBranches, setModalBranches] = useState([]); // for form
 
-  const [selectedClinicId, setSelectedClinicId] = useState("all");
-  const [selectedBranchId, setSelectedBranchId] = useState("all");
+  const [selectedClinicId, setSelectedClinicId] = useState('all');
+  const [selectedBranchId, setSelectedBranchId] = useState('all');
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDept, setSelectedDept] = useState(null);
 
-  // Form Modal State
+  // Selected / Modal
+  const [selectedDept, setSelectedDept] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Form Modal
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [deptIdForUpdate, setDeptIdForUpdate] = useState(null);
@@ -33,53 +55,59 @@ const DepartmentList = () => {
     clinicId: '',
     branchId: '',
     departmentName: '',
-    profile: ''
+    profile: '',
   });
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
 
-  // Load Clinics
+  // Profile / Theme
+  const profileName = localStorage.getItem('profileName') || 'Admin';
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isProfileDetailsOpen, setIsProfileDetailsOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
+
+  const profileRef = useRef(null);
+
+  // ────────────────────────────────────────────────
+  // Data fetching
   useEffect(() => {
     const fetchClinics = async () => {
       try {
         const data = await getClinicList();
-        setClinics([{ id: "all", name: "All Clinics" }, ...data]);
+        setClinics(data);
       } catch (err) {
-        if (err?.status >= 400) setError(err);
+        console.error('Failed to load clinics:', err);
       }
     };
     fetchClinics();
   }, []);
 
-  // Load Branches for Filter
+  // Filter branches when clinic changes
   useEffect(() => {
     const fetchBranches = async () => {
-      if (selectedClinicId === "all") {
-        setBranches([{ id: "all", name: "All Branches" }]);
-        setSelectedBranchId("all");
+      if (selectedClinicId === 'all') {
+        setBranches([]);
+        setSelectedBranchId('all');
         return;
       }
       try {
         const data = await getBranchList(selectedClinicId);
-        setBranches([{ id: "all", name: "All Branches" }, ...data]);
-        setSelectedBranchId("all");
+        setBranches(data);
+        setSelectedBranchId('all');
       } catch (err) {
-        setBranches([{ id: "all", name: "All Branches" }]);
+        setBranches([]);
       }
     };
     fetchBranches();
   }, [selectedClinicId]);
 
-  // Load Branches for Modal
+  // Modal branches when form clinic changes
   useEffect(() => {
     const loadModalBranches = async () => {
       if (!formData.clinicId) {
         setModalBranches([]);
-        setFormData(prev => ({ ...prev, branchId: '' }));
         return;
       }
       try {
@@ -92,25 +120,22 @@ const DepartmentList = () => {
     loadModalBranches();
   }, [formData.clinicId]);
 
-  // Load Departments - FIXED: Removed extra { }
+  // Load departments
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const clinicId = selectedClinicId === "all" ? 0 : parseInt(selectedClinicId);
-        const branchId = selectedBranchId === "all" ? 0 : parseInt(selectedBranchId);
+        const clinicId = selectedClinicId === 'all' ? 0 : Number(selectedClinicId);
+        const branchId = selectedBranchId === 'all' ? 0 : Number(selectedBranchId);
 
         const data = await getDepartmentList(clinicId, branchId);
         setDepartments(data);
         setAllDepartments(data);
       } catch (err) {
-        if (err?.status >= 400) {
-          setError(err);
-        } else {
-          setError({ message: err.message || 'Failed to load departments' });
-        }
+        console.error('fetchDepartments error:', err);
+        setError(err?.status >= 400 || err?.code >= 400 ? err : { message: err.message || 'Failed to load departments' });
       } finally {
         setLoading(false);
       }
@@ -119,19 +144,48 @@ const DepartmentList = () => {
     fetchDepartments();
   }, [selectedClinicId, selectedBranchId]);
 
+  // Dark mode
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark-mode');
+      localStorage.setItem('darkMode', 'true');
+    } else {
+      document.documentElement.classList.remove('dark-mode');
+      localStorage.setItem('darkMode', 'false');
+    }
+  }, [isDarkMode]);
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // ────────────────────────────────────────────────
+  // Computed
   const filteredDepartments = useMemo(() => {
     if (!searchTerm.trim()) return allDepartments;
     const term = searchTerm.toLowerCase();
-    return allDepartments.filter(dept =>
-      dept.name?.toLowerCase().includes(term) ||
-      dept.profile?.toLowerCase().includes(term) ||
-      dept.clinicName?.toLowerCase().includes(term) ||
-      dept.branchName?.toLowerCase().includes(term)
+    return allDepartments.filter(
+      (dept) =>
+        dept.name?.toLowerCase().includes(term) ||
+        dept.profile?.toLowerCase().includes(term) ||
+        dept.clinicName?.toLowerCase().includes(term) ||
+        dept.branchName?.toLowerCase().includes(term)
     );
   }, [allDepartments, searchTerm]);
 
+  // ────────────────────────────────────────────────
+  // Handlers
   const handleSearch = () => setSearchTerm(searchInput.trim());
-  const handleKeyPress = (e) => { if (e.key === 'Enter') handleSearch(); };
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') handleSearch();
+  };
 
   const openDetails = (dept) => setSelectedDept(dept);
   const closeModal = () => setSelectedDept(null);
@@ -140,14 +194,13 @@ const DepartmentList = () => {
     setIsUpdateMode(false);
     setDeptIdForUpdate(null);
     setFormData({
-      clinicId: selectedClinicId === "all" ? '' : selectedClinicId,
+      clinicId: '',
       branchId: '',
       departmentName: '',
-      profile: ''
+      profile: '',
     });
     setFormError('');
     setFormSuccess(false);
-    setModalBranches([]);
     setIsFormOpen(true);
   };
 
@@ -158,7 +211,7 @@ const DepartmentList = () => {
       clinicId: dept.clinicId.toString(),
       branchId: dept.branchId ? dept.branchId.toString() : '',
       departmentName: dept.name || '',
-      profile: dept.profile || ''
+      profile: dept.profile || '',
     });
     setFormError('');
     setFormSuccess(false);
@@ -175,7 +228,7 @@ const DepartmentList = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -183,13 +236,12 @@ const DepartmentList = () => {
     setFormLoading(true);
     setFormError('');
     setFormSuccess(false);
-    setError(null);
 
     const payload = {
-      clinicId: parseInt(formData.clinicId),
-      branchId: formData.branchId ? parseInt(formData.branchId) : 0,
+      clinicId: Number(formData.clinicId),
+      branchId: formData.branchId ? Number(formData.branchId) : 0,
       departmentName: formData.departmentName.trim(),
-      profile: formData.profile.trim()
+      profile: formData.profile.trim(),
     };
 
     try {
@@ -198,7 +250,7 @@ const DepartmentList = () => {
           departmentId: deptIdForUpdate,
           clinicId: payload.clinicId,
           DepartmentName: payload.departmentName,
-          Profile: payload.profile
+          Profile: payload.profile,
         });
       } else {
         await addDepartment(payload);
@@ -207,89 +259,111 @@ const DepartmentList = () => {
       setFormSuccess(true);
       setTimeout(() => {
         closeForm();
-        const cId = selectedClinicId === "all" ? 0 : parseInt(selectedClinicId);
-        const bId = selectedBranchId === "all" ? 0 : parseInt(selectedBranchId);
-        getDepartmentList(cId, bId).then(data => {
+        const cId = selectedClinicId === 'all' ? 0 : Number(selectedClinicId);
+        const bId = selectedBranchId === 'all' ? 0 : Number(selectedBranchId);
+        getDepartmentList(cId, bId).then((data) => {
           setDepartments(data);
           setAllDepartments(data);
         });
       }, 1500);
     } catch (err) {
-      console.error("Save error:", err);
-      if (err?.status >= 400) {
-        setError(err);
-      } else {
-        setFormError(err.message || 'Failed to save department');
-      }
+      console.error('Save department failed:', err);
+      setFormError(err.message || 'Failed to save department.');
     } finally {
       setFormLoading(false);
     }
   };
 
-  if (error && error?.status >= 400) {
+  const toggleDarkMode = () => {
+    setIsDarkMode((prev) => !prev);
+    setIsProfileOpen(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/login');
+  };
+
+  const openProfileDetails = () => {
+    setIsProfileDetailsOpen(true);
+    setIsProfileOpen(false);
+  };
+
+  // ────────────────────────────────────────────────
+  // Early returns
+  if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className="dept-loading">Loading departments...</div>;
-  if (error) return <div className="dept-error">Error: {error.message}</div>;
+  if (loading) return <div className="clinic-loading">Loading departments...</div>;
+  if (error) return <div className="clinic-error">Error: {error.message || error}</div>;
 
+  // ────────────────────────────────────────────────
   return (
-    <div className="dept-list-wrapper">
+    <div className="clinic-list-wrapper">
       <ErrorHandler error={error} />
 
-      <div className="dept-list-header">
-        <h1>Department Management</h1>
-        <p>Manage departments across clinics and branches</p>
-      </div>
+      <Header title="Department Management" />
 
-      <div className="dept-filters">
-        <div className="dept-filter-item">
-          <div className="filter-wrapper">
-            <FiHome className="filter-icon" size={20} />
-            <select value={selectedClinicId} onChange={(e) => setSelectedClinicId(e.target.value)} className="dept-select">
-              {clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
+      {/* Toolbar */}
+      <div className="clinic-toolbar">
+        <div className="clinic-select-wrapper">
+          <FiHome className="clinic-select-icon" size={20} />
+          <select
+            value={selectedClinicId}
+            onChange={(e) => setSelectedClinicId(e.target.value)}
+            className="clinic-select"
+          >
+            <option value="all">All Clinics</option>
+            {clinics.map((clinic) => (
+              <option key={clinic.id} value={clinic.id}>
+                {clinic.name}
+              </option>
+            ))}
+          </select>
         </div>
-        <div className="dept-filter-item">
-          <div className="filter-wrapper">
-            <FiLayers className="filter-icon" size={20} />
-            <select
-              value={selectedBranchId}
-              onChange={(e) => setSelectedBranchId(e.target.value)}
-              className="dept-select"
-              disabled={selectedClinicId === "all"}
-            >
-              {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-            </select>
-          </div>
-        </div>
-      </div>
 
-      <div className="dept-search-section">
-        <div className="dept-search-container">
+        <div className="clinic-select-wrapper">
+          <FiLayers className="clinic-select-icon" size={20} />
+          <select
+            value={selectedBranchId}
+            onChange={(e) => setSelectedBranchId(e.target.value)}
+            className="clinic-select"
+            disabled={selectedClinicId === 'all'}
+          >
+            <option value="all">All Branches</option>
+            {branches.map((branch) => (
+              <option key={branch.id} value={branch.id}>
+                {branch.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="clinic-search-container">
           <input
             type="text"
             placeholder="Search department, profile, clinic, branch..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="dept-search-input"
+            className="clinic-search-input"
           />
-          <button onClick={handleSearch} className="dept-search-btn">
+          <button onClick={handleSearch} className="dep-search-btn">
             <FiSearch size={20} />
+          </button>
+        </div>
+
+        <div className="clinic-add-section">
+          <button onClick={openAddForm} className="dep-add-btn">
+            <FiPlus size={22} /> Add Dep
           </button>
         </div>
       </div>
 
-      <div className="dept-add-section">
-        <button onClick={openAddForm} className="dept-add-btn-full">
-          <FiPlus size={22} /> Add Department
-        </button>
-      </div>
-
-      <div className="dept-table-container">
-        <table className="dept-table">
+      {/* Table */}
+      <div className="clinic-table-container">
+        <table className="clinic-table">
           <thead>
             <tr>
               <th>Department</th>
@@ -302,7 +376,7 @@ const DepartmentList = () => {
           <tbody>
             {filteredDepartments.length === 0 ? (
               <tr>
-                <td colSpan="5" className="dept-no-data">
+                <td colSpan={5} className="clinic-no-data">
                   {searchTerm ? 'No departments found.' : 'No departments registered yet.'}
                 </td>
               </tr>
@@ -310,20 +384,18 @@ const DepartmentList = () => {
               filteredDepartments.map((dept) => (
                 <tr key={dept.id}>
                   <td>
-                    <div className="dept-name-cell">
-                      <div className="dept-avatar">
-                        {dept.name.charAt(0).toUpperCase()}
-                      </div>
+                    <div className="clinic-name-cell">
+                      <div className="clinic-avatar">{dept.name.charAt(0).toUpperCase()}</div>
                       <div>
-                        <div className="dept-name">{dept.name}</div>
+                        <div className="clinic-name">{dept.name}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="dept-profile">{dept.profile || '—'}</td>
+                  <td>{dept.profile || '—'}</td>
                   <td>{dept.clinicName || '—'}</td>
                   <td>{dept.branchName || '—'}</td>
                   <td>
-                    <button onClick={() => openDetails(dept)} className="dept-details-btn">
+                    <button onClick={() => openDetails(dept)} className="clinic-details-btn">
                       View Details
                     </button>
                   </td>
@@ -336,23 +408,55 @@ const DepartmentList = () => {
 
       {/* Details Modal */}
       {selectedDept && (
-        <div className="dept-modal-overlay" onClick={closeModal}>
-          <div className="dept-modal" onClick={e => e.stopPropagation()}>
-            <div className="dept-modal-header">
-              <h2>{selectedDept.name}</h2>
-              <button onClick={closeModal} className="dept-modal-close">×</button>
-            </div>
-            <div className="dept-modal-body">
-              <div className="dept-info-grid">
-                <div className="info-item"><label>Department ID</label><p>#{selectedDept.id}</p></div>
-                <div className="info-item"><label>Clinic</label><p>{selectedDept.clinicName}</p></div>
-                <div className="info-item"><label>Branch</label><p>{selectedDept.branchName || '—'}</p></div>
-                <div className="info-item"><label>Profile / Purpose</label><p>{selectedDept.profile || '—'}</p></div>
-                <div className="info-item"><label>Created</label><p>{new Date(selectedDept.dateCreated).toLocaleDateString()}</p></div>
-                <div className="info-item"><label>Last Modified</label><p>{new Date(selectedDept.dateModified).toLocaleDateString()}</p></div>
+        <div className="clinic-modal-overlay" onClick={closeModal}>
+          <div className="clinic-modal details-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="details-modal-header">
+              <div className="details-header-content">
+                <div className="clinic-avatar-large">{selectedDept.name.charAt(0).toUpperCase()}</div>
+                <div>
+                  <h2>{selectedDept.name}</h2>
+                 
+                </div>
               </div>
+              <button onClick={closeModal} className="clinic-modal-close">×</button>
             </div>
-            <div className="dept-modal-footer">
+
+            <div className="details-modal-body">
+              <table className="details-table">
+                <tbody>
+                  <tr>
+                    <td className="label">Department ID</td>
+                    <td className="value">#{selectedDept.id}</td>
+                  </tr>
+                  <tr>
+                    <td className="label">Clinic</td>
+                    <td className="value">{selectedDept.clinicName || '—'}</td>
+                  </tr>
+                  <tr>
+                    <td className="label">Branch</td>
+                    <td className="value">{selectedDept.branchName || '—'}</td>
+                  </tr>
+                  <tr>
+                    <td className="label">Profile / Purpose</td>
+                    <td className="value">{selectedDept.profile || '—'}</td>
+                  </tr>
+                  <tr>
+                    <td className="label">Created</td>
+                    <td className="value">
+                      {selectedDept.dateCreated ? new Date(selectedDept.dateCreated).toLocaleDateString() : '—'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="label">Last Modified</td>
+                    <td className="value">
+                      {selectedDept.dateModified ? new Date(selectedDept.dateModified).toLocaleDateString() : '—'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="clinic-modal-footer">
               <button onClick={() => openUpdateForm(selectedDept)} className="btn-update">
                 Update Department
               </button>
@@ -363,60 +467,72 @@ const DepartmentList = () => {
 
       {/* Add / Update Form Modal */}
       {isFormOpen && (
-        <div className="dept-modal-overlay" onClick={closeForm}>
-          <div className="dept-modal form-modal" onClick={e => e.stopPropagation()}>
-            <div className="dept-modal-header">
+        <div className="clinic-modal-overlay" onClick={closeForm}>
+          <div className="clinic-modal form-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="clinic-modal-header">
               <h2>{isUpdateMode ? 'Update Department' : 'Add New Department'}</h2>
-              <button onClick={closeForm} className="dept-modal-close">
-                <FiX size={28} />
+              <button onClick={closeForm} className="clinic-modal-close">
+                <FiX />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="dept-modal-body">
+            <form onSubmit={handleSubmit} className="clinic-modal-body">
               {formError && <div className="form-error">{formError}</div>}
-              {formSuccess && <div className="form-success">Department {isUpdateMode ? 'updated' : 'added'} successfully!</div>}
+              {formSuccess && (
+                <div className="form-success">
+                  Department {isUpdateMode ? 'updated' : 'added'} successfully!
+                </div>
+              )}
 
               <div className="form-grid">
-                <div className="form-group">
-                  <label>Clinic <span className="required">*</span></label>
+                <div className="form-group full-width">
+                  <label>
+                    Clinic <span className="required">*</span>
+                  </label>
                   <select
                     name="clinicId"
                     value={formData.clinicId}
                     onChange={handleInputChange}
                     required
-                    className="dept-select-input"
                   >
                     <option value="">Select Clinic</option>
-                    {clinics.filter(c => c.id !== "all").map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
+                    {clinics.map((clinic) => (
+                      <option key={clinic.id} value={clinic.id}>
+                        {clinic.name}
+                      </option>
                     ))}
                   </select>
                 </div>
 
-                <div className="form-group">
-                  <label>Branch <span style={{color: '#94a3b8'}}>(Optional)</span></label>
+                <div className="form-group full-width">
+                  <label>
+                    Branch <span style={{ color: '#94a3b8' }}>(Optional)</span>
+                  </label>
                   <select
                     name="branchId"
                     value={formData.branchId}
                     onChange={handleInputChange}
-                    className="dept-select-input"
                     disabled={!formData.clinicId}
                   >
                     <option value="">No Branch (Main)</option>
-                    {modalBranches.map(b => (
-                      <option key={b.id} value={b.id}>{b.name}</option>
+                    {modalBranches.map((branch) => (
+                      <option key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label>Department Name <span className="required">*</span></label>
+                  <label>
+                    Department Name <span className="required">*</span>
+                  </label>
                   <input
                     required
                     name="departmentName"
                     value={formData.departmentName}
                     onChange={handleInputChange}
-                    placeholder="e.g. Cardiology"
+                    placeholder="e.g. Cardiology, OPD"
                   />
                 </div>
 
@@ -424,7 +540,7 @@ const DepartmentList = () => {
                   <label>Profile / Purpose (Optional)</label>
                   <textarea
                     name="profile"
-                    rows="3"
+                    rows={3}
                     value={formData.profile}
                     onChange={handleInputChange}
                     placeholder="Describe department services..."
@@ -432,13 +548,61 @@ const DepartmentList = () => {
                 </div>
               </div>
 
-              <div className="dept-modal-footer">
-                <button type="button" onClick={closeForm} className="btn-cancel">Cancel</button>
+              <div className="clinic-modal-footer">
+                <button type="button" onClick={closeForm} className="btn-cancel">
+                  Cancel
+                </button>
                 <button type="submit" disabled={formLoading} className="btn-submit">
-                  {formLoading ? 'Saving...' : (isUpdateMode ? 'Update' : 'Add')} Department
+                  {formLoading ? 'Saving...' : isUpdateMode ? 'Update Department' : 'Add Department'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Details Modal */}
+      {isProfileDetailsOpen && (
+        <div className="clinic-modal-overlay" onClick={() => setIsProfileDetailsOpen(false)}>
+          <div className="clinic-modal profile-details-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="clinic-modal-header">
+              <h2>Admin Profile</h2>
+              <button onClick={() => setIsProfileDetailsOpen(false)} className="clinic-modal-close">
+                <FiX />
+              </button>
+            </div>
+
+            <div className="clinic-modal-body profile-details-body">
+              <div className="profile-avatar-large">{profileName.charAt(0).toUpperCase()}</div>
+
+              <h3>{profileName}</h3>
+              <p className="profile-role">Administrator</p>
+
+              <div className="profile-info-grid">
+                <div className="profile-info-item">
+                  <label>Full Name</label>
+                  <p>{profileName}</p>
+                </div>
+                <div className="profile-info-item">
+                  <label>Email</label>
+                  <p>admin@example.com</p>
+                </div>
+                <div className="profile-info-item">
+                  <label>Role</label>
+                  <p>Super Admin</p>
+                </div>
+                <div className="profile-info-item">
+                  <label>Last Login</label>
+                  <p>December 30, 2025</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="clinic-modal-footer">
+              <button className="btn-cancel" onClick={() => setIsProfileDetailsOpen(false)}>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

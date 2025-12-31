@@ -22,6 +22,7 @@ import ClinicList from "./ClinicList/ClinicList.jsx";
 import BranchList from "./BranchList/BranchList.jsx";
 import DepartmentList from "./DepartmentList/DepartmentList.jsx";
 import EmployeeList from "./EmployeeList/EmployeeList.jsx";
+import UpdateEmployee from "./EmployeeList/UpdateEmployee.jsx"
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
           <Route path="/branch-list" element={<BranchList />} />
           <Route path="/dept-list" element={<DepartmentList />} />
           <Route path="/employee-list" element={<EmployeeList />} />
+          <Route path="/update-employee/:id" element={<UpdateEmployee />} />
           <Route path="/patients" element={<Patients />} />
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/prescriptions" element={<Prescriptions />} />
