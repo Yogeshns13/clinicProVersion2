@@ -1,30 +1,27 @@
 // src/components/BranchList.jsx
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FiSearch,
   FiPlus,
   FiX,
-  FiUser,
-  FiLogOut,
-  FiMoon,
-  FiSun,
-  FiKey,
   FiHome,
 } from 'react-icons/fi';
-import { FaUserCircle } from 'react-icons/fa';
-
-import { getBranchList, getClinicList, addBranch, updateBranch } from '../api/api.js';
+import { 
+  getBranchList, 
+  getClinicList, 
+  addBranch 
+} from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-
-
 import './BranchList.css';
 
 // ────────────────────────────────────────────────
+// CONSTANTS
+// ────────────────────────────────────────────────
 const BRANCH_TYPES = [
-  { id: 1, label: 'Main Branch' },
-  { id: 2, label: 'Satellite Branch' },
+  { id: 1, label: 'Main' },
+  { id: 2, label: 'Satellite' },
   { id: 3, label: 'Clinic' },
   { id: 4, label: 'Hospital' },
   { id: 5, label: 'Diagnostic Center' },
@@ -48,31 +45,18 @@ const BranchList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Form Modal
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isUpdateMode, setIsUpdateMode] = useState(false);
-  const [branchIdForUpdate, setBranchIdForUpdate] = useState(null);
-
+  // Add Form Modal
+  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [formData, setFormData] = useState({
     clinicId: '',
     branchName: '',
     address: '',
     location: '',
     branchType: 1,
-    status: 'active',
   });
-
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
-
-  // UI / Profile / Theme
-  const profileName = localStorage.getItem('profileName') || 'Admin';
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isProfileDetailsOpen, setIsProfileDetailsOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
-
-  const profileRef = useRef(null);
 
   // ────────────────────────────────────────────────
   // Data fetching
@@ -93,50 +77,30 @@ const BranchList = () => {
       try {
         setLoading(true);
         setError(null);
-
+        
         const clinicId = selectedClinicId === 'all' ? 0 : Number(selectedClinicId) || 0;
         const data = await getBranchList(clinicId);
-
+        
         setBranches(data);
         setAllBranches(data);
       } catch (err) {
         console.error('fetchBranches error:', err);
-        setError(err?.status >= 400 || err?.code >= 400 ? err : { message: err.message || 'Failed to load branches' });
+        setError(
+          err?.status >= 400 || err?.code >= 400
+            ? err
+            : { message: err.message || 'Failed to load branches' }
+        );
       } finally {
         setLoading(false);
       }
     };
-
     fetchBranches();
   }, [selectedClinicId]);
-
-  // Dark mode
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark-mode');
-      localStorage.setItem('darkMode', 'true');
-    } else {
-      document.documentElement.classList.remove('dark-mode');
-      localStorage.setItem('darkMode', 'false');
-    }
-  }, [isDarkMode]);
-
-  // Close profile dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (profileRef.current && !profileRef.current.contains(e.target)) {
-        setIsProfileOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   // ────────────────────────────────────────────────
   // Computed values
   const filteredBranches = useMemo(() => {
     if (!searchTerm.trim()) return allBranches;
-
     const term = searchTerm.toLowerCase();
     return allBranches.filter(
       (branch) =>
@@ -149,52 +113,44 @@ const BranchList = () => {
   }, [allBranches, searchTerm]);
 
   // ────────────────────────────────────────────────
+  // Helper functions
+  const getBranchTypeLabel = (branchTypeId) => {
+    return BRANCH_TYPES.find((t) => t.id === branchTypeId)?.label || 'Main';
+  };
+
+  const getStatusClass = (status) => {
+    if (status === 'active') return 'active';
+    if (status === 'inactive') return 'inactive';
+    return 'inactive';
+  };
+
+  // ────────────────────────────────────────────────
   // Handlers
   const handleSearch = () => setSearchTerm(searchInput.trim());
+  
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') handleSearch();
   };
 
   const openDetails = (branch) => setSelectedBranch(branch);
+  
   const closeModal = () => setSelectedBranch(null);
 
   const openAddForm = () => {
-    setIsUpdateMode(false);
-    setBranchIdForUpdate(null);
     setFormData({
       clinicId: '',
       branchName: '',
       address: '',
       location: '',
       branchType: 1,
-      status: 'active',
     });
     setFormError('');
     setFormSuccess(false);
-    setIsFormOpen(true);
+    setIsAddFormOpen(true);
   };
 
-  const openUpdateForm = (branch) => {
-    setIsUpdateMode(true);
-    setBranchIdForUpdate(branch.id);
-
-    setFormData({
-      clinicId: branch.clinicId || '',
-      branchName: branch.name || '',
-      address: branch.address || '',
-      location: branch.location || '',
-      branchType: branch.branchType || 1,
-      status: branch.status === 'active' ? 'active' : 'inactive',
-    });
-
-    setFormError('');
-    setFormSuccess(false);
-    setSelectedBranch(null);
-    setIsFormOpen(true);
-  };
-
-  const closeForm = () => {
-    setIsFormOpen(false);
+  const closeAddForm = () => {
+    setIsAddFormOpen(false);
     setFormLoading(false);
     setFormError('');
     setFormSuccess(false);
@@ -213,29 +169,17 @@ const BranchList = () => {
     setError(null);
 
     try {
-      if (isUpdateMode) {
-        await updateBranch({
-          branchId: branchIdForUpdate,
-          clinicId: Number(formData.clinicId),
-          BranchName: formData.branchName.trim(),
-          Address: formData.address.trim(),
-          Location: formData.location.trim(),
-          BranchType: Number(formData.branchType),
-          Status: formData.status === 'active' ? 1 : 2,
-        });
-      } else {
-        await addBranch({
-          clinicId: Number(formData.clinicId),
-          branchName: formData.branchName.trim(),
-          address: formData.address.trim(),
-          location: formData.location.trim(),
-          branchType: Number(formData.branchType),
-        });
-      }
+      await addBranch({
+        clinicId: Number(formData.clinicId),
+        branchName: formData.branchName.trim(),
+        address: formData.address.trim(),
+        location: formData.location.trim(),
+        branchType: Number(formData.branchType),
+      });
 
       setFormSuccess(true);
       setTimeout(() => {
-        closeForm();
+        closeAddForm();
         const clinicId = selectedClinicId === 'all' ? 0 : Number(selectedClinicId) || 0;
         getBranchList(clinicId).then((data) => {
           setBranches(data);
@@ -243,34 +187,15 @@ const BranchList = () => {
         });
       }, 1500);
     } catch (err) {
-      console.error('Save branch failed:', err);
-      setFormError(err.message || 'Failed to save branch.');
+      console.error('Add branch failed:', err);
+      setFormError(err.message || 'Failed to add branch.');
     } finally {
       setFormLoading(false);
     }
   };
 
-  const handleHold = (branch) => {
-    const toggled = {
-      ...branch,
-      status: branch.status === 'active' ? 'inactive' : 'active',
-    };
-    openUpdateForm(toggled);
-  };
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prev) => !prev);
-    setIsProfileOpen(false);
-  };
-
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate('/login');
-  };
-
-  const openProfileDetails = () => {
-    setIsProfileDetailsOpen(true);
-    setIsProfileOpen(false);
+  const handleUpdateClick = (branch) => {
+    navigate(`/update-branch/${branch.id}`);
   };
 
   // ────────────────────────────────────────────────
@@ -280,19 +205,18 @@ const BranchList = () => {
   }
 
   if (loading) return <div className="clinic-loading">Loading branches...</div>;
+
   if (error) return <div className="clinic-error">Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
   return (
     <div className="clinic-list-wrapper">
       <ErrorHandler error={error} />
-
       <Header title="Branch Management" />
-
 
       {/* Toolbar */}
       <div className="clinic-toolbar">
-        <div className="clinic-select-wrapper" >
+        <div className="clinic-select-wrapper">
           <FiHome className="clinic-select-icon" size={20} />
           <select
             value={selectedClinicId}
@@ -307,29 +231,27 @@ const BranchList = () => {
             ))}
           </select>
         </div>
+
         <div className="clinic-search-container">
-            <input
-              type="text"
-              placeholder="Search by branch name, clinic, location..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="clinic-search-input"
-            />
-            <button onClick={handleSearch} className="branch-search-btn">
-              <FiSearch size={20} />
-            </button>
-          </div>
-       
-          <button onClick={openAddForm} className="branch-add-btn">
+          <input
+            type="text"
+            placeholder="Search by branch name, clinic, location..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className="clinic-search-input"
+          />
+          <button onClick={handleSearch} className="clinic-search-btn">
+            <FiSearch size={20} />
+          </button>
+        </div>
+
+        <div className="clinic-add-section">
+          <button onClick={openAddForm} className="clinic-add-btn">
             <FiPlus size={22} /> Add Branch
           </button>
         </div>
-      
-
-
-
-
+      </div>
 
       {/* Table */}
       <div className="clinic-table-container">
@@ -356,11 +278,13 @@ const BranchList = () => {
                 <tr key={branch.id}>
                   <td>
                     <div className="clinic-name-cell">
-                      <div className="clinic-avatar">{branch.name.charAt(0).toUpperCase()}</div>
+                      <div className="clinic-avatar">
+                        {branch.name?.charAt(0).toUpperCase() || 'B'}
+                      </div>
                       <div>
                         <div className="clinic-name">{branch.name}</div>
                         <div className="clinic-type">
-                          {BRANCH_TYPES.find((t) => t.id === branch.branchType)?.label || 'Main Branch'}
+                          {getBranchTypeLabel(branch.branchType)}
                         </div>
                       </div>
                     </div>
@@ -368,12 +292,12 @@ const BranchList = () => {
                   <td>{branch.clinicName || '—'}</td>
                   <td>
                     <span className="branch-type-badge">
-                      {BRANCH_TYPES.find((t) => t.id === branch.branchType)?.label || 'Main'}
+                      {getBranchTypeLabel(branch.branchType)}
                     </span>
                   </td>
                   <td>{branch.location || branch.address?.split(',')[0] || '—'}</td>
                   <td>
-                    <span className={`status-badge ${branch.status}`}>
+                    <span className={`status-badge ${getStatusClass(branch.status)}`}>
                       {branch.status.toUpperCase()}
                     </span>
                   </td>
@@ -395,22 +319,24 @@ const BranchList = () => {
           <div className="clinic-modal details-modal" onClick={(e) => e.stopPropagation()}>
             <div className="details-modal-header">
               <div className="details-header-content">
-                <div className="clinic-avatar-large">{selectedBranch.name.charAt(0).toUpperCase()}</div>
+                <div className="clinic-avatar-large">
+                  {selectedBranch.name?.charAt(0).toUpperCase() || 'B'}
+                </div>
                 <div>
                   <h2>{selectedBranch.name}</h2>
                   <p className="clinic-subtitle">
-                    {BRANCH_TYPES.find((t) => t.id === selectedBranch.branchType)?.label || 'Main Branch'}
+                    {getBranchTypeLabel(selectedBranch.branchType)}
                   </p>
                 </div>
               </div>
-
               <div className="status-badge-large-wrapper">
-                <span className={`status-badge large ${selectedBranch.status}`}>
+                <span className={`status-badge large ${getStatusClass(selectedBranch.status)}`}>
                   {selectedBranch.status.toUpperCase()}
                 </span>
               </div>
-
-              <button onClick={closeModal} className="clinic-modal-close">×</button>
+              <button onClick={closeModal} className="clinic-modal-close">
+                ×
+              </button>
             </div>
 
             <div className="details-modal-body">
@@ -423,7 +349,7 @@ const BranchList = () => {
                   <tr>
                     <td className="label">Branch Type</td>
                     <td className="value">
-                      {BRANCH_TYPES.find((t) => t.id === selectedBranch.branchType)?.label || 'Main'}
+                      {getBranchTypeLabel(selectedBranch.branchType)}
                     </td>
                   </tr>
                   <tr>
@@ -434,19 +360,12 @@ const BranchList = () => {
                     <td className="label">Location</td>
                     <td className="value">{selectedBranch.location || '—'}</td>
                   </tr>
-                  <tr>
-                    <td className="label">Branch ID</td>
-                    <td className="value">#{selectedBranch.id}</td>
-                  </tr>
                 </tbody>
               </table>
             </div>
 
             <div className="clinic-modal-footer">
-              <button onClick={() => handleHold(selectedBranch)} className="btn-hold">
-                {selectedBranch.status === 'active' ? 'Hold Branch' : 'Activate Branch'}
-              </button>
-              <button onClick={() => openUpdateForm(selectedBranch)} className="btn-update">
+              <button onClick={() => handleUpdateClick(selectedBranch)} className="btn-update">
                 Update Branch
               </button>
             </div>
@@ -454,34 +373,33 @@ const BranchList = () => {
         </div>
       )}
 
-      {/* ──────────────── Add/Update Form Modal ──────────────── */}
-      {isFormOpen && (
-        <div className="clinic-modal-overlay" onClick={closeForm}>
-          <div className="clinic-modal form-modal" onClick={(e) => e.stopPropagation()}>
+      {/* ──────────────── Add Form Modal ──────────────── */}
+      {isAddFormOpen && (
+        <div className="clinic-modal-overlay" onClick={closeAddForm}>
+          <div className="clinic-modal form-modal employee-form-modal" onClick={(e) => e.stopPropagation()}>
             <div className="clinic-modal-header">
-              <h2>{isUpdateMode ? 'Update Branch' : 'Add New Branch'}</h2>
-              <button onClick={closeForm} className="clinic-modal-close">
+              <h2>Add New Branch</h2>
+              <button onClick={closeAddForm} className="clinic-modal-close">
                 <FiX />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="clinic-modal-body">
               {formError && <div className="form-error">{formError}</div>}
-              {formSuccess && (
-                <div className="form-success">Branch {isUpdateMode ? 'updated' : 'added'} successfully!</div>
-              )}
+              {formSuccess && <div className="form-success">Branch added successfully!</div>}
 
               <div className="form-grid">
+                <h3 className="form-section-title">Branch Information</h3>
+
                 <div className="form-group full-width">
                   <label>
                     Clinic <span className="required">*</span>
                   </label>
                   <select
+                    required
                     name="clinicId"
                     value={formData.clinicId}
                     onChange={handleInputChange}
-                    required
-                    disabled={isUpdateMode}
                   >
                     <option value="">Select Clinic</option>
                     {clinics.map((clinic) => (
@@ -509,12 +427,11 @@ const BranchList = () => {
                     Branch Type <span className="required">*</span>
                   </label>
                   <select
+                    required
                     name="branchType"
                     value={formData.branchType}
                     onChange={handleInputChange}
-                    required
                   >
-                    <option value="">Select Type</option>
                     {BRANCH_TYPES.map((type) => (
                       <option key={type.id} value={type.id}>
                         {type.label}
@@ -525,80 +442,33 @@ const BranchList = () => {
 
                 <div className="form-group full-width">
                   <label>Full Address</label>
-                  <textarea name="address" rows={2} value={formData.address} onChange={handleInputChange} />
+                  <textarea
+                    name="address"
+                    rows={2}
+                    value={formData.address}
+                    onChange={handleInputChange}
+                  />
                 </div>
 
                 <div className="form-group full-width">
                   <label>Location (Area/City)</label>
-                  <input name="location" value={formData.location} onChange={handleInputChange} />
+                  <input
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                  />
                 </div>
-
-                {isUpdateMode && (
-                  <div className="form-group full-width">
-                    <label>Status</label>
-                    <select name="status" value={formData.status} onChange={handleInputChange}>
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                  </div>
-                )}
               </div>
 
               <div className="clinic-modal-footer">
-                <button type="button" onClick={closeForm} className="btn-cancel">
+                <button type="button" onClick={closeAddForm} className="btn-cancel">
                   Cancel
                 </button>
                 <button type="submit" disabled={formLoading} className="btn-submit">
-                  {formLoading ? 'Saving...' : isUpdateMode ? 'Update Branch' : 'Add Branch'}
+                  {formLoading ? 'Adding...' : 'Add Branch'}
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* ──────────────── Profile Details Modal ──────────────── */}
-      {isProfileDetailsOpen && (
-        <div className="clinic-modal-overlay" onClick={() => setIsProfileDetailsOpen(false)}>
-          <div className="clinic-modal profile-details-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="clinic-modal-header">
-              <h2>Admin Profile</h2>
-              <button onClick={() => setIsProfileDetailsOpen(false)} className="clinic-modal-close">
-                <FiX />
-              </button>
-            </div>
-
-            <div className="clinic-modal-body profile-details-body">
-              <div className="profile-avatar-large">{profileName.charAt(0).toUpperCase()}</div>
-
-              <h3>{profileName}</h3>
-              <p className="profile-role">Administrator</p>
-
-              <div className="profile-info-grid">
-                <div className="profile-info-item">
-                  <label>Full Name</label>
-                  <p>{profileName}</p>
-                </div>
-                <div className="profile-info-item">
-                  <label>Email</label>
-                  <p>admin@example.com</p>
-                </div>
-                <div className="profile-info-item">
-                  <label>Role</label>
-                  <p>Super Admin</p>
-                </div>
-                <div className="profile-info-item">
-                  <label>Last Login</label>
-                  <p>December 30, 2025</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="clinic-modal-footer">
-              <button className="btn-cancel" onClick={() => setIsProfileDetailsOpen(false)}>
-                Close
-              </button>
-            </div>
           </div>
         </div>
       )}

@@ -393,7 +393,7 @@ const EmployeeList = () => {
 
         <div className="clinic-add-section">
           <button onClick={openAddForm} className="clinic-add-btn">
-            <FiPlus size={22} /> Add Employee
+            <FiPlus size={22} /> Add Emp
           </button>
         </div>
       </div>

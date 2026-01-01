@@ -6,8 +6,11 @@ import { useEffect } from "react";
 const ROUTE_PERMISSIONS = {
   "/dashboard": ["admin", "doctor", "receptionist", "nurse"],
   "/clinic-list": ["admin", "doctor", "receptionist"],
+  "/update-clinic/:id": ["admin", "doctor", "receptionist"],
   "/branch-list": ["admin", "doctor", "receptionist"],
+  "/branch-list/:id": ["admin", "doctor", "receptionist"],
   "/dept-list": ["admin", "doctor", "receptionist"],
+  "/update-dept/:id": ["admin", "doctor", "receptionist"],
   "/employee-list": ["admin", "doctor", "receptionist"],
   "/update-employee/:id": ["admin", "doctor", "receptionist"],
   "/patients": ["admin", "doctor", "receptionist"],

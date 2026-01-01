@@ -219,6 +219,8 @@ export const addClinic = async (clinicData) => {
     ProfileName: clinicData.profileName || "admin" // optional, defaulting to "admin"
   };
 
+  console.log("Add Clinic:",payload)
+
   try {
     const response = await API.post("/AddClinic", payload);
 
@@ -299,7 +301,7 @@ export const updateClinic = async (clinicData) => {
     InvoicePrefix: clinicData.InvoicePrefix?.trim() || "",
     Status: Number(clinicData.Status) || 1,
   };
-  console.log(payload)
+  console.log("Update Clinic:",payload)
 
   try {
     const response = await API.post("/UpdateClinic", payload);
@@ -419,6 +421,8 @@ export const addBranch = async (branchData) => {
     BranchType: branchData.branchType ?? 1 // default to 1 if not provided
   };
 
+  console.log("Add Branch:", payload)
+
   try {
     const response = await API.post("/AddBranch", payload);
 
@@ -511,7 +515,7 @@ export const updateBranch = async (branchData) => {
     Status: branchData.Status || 1,
   };
 
-  console.log("updateBranch payload:", payload);
+  console.log("update Branch:", payload);
 
   try {
     const response = await API.post("/UpdateBranch", payload);
@@ -647,6 +651,8 @@ export const addDepartment = async (departmentData) => {
     DepartmentName: departmentData.departmentName || "",
     Profile: departmentData.profile || "" // Description / full name
   };
+
+  console.log("Add Department", payload)
 
   try {
     const response = await API.post("/AddDepartment", payload);
