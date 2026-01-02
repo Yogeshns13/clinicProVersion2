@@ -287,7 +287,7 @@ const DepartmentList = () => {
 
         <div className="clinic-add-section">
           <button onClick={openAddForm} className="clinic-add-btn">
-            <FiPlus size={22} /> Add Department
+            <FiPlus size={22} /> Add Dept
           </button>
         </div>
       </div>

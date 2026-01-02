@@ -11,6 +11,9 @@ export const getUserId = () => {
   return localStorage.getItem("userId");
 };
 
+const UPLOAD_API_URL = '/upload';
+const FILE_API_URL = 'http://192.168.0.3:5002/file';
+
 const baseURL = "/api";
 const API = axios.create({
   baseURL,
@@ -36,6 +39,11 @@ export const getClinicId = () => {
 export const getBranchId = () => {
   const branchId = localStorage.getItem('branchID');
   return branchId ? parseInt(branchId, 10) : null;
+};
+
+export const getFileAccessToken = () => {
+  const file_access_token = localStorage.getItem('fileAccessToken');
+  return file_access_token || null;
 };
 
 export const checkSession = async () => {
@@ -111,42 +119,146 @@ export const renewToken = async () => {
     return { success: false, responseTime };
   }
 };
-// api.js (add this function alongside getInstituteList)
+
+export const uploadPhoto = async (file) => {
+  try {
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    let fileType;
+    if (['jpeg', 'jpg'].includes(fileExtension)) {
+      fileType = 'image/jpeg';
+    } else if (fileExtension === 'png') {
+      fileType = 'image/png';
+    } else {
+      throw new Error('Unsupported file type. Please upload a .jpg, .jpeg, or .png file.');
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('fileType', fileType);
+    formData.append('ClinicID', getClinicId());
+
+    const response = await axios.post(UPLOAD_API_URL, formData, {
+      headers: { 'Content-Type': 'multipart/form-data',
+        ...(PRODUCTION_MODE === 1 ? { "API-Key": API_KEY } : {})
+      }
+    });
+    console.log('Photo uploaded successfully.');
+    return { fileId: response.data.OUT_FILE_ID };
+  } catch (error) {
+    console.error('Error uploading photo:', error);
+    throw error;
+  }
+};
+
+export const uploadIDProof = async (file) => {
+  try {
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    let fileType;
+    if (['jpeg', 'jpg'].includes(fileExtension)) {
+      fileType = 'image/jpeg';
+    } else if (fileExtension === 'png') {
+      fileType = 'image/png';
+    } else if (fileExtension === 'pdf') {
+      fileType = 'application/pdf';
+    } else {
+      throw new Error('Unsupported file type. Please upload a .jpg, .jpeg, .png, or .pdf file.');
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('fileType', fileType);
+    formData.append('clinicID',getClinicId());
+    const response = await axios.post(UPLOAD_API_URL, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' ,
+        ...(PRODUCTION_MODE === 1 ? { "API-Key": API_KEY } : {})
+      }
+    });
+    console.log('ID proof uploaded successfully.');
+    return { fileId: response.data.OUT_FILE_ID };
+  } catch (error) {
+    console.error('Error uploading ID proof:', error);
+    throw error;
+  }
+};
+
+
+export const getPhoto = async (fileId) => {
+  try {
+    if (!fileId) {
+      throw new Error('FileID is required');
+    }
+    const payload = {
+      ClinicID: getClinicId(),           
+      FileID: Number(fileId),            
+      FileAccessToken: getFileAccessToken()
+    };
+
+    console.log("getPhoto Request:",payload)
+
+    const response = await axios.post(FILE_API_URL, payload, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(PRODUCTION_MODE === 1 ? { "API-Key": API_KEY } : {})
+      },
+      responseType: 'blob'
+    });
+    const imageBlob = response.data;
+    const imageUrl = URL.createObjectURL(imageBlob);
+
+    console.log('Photo fetched successfully.');
+
+    return {
+      url: imageUrl,
+      blob: imageBlob,
+      fileId: fileId
+    };
+
+  } catch (error) {
+    console.error('Error fetching photo:', error);
+    
+    if (error.response?.status === 404) {
+      throw new Error('Photo not found');
+    }
+    if (error.response?.status === 403 || error.response?.status === 401) {
+      throw new Error('Access denied - invalid or expired token');
+    }
+    
+    throw error;
+  }
+};
+
 
 export const getClinicList = async () => {
   const userId = getUserId();
   if (!userId) {
-    const authError = new Error("User ID is missing. Please log in again.");
-    authError.status = 401;
-    authError.code = 401;
-    throw authError;
+    const error = new Error("User not logged in. Please sign in again.");
+    error.status = 401;
+    error.code = 401;
+    throw error;
   }
 
-  // Default payload (you can override any field via options)
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
-    USER_ID: parseInt(userId),
+    USER_ID: parseInt(userId, 10),
     Page: 1,
     PageSize: 20,
-    ClinicID: 0,        
+    ClinicID: 0,          // 0 = get all (most common pattern)
     ClinicName: "",
     Mobile: "",
     GstNo: "",
-    Status: -1            
+    Status: -1            // -1 = all statuses
   };
 
   try {
     const response = await API.post("/GetClinicList", payload);
+    console.log("GetClinicList response:", response);
+    // Safeguard: make sure we have an array
+    const clinics = Array.isArray(response.data?.result) 
+      ? response.data.result 
+      : [];
 
-    // Safety: ensure result is an array
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
-
-    console.log("GetClinicList response:", results);
-
-    // Map backend response to clean frontend shape
-    return results.map((clinic) => ({
+    // Map to clean frontend shape
+    const mappedClinics = clinics.map(clinic => ({
       id: clinic.clinic_id,
       name: clinic.clinic_name,
       address: clinic.address,
@@ -165,23 +277,51 @@ export const getClinicList = async () => {
       invoiceLastSeq: clinic.invoice_last_seq,
       currentYear: clinic.current_year,
       seqGen: clinic.seq_gen,
-      status: clinic.status === 1 ? 'active' : 'inactive', // normalized
+      status: clinic.status === 1 ? 'active' : 'inactive',
       statusDesc: clinic.status_desc,
       fileAccessToken: clinic.file_access_token,
       dateCreated: clinic.date_created,
       dateModified: clinic.date_modified
     }));
-  } catch (error) {
-    console.error("getClinicList failed:", error);
 
-    const errorWithStatus = {
-      ...error,
-      status: error.response?.status || 500,
-      code: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || 'Failed to fetch clinic list'
+    // ── Store fileAccessToken of the selected clinic ────────────────────────
+    const storedClinicId = getClinicId(); // ← your function that reads from localStorage
+
+    let targetClinic;
+
+    if (storedClinicId) {
+      targetClinic = mappedClinics.find(c => c.id === storedClinicId);
+    }
+
+    // Fallback: if no stored ID or not found → use first clinic (common UX pattern)
+    if (!targetClinic && mappedClinics.length > 0) {
+      targetClinic = mappedClinics[0];
+      // Optional: also update stored ID to avoid confusion next time
+      // localStorage.setItem('clinicId', mappedClinics[0].id);
+    }
+
+    if (targetClinic?.fileAccessToken) {
+      localStorage.setItem('fileAccessToken', targetClinic.fileAccessToken);
+      console.log(`Stored fileAccessToken for clinic ${targetClinic.id} (${targetClinic.name})`);
+    } else if (mappedClinics.length === 0) {
+      console.warn("No clinics returned → cannot store fileAccessToken");
+    } else {
+      console.warn(`Clinic ${storedClinicId} not found in list → no fileAccessToken stored`);
+    }
+
+    return mappedClinics;
+
+  } catch (err) {
+    console.error("getClinicList failed:", err);
+
+    const error = {
+      ...err,
+      status: err.response?.status || 500,
+      code: err.response?.status || 500,
+      message: err.response?.data?.message || err.message || "Failed to load clinics"
     };
 
-    throw errorWithStatus;
+    throw error;
   }
 };
 
@@ -833,7 +973,6 @@ export const getEmployeeList = async (clinicId = 0, options = {}) => {
       name: emp.employee_name,
       firstName: emp.first_name,
       lastName: emp.last_name,
-
       // ── New / expanded fields ───────────────────────────────────────────────
       photoFileId: emp.photo_file_id ?? null,
       gender: emp.gender,                   // usually 1/2 or similar
@@ -881,7 +1020,6 @@ export const getEmployeeList = async (clinicId = 0, options = {}) => {
     throw err;
   }
 };
-
 
 export const addEmployee = async (employeeData) => {
   const userId = getUserId();
@@ -945,6 +1083,8 @@ export const addEmployee = async (employeeData) => {
     ESINo: employeeData.esiNo || "",
     ShiftID: employeeData.shiftId ?? 0
   };
+
+  console.log("Add Employee",payload)
 
   try {
     const response = await API.post("/AddEmployee", payload);
@@ -1145,6 +1285,335 @@ export const deleteEmployee = async (employeeId) => {
       error.response?.data?.message ||
       error.message ||
       "Failed to delete employee";
+
+    const enhancedError = new Error(errorMsg);
+    enhancedError.status = error.response?.status || 500;
+    enhancedError.code = error.response?.status || 500;
+
+    throw enhancedError;
+  }
+};
+
+export const getEmployeeProofList = async (clinicId = 0, options = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Optional: stricter validation in non-production
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  // Determine final IDs based on environment
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    EmployeeID: options.EmployeeID || 0,
+    ProofType: options.ProofType || 0,
+    IdNumber: options.IdNumber || "",
+    Status: options.Status ?? -1
+  };
+
+  try {
+    const response = await API.post("/GetEmployeeProofList", payload);
+    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    console.log("GetEmployeeProofList response:", results);
+
+    return results.map((proof) => ({
+      proofId: proof.proof_id,
+      uniqueSeq: proof.unique_seq,
+      clinicId: proof.clinic_id,
+      clinicName: proof.clinic_name,
+      branchId: proof.branch_id,
+      branchName: proof.branch_name,
+      employeeId: proof.employee_id,
+      employeeName: proof.employee_name,
+      employeeCode: proof.employee_code,
+      fileId: proof.file_id ?? 0,
+      proofType: proof.proof_type,
+      proofTypeDesc: proof.proof_type_desc || "Unknown",
+      idNumber: proof.id_number || null,
+      detail: proof.detail || null,
+      expiryDate: proof.expiry_date || null,
+      status: proof.status === 1 ? "active" : "inactive",
+      statusDesc: proof.status_desc || "Unknown",
+      dateCreated: proof.date_created,
+      dateModified: proof.date_modified
+    }));
+  } catch (error) {
+    console.error("getEmployeeProofList failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || "Failed to fetch employee proofs"
+    };
+
+    throw err;
+  }
+};
+
+export const addEmployeeProof = async (proofData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Basic required-field validation
+  if (!proofData?.employeeId || proofData.employeeId === 0) {
+    const validationError = new Error("Employee ID is required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  if (!proofData?.proofType || proofData.proofType === 0) {
+    const validationError = new Error("Proof type is required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  if (!proofData?.idNumber || proofData.idNumber.trim() === "") {
+    const validationError = new Error("ID number is required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  // In dev mode you might want to validate ClinicID / BranchID more strictly
+  if (PRODUCTION_MODE !== true) {
+    if (proofData.clinicId < 0 || (proofData.clinicId !== 0 && isNaN(proofData.clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (proofData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (proofData.branchId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    EmployeeID: proofData.employeeId || 0,
+    FileID: proofData.fileId ?? 0,
+    ProofType: proofData.proofType || 0,
+    IdNumber: proofData.idNumber || "",
+    Detail: proofData.detail || "",
+    ExpiryDate: proofData.expiryDate || ""
+  };
+
+  console.log("Add Employee Proof", payload);
+
+  try {
+    const response = await API.post("/AddEmployeeProof", payload);
+
+    console.log("AddEmployeeProof response:", response.data);
+
+    const result = response.data?.result;
+
+    // Validate expected response structure
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to add employee proof");
+    }
+
+    // Return success with new proof ID
+    return {
+      success: true,
+      proofId: result.OUT_PROOF_ID,
+      message: result.OUT_ERROR || "OK"
+    };
+
+  } catch (error) {
+    console.error("addEmployeeProof failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message: 
+        error.response?.data?.message || 
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message || 
+        "Failed to add employee proof"
+    };
+
+    throw errorWithStatus;
+  }
+};
+
+export const updateEmployeeProof = async (proofData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // ProofID is mandatory for update
+  if (!proofData?.proofId && proofData?.proofId !== 0) {
+    const validationError = new Error("ProofID is required to update an employee proof.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  // ClinicID is also typically required
+  if (!proofData?.clinicId && proofData?.clinicId !== 0) {
+    const validationError = new Error("ClinicID is required to update an employee proof.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  // EmployeeID is required
+  if (!proofData?.employeeId && proofData?.employeeId !== 0) {
+    const validationError = new Error("EmployeeID is required to update an employee proof.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  if (PRODUCTION_MODE !== true) {
+    if (proofData.clinicId < 0 || (proofData.clinicId !== 0 && isNaN(proofData.clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (proofData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (proofData.branchId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ProofID: proofData.proofId || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    EmployeeID: proofData.employeeId || 0,
+    FileID: proofData.fileId ?? 0,
+    ProofType: proofData.proofType ?? 0,
+    IdNumber: proofData.idNumber?.trim() || "",
+    Detail: proofData.detail?.trim() || "",
+    ExpiryDate: proofData.expiryDate?.trim() || "",
+    Status: proofData.status ?? 1     // usually 1 = active
+  };
+
+  console.log("updateEmployeeProof payload:", payload);
+
+  try {
+    const response = await API.post("/UpdateEmployeeProof", payload);
+    console.log("UpdateEmployeeProof response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to update employee proof");
+    }
+
+    return {
+      success: true,
+      proofId: result.IN_PROOF_ID || proofData.proofId,  // echo back or use input
+      message: "Employee proof updated successfully"
+    };
+
+  } catch (error) {
+    console.error("updateEmployeeProof error:", error);
+
+    const errorMessage =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to update employee proof";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
+  }
+};
+
+export const deleteEmployeeProof = async (proofId) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // ProofID is mandatory for delete
+  if (!proofId && proofId !== 0) {
+    const validationError = new Error("ProofID is required to delete an employee proof.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ProofID: proofId
+  };
+
+  console.log("deleteEmployeeProof payload:", payload);
+
+  try {
+    const response = await API.post("/DeleteEmployeeProof", payload);
+    const result = response.data?.result;
+
+    // Validate backend response
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to delete employee proof");
+    }
+
+    return {
+      success: true,
+      proofId: result.IN_PROOF_ID || proofId,
+      message: "Employee proof deleted successfully"
+    };
+
+  } catch (error) {
+    console.error("deleteEmployeeProof error:", error);
+
+    const errorMsg =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to delete employee proof";
 
     const enhancedError = new Error(errorMsg);
     enhancedError.status = error.response?.status || 500;

@@ -13,6 +13,8 @@ const ROUTE_PERMISSIONS = {
   "/update-dept/:id": ["admin", "doctor", "receptionist"],
   "/employee-list": ["admin", "doctor", "receptionist"],
   "/update-employee/:id": ["admin", "doctor", "receptionist"],
+  "/app-employee": ["admin", "doctor", "receptionist"],
+  "/view-employee/:id": ["admin", "doctor", "receptionist"],
   "/patients": ["admin", "doctor", "receptionist"],
   "/appointments": ["admin", "doctor", "receptionist"],
   "/prescriptions": ["admin", "doctor"],

@@ -9,7 +9,6 @@ AddEmployeeProof
     "EmployeeID":1000001,
     "FileID":0,
     "ProofType":1,
-    "PhotoFileID":0,
     "IdNumber":"1457 2587 2365",
     "Detail":"Aadhar card",
     "ExpiryDate":"2033-04-17"
@@ -188,6 +187,7 @@ DeleteEmployeeProof
 
 {
     "result": {
+        
         "IN_PROOF_ID": 1,
         "OUT_OK": 1,
         "OUT_ERROR": "OK"

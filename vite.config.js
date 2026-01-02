@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0', // Allow connections from any IP
-    port: 5001,      // Ensure this matches your desired port
+    port: 3000,      // Ensure this matches your desired port
     proxy: {
       '/api': {
         target: 'http://192.168.0.3:5001',
@@ -14,12 +14,12 @@ export default defineConfig({
         secure: false,
       },
       '/upload': {
-        target: 'http://192.168.0.3:3002',
+        target: 'http://192.168.0.3:5002',
         changeOrigin: true,
         secure: false,
       },
       '/file': {
-        target: 'http://192.168.0.3:3002',
+        target: 'http://192.168.0.3:5002',
         changeOrigin: true,
         secure: false,
       },

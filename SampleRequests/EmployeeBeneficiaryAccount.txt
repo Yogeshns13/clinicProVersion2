@@ -7,6 +7,7 @@ AddEmployeeBeneficiaryAccount
     "ClinicID":1,
     "BranchID":1,
     "EmployeeID":1000001,
+    
     "AccountHolderName":"Gopi",
     "AccountNo":"6540002150",
     "IFSCCode":"SBIN0002234",

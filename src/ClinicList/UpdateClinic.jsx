@@ -182,12 +182,12 @@ const UpdateClinic = () => {
 
       <div className="clinic-toolbar">
         <button onClick={handleBack} className="clinic-add-btn">
-          <FiArrowLeft size={20} /> Back to List
+           Back to List
         </button>
       </div>
 
-      <div className="clinic-table-container update-employee-container">
-        <div className="clinic-modal form-modal update-employee-form">
+      <div className="clinic-table-container update-employee-container" style={{ padding: '20px', borderRadius: '17px' }}>
+        <div className="clinic-modal form-modal update-employee-form" style={{ maxWidth: 'none', width: '100%', maxHeight: 'none' }}>
           <div className="clinic-modal-header update-employee-header">
             <h2>Update Clinic: {formData.clinicName}</h2>
           </div>

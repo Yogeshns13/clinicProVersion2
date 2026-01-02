@@ -26,6 +26,8 @@ import UpdateEmployee from "./EmployeeList/UpdateEmployee.jsx"
 import UpdateClinic from "./ClinicList/UpdateClinic.jsx";
 import UpdateBranch from "./BranchList/UpdateBranch.jsx";
 import UpdateDepartment from "./DepartmentList/UpdateDepartment.jsx";
+import AddEmployee from "./EmployeeList/AddEmployee.jsx";
+import ViewEmployee from "./EmployeeList/ViewEmployee.jsx";
 
 function App() {
   return (
@@ -51,6 +53,8 @@ function App() {
           <Route path="/dept-list" element={<DepartmentList />} />
           <Route path="/update-dept/:id" element={<UpdateDepartment />} />
           <Route path="/employee-list" element={<EmployeeList />} />
+          <Route path="/add-employee" element={<AddEmployee />} />
+          <Route path="/view-employee/:id" element={<ViewEmployee />} />
           <Route path="/update-employee/:id" element={<UpdateEmployee />} />
           <Route path="/patients" element={<Patients />} />
           <Route path="/appointments" element={<Appointments />} />
