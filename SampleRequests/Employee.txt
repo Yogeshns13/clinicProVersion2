@@ -18,9 +18,6 @@ AddEmployee
     "Mobile":"8765894765",
     "AltMobile": "8765694765",
     "Email":"sivashankarandeveloper@gmail.com",
-    "IdProofType": 1,   
-    "IdNumber": "3724 2785 1754",
-    "IdExpiry":"2028-10-30",
     "DepartmentID":1,
     "Designation":1,
     "Qualification":"MBBS, MS, FRCS",
@@ -32,7 +29,6 @@ AddEmployee
     "PFNo":"78412578",
     "ESINo":"1457854",
     "ShiftID":1
-   
 }
 -- Gender Text Table #1
 -- Blood Group text table tabke id  #2
@@ -43,7 +39,7 @@ AddEmployee
 UpdateEmployee
 {
     "CHANNEL_ID":1,
-    "REF_KEY":"hshshshshshshshshshsh",
+    "REF_KEY":"hshshshshshshshshsh`sh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000,
     "EmployeeID":1000001,
@@ -61,9 +57,6 @@ UpdateEmployee
     "Mobile":"8765894765",
     "AltMobile": "8765694765",
    "Email":"sivashankarandeveloper@gmail.com",
-    "IdProofType": 1,   
-    "IdNumber": "3724 2785 1754",
-    "IdExpiry":"2028-10-30",
     "DepartmentID":1,
     "Designation":1,
     "Qualification":"MBBS, MS, FRCS",
@@ -154,9 +147,6 @@ GetEmployeeList
             "mobile": "9087130902",
             "alt_mobile": "8975225676",
             "email": "nsyogeshofficial@gmail.com",
-            "id_proof_type": 1,
-            "id_number": "920198456778",
-            "id_expiry": "2025-12-10T18:30:00.000Z",
             "qualification": "B.E",
             "specialization": "CSE",
             "license_no": "IMA-45789667",
@@ -197,9 +187,6 @@ GetEmployeeList
             "mobile": "8765894765",
             "alt_mobile": "8765694765",
             "email": "sivashankarandeveloper@gmail.com",
-            "id_proof_type": 1,
-            "id_number": "3724 2785 1754",
-            "id_expiry": "2028-10-29T18:30:00.000Z",
             "qualification": "MBBS, MS, FRCS",
             "specialization": "Cardiology",
             "license_no": "IMA-45789654",
@@ -244,9 +231,6 @@ AddEmployee
     "Mobile":"8765894765",
     "AltMobile": "8765694765",
     "Email":"sivashankarandeveloper@gmail.com",
-    "IdProofType": 1,   
-    "IdNumber": "3724 2785 1754",
-    "IdExpiry":"2028-10-30",
     "DepartmentID":1,
     "Designation":1,
     "Qualification":"MBBS, MS, FRCS",
@@ -302,9 +286,6 @@ UpdateEmployee
     "Mobile":"8765894765",
     "AltMobile": "8765694765",
     "Email":"sivashankarandeveloper@gmail.com",
-    "IdProofType": 1,   
-    "IdNumber": "3724 2785 1754",
-    "IdExpiry":"2028-10-30",
     "DepartmentID":1,
     "Designation":1,
     "Qualification":"MBBS, MS, FRCS",

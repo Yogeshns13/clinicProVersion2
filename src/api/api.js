@@ -165,13 +165,13 @@ export const uploadIDProof = async (file) => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('fileType', fileType);
-    formData.append('clinicID',getClinicId());
+    formData.append('ClinicID',getClinicId());
     const response = await axios.post(UPLOAD_API_URL, formData, {
       headers: { 'Content-Type': 'multipart/form-data' ,
         ...(PRODUCTION_MODE === 1 ? { "API-Key": API_KEY } : {})
       }
     });
-    console.log('ID proof uploaded successfully.');
+    console.log('ID proof uploaded successfully');
     return { fileId: response.data.OUT_FILE_ID };
   } catch (error) {
     console.error('Error uploading ID proof:', error);
@@ -180,7 +180,7 @@ export const uploadIDProof = async (file) => {
 };
 
 
-export const getPhoto = async (fileId) => {
+export const getFile = async (fileId) => {
   try {
     if (!fileId) {
       throw new Error('FileID is required');
@@ -191,7 +191,7 @@ export const getPhoto = async (fileId) => {
       FileAccessToken: getFileAccessToken()
     };
 
-    console.log("getPhoto Request:",payload)
+    console.log("getFile Request:",payload)
 
     const response = await axios.post(FILE_API_URL, payload, {
       headers: {
@@ -203,7 +203,7 @@ export const getPhoto = async (fileId) => {
     const imageBlob = response.data;
     const imageUrl = URL.createObjectURL(imageBlob);
 
-    console.log('Photo fetched successfully.');
+    console.log('File fetched successfully.');
 
     return {
       url: imageUrl,
@@ -212,10 +212,10 @@ export const getPhoto = async (fileId) => {
     };
 
   } catch (error) {
-    console.error('Error fetching photo:', error);
+    console.error('Error fetching file:', error);
     
     if (error.response?.status === 404) {
-      throw new Error('Photo not found');
+      throw new Error('File not found');
     }
     if (error.response?.status === 403 || error.response?.status === 401) {
       throw new Error('Access denied - invalid or expired token');
@@ -973,7 +973,6 @@ export const getEmployeeList = async (clinicId = 0, options = {}) => {
       name: emp.employee_name,
       firstName: emp.first_name,
       lastName: emp.last_name,
-      // ── New / expanded fields ───────────────────────────────────────────────
       photoFileId: emp.photo_file_id ?? null,
       gender: emp.gender,                   // usually 1/2 or similar
       genderDesc: emp.gender_desc || "Unknown",
@@ -984,9 +983,6 @@ export const getEmployeeList = async (clinicId = 0, options = {}) => {
       mobile: emp.mobile || null,
       altMobile: emp.alt_mobile || null,
       email: emp.email || null,
-      idProofType: emp.id_proof_type || null,
-      idNumber: emp.id_number || null,
-      idExpiry: emp.id_expiry || null,
       qualification: emp.qualification || null,
       specialization: emp.specialization || null,
       licenseNo: emp.license_no || null,
@@ -995,8 +991,6 @@ export const getEmployeeList = async (clinicId = 0, options = {}) => {
       universityName: emp.university_name || null,
       pfNo: emp.pf_no || null,
       esiNo: emp.esi_no || null,
-
-      // ── Existing continued ─────────────────────────────────────────────────
       departmentId: emp.department_id,
       departmentName: emp.department_name,
       designation: emp.designation,
@@ -1067,10 +1061,7 @@ export const addEmployee = async (employeeData) => {
     Address: employeeData.address || "",
     Mobile: employeeData.mobile || "",
     AltMobile: employeeData.altMobile || "",
-    Email: employeeData.email || "",
-    IdProofType: employeeData.idProofType ?? 0,
-    IdNumber: employeeData.idNumber || "",
-    IdExpiry: employeeData.idExpiry || "",  
+    Email: employeeData.email || "", 
     DepartmentID: employeeData.departmentId ?? 0,
     Designation: employeeData.designation ?? 0,
     Qualification: employeeData.qualification || "",
@@ -1183,9 +1174,6 @@ export const updateEmployee = async (employeeData) => {
     Mobile: employeeData.mobile?.trim() || "",
     AltMobile: employeeData.altMobile?.trim() || "",
     Email: employeeData.email?.trim() || "",
-    IdProofType: employeeData.idProofType ?? 0,
-    IdNumber: employeeData.idNumber?.trim() || "",
-    IdExpiry: employeeData.idExpiry?.trim() || "",
     DepartmentID: employeeData.departmentId ?? 0,
     Designation: employeeData.designation ?? 0,
     Qualification: employeeData.qualification?.trim() || "",
@@ -1622,3 +1610,813 @@ export const deleteEmployeeProof = async (proofId) => {
     throw enhancedError;
   }
 };
+
+export const getEmployeeBeneficiaryAccountList = async (clinicId = 0, options = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Optional: stricter validation in non-production
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  // Determine final IDs based on environment
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,
+    BeneficiaryID: options.BeneficiaryID || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    EmployeeID: options.EmployeeID || 0,
+    AccountNo: options.AccountNo || "",
+    IFSCCode: options.IFSCCode || "",
+    IsDefault: options.IsDefault || -1,
+    Status: options.Status ?? -1
+  };
+
+  try {
+    const response = await API.post("/GetEmployeeBeneficiaryAccountList", payload);
+    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    console.log("GetEmployeeBeneficiaryAccountList response:", results);
+
+    return results.map((account) => ({
+      beneficiaryId: account.beneficiary_id,
+      uniqueSeq: account.unique_seq,
+      clinicId: account.clinic_id,
+      clinicName: account.clinic_name,
+      branchId: account.branch_id,
+      branchName: account.branch_name,
+      employeeId: account.employee_id,
+      employeeName: account.employee_name,
+      employeeCode: account.employee_code,
+      accountHolderName: account.account_holder_name,
+      accountNo: account.account_no,
+      ifscCode: account.ifsc_code,
+      bankName: account.bank_name,
+      bankAddress: account.bank_address || null,
+      isDefault: account.is_default === 1,
+      isDefaultDesc: account.is_default_desc || "Unknown",
+      status: account.status === 1 ? "active" : "inactive",
+      statusDesc: account.status_desc || "Unknown",
+      dateCreated: account.date_created,
+      dateModified: account.date_modified
+    }));
+  } catch (error) {
+    console.error("getEmployeeBeneficiaryAccountList failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || "Failed to fetch employee beneficiary accounts"
+    };
+
+    throw err;
+  }
+};
+
+export const addEmployeeBeneficiaryAccount = async (beneficiaryData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Basic required-field validation
+  if (!beneficiaryData?.EmployeeID) {
+    const validationError = new Error("EmployeeID is required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  if (!beneficiaryData?.AccountHolderName || !beneficiaryData?.AccountNo || !beneficiaryData?.IFSCCode) {
+    const validationError = new Error("Account holder name, account number, and IFSC code are required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  // In production these come from context/session; in dev they may come from form
+  const finalClinicId  = PRODUCTION_MODE ? getClinicId()  : (beneficiaryData.ClinicID  || 0);
+  const finalBranchId  = PRODUCTION_MODE ? getBranchId()  : (beneficiaryData.BranchID  || 0);
+  const finalEmployeeId = beneficiaryData.EmployeeID;   // usually sent explicitly – no fallback to global
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    EmployeeID: parseInt(finalEmployeeId),           // usually expected as integer
+    AccountHolderName: beneficiaryData.AccountHolderName?.trim() || "",
+    AccountNo: beneficiaryData.AccountNo?.trim() || "",
+    IFSCCode: beneficiaryData.IFSCCode?.trim() || "",
+    BankName: beneficiaryData.BankName?.trim() || "",
+    BankAddress: beneficiaryData.BankAddress?.trim() || "",
+    IsDefault: beneficiaryData.IsDefault ? 1 : 0     // normalize to 0 or 1
+  };
+
+  console.log("Add Employee Beneficiary Account payload:", payload);
+
+  try {
+    const response = await API.post("/AddEmployeeBeneficiaryAccount", payload);
+
+    console.log("AddEmployeeBeneficiaryAccount response:", response.data);
+
+    const result = response.data?.result;
+
+    // Validate expected response structure
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to add beneficiary account");
+    }
+
+    // Return success with the new beneficiary ID
+    return {
+      success: true,
+      beneficiaryId: result.OUT_BENEFICIARY_ID,
+      message: result.OUT_ERROR || "OK"
+    };
+
+  } catch (error) {
+    console.error("addEmployeeBeneficiaryAccount failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message:
+        error.response?.data?.message ||
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message ||
+        "Failed to add beneficiary account"
+    };
+
+    throw errorWithStatus;
+  }
+};
+
+export const updateEmployeeBeneficiaryAccount = async (beneficiaryData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // BeneficiaryID is mandatory for update
+  if (!beneficiaryData?.BeneficiaryID && beneficiaryData?.BeneficiaryID !== 0) {
+    const validationError = new Error("BeneficiaryID is required to update a beneficiary account.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  // EmployeeID is typically required
+  if (!beneficiaryData?.EmployeeID && beneficiaryData?.EmployeeID !== 0) {
+    const validationError = new Error("EmployeeID is required to update a beneficiary account.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  // ClinicID is usually required
+  if (!beneficiaryData?.ClinicID && beneficiaryData?.ClinicID !== 0) {
+    const validationError = new Error("ClinicID is required to update a beneficiary account.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  // Optional: basic validation in non-production
+  if (PRODUCTION_MODE !== true) {
+    if (beneficiaryData.ClinicID < 0 || (beneficiaryData.ClinicID !== 0 && isNaN(beneficiaryData.ClinicID))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+    if (beneficiaryData.EmployeeID < 0 || (beneficiaryData.EmployeeID !== 0 && isNaN(beneficiaryData.EmployeeID))) {
+      const error = new Error("Invalid Employee ID");
+      error.status = 400;
+      throw error;
+    }
+    // You could add more checks (IFSC length, AccountNo digits, etc.) if needed
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (beneficiaryData.ClinicID || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (beneficiaryData.BranchID || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    
+    BeneficiaryID: beneficiaryData.BeneficiaryID || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    EmployeeID: beneficiaryData.EmployeeID || 0,
+    
+    AccountHolderName: beneficiaryData.AccountHolderName?.trim() || "",
+    AccountNo: beneficiaryData.AccountNo?.trim() || "",
+    IFSCCode: beneficiaryData.IFSCCode?.trim() || "",
+    BankName: beneficiaryData.BankName?.trim() || "",
+    BankAddress: beneficiaryData.BankAddress?.trim() || "",
+    
+    IsDefault: beneficiaryData.IsDefault ?? 0,
+    Status: beneficiaryData.Status ?? 1   // usually 1 = active
+  };
+
+  console.log("updateEmployeeBeneficiaryAccount payload:", payload);
+
+  try {
+    const response = await API.post("/UpdateEmployeeBeneficiaryAccount", payload);
+    console.log("UpdateEmployeeBeneficiaryAccount response:", response.data);
+
+    const result = response.data?.result;
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to update beneficiary account");
+    }
+
+    return {
+      success: true,
+      beneficiaryId: result.IN_BENEFICIARY_ID || payload.BeneficiaryID,
+      message: "Beneficiary account updated successfully"
+    };
+  } catch (error) {
+    console.error("updateEmployeeBeneficiaryAccount error:", error);
+
+    const errorMessage =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to update beneficiary account";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
+  }
+};
+
+export const deleteEmployeeBeneficiaryAccount = async (beneficiaryId) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // BeneficiaryID is mandatory
+  if (!beneficiaryId && beneficiaryId !== 0) {
+    const validationError = new Error("BeneficiaryID is required to delete beneficiary account.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    BeneficiaryID: beneficiaryId
+  };
+
+  console.log("deleteEmployeeBeneficiaryAccount payload:", payload);
+
+  try {
+    const response = await API.post("/DeleteEmployeeBeneficiaryAccount", payload);
+    const result = response.data?.result;
+
+    // Validate backend response (following same pattern as deleteEmployee)
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to delete beneficiary account");
+    }
+
+    return {
+      success: true,
+      beneficiaryId: result.IN_BENEFICIARY_ID || beneficiaryId,
+      message: "Beneficiary account deleted successfully"
+    };
+  } catch (error) {
+    console.error("deleteEmployeeBeneficiaryAccount error:", error);
+
+    const errorMsg =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to delete beneficiary account";
+
+    const enhancedError = new Error(errorMsg);
+    enhancedError.status = error.response?.status || 500;
+    enhancedError.code = error.response?.status || 500;
+
+    throw enhancedError;
+  }
+};
+
+export const getEmployeeShiftList = async (clinicId = 0, options = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,
+    ClinicID: finalClinicId,
+    EmployeeID: options.EmployeeID || 0,   
+    ShiftID: options.ShiftID || 0
+  };
+
+  try {
+    const response = await API.post("/GetEmployeeShiftList", payload);
+    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    console.log("GetEmployeeShiftList response:", results);
+
+    return results.map((item) => ({
+      shiftMapId: item.ShiftMapID,
+      clinicId: item.ClinicID,
+      employeeId: item.EmployeeID,
+      employeeName: item.EmployeeName || "",
+      employeeCode: item.EmployeeCode || "",
+      shiftId: item.ShiftID,
+      shiftName: item.ShiftName || "Unknown",
+      shiftStartTime: item.ShiftStartTime || null, 
+      shiftEndTime: item.ShiftEndTime || null,     
+    }));
+  } catch (error) {
+    console.error("getEmployeeShiftList failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || "Failed to fetch employee shifts"
+    };
+
+    throw err;
+  }
+};
+
+export const addEmployeeShift = async (shiftData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Basic required-field validation
+  if (!shiftData?.EmployeeID) {
+    const validationError = new Error("EmployeeID is required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  if (!shiftData?.ShiftID) {
+    const validationError = new Error("ShiftID is required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  // ClinicID: use global/session value in production, allow override in dev
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (shiftData.ClinicID || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    EmployeeID: parseInt(shiftData.EmployeeID),
+    ShiftID: parseInt(shiftData.ShiftID)
+  };
+
+  console.log("Add Employee Shift payload:", payload);
+
+  try {
+    const response = await API.post("/AddEmployeeShift", payload);
+
+    console.log("AddEmployeeShift response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to assign shift to employee");
+    }
+
+    return {
+      success: true,
+      message: result.OUT_ERROR || "OK"
+    };
+
+  } catch (error) {
+    console.error("addEmployeeShift failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message:
+        error.response?.data?.message ||
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message ||
+        "Failed to assign shift to employee"
+    };
+
+    throw errorWithStatus;
+  }
+};
+
+export const deleteEmployeeShift = async (shiftMapId) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (!shiftMapId && shiftMapId !== 0) {
+    const validationError = new Error("ShiftMapID is required to delete an employee shift.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ShiftMapID: shiftMapId
+  };
+
+  console.log("deleteEmployeeShift payload:", payload);
+
+  try {
+    const response = await API.post("/DeleteEmployeeShift", payload);
+    const result = response.data?.result;
+
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to delete employee shift");
+    }
+
+    return {
+      success: true,
+      shiftMapId: result.IN_ShiftMapID || shiftMapId, 
+      message: "Employee shift deleted successfully"
+    };
+
+  } catch (error) {
+    console.error("deleteEmployeeShift error:", error);
+
+    const errorMsg =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to delete employee shift";
+
+    const enhancedError = new Error(errorMsg);
+    enhancedError.status = error.response?.status || 500;
+    enhancedError.code = error.response?.status || 500;
+
+    throw enhancedError;
+  }
+};
+
+export const getShiftList = async (clinicId = 0, options = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,
+    ShiftID: options.ShiftID || 0,
+    ClinicID: finalClinicId,
+    ShiftName: options.ShiftName || "",
+    Status: options.Status ?? -1   
+  };
+
+  try {
+    const response = await API.post("/GetWorkShiftList", payload);
+    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    console.log("GetWorkShiftList response:", results);
+
+    return results.map((shift) => ({
+      id: shift.shift_id,
+      uniqueSeq: shift.unique_seq,
+      clinicId: shift.clinic_id,
+      clinicName: shift.clinic_name,
+      shiftName: shift.shift_name || "Unnamed Shift",
+      timeStart: shift.shift_time_start || null,  
+      timeEnd: shift.shift_time_end || null,       
+      workingHours: shift.working_hours || null,   
+      status: shift.status === 1 ? "active" : "inactive",
+      statusDesc: shift.status_desc || "Unknown",
+      dateCreated: shift.date_created || null,
+      dateModified: shift.date_modified || null
+    }));
+  } catch (error) {
+    console.error("getShiftList failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || "Failed to fetch work shifts"
+    };
+
+    throw err;
+  }
+};
+
+export const addShift = async (shiftData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (!shiftData?.ShiftName) {
+    const validationError = new Error("Shift name is required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  if (!shiftData?.ShiftTimeStart || !shiftData?.ShiftTimeEnd) {
+    const validationError = new Error("Start time and end time are required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  // Optional: stricter validation in non-production
+  if (PRODUCTION_MODE !== true) {
+    if (shiftData.clinicId < 0 || (shiftData.clinicId !== 0 && isNaN(shiftData.clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (shiftData.clinicId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    ShiftName: shiftData.ShiftName?.trim() || "",
+    ShiftTimeStart: shiftData.ShiftTimeStart || "",   
+    ShiftTimeEnd: shiftData.ShiftTimeEnd || "",       
+    WorkingHours: shiftData.WorkingHours ?? null     
+  };
+
+  console.log("Add Work Shift payload:", payload);
+
+  try {
+    const response = await API.post("/AddWorkShift", payload);
+
+    console.log("AddWorkShift response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to add work shift");
+    }
+
+    return {
+      success: true,
+      shiftId: result.OUT_SHIFT_ID,
+      message: result.OUT_ERROR || "OK"
+    };
+
+  } catch (error) {
+    console.error("addShift failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message: 
+        error.response?.data?.message || 
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message || 
+        "Failed to add work shift"
+    };
+
+    throw errorWithStatus;
+  }
+};
+
+export const updateShift = async (shiftData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (!shiftData?.ShiftID && shiftData?.ShiftID !== 0) {
+    const validationError = new Error("ShiftID is required to update a work shift.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  if (!shiftData?.ClinicID && shiftData?.ClinicID !== 0) {
+    const validationError = new Error("ClinicID is required to update a work shift.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  if (PRODUCTION_MODE !== true) {
+    if (shiftData.ClinicID < 0 || (shiftData.ClinicID !== 0 && isNaN(shiftData.ClinicID))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (shiftData.ClinicID || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ShiftID: shiftData.ShiftID || 0,
+    ClinicID: finalClinicId,
+    ShiftName: shiftData.ShiftName?.trim() || "",
+    ShiftTimeStart: shiftData.ShiftTimeStart?.trim() || "",   
+    ShiftTimeEnd: shiftData.ShiftTimeEnd?.trim() || "",       
+    WorkingHours: shiftData.WorkingHours ?? null,             
+    Status: shiftData.Status ?? 1                           
+  };
+
+  console.log("updateShift payload:", payload);
+
+  try {
+    const response = await API.post("/UpdateWorkShift", payload);
+    console.log("UpdateWorkShift response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to update work shift");
+    }
+
+    return {
+      success: true,
+      shiftId: result.IN_SHIFT_ID || shiftData.ShiftID, 
+      message: "Work shift updated successfully"
+    };
+
+  } catch (error) {
+    console.error("updateShift error:", error);
+
+    const errorMessage =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to update work shift";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
+  }
+};
+
+export const deleteShift = async (shiftId) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (!shiftId && shiftId !== 0) {
+    const validationError = new Error("ShiftID is required to delete a work shift.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ShiftID: shiftId
+  };
+
+  console.log("deleteShift payload:", payload);
+
+  try {
+    const response = await API.post("/DeleteWorkShift", payload);
+    const result = response.data?.result;
+
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to delete work shift");
+    }
+
+    return {
+      success: true,
+      shiftId: result.IN_SHIFT_ID || shiftId,   
+      message: "Work shift deleted successfully"
+    };
+
+  } catch (error) {
+    console.error("deleteShift error:", error);
+
+    const errorMsg =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to delete work shift";
+
+    const enhancedError = new Error(errorMsg);
+    enhancedError.status = error.response?.status || 500;
+    enhancedError.code = error.response?.status || 500;
+
+    throw enhancedError;
+  }
+};
+
+

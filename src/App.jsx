@@ -28,6 +28,11 @@ import UpdateBranch from "./BranchList/UpdateBranch.jsx";
 import UpdateDepartment from "./DepartmentList/UpdateDepartment.jsx";
 import AddEmployee from "./EmployeeList/AddEmployee.jsx";
 import ViewEmployee from "./EmployeeList/ViewEmployee.jsx";
+import EmployeeProof from "./EmployeeList/EmployeeProof.jsx";
+import EmployeeAccount from "./EmployeeList/EmployeeAccount.jsx";
+import EmployeeShift from "./EmployeeList/EmployeeShift.jsx";
+import WorkShift from "./WorkShiftList/WorkShift.jsx";
+import UpdateWorkShift from "./WorkShiftList/UpdateWorkShift.jsx";
 
 function App() {
   return (
@@ -52,10 +57,15 @@ function App() {
           <Route path="/update-branch/:id" element={<UpdateBranch/>} />
           <Route path="/dept-list" element={<DepartmentList />} />
           <Route path="/update-dept/:id" element={<UpdateDepartment />} />
+          <Route path="/work-shift" element={<WorkShift/>} />
+          <Route path="/update-shift/:id" element={<UpdateWorkShift />} />
           <Route path="/employee-list" element={<EmployeeList />} />
           <Route path="/add-employee" element={<AddEmployee />} />
           <Route path="/view-employee/:id" element={<ViewEmployee />} />
           <Route path="/update-employee/:id" element={<UpdateEmployee />} />
+          <Route path="/employee-proof/:id" element={<EmployeeProof />} />
+          <Route path="/employee-account/:id" element={<EmployeeAccount />} />
+          <Route path="/employee-shift/:id" element={<EmployeeShift />} />
           <Route path="/patients" element={<Patients />} />
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/prescriptions" element={<Prescriptions />} />

@@ -49,9 +49,9 @@ const Sidebar = () => {
       label: "Clinic",
       hasDropdown: true,
       subItems: [
-        { to: "/clinic-list", label: "Clinic List" },
-        { to: "/branch-list", label: "Branch List" },
-        { to: "/dept-list", label: "Department List" },
+        { to: "/clinic-list", label: "Clinic" },
+        { to: "/branch-list", label: "Branch" },
+        { to: "/dept-list", label: "Department" },
       ],
       show: hasAccess(MENU_PERMISSIONS.clinic),
     },
@@ -61,7 +61,8 @@ const Sidebar = () => {
       label: "Employee",
       hasDropdown: true,
       subItems: [
-        { to: "/employee-list", label: "Employee List" },
+        { to: "/work-shift", label: "Work Shift" },
+        { to: "/employee-list", label: "Employee" },
       ],
       show: hasAccess(MENU_PERMISSIONS.employee),
     },

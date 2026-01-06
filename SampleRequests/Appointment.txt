@@ -13,9 +13,6 @@ AddAppointment
    
 }
 
-
-
-
 CancelAppointment
 {               
     "CHANNEL_ID":1,

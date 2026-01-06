@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiUser, FiArrowLeft } from 'react-icons/fi';
-import { getEmployeeList, deleteEmployee, getPhoto } from '../api/api.js';
+import { getEmployeeList, deleteEmployee, getFile } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import './EmployeeList.css';
@@ -68,14 +68,15 @@ const ViewEmployee = () => {
   const [activeTab, setActiveTab] = useState('details');
 
   // ────────────────────────────────────────────────
-  // Fetch employee details
   useEffect(() => {
     const fetchEmployeeDetails = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const data = await getEmployeeList(0, {
+        const clinicId = localStorage.getItem('clinicID');
+
+        const data = await getEmployeeList(clinicId, {
           EmployeeID: Number(id),
           DepartmentID: 0,
         });
@@ -169,7 +170,7 @@ const ViewEmployee = () => {
     
     setPhotoLoading(true);
     try {
-      const photoData = await getPhoto(employee.photoFileId);
+      const photoData = await getFile(employee.photoFileId);
       setEmployeePhoto(photoData.url);
     } catch (err) {
       console.error('Failed to load employee photo:', err);
@@ -390,10 +391,6 @@ const ViewEmployee = () => {
                 <span className="detail-value">{getDesignationLabel(employee.designation)}</span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Shift Type</span>
-                <span className="detail-value">{employee.shiftName || '—'}</span>
-              </div>
-              <div className="detail-item">
                 <span className="detail-label">Experience Years</span>
                 <span className="detail-value">{employee.experienceYears || '—'}</span>
               </div>
@@ -429,25 +426,6 @@ const ViewEmployee = () => {
               <div className="detail-item">
                 <span className="detail-label">License Expiry Date</span>
                 <span className="detail-value">{formatDate(employee.licenseExpiryDate)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 5: Identity & Compliance */}
-          <div className="details-section">
-            <h3 className="section-title">Identity & Compliance</h3>
-            <div className="details-grid">
-              <div className="detail-item">
-                <span className="detail-label">ID Proof Type</span>
-                <span className="detail-value">{getIdProofLabel(employee.idProofType)}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">ID Number</span>
-                <span className="detail-value">{maskIdNumber(employee.idNumber)}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">ID Expiry Date</span>
-                <span className="detail-value">{formatDate(employee.idExpiry)}</span>
               </div>
             </div>
           </div>

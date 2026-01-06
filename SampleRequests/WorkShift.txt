@@ -49,10 +49,112 @@ GetWorkShiftList
     "USER_ID" : 2000000,
     "Page":1,
     "PageSize":20,
-   "ShiftID":1, 
+    "ShiftID":1, 
     "ClinicID": 1,
     "ShiftName"  :"Day Shift 1",
      "Status":1
    
 }
+
+-----------------------------------------------------------------
+GetWorkShiftList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "ShiftID":1, 
+    "ClinicID": 1,
+    "ShiftName"  :"Day Shift 1",
+    "Status":1
+}
+
+{
+    "result": [
+        {
+            "shift_id": 1,
+            "unique_seq": 1,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "shift_name": "Day Shift 1",
+            "shift_time_start": "09:00:00",
+            "shift_time_end": "14:00:00",
+            "working_hours": "5.00",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-21T12:48:00.000Z",
+            "date_modified": "2025-11-21T12:53:49.000Z"
+        }
+    ]
+}
+
+______________________________________________________________________
+
+AddWorkShift
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "ShiftName":"Noon Shift 1",
+    "ShiftTimeStart":"14:00:00",
+    "ShiftTimeEnd":"19:00:00",
+    "WorkingHours":5
+}
+
+{
+    "result": {
+        "OUT_SHIFT_ID": 3,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+______________________________________________________________________
+
+UpdateWorkShift
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ShiftID":2, 
+    "ClinicID": 1,
+    "ShiftName"  :"Early Shift 1",
+    "ShiftTimeStart":"4:00:00",
+    "ShiftTimeEnd":"9:00:00",
+    "WorkingHours":5,
+    "Status":1
+}
+
+{
+    "result": {
+        "IN_SHIFT_ID": 2,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+________________________________________________
+DeleteWorkShift
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+   "ShiftID":1 
+   
+}
+
+{
+    "result": {
+        "IN_SHIFT_ID": 3,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+
 

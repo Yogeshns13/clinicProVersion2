@@ -1,8 +1,8 @@
 // src/components/UpdateEmployee.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiSave } from 'react-icons/fi';
-import { getEmployeeList, getDepartmentList, updateEmployee } from '../api/api.js';
+import { FiArrowLeft, FiSave, FiX, FiUpload } from 'react-icons/fi';
+import { getEmployeeList, getDepartmentList, updateEmployee, uploadPhoto } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import './EmployeeList.css';
@@ -66,11 +66,6 @@ const STATUS_OPTIONS = [
   { id: 6, label: 'Deleted' },
 ];
 
-const SHIFT_OPTIONS = [
-  { id: 1, label: 'Active' },
-  { id: 2, label: 'Inactive' },
-];
-
 // ────────────────────────────────────────────────
 const UpdateEmployee = () => {
   const navigate = useNavigate();
@@ -110,7 +105,15 @@ const UpdateEmployee = () => {
     esiNo: '',
     shiftId: 0,
     status: 1,
+    photoFileId: 0,
   });
+
+  // Photo upload states
+  const [photo, setPhoto] = useState(null);
+  const [photoUrl, setPhotoUrl] = useState(null);
+  const [photoUploaded, setPhotoUploaded] = useState(false);
+  const [photoUploadStatus, setPhotoUploadStatus] = useState('');
+  const [isPhotoUploading, setIsPhotoUploading] = useState(false);
 
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
@@ -172,9 +175,15 @@ const UpdateEmployee = () => {
           universityName: employee.universityName || '',
           pfNo: employee.pfNo || '',
           esiNo: employee.esiNo || '',
-          shiftId: employee.shiftId || 0,
           status: employee.status === 'active' ? 1 : 2,
+          photoFileId: employee.photoFileId || 0,
         });
+
+        // If employee has existing photo, set the photoUploaded flag
+        if (employee.photoFileId && employee.photoFileId > 0) {
+          setPhotoUploaded(true);
+          setPhotoUploadStatus('Existing photo will be retained unless you upload a new one.');
+        }
       } catch (err) {
         setError({
           message: err.message || 'Failed to load employee data',
@@ -192,6 +201,75 @@ const UpdateEmployee = () => {
       setError({ message: 'No employee ID provided', status: 400 });
     }
   }, [employeeId]);
+
+  // ────────────────────────────────────────────────
+  // Photo Upload Handlers
+  // ────────────────────────────────────────────────
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    const maxSize = 4 * 1024 * 1024; // 4MB
+
+    if (!file) {
+      setPhotoUploadStatus('No file selected.');
+      setPhoto(null);
+      setPhotoUploaded(false);
+      setPhotoUrl(null);
+      // Don't reset photoFileId here - keep existing photo if any
+      return;
+    }
+
+    if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+      setPhotoUploadStatus('Please upload a valid JPG, JPEG, or PNG file.');
+      setPhoto(null);
+      setPhotoUrl(null);
+      return;
+    }
+
+    if (file.size > maxSize) {
+      setPhotoUploadStatus('File size exceeds 4MB limit.');
+      setPhoto(null);
+      setPhotoUrl(null);
+      return;
+    }
+
+    setPhoto(file);
+    setPhotoUrl(URL.createObjectURL(file));
+    setPhotoUploadStatus('File selected. Click "Upload Photo" to submit.');
+    setPhotoUploaded(false);
+  };
+
+  const handlePhotoUploadSubmit = async () => {
+    if (!photo) {
+      setPhotoUploadStatus('Please select a photo first.');
+      return;
+    }
+
+    setIsPhotoUploading(true);
+    setPhotoUploadStatus('Uploading photo...');
+
+    try {
+      const response = await uploadPhoto(photo);
+      setFormData((prev) => ({ ...prev, photoFileId: response.fileId }));
+      setPhotoUploadStatus('Photo uploaded successfully! This will replace the existing photo when you update.');
+      setPhotoUploaded(true);
+    } catch (err) {
+      setPhotoUploaded(false);
+      setPhotoUploadStatus(`Failed to upload photo: ${err.message}`);
+    } finally {
+      setIsPhotoUploading(false);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPhoto(null);
+    setPhotoUrl(null);
+    setPhotoUploaded(false);
+    setPhotoUploadStatus('Photo removed. The existing photo will be retained unless you upload a new one.');
+    // Restore original photoFileId from employeeData
+    if (employeeData && employeeData.photoFileId) {
+      setFormData((prev) => ({ ...prev, photoFileId: employeeData.photoFileId }));
+    }
+  };
 
   // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
@@ -225,9 +303,6 @@ const UpdateEmployee = () => {
         mobile: formData.mobile.trim(),
         altMobile: formData.altMobile.trim(),
         email: formData.email.trim(),
-        idProofType: Number(formData.idProofType),
-        idNumber: formData.idNumber.trim(),
-        idExpiry: formData.idExpiry,
         departmentId: Number(formData.departmentId),
         designation: Number(formData.designation),
         qualification: formData.qualification.trim(),
@@ -238,8 +313,9 @@ const UpdateEmployee = () => {
         universityName: formData.universityName.trim(),
         pfNo: formData.pfNo.trim(),
         esiNo: formData.esiNo.trim(),
-        shiftId: Number(formData.shiftId),
+        shiftId: 0,
         status: Number(formData.status),
+        photoFileId: Number(formData.photoFileId),
       });
 
       setFormSuccess(true);
@@ -307,6 +383,68 @@ const UpdateEmployee = () => {
           {formSuccess && <div className="form-success">Employee updated successfully!</div>}
 
           <div className="form-grid">
+            {/* Photo Upload Section */}
+            <h3 className="form-section-title">Photo Upload</h3>
+            
+            <div className="form-group full-width">
+              <div className="photo-upload-container">
+                <div className="photo-preview-section">
+                  {photoUrl ? (
+                    <div className="photo-preview">
+                      <img src={photoUrl} alt="Employee Preview" />
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        className="remove-photo-btn"
+                        title="Remove photo"
+                      >
+                        <FiX />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="photo-placeholder">
+                      <FiUpload size={40} />
+                      <p>{employeeData.photoFileId ? 'Employee has existing photo' : 'No photo selected'}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="photo-upload-controls">
+                  <input
+                    type="file"
+                    id="photoInput"
+                    accept="image/jpeg,image/jpg,image/png"
+                    onChange={handlePhotoUpload}
+                    style={{ display: 'none' }}
+                  />
+                  <label htmlFor="photoInput" className="btn-select-photo">
+                    Select New Photo
+                  </label>
+                  
+                  {photo && !photoUploaded && (
+                    <button
+                      type="button"
+                      onClick={handlePhotoUploadSubmit}
+                      disabled={isPhotoUploading}
+                      className="btn-upload-photo"
+                    >
+                      {isPhotoUploading ? 'Uploading...' : 'Upload Photo'}
+                    </button>
+                  )}
+                  
+                  {photoUploadStatus && (
+                    <p className={`photo-status ${photoUploaded ? 'success' : 'info'}`}>
+                      {photoUploadStatus}
+                    </p>
+                  )}
+                  
+                  <p className="photo-hint">
+                    JPG, JPEG, or PNG. Max size: 4MB
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <h3 className="form-section-title">Basic Information</h3>
 
             <div className="form-group">
@@ -381,28 +519,6 @@ const UpdateEmployee = () => {
               <input type="email" name="email" value={formData.email} onChange={handleInputChange} />
             </div>
 
-            <h3 className="form-section-title">ID Proof Details</h3>
-
-            <div className="form-group">
-              <label>ID Proof Type</label>
-              <select name="idProofType" value={formData.idProofType} onChange={handleInputChange}>
-                <option value="0">Select ID Type</option>
-                {ID_PROOF_OPTIONS.map((id) => (
-                  <option key={id.id} value={id.id}>{id.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>ID Number</label>
-              <input name="idNumber" value={formData.idNumber} onChange={handleInputChange} />
-            </div>
-
-            <div className="form-group">
-              <label>ID Expiry</label>
-              <input type="date" name="idExpiry" value={formData.idExpiry} onChange={handleInputChange} />
-            </div>
-
             <h3 className="form-section-title">Professional Information</h3>
 
             <div className="form-group">
@@ -468,16 +584,6 @@ const UpdateEmployee = () => {
             </div>
 
             <div className="form-group">
-              <label>Shift</label>
-              <select name="shiftId" value={formData.shiftId} onChange={handleInputChange}>
-                <option value="0">Select Shift</option>
-                {SHIFT_OPTIONS.map((shift) => (
-                  <option key={shift.id} value={shift.id}>{shift.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
               <label>Status <span className="required">*</span></label>
               <select required name="status" value={formData.status} onChange={handleInputChange}>
                 {STATUS_OPTIONS.map((status) => (
@@ -493,7 +599,6 @@ const UpdateEmployee = () => {
               Cancel
             </button>
             <button type="submit" disabled={formLoading} className="btn-submit">
-             
               {formLoading ? 'Updating...' : 'Update Employee'}
             </button>
           </div>
