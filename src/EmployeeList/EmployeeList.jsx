@@ -60,10 +60,10 @@ const EmployeeList = () => {
     try {
       setLoading(true);
       setError(null);
-
+      const clinicId = localStorage.getItem('clinicID');
       const departmentId = selectedDepartmentId === 'all' ? 0 : Number(selectedDepartmentId) || 0;
 
-      const data = await getEmployeeList(0, {
+      const data = await getEmployeeList(clinicId, {
         EmployeeID: 0,
         DepartmentID: departmentId,
       });

@@ -66,6 +66,11 @@ const ViewEmployee = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('details');
+  
+  const getStoredClinicId = () => {
+  const clinicId = localStorage.getItem('clinicID');
+  return clinicId ? parseInt(clinicId, 10) : null;
+};
 
   // ────────────────────────────────────────────────
   useEffect(() => {

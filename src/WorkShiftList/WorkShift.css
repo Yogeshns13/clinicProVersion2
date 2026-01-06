@@ -46,7 +46,7 @@
   font-weight: 500;
 }
 
-.clinic-toolbar {
+.shift-toolbar {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -86,7 +86,7 @@
 
 .clinic-toolbar .branch-search-btn {
   position: absolute;
-  right: 160px;
+  right: 200px;
   top: 50%;
   transform: translateY(-50%);
   width: 40px;
@@ -114,7 +114,7 @@
   height: 40px;
   width: 150px;
   gap: 10px;
-  padding: 10px 10px;
+  padding: 10px 26px;
   background: linear-gradient(135deg, #016183, var(--primary-end));
   color: var(--text-light);
   font-weight: 700;
@@ -561,7 +561,7 @@
 
 .clinic-modal-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content:right;
   gap: 12px; /* Reduced from 14px */
   padding: 17px 23px; /* Reduced from 20px 27px */
   border-top: 2px solid rgba(34, 43, 108, 0.15);
@@ -646,7 +646,7 @@
 
 .clinic-subtitle {
   margin: 3px 0 0;
-  color: var(--text-light);
+  color: var(--text-dark);
   font-size: 0.6rem; /* Reduced from 0.7rem */
   font-weight: 500;
 }

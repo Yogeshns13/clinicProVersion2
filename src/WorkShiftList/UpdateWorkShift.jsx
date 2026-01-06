@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiX, FiArrowLeft, FiSave } from 'react-icons/fi';
-import { getShiftList, getClinicList, updateShift } from '../api/api.js';
+import { getShiftList, updateShift } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import './WorkShift.css';
@@ -24,11 +24,9 @@ const UpdateWorkShift = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [clinics, setClinics] = useState([]);
   const [shiftData, setShiftData] = useState(null);
 
   const [formData, setFormData] = useState({
-    clinicId: '',
     shiftName: '',
     timeStart: '',
     timeEnd: '',
@@ -39,6 +37,12 @@ const UpdateWorkShift = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
+
+  // ────────────────────────────────────────────────
+const getStoredClinicId = () => {
+  const clinicId = localStorage.getItem('clinicID');
+  return clinicId ? parseInt(clinicId, 10) : null;
+};
 
   // ────────────────────────────────────────────────
   // Helper functions
@@ -93,9 +97,6 @@ const UpdateWorkShift = () => {
         setLoading(true);
         setError(null);
 
-        const clinicData = await getClinicList();
-        setClinics(clinicData || []);
-
         const shiftList = await getShiftList(0);
         const shift = shiftList.find((s) => s.id === Number(shiftId));
 
@@ -106,7 +107,6 @@ const UpdateWorkShift = () => {
         setShiftData(shift);
 
         setFormData({
-          clinicId: shift.clinicId || '',
           shiftName: shift.shiftName || '',
           timeStart: formatTimeForInput(shift.timeStart) || '',
           timeEnd: formatTimeForInput(shift.timeEnd) || '',
@@ -150,7 +150,7 @@ const UpdateWorkShift = () => {
   };
 
   const handleBack = () => {
-    navigate('/workshift');
+    navigate('/work-shift');
   };
 
   const handleSubmit = async (e) => {
@@ -160,13 +160,18 @@ const UpdateWorkShift = () => {
     setFormSuccess(false);
 
     try {
+      const clinicId = getStoredClinicId();
+      if (!clinicId) {
+        throw new Error('Clinic ID not found in localStorage');
+      }
+
       const workingHours = formData.workingHours 
         ? parseFloat(formData.workingHours) 
         : calculateWorkingHours(formData.timeStart, formData.timeEnd);
 
       await updateShift({
         ShiftID: Number(shiftId),
-        ClinicID: Number(formData.clinicId),
+        ClinicID: clinicId,
         ShiftName: formData.shiftName.trim(),
         ShiftTimeStart: formatTimeFor24Hr(formData.timeStart),
         ShiftTimeEnd: formatTimeFor24Hr(formData.timeEnd),
@@ -176,7 +181,7 @@ const UpdateWorkShift = () => {
 
       setFormSuccess(true);
       setTimeout(() => {
-        navigate('/workshift');
+        navigate('/work-shift');
       }, 1500);
     } catch (err) {
       setFormError(err.message || 'Failed to update work shift.');
@@ -246,25 +251,6 @@ const UpdateWorkShift = () => {
 
               <div className="form-group full-width">
                 <label>
-                  Clinic <span className="required">*</span>
-                </label>
-                <select
-                  required
-                  name="clinicId"
-                  value={formData.clinicId}
-                  onChange={handleInputChange}
-                >
-                  <option value="">Select Clinic</option>
-                  {clinics.map((clinic) => (
-                    <option key={clinic.id} value={clinic.id}>
-                      {clinic.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group full-width">
-                <label>
                   Shift Name <span className="required">*</span>
                 </label>
                 <input
@@ -303,7 +289,7 @@ const UpdateWorkShift = () => {
               </div>
 
               <div className="form-group">
-                <label>Working Hours (auto-calculated)</label>
+                <label>Working Hours</label>
                 <input
                   type="number"
                   step="0.01"
@@ -311,7 +297,6 @@ const UpdateWorkShift = () => {
                   value={formData.workingHours}
                   onChange={handleInputChange}
                   placeholder="Auto-calculated from times"
-                  readOnly
                 />
               </div>
 

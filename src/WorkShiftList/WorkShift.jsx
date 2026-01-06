@@ -59,13 +59,31 @@ const WorkShift = () => {
   // ────────────────────────────────────────────────
   // Get Clinic ID from localStorage
   const getStoredClinicId = () => {
-    try {
-      const storedId = localStorage.getItem('clinicId');
-      return storedId ? parseInt(storedId, 10) : 0;
-    } catch (err) {
-      console.error('Failed to get clinicId from localStorage:', err);
-      return 0;
+  const clinicId = localStorage.getItem('clinicID');
+  return clinicId ? parseInt(clinicId, 10) : null;
+};
+
+  // ────────────────────────────────────────────────
+  // Helper function to calculate working hours
+  const calculateWorkingHours = (start, end) => {
+    if (!start || !end) return null;
+    
+    const [startHour, startMin] = start.split(':').map(Number);
+    const [endHour, endMin] = end.split(':').map(Number);
+    
+    let hours = endHour - startHour;
+    let minutes = endMin - startMin;
+    
+    if (minutes < 0) {
+      hours -= 1;
+      minutes += 60;
     }
+    
+    if (hours < 0) {
+      hours += 24;
+    }
+    
+    return hours + (minutes / 60);
   };
 
   // ────────────────────────────────────────────────
@@ -135,27 +153,6 @@ const WorkShift = () => {
       return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:00`;
     }
     return time;
-  };
-
-  const calculateWorkingHours = (start, end) => {
-    if (!start || !end) return null;
-    
-    const [startHour, startMin] = start.split(':').map(Number);
-    const [endHour, endMin] = end.split(':').map(Number);
-    
-    let hours = endHour - startHour;
-    let minutes = endMin - startMin;
-    
-    if (minutes < 0) {
-      hours -= 1;
-      minutes += 60;
-    }
-    
-    if (hours < 0) {
-      hours += 24;
-    }
-    
-    return hours + (minutes / 60);
   };
 
   // ────────────────────────────────────────────────
@@ -523,15 +520,14 @@ const WorkShift = () => {
                 </div>
 
                 <div className="form-group full-width">
-                  <label>Working Hours (auto-calculated)</label>
+                  <label>Working Hours</label>
                   <input
+                    required
                     type="number"
-                    step="0.01"
                     name="workingHours"
                     value={formData.workingHours}
                     onChange={handleInputChange}
                     placeholder="Auto-calculated from times"
-                    readOnly
                   />
                 </div>
               </div>

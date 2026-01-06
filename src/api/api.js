@@ -957,6 +957,8 @@ export const getEmployeeList = async (clinicId = 0, options = {}) => {
     Status: options.Status ?? -1          
   };
 
+  console.log("get Employee:", payload);
+
   try {
     const response = await API.post("/GetEmployeeList", payload);
     const results = Array.isArray(response.data?.result) ? response.data.result : [];
