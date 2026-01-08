@@ -37,6 +37,10 @@ import PatientList from "./Patients/PatientList.jsx";
 import ViewPatient from "./Patients/ViewPatinet.jsx";
 import AddPatient from "./Patients/AddPatient.jsx";
 import UpdatePatient from "./Patients/UpdatePatient.jsx";
+import AddSlotConfig from "./Slot/AddSlotConfig.jsx";
+import GenerateSlots from "./Slot/GenerateSlots.jsx";
+import SlotConfigList from "./Slot/SlotConfigList.jsx";
+import SlotList from "./Slot/SlotList.jsx";
 
 function App() {
   return (
@@ -79,6 +83,10 @@ function App() {
           <Route path="/reports" element={<Reports />} />
           <Route path="/attendance" element={<Attendance/>}/>
           <Route path="/settings" element={<Settings />} />
+          <Route path="/add-slotconfig" element={<AddSlotConfig/>}/>
+          <Route path="/generate-slots" element={<GenerateSlots />} />
+          <Route path="/slotconfig-list" element={<SlotConfigList/>}/>
+          <Route path="/slot-list" element={<SlotList/>} />
 
           {/* Default redirect inside protected area */}
           <Route path="/admin" element={<Navigate to="/dashboard" replace />} />

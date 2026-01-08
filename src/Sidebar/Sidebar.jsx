@@ -73,6 +73,8 @@ const Sidebar = () => {
       hasDropdown: true,
       subItems: [
         { to: "/patient-list", label: "Patients" },
+        { to: "/slotconfig-list", label: "SlotConfig List" },
+        { to: "/slot-list", label: "Slot-List" },
       ],
       show: hasAccess(MENU_PERMISSIONS.patients),
     },

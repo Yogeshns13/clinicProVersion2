@@ -133,10 +133,17 @@ DeleteSlotConfig
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000, 
-   "SlotConfigID":2
+   "SlotConfigID":6
    
 }
 
+{
+    "result": {
+        "IN_SLOT_CONFIG_ID": 6,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
 
 
 

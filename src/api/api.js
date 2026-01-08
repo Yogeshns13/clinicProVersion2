@@ -2781,5 +2781,608 @@ export const deletePatient = async (patientId) => {
   }
 };
 
+export const getSlotConfigList = async (clinicId = 0, options = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Optional: stricter validation in non-production environments
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  // Determine final IDs based on environment (same logic as getEmployeeList)
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,
+    SlotConfigID: options.SlotConfigID || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    DoctorID: options.DoctorID || 0,
+    DoctorName: options.DoctorName || "",
+    ShiftID: options.ShiftID || 0,
+    Duration: options.Duration || 0,
+    Status: options.Status ?? -1
+  };
+
+  console.log("getSlotConfig payload:", payload);
+
+  try {
+    const response = await API.post("/GetSlotConfigList", payload);
+    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    console.log("GetSlotConfigList response:", results);
+
+    return results.map((config) => ({
+      id: config.slot_config_id,
+      uniqueSeq: config.unique_seq,
+      clinicId: config.clinic_id,
+      clinicName: config.clinic_name,
+      branchId: config.branch_id,
+      branchName: config.branch_name,
+      doctorId: config.doctor_id,
+      doctorFullName: config.doctor_full_name,
+      doctorCode: config.doctor_code,
+      doctorName: config.doctor_name,
+      shiftId: config.shift_id,
+      shiftName: config.shift_name,
+      duration: config.duration,
+      durationDesc: config.duration_desc || "Unknown",
+      slotSpecificDate: config.slot_specific_date || null,
+      slotDate: config.slot_date || null,
+      slotInterval: config.slot_interval,
+      createSlotDays: config.create_slot_days,
+      status: config.status === 1 ? "active" : "inactive",
+      statusDesc: config.status_desc || "Unknown",
+      dateCreated: config.date_created,
+      dateModified: config.date_modified
+    }));
+  } catch (error) {
+    console.error("getSlotConfig failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || "Failed to fetch slot configurations"
+    };
+
+    throw err;
+  }
+};
+
+export const addSlotConfig = async (slotConfigData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Basic required-field validation (adjust as per your backend rules)
+  if (!slotConfigData?.doctorId || !slotConfigData?.shiftId) {
+    const validationError = new Error("Doctor ID and Shift ID are required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  // Optional: Add more validations if needed (e.g., Duration > 0, SlotInterval > 0, etc.)
+  if (slotConfigData.duration <= 0 || slotConfigData.slotInterval <= 0 || slotConfigData.createSlotDays <= 0) {
+    const validationError = new Error("Duration, SlotInterval, and CreateSlotDays must be positive numbers");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (slotConfigData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (slotConfigData.branchId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    DoctorID: slotConfigData.doctorId,
+    ShiftID: slotConfigData.shiftId,
+    Duration: slotConfigData.duration ?? 0,
+    SlotDate: slotConfigData.slotDate || "",  // Empty string if not provided (as in your example)
+    SlotInterval: slotConfigData.slotInterval ?? 15,
+    CreateSlotDays: slotConfigData.createSlotDays ?? 0
+  };
+
+  console.log("Add SlotConfig", payload);
+
+  try {
+    const response = await API.post("/AddSlotConfig", payload);
+
+    console.log("AddSlotConfig response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to add slot configuration");
+    }
+
+    return {
+      success: true,
+      slotConfigId: result.OUT_SLOT_CONFIG_ID,
+      message: result.OUT_ERROR || "OK"
+    };
+
+  } catch (error) {
+    console.error("addSlotConfig failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message: 
+        error.response?.data?.message || 
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message || 
+        "Failed to add slot configuration"
+    };
+
+    throw errorWithStatus;
+  }
+};
+
+export const deleteSlotConfig = async (slotConfigId) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // SlotConfigID is mandatory for delete
+  if (!slotConfigId && slotConfigId !== 0) {
+    const validationError = new Error("SlotConfigID is required to delete a slot configuration.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    SlotConfigID: slotConfigId
+  };
+
+  console.log("deleteSlotConfig payload:", payload);
+
+  try {
+    const response = await API.post("/DeleteSlotConfig", payload);
+    const result = response.data?.result;
+
+    // Validate backend response
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to delete slot configuration");
+    }
+
+    return {
+      success: true,
+      slotConfigId: result.IN_SLOT_CONFIG_ID || slotConfigId,
+      message: "Slot configuration deleted successfully"
+    };
+
+  } catch (error) {
+    console.error("deleteSlotConfig error:", error);
+
+    const errorMsg =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to delete slot configuration";
+
+    const enhancedError = new Error(errorMsg);
+    enhancedError.status = error.response?.status || 500;
+    enhancedError.code = error.response?.status || 500;
+
+    throw enhancedError;
+  }
+};
+
+export const generateSlots = async (slotData = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // ClinicID is required (same logic as updateEmployee)
+  if (!slotData?.clinicId && slotData?.clinicId !== 0) {
+    const validationError = new Error("ClinicID is required to generate slots.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const hasDateRange = !!(slotData.fromDate && slotData.toDate);
+  const hasDaysAhead = slotData.daysAhead !== undefined && Number.isInteger(slotData.daysAhead) && slotData.daysAhead > 0;
+
+  if (!hasDateRange && !hasDaysAhead) {
+    const validationError = new Error("You must provide either (FromDate + ToDate) or DaysAhead > 0.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  // Optional: warn if both are provided (backend might ignore one)
+  if (hasDateRange && hasDaysAhead) {
+    console.warn(
+      "generateSlots: Both date range (FromDate/ToDate) and DaysAhead provided. " +
+      "Backend behavior may be unpredictable — consider using only one method."
+    );
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (slotData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (slotData.branchId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    DaysAhead: hasDaysAhead ? Number(slotData.daysAhead) : 0,
+    FromDate: slotData.fromDate?.trim() || "",
+    ToDate: slotData.toDate?.trim() || ""
+  };
+
+  console.log("generateSlots payload:", payload);
+
+  try {
+    const response = await API.post("/GenerateSlots", payload);
+    console.log("GenerateSlots response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || result.OUT_OK !== 1) {
+      const errorMsg = result?.OUT_ERROR || "Failed to generate slots";
+      throw new Error(errorMsg);
+    }
+
+    return {
+      success: true,
+      message: "Slots generated successfully",
+    };
+
+  } catch (error) {
+    console.error("generateSlots error:", error);
+
+    const errorMessage =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to generate slots";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
+  }
+};
+
+export const getSlotList = async (clinicId = 0, options = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Optional: stricter validation in non-production
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  // Determine final IDs based on environment (same pattern as getEmployeeList)
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,
+    SlotConfigID: options.SlotConfigID || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    DoctorID: options.DoctorID || 0,
+    DoctorName: options.DoctorName || "",
+    SlotDate: options.SlotDate || "",           
+    FromSlotDate: options.FromSlotDate || "",   
+    ToSlotDate: options.ToSlotDate || "",       
+    IsBooked: options.IsBooked ?? -1,           
+    Status: options.Status ?? -1               
+  };
+
+  console.log("get SlotList payload:", payload);
+
+  try {
+    const response = await API.post("/GetSlotList", payload);
+    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    console.log("GetSlotList response:", results);
+
+    return results.map((slot) => ({
+      id: slot.slot_id,
+      uniqueSeq: slot.unique_seq,
+      clinicId: slot.clinic_id,
+      clinicName: slot.clinic_name,
+      branchId: slot.branch_id,
+      branchName: slot.branch_name,
+      doctorId: slot.doctor_id,
+      doctorFullName: slot.doctor_full_name,
+      doctorCode: slot.doctor_code,
+      doctorName: slot.doctor_name,
+      slotDate: slot.slot_date || null,           
+      slotTime: slot.slot_time || null,           
+      isBooked: !!slot.is_booked,                 
+      bookedDesc: slot.booked_desc || "Unknown",
+      appointmentId: slot.appointment_id ?? null,
+      status: slot.status === 1 ? "active" : "inactive",
+      statusDesc: slot.status_desc || "Unknown",
+      dateCreated: slot.date_created || null,
+      dateModified: slot.date_modified || null
+    }));
+  } catch (error) {
+    console.error("getSlotList failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || "Failed to fetch slots"
+    };
+
+    throw err;
+  }
+};
+
+export const addSlot = async (slotData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Basic required-field validation
+  if (!slotData?.doctorId || !slotData?.slotDate || !slotData?.slotTime) {
+    const validationError = new Error("Doctor ID, Slot Date, and Slot Time are required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  // Optional: basic format check for date and time (you can make it stricter if needed)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(slotData.slotDate)) {
+    const validationError = new Error("Slot Date must be in YYYY-MM-DD format");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  if (!/^\d{2}:\d{2}:\d{2}$/.test(slotData.slotTime)) {
+    const validationError = new Error("Slot Time must be in HH:MM:SS format");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (slotData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (slotData.branchId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    DoctorID: slotData.doctorId,
+    SlotDate: slotData.slotDate,
+    SlotTime: slotData.slotTime
+  };
+
+  console.log("Add Slot", payload);
+
+  try {
+    const response = await API.post("/AddSlot", payload);
+
+    console.log("AddSlot response:", response.data);
+
+    const result = response.data?.result;
+
+    // Validate expected response structure
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to add slot");
+    }
+
+    // Return success with new slot ID
+    return {
+      success: true,
+      slotId: result.OUT_SLOT_ID,
+      message: result.OUT_ERROR || "OK"
+    };
+
+  } catch (error) {
+    console.error("addSlot failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message: 
+        error.response?.data?.message || 
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message || 
+        "Failed to add slot"
+    };
+
+    throw errorWithStatus;
+  }
+};
+
+export const deleteSlot = async (slotId) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // SlotID is mandatory for delete
+  if (!slotId && slotId !== 0) {
+    const validationError = new Error("SlotID is required to delete a slot.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    SlotID: slotId
+  };
+
+  console.log("deleteSlot payload:", payload);
+
+  try {
+    const response = await API.post("/DeleteSlot", payload);
+    const result = response.data?.result;
+
+    // Validate backend response
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to delete slot");
+    }
+
+    return {
+      success: true,
+      slotId: result.IN_SLOT_ID || slotId,
+      message: "Slot deleted successfully"
+    };
+
+  } catch (error) {
+    console.error("deleteSlot error:", error);
+
+    const errorMsg =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to delete slot";
+
+    const enhancedError = new Error(errorMsg);
+    enhancedError.status = error.response?.status || 500;
+    enhancedError.code = error.response?.status || 500;
+
+    throw enhancedError;
+  }
+};
+
+export const updateSlot = async (slotData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // SlotID is mandatory for update
+  if (!slotData?.slotId && slotData?.slotId !== 0) {
+    const validationError = new Error("SlotID is required to update a slot.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    SlotID: slotData.slotId,          
+    AppointmentID: slotData.appointmentId ?? 0,   
+    IsBooked: slotData.isBooked ?? 0            
+  };
+
+  console.log("updateSlot payload:", payload);
+
+  try {
+    const response = await API.post("/UpdateSlot", payload);
+    console.log("UpdateSlot response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to update slot");
+    }
+
+    return {
+      success: true,
+      slotId: result.IN_SLOT_ID || slotData.slotId,  // echo back the updated ID
+      message: "Slot updated successfully"
+    };
+
+  } catch (error) {
+    console.error("updateSlot error:", error);
+
+    const errorMessage =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to update slot";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
+  }
+};
+
+
+
+
+
 
 

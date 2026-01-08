@@ -28,6 +28,10 @@ const ROUTE_PERMISSIONS = {
   "/reports": ["admin", "doctor"],
   "/attendance": ["admin","doctor"],
   "/settings": ["admin"],
+  "/add-slotconfig": ["admin", "doctor", "receptionist"],
+  "/generate-slots": ["admin", "doctor", "receptionist"],
+  "/slotconfig-list": ["admin", "doctor", "receptionist"],
+  "/slot-list": ["admin", "doctor", "receptionist"],
 };
 
 const PrivateRoute = ({ children }) => {

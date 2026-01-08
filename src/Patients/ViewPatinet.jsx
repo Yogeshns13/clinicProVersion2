@@ -94,7 +94,8 @@ const ViewPatient = () => {
     return MARITAL_STATUS_OPTIONS.find((m) => m.id === maritalStatusId)?.label || '—';
   };
 
-  const formatDate = (dateString) => {
+  const 
+  formatDate = (dateString) => {
     if (!dateString) return '—';
     try {
       const date = new Date(dateString);
