@@ -10,7 +10,6 @@ AddAppointment
     "DoctorID":1000001,
     "SlotID":  2,  
     "Reason": "having high fever"
-   
 }
 
 CancelAppointment
@@ -20,7 +19,6 @@ CancelAppointment
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000, 
    "AppointmentID":3000000
-   
 }
 
 GetAppointmentList
@@ -43,8 +41,6 @@ GetAppointmentList
     "ToDate":"",
     "SlotID":0,
     "Status":-1
-   
-   
 }
 
 _________________________________________________________________________________________________________________________
@@ -162,7 +158,6 @@ AddAppointment
     "DoctorID":1000001,
     "SlotID":  92,  
     "Reason": "having high stomach ache"
-   
 }
 
 {
@@ -181,8 +176,7 @@ CancelAppointment
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000, 
-   "AppointmentID":3000003
-   
+    "AppointmentID":3000003
 }
 
 {

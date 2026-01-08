@@ -88,7 +88,7 @@ GetPatientList
     "PatientID":2000000,
     "ClinicID":1,
     "BranchID":0,
-    "FirstName":"",
+    "FirstName":"",0.
     "LastName":"",  
     "FileNo":"",
     "Name":"",

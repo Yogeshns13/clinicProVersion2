@@ -16,9 +16,7 @@ AddPatientVisit
     "BPSystolic":130,
    "BPDiastolic": 90,
    "Temperature":100.2,
-   "Weight":88.5
-
-   
+   "Weight":88.5  
 }
 
 UpdatePatientVisit
@@ -27,19 +25,17 @@ UpdatePatientVisit
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000, 
-    "VisitID":4000000,    
+    "VisitID":4000000,
     "AppointmentID":1,    
     "DoctorID":1000001,
     "VisitDate": "2025-11-25",  
     "VisitTime":"10:00:00",
     "Reason": "having high fever",
-   "Symptoms":"Fever cold and head ache",
+    "Symptoms":"Fever cold and head ache",
     "BPSystolic":130,
    "BPDiastolic": 90,
    "Temperature":100.2,
    "Weight":88.5
-
-   
 }
 
 
@@ -63,5 +59,4 @@ GetPatientVisitList
     "FromVisitDate":"",
     "ToVisitDate":"",
     "Reason":""
-   
 }

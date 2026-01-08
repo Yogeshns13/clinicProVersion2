@@ -12,7 +12,7 @@ import LoginPage from "./LoginPage/LoginPage";
 
 // Protected Pages (inside AdminLayout)
 import Dashboard from "./Dashboard/Dashboard.jsx";
-import Patients from "./Patients/Patients.jsx";
+import Patients from "./Patients/PatientList.jsx";
 import Appointments from "./Appointments/Appointments.jsx";
 import Prescriptions from "./Prescriptions/Prescriptions.jsx";
 import Reports from "./Reports/Reports.jsx";
@@ -33,6 +33,10 @@ import EmployeeAccount from "./EmployeeList/EmployeeAccount.jsx";
 import EmployeeShift from "./EmployeeList/EmployeeShift.jsx";
 import WorkShift from "./WorkShiftList/WorkShift.jsx";
 import UpdateWorkShift from "./WorkShiftList/UpdateWorkShift.jsx";
+import PatientList from "./Patients/PatientList.jsx";
+import ViewPatient from "./Patients/ViewPatinet.jsx";
+import AddPatient from "./Patients/AddPatient.jsx";
+import UpdatePatient from "./Patients/UpdatePatient.jsx";
 
 function App() {
   return (
@@ -66,7 +70,10 @@ function App() {
           <Route path="/employee-proof/:id" element={<EmployeeProof />} />
           <Route path="/employee-account/:id" element={<EmployeeAccount />} />
           <Route path="/employee-shift/:id" element={<EmployeeShift />} />
-          <Route path="/patients" element={<Patients />} />
+          <Route path="/patient-list" element={<PatientList />} />
+          <Route path="/view-patient/:id" element={<ViewPatient />} />
+          <Route path="/add-patient" element={<AddPatient />} />
+          <Route path="/update-patient/:id" element={<UpdatePatient />} />
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/prescriptions" element={<Prescriptions />} />
           <Route path="/reports" element={<Reports />} />

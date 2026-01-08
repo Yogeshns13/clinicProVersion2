@@ -8,10 +8,9 @@ AddSlot
     "BranchID"  :1,
     "DoctorID":1000001,
     "SlotDate":"2025-12-01",
-    "SlotTime":"10:00:00"
-    
-   
+    "SlotTime":"10:00:00" 
 }
+
 UpdateSlot
 {
     "CHANNEL_ID":1,
@@ -21,12 +20,7 @@ UpdateSlot
     "SlotID": 1,
     "AppointmentID"  :1,
     "IsBooked":1
-   
-    
-   
 }
-
-
 
 DeleteSlot
 {               
@@ -55,8 +49,6 @@ GetSlotList
     "ToSlotDate":"",
     "IsBooked":-1,
     "Status":-1
-   
-   
 }
 
 -- SlotDate (exact slot date) pass null to ignore
@@ -72,8 +64,8 @@ GenerateSlots
      "ClinicID": 1,
     "BranchID":1,
     "DaysAhead":10,
-    "FromSlotDate":"",
-    "ToSlotDate":"",
+    "FromDate":"",
+    "ToDate":"",
         
 }
 -- DaysAhead is to define for how many days the slots should be prepared.
@@ -98,9 +90,7 @@ GetSlotList
     "FromSlotDate":"",
     "ToSlotDate":"",
     "IsBooked":-1,
-    "Status":-1
-   
-   
+    "Status":-1 
 }
 
 {
@@ -601,12 +591,11 @@ GenerateSlots
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000,
-     "ClinicID": 1,
+    "ClinicID": 1,
     "BranchID":1,
     "DaysAhead":2,
-    "FromSlotDate":"2025-12-10",
-    "ToSlotDate":"2025-12-11"
-        
+    "FromDate":"2025-12-10",
+    "ToDate":"2025-12-11"     
 }
 
 {

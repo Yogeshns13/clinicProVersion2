@@ -916,7 +916,6 @@ export const updateDepartment = async (departmentData) => {
   }
 };
 
-
 export const getEmployeeList = async (clinicId = 0, options = {}) => {
   const userId = getUserId();
   if (!userId) {
@@ -1053,8 +1052,8 @@ export const addEmployee = async (employeeData) => {
     ClinicID: finalClinicId,
     BranchID: finalBranchId,
     EmployeeCode: employeeData.employeeCode || "",
-    FirstName: employeeData.firstName || employeeData.FirstName || "",
-    LastName: employeeData.lastName || employeeData.LastName || "",
+    FirstName: employeeData.firstName || "",
+    LastName: employeeData.lastName || "",
     PhotoFileID: employeeData.photoFileId ?? 0,
     Gender: employeeData.gender ?? 0,                
     BirthDate: employeeData.birthDate || "",         
@@ -1165,8 +1164,8 @@ export const updateEmployee = async (employeeData) => {
     ClinicID: finalClinicId,
     BranchID: finalBranchId,
     EmployeeCode: employeeData.employeeCode?.trim() || "",
-    FirstName: employeeData.firstName?.trim() || employeeData.FirstName?.trim() || "",
-    LastName: employeeData.lastName?.trim() || employeeData.LastName?.trim() || "",
+    FirstName: employeeData.firstName?.trim() || "",
+    LastName: employeeData.lastName?.trim() || "",
     PhotoFileID: employeeData.photoFileId ?? 0,
     Gender: employeeData.gender ?? 0,
     BirthDate: employeeData.birthDate?.trim() || "",
@@ -2420,5 +2419,367 @@ export const deleteShift = async (shiftId) => {
     throw enhancedError;
   }
 };
+
+export const getPatientsList = async (clinicId = 0, options = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Optional: stricter validation in non-production environments
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  // Determine final IDs based on environment (same logic as employees)
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,
+    PatientID: options.PatientID || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    FirstName: options.FirstName || "",
+    LastName: options.LastName || "",
+    FileNo: options.FileNo || "",
+    Name: options.Name || "",
+    Mobile: options.Mobile || "",
+    Gender: options.Gender ?? 0,
+    BloodGroup: options.BloodGroup ?? 0,
+    FamilyPatientID: options.FamilyPatientID || 0,
+    Status: options.Status ?? -1
+  };
+
+  console.log("get Patients payload:", payload);
+
+  try {
+    const response = await API.post("/GetPatientList", payload);
+    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    console.log("GetPatientList response:", results);
+
+    return results.map((patient) => ({
+      id: patient.patient_id,
+      uniqueSeq: patient.unique_seq,
+      clinicId: patient.clinic_id,
+      clinicName: patient.clinic_name,
+      branchId: patient.branch_id,
+      branchName: patient.branch_name,
+      fileNo: patient.file_no,
+      patientName: patient.patient_name,
+      firstName: patient.first_name,
+      lastName: patient.last_name,
+      gender: patient.gender,               
+      genderDesc: patient.gender_desc || "Unknown",
+      birthDate: patient.birth_date || null,
+      age: patient.age || null,             
+      bloodGroup: patient.blood_group,    
+      bloodGroupDesc: patient.blood_group_desc || null,
+      maritalStatus: patient.marital_status,
+      maritalStatusDesc: patient.marital_status_desc || null,
+      mobile: patient.mobile || null,
+      altMobile: patient.alt_mobile || null,
+      email: patient.email || null,
+      address: patient.address || null,
+      emergencyContactNo: patient.emergency_contact_no || null,
+      allergies: patient.allergies || null,
+      existingMedicalConditions: patient.existing_medical_conditions || null,
+      status: patient.status === 1 ? "active" : "inactive",
+      statusDesc: patient.status_desc || "Unknown",
+      dateCreated: patient.date_created,
+      dateModified: patient.date_modified
+    }));
+  } catch (error) {
+    console.error("getPatientsList failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || "Failed to fetch patients"
+    };
+
+    throw err;
+  }
+};
+
+export const addPatient = async (patientData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Basic required-field validation (adjust as per your backend requirements)
+  if (!patientData?.firstName || !patientData?.lastName) {
+    const validationError = new Error("First name and last name are required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  if (!patientData?.mobile) {
+    const validationError = new Error("Mobile number is required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  // Optional: stricter ClinicID validation in non-production
+  if (PRODUCTION_MODE !== true) {
+    if (patientData.clinicId < 0 || (patientData.clinicId !== 0 && isNaN(patientData.clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (patientData.clinicId);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (patientData.branchID);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    FirstName: patientData.firstName || "",
+    LastName: patientData.lastName  || "",
+    Gender: patientData.gender ??  0,
+    BirthDate: patientData.birthDate ||  "",
+    Age: patientData.age ??  0,                    
+    BloodGroup: patientData.bloodGroup ??  0,
+    PhotoFileID: patientData.photoFileId ??  0,
+    MaritalStatus: patientData.maritalStatus ??  0,
+    Mobile: patientData.mobile ||  "",
+    AltMobile: patientData.altMobile || "",
+    Email: patientData.email ||  "",
+    Address: patientData.address || "",
+    EmergencyContactNo: patientData.emergencyContactNo ||  "",
+    Allergies: patientData.allergies || "No Allergies",
+    ExistingMedicalConditions: patientData.existingMedicalConditions || "Not reported",
+    PastSurgeries: patientData.pastSurgeries ||  "Nothing",
+    CurrentMedications: patientData.currentMedications || "NA",
+    FamilyMedicalHistory: patientData.familyMedicalHistory ||  "",
+    ImmunizationRecords: patientData.immunizationRecords || "Not Available",
+    FamilyPatientID: patientData.familyPatientId ?? 0,
+  };
+
+  console.log("Add Patient Payload:", payload);
+
+  try {
+    const response = await API.post("/AddPatient", payload);
+
+    console.log("AddPatient response:", response.data);
+
+    const result = response.data?.result;
+
+    // Validate expected response structure
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to add patient");
+    }
+
+    // Return success with new patient ID
+    return {
+      success: true,
+      patientId: result.OUT_PATIENT_ID,
+      message: result.OUT_ERROR || "OK"
+    };
+
+  } catch (error) {
+    console.error("addPatient failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message:
+        error.response?.data?.message ||
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message ||
+        "Failed to add patient"
+    };
+
+    throw errorWithStatus;
+  }
+};
+
+export const updatePatient = async (patientData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // PatientID is mandatory for update
+  if (!patientData?.patientId && patientData?.patientId !== 0) {
+    const validationError = new Error("PatientID is required to update a patient.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  // ClinicID is also typically required
+  if (!patientData?.clinicId && patientData?.clinicId !== 0) {
+    const validationError = new Error("ClinicID is required to update a patient.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  if (PRODUCTION_MODE !== true) {
+    if (patientData.clinicId < 0 || (patientData.clinicId !== 0 && isNaN(patientData.clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (patientData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (patientData.branchId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    PatientID: patientData.patientId || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    FirstName: patientData.firstName?.trim() || "",
+    LastName: patientData.lastName?.trim() || "",
+    Gender: patientData.gender ?? 0,
+    BirthDate: patientData.birthDate?.trim() || "",
+    Age: patientData.age ?? 0,
+    BloodGroup: patientData.bloodGroup ?? 0,
+    PhotoFileID: patientData.photoFileId ?? 0,
+    MaritalStatus: patientData.maritalStatus ?? 0,
+    Mobile: patientData.mobile?.trim() || "",
+    AltMobile: patientData.altMobile?.trim() || "",
+    Email: patientData.email?.trim() || "",
+    Address: patientData.address?.trim() || "",
+    EmergencyContactNo: patientData.emergencyContactNo?.trim() || "",
+    Allergies: patientData.allergies?.trim() || "",
+    ExistingMedicalConditions: patientData.existingMedicalConditions?.trim() || "",
+    PastSurgeries: patientData.pastSurgeries?.trim() || "",
+    CurrentMedications: patientData.currentMedications?.trim() || "",
+    FamilyMedicalHistory: patientData.familyMedicalHistory?.trim() || "",
+    ImmunizationRecords: patientData.immunizationRecords?.trim() || "",
+    FamilyPatientID: patientData.familyPatientId ?? 0,
+    Status: patientData.status ?? 1  // usually 1 = active
+  };
+
+  console.log("updatePatient payload:", payload);
+
+  try {
+    const response = await API.post("/UpdatePatient", payload);
+    console.log("UpdatePatient response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to update patient");
+    }
+
+    return {
+      success: true,
+      patientId: result.IN_PATIENT_ID || patientData.patientId,
+      message: "Patient updated successfully"
+    };
+
+  } catch (error) {
+    console.error("updatePatient error:", error);
+
+    const errorMessage =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to update patient";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
+  }
+};
+
+export const deletePatient = async (patientId) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // PatientID is mandatory for delete
+  if (!patientId && patientId !== 0) {
+    const validationError = new Error("PatientID is required to delete a patient.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    PatientID: patientId
+  };
+
+  console.log("deletePatient payload:", payload);
+
+  try {
+    const response = await API.post("/DeletePatient", payload);
+    const result = response.data?.result;
+
+    // Validate backend response
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to delete patient");
+    }
+
+    return {
+      success: true,
+      patientId: result.IN_PATIENT_ID || patientId,
+      message: "Patient deleted successfully"
+    };
+
+  } catch (error) {
+    console.error("deletePatient error:", error);
+
+    const errorMsg =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to delete patient";
+
+    const enhancedError = new Error(errorMsg);
+    enhancedError.status = error.response?.status || 500;
+    enhancedError.code = error.response?.status || 500;
+
+    throw enhancedError;
+  }
+};
+
 
 

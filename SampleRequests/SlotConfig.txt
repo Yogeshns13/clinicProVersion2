@@ -6,19 +6,20 @@ AddSlotConfig
     "USER_ID" : 2000000, 
     "ClinicID": 1,
     "BranchID"  :1,
-    "DoctorID":1000001,
+    "DoctorID":1000000,
     "ShiftID":1,
-    "Duration":1,
-    "SlotDate":"2025-11-30",
+    "Duration":3,
+    "SlotDate":"2026-01-09",
     "SlotInterval":30,
-    "CreateSlotDays":30
-   
+    "CreateSlotDays":1 
 }
+
+
 -- Duration text table #39  1-daily, 2-week end, 3- specific date. if 3, then get the date.
 -- Slot Interval in minutes (how long a single slot will be)
 -- Slot Date mandatory for Duration 3
 
-
+33
 
 DeleteSlotConfig
 {               
@@ -29,6 +30,7 @@ DeleteSlotConfig
    "SlotConfigID":1
    
 }
+
 GetSlotConfigList
 {
     "CHANNEL_ID":1,

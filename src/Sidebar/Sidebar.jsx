@@ -66,7 +66,16 @@ const Sidebar = () => {
       ],
       show: hasAccess(MENU_PERMISSIONS.employee),
     },
-    { to: "/patients", icon: FiUsers, label: "Patients", show: hasAccess(MENU_PERMISSIONS.patients) },
+    {
+      id: "patients",
+      icon: FiUsers,
+      label: "Patients",
+      hasDropdown: true,
+      subItems: [
+        { to: "/patient-list", label: "Patients" },
+      ],
+      show: hasAccess(MENU_PERMISSIONS.patients),
+    },
     { to: "/appointments", icon: FiCalendar, label: "Appointments", show: hasAccess(MENU_PERMISSIONS.appointments) },
     { to: "/prescriptions", icon: FiFileText, label: "Prescriptions", show: hasAccess(MENU_PERMISSIONS.prescriptions) },
     { to: "/reports", icon: FiBarChart2, label: "Reports", show: hasAccess(MENU_PERMISSIONS.reports) },
