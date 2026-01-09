@@ -1,7 +1,7 @@
 // src/components/SlotList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { FiSearch, FiCalendar, FiClock, FiCheckCircle, FiXCircle } from 'react-icons/fi';
-import { getSlotList, getEmployeeList, deleteSlot } from '../api/api.js';
+import { FiSearch, FiCalendar, FiClock, FiCheckCircle, FiXCircle, FiTrash2, FiEdit, FiPlus, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { getSlotList, getSlotConfigList, getEmployeeList, deleteSlot, updateSlot, addSlot } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import './SlotConfigList.css';
@@ -10,6 +10,7 @@ const SlotList = () => {
   // Data & Filter
   const [slots, setSlots] = useState([]);
   const [allSlots, setAllSlots] = useState([]);
+  const [slotConfigs, setSlotConfigs] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctorId, setSelectedDoctorId] = useState('all');
   const [selectedDate, setSelectedDate] = useState('');
@@ -19,6 +20,30 @@ const SlotList = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Calendar state
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [showCalendar, setShowCalendar] = useState(false);
+
+  // Modal states
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+
+  // Hover state
+  const [hoveredSlotId, setHoveredSlotId] = useState(null);
+
+  // Form states
+  const [formData, setFormData] = useState({
+    doctorId: '',
+    slotDate: '',
+    slotTime: ''
+  });
+
+  const [updateFormData, setUpdateFormData] = useState({
+    appointmentId: 0,
+    isBooked: 0
+  });
 
   // Stats
   const [stats, setStats] = useState({
@@ -43,6 +68,22 @@ const SlotList = () => {
       }
     };
     fetchDoctors();
+  }, []);
+
+  // Fetch SlotConfigs for calendar display
+  useEffect(() => {
+    const fetchSlotConfigs = async () => {
+      try {
+        const clinicId = localStorage.getItem('clinicID');
+        const data = await getSlotConfigList(clinicId, {
+          Status: 1
+        });
+        setSlotConfigs(data);
+      } catch (err) {
+        console.error('Failed to load slot configs:', err);
+      }
+    };
+    fetchSlotConfigs();
   }, []);
 
   const fetchSlots = async () => {
@@ -97,6 +138,49 @@ const SlotList = () => {
   }, [selectedDoctorId, selectedDate, bookedFilter]);
 
   // ────────────────────────────────────────────────
+  // Calendar functions
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    return { daysInMonth, startingDayOfWeek, year, month };
+  };
+
+  const getSlotsForDate = (date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    return allSlots.filter(slot => slot.slotDate === dateStr);
+  };
+
+  const getSlotConfigsForDate = (date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    return slotConfigs.filter(config => {
+      // Check if slotSpecificDate matches
+      if (config.slotSpecificDate === dateStr) return true;
+      // Check if slotDate matches
+      if (config.slotDate === dateStr) return true;
+      return false;
+    });
+  };
+
+  const handlePrevMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+  };
+
+  const handleDateClick = (day) => {
+    const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    setSelectedDate(dateStr);
+    setShowCalendar(false);
+  };
+
+  // ────────────────────────────────────────────────
   // Computed values
   const filteredSlots = useMemo(() => {
     if (!searchTerm.trim()) return allSlots;
@@ -147,7 +231,87 @@ const SlotList = () => {
 
   const formatTime = (timeStr) => {
     if (!timeStr) return '—';
-    return timeStr.substring(0, 5); // HH:MM
+    const [hours, minutes] = timeStr.split(':');
+    const hour = parseInt(hours, 10);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${period}`;
+  };
+
+  // ────────────────────────────────────────────────
+  // CRUD Handlers
+  const handleAddSlot = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const clinicId = localStorage.getItem('clinicID');
+      
+      await addSlot({
+        clinicId: parseInt(clinicId),
+        branchId: 0,
+        doctorId: parseInt(formData.doctorId),
+        slotDate: formData.slotDate,
+        slotTime: formData.slotTime + ':00'
+      });
+
+      setShowAddModal(false);
+      setFormData({ doctorId: '', slotDate: '', slotTime: '' });
+      fetchSlots();
+    } catch (err) {
+      console.error('Add slot error:', err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteSlot = async (slotId) => {
+    if (!window.confirm('Are you sure you want to delete this slot?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await deleteSlot(slotId);
+      fetchSlots();
+    } catch (err) {
+      console.error('Delete slot error:', err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateSlot = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      
+      await updateSlot({
+        slotId: selectedSlot.id,
+        appointmentId: parseInt(updateFormData.appointmentId),
+        isBooked: parseInt(updateFormData.isBooked)
+      });
+
+      setShowUpdateModal(false);
+      setSelectedSlot(null);
+      setUpdateFormData({ appointmentId: 0, isBooked: 0 });
+      fetchSlots();
+    } catch (err) {
+      console.error('Update slot error:', err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openUpdateModal = (slot) => {
+    setSelectedSlot(slot);
+    setUpdateFormData({
+      appointmentId: slot.appointmentId || 0,
+      isBooked: slot.isBooked ? 1 : 0
+    });
+    setShowUpdateModal(true);
   };
 
   // ────────────────────────────────────────────────
@@ -177,10 +341,118 @@ const SlotList = () => {
   if (error) return <div className="clinic-error">Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
+  // Calendar rendering
+  const renderCalendar = () => {
+    const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(currentMonth);
+    const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    
+    const days = [];
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const daySlots = getSlotsForDate(date);
+      const dayConfigs = getSlotConfigsForDate(date);
+      
+      const hasSlots = daySlots.length > 0;
+      const hasConfigs = dayConfigs.length > 0;
+      const availableSlots = daySlots.filter(s => !s.isBooked).length;
+
+      // Determine day class based on what it has
+      let dayClass = 'calendar-day';
+      if (hasSlots && hasConfigs) {
+        dayClass += ' has-both';
+      } else if (hasSlots) {
+        dayClass += ' has-slots';
+      } else if (hasConfigs) {
+        dayClass += ' has-configs';
+      }
+
+      days.push(
+        <div
+          key={day}
+          className={dayClass}
+          onClick={() => handleDateClick(day)}
+        >
+          <span className="day-number">{day}</span>
+          {(hasSlots || hasConfigs) && (
+            <div className="day-indicators">
+              {hasConfigs && (
+                <div className="config-indicator" title={`${dayConfigs.length} config(s)`}>
+                  <span className="config-dot"></span>
+                </div>
+              )}
+              {hasSlots && (
+                <div className="slots-indicator" title={`${availableSlots}/${daySlots.length} slots available`}>
+                  <span className="slots-count">{availableSlots}/{daySlots.length}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="calendar-modal">
+        <div className="calendar-overlay" onClick={() => setShowCalendar(false)}></div>
+        <div className="calendar-container">
+          <div className="calendar-header">
+            <button onClick={handlePrevMonth} className="calendar-nav-btn">
+              <FiChevronLeft size={20} />
+            </button>
+            <h3>{monthName}</h3>
+            <button onClick={handleNextMonth} className="calendar-nav-btn">
+              <FiChevronRight size={20} />
+            </button>
+          </div>
+          <div className="calendar-legend">
+            <div className="legend-item">
+              <span className="legend-color config-color"></span>
+              <span>Slot Config</span>
+            </div>
+            <div className="legend-item">
+              <span className="legend-color slot-color"></span>
+              <span>Slot Date</span>
+            </div>
+            <div className="legend-item">
+              <span className="legend-color both-color"></span>
+              <span>Both</span>
+            </div>
+          </div>
+          <div className="calendar-weekdays">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <div key={day} className="calendar-weekday">{day}</div>
+            ))}
+          </div>
+          <div className="calendar-days">
+            {days}
+          </div>
+          <div className="calendar-footer">
+            <button onClick={() => setShowCalendar(false)} className="calendar-close-btn">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ────────────────────────────────────────────────
   return (
     <div className="clinic-list-wrapper">
       <ErrorHandler error={error} />
-      <Header title="Appointment Slots" />
+      <Header 
+        title="Appointment Slots"
+        actions={
+          <button onClick={() => setShowAddModal(true)} className="clinic-generate-btn">
+            <FiPlus size={18} />
+            Add Slot
+          </button>
+        }
+      />
 
       {/* Stats Cards */}
       <div className="stats-container">
@@ -244,6 +516,10 @@ const SlotList = () => {
               Clear
             </button>
           )}
+          <button onClick={() => setShowCalendar(true)} className="calendar-toggle-btn">
+            <FiCalendar size={18} />
+            Calendar
+          </button>
         </div>
 
         <div className="clinic-select-wrapper">
@@ -283,7 +559,7 @@ const SlotList = () => {
           Object.entries(groupedSlots).map(([date, dateSlots]) => (
             <div key={date} className="date-group">
               <div className="date-header">
-                <FiCalendar size={20} />
+                <FiCalendar size={18} />
                 <h3>{formatDate(date)}</h3>
                 <span className="slot-count">
                   {dateSlots.length} slot{dateSlots.length !== 1 ? 's' : ''}
@@ -295,9 +571,11 @@ const SlotList = () => {
                   <div 
                     key={slot.id} 
                     className={`slot-card ${slot.isBooked ? 'booked' : 'available'}`}
+                    onMouseEnter={() => setHoveredSlotId(slot.id)}
+                    onMouseLeave={() => setHoveredSlotId(null)}
                   >
                     <div className="slot-time">
-                      <FiClock size={16} />
+                      <FiClock size={14} />
                       {formatTime(slot.slotTime)}
                     </div>
 
@@ -314,15 +592,36 @@ const SlotList = () => {
                     <div className="slot-status">
                       {slot.isBooked ? (
                         <>
-                          <FiCheckCircle size={16} className="status-icon booked" />
+                          <FiCheckCircle size={14} className="status-icon booked" />
                           <span className="status-text booked">Booked</span>
                         </>
                       ) : (
                         <>
-                          <FiXCircle size={16} className="status-icon available" />
+                          <FiXCircle size={14} className="status-icon available" />
                           <span className="status-text available">Available</span>
                         </>
                       )}
+                    </div>
+
+                    {/* Hover Actions - Show only on hover */}
+                    <div className={`slot-actions ${hoveredSlotId === slot.id ? 'visible' : ''}`}>
+                      {/* Update button only for booked slots */}
+                      {slot.isBooked && (
+                        <button 
+                          onClick={() => openUpdateModal(slot)}
+                          className="btn-icon-edit"
+                          title="Update Slot"
+                        >
+                          <FiEdit size={14} />
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => handleDeleteSlot(slot.id)}
+                        className="btn-icon-delete"
+                        title="Delete Slot"
+                      >
+                        <FiTrash2 size={14} />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -331,6 +630,122 @@ const SlotList = () => {
           ))
         )}
       </div>
+
+      {/* Add Slot Modal */}
+      {showAddModal && (
+        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Add New Slot</h2>
+              <button onClick={() => setShowAddModal(false)} className="modal-close-btn">×</button>
+            </div>
+            <form onSubmit={handleAddSlot} className="modal-form">
+              <div className="form-group">
+                <label>Doctor *</label>
+                <select
+                  value={formData.doctorId}
+                  onChange={(e) => setFormData({ ...formData, doctorId: e.target.value })}
+                  required
+                  className="form-input"
+                >
+                  <option value="">Select Doctor</option>
+                  {doctors.map((doc) => (
+                    <option key={doc.id} value={doc.id}>
+                      {doc.firstName} {doc.lastName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Slot Date *</label>
+                <input
+                  type="date"
+                  value={formData.slotDate}
+                  onChange={(e) => setFormData({ ...formData, slotDate: e.target.value })}
+                  required
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Slot Time *</label>
+                <input
+                  type="time"
+                  value={formData.slotTime}
+                  onChange={(e) => setFormData({ ...formData, slotTime: e.target.value })}
+                  required
+                  className="form-input"
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" onClick={() => setShowAddModal(false)} className="btn-cancel">
+                  Cancel
+                </button>
+                <button type="submit" className="btn-submit">
+                  Add Slot
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Update Slot Modal */}
+      {showUpdateModal && selectedSlot && (
+        <div className="modal-overlay" onClick={() => setShowUpdateModal(false)}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Update Slot</h2>
+              <button onClick={() => setShowUpdateModal(false)} className="modal-close-btn">×</button>
+            </div>
+            <form onSubmit={handleUpdateSlot} className="modal-form">
+              <div className="slot-details-info">
+                <p><strong>Doctor:</strong> {selectedSlot.doctorName}</p>
+                <p><strong>Date:</strong> {formatDate(selectedSlot.slotDate)}</p>
+                <p><strong>Time:</strong> {formatTime(selectedSlot.slotTime)}</p>
+              </div>
+
+              <div className="form-group">
+                <label>Appointment ID</label>
+                <input
+                  type="number"
+                  value={updateFormData.appointmentId}
+                  onChange={(e) => setUpdateFormData({ ...updateFormData, appointmentId: e.target.value })}
+                  className="form-input"
+                  placeholder="0 for no appointment"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Booking Status *</label>
+                <select
+                  value={updateFormData.isBooked}
+                  onChange={(e) => setUpdateFormData({ ...updateFormData, isBooked: e.target.value })}
+                  required
+                  className="form-input"
+                >
+                  <option value={0}>Available</option>
+                  <option value={1}>Booked</option>
+                </select>
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" onClick={() => setShowUpdateModal(false)} className="btn-cancel">
+                  Cancel
+                </button>
+                <button type="submit" className="btn-submit">
+                  Update Slot
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Calendar Modal */}
+      {showCalendar && renderCalendar()}
     </div>
   );
 };

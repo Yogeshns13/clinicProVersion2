@@ -42,6 +42,7 @@ const ViewPatient = () => {
   const navigate = useNavigate();
 
   const [patient, setPatient] = useState(null);
+  const [familyPatientName, setFamilyPatientName] = useState('—');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -59,7 +60,25 @@ const ViewPatient = () => {
         });
 
         if (data && data.length > 0) {
-          setPatient(data[0]);
+          const currentPatient = data[0];
+          setPatient(currentPatient);
+
+          // Fetch family patient name if familyPatientId exists and is not 0
+          if (currentPatient.familyPatientId && currentPatient.familyPatientId !== 0) {
+            try {
+              const familyData = await getPatientsList(clinicId, {
+                PatientID: currentPatient.familyPatientId,
+              });
+
+              if (familyData && familyData.length > 0) {
+                const familyPatient = familyData[0];
+                setFamilyPatientName(`${familyPatient.firstName} ${familyPatient.lastName}`);
+              }
+            } catch (familyErr) {
+              console.error('Failed to fetch family patient:', familyErr);
+              // Don't set error state, just keep default '—' value
+            }
+          }
         } else {
           setError({ message: 'Patient not found' });
         }
@@ -221,6 +240,10 @@ const ViewPatient = () => {
                 <span className="detail-label">Marital Status</span>
                 <span className="detail-value">{getMaritalStatusLabel(patient.maritalStatus)}</span>
               </div>
+              <div className="detail-item">
+                <span className="detail-label">Family Patient</span>
+                <span className="detail-value">{familyPatientName}</span>
+              </div>
             </div>
           </div>
 
@@ -283,6 +306,22 @@ const ViewPatient = () => {
               <div className="detail-item full-width">
                 <span className="detail-label">Existing Medical Conditions</span>
                 <span className="detail-value">{patient.existingMedicalConditions || '—'}</span>
+              </div>
+              <div className="detail-item full-width">
+                <span className="detail-label">Past Surgeries</span>
+                <span className="detail-value">{patient.pastSurgeries || '—'}</span>
+              </div>
+              <div className="detail-item full-width">
+                <span className="detail-label">Current Medications</span>
+                <span className="detail-value">{patient.currentMedications || '—'}</span>
+              </div>
+              <div className="detail-item full-width">
+                <span className="detail-label">Family Medical History</span>
+                <span className="detail-value">{patient.familyMedicalHistory || '—'}</span>
+              </div>
+              <div className="detail-item full-width">
+                <span className="detail-label">Immunization Records</span>
+                <span className="detail-value">{patient.immunizationRecords || '—'}</span>
               </div>
             </div>
           </div>

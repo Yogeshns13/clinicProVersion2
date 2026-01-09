@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { addSlotConfig } from '../api/api.js';
 
 const DURATION_OPTIONS = [
-  { id: 3, label: 'Daily', createDays: 30 },
+  { id: 1, label: 'Daily', createDays: 30 },
   { id: 2, label: 'Weekend', createDays: 2 },
-  { id: 1, label: 'Specific Day', createDays: 1 },
+  { id: 3, label: 'Specific Day', createDays: 1 },
 ];
 
 const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSuccess }) => {
@@ -123,8 +123,8 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
       return;
     }
 
-    // For Specific Day (duration=1), slot date is required
-    if (Number(formData.duration) === 1 && !formData.slotDate) {
+    // For Specific Day (duration=3), slot date is required
+    if (Number(formData.duration) === 3 && !formData.slotDate) {
       setError('Please select a specific date');
       return;
     }
@@ -146,7 +146,7 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
         doctorId: Number(formData.doctorId),
         shiftId: Number(formData.shiftId),
         duration: Number(formData.duration),
-        slotDate: Number(formData.duration) === 1 ? formData.slotDate : '',
+        slotDate: Number(formData.duration) === 3 ? formData.slotDate : '',
         slotInterval: Number(formData.slotInterval),
         createSlotDays: createSlotDays
       };
@@ -170,7 +170,7 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
 
   if (!isOpen) return null;
 
-  const showDatePicker = Number(formData.duration) === 1;
+  const showDatePicker = Number(formData.duration) === 3;
 
   return (
     <div className="clinic-modal-overlay">
