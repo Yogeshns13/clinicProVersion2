@@ -1,29 +1,27 @@
 // src/components/SlotList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { FiSearch, FiCalendar, FiClock, FiCheckCircle, FiXCircle, FiTrash2, FiEdit, FiPlus, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import { getSlotList, getSlotConfigList, getEmployeeList, deleteSlot, updateSlot, addSlot } from '../api/api.js';
+import { FiSearch, FiCalendar, FiClock, FiCheckCircle, FiXCircle, FiTrash2, FiEdit, FiPlus } from 'react-icons/fi';
+import { getSlotList, getEmployeeList, deleteSlot, updateSlot, addSlot } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import './SlotConfigList.css';
+import './SlotConfigList.css';  // ← you may want to rename or adjust CSS file
 
 const SlotList = () => {
   // Data & Filter
   const [slots, setSlots] = useState([]);
   const [allSlots, setAllSlots] = useState([]);
-  const [slotConfigs, setSlotConfigs] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctorId, setSelectedDoctorId] = useState('all');
-  const [selectedDate, setSelectedDate] = useState('');
+  
+  const todayDate = new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState(todayDate);
+
   const [bookedFilter, setBookedFilter] = useState('all'); // 'all', 'booked', 'available'
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Calendar state
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [showCalendar, setShowCalendar] = useState(false);
 
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
@@ -70,22 +68,6 @@ const SlotList = () => {
     fetchDoctors();
   }, []);
 
-  // Fetch SlotConfigs for calendar display
-  useEffect(() => {
-    const fetchSlotConfigs = async () => {
-      try {
-        const clinicId = localStorage.getItem('clinicID');
-        const data = await getSlotConfigList(clinicId, {
-          Status: 1
-        });
-        setSlotConfigs(data);
-      } catch (err) {
-        console.error('Failed to load slot configs:', err);
-      }
-    };
-    fetchSlotConfigs();
-  }, []);
-
   const fetchSlots = async () => {
     try {
       setLoading(true);
@@ -97,12 +79,10 @@ const SlotList = () => {
         DoctorID: doctorId,
       };
 
-      // Add date filter if selected
       if (selectedDate) {
         options.SlotDate = selectedDate;
       }
 
-      // Add booked filter
       if (bookedFilter === 'booked') {
         options.IsBooked = 1;
       } else if (bookedFilter === 'available') {
@@ -138,49 +118,6 @@ const SlotList = () => {
   }, [selectedDoctorId, selectedDate, bookedFilter]);
 
   // ────────────────────────────────────────────────
-  // Calendar functions
-  const getDaysInMonth = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-
-    return { daysInMonth, startingDayOfWeek, year, month };
-  };
-
-  const getSlotsForDate = (date) => {
-    const dateStr = date.toISOString().split('T')[0];
-    return allSlots.filter(slot => slot.slotDate === dateStr);
-  };
-
-  const getSlotConfigsForDate = (date) => {
-    const dateStr = date.toISOString().split('T')[0];
-    return slotConfigs.filter(config => {
-      // Check if slotSpecificDate matches
-      if (config.slotSpecificDate === dateStr) return true;
-      // Check if slotDate matches
-      if (config.slotDate === dateStr) return true;
-      return false;
-    });
-  };
-
-  const handlePrevMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
-  };
-
-  const handleDateClick = (day) => {
-    const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    setSelectedDate(dateStr);
-    setShowCalendar(false);
-  };
-
-  // ────────────────────────────────────────────────
   // Computed values
   const filteredSlots = useMemo(() => {
     if (!searchTerm.trim()) return allSlots;
@@ -199,19 +136,16 @@ const SlotList = () => {
     const groups = {};
     filteredSlots.forEach(slot => {
       const date = slot.slotDate || 'Unknown';
-      if (!groups[date]) {
-        groups[date] = [];
-      }
+      if (!groups[date]) groups[date] = [];
       groups[date].push(slot);
     });
 
-    // Sort dates
     return Object.keys(groups)
       .sort()
       .reduce((acc, date) => {
-        acc[date] = groups[date].sort((a, b) => {
-          return (a.slotTime || '').localeCompare(b.slotTime || '');
-        });
+        acc[date] = groups[date].sort((a, b) => 
+          (a.slotTime || '').localeCompare(b.slotTime || '')
+        );
         return acc;
       }, {});
   }, [filteredSlots]);
@@ -236,6 +170,13 @@ const SlotList = () => {
     const period = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${period}`;
+  };
+
+  const getSlotStatus = (slot) => {
+    if (slot.status === 'inactive' || slot.status === 2) {
+      return 'deleted';
+    }
+    return slot.isBooked ? 'booked' : 'available';
   };
 
   // ────────────────────────────────────────────────
@@ -266,9 +207,7 @@ const SlotList = () => {
   };
 
   const handleDeleteSlot = async (slotId) => {
-    if (!window.confirm('Are you sure you want to delete this slot?')) {
-      return;
-    }
+    if (!window.confirm('Are you sure you want to delete this slot?')) return;
 
     try {
       setLoading(true);
@@ -327,7 +266,7 @@ const SlotList = () => {
   };
 
   const clearDateFilter = () => {
-    setSelectedDate('');
+    setSelectedDate(todayDate);
   };
 
   // ────────────────────────────────────────────────
@@ -339,106 +278,6 @@ const SlotList = () => {
   if (loading) return <div className="clinic-loading">Loading slots...</div>;
 
   if (error) return <div className="clinic-error">Error: {error.message || error}</div>;
-
-  // ────────────────────────────────────────────────
-  // Calendar rendering
-  const renderCalendar = () => {
-    const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(currentMonth);
-    const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    
-    const days = [];
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
-    }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      const daySlots = getSlotsForDate(date);
-      const dayConfigs = getSlotConfigsForDate(date);
-      
-      const hasSlots = daySlots.length > 0;
-      const hasConfigs = dayConfigs.length > 0;
-      const availableSlots = daySlots.filter(s => !s.isBooked).length;
-
-      // Determine day class based on what it has
-      let dayClass = 'calendar-day';
-      if (hasSlots && hasConfigs) {
-        dayClass += ' has-both';
-      } else if (hasSlots) {
-        dayClass += ' has-slots';
-      } else if (hasConfigs) {
-        dayClass += ' has-configs';
-      }
-
-      days.push(
-        <div
-          key={day}
-          className={dayClass}
-          onClick={() => handleDateClick(day)}
-        >
-          <span className="day-number">{day}</span>
-          {(hasSlots || hasConfigs) && (
-            <div className="day-indicators">
-              {hasConfigs && (
-                <div className="config-indicator" title={`${dayConfigs.length} config(s)`}>
-                  <span className="config-dot"></span>
-                </div>
-              )}
-              {hasSlots && (
-                <div className="slots-indicator" title={`${availableSlots}/${daySlots.length} slots available`}>
-                  <span className="slots-count">{availableSlots}/{daySlots.length}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    return (
-      <div className="calendar-modal">
-        <div className="calendar-overlay" onClick={() => setShowCalendar(false)}></div>
-        <div className="calendar-container">
-          <div className="calendar-header">
-            <button onClick={handlePrevMonth} className="calendar-nav-btn">
-              <FiChevronLeft size={20} />
-            </button>
-            <h3>{monthName}</h3>
-            <button onClick={handleNextMonth} className="calendar-nav-btn">
-              <FiChevronRight size={20} />
-            </button>
-          </div>
-          <div className="calendar-legend">
-            <div className="legend-item">
-              <span className="legend-color config-color"></span>
-              <span>Slot Config</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-color slot-color"></span>
-              <span>Slot Date</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-color both-color"></span>
-              <span>Both</span>
-            </div>
-          </div>
-          <div className="calendar-weekdays">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="calendar-weekday">{day}</div>
-            ))}
-          </div>
-          <div className="calendar-days">
-            {days}
-          </div>
-          <div className="calendar-footer">
-            <button onClick={() => setShowCalendar(false)} className="calendar-close-btn">
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   // ────────────────────────────────────────────────
   return (
@@ -457,9 +296,7 @@ const SlotList = () => {
       {/* Stats Cards */}
       <div className="stats-container">
         <div className="stat-card">
-          <div className="stat-icon total">
-            <FiCalendar size={24} />
-          </div>
+          <div className="stat-icon total"><FiCalendar size={24} /></div>
           <div className="stat-content">
             <div className="stat-value">{stats.total}</div>
             <div className="stat-label">Total Slots</div>
@@ -467,9 +304,7 @@ const SlotList = () => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon booked">
-            <FiCheckCircle size={24} />
-          </div>
+          <div className="stat-icon booked"><FiCheckCircle size={24} /></div>
           <div className="stat-content">
             <div className="stat-value">{stats.booked}</div>
             <div className="stat-label">Booked</div>
@@ -477,9 +312,7 @@ const SlotList = () => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon available">
-            <FiXCircle size={24} />
-          </div>
+          <div className="stat-icon available"><FiXCircle size={24} /></div>
           <div className="stat-content">
             <div className="stat-value">{stats.available}</div>
             <div className="stat-label">Available</div>
@@ -511,15 +344,11 @@ const SlotList = () => {
             onChange={handleDateChange}
             className="date-filter-input"
           />
-          {selectedDate && (
+          {selectedDate && selectedDate !== todayDate && (
             <button onClick={clearDateFilter} className="clear-date-btn">
               Clear
             </button>
           )}
-          <button onClick={() => setShowCalendar(true)} className="calendar-toggle-btn">
-            <FiCalendar size={18} />
-            Calendar
-          </button>
         </div>
 
         <div className="clinic-select-wrapper">
@@ -553,7 +382,7 @@ const SlotList = () => {
       <div className="slots-timeline">
         {Object.keys(groupedSlots).length === 0 ? (
           <div className="clinic-no-data">
-            {searchTerm ? 'No slots found.' : 'No slots available.'}
+            {searchTerm ? 'No slots found.' : 'No slots for selected date.'}
           </div>
         ) : (
           Object.entries(groupedSlots).map(([date, dateSlots]) => (
@@ -567,64 +396,72 @@ const SlotList = () => {
               </div>
 
               <div className="slots-grid">
-                {dateSlots.map((slot) => (
-                  <div 
-                    key={slot.id} 
-                    className={`slot-card ${slot.isBooked ? 'booked' : 'available'}`}
-                    onMouseEnter={() => setHoveredSlotId(slot.id)}
-                    onMouseLeave={() => setHoveredSlotId(null)}
-                  >
-                    <div className="slot-time">
-                      <FiClock size={14} />
-                      {formatTime(slot.slotTime)}
-                    </div>
-
-                    <div className="slot-doctor">
-                      <div className="doctor-avatar">
-                        {slot.doctorName?.charAt(0).toUpperCase() || 'D'}
+                {dateSlots.map((slot) => {
+                  const slotStatus = getSlotStatus(slot);
+                  return (
+                    <div 
+                      key={slot.id} 
+                      className={`slot-card ${slotStatus}`}
+                      onMouseEnter={() => setHoveredSlotId(slot.id)}
+                      onMouseLeave={() => setHoveredSlotId(null)}
+                    >
+                      <div className="slot-time">
+                        <FiClock size={14} />
+                        {formatTime(slot.slotTime)}
                       </div>
-                      <div className="doctor-info">
-                        <div className="doctor-name">{slot.doctorName}</div>
-                        <div className="doctor-code">{slot.doctorCode}</div>
-                      </div>
-                    </div>
 
-                    <div className="slot-status">
-                      {slot.isBooked ? (
-                        <>
-                          <FiCheckCircle size={14} className="status-icon booked" />
-                          <span className="status-text booked">Booked</span>
-                        </>
-                      ) : (
-                        <>
-                          <FiXCircle size={14} className="status-icon available" />
-                          <span className="status-text available">Available</span>
-                        </>
+                      <div className="slot-doctor">
+                        <div className="doctor-avatar">
+                          {slot.doctorName?.charAt(0).toUpperCase() || 'D'}
+                        </div>
+                        <div className="doctor-info">
+                          <div className="doctor-name">{slot.doctorName}</div>
+                          <div className="doctor-code">{slot.doctorCode}</div>
+                        </div>
+                      </div>
+
+                      <div className="slot-status">
+                        {slotStatus === 'deleted' ? (
+                          <>
+                            <FiTrash2 size={14} className="status-icon deleted" />
+                            <span className="status-text deleted">Deleted</span>
+                          </>
+                        ) : slotStatus === 'booked' ? (
+                          <>
+                            <FiCheckCircle size={14} className="status-icon booked" />
+                            <span className="status-text booked">Booked</span>
+                          </>
+                        ) : (
+                          <>
+                            <FiXCircle size={14} className="status-icon available" />
+                            <span className="status-text available">Available</span>
+                          </>
+                        )}
+                      </div>
+
+                      {slotStatus !== 'deleted' && (
+                        <div className={`slot-actions ${hoveredSlotId === slot.id ? 'visible' : ''}`}>
+                          {slot.isBooked && (
+                            <button 
+                              onClick={() => openUpdateModal(slot)}
+                              className="btn-icon-edit"
+                              title="Update Slot"
+                            >
+                              <FiEdit size={14} />
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => handleDeleteSlot(slot.id)}
+                            className="btn-icon-delete"
+                            title="Delete Slot"
+                          >
+                            <FiTrash2 size={14} />
+                          </button>
+                        </div>
                       )}
                     </div>
-
-                    {/* Hover Actions - Show only on hover */}
-                    <div className={`slot-actions ${hoveredSlotId === slot.id ? 'visible' : ''}`}>
-                      {/* Update button only for booked slots */}
-                      {slot.isBooked && (
-                        <button 
-                          onClick={() => openUpdateModal(slot)}
-                          className="btn-icon-edit"
-                          title="Update Slot"
-                        >
-                          <FiEdit size={14} />
-                        </button>
-                      )}
-                      <button 
-                        onClick={() => handleDeleteSlot(slot.id)}
-                        className="btn-icon-delete"
-                        title="Delete Slot"
-                      >
-                        <FiTrash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))
@@ -743,9 +580,6 @@ const SlotList = () => {
           </div>
         </div>
       )}
-
-      {/* Calendar Modal */}
-      {showCalendar && renderCalendar()}
     </div>
   );
 };

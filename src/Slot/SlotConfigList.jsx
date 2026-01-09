@@ -13,9 +13,9 @@ import './SlotConfigList.css';
 // CONSTANTS
 // ────────────────────────────────────────────────
 const DURATION_OPTIONS = [
-  { id: 3, label: 'Daily' },
+  { id: 1, label: 'Daily' },
   { id: 2, label: 'Weekend' },
-  { id: 1, label: 'Specific Day' },
+  { id: 3, label: 'Specific Day' },
 ];
 
 // ────────────────────────────────────────────────

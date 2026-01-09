@@ -62,7 +62,7 @@ const GenerateSlots = ({ isOpen, onClose, onSuccess }) => {
       }
 
       // Check if fromDate is before toDate
-      if (new Date(formData.fromDate) >= new Date(formData.toDate)) {
+      if (new Date(formData.fromDate) > new Date(formData.toDate)) {
         setError('From date must be before to date');
         return;
       }

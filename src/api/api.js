@@ -1026,7 +1026,7 @@ export const addEmployee = async (employeeData) => {
   }
 
   // Basic required-field validation (adjust required fields as per your backend rules)
-  if (!employeeData?.FirstName || !employeeData?.LastName) {
+  if (!employeeData?.firstName || !employeeData?.lastName) {
     const validationError = new Error("First name and last name are required");
     validationError.status = 400;
     throw validationError;
