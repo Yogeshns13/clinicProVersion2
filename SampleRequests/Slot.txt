@@ -28,8 +28,7 @@ DeleteSlot
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000, 
-   "SlotID":1
-   
+    "SlotID":1
 }
 GetSlotList
 {
@@ -65,8 +64,7 @@ GenerateSlots
     "BranchID":1,
     "DaysAhead":10,
     "FromDate":"",
-    "ToDate":"",
-        
+    "ToDate":"", 
 }
 -- DaysAhead is to define for how many days the slots should be prepared.
 

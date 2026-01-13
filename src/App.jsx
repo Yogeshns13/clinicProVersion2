@@ -3,17 +3,9 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
-
-// Layout
 import AdminLayout from "./AdminLayout/AdminLayout.jsx";
-
-// Pages
 import LoginPage from "./LoginPage/LoginPage";
-
-// Protected Pages (inside AdminLayout)
 import Dashboard from "./Dashboard/Dashboard.jsx";
-import Patients from "./Patients/PatientList.jsx";
-import Appointments from "./Appointments/Appointments.jsx";
 import Prescriptions from "./Prescriptions/Prescriptions.jsx";
 import Reports from "./Reports/Reports.jsx";
 import Settings from "./Settings/Settings.jsx";
@@ -41,6 +33,8 @@ import AddSlotConfig from "./Slot/AddSlotConfig.jsx";
 import GenerateSlots from "./Slot/GenerateSlots.jsx";
 import SlotConfigList from "./Slot/SlotConfigList.jsx";
 import SlotList from "./Slot/SlotList.jsx";
+import AppointmentList from "./Appointments/AppointmentList.jsx";
+import AddAppointment from "./Appointments/AddAppointment.jsx";
 
 function App() {
   return (
@@ -78,7 +72,6 @@ function App() {
           <Route path="/view-patient/:id" element={<ViewPatient />} />
           <Route path="/add-patient" element={<AddPatient />} />
           <Route path="/update-patient/:id" element={<UpdatePatient />} />
-          <Route path="/appointments" element={<Appointments />} />
           <Route path="/prescriptions" element={<Prescriptions />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/attendance" element={<Attendance/>}/>
@@ -87,6 +80,8 @@ function App() {
           <Route path="/generate-slots" element={<GenerateSlots />} />
           <Route path="/slotconfig-list" element={<SlotConfigList/>}/>
           <Route path="/slot-list" element={<SlotList/>} />
+          <Route path="/appointment-list" element={<AppointmentList/>} />
+          <Route path="/add-appointment" element={<AddAppointment/>} />
 
           {/* Default redirect inside protected area */}
           <Route path="/admin" element={<Navigate to="/dashboard" replace />} />

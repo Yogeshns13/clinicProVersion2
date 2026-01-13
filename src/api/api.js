@@ -2420,6 +2420,154 @@ export const deleteShift = async (shiftId) => {
   }
 };
 
+export const getWorkDaysList = async (clinicId = 0, employeeId) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // EmployeeID is required for this API
+  if (!employeeId || isNaN(employeeId) || employeeId <= 0) {
+    const error = new Error("Valid Employee ID is required");
+    error.status = 400;
+    throw error;
+  }
+
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    EmployeeID: parseInt(employeeId)
+  };
+
+  try {
+    const response = await API.post("/GetWorkDays", payload);
+    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    console.log("GetWorkDays response:", results);
+
+    return results.map((day) => ({
+      id: day.work_days_id,
+      uniqueSeq: day.unique_seq,
+      clinicId: day.clinic_id,
+      employeeId: day.employee_id,
+      workDay: day.work_day,                    // 1 = Monday, 2 = Tuesday, ..., 7 = Sunday
+      dayName: getDayName(day.work_day),
+      status: day.status === 1 ? "active" : "inactive",
+      dateCreated: day.date_created || null,
+      dateModified: day.date_modified || null
+    }));
+  } catch (error) {
+    console.error("getWorkDays failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || "Failed to fetch work days"
+    };
+
+    throw err;
+  }
+};
+
+export const addWorkdays = async (workdayData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Basic required-field validation
+  if (!workdayData?.EmployeeID) {
+    const validationError = new Error("EmployeeID is required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  if (!workdayData?.WorkDay) {
+    const validationError = new Error("WorkDay is required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  // Validate WorkDay value (assuming 1-7, Monday=1 ... Sunday=7)
+  const workdayValue = parseInt(workdayData.WorkDay);
+  if (isNaN(workdayValue) || workdayValue < 1 || workdayValue > 7) {
+    const validationError = new Error("WorkDay must be a number between 1 and 7");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  // ClinicID: use global/session value in production, allow override in dev
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (workdayData.ClinicID || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    EmployeeID: parseInt(workdayData.EmployeeID),
+    WorkDay: workdayValue
+  };
+
+  console.log("Add Workdays payload:", payload);
+
+  try {
+    const response = await API.post("/AddWorkDays", payload);
+
+    console.log("AddWorkDays response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to add workday for employee");
+    }
+
+    return {
+      success: true,
+      message: result.OUT_ERROR || "OK",
+      workDaysId: result.OUT_WORK_DAYS_ID || null
+    };
+
+  } catch (error) {
+    console.error("addWorkdays failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message:
+        error.response?.data?.message ||
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message ||
+        "Failed to add workday for employee"
+    };
+
+    throw errorWithStatus;
+  }
+};
+
 export const getPatientsList = async (clinicId = 0, options = {}) => {
   const userId = getUserId();
   if (!userId) {
@@ -3384,6 +3532,498 @@ export const updateSlot = async (slotData) => {
     throw formattedError;
   }
 };
+
+export const getAppointmentList = async (clinicId = 0, options = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Optional: stricter validation in development/testing
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  // Determine final IDs based on environment (same pattern as getEmployeeList)
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,
+    AppointmentID: options.AppointmentID || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    PatientID: options.PatientID || 0,
+    PatientName: options.PatientName || "",
+    DoctorID: options.DoctorID || 0,
+    DoctorName: options.DoctorName || "",
+    AppointmentDate: options.AppointmentDate || "",    
+    FromDate: options.FromDate || "",                 
+    ToDate: options.ToDate || "",                     
+    SlotID: options.SlotID || 0,
+    Status: options.Status ?? -1                      
+  };
+
+  console.log("getAppointmentList payload:", payload);
+
+  try {
+    const response = await API.post("/GetAppointmentList", payload);
+    
+    const results = Array.isArray(response.data?.result) 
+      ? response.data.result 
+      : [];
+    
+    console.log("GetAppointmentList response count:", results.length);
+
+    return results.map((appt) => ({
+      id: appt.appointment_id,
+      uniqueSeq: appt.unique_seq,
+      clinicId: appt.clinic_id,
+      clinicName: appt.clinic_name,
+      branchId: appt.branch_id,
+      branchName: appt.branch_name,
+      patientId: appt.patient_id,
+      patientName: appt.patient_name,
+      patientMobile: appt.patient_mobile,
+      patientFileNo: appt.patient_file_no,
+      doctorId: appt.doctor_id,
+      doctorFullName: appt.doctor_full_name,
+      doctorCode: appt.doctor_code,
+      doctorName: appt.doctor_name,
+      appointmentDate: appt.appointment_date,    // ISO string
+      appointmentTime: appt.appointment_time,    // "HH:mm:ss"
+      reason: appt.reason || "",
+      slotId: appt.slot_id,
+      status: appt.status === 1 ? "scheduled" : "cancelled", 
+      statusDesc: appt.status_desc || "Unknown",
+      dateCreated: appt.date_created,
+      dateModified: appt.date_modified
+    }));
+  } catch (error) {
+    console.error("getAppointmentList failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || "Failed to fetch appointments"
+    };
+
+    throw err;
+  }
+};
+
+export const addAppointment = async (appointmentData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (!appointmentData?.patientId) {
+    throw Object.assign(new Error("Patient is required"), { status: 400 });
+  }
+  if (!appointmentData?.doctorId) {
+    throw Object.assign(new Error("Doctor is required"), { status: 400 });
+  }
+  if (!appointmentData?.slotId) {
+    throw Object.assign(new Error("Appointment slot is required"), { status: 400 });
+  }
+
+  if (PRODUCTION_MODE !== true) {
+    if (appointmentData.clinicId && (appointmentData.clinicId < 0 || isNaN(appointmentData.clinicId))) {
+      throw Object.assign(new Error("Invalid Clinic ID"), { status: 400 });
+    }
+    if (appointmentData.branchId && (appointmentData.branchId < 0 || isNaN(appointmentData.branchId))) {
+      throw Object.assign(new Error("Invalid Branch ID"), { status: 400 });
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (appointmentData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (appointmentData.branchId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    PatientID: parseInt(appointmentData.patientId),
+    DoctorID: parseInt(appointmentData.doctorId),
+    SlotID: parseInt(appointmentData.slotId),
+    Reason: appointmentData.reason?.trim() || ""
+  };
+
+  console.log("Add Appointment payload:", payload);
+
+  try {
+    const response = await API.post("/AddAppointment", payload);
+
+    console.log("AddAppointment response:", response.data);
+
+    const result = response.data?.result;
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response structure from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to create appointment");
+    }
+    return {
+      success: true,
+      appointmentId: result.OUT_APPOINTMENT_ID,
+      message: result.OUT_ERROR || "Appointment created successfully"
+    };
+
+  } catch (error) {
+    console.error("addAppointment failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message:
+        error.response?.data?.message ||
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message ||
+        "Failed to create appointment"
+    };
+
+    throw errorWithStatus;
+  }
+};
+
+export const cancelAppointment = async (appointmentId) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (!appointmentId || isNaN(appointmentId) || appointmentId <= 0) {
+    const validationError = new Error("Valid AppointmentID is required to cancel an appointment.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    AppointmentID: parseInt(appointmentId)
+  };
+
+  console.log("cancelAppointment payload:", payload);
+
+  try {
+    const response = await API.post("/CancelAppointment", payload);
+    const result = response.data?.result;
+
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to cancel appointment");
+    }
+
+    return {
+      success: true,
+      appointmentId: result.IN_APPOINTMENT_ID || appointmentId,
+      message: "Appointment cancelled successfully"
+    };
+
+  } catch (error) {
+    console.error("cancelAppointment error:", error);
+
+    const errorMsg =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to cancel appointment";
+
+    const enhancedError = new Error(errorMsg);
+    enhancedError.status = error.response?.status || 500;
+    enhancedError.code = error.response?.status || 500;
+
+    throw enhancedError;
+  }
+};
+
+export const getPatientVisitList = async (clinicId = 0, options = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Optional: stricter validation in non-production
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  // Determine final IDs based on environment (same pattern as getEmployeeList)
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,
+    VisitID: options.VisitID || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    PatientID: options.PatientID || 0,
+    PatientName: options.PatientName || "",
+    DoctorID: options.DoctorID || 0,
+    DoctorName: options.DoctorName || "",
+    AppointmentID: options.AppointmentID || 0,
+    VisitDate: options.VisitDate || "",           // exact date
+    FromVisitDate: options.FromVisitDate || "",   // date range start
+    ToVisitDate: options.ToVisitDate || "",       // date range end
+    Reason: options.Reason || ""
+  };
+
+  console.log("getPatientVisitList payload:", payload);
+
+  try {
+    const response = await API.post("/GetPatientVisitList", payload);
+    
+    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    console.log("GetPatientVisitList response:", results);
+
+    return results.map((visit) => ({
+      id: visit.visit_id,
+      uniqueSeq: visit.unique_seq,
+      clinicId: visit.clinic_id,
+      clinicName: visit.clinic_name,
+      branchId: visit.branch_id,
+      branchName: visit.branch_name,
+      appointmentId: visit.appointment_id,
+      patientId: visit.patient_id,
+      patientName: visit.patient_name,
+      patientMobile: visit.patient_mobile,
+      patientFileNo: visit.patient_file_no,
+      doctorId: visit.doctor_id,
+      doctorFullName: visit.doctor_full_name,
+      doctorCode: visit.doctor_code,
+      doctorName: visit.doctor_name,           // might be same as full name or short name
+      visitDate: visit.visit_date || null,      // ISO string
+      visitTime: visit.visit_time || null,      // "HH:mm:ss"
+      reason: visit.reason || "",
+      symptoms: visit.symptoms || "",
+      bpSystolic: visit.bp_systolic || null,
+      bpDiastolic: visit.bp_diastolic || null,
+      bpReading: visit.bp_reading || null,      // formatted "130/90"
+      temperature: visit.temperature || null,
+      weight: visit.weight || null,
+      dateCreated: visit.date_created || null,
+      dateModified: visit.date_modified || null
+    }));
+  } catch (error) {
+    console.error("getPatientVisitList failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || "Failed to fetch patient visits"
+    };
+
+    throw err;
+  }
+};
+
+export const addPatientVisit = async (visitData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Basic required field validation
+  if (!visitData?.PatientID) {
+    const validationError = new Error("Patient ID is required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  if (!visitData?.DoctorID) {
+    const validationError = new Error("Doctor ID is required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  if (!visitData?.VisitDate) {
+    const validationError = new Error("Visit date is required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (visitData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (visitData.branchId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    AppointmentID: visitData.appointmentId ?? 0,      // optional
+    PatientID: parseInt(visitData.PatientID),         // mostly required
+    DoctorID: parseInt(visitData.DoctorID),           // required
+    VisitDate: visitData.VisitDate || "",             // YYYY-MM-DD
+    VisitTime: visitData.VisitTime || "",             // HH:MM:SS or HH:MM
+    Reason: visitData.reason || "",
+    Symptoms: visitData.symptoms || "",
+    BPSystolic: visitData.bpSystolic ?? 0,
+    BPDiastolic: visitData.bpDiastolic ?? 0,
+    Temperature: visitData.temperature ?? 0,
+    Weight: visitData.weight ?? 0,
+  };
+
+  console.log("Add Patient Visit Payload:", payload);
+
+  try {
+    const response = await API.post("/AddPatientVisit", payload);
+    console.log("AddPatientVisit response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response structure from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to create patient visit");
+    }
+    return {
+      success: true,
+      visitId: result.OUT_VISIT_ID,
+      message: result.OUT_ERROR || "OK"
+    };
+
+  } catch (error) {
+    console.error("addPatientVisit failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message:
+        error.response?.data?.message ||
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message ||
+        "Failed to add patient visit"
+    };
+
+    throw errorWithStatus;
+  }
+};
+
+export const updatePatientVisit = async (visitData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // VisitID is mandatory for update
+  if (!visitData?.visitId && visitData?.visitId !== 0) {
+    const validationError = new Error("VisitID is required to update a patient visit.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    VisitID: visitData.visitId || 0,
+    AppointmentID: visitData.appointmentId ?? 0,
+    DoctorID: visitData.doctorId ?? 0,
+    VisitDate: visitData.visitDate?.trim() || "",
+    VisitTime: visitData.visitTime?.trim() || "",
+    Reason: visitData.reason?.trim() || "",
+    Symptoms: visitData.symptoms?.trim() || "",
+    BPSystolic: visitData.bpSystolic ?? 0,
+    BPDiastolic: visitData.bpDiastolic ?? 0,
+    Temperature: visitData.temperature ?? 0,
+    Weight: visitData.weight ?? 0,
+  };
+
+  console.log("updatePatientVisit payload:", payload);
+
+  try {
+    const response = await API.post("/UpdatePatientVisit", payload);
+    console.log("UpdatePatientVisit response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to update patient visit");
+    }
+
+    return {
+      success: true,
+      visitId: result.IN_VISIT_ID || visitData.visitId,
+      message: "Patient visit updated successfully"
+    };
+
+  } catch (error) {
+    console.error("updatePatientVisit error:", error);
+
+    const errorMessage =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to update patient visit";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
+  }
+};
+  
+
+
+
+
 
 
 

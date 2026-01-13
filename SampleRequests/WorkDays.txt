@@ -1,0 +1,120 @@
+AddWorkDays
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,   
+    "EmployeeID":1000001,
+    "WorkDay":1
+}
+
+DeleteWorkDays
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "WorkDaysID": 1
+}
+
+
+GetWorkDays
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,    
+    "ClinicID": 1,
+    "EmployeeID":1
+}
+
+
+-----------------------------------------------------------
+AddWorkDays
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,   
+    "EmployeeID":1000000,
+    "WorkDay":5
+}
+
+{
+    "result": {
+        "OUT_WORK_DAYS_ID": 3,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+_________________________________________________________________
+
+GetWorkDays
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,    
+    "ClinicID": 1,
+    "EmployeeID":1000000
+}
+
+{
+    "result": [
+        {
+            "work_days_id": 1,
+            "unique_seq": 1,
+            "clinic_id": 1,
+            "employee_id": 1000000,
+            "work_day": 6,
+            "status": 1,
+            "date_created": "2026-01-13T05:55:40.000Z",
+            "date_modified": "2026-01-13T05:55:40.000Z"
+        },
+        {
+            "work_days_id": 2,
+            "unique_seq": 2,
+            "clinic_id": 1,
+            "employee_id": 1000000,
+            "work_day": 7,
+            "status": 1,
+            "date_created": "2026-01-13T05:55:51.000Z",
+            "date_modified": "2026-01-13T05:55:51.000Z"
+        },
+        {
+            "work_days_id": 3,
+            "unique_seq": 3,
+            "clinic_id": 1,
+            "employee_id": 1000000,
+            "work_day": 5,
+            "status": 1,
+            "date_created": "2026-01-13T06:00:32.000Z",
+            "date_modified": "2026-01-13T06:00:32.000Z"
+        }
+    ]
+}
+
+---------------------------------------------------------
+
+DeleteWorkDays
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "WorkDaysID": 3
+}
+
+{
+    "result": {
+        "IN_WORK_DAYS_ID": 3,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+
+

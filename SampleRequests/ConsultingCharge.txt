@@ -21,10 +21,7 @@ CancelConsultationCharge
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000,
-    "ConsChargeID": 1
-    
-    
-   
+    "ConsChargeID": 1 
 }
 
 

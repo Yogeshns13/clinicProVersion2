@@ -16,8 +16,6 @@ AddLabTestMaster
     "Fees":100.00,
     "CGSTPercentage":9.00,    
     "SGSTPercentage":9.00
-
-   
 }
 -- TestType is a int from Text Table #12 1-Blood 2 -Urine (refer text table for other values) 
 
