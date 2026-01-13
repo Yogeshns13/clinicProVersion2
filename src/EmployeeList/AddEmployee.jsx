@@ -8,7 +8,8 @@ import {
   uploadIDProof,
   addEmployeeBeneficiaryAccount,
   addEmployeeShift,
-  getShiftList  // ADD THIS IMPORT
+  getShiftList,
+  addWorkDays  
 } from '../api/api.js';
 import './EmployeeList.css';
 
@@ -62,7 +63,16 @@ const DESIGNATION_OPTIONS = [
   { id: 10, label: 'Others' },
 ];
 
-// REMOVED SHIFT_OPTIONS CONSTANT - will fetch from API
+// ADD: Workdays constant
+const WORK_DAYS = [
+  { id: 1, label: 'Sunday' },
+  { id: 2, label: 'Monday' },
+  { id: 3, label: 'Tuesday' },
+  { id: 4, label: 'Wednesday' },
+  { id: 5, label: 'Thursday' },
+  { id: 6, label: 'Friday' },
+  { id: 7, label: 'Saturday' },
+];
 
 // ────────────────────────────────────────────────
 const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
@@ -140,6 +150,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
   const [shiftData, setShiftData] = useState({
     ShiftID: 0,
   });
+
+  // ADD: Selected workdays state
+  const [selectedWorkDays, setSelectedWorkDays] = useState([]);
 
   // Form states
   const [formLoading, setFormLoading] = useState(false);
@@ -237,6 +250,8 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     setShiftData({
       ShiftID: 0,
     });
+
+    setSelectedWorkDays([]);
 
     setFormError('');
     setFormSuccess(false);
@@ -417,6 +432,17 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     setShiftData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // ADD: Workday toggle handler
+  const handleWorkDayToggle = (dayId) => {
+    setSelectedWorkDays((prev) => {
+      if (prev.includes(dayId)) {
+        return prev.filter((id) => id !== dayId);
+      } else {
+        return [...prev, dayId];
+      }
+    });
+  };
+
   // ────────────────────────────────────────────────
   // Step 1: Submit Basic Employee Info
   // ────────────────────────────────────────────────
@@ -564,7 +590,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
   };
 
   // ────────────────────────────────────────────────
-  // Step 4: Submit Employee Shift (Final Step)
+  // Step 4: Submit Employee Shift AND Workdays (Final Step)
   // ────────────────────────────────────────────────
   const handleStep4Submit = async (e) => {
     e.preventDefault();
@@ -575,13 +601,27 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     try {
       const clinicId = localStorage.getItem('clinicID');
 
-      const payload = {
+      // 1. Add Employee Shift
+      const shiftPayload = {
         ClinicID: clinicId ? Number(clinicId) : 0,
         EmployeeID: createdEmployeeId,
         ShiftID: Number(shiftData.ShiftID),
       };
 
-      await addEmployeeShift(payload);
+      await addEmployeeShift(shiftPayload);
+
+      // 2. Add Workdays (loop through selected days)
+      if (selectedWorkDays.length > 0) {
+        for (const dayId of selectedWorkDays) {
+          const workdayPayload = {
+            ClinicID: clinicId ? Number(clinicId) : 0,
+            EmployeeID: createdEmployeeId,
+            WorkDay: dayId,
+          };
+          
+          await addWorkDays(workdayPayload);
+        }
+      }
 
       setFormSuccess(true);
       setFormError('');
@@ -592,8 +632,8 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
         onClose();
       }, 1500);
     } catch (err) {
-      console.error('Add employee shift failed:', err);
-      setFormError(err.message || 'Failed to assign employee shift.');
+      console.error('Add employee shift/workdays failed:', err);
+      setFormError(err.message || 'Failed to assign employee shift or workdays.');
     } finally {
       setFormLoading(false);
     }
@@ -1203,7 +1243,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
         return (
           <form onSubmit={handleStep4Submit} className="clinic-modal-body">
             {formError && <div className="form-error">{formError}</div>}
-            {formSuccess && <div className="form-success">Employee shift assigned successfully!</div>}
+            {formSuccess && <div className="form-success">Employee shift and workdays assigned successfully!</div>}
 
             <div className="form-grid">
               <h3 className="form-section-title">Employee Shift Assignment</h3>
@@ -1226,6 +1266,26 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <h3 className="form-section-title">Work Days</h3>
+              
+              <div className="form-group full-width">
+                <div className="workdays-container">
+                  {WORK_DAYS.map((day) => (
+                    <button
+                      key={day.id}
+                      type="button"
+                      className={`workday-box ${selectedWorkDays.includes(day.id) ? 'selected' : ''}`}
+                      onClick={() => handleWorkDayToggle(day.id)}
+                    >
+                      {day.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="workdays-hint">
+                  Select the days this employee will work
+                </p>
               </div>
             </div>
 
@@ -1277,7 +1337,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
           </div>
           <div className={`step ${currentStep >= 4 ? 'active' : ''}`}>
             <div className="step-number">4</div>
-            <div className="step-label">Shift</div>
+            <div className="step-label">Shift & Workdays</div>
           </div>
         </div>
 

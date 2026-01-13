@@ -2466,7 +2466,6 @@ export const getWorkDaysList = async (clinicId = 0, employeeId) => {
       clinicId: day.clinic_id,
       employeeId: day.employee_id,
       workDay: day.work_day,                    // 1 = Monday, 2 = Tuesday, ..., 7 = Sunday
-      dayName: getDayName(day.work_day),
       status: day.status === 1 ? "active" : "inactive",
       dateCreated: day.date_created || null,
       dateModified: day.date_modified || null
@@ -2484,7 +2483,7 @@ export const getWorkDaysList = async (clinicId = 0, employeeId) => {
   }
 };
 
-export const addWorkdays = async (workdayData) => {
+export const addWorkDays = async (workdayData) => {
   const userId = getUserId();
   if (!userId) {
     const authError = new Error("User ID is missing. Please log in again.");
@@ -2567,6 +2566,65 @@ export const addWorkdays = async (workdayData) => {
     throw errorWithStatus;
   }
 };
+
+export const deleteWorkDays = async (workDaysId) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (!workDaysId && workDaysId !== 0) {
+    const validationError = new Error("WorkDaysID is required to delete work days record.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    WorkDaysID: workDaysId       
+  };
+
+  console.log("deleteWorkDays payload:", payload);
+
+  try {
+    const response = await API.post("/DeleteWorkDays", payload);
+    const result = response.data?.result;
+
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to delete work days record");
+    }
+
+    return {
+      success: true,
+      workDaysId: result.IN_WORK_DAYS_ID || workDaysId,
+      message: "Work days record deleted successfully"
+    };
+
+  } catch (error) {
+    console.error("deleteWorkDays error:", error);
+
+    const errorMsg =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to delete work days record";
+
+    const enhancedError = new Error(errorMsg);
+    enhancedError.status = error.response?.status || 500;
+    enhancedError.code = error.response?.status || 500;
+
+    throw enhancedError;
+  }
+};
+
+
 
 export const getPatientsList = async (clinicId = 0, options = {}) => {
   const userId = getUserId();

@@ -1,0 +1,416 @@
+/* src/components/UpdatePatient.css */
+/* FULL CSS WITH ~15% SIZE REDUCTION APPLIED */
+
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== MAIN WRAPPER ==================== */
+.clinic-list-wrapper {
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ==================== TOOLBAR ==================== */
+.clinic-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.clinic-add-btn {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  width: 150px;
+  gap: 10px;
+  padding: 10px 26px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  font-weight: 700;
+  font-size: 0.94rem;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  white-space: nowrap;
+}
+
+.clinic-add-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(32, 125, 156, 0.45);
+}
+
+/* ==================== TABLE CONTAINER (Used as Form Container) ==================== */
+.clinic-table-container {
+  background: white;
+  border-radius: 17px;
+  overflow: hidden;
+  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+/* ==================== HEADER ==================== */
+.clinic-header {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 30px;
+  background: linear-gradient(135deg, var(--primary-start) 0%, var(--accent-end) 30%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ==================== FORM SECTION TITLES ==================== */
+.form-section-title {
+  grid-column: 1 / -1;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin: 24px 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--accent-end);
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ==================== FORMS ==================== */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(202px, 1fr));
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--primary-start);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.17px;
+}
+
+.form-group .required {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid rgba(34, 43, 108, 0.2);
+  border-radius: 9px;
+  color: var(--text-dark);
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: rgba(30, 41, 59, 0.4);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15), inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.form-group select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 12px;
+  padding-right: 35px;
+}
+
+/* ==================== FORM MESSAGES ==================== */
+.form-error,
+.form-success {
+  grid-column: 1 / -1;
+  padding: 9px 12px;
+  border-radius: 9px;
+  margin-bottom: 14px;
+  border: 2px solid;
+  font-size: 0.65rem;
+  font-weight: 600;
+  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.1);
+}
+
+.form-error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
+  color: #dc2626;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.form-success {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.2));
+  color: #059669;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+/* ==================== MODAL FOOTER (Used as Form Footer) ==================== */
+.clinic-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 17px 23px;
+  border-top: 2px solid rgba(34, 43, 108, 0.15);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+}
+
+/* ==================== BUTTONS ==================== */
+.btn-cancel,
+.btn-submit {
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn-cancel {
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(34, 43, 108, 0.3);
+}
+
+.btn-cancel::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(239, 68, 68, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btn-cancel:hover::before {
+  width: 170px;
+  height: 170px;
+}
+
+.btn-cancel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(239, 68, 68, 0.4);
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+}
+
+.btn-submit::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btn-submit:hover:not(:disabled)::before {
+  width: 170px;
+  height: 170px;
+}
+
+.btn-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+.btn-submit:active {
+  transform: translateY(-1px);
+}
+
+.btn-submit:disabled {
+  background: linear-gradient(135deg, #64748b, #94a3b8);
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+/* ==================== UTILITY CLASSES ==================== */
+.clinic-loading,
+.clinic-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  font-size: 1.3rem;
+  color: #64748b;
+}
+
+.clinic-error {
+  color: #ef4444;
+}
+
+/* ==================== DARK MODE ==================== */
+.dark-mode {
+  --glass-bg: rgba(30, 41, 59, 0.92);
+  --text-dark: #e2e8f0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+}
+
+.dark-mode .clinic-list-wrapper {
+  background: #1e293b;
+}
+
+.dark-mode .clinic-table-container {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.dark-mode .clinic-header {
+  background: linear-gradient(135deg, var(--text-light) 0%, var(--accent-end) 30%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark-mode .form-section-title {
+  background: var(--text-light);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark-mode .form-group label {
+  color: var(--accent-end);
+}
+
+.dark-mode .form-group input,
+.dark-mode .form-group textarea,
+.dark-mode .form-group select {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark-mode .form-group input::placeholder,
+.dark-mode .form-group textarea::placeholder {
+  color: #64748b;
+}
+
+.dark-mode .clinic-modal-footer {
+  background: linear-gradient(135deg, #1e293b, #334155);
+}
+
+.dark-mode .btn-cancel {
+  background: linear-gradient(135deg, var(--primary-end));
+  color: var(--text-light);
+}
+
+.dark-mode .btn-cancel:hover {
+  background: rgba(239, 68, 68);
+  transform: translateY(-2px);
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 768px) {
+  .clinic-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .clinic-add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .clinic-modal-footer {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .btn-cancel,
+  .btn-submit {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .clinic-list-wrapper {
+    padding: 14px;
+  }
+
+  .btn-submit,
+  .btn-cancel {
+    width: 100%;
+  }
+}

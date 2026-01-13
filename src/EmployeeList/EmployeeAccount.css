@@ -1,0 +1,89 @@
+/* src/components/EmployeeAccount.css */
+/* STYLES SPECIFIC TO EMPLOYEE ACCOUNT COMPONENT */
+
+@import './Common.css';
+
+/* ==================== DEFAULT BADGE ==================== */
+.default-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.2));
+  color: #059669;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-left: 10px;
+}
+
+/* ==================== DELETE MODAL ==================== */
+.delete-modal {
+  max-width: 500px;
+}
+
+.delete-confirmation {
+  text-align: center;
+}
+
+.delete-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: #ef4444;
+}
+
+.delete-message {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #1f2937;
+}
+
+.delete-details {
+  background: #f3f4f6;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.delete-details p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.delete-warning {
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn-delete {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.btn-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 768px) {
+  .default-badge {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+}

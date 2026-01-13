@@ -1,7 +1,7 @@
 // src/components/AppointmentList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiPlus, FiCalendar, FiX } from 'react-icons/fi';
+import { FiSearch, FiPlus, FiCalendar, FiX, FiCheck} from 'react-icons/fi';
 import { getAppointmentList, cancelAppointment } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
@@ -174,6 +174,7 @@ const AppointmentList = () => {
       {/* Toolbar */}
       <div className="clinic-toolbar">
         <div className="clinic-select-wrapper">
+          <FiCalendar className="clinic-select-icon" size={20} />
           <input
             type="date"
             value={dateFilter}
@@ -197,6 +198,7 @@ const AppointmentList = () => {
         )}
 
         <div className="clinic-select-wrapper">
+          <FiCheck className="clinic-select-icon" size={20} />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -230,8 +232,8 @@ const AppointmentList = () => {
           >
             <FiCalendar size={22} /> Today
           </button>
-          <button onClick={openAddForm} className="clinic-add-btn">
-            <FiPlus size={22} /> Book Appointment
+          <button onClick={openAddForm} className="app-add-btn">
+            <FiPlus size={22} /> Appointment
           </button>
         </div>
       </div>

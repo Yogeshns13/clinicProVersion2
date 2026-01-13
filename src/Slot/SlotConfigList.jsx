@@ -257,7 +257,7 @@ const SlotConfigList = () => {
           <button onClick={openGenerateSlots} className="clinic-generate-btn">
             <FiCalendar size={22} /> Generate Slots
           </button>
-          <button onClick={openAddForm} className="clinic-add-btn">
+          <button onClick={openAddForm} className="slot-add-btn">
             <FiPlus size={22} /> Add Config
           </button>
         </div>

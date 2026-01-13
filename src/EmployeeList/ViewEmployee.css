@@ -1,0 +1,444 @@
+/* src/components/ViewEmployee.css */
+/* STYLES SPECIFIC TO VIEW EMPLOYEE COMPONENT */
+
+@import './Common.css';
+
+/* ==================== BACK BUTTON ==================== */
+.clinic-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.clinic-back-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.clinic-back-btn:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+.clinic-back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+/* ==================== EMPLOYEE DETAILS CARD ==================== */
+.employee-details-card {
+  background: white;
+  border-radius: 17px;
+  overflow: hidden;
+  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  margin-bottom: 20px;
+}
+
+.details-card-header {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
+  border-bottom: 2px solid rgba(34, 43, 108, 0.1);
+}
+
+.details-card-body {
+  padding: 24px;
+}
+
+.details-card-footer {
+  display: flex;
+  justify-content:flex-start;
+  gap: 12px;
+  padding: 17px 23px;
+  border-top: 2px solid rgba(34, 43, 108, 0.15);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+}
+
+
+
+/* ==================== EMPLOYEE HEADER INFO ==================== */
+.employee-header-info {
+  margin-bottom: 20px;
+}
+
+.employee-header-info h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.clinic-subtitle {
+  margin: 3px 0 6px;
+  color: var(--primary-end);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* ==================== TAB NAVIGATION ==================== */
+.employee-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0;
+}
+
+.tab-button {
+  padding: 12px 24px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  position: relative;
+  bottom: -2px;
+}
+
+.tab-button:hover {
+  color: #3b82f6;
+  background-color: #f3f4f6;
+}
+
+.tab-button.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  font-weight: 600;
+}
+
+.tab-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* ==================== DETAILS SECTIONS ==================== */
+.details-section {
+  margin-bottom: 24px;
+  padding: 17px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(48, 178, 181, 0.04));
+  border-radius: 13px;
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin: 0 0 14px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--accent-end);
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.detail-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  word-break: break-word;
+}
+
+/* ==================== EMPLOYEE PHOTO CONTAINER ==================== */
+.employee-photo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.08), rgba(48, 178, 181, 0.08));
+  border-radius: 13px;
+  border: 2px solid rgba(34, 43, 108, 0.15);
+  margin-bottom: 20px;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.employee-photo-display {
+  width: 170px;
+  height: 170px;
+  border-radius: 13px;
+  overflow: hidden;
+  border: 3px solid rgba(34, 43, 108, 0.2);
+  background: white;
+  box-shadow: 0 5px 20px rgba(32, 125, 156, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.employee-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.employee-photo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
+  color: #94a3b8;
+}
+
+.employee-photo-placeholder svg {
+  color: var(--accent-start);
+  opacity: 0.6;
+  margin-bottom: 8px;
+}
+
+.employee-photo-placeholder p {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Photo Loading State */
+.photo-loading-state {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
+  color: var(--accent-start);
+}
+
+.photo-loading-state p {
+  margin: 10px 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(48, 178, 181, 0.2);
+  border-top-color: var(--accent-start);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* View Photo Button */
+.btn-view-photo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn-view-photo::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btn-view-photo:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+.btn-view-photo:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(32, 125, 156, 0.45);
+}
+
+.btn-view-photo:active {
+  transform: translateY(0);
+}
+
+/* ==================== DARK MODE OVERRIDES ==================== */
+.dark-mode .employee-details-card {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.dark-mode .details-card-header {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
+  border-bottom-color: #475569;
+}
+
+.dark-mode .employee-header-info h2 {
+  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark-mode .details-section {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
+  border-color: #475569;
+}
+
+.dark-mode .section-title {
+  background: var(--text-light);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark-mode .detail-label {
+  color: var(--accent-end);
+}
+
+.dark-mode .detail-value {
+  color: var(--text-light);
+}
+
+.dark-mode .employee-photo-container {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
+  border-color: #475569;
+}
+
+.dark-mode .employee-photo-display {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.dark-mode .employee-photo-placeholder {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.6), rgba(48, 178, 181, 0.05));
+}
+
+.dark-mode .photo-loading-state {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.6), rgba(48, 178, 181, 0.05));
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 768px) {
+  .employee-tabs {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .tab-button {
+    padding: 10px 16px;
+    font-size: 13px;
+    flex: 1 1 calc(50% - 4px);
+    text-align: center;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+    gap: 17px;
+  }
+
+  .employee-photo-display {
+    width: 140px;
+    height: 140px;
+  }
+
+  .details-section {
+    padding: 14px;
+  }
+
+  .btn-view-photo {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-button {
+    padding: 8px 12px;
+    font-size: 12px;
+    flex: 1 1 100%;
+  }
+
+  .employee-header-info h2 {
+    font-size: 1.2rem;
+  }
+
+  .details-card-body {
+    padding: 16px;
+  }
+
+  .employee-photo-display {
+    width: 120px;
+    height: 120px;
+  }
+
+  .employee-photo-placeholder svg {
+    width: 48px;
+    height: 48px;
+  }
+}

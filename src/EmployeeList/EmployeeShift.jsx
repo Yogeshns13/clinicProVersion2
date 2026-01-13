@@ -1,17 +1,47 @@
 // src/components/EmployeeShift.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiX, FiTrash2, FiClock } from 'react-icons/fi';
+import { FiArrowLeft, FiX, FiTrash2, FiClock, FiCalendar } from 'react-icons/fi';
 import { 
   getEmployeeList,
   getEmployeeShiftList,
   getShiftList,
   addEmployeeShift,
-  deleteEmployeeShift
+  deleteEmployeeShift,
+  getWorkDaysList,
+  addWorkDays,
+  deleteWorkDays
 } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import './EmployeeList.css';
+import './EmployeeShift.css';
+
+// ────────────────────────────────────────────────
+// CONSTANTS
+// ────────────────────────────────────────────────
+const WORK_DAYS = [
+  { id: 1, label: 'Sunday' },
+  { id: 2, label: 'Monday' },
+  { id: 3, label: 'Tuesday' },
+  { id: 4, label: 'Wednesday' },
+  { id: 5, label: 'Thursday' },
+  { id: 6, label: 'Friday' },
+  { id: 7, label: 'Saturday' },
+];
+
+// Helper function to get day name from day number
+const getDayName = (dayNumber) => {
+  const days = {
+    1: "Sunday",
+    2: "Monday",
+    3: "Tuesday",
+    4: "Wednesday",
+    5: "Thursday",
+    6: "Friday",
+    7: "Saturday"
+  };
+  return days[dayNumber] || "Unknown";
+};
 
 // ────────────────────────────────────────────────
 const EmployeeShift = () => {
@@ -25,15 +55,32 @@ const EmployeeShift = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // WorkDays data
+  const [workDaysList, setWorkDaysList] = useState([]);
+  const [workDaysLoading, setWorkDaysLoading] = useState(false);
+
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedShiftId, setSelectedShiftId] = useState(0);
+
+  // WorkDays modal states
+  const [isWorkDaysModalOpen, setIsWorkDaysModalOpen] = useState(false);
+  const [selectedWorkDays, setSelectedWorkDays] = useState([]);
+  const [workDaysFormLoading, setWorkDaysFormLoading] = useState(false);
+  const [workDaysFormError, setWorkDaysFormError] = useState('');
+  const [workDaysFormSuccess, setWorkDaysFormSuccess] = useState(false);
 
   // Delete confirmation modal
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [shiftToDelete, setShiftToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+
+  // Delete WorkDay confirmation modal
+  const [isDeleteWorkDayModalOpen, setIsDeleteWorkDayModalOpen] = useState(false);
+  const [workDayToDelete, setWorkDayToDelete] = useState(null);
+  const [isDeletingWorkDay, setIsDeletingWorkDay] = useState(false);
+  const [deleteWorkDayError, setDeleteWorkDayError] = useState('');
 
   // Form submission states
   const [formLoading, setFormLoading] = useState(false);
@@ -76,6 +123,9 @@ const EmployeeShift = () => {
 
         setAvailableShifts(shifts || []);
 
+        // Fetch work days for this employee
+        await fetchWorkDays();
+
       } catch (err) {
         console.error('fetchData error:', err);
         setError(
@@ -92,6 +142,41 @@ const EmployeeShift = () => {
       fetchData();
     }
   }, [id]);
+
+  // ────────────────────────────────────────────────
+  // Fetch WorkDays
+  // ────────────────────────────────────────────────
+  const fetchWorkDays = async () => {
+    setWorkDaysLoading(true);
+    try {
+      const clinicId = localStorage.getItem('clinicID');
+      console.log('Fetching work days for employee:', id, 'clinicId:', clinicId);
+      
+      // Call getWorkDaysList with clinicId and employeeId (as number, not object)
+      const workDaysRaw = await getWorkDaysList(
+        clinicId ? Number(clinicId) : 0, 
+        Number(id)
+      );
+      
+      console.log('Work days raw response:', workDaysRaw);
+      
+      // Process the work days and add dayName - Filter out status === 2
+      const processedWorkDays = (workDaysRaw || [])
+        .filter(wd => wd.status !== 'inactive' && wd.status !== 2) // Filter out inactive/deleted work days
+        .map(wd => ({
+          ...wd,
+          dayName: getDayName(wd.workDay)
+        }));
+      
+      console.log('Processed work days:', processedWorkDays);
+      setWorkDaysList(processedWorkDays);
+    } catch (err) {
+      console.error('Failed to fetch work days:', err);
+      setWorkDaysList([]);
+    } finally {
+      setWorkDaysLoading(false);
+    }
+  };
 
   // ────────────────────────────────────────────────
   // Helper functions
@@ -120,7 +205,126 @@ const EmployeeShift = () => {
   };
 
   // ────────────────────────────────────────────────
-  // Delete Handlers
+  // WorkDays Handlers
+  // ────────────────────────────────────────────────
+  const handleOpenWorkDaysModal = () => {
+    // Pre-select existing work days
+    const existingDayIds = workDaysList.map(wd => wd.workDay);
+    console.log('Pre-selecting work days:', existingDayIds);
+    setSelectedWorkDays(existingDayIds);
+    setWorkDaysFormError('');
+    setWorkDaysFormSuccess(false);
+    setIsWorkDaysModalOpen(true);
+  };
+
+  const handleCloseWorkDaysModal = () => {
+    setIsWorkDaysModalOpen(false);
+    setSelectedWorkDays([]);
+    setWorkDaysFormError('');
+    setWorkDaysFormSuccess(false);
+  };
+
+  const handleWorkDayToggle = (dayId) => {
+    setSelectedWorkDays((prev) => {
+      if (prev.includes(dayId)) {
+        return prev.filter((id) => id !== dayId);
+      } else {
+        return [...prev, dayId];
+      }
+    });
+  };
+
+  const handleWorkDaysSubmit = async (e) => {
+    e.preventDefault();
+    setWorkDaysFormLoading(true);
+    setWorkDaysFormError('');
+    setWorkDaysFormSuccess(false);
+
+    try {
+      const clinicId = localStorage.getItem('clinicID');
+      
+      // Get existing work day IDs
+      const existingDayIds = workDaysList.map(wd => wd.workDay);
+      
+      // Find days to add (selected but not in existing)
+      const daysToAdd = selectedWorkDays.filter(dayId => !existingDayIds.includes(dayId));
+      
+      // Find days to remove (existing but not in selected)
+      const daysToRemove = workDaysList.filter(wd => !selectedWorkDays.includes(wd.workDay));
+
+      console.log('Days to add:', daysToAdd);
+      console.log('Days to remove:', daysToRemove);
+
+      // Add new work days
+      for (const dayId of daysToAdd) {
+        const payload = {
+          ClinicID: clinicId ? Number(clinicId) : 0,
+          EmployeeID: Number(id),
+          WorkDay: dayId,
+        };
+        await addWorkDays(payload);
+      }
+
+      // Remove unselected work days
+      for (const workDay of daysToRemove) {
+        await deleteWorkDays(workDay.id);
+      }
+
+      setWorkDaysFormSuccess(true);
+      
+      // Refresh work days list
+      setTimeout(async () => {
+        await fetchWorkDays();
+        handleCloseWorkDaysModal();
+      }, 1500);
+    } catch (err) {
+      console.error('Work days update failed:', err);
+      setWorkDaysFormError(err.message || 'Failed to update work days.');
+    } finally {
+      setWorkDaysFormLoading(false);
+    }
+  };
+
+  // ────────────────────────────────────────────────
+  // Delete WorkDay Handlers
+  // ────────────────────────────────────────────────
+  const handleOpenDeleteWorkDayModal = (workDay) => {
+    setWorkDayToDelete(workDay);
+    setDeleteWorkDayError('');
+    setIsDeleteWorkDayModalOpen(true);
+  };
+
+  const handleCloseDeleteWorkDayModal = () => {
+    setIsDeleteWorkDayModalOpen(false);
+    setWorkDayToDelete(null);
+    setDeleteWorkDayError('');
+  };
+
+  const handleDeleteWorkDay = async () => {
+    if (!workDayToDelete) return;
+
+    setIsDeletingWorkDay(true);
+    setDeleteWorkDayError('');
+
+    try {
+      console.log('Deleting work day:', workDayToDelete);
+      await deleteWorkDays(workDayToDelete.id);
+      
+      // Refresh work days list
+      await fetchWorkDays();
+      
+      // Close modal
+      handleCloseDeleteWorkDayModal();
+    } catch (err) {
+      console.error('Delete work day failed:', err);
+      setDeleteWorkDayError(err.message || 'Failed to delete work day.');
+    } finally {
+      setIsDeletingWorkDay(false);
+    }
+  };
+
+  // ────────────────────────────────────────────────
+  // Delete Shift Handlers
   // ────────────────────────────────────────────────
   const handleOpenDeleteModal = (shift) => {
     setShiftToDelete(shift);
@@ -363,10 +567,46 @@ const EmployeeShift = () => {
               ))}
             </>
           )}
+
+          {/* Work Days Section */}
+          <div className="work-days-section">
+            <div className="proof-list-header">
+              <h3 className="section-title">
+                <FiCalendar size={20} style={{ marginRight: '0.5rem' }} />
+                Work Days
+              </h3>
+              <button onClick={handleOpenWorkDaysModal} className="btn-add-secondary">
+                {workDaysList.length > 0 ? 'Edit Work Days' : 'Add Work Days'}
+              </button>
+            </div>
+
+            {workDaysLoading ? (
+              <div className="loading-state">Loading work days...</div>
+            ) : workDaysList.length === 0 ? (
+              <div className="empty-state-small">
+                <p>No work days assigned for this employee.</p>
+              </div>
+            ) : (
+              <div className="work-days-list">
+                {workDaysList.map((workDay) => (
+                  <div key={workDay.id} className="work-day-item">
+                    <span className="work-day-name">{workDay.dayName}</span>
+                    <button
+                      onClick={() => handleOpenDeleteWorkDayModal(workDay)}
+                      className="btn-icon-delete-small"
+                      title="Remove work day"
+                    >
+                      <FiX size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Add Modal */}
+      {/* Add Shift Modal */}
       {isAddModalOpen && (
         <div className="clinic-modal-overlay" onClick={handleCloseAddModal}>
           <div className="clinic-modal form-modal" onClick={(e) => e.stopPropagation()}>
@@ -455,7 +695,59 @@ const EmployeeShift = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Work Days Modal */}
+      {isWorkDaysModalOpen && (
+        <div className="clinic-modal-overlay" onClick={handleCloseWorkDaysModal}>
+          <div className="clinic-modal form-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="clinic-modal-header">
+              <h2>Manage Work Days</h2>
+              <button onClick={handleCloseWorkDaysModal} className="clinic-modal-close">
+                <FiX />
+              </button>
+            </div>
+
+            <form onSubmit={handleWorkDaysSubmit} className="clinic-modal-body">
+              {workDaysFormError && <div className="form-error">{workDaysFormError}</div>}
+              {workDaysFormSuccess && <div className="form-success">
+                Work days updated successfully!
+              </div>}
+
+              <div className="form-grid">
+                <h3 className="form-section-title">Select Work Days</h3>
+                
+                <div className="form-group full-width">
+                  <div className="workdays-container">
+                    {WORK_DAYS.map((day) => (
+                      <button
+                        key={day.id}
+                        type="button"
+                        className={`workday-box ${selectedWorkDays.includes(day.id) ? 'selected' : ''}`}
+                        onClick={() => handleWorkDayToggle(day.id)}
+                      >
+                        {day.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="workdays-hint">
+                    Select the days this employee will work
+                  </p>
+                </div>
+              </div>
+
+              <div className="clinic-modal-footer">
+                <button type="button" onClick={handleCloseWorkDaysModal} className="btn-cancel">
+                  Cancel
+                </button>
+                <button type="submit" disabled={workDaysFormLoading} className="btn-submit">
+                  {workDaysFormLoading ? 'Saving...' : 'Save Work Days'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Shift Confirmation Modal */}
       {isDeleteModalOpen && (
         <div className="clinic-modal-overlay" onClick={handleCloseDeleteModal}>
           <div className="clinic-modal delete-modal" onClick={(e) => e.stopPropagation()}>
@@ -498,6 +790,53 @@ const EmployeeShift = () => {
                 disabled={isDeleting}
               >
                 {isDeleting ? 'Removing...' : 'Remove Assignment'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete WorkDay Confirmation Modal */}
+      {isDeleteWorkDayModalOpen && (
+        <div className="clinic-modal-overlay" onClick={handleCloseDeleteWorkDayModal}>
+          <div className="clinic-modal delete-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="clinic-modal-header">
+              <h2>Remove Work Day</h2>
+              <button onClick={handleCloseDeleteWorkDayModal} className="clinic-modal-close">
+                <FiX />
+              </button>
+            </div>
+
+            <div className="clinic-modal-body">
+              {deleteWorkDayError && <div className="form-error">{deleteWorkDayError}</div>}
+              
+              <p className="delete-confirmation-text">
+                Are you sure you want to remove this work day?
+              </p>
+              
+              {workDayToDelete && (
+                <div className="delete-proof-details">
+                  <p><strong>Work Day:</strong> {workDayToDelete.dayName}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="clinic-modal-footer">
+              <button 
+                type="button" 
+                onClick={handleCloseDeleteWorkDayModal} 
+                className="btn-cancel"
+                disabled={isDeletingWorkDay}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={handleDeleteWorkDay} 
+                className="btn-delete"
+                disabled={isDeletingWorkDay}
+              >
+                {isDeletingWorkDay ? 'Removing...' : 'Remove Work Day'}
               </button>
             </div>
           </div>

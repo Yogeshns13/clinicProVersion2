@@ -247,8 +247,8 @@ const BranchList = () => {
         </div>
 
         <div className="clinic-add-section">
-          <button onClick={openAddForm} className="clinic-add-btn">
-            <FiPlus size={22} /> Add Branch
+          <button onClick={openAddForm} className="branch-add-btn">
+            <FiPlus size={22} />Add Branch
           </button>
         </div>
       </div>
