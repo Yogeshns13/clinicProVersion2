@@ -13,7 +13,7 @@ import {
 } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import './EmployeeList.css';
+import './EmployeeProof.css';
 
 // ────────────────────────────────────────────────
 // CONSTANTS

@@ -497,7 +497,7 @@
   display: block;
   margin-bottom: 4px; /* Reduced from 5px */
   color: var(--primary-start);
-  font-size: 0.7rem; /* Reduced from 0.7rem */
+  font-size: 0.5rem; /* Reduced from 0.7rem */
   font-weight: 600;
   letter-spacing: 0.17px; /* Reduced from 0.2px */
 }

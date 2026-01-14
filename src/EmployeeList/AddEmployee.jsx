@@ -11,7 +11,7 @@ import {
   getShiftList,
   addWorkDays  
 } from '../api/api.js';
-import './EmployeeList.css';
+import './AddEmployee.css';
 
 // ────────────────────────────────────────────────
 // CONSTANTS

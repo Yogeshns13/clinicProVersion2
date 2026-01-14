@@ -1,36 +1,127 @@
-/* src/components/AddEmployee.css */
-/* STYLES SPECIFIC TO ADD EMPLOYEE COMPONENT */
+/* AddEmployee.css - Cleaned & Focused version for AddEmployee.jsx */
 
-@import './Common.css';
-
-/* ==================== MODAL SIZING ==================== */
-.employee-form-modal {
-  max-width: 850px;
+/* ==================== CSS VARIABLES (keep only what's used) ==================== */
+:root {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.4);
 }
 
-.form-modal {
-  max-width: 850px;
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== MODAL STRUCTURE ==================== */
+.clinic-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 22, 41, 0.85);
+  backdrop-filter: blur(9px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+.clinic-modal {
+  background: var(--glass-bg);
+  border-radius: 15px;
+  border: 2px solid var(--glass-border);
+  width: 100%;
+  max-width: 850px;               /* wider for multi-step form */
+  max-height: 92vh;
+  overflow-y: auto;
+  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clinic-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 17px 23px 0;
+  margin-bottom: 8px;
+}
+
+.clinic-modal-header h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.clinic-modal-close {
+  background: rgba(100, 116, 139, 0.15);
+  border: 2px solid rgba(100, 116, 139, 0.2);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #64748b;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+}
+
+.clinic-modal-close:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+  transform: rotate(90deg);
+}
+
+.clinic-modal-body {
+  padding: 0 25px 25px;
 }
 
 /* ==================== STEP INDICATOR ==================== */
 .step-indicator {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 20px 30px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 16px 30px;
+  background: rgba(248, 249, 250, 0.6);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
   position: relative;
+  margin-bottom: 12px;
 }
 
 .step-indicator::before {
   content: '';
   position: absolute;
   top: 50%;
-  left: 10%;
-  right: 10%;
+  left: 8%;
+  right: 8%;
   height: 2px;
-  background: #e0e0e0;
+  background: rgba(0,0,0,0.12);
   transform: translateY(-50%);
   z-index: 0;
 }
@@ -39,98 +130,139 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
   position: relative;
   z-index: 1;
   flex: 1;
 }
 
 .step-number {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: #fff;
-  border: 2px solid #e0e0e0;
+  background: white;
+  border: 2px solid #d1d5db;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 16px;
-  color: #999;
+  color: #6b7280;
   transition: all 0.3s ease;
 }
 
-.step.active .step-number {
-  background: #007bff;
-  border-color: #007bff;
-  color: #fff;
-}
-
+.step.active .step-number,
 .step.completed .step-number {
-  background: #28a745;
-  border-color: #28a745;
-  color: #fff;
+  border-color: var(--accent-end);
+  background: var(--accent-end);
+  color: white;
 }
 
 .step.completed .step-number::after {
   content: '✓';
-  position: absolute;
   font-size: 18px;
 }
 
 .step-label {
-  font-size: 13px;
+  margin-top: 6px;
+  font-size: 0.8rem;
   font-weight: 500;
-  color: #666;
+  color: #64748b;
   text-align: center;
-  white-space: nowrap;
 }
 
-.step.active .step-label {
-  color: #007bff;
+.step.active .step-label,
+.step.completed .step-label {
+  color: var(--accent-end);
   font-weight: 600;
 }
 
-.step.completed .step-label {
-  color: #28a745;
+/* ==================== FORM SECTION TITLES ==================== */
+.form-section-title {
+  grid-column: 1 / -1;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin: 28px 0 14px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--accent-end);
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* ==================== EMPLOYEE ID BADGE ==================== */
-.employee-id-badge {
-  font-size: 14px;
-  font-weight: 500;
-  color: #28a745;
-  background: #d4edda;
-  padding: 4px 12px;
-  border-radius: 12px;
-  margin-left: 10px;
+/* ==================== FORM LAYOUT ==================== */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin-bottom: 16px;
 }
 
-/* ==================== PHOTO UPLOAD SECTION ==================== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  color: var(--primary-start);
+  font-size: 0.5rem;
+  font-weight: 600;
+}
+
+.form-group .required {
+  color: #dc2626;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  padding: 10px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.25s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
+}
+
+/* ==================== PHOTO / FILE UPLOAD ==================== */
 .photo-upload-container {
   display: flex;
-  gap: 20px;
+  gap: 22px;
   align-items: flex-start;
-  padding: 17px;
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.08), rgba(48, 178, 181, 0.08));
-  border-radius: 13px;
-  border: 2px solid rgba(34, 43, 108, 0.15);
-  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.05);
+  padding: 18px;
+  background: linear-gradient(135deg, rgba(34,43,108,0.04), rgba(48,178,181,0.04));
+  border-radius: 12px;
+  border: 1px solid rgba(34,43,108,0.12);
 }
 
 .photo-preview-section {
   flex-shrink: 0;
 }
 
-.photo-preview {
-  position: relative;
-  width: 127px;
-  height: 127px;
+.photo-preview,
+.photo-placeholder {
+  width: 135px;
+  height: 135px;
   border-radius: 10px;
   overflow: hidden;
-  border: 2px solid rgba(34, 43, 108, 0.2);
-  background-color: #fff;
-  box-shadow: 0 3px 12px rgba(32, 125, 156, 0.2);
+  border: 2px solid rgba(34,43,108,0.18);
+  background: white;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 .photo-preview img {
@@ -139,251 +271,194 @@
   object-fit: cover;
 }
 
+.photo-placeholder {
+  border-style: dashed;
+  color: #64748b;
+  flex-direction: column;
+  text-align: center;
+  font-size: 0.78rem;
+}
+
 .remove-photo-btn {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  background: rgba(239, 68, 68, 0.9);
+  top: 6px;
+  right: 6px;
+  background: rgba(239,68,68,0.9);
   color: white;
   border: none;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  transition: transform 0.2s;
 }
 
 .remove-photo-btn:hover {
-  background: rgba(239, 68, 68, 1);
   transform: scale(1.1);
 }
 
-.photo-placeholder {
-  width: 127px;
-  height: 127px;
-  border-radius: 10px;
-  border: 2px dashed rgba(34, 43, 108, 0.3);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.6);
-  color: #64748b;
-}
-
-.photo-placeholder svg {
-  margin-bottom: 6px;
-  opacity: 0.5;
-  color: var(--accent-start);
-}
-
-.photo-placeholder p {
-  margin: 0;
-  font-size: 0.72rem;
-  font-weight: 600;
-}
-
-/* Photo Upload Controls */
 .photo-upload-controls {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .btn-select-photo,
 .btn-upload-photo {
-  padding: 8px 20px;
+  padding: 9px 20px;
   border: none;
-  border-radius: 9px;
-  font-size: 0.75rem;
+  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  display: inline-block;
-  text-align: center;
+  transition: all 0.25s;
   width: fit-content;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
 }
 
 .btn-select-photo {
   background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
-}
-
-.btn-select-photo::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background: rgba(48, 178, 181, 0.35);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.6s ease, height 0.6s ease;
-  z-index: -1;
-  pointer-events: none;
-}
-
-.btn-select-photo:hover::before {
-  width: 170px;
-  height: 170px;
-}
-
-.btn-select-photo:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(32, 125, 156, 0.45);
+  color: white;
 }
 
 .btn-upload-photo {
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
-}
-
-.btn-upload-photo::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background: rgba(48, 178, 181, 0.35);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.6s ease, height 0.6s ease;
-  z-index: -1;
-  pointer-events: none;
-}
-
-.btn-upload-photo:hover:not(:disabled)::before {
-  width: 170px;
-  height: 170px;
-}
-
-.btn-upload-photo:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+  color: white;
 }
 
 .btn-upload-photo:disabled {
-  background: linear-gradient(135deg, #64748b, #94a3b8);
-  cursor: not-allowed;
   opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .photo-status {
-  margin: 0;
-  padding: 8px 10px;
-  border-radius: 9px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  border: 2px solid;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
 .photo-status.success {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.2));
+  background: rgba(34,197,94,0.15);
   color: #059669;
-  border-color: rgba(34, 197, 94, 0.3);
+  border: 1px solid rgba(34,197,94,0.3);
 }
 
 .photo-status.info {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.2));
+  background: rgba(59,130,246,0.12);
   color: #2563eb;
-  border-color: rgba(59, 130, 246, 0.3);
 }
 
 .photo-hint {
-  margin: 0;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   color: #64748b;
-  font-weight: 500;
 }
 
-/* ==================== CHECKBOX LABEL ==================== */
-.checkbox-label {
+/* ==================== WORKDAYS SELECTION ==================== */
+.workdays-container {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  user-select: none;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0;
 }
 
-.checkbox-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+.workday-box {
+  padding: 10px 18px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
   cursor: pointer;
-}
-
-.checkbox-label span {
-  font-size: 14px;
-  color: #333;
-}
-
-/* ==================== BUTTON STYLES ==================== */
-.btn-secondary {
-  padding: 10px 20px;
-  background: #6c757d;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
+  transition: all 0.25s ease;
+  font-size: 0.88rem;
   font-weight: 500;
-  transition: background 0.2s;
 }
 
-.btn-secondary:hover {
-  background: #5a6268;
+.workday-box.selected {
+  background: var(--accent-end);
+  color: white;
+  border-color: var(--accent-end);
 }
 
+/* ==================== FOOTER BUTTONS ==================== */
+.clinic-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 18px 24px;
+  border-top: 1px solid rgba(34,43,108,0.12);
+  background: rgba(255,255,255,0.4);
+}
+
+.btn-cancel,
+.btn-submit,
+.btn-secondary {
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: none;
+}
+
+.btn-cancel,
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: white;
+}
+
+.btn-submit:disabled,
 .btn-secondary:disabled {
-  background: #ccc;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* ==================== DARK MODE OVERRIDES ==================== */
-.dark-mode .photo-upload-container {
-  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
-  border-color: #475569;
+/* ==================== MESSAGES ==================== */
+.form-error,
+.form-success {
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-weight: 500;
 }
 
-.dark-mode .photo-preview {
-  border-color: #475569;
-  background-color: #1e293b;
+.form-error {
+  background: rgba(239,68,68,0.15);
+  color: #dc2626;
+  border: 1px solid rgba(239,68,68,0.3);
 }
 
-.dark-mode .photo-placeholder {
-  background: rgba(30, 41, 59, 0.6);
-  border-color: #475569;
-  color: #94a3b8;
+.form-success {
+  background: rgba(34,197,94,0.15);
+  color: #059669;
+  border: 1px solid rgba(34,197,94,0.3);
 }
 
-/* ==================== RESPONSIVE DESIGN ==================== */
+/* ==================== EMPLOYEE ID BADGE ==================== */
+.employee-id-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #059669;
+  background: rgba(5,150,105,0.12);
+  padding: 4px 10px;
+  border-radius: 10px;
+  margin-left: 10px;
+}
+
+/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
-  .step-indicator {
-    padding: 15px;
+  .clinic-modal {
+    max-width: 94%;
   }
 
-  .step-indicator::before {
-    display: none;
-  }
-
-  .step-number {
-    width: 35px;
-    height: 35px;
-    font-size: 14px;
-  }
-
-  .step-label {
-    font-size: 11px;
+  .form-grid {
+    grid-template-columns: 1fr;
   }
 
   .photo-upload-container {
@@ -391,81 +466,24 @@
     align-items: center;
   }
 
-  .clinic-modal {
-    max-width: 92%;
-  }
-
-  .clinic-modal-header,
-  .clinic-modal-body,
-  .clinic-modal-footer {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
   .clinic-modal-footer {
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
   }
 
   .btn-cancel,
-  .btn-submit {
-    width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .clinic-modal-footer {
-    flex-direction: column;
-  }
-
   .btn-submit,
-  .btn-cancel,
-  .btn-select-photo,
-  .btn-upload-photo {
+  .btn-secondary {
     width: 100%;
   }
 
-  .photo-preview,
-  .photo-placeholder {
-    width: 110px;
-    height: 110px;
+  .step-indicator {
+    padding: 12px 16px;
   }
-}
 
-.workdays-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.workday-box {
-  flex: 1;
-  min-width: 100px;
-  padding: 12px 20px;
-  border: 2px solid #ddd;
-  background-color: #fff;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  text-align: center;
-}
-
-.workday-box:hover {
-  border-color: #4CAF50;
-  background-color: #f0f9f0;
-}
-
-.workday-box.selected {
-  background-color: #4CAF50;
-  color: white;
-  border-color: #4CAF50;
-}
-
-.workdays-hint {
-  margin-top: 10px;
-  font-size: 0.9rem;
-  color: #666;
-  font-style: italic;
+  .step-number {
+    width: 34px;
+    height: 34px;
+    font-size: 0.9rem;
+  }
 }

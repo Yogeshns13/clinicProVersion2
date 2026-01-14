@@ -5,7 +5,7 @@ import { FiUser, FiArrowLeft } from 'react-icons/fi';
 import { getEmployeeList, deleteEmployee, getFile } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import './EmployeeList.css';
+import './ViewEmployee.css';
 
 // ────────────────────────────────────────────────
 // CONSTANTS
