@@ -1,0 +1,678 @@
+/* src/components/AppointmentList.css */
+
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== MAIN WRAPPER ==================== */
+.clinic-list-wrapper {
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ==================== TOOLBAR ==================== */
+.clinic-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.clinic-search-container {
+  flex: 1;
+  min-width: 255px;
+  position: relative;
+}
+
+.clinic-search-input {
+  width: 80%;
+  height: 40px;
+  padding: 15px 60px 15px 20px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  color: var(--text-dark);
+  font-size: 0.94rem;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  transition: all 0.3s ease;
+}
+
+.clinic-search-input::placeholder {
+  color: #94a3b8;
+}
+
+.clinic-search-input:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18), 0 8px 25px rgba(34, 43, 108, 0.12);
+}
+
+.clinic-search-btn {
+  position: absolute;
+  right: 160px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.35);
+}
+
+.clinic-search-btn:hover {
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 8px 24px rgba(32, 125, 156, 0.45);
+}
+
+.clinic-add-section {
+  display: flex;
+  gap: 10px;
+}
+
+.clinic-add-btn,
+.app-add-btn {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  gap: 10px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  font-weight: 700;
+  font-size: 0.94rem;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  white-space: nowrap;
+}
+
+.clinic-add-btn:hover,
+.app-add-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(32, 125, 156, 0.45);
+}
+
+/* ==================== SELECT WRAPPER ==================== */
+.clinic-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.clinic-select-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-dark);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.clinic-select {
+  width: 100%;
+  min-width: 180px;
+  height: 40px;
+  padding: 10px 14px 10px 44px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  color: var(--text-dark);
+  font-size: 0.94rem;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  transition: all 0.3s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 12px;
+  cursor: pointer;
+}
+
+.clinic-select:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18), 0 8px 25px rgba(34, 43, 108, 0.12);
+}
+
+/* ==================== TABLE ==================== */
+.clinic-table-container {
+  background: white;
+  border-radius: 17px;
+  overflow: hidden;
+  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.clinic-table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+
+.clinic-table th {
+  text-align: left;
+  padding: 12px 17px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+}
+
+.clinic-table td {
+  padding: 12px 17px;
+  border-bottom: 1px solid #e2e8f0;
+  color: var(--text-dark);
+  font-size: 0.75rem;
+  vertical-align: middle;
+}
+
+.clinic-table th:last-child,
+.clinic-table td:last-child {
+  text-align: right;
+  padding-right: 24px;
+}
+
+.clinic-table tbody tr:nth-child(even) {
+  background-color: #d5e6ec;
+}
+
+.clinic-table tbody tr:hover {
+  background-color: rgba(48, 178, 181, 0.08) !important;
+  transition: background-color 0.25s ease;
+}
+
+/* ==================== TABLE CELLS ==================== */
+.clinic-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.clinic-avatar {
+  width: 33px;
+  height: 33px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  font-weight: bold;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 12px rgba(32, 125, 156, 0.35);
+  flex-shrink: 0;
+}
+
+.clinic-name {
+  font-weight: 700;
+  color: var(--text-dark);
+  font-size: 0.87rem;
+}
+
+.clinic-type {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* ==================== STATUS BADGES ==================== */
+.status-badge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.status-badge.active {
+  color: #166534;
+}
+
+.status-badge.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.branch-type-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.08), rgba(48, 178, 181, 0.08));
+  color: var(--primary-start);
+  border: 1px solid rgba(34, 43, 108, 0.15);
+}
+
+/* ==================== BUTTONS ==================== */
+.clinic-details-btn {
+  padding: 7px 15px;
+  font-size: 0.75rem;
+  border-radius: 9px;
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  z-index: 1;
+}
+
+.clinic-details-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.clinic-details-btn:hover::before {
+  width: 170px;
+  height: 170px;
+}
+
+.clinic-details-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+.clinic-details-btn:active {
+  transform: translateY(-1px);
+}
+
+.btn-cancel,
+.btn-delete {
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.btn-cancel {
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(34, 43, 108, 0.3);
+}
+
+.btn-cancel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.4);
+}
+
+.btn-delete {
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.3);
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(239, 68, 68, 0.4);
+}
+
+.btn-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==================== MODAL OVERLAY ==================== */
+.clinic-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 22, 41, 0.85);
+  backdrop-filter: blur(9px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+/* ==================== MODAL ==================== */
+.clinic-modal {
+  background: var(--glass-bg);
+  border-radius: 15px;
+  border: 2px solid var(--glass-border);
+  width: 100%;
+  max-width: 578px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(14px);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.delete-modal {
+  max-width: 500px;
+}
+
+.clinic-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 17px 23px 0;
+  margin-bottom: 14px;
+}
+
+.clinic-modal-header h2 {
+  font-size: 1.23rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0;
+  letter-spacing: -0.3px;
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.clinic-modal-close {
+  background: rgba(100, 116, 139, 0.15);
+  border: 2px solid rgba(100, 116, 139, 0.2);
+  width: 29px;
+  height: 29px;
+  border-radius: 50%;
+  color: #64748b;
+  font-size: 17px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.clinic-modal-close:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+  transform: rotate(90deg);
+}
+
+.clinic-modal-body {
+  padding: 0 29px 23px;
+  color: var(--text-dark);
+}
+
+.clinic-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 17px 23px;
+  border-top: 2px solid rgba(34, 43, 108, 0.15);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+}
+
+/* ==================== DELETE CONFIRMATION ==================== */
+.delete-confirmation {
+  text-align: center;
+}
+
+.delete-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: #ef4444;
+}
+
+.delete-message {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #1f2937;
+}
+
+.delete-details {
+  background: #f3f4f6;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.delete-details p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.delete-warning {
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ==================== LOADING & ERROR ==================== */
+.clinic-loading,
+.clinic-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  font-size: 1.3rem;
+  color: #64748b;
+}
+
+.clinic-error {
+  color: #ef4444;
+}
+
+.clinic-no-data {
+  text-align: center;
+  padding: 68px 17px;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+/* ==================== DARK MODE ==================== */
+.dark-mode {
+  --glass-bg: rgba(30, 41, 59, 0.92);
+  --text-dark: #e2e8f0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+}
+
+.dark-mode .clinic-list-wrapper {
+  background: #1e293b;
+}
+
+.dark-mode .clinic-search-input,
+.dark-mode .clinic-select {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark-mode .clinic-table-container {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.dark-mode .clinic-table th {
+  background: linear-gradient(135deg, #334155, #475569);
+}
+
+.dark-mode .clinic-table td {
+  border-bottom-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark-mode .clinic-table tbody tr:nth-child(even) {
+  background-color: #334155;
+}
+
+.dark-mode .status-badge.active {
+  color: #9cc14d;
+}
+
+.dark-mode .clinic-modal {
+  background: rgba(30, 41, 59, 0.94);
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark-mode .clinic-modal-header h2 {
+  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark-mode .clinic-modal-footer {
+  background: linear-gradient(135deg, #1e293b, #334155);
+}
+
+.dark-mode .btn-cancel {
+  background: linear-gradient(135deg, var(--primary-end));
+  color: var(--text-light);
+}
+
+.dark-mode .btn-cancel:hover {
+  background: rgba(239, 68, 68);
+  transform: translateY(-2px);
+}
+
+.dark-mode .delete-details {
+  background: #1e293b;
+}
+
+.dark-mode .delete-message {
+  color: #e2e8f0;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 768px) {
+  .clinic-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .clinic-search-container {
+    min-width: 100%;
+  }
+
+  .clinic-search-input {
+    width: 100%;
+  }
+
+  .clinic-search-btn {
+    right: 10px;
+  }
+
+  .clinic-add-section {
+    width: 100%;
+  }
+
+  .clinic-add-btn,
+  .app-add-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .clinic-select-wrapper {
+    width: 100%;
+  }
+
+  .clinic-table th,
+  .clinic-table td {
+    padding: 12px 14px;
+  }
+
+  .clinic-details-btn {
+    padding: 7px 14px;
+    font-size: 0.72rem;
+  }
+
+  .clinic-modal {
+    max-width: 92%;
+  }
+
+  .clinic-modal-header,
+  .clinic-modal-body,
+  .clinic-modal-footer {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .clinic-modal-footer {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .btn-cancel,
+  .btn-delete {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .clinic-list-wrapper {
+    padding: 14px;
+  }
+
+  .clinic-modal-footer {
+    flex-direction: column;
+  }
+
+  .btn-cancel,
+  .btn-delete {
+    width: 100%;
+  }
+}

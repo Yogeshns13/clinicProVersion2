@@ -70,18 +70,28 @@ const AppointmentList = () => {
     fetchAppointments();
   }, [dateFilter, statusFilter]);
 
-  // Filtered appointments
+  // Filtered and sorted appointments
   const filteredAppointments = useMemo(() => {
-    if (!searchTerm.trim()) return allAppointments;
-    const term = searchTerm.toLowerCase();
-    return allAppointments.filter(
-      (appt) =>
-        appt.patientName?.toLowerCase().includes(term) ||
-        appt.doctorFullName?.toLowerCase().includes(term) ||
-        appt.patientFileNo?.toLowerCase().includes(term) ||
-        appt.patientMobile?.toLowerCase().includes(term) ||
-        appt.reason?.toLowerCase().includes(term)
-    );
+    let filtered = allAppointments;
+    
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = allAppointments.filter(
+        (appt) =>
+          appt.patientName?.toLowerCase().includes(term) ||
+          appt.doctorFullName?.toLowerCase().includes(term) ||
+          appt.patientFileNo?.toLowerCase().includes(term) ||
+          appt.patientMobile?.toLowerCase().includes(term) ||
+          appt.reason?.toLowerCase().includes(term)
+      );
+    }
+
+    // Sort by date and time in ascending order
+    return filtered.sort((a, b) => {
+      const dateA = new Date(a.appointmentDate + ' ' + a.appointmentTime);
+      const dateB = new Date(b.appointmentDate + ' ' + b.appointmentTime);
+      return dateA - dateB;
+    });
   }, [allAppointments, searchTerm]);
 
   // Handlers
@@ -146,7 +156,15 @@ const AppointmentList = () => {
 
   const formatTime = (timeStr) => {
     if (!timeStr) return '—';
-    return timeStr.substring(0, 5); // HH:MM
+    
+    // Parse HH:MM format
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    
+    // Convert to 12-hour format
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hour12 = hours % 12 || 12;
+    
+    return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
   const getTodayDate = () => {

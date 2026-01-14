@@ -506,7 +506,7 @@ const EmployeeProof = () => {
           </div>
 
           {/* Tab Navigation */}
-          <div className="employee-tabs">
+          <div className="employee-tabs1">
             <button
               className="tab-button"
               onClick={() => handleTabClick('details', `/view-employee/${id}`)}

@@ -1,0 +1,276 @@
+/* src/components/AddAppointment.css */
+
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== MODAL OVERLAY ==================== */
+.clinic-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 22, 41, 0.85);
+  backdrop-filter: blur(9px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+/* ==================== MODAL ==================== */
+.clinic-modal {
+  background: var(--glass-bg);
+  border-radius: 15px;
+  border: 2px solid var(--glass-border);
+  width: 100%;
+  max-width: 578px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(14px);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clinic-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 17px 23px 0;
+  margin-bottom: 14px;
+}
+
+.clinic-modal-header h2 {
+  font-size: 1.23rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0;
+  letter-spacing: -0.3px;
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: flex;
+  align-items: center;
+}
+
+.clinic-modal-close {
+  background: rgba(100, 116, 139, 0.15);
+  border: 2px solid rgba(100, 116, 139, 0.2);
+  width: 29px;
+  height: 29px;
+  border-radius: 50%;
+  color: #64748b;
+  font-size: 17px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.clinic-modal-close:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+  transform: rotate(90deg);
+}
+
+.clinic-modal-content {
+  padding: 0 29px;
+}
+
+.clinic-modal-body {
+  padding-bottom: 23px;
+  color: var(--text-dark);
+}
+
+.clinic-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 17px 23px;
+  border-top: 2px solid rgba(34, 43, 108, 0.15);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+}
+
+/* ==================== BUTTONS ==================== */
+.btn-cancel,
+.btn-submit {
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn-cancel {
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(34, 43, 108, 0.3);
+}
+
+.btn-cancel::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(239, 68, 68, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btn-cancel:hover::before {
+  width: 170px;
+  height: 170px;
+}
+
+.btn-cancel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(239, 68, 68, 0.4);
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+}
+
+.btn-submit::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btn-submit:hover:not(:disabled)::before {
+  width: 170px;
+  height: 170px;
+}
+
+.btn-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+.btn-submit:active {
+  transform: translateY(-1px);
+}
+
+.btn-submit:disabled {
+  background: linear-gradient(135deg, #64748b, #94a3b8);
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+/* ==================== DARK MODE ==================== */
+.dark-mode {
+  --glass-bg: rgba(30, 41, 59, 0.92);
+  --text-dark: #e2e8f0;
+}
+
+.dark-mode .clinic-modal {
+  background: rgba(30, 41, 59, 0.94);
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark-mode .clinic-modal-header h2 {
+  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark-mode .clinic-modal-footer {
+  background: linear-gradient(135deg, #1e293b, #334155);
+}
+
+.dark-mode .btn-cancel {
+  background: linear-gradient(135deg, var(--primary-end));
+  color: var(--text-light);
+}
+
+.dark-mode .btn-cancel:hover {
+  background: rgba(239, 68, 68);
+  transform: translateY(-2px);
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 768px) {
+  .clinic-modal {
+    max-width: 92%;
+  }
+
+  .clinic-modal-header,
+  .clinic-modal-content,
+  .clinic-modal-footer {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .clinic-modal-footer {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .btn-cancel,
+  .btn-submit {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .clinic-modal-footer {
+    flex-direction: column;
+  }
+
+  .btn-submit,
+  .btn-cancel {
+    width: 100%;
+  }
+}
