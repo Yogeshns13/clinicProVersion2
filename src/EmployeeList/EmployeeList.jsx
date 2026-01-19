@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiHome } from 'react-icons/fi';
-import { getEmployeeList, getDepartmentList, deleteEmployee } from '../api/api.js';
+import { getEmployeeList, getDepartmentList} from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddEmployee from './AddEmployee.jsx';
@@ -46,8 +46,10 @@ const EmployeeList = () => {
   // Data fetching
   useEffect(() => {
     const fetchDepartments = async () => {
+        const clinicId = Number(localStorage.getItem('clinicID'));
+        const branchId = Number(localStorage.getItem('branchID'));
       try {
-        const data = await getDepartmentList(0, 0);
+        const data = await getDepartmentList(clinicId, branchId, {});
         setDepartments(data);
       } catch (err) {
         console.error('Failed to load departments:', err);
@@ -60,10 +62,12 @@ const EmployeeList = () => {
     try {
       setLoading(true);
       setError(null);
-      const clinicId = localStorage.getItem('clinicID');
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
       const departmentId = selectedDepartmentId === 'all' ? 0 : Number(selectedDepartmentId) || 0;
 
       const data = await getEmployeeList(clinicId, {
+        BranchID: branchId,
         EmployeeID: 0,
         DepartmentID: departmentId,
       });

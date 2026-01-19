@@ -7,7 +7,7 @@ import {
   addEmployeeBeneficiaryAccount, 
   updateEmployeeBeneficiaryAccount,
   deleteEmployeeBeneficiaryAccount,
-  getEmployeeList
+  getEmployeeList  
 } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
@@ -17,19 +17,13 @@ import './EmployeeAccount.css';
 const EmployeeAccount = () => {
   const { id } = useParams(); // Employee ID from URL
   const navigate = useNavigate();
-
-  // Employee & Account data
   const [employee, setEmployee] = useState(null);
   const [accountList, setAccountList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
   const [selectedAccount, setSelectedAccount] = useState(null);
-
-  // Form data
   const [formData, setFormData] = useState({
     accountHolderName: '',
     accountNo: '',
@@ -58,11 +52,13 @@ const EmployeeAccount = () => {
         setLoading(true);
         setError(null);
 
-        const clinicId = localStorage.getItem('clinicID');
+        const clinicId = Number(localStorage.getItem('clinicID'));
+        const branchId = Number(localStorage.getItem('branchID'));
 
         // Fetch employee details
         const empData = await getEmployeeList(clinicId, {
           EmployeeID: Number(id),
+          BranchID: branchId
         });
 
         if (empData && empData.length > 0) {
@@ -74,6 +70,7 @@ const EmployeeAccount = () => {
 
         // Fetch employee beneficiary account list (pass -1 to get all)
         const accountData = await getEmployeeBeneficiaryAccountList(clinicId, {
+          BranchID: branchId,
           EmployeeID: Number(id),
           IsDefault: -1,
         });
@@ -196,8 +193,8 @@ const EmployeeAccount = () => {
     setFormSuccess(false);
 
     try {
-      const clinicId = localStorage.getItem('clinicID');
-      const branchId = localStorage.getItem('branchID');
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
 
       const payload = {
         ClinicID: clinicId ? Number(clinicId) : 0,
@@ -218,6 +215,7 @@ const EmployeeAccount = () => {
         // Refresh account list
         setTimeout(async () => {
           const accountData = await getEmployeeBeneficiaryAccountList(clinicId, {
+            BranchID: branchId,
             EmployeeID: Number(id),
             IsDefault: -1,
           });
@@ -234,6 +232,7 @@ const EmployeeAccount = () => {
         // Refresh account list
         setTimeout(async () => {
           const accountData = await getEmployeeBeneficiaryAccountList(clinicId, {
+            BranchID: branchId,
             EmployeeID: Number(id),
             IsDefault: -1,
           });
@@ -273,11 +272,12 @@ const EmployeeAccount = () => {
     try {
       await deleteEmployeeBeneficiaryAccount(accountToDelete.beneficiaryId);
 
-      const clinicId = localStorage.getItem('clinicID');
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
 
-      
       // Refresh account list
       const accountData = await getEmployeeBeneficiaryAccountList(clinicId, {
+        BranchID: branchId,
         EmployeeID: Number(id),
         IsDefault: -1,
       });

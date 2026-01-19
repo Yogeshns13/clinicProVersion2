@@ -83,11 +83,13 @@ const EmployeeProof = () => {
         setLoading(true);
         setError(null);
 
-        const clinicId = localStorage.getItem('clinicID');
+        const clinicId = Number(localStorage.getItem('clinicID'));
+        const branchId = Number(localStorage.getItem('branchID'));
 
         // Fetch employee details
         const empData = await getEmployeeList(clinicId, {
           EmployeeID: Number(id),
+          BranchID: branchId
         });
 
         if (empData && empData.length > 0) {
@@ -99,6 +101,7 @@ const EmployeeProof = () => {
 
         // Fetch employee proof list
         const proofData = await getEmployeeProofList(clinicId, {
+          BranchID: branchId,
           EmployeeID: Number(id),
         });
 
@@ -309,10 +312,12 @@ const EmployeeProof = () => {
     try {
       await deleteEmployeeProof(proofToDelete.proofId);
 
-      const clinicId = localStorage.getItem('clinicID');
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
       
       // Refresh proof list
       const proofData = await getEmployeeProofList(clinicId, {
+        BranchID: branchId,
         EmployeeID: Number(id),
       });
       setProofList(proofData || []);
@@ -401,8 +406,8 @@ const EmployeeProof = () => {
     setFormSuccess(false);
 
     try {
-      const clinicId = localStorage.getItem('clinicID');
-      const branchId = localStorage.getItem('branchID');
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
 
       const payload = {
         clinicId: clinicId ? Number(clinicId) : 0,
@@ -422,6 +427,7 @@ const EmployeeProof = () => {
         // Refresh proof list
         setTimeout(async () => {
           const proofData = await getEmployeeProofList(clinicId, {
+            BranchID: branchId,
             EmployeeID: Number(id),
           });
           setProofList(proofData || []);
@@ -436,6 +442,7 @@ const EmployeeProof = () => {
         // Refresh proof list
         setTimeout(async () => {
           const proofData = await getEmployeeProofList(clinicId, {
+            BranchID: branchId,
             EmployeeID: Number(id),
           });
           setProofList(proofData || []);

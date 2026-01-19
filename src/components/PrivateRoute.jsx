@@ -34,6 +34,11 @@ const ROUTE_PERMISSIONS = {
   "/slot-list": ["admin", "doctor", "receptionist"],
   "/appointment-list": ["admin", "doctor", "receptionist"],
   "/add-appointment": ["admin", "doctor", "receptionist"],
+  "/view-appointment": ["admin", "doctor", "receptionist"],
+  "/patientvisit-list": ["admin", "doctor", "receptionist"],
+  "/add-patientvisit": ["admin", "doctor", "receptionist"],
+  "/view-patientvisit": ["admin", "doctor", "receptionist"],
+  "/update-patientvisit/:id": ["admin", "doctor", "receptionist"],
 };
 
 const PrivateRoute = ({ children }) => {

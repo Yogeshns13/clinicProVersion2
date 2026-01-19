@@ -95,10 +95,12 @@ const EmployeeShift = () => {
         setLoading(true);
         setError(null);
 
-        const clinicId = localStorage.getItem('clinicID');
+        const clinicId = Number(localStorage.getItem('clinicID'));
+        const branchId = Number(localStorage.getItem('branchID'));
 
         // Fetch employee details
         const empData = await getEmployeeList(clinicId, {
+          BranchID: branchId,
           EmployeeID: Number(id),
         });
 
@@ -152,7 +154,6 @@ const EmployeeShift = () => {
       const clinicId = localStorage.getItem('clinicID');
       console.log('Fetching work days for employee:', id, 'clinicId:', clinicId);
       
-      // Call getWorkDaysList with clinicId and employeeId (as number, not object)
       const workDaysRaw = await getWorkDaysList(
         clinicId ? Number(clinicId) : 0, 
         Number(id)
@@ -345,10 +346,11 @@ const EmployeeShift = () => {
     setDeleteError('');
 
     try {
+      const clinicId = Number(localStorage.getItem('clinicID'));
       await deleteEmployeeShift(shiftToDelete.shiftMapId);
       
       // Refresh shift list
-      const shiftData = await getEmployeeShiftList(0, {
+      const shiftData = await getEmployeeShiftList(clinicId, {
         EmployeeID: Number(id),
       });
       setEmployeeShiftList(shiftData || []);
@@ -396,7 +398,7 @@ const EmployeeShift = () => {
     }
 
     try {
-      const clinicId = localStorage.getItem('clinicID');
+      const clinicId = Number(localStorage.getItem('clinicID'));
 
       const payload = {
         ClinicID: clinicId ? Number(clinicId) : 0,
@@ -409,7 +411,7 @@ const EmployeeShift = () => {
       
       // Refresh shift list
       setTimeout(async () => {
-        const shiftData = await getEmployeeShiftList(0, {
+        const shiftData = await getEmployeeShiftList(clinicId, {
           EmployeeID: Number(id),
         });
         setEmployeeShiftList(shiftData || []);

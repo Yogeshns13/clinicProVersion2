@@ -715,7 +715,7 @@ export const getDepartmentList = async (clinicId = 0, branchId = 0, options = {}
   }
 
   const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
-  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (branchId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : branchId;
 
   const payload = {
     CHANNEL_ID,
@@ -729,6 +729,8 @@ export const getDepartmentList = async (clinicId = 0, branchId = 0, options = {}
     DepartmentID: options.DepartmentID || 0,
     DepartmentName: options.DepartmentName || ""
   };
+  
+  console.log("getDepartmentList Payload",payload)
 
   try {
     const response = await API.post("/GetDepartmentList", payload);
@@ -3643,7 +3645,7 @@ export const getAppointmentList = async (clinicId = 0, options = {}) => {
       ? response.data.result 
       : [];
     
-    console.log("GetAppointmentList response count:", results.length);
+    console.log("GetAppointmentList response count:", results);
 
     return results.map((appt) => ({
       id: appt.appointment_id,
@@ -4048,7 +4050,6 @@ export const updatePatientVisit = async (visitData) => {
   try {
     const response = await API.post("/UpdatePatientVisit", payload);
     console.log("UpdatePatientVisit response:", response.data);
-
     const result = response.data?.result;
 
     if (!result || result.OUT_OK !== 1) {

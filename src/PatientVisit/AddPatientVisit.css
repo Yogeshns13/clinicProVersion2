@@ -1,0 +1,559 @@
+/* src/components/AddPatientVisit.css */
+
+/* ==================== MODAL OVERLAY ==================== */
+.add-visit-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 22, 41, 0.85);
+  backdrop-filter: blur(9px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+  overflow-y: auto;
+}
+
+/* ==================== MODAL ==================== */
+.add-visit-modal {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 17px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==================== HEADER ==================== */
+.add-visit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
+  border-bottom: 2px solid rgba(34, 43, 108, 0.1);
+}
+
+.add-visit-header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.add-visit-header-icon {
+  color: #30b2b5;
+}
+
+.add-visit-header h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, #222b6c, #30b2b5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.add-visit-close {
+  background: rgba(100, 116, 139, 0.15);
+  border: 2px solid rgba(100, 116, 139, 0.2);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.add-visit-close:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+  transform: rotate(90deg);
+}
+
+/* ==================== VISIT MODE SELECTION ==================== */
+.visit-mode-section {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(48, 178, 181, 0.04));
+  border-radius: 13px;
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.mode-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #222b6c;
+  margin: 0 0 16px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #30b2b5;
+}
+
+.mode-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.mode-option {
+  cursor: pointer;
+  position: relative;
+}
+
+.mode-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mode-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+.mode-option:hover .mode-content {
+  border-color: #30b2b5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(48, 178, 181, 0.15);
+}
+
+.mode-option.active .mode-content {
+  background: linear-gradient(135deg, #016183, #225ca0);
+  border-color: #30b2b5;
+  color: white;
+  box-shadow: 0 4px 16px rgba(48, 178, 181, 0.3);
+}
+
+/* ==================== APPOINTMENTS SECTION ==================== */
+.appointments-section {
+  margin-bottom: 24px;
+}
+
+.appointments-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(48, 178, 181, 0.2);
+  border-top-color: #30b2b5;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.appointments-loading p {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.no-appointments {
+  padding: 40px 20px;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(239, 68, 68, 0.02));
+  border-radius: 12px;
+  border: 2px dashed rgba(239, 68, 68, 0.3);
+}
+
+.no-appointments p {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.appointments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.appointment-card {
+  padding: 16px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.appointment-card:hover {
+  border-color: #30b2b5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(48, 178, 181, 0.15);
+}
+
+.appointment-card.selected {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(34, 197, 94, 0.04));
+  border-color: #22c55e;
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.2);
+}
+
+.appointment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.appointment-patient {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.patient-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #207d9c, #30b2b5);
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.patient-name {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.patient-info {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.selected-icon {
+  color: #22c55e;
+  flex-shrink: 0;
+}
+
+.appointment-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 54px;
+}
+
+.appointment-detail {
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.appointment-detail strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* ==================== FORM ==================== */
+.add-visit-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.add-visit-body {
+  padding: 24px;
+  max-height: calc(90vh - 200px);
+  overflow-y: auto;
+}
+
+.add-visit-error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.1));
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.form-section {
+  margin-bottom: 28px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(48, 178, 181, 0.04));
+  border-radius: 13px;
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #222b6c;
+  margin: 0 0 16px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #30b2b5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #1e293b;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #30b2b5;
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.1);
+}
+
+.form-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+/* ==================== FOOTER ==================== */
+.add-visit-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 2px solid rgba(34, 43, 108, 0.15);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+}
+
+.btn-cancel,
+.btn-submit {
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-cancel {
+  background: linear-gradient(135deg, #64748b, #94a3b8);
+  color: white;
+  box-shadow: 0 3px 10px rgba(100, 116, 139, 0.3);
+}
+
+.btn-cancel:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(100, 116, 139, 0.4);
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, #016183, #225ca0);
+  color: white;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+}
+
+.btn-submit::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btn-submit:hover:not(:disabled)::before {
+  width: 200px;
+  height: 200px;
+}
+
+.btn-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+.btn-cancel:disabled,
+.btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==================== DARK MODE ==================== */
+.dark-mode .add-visit-modal {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: #475569;
+}
+
+.dark-mode .add-visit-header {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
+  border-bottom-color: #475569;
+}
+
+.dark-mode .form-section {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
+  border-color: #475569;
+}
+
+.dark-mode .form-label {
+  color: #94a3b8;
+}
+
+.dark-mode .form-input,
+.dark-mode .form-select,
+.dark-mode .form-textarea {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark-mode .add-visit-footer {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border-top-color: #475569;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .add-visit-modal {
+    max-width: 95%;
+    margin: 10px;
+  }
+
+  .add-visit-header {
+    padding: 16px 20px;
+  }
+
+  .add-visit-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .add-visit-body {
+    padding: 20px;
+  }
+
+  .form-section {
+    padding: 16px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .add-visit-footer {
+    flex-direction: column;
+    padding: 16px 20px;
+  }
+
+  .btn-cancel,
+  .btn-submit {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .add-visit-header-icon {
+    display: none;
+  }
+
+  .add-visit-header h2 {
+    font-size: 1.1rem;
+  }
+}
+
+/* ==================== SCROLLBAR ==================== */
+.add-visit-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.add-visit-body::-webkit-scrollbar-track {
+  background: rgba(34, 43, 108, 0.05);
+  border-radius: 10px;
+}
+
+.add-visit-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #207d9c, #30b2b5);
+  border-radius: 10px;
+}
+
+.add-visit-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #222b6c, #225ca0);
+}

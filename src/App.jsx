@@ -35,6 +35,11 @@ import SlotConfigList from "./Slot/SlotConfigList.jsx";
 import SlotList from "./Slot/SlotList.jsx";
 import AppointmentList from "./Appointments/AppointmentList.jsx";
 import AddAppointment from "./Appointments/AddAppointment.jsx";
+import ViewAppointment from "./Appointments/ViewAppointment.jsx";
+import AddPatientVisit from "./PatientVisit/AddPatientVisit.jsx";
+import ViewPatientVisit from "./PatientVisit/ViewPatientVisit.jsx";
+import UpdatePatientVisit from "./PatientVisit/UpdatePatientVisit.jsx";
+import PatientVisitList from "./PatientVisit/PatientVistList.jsx";
 
 function App() {
   return (
@@ -82,6 +87,11 @@ function App() {
           <Route path="/slot-list" element={<SlotList/>} />
           <Route path="/appointment-list" element={<AppointmentList/>} />
           <Route path="/add-appointment" element={<AddAppointment/>} />
+          <Route path="/view-appointment" element={<ViewAppointment/>} />
+          <Route path="/patientvisit-list" element={<PatientVisitList/>} />
+          <Route path="/add-patientvisit" element={<AddPatientVisit/>} />
+          <Route path="/view-patientvisit" element={<ViewPatientVisit/>} />
+          <Route path="/update-patientvisit/:id" element={<UpdatePatientVisit/>} />
 
           {/* Default redirect inside protected area */}
           <Route path="/admin" element={<Navigate to="/dashboard" replace />} />

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiTrash2, FiCalendar } from 'react-icons/fi';
-import { getSlotConfigList, getDepartmentList, getEmployeeList, getShiftList, deleteSlotConfig } from '../api/api.js';
+import { getSlotConfigList, getEmployeeList, getShiftList, deleteSlotConfig } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddSlotConfig from './AddSlotConfig.jsx';
@@ -49,8 +49,11 @@ const SlotConfigList = () => {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const clinicId = localStorage.getItem('clinicID');
+        const clinicId = Number(localStorage.getItem('clinicID'));
+        const branchId = Number(localStorage.getItem('branchID'));
+
         const data = await getEmployeeList(clinicId, {
+          BranchID: branchId,
           Designation: 1, // Assuming 1 is for doctors
           Status: 1
         });
@@ -65,7 +68,7 @@ const SlotConfigList = () => {
   useEffect(() => {
     const fetchShifts = async () => {
       try {
-        const clinicId = localStorage.getItem('clinicID');
+        const clinicId = Number(localStorage.getItem('clinicID'));
         const data = await getShiftList(clinicId, { Status: 1 });
         setShifts(data);
       } catch (err) {

@@ -30,6 +30,7 @@ const SlotList = () => {
 
   // Hover state
   const [hoveredSlotId, setHoveredSlotId] = useState(null);
+  
 
   // Form states
   const [formData, setFormData] = useState({
@@ -50,13 +51,18 @@ const SlotList = () => {
     available: 0
   });
 
+  const openAddForm = () => setShowAddModal(true);
+
   // ────────────────────────────────────────────────
   // Data fetching
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const clinicId = localStorage.getItem('clinicID');
+        const clinicId = Number(localStorage.getItem('clinicID'));
+        const branchId = Number(localStorage.getItem('branchID'));
+
         const data = await getEmployeeList(clinicId, {
+          BranchID: branchId,
           Designation: 1,
           Status: 1
         });
@@ -72,10 +78,13 @@ const SlotList = () => {
     try {
       setLoading(true);
       setError(null);
-      const clinicId = localStorage.getItem('clinicID');
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
       const doctorId = selectedDoctorId === 'all' ? 0 : Number(selectedDoctorId) || 0;
 
       const options = {
+        BranchID: branchId,
         DoctorID: doctorId,
       };
 
@@ -186,10 +195,11 @@ const SlotList = () => {
     try {
       setLoading(true);
       const clinicId = localStorage.getItem('clinicID');
+      const branchId = localStorage.getItem('branchID');
       
       await addSlot({
         clinicId: parseInt(clinicId),
-        branchId: 0,
+        branchId: parseInt(branchId),
         doctorId: parseInt(formData.doctorId),
         slotDate: formData.slotDate,
         slotTime: formData.slotTime + ':00'
@@ -376,6 +386,9 @@ const SlotList = () => {
             <FiSearch size={20} />
           </button>
         </div>
+        <button onClick={openAddForm} className="slot-add-btn">
+                    <FiPlus size={22} /> Add Slots
+                  </button>
       </div>
 
       {/* Slots Grouped by Date */}

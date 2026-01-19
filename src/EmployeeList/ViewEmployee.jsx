@@ -79,9 +79,11 @@ const ViewEmployee = () => {
         setLoading(true);
         setError(null);
 
-        const clinicId = localStorage.getItem('clinicID');
+        const clinicId = Number(localStorage.getItem('clinicID'));
+        const branchId = Number(localStorage.getItem('branchID'));
 
         const data = await getEmployeeList(clinicId, {
+          BranchID: branchId,
           EmployeeID: Number(id),
           DepartmentID: 0,
         });

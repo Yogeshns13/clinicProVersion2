@@ -1,0 +1,467 @@
+/* src/components/AppointmentDetails.css */
+
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUpModal {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==================== MODAL OVERLAY ==================== */
+.appointment-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 22, 41, 0.85);
+  backdrop-filter: blur(9px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeInModal 0.3s ease;
+  overflow-y: auto;
+}
+
+/* ==================== MODAL ==================== */
+.appointment-modal {
+  background: var(--glass-bg);
+  border-radius: 17px;
+  border: 2px solid var(--glass-border);
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(14px);
+  animation: slideUpModal 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==================== MODAL HEADER ==================== */
+.appointment-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
+  border-bottom: 2px solid rgba(34, 43, 108, 0.1);
+}
+
+.appointment-header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.appointment-header-icon {
+  color: var(--accent-end);
+}
+
+.appointment-modal-header h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.appointment-modal-close {
+  background: rgba(100, 116, 139, 0.15);
+  border: 2px solid rgba(100, 116, 139, 0.2);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.appointment-modal-close:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+  transform: rotate(90deg);
+}
+
+/* ==================== MODAL BODY ==================== */
+.appointment-modal-body {
+  padding: 24px;
+}
+
+/* ==================== STATUS SECTION ==================== */
+.appointment-status-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.appointment-status-badge {
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: inline-block;
+}
+
+.appointment-status-badge.active {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.1));
+  color: #166534;
+  border: 2px solid rgba(34, 197, 94, 0.3);
+}
+
+.appointment-status-badge.inactive {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.1));
+  color: #991b1b;
+  border: 2px solid rgba(239, 68, 68, 0.3);
+}
+
+.appointment-status-badge.completed {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.1));
+  color: #1e40af;
+  border: 2px solid rgba(59, 130, 246, 0.3);
+}
+
+/* ==================== DETAILS SECTIONS ==================== */
+.appointment-details-section {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(48, 178, 181, 0.04));
+  border-radius: 13px;
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.appointment-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin: 0 0 16px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--accent-end);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.appointment-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.appointment-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.appointment-detail-item.appointment-full-width {
+  grid-column: 1 / -1;
+}
+
+.appointment-detail-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.appointment-detail-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+/* ==================== LOADING STATE ==================== */
+.appointment-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 20px;
+}
+
+.appointment-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(48, 178, 181, 0.2);
+  border-top-color: var(--accent-end);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.appointment-loading p {
+  font-size: 1rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* ==================== ERROR STATE ==================== */
+.appointment-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.appointment-error p {
+  font-size: 1rem;
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* ==================== MODAL FOOTER ==================== */
+.appointment-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 2px solid rgba(34, 43, 108, 0.15);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+}
+
+.appointment-close-btn {
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  border: none;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.appointment-close-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.appointment-close-btn:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+.appointment-close-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+.appointment-close-btn:active {
+  transform: translateY(-1px);
+}
+
+/* ==================== DARK MODE ==================== */
+.dark-mode .appointment-modal {
+  background: rgba(30, 41, 59, 0.94);
+  border-color: #475569;
+}
+
+.dark-mode .appointment-modal-header {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
+  border-bottom-color: #475569;
+}
+
+.dark-mode .appointment-modal-header h2 {
+  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark-mode .appointment-header-icon {
+  color: var(--accent-end);
+}
+
+.dark-mode .appointment-details-section {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
+  border-color: #475569;
+}
+
+.dark-mode .appointment-section-title {
+  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark-mode .appointment-detail-label {
+  color: var(--accent-end);
+}
+
+.dark-mode .appointment-detail-value {
+  color: var(--text-light);
+}
+
+.dark-mode .appointment-modal-footer {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border-top-color: #475569;
+}
+
+.dark-mode .appointment-loading p {
+  color: #94a3b8;
+}
+
+.dark-mode .appointment-status-badge.active {
+  color: #9cc14d;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 768px) {
+  .appointment-modal {
+    max-width: 95%;
+    margin: 10px;
+  }
+
+  .appointment-modal-header {
+    padding: 16px 20px;
+  }
+
+  .appointment-modal-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .appointment-modal-body {
+    padding: 20px;
+  }
+
+  .appointment-details-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .appointment-details-section {
+    padding: 16px;
+  }
+
+  .appointment-section-title {
+    font-size: 0.95rem;
+  }
+
+  .appointment-modal-footer {
+    padding: 16px 20px;
+  }
+
+  .appointment-close-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .appointment-modal {
+    border-radius: 12px;
+  }
+
+  .appointment-modal-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .appointment-header-icon {
+    display: none;
+  }
+
+  .appointment-modal-body {
+    padding: 16px;
+  }
+
+  .appointment-details-section {
+    padding: 14px;
+    margin-bottom: 16px;
+  }
+
+  .appointment-status-badge {
+    padding: 8px 16px;
+    font-size: 0.75rem;
+  }
+
+  .appointment-detail-label {
+    font-size: 0.65rem;
+  }
+
+  .appointment-detail-value {
+    font-size: 0.85rem;
+  }
+}
+
+/* ==================== SCROLLBAR STYLING ==================== */
+.appointment-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.appointment-modal::-webkit-scrollbar-track {
+  background: rgba(34, 43, 108, 0.05);
+  border-radius: 10px;
+}
+
+.appointment-modal::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-radius: 10px;
+}
+
+.appointment-modal::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+}

@@ -525,7 +525,7 @@
   font-size: 0.76rem;
   letter-spacing: -0.09px;
 }
-
+ 
 .clinic-extra-info {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(159px, 1fr));

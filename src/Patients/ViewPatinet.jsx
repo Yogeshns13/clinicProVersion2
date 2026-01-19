@@ -53,10 +53,12 @@ const ViewPatient = () => {
         setLoading(true);
         setError(null);
 
-        const clinicId = localStorage.getItem('clinicID');
+        const clinicId = Number(localStorage.getItem('clinicID'));
+        const branchId = Number(localStorage.getItem('branchID'));
 
         const data = await getPatientsList(clinicId, {
           PatientID: Number(id),
+          BranchID: branchId
         });
 
         if (data && data.length > 0) {
@@ -68,6 +70,7 @@ const ViewPatient = () => {
             try {
               const familyData = await getPatientsList(clinicId, {
                 PatientID: currentPatient.familyPatientId,
+                BranchID: branchId
               });
 
               if (familyData && familyData.length > 0) {

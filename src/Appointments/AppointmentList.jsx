@@ -6,6 +6,7 @@ import { getAppointmentList, cancelAppointment } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddAppointment from './AddAppointment.jsx';
+import AppointmentDetails from './ViewAppointment.jsx';
 import './AppointmentList.css';
 
 const AppointmentList = () => {
@@ -16,15 +17,15 @@ const AppointmentList = () => {
   const [allAppointments, setAllAppointments] = useState([]);
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
+  const todayDate = new Date().toISOString().split('T')[0];
+  const [dateFilter, setDateFilter] = useState(todayDate);
   const [statusFilter, setStatusFilter] = useState('all'); // all, scheduled, cancelled
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Modals
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [cancelLoading, setCancelLoading] = useState(false);
 
@@ -33,9 +34,11 @@ const AppointmentList = () => {
     try {
       setLoading(true);
       setError(null);
-      const clinicId = localStorage.getItem('clinicID');
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
 
       const options = {
+        BranchID: branchId,
         Page: 1,
         PageSize: 100
       };
@@ -102,7 +105,13 @@ const AppointmentList = () => {
   };
 
   const handleViewDetails = (appointment) => {
-    navigate(`/appointment/${appointment.id}`);
+    setSelectedAppointment(appointment);
+    setIsDetailsModalOpen(true);
+  };
+
+  const closeDetailsModal = () => {
+    setSelectedAppointment(null);
+    setIsDetailsModalOpen(false);
   };
 
   const openAddForm = () => setIsAddFormOpen(true);
@@ -172,7 +181,7 @@ const AppointmentList = () => {
   };
 
   const clearDateFilter = () => {
-    setDateFilter('');
+    setDateFilter(todayDate);
   };
 
   // Early returns
@@ -201,15 +210,10 @@ const AppointmentList = () => {
           />
         </div>
 
-        {dateFilter && (
+        {dateFilter && dateFilter !== todayDate && (
           <button 
             onClick={clearDateFilter} 
-            className="clinic-add-btn"
-            style={{ 
-              width: 'auto', 
-              padding: '10px 20px',
-              background: 'linear-gradient(135deg, #64748b, #94a3b8)'
-            }}
+            className="clinic-add-btn clear-date-btn"
           >
             Clear Date
           </button>
@@ -243,62 +247,34 @@ const AppointmentList = () => {
         </div>
 
         <div className="clinic-add-section">
-          <button 
-            onClick={() => setDateFilter(getTodayDate())} 
-            className="clinic-add-btn"
-            style={{ marginRight: '10px' }}
-          >
-            <FiCalendar size={22} /> Today
-          </button>
           <button onClick={openAddForm} className="app-add-btn">
             <FiPlus size={22} /> Appointment
           </button>
         </div>
       </div>
 
-      {/* Summary Stats */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '20px',
-        marginBottom: '20px'
-      }}>
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05))',
-          padding: '20px',
-          borderRadius: '13px',
-          border: '2px solid rgba(34, 197, 94, 0.2)'
-        }}>
-          <div style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600, marginBottom: '5px' }}>
+      <div className="stats-grid">
+        <div className="stat-card stat-scheduled">
+          <div className="stat-label">
             SCHEDULED
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#059669' }}>
+          <div className="stat-value">
             {allAppointments.filter(a => a.status === 'scheduled').length}
           </div>
         </div>
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05))',
-          padding: '20px',
-          borderRadius: '13px',
-          border: '2px solid rgba(239, 68, 68, 0.2)'
-        }}>
-          <div style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 600, marginBottom: '5px' }}>
+        <div className="stat-card stat-cancelled">
+          <div className="stat-label">
             CANCELLED
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#dc2626' }}>
+          <div className="stat-value">
             {allAppointments.filter(a => a.status === 'cancelled').length}
           </div>
         </div>
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05))',
-          padding: '20px',
-          borderRadius: '13px',
-          border: '2px solid rgba(59, 130, 246, 0.2)'
-        }}>
-          <div style={{ fontSize: '0.75rem', color: '#2563eb', fontWeight: 600, marginBottom: '5px' }}>
+        <div className="stat-card stat-total">
+          <div className="stat-label">
             TOTAL
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#2563eb' }}>
+          <div className="stat-value">
             {allAppointments.length}
           </div>
         </div>
@@ -357,12 +333,7 @@ const AppointmentList = () => {
                     </div>
                   </td>
                   <td>
-                    <div style={{ 
-                      maxWidth: '200px', 
-                      overflow: 'hidden', 
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
+                    <div className="reason-cell">
                       {appt.reason || '—'}
                     </div>
                   </td>
@@ -372,7 +343,7 @@ const AppointmentList = () => {
                     </span>
                   </td>
                   <td>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <div className="actions-cell">
                       <button 
                         onClick={() => handleViewDetails(appt)} 
                         className="clinic-details-btn"
@@ -382,11 +353,7 @@ const AppointmentList = () => {
                       {appt.status === 'scheduled' && (
                         <button 
                           onClick={() => openCancelModal(appt)} 
-                          className="clinic-details-btn"
-                          style={{ 
-                            background: 'linear-gradient(135deg, #dc2626, #ef4444)',
-                            marginLeft: '5px'
-                          }}
+                          className="clinic-details-btn cancel-btn"
                         >
                           Cancel
                         </button>
@@ -405,6 +372,13 @@ const AppointmentList = () => {
         isOpen={isAddFormOpen}
         onClose={closeAddForm}
         onSuccess={handleAddSuccess}
+      />
+
+      {/* Appointment Details Modal */}
+      <AppointmentDetails
+        isOpen={isDetailsModalOpen}
+        onClose={closeDetailsModal}
+        appointmentId={selectedAppointment?.id}
       />
 
       {/* Cancel Appointment Confirmation Modal */}

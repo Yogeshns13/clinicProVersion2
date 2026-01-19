@@ -94,7 +94,11 @@ const UpdatePatient = () => {
         setLoading(true);
         setError(null);
 
-        const patientList = await getPatientsList(0, {
+        const clinicId = Number(localStorage.getItem('clinicID'));
+        const branchId = Number(localStorage.getItem('branchID'));
+
+        const patientList = await getPatientsList(clinicId, {
+          BranchID: branchId,
           PatientID: Number(patientId),
         });
 
@@ -145,7 +149,10 @@ const UpdatePatient = () => {
           setHasFamilyPatient(true);
           
           try {
-            const familyPatientList = await getPatientsList(0, {
+            const clinicId = Number(localStorage.getItem('clinicID'));
+            const branchId = Number(localStorage.getItem('branchID'));
+            const familyPatientList = await getPatientsList(clinicId, {
+              BranchID: branchId,
               PatientID: familyPatientId,
             });
 

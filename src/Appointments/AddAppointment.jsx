@@ -58,8 +58,11 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
 
   const fetchPatients = async () => {
     try {
-      const clinicId = localStorage.getItem('clinicID');
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
       const data = await getPatientsList(clinicId, {
+        BranchID: branchId,
         Status: 1,
         PageSize: 100
       });
@@ -72,9 +75,12 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
 
   const fetchDoctors = async () => {
     try {
-      const clinicId = localStorage.getItem('clinicID');
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
       const data = await getEmployeeList(clinicId, {
-        Designation: 1, // Assuming 1 is for doctors
+        BranchID: branchId,
+        Designation: 1, 
         Status: 1,
         PageSize: 100
       });
@@ -87,8 +93,11 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
   const fetchAvailableSlots = async (doctorId, date) => {
     setLoadingSlots(true);
     try {
-      const clinicId = localStorage.getItem('clinicID');
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
       const data = await getSlotList(clinicId, {
+        BranchID: branchId,
         DoctorID: doctorId,
         SlotDate: date,
         IsBooked: 0, // Only available slots

@@ -1,7 +1,7 @@
 // src/components/UpdateEmployee.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiSave, FiX, FiUpload } from 'react-icons/fi';
+import { FiArrowLeft, FiX, FiUpload } from 'react-icons/fi';
 import { getEmployeeList, getDepartmentList, updateEmployee, uploadPhoto } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
@@ -126,10 +126,14 @@ const UpdateEmployee = () => {
         setLoading(true);
         setError(null);
 
-        const deptData = await getDepartmentList(0, 0);
+        const clinicId = Number(localStorage.getItem('clinicID'));
+        const branchId = Number(localStorage.getItem('branchID'));
+
+        const deptData = await getDepartmentList(clinicId, branchId);
         setDepartments(deptData || []);
 
-        const empList = await getEmployeeList(0, {
+        const empList = await getEmployeeList(clinicId, {
+          BranchID: branchId,
           EmployeeID: Number(employeeId),
         });
 

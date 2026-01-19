@@ -53,11 +53,14 @@ const PatientList = () => {
     try {
       setLoading(true);
       setError(null);
-      const clinicId = localStorage.getItem('clinicID');
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
       const genderFilter = selectedGender === 'all' ? 0 : Number(selectedGender);
       const bloodGroupFilter = selectedBloodGroup === 'all' ? 0 : Number(selectedBloodGroup);
 
       const data = await getPatientsList(clinicId, {
+        BranchID: branchId,
         PatientID: 0,
         Gender: genderFilter,
         BloodGroup: bloodGroupFilter,
