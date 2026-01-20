@@ -34,8 +34,152 @@ GetConsultationInvoiceDetailList
     "ChargeName":"", 
     "FromDate":"",
     "ToDate":""
+}
+
+______________________________________________________
+
+
+GenerateConsultationInvoice
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,    
+    "ClinicID":1,
+    "BranchID":1,
+    "ConsultationID":5000003,
+    "InvoiceDate":"2026-01-19",  
+    "Discount": 0 
     
-    
-    
-   
+}
+
+{
+    "result": {
+        "OUT_INVOICE_ID": 6,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+
+______________________________________________________
+
+GetConsultationInvoiceDetailList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "DetailID":0,
+     "ClinicID": 1,
+    "BranchID":1,
+     "InvoiceID":0,
+    "InvoiceNo":"",
+    "ConsultationID":0,
+    "VisitID":0,   
+    "PatientID":0,
+    "PatientName":"",
+    "DoctorID":0,
+    "ChargeID":0,  
+    "ChargeName":"", 
+    "FromDate":"",
+    "ToDate":""
+}
+
+
+{
+    "result": [
+        {
+            "detail_id": 3,
+            "unique_seq": 3,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_id": 6,
+            "invoice_no": "CPT-INV-CONS-000008",
+            "invoice_date": "2026-01-18T18:30:00.000Z",
+            "consultation_id": 5000003,
+            "visit_id": 4000005,
+            "patient_id": 2000003,
+            "patient_name": "Vishnu Kumar",
+            "patient_mobile": "9087130977",
+            "patient_file_no": "CPT200005",
+            "doctor_id": 1000004,
+            "doctor_full_name": "Gopi Nath",
+            "charge_id": 1,
+            "charge_name": "First Consultation Charge",
+            "charge_code": "CONS001",
+            "charge_amount": "400.00",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "cgst_amount": "36.00",
+            "sgst_amount": "36.00",
+            "net_amount": "472.00",
+            "date_created": "2026-01-20T08:12:17.000Z",
+            "date_modified": "2026-01-20T08:12:17.000Z"
+        },
+        {
+            "detail_id": 2,
+            "unique_seq": 2,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_id": 5,
+            "invoice_no": "CPT-INV-CONS-000007",
+            "invoice_date": "2025-12-01T18:30:00.000Z",
+            "consultation_id": 5000000,
+            "visit_id": 4000000,
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Thivaakar AD",
+            "charge_id": 1,
+            "charge_name": "First Consultation Charge",
+            "charge_code": "CONS001",
+            "charge_amount": "150.00",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "cgst_amount": "13.50",
+            "sgst_amount": "13.50",
+            "net_amount": "177.00",
+            "date_created": "2025-12-02T13:43:46.000Z",
+            "date_modified": "2025-12-02T13:43:46.000Z"
+        },
+        {
+            "detail_id": 1,
+            "unique_seq": 1,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_id": 5,
+            "invoice_no": "CPT-INV-CONS-000007",
+            "invoice_date": "2025-12-01T18:30:00.000Z",
+            "consultation_id": 5000000,
+            "visit_id": 4000000,
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Thivaakar AD",
+            "charge_id": 1,
+            "charge_name": "First Consultation Charge",
+            "charge_code": "CONS001",
+            "charge_amount": "350.00",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "cgst_amount": "31.50",
+            "sgst_amount": "31.50",
+            "net_amount": "413.00",
+            "date_created": "2025-12-02T13:43:46.000Z",
+            "date_modified": "2025-12-02T13:43:46.000Z"
+        }
+    ]
 }

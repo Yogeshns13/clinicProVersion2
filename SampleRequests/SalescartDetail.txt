@@ -12,9 +12,6 @@ AddSalesCartDetail
     "UnitPrice":11.00,
     "DiscountPercentage":5,
     "BatchSelection":"FEFO"
-    
-   
-   
 }
 
 -- batch selection -> 'FIFO' or 'FEFO'

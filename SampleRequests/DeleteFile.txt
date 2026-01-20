@@ -6,8 +6,6 @@
     "USER_ID" : 1000002,
     "FileId": 2, 
     "ClinicID":1
-     
-   
 }
 
 

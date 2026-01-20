@@ -1,4 +1,3 @@
-
 AddInvoicePayment
 {
     "CHANNEL_ID":1,
@@ -16,7 +15,7 @@ AddInvoicePayment
    
 }
 -- PaymentMode Text Table #33 1-Cash 2-Card 3- UPI 4-Net Banking 5-Wallet 6-Cheque 7-Insurance 8- Credit
-
+-
 UpdateInvoicePayment
 {
     "CHANNEL_ID":1,
@@ -32,11 +31,7 @@ UpdateInvoicePayment
 }
 --  possible status to be 4-refunded 5-reversed
 
-
-GetInvoicePaymentList
-{
-    "CHANNEL_ID":1,
-    "REF_KEY":"hshshshshshshshshshsh",
++++++++++++++++++++++++++++++++++++++++++++++++++++++hshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000,
     "OrderID":0,

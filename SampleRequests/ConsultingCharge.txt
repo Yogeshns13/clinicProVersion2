@@ -34,9 +34,9 @@ GetConsultationChargeList
     "Page":1,
     "PageSize":20,
     "ConsChargeID":0,
-     "ClinicID": 1,
+    "ClinicID": 1,
     "BranchID":1,
-     "ConsultationID":0,
+    "ConsultationID":0,
     "VisitID":0,   
     "PatientID":0,
     "PatientName":"",
@@ -49,4 +49,118 @@ GetConsultationChargeList
     
     
    
+}
+
+
+______________________________________________________
+
+
+AddConsultationCharge
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,    
+    "ClinicID":1,
+    "BranchID":1,
+    "ConsultationID":5000003,
+    "ChargeID":1,  
+    "ChargeAmount": 0 
+    
+}
+
+{
+    "result": {
+        "OUT_CONS_CHARGE_ID": 3,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+______________________________________________________
+
+GetConsultationChargeList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "ConsChargeID":0,
+     "ClinicID": 1,
+    "BranchID":1,
+     "ConsultationID":0,
+    "VisitID":0,   
+    "PatientID":0,
+    "PatientName":"",
+    "DoctorID":0,
+    "ChargeID":0,  
+    "ChargeName":"", 
+    "InvoiceID":0,
+    "InvoicedOnly":0,
+    "Status":-1
+    
+    
+   
+}
+
+{
+    "result": [
+        {
+            "cons_charge_id": 3,
+            "unique_seq": 3,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "consultation_id": 5000003,
+            "visit_id": 4000005,
+            "patient_id": 2000003,
+            "patient_name": "Vishnu Kumar",
+            "patient_mobile": "9087130977",
+            "patient_file_no": "CPT200005",
+            "doctor_id": 1000004,
+            "doctor_full_name": "Gopi Nath",
+            "charge_id": 1,
+            "charge_name": "First Consultation Charge",
+            "charge_code": "CONS001",
+            "charge_amount": "400.00",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "cgst_amount": "36.00",
+            "sgst_amount": "36.00",
+            "net_amount": "472.00",
+            "invoice_id": null,
+            "invoice_no": null,
+            "is_invoiced": "No",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2026-01-20T08:05:59.000Z",
+            "date_modified": "2026-01-20T08:05:59.000Z"
+        }
+    ]
+}
+
+
+______________________________________________________
+
+
+CancelConsultationCharge
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ConsChargeID": 4 
+}
+
+{
+    "result": [
+        {
+            "IN_CONS_CHARGE_ID": 4,
+            "OUT_OK": 1,
+            "OUT_ERROR": "OK"
+        }
+    ]
 }

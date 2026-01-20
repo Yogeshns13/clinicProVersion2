@@ -94,6 +94,4 @@ ForgetPassword
     "ClinicID":1,    
     "UserName":"admin",
     "Email":"siva@gmail.com"
-    
-   
 }

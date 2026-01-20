@@ -40,6 +40,10 @@ import AddPatientVisit from "./PatientVisit/AddPatientVisit.jsx";
 import ViewPatientVisit from "./PatientVisit/ViewPatientVisit.jsx";
 import UpdatePatientVisit from "./PatientVisit/UpdatePatientVisit.jsx";
 import PatientVisitList from "./PatientVisit/PatientVistList.jsx";
+import ConsultationList from "./Consultation/ConsultationList.jsx";
+import ViewConsultation from "./Consultation/ViewConsultation.jsx";
+import AddConsultation from "./Consultation/AddConsultation.jsx";
+import UpdateConsultation from "./Consultation/UpdateConsultation.jsx";
 
 function App() {
   return (
@@ -92,6 +96,10 @@ function App() {
           <Route path="/add-patientvisit" element={<AddPatientVisit/>} />
           <Route path="/view-patientvisit" element={<ViewPatientVisit/>} />
           <Route path="/update-patientvisit/:id" element={<UpdatePatientVisit/>} />
+          <Route path="/consultation-list" element={<ConsultationList/>} />
+          <Route path="/view-consultation" element={<ViewConsultation/>} />
+          <Route path="/add-consultation" element={<AddConsultation/>} />
+          <Route path="/update-consultation/:id" element={<UpdateConsultation/>} />
 
           {/* Default redirect inside protected area */}
           <Route path="/admin" element={<Navigate to="/dashboard" replace />} />

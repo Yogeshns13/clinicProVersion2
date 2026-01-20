@@ -77,6 +77,7 @@ const Sidebar = () => {
         { to: "/slot-list", label: "Slot-List" },
         { to: "/appointment-list", label: "Appoinment List" },
         { to: "/patientvisit-list", label: "Patient Visit List"},
+        { to: "/consultation-list", label: "Consultation List"},
 
       ],
       show: hasAccess(MENU_PERMISSIONS.patients),

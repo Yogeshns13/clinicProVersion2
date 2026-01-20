@@ -1,0 +1,629 @@
+/* src/components/AddConsultation.css */
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ==================== MODAL OVERLAY ==================== */
+.add-consultation-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 22, 41, 0.85);
+  backdrop-filter: blur(9px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+  overflow-y: auto;
+}
+
+/* ==================== MODAL ==================== */
+.add-consultation-modal {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 17px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==================== HEADER ==================== */
+.add-consultation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
+  border-bottom: 2px solid rgba(34, 43, 108, 0.1);
+}
+
+.add-consultation-header h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  background: linear-gradient(135deg, #222b6c, #30b2b5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.add-consultation-subtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 600;
+  margin: 0;
+}
+
+.add-consultation-close-btn {
+  background: rgba(100, 116, 139, 0.15);
+  border: 2px solid rgba(100, 116, 139, 0.2);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.add-consultation-close-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+  transform: rotate(90deg);
+}
+
+/* ==================== BODY ==================== */
+.add-consultation-body {
+  padding: 24px;
+  max-height: calc(90vh - 150px);
+  overflow-y: auto;
+}
+
+/* ==================== LOADING STATE ==================== */
+.add-consultation-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  font-size: 1rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* ==================== NO DATA STATE ==================== */
+.add-consultation-no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 16px;
+}
+
+.add-consultation-no-data svg {
+  color: #94a3b8;
+}
+
+.add-consultation-no-data p {
+  font-size: 1rem;
+  color: #64748b;
+  font-weight: 600;
+  margin: 0;
+}
+
+.add-consultation-hint {
+  font-size: 0.85rem !important;
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+}
+
+/* ==================== VISIT SELECTION GRID ==================== */
+.visit-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.visit-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.visit-card:hover {
+  border-color: #30b2b5;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(48, 178, 181, 0.15);
+}
+
+/* ==================== VISIT CARD HEADER ==================== */
+.visit-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.visit-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #207d9c, #30b2b5);
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.visit-info {
+  flex: 1;
+}
+
+.visit-patient-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.visit-details {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* ==================== VISIT CARD BODY ==================== */
+.visit-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.visit-field {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.visit-label {
+  font-weight: 600;
+  color: #64748b;
+  min-width: 70px;
+}
+
+.visit-value {
+  color: #1e293b;
+  font-weight: 500;
+  flex: 1;
+}
+
+.visit-vitals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.vital-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.vital-badge.bp {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.1));
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.vital-badge.temp {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.1));
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.vital-badge.weight {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.1));
+  color: #2563eb;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* ==================== VISIT CARD FOOTER ==================== */
+.visit-card-footer {
+  padding-top: 10px;
+  border-top: 2px solid #f1f5f9;
+}
+
+.select-visit-btn {
+  width: 100%;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #016183, #225ca0);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+}
+
+.select-visit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+/* ==================== SELECTED VISIT SUMMARY ==================== */
+.selected-visit-summary {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(34, 197, 94, 0.04));
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 24px;
+}
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #16a34a;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(34, 197, 94, 0.2);
+}
+
+.summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.summary-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.summary-label {
+  font-weight: 600;
+  color: #64748b;
+  min-width: 90px;
+}
+
+.summary-value {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.change-visit-btn {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #64748b, #94a3b8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(100, 116, 139, 0.3);
+}
+
+.change-visit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.4);
+}
+
+/* ==================== CONSULTATION FORM ==================== */
+.consultation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-section {
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(48, 178, 181, 0.04));
+  border-radius: 13px;
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.form-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #222b6c;
+  margin: 0 0 16px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #30b2b5;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #1e293b;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #30b2b5;
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* ==================== FORM ACTIONS ==================== */
+.add-consultation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 2px solid rgba(34, 43, 108, 0.1);
+}
+
+.btn-secondary,
+.btn-primary {
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #64748b, #94a3b8);
+  color: white;
+  box-shadow: 0 3px 10px rgba(100, 116, 139, 0.3);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(100, 116, 139, 0.4);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #016183, #225ca0);
+  color: white;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btn-primary:hover:not(:disabled)::before {
+  width: 200px;
+  height: 200px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+.btn-secondary:disabled,
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==================== DARK MODE ==================== */
+.dark-mode .add-consultation-modal {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: #475569;
+}
+
+.dark-mode .add-consultation-header {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
+  border-bottom-color: #475569;
+}
+
+.dark-mode .add-consultation-subtitle {
+  color: #94a3b8;
+}
+
+.dark-mode .visit-card {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.dark-mode .visit-patient-name,
+.dark-mode .visit-value {
+  color: #e2e8f0;
+}
+
+.dark-mode .form-section {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
+  border-color: #475569;
+}
+
+.dark-mode .form-label {
+  color: #94a3b8;
+}
+
+.dark-mode .form-input,
+.dark-mode .form-textarea {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark-mode .selected-visit-summary {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.dark-mode .summary-value {
+  color: #e2e8f0;
+}
+
+/* ==================== SCROLLBAR ==================== */
+.add-consultation-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.add-consultation-body::-webkit-scrollbar-track {
+  background: rgba(34, 43, 108, 0.05);
+  border-radius: 10px;
+}
+
+.add-consultation-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #207d9c, #30b2b5);
+  border-radius: 10px;
+}
+
+.add-consultation-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #222b6c, #225ca0);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .add-consultation-modal {
+    max-width: 95%;
+    margin: 10px;
+  }
+
+  .add-consultation-header {
+    padding: 16px 20px;
+  }
+
+  .add-consultation-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .add-consultation-body {
+    padding: 20px;
+  }
+
+  .visit-selection-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-section {
+    padding: 16px;
+  }
+
+  .add-consultation-actions {
+    flex-direction: column;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .add-consultation-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .visit-avatar {
+    width: 42px;
+    height: 42px;
+    font-size: 16px;
+  }
+}

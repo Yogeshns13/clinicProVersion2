@@ -63,3 +63,139 @@ GetConsultationChargeConfigList
     
    
 }
+
+______________________________________________________
+
+
+AddConsultationChargeConfig
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,    
+    "ClinicID":1,
+    "BranchID":1,
+    "ChargeCode":"CONS002",
+    "ChargeName":"Second Consultation Charge",
+    "DefaultAmount":500.00,
+    "GstNo": "AAB4536RRE3",   
+    "CgstPercentage": 9.0,  
+    "SgstPercentage":9.0
+    
+}
+
+{
+    "result": {
+        "OUT_CHARGE_ID": 2,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+______________________________________________________
+
+UpdateConsultationChargeConfig
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,    
+    "ClinicID":1,
+    "BranchID":1,        
+    "ChargeID":1,
+    "ChargeCode":"CONS001",
+    "ChargeName":"First Consultation Charge",
+    "DefaultAmount":400.00,       
+    "CgstPercentage": 9.0,  
+    "SgstPercentage":9.0,
+    "Status":1
+    
+}
+
+
+{
+    "result": {
+        "IN_CHARGE_ID": 1,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+______________________________________________________
+
+
+DeleteConsultationChargeConfig
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ChargeID": 2
+    
+    
+   
+}
+
+{
+    "result": {
+        "IN_CHARGE_ID": 2,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+______________________________________________________
+
+
+GetConsultationChargeConfigList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "ChargeID":0,
+    "ClinicID": 1,
+    "ChargeCode":"",
+    "ChargeName":"",   
+    "Status":-1
+    
+    
+   
+}
+
+{
+    "result": [
+        {
+            "charge_id": 1,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "charge_code": "CONS001",
+            "charge_name": "First Consultation Charge",
+            "default_amount": "400.00",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "amount_inclusive_tax": "472.00000000",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-12-02T08:55:25.000Z",
+            "date_modified": "2026-01-20T07:58:30.000Z"
+        },
+        {
+            "charge_id": 2,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "charge_code": "CONS002",
+            "charge_name": "Second Consultation Charge",
+            "default_amount": "500.00",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "amount_inclusive_tax": "590.00000000",
+            "status": 2,
+            "status_desc": "Deleted",
+            "date_created": "2026-01-20T07:55:02.000Z",
+            "date_modified": "2026-01-20T07:59:55.000Z"
+        }
+    ]
+}

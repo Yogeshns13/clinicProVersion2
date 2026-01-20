@@ -15,7 +15,6 @@ AddLabTestReport
     "VerifiedBy":1000001,
     "VerifiedDateTime":"2025-11-27 18:58:00",
     "Remarks":"Verified "
-   
 }
 
 UpdateLabTestReport
@@ -24,16 +23,16 @@ UpdateLabTestReport
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000, 
-     "ClinicID": 1  ,  
+    "ClinicID": 1  ,  
     "BranchID":1,
     "ReportID":1,
-     "VerifiedBy":1000001,
+    "VerifiedBy":1000001,
     "VerifiedDateTime":"2025-11-27 18:58:00",
-     "FileID":1,    
+    "FileID":1,    
     "Remarks":"Verified ",
     "Status":3
-   
 }
+
 DeleteLabTestReport
 {
     "CHANNEL_ID":1,
@@ -64,11 +63,6 @@ GetLabTestReportList
     "VerifiedBy":0,
     "FromDate":"",
     "ToDate":"",
-    "Status":-1
-    
-
-    
-   
-   
+    "Status":-1  
 }
 

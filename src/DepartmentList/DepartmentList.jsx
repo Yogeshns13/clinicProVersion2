@@ -12,8 +12,9 @@ import {
   getDepartmentList, 
   getClinicList, 
   getBranchList,
-  addDepartment 
-} from '../api/api.js';
+  clearCacheByType 
+} from '../api/cachedApi.js';
+import { addDepartment } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import './DepartmentList.css';
@@ -51,7 +52,7 @@ const DepartmentList = () => {
   const [formSuccess, setFormSuccess] = useState(false);
 
   // ────────────────────────────────────────────────
-  // Data fetching
+  // Data fetching with cache
   useEffect(() => {
     const fetchClinics = async () => {
       try {
@@ -198,15 +199,18 @@ const DepartmentList = () => {
         profile: formData.profile.trim(),
       });
 
+      // Clear cache after successful add
+      clearCacheByType('GetDepartmentList');
+
       setFormSuccess(true);
-      setTimeout(() => {
+      setTimeout(async () => {
         closeAddForm();
         const clinicId = selectedClinicId === 'all' ? 0 : Number(selectedClinicId) || 0;
         const branchId = selectedBranchId === 'all' ? 0 : Number(selectedBranchId) || 0;
-        getDepartmentList(clinicId, branchId).then((data) => {
-          setDepartments(data);
-          setAllDepartments(data);
-        });
+        // Force refresh to get updated data
+        const data = await getDepartmentList(clinicId, branchId, {}, true);
+        setDepartments(data);
+        setAllDepartments(data);
       }, 1500);
     } catch (err) {
       console.error('Add department failed:', err);

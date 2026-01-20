@@ -8,13 +8,8 @@ GeneratePharmacyInvoice
     "BranchID"  :1,
     "CartID":1,
     "InvoiceDate":"2025-11-28",
-    "Discount":10   
-  
-
-   
+    "Discount":10      
 }
-
-
 
 GetPharmacyInvoiceDetailList
 {
@@ -26,7 +21,7 @@ GetPharmacyInvoiceDetailList
     "Page":1,
     "PageSize":20,
     "InvDetailID":0,   
-    "ClinicID": 1,    
+    "ClinicID": 1, 
     "BranchID":1,
     "InvoiceID"  :0,    
     "InvoiceNo":"",
@@ -37,6 +32,4 @@ GetPharmacyInvoiceDetailList
     "BatchNo":"",
     "FromDate":"",
     "ToDate":""
-    
-   
 }

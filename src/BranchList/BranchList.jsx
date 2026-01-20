@@ -10,8 +10,9 @@ import {
 import { 
   getBranchList, 
   getClinicList, 
-  addBranch 
-} from '../api/api.js';
+  clearCacheByType 
+} from '../api/cachedApi.js';
+import { addBranch } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import './BranchList.css';
@@ -59,7 +60,7 @@ const BranchList = () => {
   const [formSuccess, setFormSuccess] = useState(false);
 
   // ────────────────────────────────────────────────
-  // Data fetching
+  // Data fetching with cache
   useEffect(() => {
     const fetchClinics = async () => {
       try {
@@ -177,14 +178,17 @@ const BranchList = () => {
         branchType: Number(formData.branchType),
       });
 
+      // Clear cache after successful add
+      clearCacheByType('GetBranchList');
+
       setFormSuccess(true);
-      setTimeout(() => {
+      setTimeout(async () => {
         closeAddForm();
         const clinicId = selectedClinicId === 'all' ? 0 : Number(selectedClinicId) || 0;
-        getBranchList(clinicId).then((data) => {
-          setBranches(data);
-          setAllBranches(data);
-        });
+        // Force refresh to get updated data
+        const data = await getBranchList(clinicId, {}, true);
+        setBranches(data);
+        setAllBranches(data);
       }, 1500);
     } catch (err) {
       console.error('Add branch failed:', err);

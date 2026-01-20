@@ -16,7 +16,7 @@ AddPrescription
    "Notes":"Fever cold and head ache",
     "IsRepeat":0,
    "RepeatCount": 0,
-   "CreatedBy":1000001
+   "CreatedBy":1000001  (employee ID)
    
 
    

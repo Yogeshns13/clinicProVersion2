@@ -21,8 +21,6 @@ AddConsultation
     "ConsultationNotes":"Test Notes",
     "NextConsultationDate":"",
     "TreatmentPlan":"Test Plan"
-
-   
 }
 
 UpdateConsultation
@@ -43,10 +41,7 @@ UpdateConsultation
     "Instructions":"Test Notes",
     "ConsultationNotes":"Test Notes",
     "NextConsultationDate":"2026-01-01",
-    "TreatmentPlan":"Test Plan"
-    
-
-   
+    "TreatmentPlan":"Test Plan" 
 }
 
 
@@ -72,3 +67,135 @@ GetConsultationList
     "InvoiceID":0
    
 }
+
+------------------------------------------------------------
+
+
+/GetConsultationList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20, 
+    "ConsultationID":0,
+    "ClinicID": 1,
+    "BranchID":1,
+    "VisitID":0,
+    "PatientID":0,
+    "PatientName":"",
+    "DoctorID":0,
+    "DoctorName":"", 
+    "FromDate":"",
+    "ToDate":"",
+    "NextConsultationDate":"",
+    "InvoiceID":0
+}
+
+{
+    "result": [
+        {
+            "consultation_id": 5000000,
+            "unique_seq": 2,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "visit_id": 4000000,
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Thivaakar AD",
+            "doctor_code": "EMP0014",
+            "reason": "having high fever",
+            "symptoms": "Fever cold and head ache",
+            "bp_systolic": 130,
+            "bp_diastolic": 90,
+            "bp_reading": "130/90",
+            "temperature": "100.2",
+            "weight": "88.50",
+            "emr_notes": "Test Notes",
+            "ehr_notes": "Test Notes",
+            "instructions": "Test Notes",
+            "consultation_notes": "Test Notes",
+            "next_consultation_date": "2025-12-31T18:30:00.000Z",
+            "treatment_plan": "Test Plan",
+            "invoice_id": 5,
+            "date_created": "2025-11-25T11:59:38.000Z",
+            "date_modified": "2025-12-02T13:43:46.000Z"
+        }
+    ]
+}
+
+--------------------------------
+
+
+AddConsultation
+
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "VisitID":4000004,
+    "PatientID":2000005,
+    "DoctorID":1000004,
+    "Reason": "having high fever",
+    "Symptoms":"Fever cold and head ache",
+    "BPSystolic":130,
+    "BPDiastolic": 90,
+    "Temperature":100.2,
+    "Weight":88.5,
+    "EMRNotes":"Test Notes",
+    "EHRNotes":"Test Notes",
+    "Instructions":"Test Notes",
+    "ConsultationNotes":"Test Notes",
+    "NextConsultationDate":"",
+    "TreatmentPlan":"Test Plan"
+}
+
+{
+    "result": {
+        "OUT_CONSULTATION_ID": 5000001,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+---------------------------
+
+UpdateConsultation
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ConsultationID":5000000,  
+     "Reason": "having high fever",
+    "Symptoms":"Fever cold and head ache",
+    "BPSystolic":130,
+    "BPDiastolic": 90,
+    "Temperature":100.2,
+    "Weight":88.5,
+    "EMRNotes":"Test Notes",
+    "EHRNotes":"Test Notes",
+    "Instructions":"Test Notes",
+    "ConsultationNotes":"Test Notes",
+    "NextConsultationDate":"2026-01-01",
+    "TreatmentPlan":"Test Plan"
+}
+
+{
+    "result": {
+        "IN_CONSULTATION_ID": 5000000,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+

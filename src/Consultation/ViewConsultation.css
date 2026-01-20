@@ -1,0 +1,596 @@
+/* src/components/ViewConsultation.css */
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== MODAL OVERLAY ==================== */
+.view-consultation-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 22, 41, 0.85);
+  backdrop-filter: blur(9px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+  overflow-y: auto;
+}
+
+/* ==================== MODAL ==================== */
+.view-consultation-modal {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 17px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  width: 100%;
+  max-width: 1000px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==================== HEADER ==================== */
+.view-consultation-header {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
+  border-bottom: 2px solid rgba(34, 43, 108, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.view-consultation-header h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  background: linear-gradient(135deg, #222b6c, #30b2b5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.view-consultation-subtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 600;
+  margin: 0;
+}
+
+.view-consultation-close-btn {
+  background: rgba(100, 116, 139, 0.15);
+  border: 2px solid rgba(100, 116, 139, 0.2);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.view-consultation-close-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+  transform: rotate(90deg);
+}
+
+/* ==================== BODY ==================== */
+.view-consultation-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ==================== LOADING & ERROR ==================== */
+.view-consultation-loading,
+.view-consultation-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  font-size: 1rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.view-consultation-error {
+  color: #ef4444;
+}
+
+/* ==================== INFO GRID ==================== */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.info-card {
+  background: white;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 2px solid;
+}
+
+.patient-info {
+  border-color: rgba(48, 178, 181, 0.3);
+  background: linear-gradient(135deg, rgba(48, 178, 181, 0.05), rgba(48, 178, 181, 0.02));
+}
+
+.doctor-info {
+  border-color: rgba(139, 92, 246, 0.3);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(139, 92, 246, 0.02));
+}
+
+.info-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(34, 43, 108, 0.1);
+}
+
+.patient-info .info-card-header {
+  color: #30b2b5;
+}
+
+.doctor-info .info-card-header {
+  color: #8b5cf6;
+}
+
+.info-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.info-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #64748b;
+  min-width: 70px;
+}
+
+.info-value {
+  color: #1e293b;
+  font-weight: 600;
+  flex: 1;
+}
+
+/* ==================== SECTIONS ==================== */
+.details-section,
+.vitals-section,
+.records-section,
+.notes-section,
+.instructions-section,
+.treatment-section,
+.followup-section {
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(48, 178, 181, 0.04));
+  border-radius: 13px;
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  padding: 20px;
+}
+
+.details-header,
+.vitals-header,
+.records-header,
+.notes-header,
+.instructions-header,
+.treatment-header,
+.followup-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #222b6c;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #30b2b5;
+}
+
+.details-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-size: 0.9rem;
+  color: #1e293b;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* ==================== VITALS ==================== */
+.vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.vital-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 2px solid;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vital-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.bp-card {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(239, 68, 68, 0.02));
+}
+
+.temp-card {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(245, 158, 11, 0.02));
+}
+
+.weight-card {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.02));
+}
+
+.vital-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vital-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1;
+}
+
+.vital-unit {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+/* ==================== RECORDS ==================== */
+.records-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.record-item {
+  background: white;
+  border-radius: 10px;
+  padding: 14px;
+  border: 2px solid #e2e8f0;
+}
+
+.record-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.record-content {
+  font-size: 0.9rem;
+  color: #1e293b;
+  line-height: 1.6;
+}
+
+/* ==================== NOTES & CONTENT SECTIONS ==================== */
+.notes-content,
+.instructions-content,
+.treatment-content {
+  font-size: 0.95rem;
+  color: #1e293b;
+  line-height: 1.7;
+  background: white;
+  padding: 16px;
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+  white-space: pre-wrap;
+}
+
+/* ==================== FOLLOW-UP ==================== */
+.followup-content {
+  text-align: center;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  border: 2px solid rgba(139, 92, 246, 0.3);
+}
+
+.followup-date {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #8b5cf6;
+}
+
+/* ==================== METADATA ==================== */
+.metadata-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(100, 116, 139, 0.08), rgba(100, 116, 139, 0.04));
+  border-radius: 10px;
+  border: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+.metadata-item {
+  display: flex;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.metadata-label {
+  font-weight: 600;
+  color: #64748b;
+}
+
+.metadata-value {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* ==================== FOOTER ==================== */
+.view-consultation-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 20px 24px;
+  border-top: 2px solid rgba(34, 43, 108, 0.15);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+}
+
+.btn-close {
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #016183, #225ca0);
+  color: white;
+  border: none;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-close::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btn-close:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+.btn-close:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+/* ==================== DARK MODE ==================== */
+.dark-mode .view-consultation-modal {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: #475569;
+}
+
+.dark-mode .view-consultation-header {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
+  border-bottom-color: #475569;
+}
+
+.dark-mode .view-consultation-subtitle {
+  color: #94a3b8;
+}
+
+.dark-mode .info-card {
+  background: #1e293b;
+}
+
+.dark-mode .info-label,
+.dark-mode .detail-label,
+.dark-mode .record-label,
+.dark-mode .vital-label,
+.dark-mode .metadata-label {
+  color: #94a3b8;
+}
+
+.dark-mode .info-value,
+.dark-mode .detail-value,
+.dark-mode .record-content,
+.dark-mode .vital-value,
+.dark-mode .metadata-value {
+  color: #e2e8f0;
+}
+
+.dark-mode .details-section,
+.dark-mode .vitals-section,
+.dark-mode .records-section,
+.dark-mode .notes-section,
+.dark-mode .instructions-section,
+.dark-mode .treatment-section,
+.dark-mode .followup-section {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
+  border-color: #475569;
+}
+
+.dark-mode .vital-card {
+  background: #1e293b;
+}
+
+.dark-mode .record-item,
+.dark-mode .notes-content,
+.dark-mode .instructions-content,
+.dark-mode .treatment-content,
+.dark-mode .followup-content {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark-mode .followup-date {
+  color: #a78bfa;
+}
+
+.dark-mode .metadata-section {
+  background: rgba(51, 65, 85, 0.5);
+  border-color: #475569;
+}
+
+.dark-mode .view-consultation-footer {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border-top-color: #475569;
+}
+
+/* ==================== SCROLLBAR ==================== */
+.view-consultation-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.view-consultation-modal::-webkit-scrollbar-track {
+  background: rgba(34, 43, 108, 0.05);
+  border-radius: 10px;
+}
+
+.view-consultation-modal::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #207d9c, #30b2b5);
+  border-radius: 10px;
+}
+
+.view-consultation-modal::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #222b6c, #225ca0);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .view-consultation-modal {
+    max-width: 95%;
+    margin: 10px;
+  }
+
+  .view-consultation-header {
+    padding: 16px 20px;
+  }
+
+  .view-consultation-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .view-consultation-body {
+    padding: 20px;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vitals-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .details-section,
+  .vitals-section,
+  .records-section,
+  .notes-section,
+  .instructions-section,
+  .treatment-section,
+  .followup-section {
+    padding: 16px;
+  }
+
+  .view-consultation-footer {
+    padding: 16px 20px;
+  }
+
+  .btn-close {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .view-consultation-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .vital-value {
+    font-size: 1.6rem;
+  }
+
+  .followup-date {
+    font-size: 1.2rem;
+  }
+}

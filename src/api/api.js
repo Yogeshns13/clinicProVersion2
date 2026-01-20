@@ -78,11 +78,11 @@ export const loginUser = async (username, password) => {
     if (result?.isAuthendicated) {
       // Save user data including PROFILE_NAME
       localStorage.setItem("userId", result.USER_ID);
-      localStorage.setItem("profileName", result.PROFILE_NAME);        // Already there
+      localStorage.setItem("profileName", result.PROFILE_NAME);      
       localStorage.setItem("clinicID", result.BRANCH_ID);
       localStorage.setItem("branchID", result.CLINIC_ID);
       localStorage.setItem("isLoggedIn", "true");
-
+      console.log("Result:", result);
       return { success: true, data: result };
     } else {
       throw new Error(result?.message || "Invalid credentials");
@@ -2626,8 +2626,6 @@ export const deleteWorkDays = async (workDaysId) => {
   }
 };
 
-
-
 export const getPatientsList = async (clinicId = 0, options = {}) => {
   const userId = getUserId();
   if (!userId) {
@@ -3001,7 +2999,7 @@ export const getSlotConfigList = async (clinicId = 0, options = {}) => {
     authError.status = 401;
     authError.code = 401;
     throw authError;
-  }
+  } 
 
   // Optional: stricter validation in non-production environments
   if (PRODUCTION_MODE !== true) {
@@ -4078,7 +4076,276 @@ export const updatePatientVisit = async (visitData) => {
     throw formattedError;
   }
 };
+
+export const getConsultationList = async (clinicId = 0, options = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Optional: stricter validation in non-production
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  // Determine final IDs based on environment
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,
+    ConsultationID: options.ConsultationID || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    VisitID: options.VisitID || 0,
+    PatientID: options.PatientID || 0,
+    PatientName: options.PatientName || "",
+    DoctorID: options.DoctorID || 0,
+    DoctorName: options.DoctorName || "",
+    FromDate: options.FromDate || "",           // e.g. "2025-01-01"
+    ToDate: options.ToDate || "",               // e.g. "2025-12-31"
+    NextConsultationDate: options.NextConsultationDate || "",
+    InvoiceID: options.InvoiceID || 0
+  };
+
+  console.log("get Consultation List payload:", payload);
+
+  try {
+    const response = await API.post("/GetConsultationList", payload);
+    
+    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    console.log("GetConsultationList response count:", results);
+
+    return results.map((consult) => ({
+      id: consult.consultation_id,
+      uniqueSeq: consult.unique_seq,
+      clinicId: consult.clinic_id,
+      clinicName: consult.clinic_name,
+      branchId: consult.branch_id,
+      branchName: consult.branch_name,
+      visitId: consult.visit_id,
+      patientId: consult.patient_id,
+      patientName: consult.patient_name || "",
+      patientMobile: consult.patient_mobile || "",
+      patientFileNo: consult.patient_file_no || "",
+      doctorId: consult.doctor_id,
+      doctorFullName: consult.doctor_full_name || "",
+      doctorCode: consult.doctor_code || "",
+      reason: consult.reason || "",
+      symptoms: consult.symptoms || "",
+      bpSystolic: consult.bp_systolic ?? null,
+      bpDiastolic: consult.bp_diastolic ?? null,
+      bpReading: consult.bp_reading || "",
+      temperature: consult.temperature || null,
+      weight: consult.weight || null,
+      emrNotes: consult.emr_notes || "",
+      ehrNotes: consult.ehr_notes || "",
+      instructions: consult.instructions || "",
+      consultationNotes: consult.consultation_notes || "",
+      nextConsultationDate: consult.next_consultation_date || null,
+      treatmentPlan: consult.treatment_plan || "",
+      invoiceId: consult.invoice_id ?? null,
+      dateCreated: consult.date_created || null,
+      dateModified: consult.date_modified || null
+    }));
+  } catch (error) {
+    console.error("getConsultationList failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || "Failed to fetch consultation list"
+    };
+
+    throw err;
+  }
+};
+
+export const addConsultation = async (consultationData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Basic required fields validation (adjust according to your business rules)
+  if (!consultationData?.patientId || !consultationData?.doctorId || !consultationData?.visitId) {
+    const validationError = new Error("Patient, Doctor and Visit are required fields");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  // Clinic/Branch handling - same pattern as addEmployee
+  if (PRODUCTION_MODE !== true) {
+    if (consultationData.clinicId < 0 || (consultationData.clinicId !== 0 && isNaN(consultationData.clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (consultationData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (consultationData.branchId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    VisitID: consultationData.visitId || 0,
+    PatientID: consultationData.patientId || 0,
+    DoctorID: consultationData.doctorId || 0,
+    Reason: consultationData.reason || "",
+    Symptoms: consultationData.symptoms || "",
+    BPSystolic: consultationData.bpSystolic ?? null,
+    BPDiastolic: consultationData.bpDiastolic ?? null,
+    Temperature: consultationData.temperature ?? null,
+    Weight: consultationData.weight ?? null,
+    EMRNotes: consultationData.emrNotes || "",
+    EHRNotes: consultationData.ehrNotes || "",
+    Instructions: consultationData.instructions || "",
+    ConsultationNotes: consultationData.consultationNotes || "",
+    NextConsultationDate: consultationData.nextConsultationDate || "", // ISO string or empty
+    TreatmentPlan: consultationData.treatmentPlan || ""
+  };
+
+  console.log("Add Consultation payload:", payload);
+
+  try {
+    const response = await API.post("/AddConsultation", payload);
+
+    console.log("AddConsultation response:", response.data);
+
+    const result = response.data?.result;
+
+    // Validate expected response structure
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response structure from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to create consultation");
+    }
+
+    // Success response
+    return {
+      success: true,
+      consultationId: result.OUT_CONSULTATION_ID,
+      message: result.OUT_ERROR || "OK"
+    };
+  } catch (error) {
+    console.error("addConsultation failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message:
+        error.response?.data?.message ||
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message ||
+        "Failed to add consultation"
+    };
+
+    throw errorWithStatus;
+  }
+};
+
+export const updateConsultation = async (consultationData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // ConsultationID is mandatory for update
+  if (!consultationData?.consultationId && consultationData?.consultationId !== 0) {
+    const validationError = new Error("ConsultationID is required to update a consultation.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  // In production usually ClinicID comes from session/context
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (consultationData.clinicId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    
+    ConsultationID: consultationData.consultationId || 0,
+    ClinicID: finalClinicId,              
+    Reason: consultationData.reason?.trim() || "",
+    Symptoms: consultationData.symptoms?.trim() || "",
+    BPSystolic: consultationData.bpSystolic ?? 0,
+    BPDiastolic: consultationData.bpDiastolic ?? 0,
+    Temperature: consultationData.temperature ?? 0,
+    Weight: consultationData.weight ?? 0,
+    EMRNotes: consultationData.emrNotes?.trim() || "",
+    EHRNotes: consultationData.ehrNotes?.trim() || "",
+    Instructions: consultationData.instructions?.trim() || "",
+    ConsultationNotes: consultationData.consultationNotes?.trim() || "",
+    NextConsultationDate: consultationData.nextConsultationDate?.trim() || "",
+    TreatmentPlan: consultationData.treatmentPlan?.trim() || ""
+  };
+
+  console.log("updateConsultation payload:", payload);
+
+  try {
+    const response = await API.post("/UpdateConsultation", payload);
+    console.log("UpdateConsultation response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to update consultation");
+    }
+
+    return {
+      success: true,
+      consultationId: result.IN_CONSULTATION_ID || consultationData.consultationId,
+      message: "Consultation updated successfully"
+    };
+
+  } catch (error) {
+    console.error("updateConsultation error:", error);
+
+    const errorMessage =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to update consultation";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
+  }
+};
   
+
+
 
 
 
