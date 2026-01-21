@@ -1,7 +1,7 @@
 // src/components/ViewConsultation.jsx
 import React, { useState, useEffect } from 'react';
 import { FiX, FiUser, FiCalendar, FiActivity, FiFileText } from 'react-icons/fi';
-import { getConsultationList } from '../api/api.js';
+import { getConsultationList } from '../api/api-consultation.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import './ViewConsultation.css';
 

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiCalendar, FiUser, FiActivity, FiFilter, FiDownload } from 'react-icons/fi';
-import { getConsultationList } from '../api/api.js';
+import { getConsultationList } from '../api/api-consultation.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddConsultation from './AddConsultation.jsx';

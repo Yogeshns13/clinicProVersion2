@@ -1,6 +1,3 @@
-
-
-
 CancelInvoice
 {
      "CHANNEL_ID":1,
@@ -45,3 +42,207 @@ GetInvoiceList
     "Status":-1   
    
 }
+
+________________________________________________________
+
+
+GetInvoiceList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "OrderID":0,
+    "Page":1,
+    "PageSize":20,
+     "InvoiceID"  :0,    
+    "ClinicID": 1,    
+    "BranchID":1,
+    "InvoiceNo":"",
+     "PatientID":0,
+    "PatientName":"",
+    "VisitID":0,  
+    "InvoiceType":0,
+    "FromDate":"",
+    "ToDate":"",
+    "Status":-1   
+}
+
+{
+    "result": [
+        {
+            "invoice_id": 6,
+            "unique_seq": 9,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_type": 1,
+            "invoice_type_desc": "Consultation",
+            "invoice_no": "CPT-INV-CONS-000008",
+            "invoice_date": "2026-01-18T18:30:00.000Z",
+            "patient_id": 2000003,
+            "patient_name": "Vishnu Kumar",
+            "patient_mobile": "9087130977",
+            "patient_file_no": "CPT200005",
+            "visit_id": 4000005,
+            "total_amount": "400.00",
+            "discount": "0.00",
+            "cgst_amount": "36.00",
+            "sgst_amount": "36.00",
+            "net_amount": "472.00",
+            "status": 2,
+            "status_desc": "Issued",
+            "date_created": "2026-01-20T08:12:17.000Z",
+            "date_modified": "2026-01-20T08:12:17.000Z"
+        },
+        {
+            "invoice_id": 5,
+            "unique_seq": 8,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_type": 1,
+            "invoice_type_desc": "Consultation",
+            "invoice_no": "CPT-INV-CONS-000007",
+            "invoice_date": "2025-12-01T18:30:00.000Z",
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "visit_id": 4000000,
+            "total_amount": "500.00",
+            "discount": "0.00",
+            "cgst_amount": "45.00",
+            "sgst_amount": "45.00",
+            "net_amount": "590.00",
+            "status": 3,
+            "status_desc": "Paid",
+            "date_created": "2025-12-02T13:43:46.000Z",
+            "date_modified": "2025-12-02T13:43:46.000Z"
+        },
+        {
+            "invoice_id": 4,
+            "unique_seq": 7,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_type": 3,
+            "invoice_type_desc": "Pharmacy",
+            "invoice_no": "CPT-INV-PHARM-000006",
+            "invoice_date": "2025-11-27T18:30:00.000Z",
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "visit_id": 4000000,
+            "total_amount": "1870.00",
+            "discount": "10.00",
+            "cgst_amount": "106.59",
+            "sgst_amount": "106.59",
+            "net_amount": "1989.68",
+            "status": 2,
+            "status_desc": "Issued",
+            "date_created": "2025-12-02T06:47:16.000Z",
+            "date_modified": "2025-12-02T06:47:16.000Z"
+        },
+        {
+            "invoice_id": 3,
+            "unique_seq": 6,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_type": 3,
+            "invoice_type_desc": "Pharmacy",
+            "invoice_no": "CPT-INV-PHARM-000005",
+            "invoice_date": "2025-11-27T18:30:00.000Z",
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "visit_id": null,
+            "total_amount": "1650.00",
+            "discount": "10.00",
+            "cgst_amount": "94.05",
+            "sgst_amount": "94.05",
+            "net_amount": "1755.60",
+            "status": 5,
+            "status_desc": "Cancelled",
+            "date_created": "2025-12-02T06:21:52.000Z",
+            "date_modified": "2025-12-02T08:31:32.000Z"
+        },
+        {
+            "invoice_id": 1,
+            "unique_seq": 4,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_type": 2,
+            "invoice_type_desc": "Lab",
+            "invoice_no": "CPT-INV-LAB-000003",
+            "invoice_date": "2025-11-27T18:30:00.000Z",
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "visit_id": 4000000,
+            "total_amount": "300.00",
+            "discount": "10.00",
+            "cgst_amount": "27.00",
+            "sgst_amount": "27.00",
+            "net_amount": "344.00",
+            "status": 2,
+            "status_desc": "Issued",
+            "date_created": "2025-11-28T08:55:16.000Z",
+            "date_modified": "2025-11-28T08:59:11.000Z"
+        }
+    ]
+}
+
+________________________________________________________
+
+UpdateInvoiceStatus
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "InvoiceID"  :1,    
+    "Status":3
+}
+
+{
+    "result": {
+        "IN_INVOICE_ID": 1,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+------------------------------------------------------
+
+CancelInvoice
+{
+     "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "InvoiceID"  :4
+}
+
+{
+    "result": {
+        "IN_INVOICE_ID": 4,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK: INVOICE CANCELLED SUCCESSFULLY. PAYMENT REVERTED. PLEASE MAKE SURE YOU REFUNDED THE PAYMENT IF EXIST FOR THE INVOICE"
+    }
+}
+
+

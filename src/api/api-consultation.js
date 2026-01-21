@@ -1,27 +1,7 @@
-// src/api-consultation.js
 import axios from "axios";
+import {getSessionRef, generateRefKey, getUserId, getClinicId, getBranchId} from "./api.js"
 const CHANNEL_ID = 1;
 const PRODUCTION_MODE = 0;
-
-const getSessionRef = () => localStorage.getItem("SESSION_REF");
-const generateRefKey = () => {
-  const sessionRef = getSessionRef();
-  if (!sessionRef) return "";
-  const now = new Date();
-  const timestamp = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}:${now.getMilliseconds()}`;
-  return `${sessionRef}_${timestamp}`;
-};
-
-export const getUserId = () => localStorage.getItem("userId");
-export const getClinicId = () => {
-  const clinicId = localStorage.getItem("clinicID");
-  return clinicId ? parseInt(clinicId, 10) : null;
-};
-export const getBranchId = () => {
-  const branchId = localStorage.getItem("branchID");
-  return branchId ? parseInt(branchId, 10) : null;
-};
-
 const API = axios.create({
   baseURL: "/api",
   withCredentials: true,
@@ -804,3 +784,191 @@ export const cancelConsultationCharge = async (consChargeId) => {
   }
 };
 
+export const getConsultationInvoiceDetailsList = async (clinicId = 0, options = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Optional: stricter validation in non-production
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  // Determine final IDs based on environment (same pattern)
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,
+    DetailID: options.DetailID || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    InvoiceID: options.InvoiceID || 0,
+    InvoiceNo: options.InvoiceNo || "",
+    ConsultationID: options.ConsultationID || 0,
+    VisitID: options.VisitID || 0,
+    PatientID: options.PatientID || 0,
+    PatientName: options.PatientName || "",
+    DoctorID: options.DoctorID || 0,
+    ChargeID: options.ChargeID || 0,
+    ChargeName: options.ChargeName || "",
+    FromDate: options.FromDate || "",     // e.g. "2025-12-01"
+    ToDate: options.ToDate || ""          // e.g. "2026-01-20"
+  };
+
+  console.log("get Consultation Invoice Details List:", payload);
+
+  try {
+    const response = await API.post("/GetConsultationInvoiceDetailList", payload);
+    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    console.log("GetConsultationInvoiceDetailList response:", results);
+
+    return results.map((detail) => ({
+      id: detail.detail_id,
+      uniqueSeq: detail.unique_seq,
+      clinicId: detail.clinic_id,
+      clinicName: detail.clinic_name,
+      branchId: detail.branch_id,
+      branchName: detail.branch_name,
+      invoiceId: detail.invoice_id,
+      invoiceNo: detail.invoice_no || "",
+      invoiceDate: detail.invoice_date || null,
+      consultationId: detail.consultation_id,
+      visitId: detail.visit_id,
+      patientId: detail.patient_id,
+      patientName: detail.patient_name || "",
+      patientMobile: detail.patient_mobile || null,
+      patientFileNo: detail.patient_file_no || null,
+      doctorId: detail.doctor_id,
+      doctorFullName: detail.doctor_full_name || "Unknown",
+      chargeId: detail.charge_id,
+      chargeName: detail.charge_name || "",
+      chargeCode: detail.charge_code || "",
+      chargeAmount: detail.charge_amount ? parseFloat(detail.charge_amount) : null,
+      cgstPercentage: detail.cgst_percentage ? parseFloat(detail.cgst_percentage) : null,
+      sgstPercentage: detail.sgst_percentage ? parseFloat(detail.sgst_percentage) : null,
+      cgstAmount: detail.cgst_amount ? parseFloat(detail.cgst_amount) : null,
+      sgstAmount: detail.sgst_amount ? parseFloat(detail.sgst_amount) : null,
+      netAmount: detail.net_amount ? parseFloat(detail.net_amount) : null,
+      dateCreated: detail.date_created || null,
+      dateModified: detail.date_modified || null
+    }));
+  } catch (error) {
+    console.error("getConsultationInvoiceDetailsList failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || "Failed to fetch consultation invoice details"
+    };
+
+    throw err;
+  }
+};
+
+export const generateConsultationInvoice = async (invoiceData = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Core required fields
+  if (!invoiceData?.consultationId || invoiceData.consultationId <= 0) {
+    const validationError = new Error("ConsultationID is required and must be a positive number");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  // ClinicID is required (same strict check as in generateSlots / updateEmployee)
+  if (!invoiceData?.clinicId && invoiceData?.clinicId !== 0) {
+    const validationError = new Error("ClinicID is required to generate consultation invoice.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  // Optional: validate InvoiceDate format if provided (ISO-like or YYYY-MM-DD)
+  if (invoiceData.invoiceDate && !/^\d{4}-\d{2}-\d{2}$/.test(invoiceData.invoiceDate.trim())) {
+    const validationError = new Error("InvoiceDate should be in YYYY-MM-DD format if provided");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  // Discount should be non-negative number if provided
+  if (
+    invoiceData.discount != null &&
+    (isNaN(Number(invoiceData.discount)) || Number(invoiceData.discount) < 0)
+  ) {
+    const validationError = new Error("Discount must be a valid non-negative number");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  // Environment-aware clinic/branch logic (same as generateSlots)
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (invoiceData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (invoiceData.branchId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    ConsultationID: Number(invoiceData.consultationId),
+    InvoiceDate: invoiceData.invoiceDate?.trim() || "",   // backend might use current date if empty
+    Discount: invoiceData.discount != null ? Number(invoiceData.discount) : 0
+  };
+
+  console.log("generateConsultationInvoice payload:", payload);
+
+  try {
+    const response = await API.post("/GenerateConsultationInvoice", payload);
+    console.log("GenerateConsultationInvoice response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || result.OUT_OK !== 1) {
+      const errorMsg = result?.OUT_ERROR || "Failed to generate consultation invoice";
+      throw new Error(errorMsg);
+    }
+
+    return {
+      success: true,
+      invoiceId: result.OUT_INVOICE_ID,
+      message: "Consultation invoice generated successfully"
+    };
+
+  } catch (error) {
+    console.error("generateConsultationInvoice error:", error);
+
+    const errorMessage =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to generate consultation invoice";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
+  }
+};

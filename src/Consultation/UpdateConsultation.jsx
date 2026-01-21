@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiSave } from 'react-icons/fi';
-import { getConsultationList, updateConsultation } from '../api/api.js';
+import { getConsultationList, updateConsultation } from '../api/api-consultation.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import './UpdateConsultation.css';

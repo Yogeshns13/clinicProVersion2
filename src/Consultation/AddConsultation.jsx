@@ -1,7 +1,8 @@
 // src/components/AddConsultation.jsx
 import React, { useState, useEffect } from 'react';
 import { FiX, FiUser, FiCalendar, FiCheck } from 'react-icons/fi';
-import { getPatientVisitList, addConsultation } from '../api/api.js';
+import { getPatientVisitList} from '../api/api.js';
+import { addConsultation } from '../api/api-consultation.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import './AddConsultation.css';
 

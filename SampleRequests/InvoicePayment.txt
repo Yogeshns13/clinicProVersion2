@@ -31,7 +31,10 @@ UpdateInvoicePayment
 }
 --  possible status to be 4-refunded 5-reversed
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++++hshshshshshshshsh",
+getInvoicePaymentList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000,
     "OrderID":0,
@@ -47,6 +50,213 @@ UpdateInvoicePayment
     "PaymentMode":0,
     "FromDate":"",
     "ToDate":""
-    
-   
 }
+
+
+----------------------------------------------
+
+GetInvoicePaymentList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "OrderID":0,
+    "Page":1,
+    "PageSize":20,
+    "PaymentID":0,   
+    "ClinicID": 1,    
+    "BranchID":1,
+    "InvoiceID"  :0,    
+    "InvoiceNo":"",
+     "PatientID":0,
+    "PatientName":"",
+    "PaymentMode":0,
+    "FromDate":"",
+    "ToDate":""
+}
+
+{
+    "result": [
+        {
+            "payment_id": 7,
+            "unique_seq": 7,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_id": 1,
+            "invoice_no": "CPT-INV-LAB-000003",
+            "invoice_date": "2025-11-27T18:30:00.000Z",
+            "patient_id": null,
+            "patient_name": null,
+            "patient_mobile": null,
+            "patient_file_no": null,
+            "payment_date": "2026-01-19T18:30:00.000Z",
+            "payment_mode": 1,
+            "payment_mode_desc": "Cash",
+            "amount": "1000.00",
+            "reference_no": "ICIC6547377",
+            "remarks": "Paid by CASH | Paid by CASH",
+            "status": 4,
+            "status_desc": "Refunded",
+            "date_created": "2026-01-20T11:02:56.000Z",
+            "date_modified": "2026-01-20T11:04:50.000Z"
+        },
+        {
+            "payment_id": 6,
+            "unique_seq": 6,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_id": 5,
+            "invoice_no": "CPT-INV-CONS-000007",
+            "invoice_date": "2025-12-01T18:30:00.000Z",
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "payment_date": "2025-12-01T18:30:00.000Z",
+            "payment_mode": 1,
+            "payment_mode_desc": "Cash",
+            "amount": "90.00",
+            "reference_no": "ICIC6547365",
+            "remarks": "Paid by CASH",
+            "status": 1,
+            "status_desc": "Success",
+            "date_created": "2025-12-02T14:27:44.000Z",
+            "date_modified": "2025-12-02T14:27:44.000Z"
+        },
+        {
+            "payment_id": 5,
+            "unique_seq": 5,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_id": 5,
+            "invoice_no": "CPT-INV-CONS-000007",
+            "invoice_date": "2025-12-01T18:30:00.000Z",
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "payment_date": "2025-12-01T18:30:00.000Z",
+            "payment_mode": 1,
+            "payment_mode_desc": "Cash",
+            "amount": "500.00",
+            "reference_no": "ICIC6547365",
+            "remarks": "Paid by CASH",
+            "status": 1,
+            "status_desc": "Success",
+            "date_created": "2025-12-02T14:27:07.000Z",
+            "date_modified": "2025-12-02T14:27:07.000Z"
+        },
+        {
+            "payment_id": 4,
+            "unique_seq": 4,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_id": 3,
+            "invoice_no": "CPT-INV-PHARM-000005",
+            "invoice_date": "2025-11-27T18:30:00.000Z",
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "payment_date": "2025-12-01T18:30:00.000Z",
+            "payment_mode": 1,
+            "payment_mode_desc": "Cash",
+            "amount": "755.60",
+            "reference_no": "ICIC6547365",
+            "remarks": "Paid by CASH | Reveresed the payment | Reveresed the payment",
+            "status": 5,
+            "status_desc": "Reversed",
+            "date_created": "2025-12-02T07:59:37.000Z",
+            "date_modified": "2025-12-02T08:27:07.000Z"
+        },
+        {
+            "payment_id": 1,
+            "unique_seq": 1,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_id": 3,
+            "invoice_no": "CPT-INV-PHARM-000005",
+            "invoice_date": "2025-11-27T18:30:00.000Z",
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "payment_date": "2025-12-01T18:30:00.000Z",
+            "payment_mode": 1,
+            "payment_mode_desc": "Cash",
+            "amount": "1000.00",
+            "reference_no": "ICIC6547365",
+            "remarks": null,
+            "status": 5,
+            "status_desc": "Reversed",
+            "date_created": "2025-12-02T07:31:43.000Z",
+            "date_modified": "2025-12-02T08:31:32.000Z"
+        }
+    ]
+}
+
+
+
+______________________________________________
+
+AddInvoicePayment
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID": 1,    
+    "BranchID"  :1,
+    "InvoiceID":1,
+    "PaymentDate":"2026-01-20",
+    "PaymentMode":1  ,
+    "Amount":1000,    
+    "ReferenceNo":"ICIC6547377",
+    "Remarks":"Paid by CASH"
+}
+
+{
+    "result": {
+        "OUT_PAYMENT_ID": 7,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+--------------------------------------
+
+
+UpdateInvoicePayment
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID": 1,    
+    "BranchID"  :1,
+    "PaymentID":7,
+    "Status":4,
+    "Remarks":"Paid by CASH"
+}
+
+{
+    "result": {
+        "IN_PAYMENT_ID": 7,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+_____________________________________________
+

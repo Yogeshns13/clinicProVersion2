@@ -43,6 +43,10 @@ const ROUTE_PERMISSIONS = {
   "/view-consultation": ["admin", "doctor", "receptionist"],
   "/add-consultation": ["admin", "doctor", "receptionist"],
   "/update-consultation/:id": ["admin", "doctor", "receptionist"],
+  "/consultationcharge-config": ["admin", "doctor", "receptionist"],
+  "/consultation-charge": ["admin", "doctor", "receptionist"],
+  "/invoice-management": ["admin", "doctor", "receptionist"],
+  "/invoice-payment": ["admin", "doctor", "receptionist"],
 };
 
 const PrivateRoute = ({ children }) => {
