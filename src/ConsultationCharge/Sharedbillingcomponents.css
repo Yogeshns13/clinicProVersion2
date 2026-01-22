@@ -909,6 +909,114 @@
   transform: none;
 }
 
+/* Add these styles to your existing SharedBillingComponents.css file */
+
+/* Tab Navigation Styles */
+.charge-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e5e7eb;
+  background-color: #fff;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.charge-tab {
+  flex: 1;
+  padding: 16px 24px;
+  background-color: #f9fafb;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 15px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.charge-tab:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.charge-tab.active {
+  background-color: #fff;
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+  font-weight: 600;
+}
+
+.charge-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+}
+
+/* Add Charge Button in Table */
+.add-charge-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.add-charge-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.add-charge-btn:active {
+  transform: translateY(0);
+}
+
+/* Reason and Symptoms Text */
+.reason-text, .symptoms-text {
+  display: block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .charge-tabs {
+    flex-direction: column;
+  }
+
+  .charge-tab {
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .charge-tab.active {
+    border-bottom-color: #2563eb;
+  }
+
+  .add-charge-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
+
 /* Dark Mode */
 .dark-mode .invoice-list-wrapper,
 .dark-mode .charge-list-wrapper,

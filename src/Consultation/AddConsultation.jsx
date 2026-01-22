@@ -6,7 +6,7 @@ import { addConsultation } from '../api/api-consultation.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import './AddConsultation.css';
 
-const AddConsultation = ({ isOpen, onClose, onSuccess }) => {
+const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null }) => {
   const [step, setStep] = useState(1); // Step 1: Select Visit, Step 2: Fill Consultation
   const [todayVisits, setTodayVisits] = useState([]);
   const [selectedVisit, setSelectedVisit] = useState(null);
@@ -30,6 +30,17 @@ const AddConsultation = ({ isOpen, onClose, onSuccess }) => {
       fetchTodayVisits();
     }
   }, [isOpen]);
+
+  // Handle pre-selected visit
+  useEffect(() => {
+    if (isOpen && preSelectedVisitId && todayVisits.length > 0) {
+      const preSelected = todayVisits.find(v => v.id === preSelectedVisitId);
+      if (preSelected) {
+        setSelectedVisit(preSelected);
+        setStep(2);
+      }
+    }
+  }, [isOpen, preSelectedVisitId, todayVisits]);
 
   const fetchTodayVisits = async () => {
     try {

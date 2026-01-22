@@ -548,6 +548,114 @@
   font-size: 1.1rem;
 }
 
+/* Add these styles to your existing ConsultationList.css */
+
+/* Tab Navigation */
+.consultation-tabs {
+  display: flex;
+  gap: 8px;
+  background: #fff;
+  padding: 16px 24px 0;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+
+.consultation-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 15px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  bottom: -2px;
+}
+
+.consultation-tab:hover {
+  color: #374151;
+  background: #f9fafb;
+}
+
+.consultation-tab.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+  background: #eff6ff;
+}
+
+/* Pending Visits Table Specific Styles */
+.consultation-actions-cell button.consultation-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.consultation-actions-cell button.consultation-add-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+}
+
+.consultation-actions-cell button.consultation-add-btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive Tab Design */
+@media (max-width: 768px) {
+  .consultation-tabs {
+    padding: 12px 16px 0;
+    overflow-x: auto;
+  }
+
+  .consultation-tab {
+    padding: 10px 16px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+}
+
+/* Stats grid adjustment for pending view */
+.consultation-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  padding: 0 24px;
+  margin-bottom: 24px;
+}
+
+/* Additional utility classes */
+.consultation-type {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.consultation-name {
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 2px;
+}
+
+/* Improve button spacing in actions cell */
+.consultation-actions-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 /* ==================== DARK MODE ==================== */
 .dark-mode .consultation-list-wrapper {
   background: #1e293b;

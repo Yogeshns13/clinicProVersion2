@@ -8,8 +8,6 @@ import './SharedBillingComponents.css'; // Using shared CSS
 
 const PAYMENT_STATUSES = [
   { id: 1, label: 'Success' },
-  { id: 2, label: 'Failed' },
-  { id: 3, label: 'Pending' },
   { id: 4, label: 'Refunded' },
   { id: 5, label: 'Reversed' }
 ];

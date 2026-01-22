@@ -85,7 +85,7 @@ export const getInvoiceList = async (clinicId = 0, options = {}) => {
       cgstAmount: inv.cgst_amount ? parseFloat(inv.cgst_amount) : null,
       sgstAmount: inv.sgst_amount ? parseFloat(inv.sgst_amount) : null,
       netAmount: inv.net_amount ? parseFloat(inv.net_amount) : null,
-
+      paidAmount: inv.PAID_AMOUNT ? parseFloat(inv.PAID_AMOUNT) : null,
       status: inv.status,
       statusDesc: inv.status_desc || "Unknown", 
       dateCreated: inv.date_created || null,

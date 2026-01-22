@@ -517,8 +517,25 @@
   justify-content: flex-end;
 }
 
+.consultation-add-btn {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  gap: 8px;
+  padding: 10px 20px;
+  color: var(--text-light);
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  white-space: nowrap;
+}
+
 /* ==================== BUTTONS ==================== */
 .visit-details-btn,
+.visit-add-btn,
 .visit-edit-btn {
   padding: 8px 16px;
   font-size: 0.75rem;
@@ -597,6 +614,144 @@
   padding: 68px 17px;
   color: #64748b;
   font-size: 1.1rem;
+}
+
+/* Add these styles to your existing PatientVisitList.css */
+
+/* Tab Navigation */
+.visit-tabs {
+  display: flex;
+  gap: 8px;
+  background: #fff;
+  padding: 16px 24px 0;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+
+.visit-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 15px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  bottom: -2px;
+}
+
+.visit-tab:hover {
+  color: #374151;
+  background: #f9fafb;
+}
+
+.visit-tab.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+  background: #eff6ff;
+}
+
+/* Pending Appointments Table Specific Styles */
+.visit-actions-cell button.visit-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.visit-actions-cell button.visit-add-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+}
+
+.visit-actions-cell button.visit-add-btn:active {
+  transform: translateY(0);
+}
+
+/* Selected Appointment Summary in AddPatientVisit */
+.selected-appointment-summary {
+  background: #f0f9ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.selected-appointment-summary .summary-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1e40af;
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+.selected-appointment-summary .summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selected-appointment-summary .summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.selected-appointment-summary .summary-label {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.selected-appointment-summary .summary-value {
+  color: #1e293b;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* Responsive Tab Design */
+@media (max-width: 768px) {
+  .visit-tabs {
+    padding: 12px 16px 0;
+    overflow-x: auto;
+  }
+
+  .visit-tab {
+    padding: 10px 16px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+}
+
+/* Stats grid adjustment */
+.visit-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  padding: 0 24px;
+  margin-bottom: 24px;
+}
+
+/* Improve button spacing in actions cell */
+.visit-actions-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 /* ==================== DARK MODE ==================== */

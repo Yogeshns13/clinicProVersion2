@@ -4,7 +4,7 @@ import { FiX, FiUser, FiCalendar, FiActivity, FiCheckCircle } from 'react-icons/
 import { addPatientVisit, getPatientsList, getEmployeeList, getAppointmentList } from '../api/api.js';
 import './AddPatientVisit.css';
 
-const AddPatientVisit = ({ isOpen, onClose, onSuccess }) => {
+const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId = null }) => {
   const [visitMode, setVisitMode] = useState('without'); // 'with' or 'without'
   
   const [formData, setFormData] = useState({
@@ -35,7 +35,6 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess }) => {
 
   const formatDateForInput = (dateString) => {
     if (!dateString) return '';
-    // Convert date to YYYY-MM-DD format for input field
     const date = new Date(dateString);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -45,14 +44,57 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess }) => {
 
   useEffect(() => {
     if (isOpen) {
-      if (visitMode === 'without') {
+      // If preSelectedAppointmentId exists, we're coming from pending appointments
+      if (preSelectedAppointmentId) {
+        fetchSingleAppointment(preSelectedAppointmentId);
+      } else {
+        // When opened from "Add Visit" button in Visited Patients, always go without appointment
+        setVisitMode('without');
         fetchPatients();
         fetchDoctors();
-      } else {
-        fetchTodayAppointments();
       }
     }
-  }, [isOpen, visitMode]);
+  }, [isOpen, preSelectedAppointmentId]);
+
+  // Fetch single appointment for pending appointment workflow
+  const fetchSingleAppointment = async (appointmentId) => {
+    try {
+      setLoadingAppointments(true);
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
+      const data = await getAppointmentList(clinicId, {
+        BranchID: branchId,
+        AppointmentID: appointmentId,
+        PageSize: 1
+      });
+
+      if (data && data.length > 0) {
+        const appointment = data[0];
+        setSelectedAppointment(appointment);
+        setVisitMode('with');
+        
+        setFormData({
+          appointmentId: appointment.id,
+          PatientID: appointment.patientId,
+          DoctorID: appointment.doctorId,
+          VisitDate: formatDateForInput(appointment.appointmentDate),
+          VisitTime: appointment.appointmentTime.substring(0, 5),
+          reason: appointment.reason || '',
+          symptoms: '',
+          bpSystolic: '',
+          bpDiastolic: '',
+          temperature: '',
+          weight: ''
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch appointment:', err);
+      setError('Failed to load appointment details');
+    } finally {
+      setLoadingAppointments(false);
+    }
+  };
 
   const fetchPatients = async () => {
     try {
@@ -94,7 +136,7 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess }) => {
       const data = await getAppointmentList(clinicId, {
         BranchID: branchId,
         AppointmentDate: today,
-        Status: 1, // Only scheduled appointments
+        Status: 1,
         PageSize: 100
       });
       
@@ -111,7 +153,6 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess }) => {
     setVisitMode(mode);
     setSelectedAppointment(null);
     setError(null);
-    // Reset form
     setFormData({
       appointmentId: 0,
       PatientID: '',
@@ -161,7 +202,6 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess }) => {
       const clinicId = localStorage.getItem('clinicID');
       const branchId = localStorage.getItem('branchID');
 
-      // Ensure date is in YYYY-MM-DD format
       const formattedDate = formatDateForInput(formData.VisitDate);
 
       const visitData = {
@@ -234,7 +274,9 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess }) => {
         <div className="add-visit-header">
           <div className="add-visit-header-content">
             <FiActivity className="add-visit-header-icon" size={24} />
-            <h2>Add New Patient Visit</h2>
+            <h2>
+              {preSelectedAppointmentId ? 'Complete Visit from Appointment' : 'Add New Patient Visit'}
+            </h2>
           </div>
           <button onClick={onClose} className="add-visit-close">
             <FiX size={20} />
@@ -249,53 +291,57 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess }) => {
               </div>
             )}
 
-            {/* Visit Mode Selection */}
-            <div className="visit-mode-section">
-              <h3 className="mode-title">Select Visit Type</h3>
-              <div className="mode-options">
-                <label className={`mode-option ${visitMode === 'with' ? 'active' : ''}`}>
-                  <input
-                    type="radio"
-                    name="visitMode"
-                    value="with"
-                    checked={visitMode === 'with'}
-                    onChange={() => handleModeChange('with')}
-                  />
-                  <div className="mode-content">
-                    <FiCheckCircle size={20} />
-                    <span>With Appointment</span>
-                  </div>
-                </label>
-                <label className={`mode-option ${visitMode === 'without' ? 'active' : ''}`}>
-                  <input
-                    type="radio"
-                    name="visitMode"
-                    value="without"
-                    checked={visitMode === 'without'}
-                    onChange={() => handleModeChange('without')}
-                  />
-                  <div className="mode-content">
-                    <FiUser size={20} />
-                    <span>Without Appointment</span>
-                  </div>
-                </label>
+            {loadingAppointments && (
+              <div className="appointments-loading">
+                <div className="spinner"></div>
+                <p>Loading appointment details...</p>
               </div>
-            </div>
+            )}
+
+            {/* Visit Mode Selection - Only show when coming from pending appointments */}
+            {!preSelectedAppointmentId && !loadingAppointments && false && (
+              <div className="visit-mode-section">
+                <h3 className="mode-title">Select Visit Type</h3>
+                <div className="mode-options">
+                  <label className={`mode-option ${visitMode === 'with' ? 'active' : ''}`}>
+                    <input
+                      type="radio"
+                      name="visitMode"
+                      value="with"
+                      checked={visitMode === 'with'}
+                      onChange={() => handleModeChange('with')}
+                    />
+                    <div className="mode-content">
+                      <FiCheckCircle size={20} />
+                      <span>With Appointment</span>
+                    </div>
+                  </label>
+                  <label className={`mode-option ${visitMode === 'without' ? 'active' : ''}`}>
+                    <input
+                      type="radio"
+                      name="visitMode"
+                      value="without"
+                      checked={visitMode === 'without'}
+                      onChange={() => handleModeChange('without')}
+                    />
+                    <div className="mode-content">
+                      <FiUser size={20} />
+                      <span>Without Appointment</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            )}
 
             {/* With Appointment - Show Today's Appointments */}
-            {visitMode === 'with' && (
+            {visitMode === 'with' && !preSelectedAppointmentId && !loadingAppointments && (
               <div className="appointments-section">
                 <h3 className="section-title">
                   <FiCalendar size={18} />
                   Today's Appointments
                 </h3>
                 
-                {loadingAppointments ? (
-                  <div className="appointments-loading">
-                    <div className="spinner"></div>
-                    <p>Loading appointments...</p>
-                  </div>
-                ) : appointments.length === 0 ? (
+                {appointments.length === 0 ? (
                   <div className="no-appointments">
                     <p>No scheduled appointments found for today.</p>
                   </div>
@@ -341,8 +387,44 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess }) => {
               </div>
             )}
 
+            {/* Show selected appointment summary if pre-selected */}
+            {preSelectedAppointmentId && selectedAppointment && !loadingAppointments && (
+              <div className="selected-appointment-summary">
+                <div className="summary-header">
+                  <FiCalendar size={20} />
+                  <span>Appointment Details</span>
+                </div>
+                <div className="summary-content">
+                  <div className="summary-row">
+                    <span className="summary-label">Patient:</span>
+                    <span className="summary-value">{selectedAppointment.patientName}</span>
+                  </div>
+                  <div className="summary-row">
+                    <span className="summary-label">Mobile:</span>
+                    <span className="summary-value">{selectedAppointment.patientMobile}</span>
+                  </div>
+                  <div className="summary-row">
+                    <span className="summary-label">Doctor:</span>
+                    <span className="summary-value">{selectedAppointment.doctorFullName}</span>
+                  </div>
+                  <div className="summary-row">
+                    <span className="summary-label">Scheduled Time:</span>
+                    <span className="summary-value">
+                      {formatTime(selectedAppointment.appointmentTime)}
+                    </span>
+                  </div>
+                  {selectedAppointment.reason && (
+                    <div className="summary-row">
+                      <span className="summary-label">Reason:</span>
+                      <span className="summary-value">{selectedAppointment.reason}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Without Appointment - Show Patient/Doctor Selection */}
-            {visitMode === 'without' && (
+            {!preSelectedAppointmentId && !loadingAppointments && (
               <>
                 <div className="form-section">
                   <h3 className="section-title">
@@ -414,8 +496,8 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess }) => {
               </>
             )}
 
-            {/* Visit Details - Common for both modes */}
-            {(visitMode === 'without' || selectedAppointment) && (
+            {/* Visit Details - Show for all cases */}
+            {!loadingAppointments && (
               <>
                 <div className="form-section">
                   <h3 className="section-title">
@@ -434,7 +516,6 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess }) => {
                         value={formData.VisitDate}
                         onChange={handleChange}
                         required
-                        disabled={visitMode === 'with'}
                         className="form-input"
                       />
                     </div>
@@ -449,7 +530,6 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess }) => {
                         value={formData.VisitTime}
                         onChange={handleChange}
                         required
-                        disabled={visitMode === 'with'}
                         className="form-input"
                       />
                     </div>
@@ -464,6 +544,7 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess }) => {
                       onChange={handleChange}
                       placeholder="e.g., Regular checkup, Follow-up..."
                       className="form-input"
+                      readOnly={preSelectedAppointmentId && formData.reason}
                     />
                   </div>
 
@@ -560,9 +641,9 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess }) => {
             <button 
               type="submit" 
               className="btn-submit"
-              disabled={loading || (visitMode === 'with' && !selectedAppointment)}
+              disabled={loading || loadingAppointments}
             >
-              {loading ? 'Adding Visit...' : 'Add Visit'}
+              {loading ? 'Booking Visit...' : 'Book Visit'}
             </button>
           </div>
         </form>

@@ -716,6 +716,8 @@
   cursor: not-allowed;
 }
 
+
+
 /* Responsive Design */
 @media (max-width: 1200px) {
   .invoice-stats-grid {

@@ -90,7 +90,7 @@ const Sidebar = () => {
         { to: "/consultation-list", label: "Consultation List"},
         { to: "/consultationcharge-config", label: "Consul Charge Config"},
         { to: "/consultation-charge", label: "Consultation Charge"},
-        { to: "/invoice-management", label: "Consultation Invoice"},
+        { to: "/invoice-management", label: "Invoice"},
         { to: "/invoice-payment", label: "Invoice Payment"},
       ],
       show: hasAccess(MENU_PERMISSIONS.consultation),
