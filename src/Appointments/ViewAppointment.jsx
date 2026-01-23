@@ -5,16 +5,27 @@ import { getAppointmentList } from '../api/api.js';
 import './ViewAppointment.css';
 
 // ────────────────────────────────────────────────
-// CONSTANTS
+// Helper function to convert status code to string
 // ────────────────────────────────────────────────
-const STATUS_OPTIONS = {
-  scheduled: 'Scheduled',
-  cancelled: 'Cancelled',
-  completed: 'Completed',
+const getStatusString = (status) => {
+  switch (status) {
+    case 1:
+      return 'scheduled';
+    case 2:
+      return 'confirmed';
+    case 3:
+      return 'inprogress';
+    case 4:
+      return 'completed';
+    case 5:
+      return 'cancelled';
+    default:
+      return 'unknown';
+  }
 };
 
 // ────────────────────────────────────────────────
-const ViewAppointment = ({ isOpen, onClose, appointmentId }) => {
+const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment }) => {
   const [appointment, setAppointment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,7 +33,15 @@ const ViewAppointment = ({ isOpen, onClose, appointmentId }) => {
   // ────────────────────────────────────────────────
   useEffect(() => {
     const fetchAppointmentDetails = async () => {
-      if (!appointmentId || !isOpen) return;
+      // If appointment is passed as prop, use it directly
+      if (passedAppointment) {
+        setAppointment(passedAppointment);
+        setLoading(false);
+        return;
+      }
+
+      // Otherwise, fetch it (this handles the appointmentId prop case)
+      if (!isOpen) return;
 
       try {
         setLoading(true);
@@ -33,7 +52,7 @@ const ViewAppointment = ({ isOpen, onClose, appointmentId }) => {
 
         const data = await getAppointmentList(clinicId, {
           BranchID: branchId,
-          AppointmentID: Number(appointmentId),
+          AppointmentID: Number(passedAppointment?.id || 0),
         });
 
         if (data && data.length > 0) {
@@ -54,7 +73,7 @@ const ViewAppointment = ({ isOpen, onClose, appointmentId }) => {
     if (isOpen) {
       fetchAppointmentDetails();
     }
-  }, [appointmentId, isOpen]);
+  }, [passedAppointment, isOpen]);
 
   // ────────────────────────────────────────────────
   // Helper functions
@@ -87,9 +106,12 @@ const ViewAppointment = ({ isOpen, onClose, appointmentId }) => {
   };
 
   const getStatusClass = (status) => {
-    if (status === 'scheduled') return 'active';
-    if (status === 'cancelled') return 'inactive';
-    if (status === 'completed') return 'completed';
+    const statusStr = getStatusString(status);
+    if (statusStr === 'scheduled') return 'active';
+    if (statusStr === 'confirmed') return 'active';
+    if (statusStr === 'inprogress') return 'active';
+    if (statusStr === 'completed') return 'completed';
+    if (statusStr === 'cancelled') return 'inactive';
     return 'inactive';
   };
 
@@ -132,7 +154,7 @@ const ViewAppointment = ({ isOpen, onClose, appointmentId }) => {
               {/* Status Badge */}
               <div className="appointment-status-section">
                 <span className={`appointment-status-badge ${getStatusClass(appointment.status)}`}>
-                  {appointment.status.toUpperCase()}
+                  {getStatusString(appointment.status).toUpperCase()}
                 </span>
               </div>
 

@@ -42,12 +42,12 @@ const InvoiceList = () => {
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const today = new Date().toISOString().split('T')[0];
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
+  const [fromDate, setFromDate] = useState(today);
+  const [toDate, setToDate] = useState(today);
   const [patientNameFilter, setPatientNameFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState(-1);
   const [invoiceTypeFilter, setInvoiceTypeFilter] = useState(0);
-  const [appliedFilters, setAppliedFilters] = useState({ fromDate: '', toDate: '', patientName: '', status: -1, invoiceType: 0 });
+  const [appliedFilters, setAppliedFilters] = useState({ fromDate: today, toDate: today, patientName: '', status: -1, invoiceType: 0 });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -146,12 +146,12 @@ const InvoiceList = () => {
   const clearAllFilters = () => {
     setSearchInput('');
     setSearchTerm('');
-    setFromDate('');
-    setToDate('');
+    setFromDate(today);
+    setToDate(today);
     setPatientNameFilter('');
     setStatusFilter(-1);
     setInvoiceTypeFilter(0);
-    setAppliedFilters({ fromDate: '', toDate: '', patientName: '', status: -1, invoiceType: 0 });
+    setAppliedFilters({ fromDate: today, toDate: today, patientName: '', status: -1, invoiceType: 0 });
   };
 
   const toggleDropdown = (invoiceId, e) => {

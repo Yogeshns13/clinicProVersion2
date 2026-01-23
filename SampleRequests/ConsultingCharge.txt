@@ -7,9 +7,8 @@ AddConsultationCharge
     "ClinicID":1,
     "BranchID":1,
     "ConsultationID":5000000,
-    "ChargeID":1,  
-    "ChargeAmount": 0 
-    
+    "ChargeID":1,
+    "ChargeAmount": 0
 }
 -- if charge amount is 0 , then the default amount will be considered from the config table.
 
@@ -100,9 +99,6 @@ GetConsultationChargeList
     "InvoiceID":0,
     "InvoicedOnly":0,
     "Status":-1
-    
-    
-   
 }
 
 {

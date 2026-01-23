@@ -24,15 +24,26 @@ const PAYMENT_MODES = [
 ];
 
 const InvoicePaymentList = () => {
+  // Get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const todayDate = getTodayDate();
+
   const [payments, setPayments] = useState([]);
   const [allPayments, setAllPayments] = useState([]);
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
+  const [fromDate, setFromDate] = useState(todayDate);
+  const [toDate, setToDate] = useState(todayDate);
   const [patientNameFilter, setPatientNameFilter] = useState('');
   const [paymentModeFilter, setPaymentModeFilter] = useState(0);
-  const [appliedFilters, setAppliedFilters] = useState({ fromDate: '', toDate: '', patientName: '', paymentMode: 0 });
+  const [appliedFilters, setAppliedFilters] = useState({ fromDate: todayDate, toDate: todayDate, patientName: '', paymentMode: 0 });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -100,11 +111,11 @@ const InvoicePaymentList = () => {
   const clearAllFilters = () => {
     setSearchInput('');
     setSearchTerm('');
-    setFromDate('');
-    setToDate('');
+    setFromDate(todayDate);
+    setToDate(todayDate);
     setPatientNameFilter('');
     setPaymentModeFilter(0);
-    setAppliedFilters({ fromDate: '', toDate: '', patientName: '', paymentMode: 0 });
+    setAppliedFilters({ fromDate: todayDate, toDate: todayDate, patientName: '', paymentMode: 0 });
   };
 
   const openUpdateModal = (payment) => {

@@ -27,11 +27,10 @@ UpdateInvoicePayment
     "PaymentID":4,
     "Status":5
     "Remarks":"Paid by CASH"
-   
 }
 --  possible status to be 4-refunded 5-reversed
 
-getInvoicePaymentList
+GetInvoicePaymentList
 {
     "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",

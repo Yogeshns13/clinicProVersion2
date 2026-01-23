@@ -37,10 +37,12 @@ export const getConsultationList = async (clinicId = 0, options = {}) => {
     NextConsultationDate: options.NextConsultationDate || "",
     InvoiceID: options.InvoiceID || 0,
   };
+  console.log("Consultation Payload:",payload)
 
   try {
     const response = await API.post("/GetConsultationList", payload);
     const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    console.log("Consultation result:",results)
 
     return results.map((consult) => ({
       id: consult.consultation_id,

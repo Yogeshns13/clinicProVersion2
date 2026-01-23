@@ -1,5 +1,5 @@
 // src/components/ConsultationList.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiCalendar, FiUser, FiActivity, FiFilter, FiDownload, FiFileText } from 'react-icons/fi';
 import { getPatientVisitList } from '../api/api.js';
@@ -16,27 +16,27 @@ const ConsultationList = () => {
   // Tab State
   const [activeTab, setActiveTab] = useState('pending'); // 'pending' or 'visited'
 
-  // Data & Filter States
+  // Data States
   const [consultations, setConsultations] = useState([]);
-  const [allConsultations, setAllConsultations] = useState([]);
-  const [pendingVisits, setPendingVisits] = useState([]);
-  const [allPendingVisits, setAllPendingVisits] = useState([]);
+  const [patientVisits, setPatientVisits] = useState([]);
+  const [filteredVisits, setFilteredVisits] = useState([]);
+  const [filteredConsultations, setFilteredConsultations] = useState([]);
+
+  // Search State
   const [searchInput, setSearchInput] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
 
-  // Advanced Filters
+  // Date Filters for Patient Visits
   const today = new Date().toISOString().split('T')[0];
-  const [fromDate, setFromDate] = useState(today);
-  const [toDate, setToDate] = useState('');
-  const [patientNameFilter, setPatientNameFilter] = useState('');
-  const [doctorNameFilter, setDoctorNameFilter] = useState('');
+  const [visitFromDate, setVisitFromDate] = useState('');
+  const [visitToDate, setVisitToDate] = useState('');
+  const [visitPatientNameFilter, setVisitPatientNameFilter] = useState('');
+  const [visitDoctorNameFilter, setVisitDoctorNameFilter] = useState('');
 
-  const [appliedFilters, setAppliedFilters] = useState({
-    fromDate: today,
-    toDate: '',
-    patientName: '',
-    doctorName: ''
-  });
+  // Date Filters for Consultations
+  const [consultFromDate, setConsultFromDate] = useState(today);
+  const [consultToDate, setConsultToDate] = useState('');
+  const [consultPatientNameFilter, setConsultPatientNameFilter] = useState('');
+  const [consultDoctorNameFilter, setConsultDoctorNameFilter] = useState('');
 
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(true);
 
@@ -48,7 +48,71 @@ const ConsultationList = () => {
   const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [consultingVisitId, setConsultingVisitId] = useState(null);
 
-  // Fetch consultations with applied filters
+  // Fetch Patient Visits with filters
+  const fetchPatientVisits = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
+      const options = {
+        Page: 1,
+        PageSize: 100,
+        BranchID: branchId
+      };
+
+      // Apply date filters logic
+      if (visitFromDate && visitToDate) {
+        // Use date range when both dates are specified
+        options.FromVisitDate = visitFromDate;
+        options.ToVisitDate = visitToDate;
+      } else if (visitFromDate) {
+        // Use FromVisitDate as single date
+        options.VisitDate = visitFromDate;
+      } else {
+        // Default to today's visits
+        options.VisitDate = today;
+      }
+
+      // Apply name filters
+      if (visitPatientNameFilter.trim()) {
+        options.PatientName = visitPatientNameFilter.trim();
+      }
+      if (visitDoctorNameFilter.trim()) {
+        options.DoctorName = visitDoctorNameFilter.trim();
+      }
+
+      console.log('Fetching patient visits with options:', options);
+
+      const data = await getPatientVisitList(clinicId, options);
+      
+      // Filter: Only show visits where consultationId is 0 (not yet consulted)
+      const unconsultedVisits = data.filter(visit => visit.consultationId === 0);
+      
+      // Sort by visit time
+      const sortedData = unconsultedVisits.sort((a, b) => {
+        const timeA = a.visitTime || '00:00:00';
+        const timeB = b.visitTime || '00:00:00';
+        return timeA.localeCompare(timeB);
+      });
+
+      setPatientVisits(sortedData);
+      setFilteredVisits(sortedData);
+    } catch (err) {
+      console.error('fetchPatientVisits error:', err);
+      setError(
+        err?.status >= 400 || err?.code >= 400
+          ? err
+          : { message: err.message || 'Failed to load patient visits' }
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch Consultations with filters
   const fetchConsultations = async () => {
     try {
       setLoading(true);
@@ -59,18 +123,26 @@ const ConsultationList = () => {
 
       const options = {
         Page: 1,
-        PageSize: 50,
+        PageSize: 100,
         BranchID: branchId
       };
 
-      if (appliedFilters.fromDate) options.FromDate = appliedFilters.fromDate;
-      if (appliedFilters.toDate) options.ToDate = appliedFilters.toDate;
-      if (appliedFilters.patientName.trim()) options.PatientName = appliedFilters.patientName.trim();
-      if (appliedFilters.doctorName.trim()) options.DoctorName = appliedFilters.doctorName.trim();
+      if (consultFromDate) options.FromDate = consultFromDate;
+      if (consultToDate) options.ToDate = consultToDate;
+      if (consultPatientNameFilter.trim()) options.PatientName = consultPatientNameFilter.trim();
+      if (consultDoctorNameFilter.trim()) options.DoctorName = consultDoctorNameFilter.trim();
 
       const data = await getConsultationList(clinicId, options);
-      setConsultations(data);
-      setAllConsultations(data);
+      
+      // Sort by date (most recent first)
+      const sortedData = data.sort((a, b) => {
+        const dateA = new Date(a.dateModified || a.dateCreated);
+        const dateB = new Date(b.dateModified || b.dateCreated);
+        return dateB - dateA;
+      });
+
+      setConsultations(sortedData);
+      setFilteredConsultations(sortedData);
     } catch (err) {
       console.error('fetchConsultations error:', err);
       setError(
@@ -83,61 +155,42 @@ const ConsultationList = () => {
     }
   };
 
-  // Fetch today's pending visits
-  const fetchPendingVisits = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
-
-      const options = {
-        Page: 1,
-        PageSize: 50,
-        BranchID: branchId,
-        VisitDate: today
-      };
-
-      const visits = await getPatientVisitList(clinicId, options);
-      
-      // Get all consultations to filter out visits that already have consultations
-      const allConsults = await getConsultationList(clinicId, { 
-        BranchID: branchId,
-        FromDate: today,
-        ToDate: today,
-        PageSize: 100 // Get more to ensure we catch all today's consultations
-      });
-      
-      const consultedVisitIds = new Set(allConsults.map(c => c.visitId));
-      const pending = visits.filter(v => !consultedVisitIds.has(v.id));
-      
-      setPendingVisits(pending);
-      setAllPendingVisits(pending);
-    } catch (err) {
-      console.error('fetchPendingVisits error:', err);
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Initial load based on active tab
   useEffect(() => {
     if (activeTab === 'visited') {
       fetchConsultations();
     } else {
-      fetchPendingVisits();
+      fetchPatientVisits();
     }
-  }, [appliedFilters, activeTab]);
+  }, [activeTab]);
 
-  // Filtered consultations (client-side search)
-  const filteredConsultations = useMemo(() => {
-    let filtered = allConsultations;
+  // Apply search filter
+  const handleSearch = () => {
+    const term = searchInput.trim().toLowerCase();
 
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      filtered = allConsultations.filter(
+    if (activeTab === 'pending') {
+      if (!term) {
+        setFilteredVisits(patientVisits);
+        return;
+      }
+
+      const filtered = patientVisits.filter(
+        (visit) =>
+          visit.patientName?.toLowerCase().includes(term) ||
+          visit.doctorFullName?.toLowerCase().includes(term) ||
+          visit.patientFileNo?.toLowerCase().includes(term) ||
+          visit.patientMobile?.toLowerCase().includes(term) ||
+          visit.reason?.toLowerCase().includes(term) ||
+          visit.symptoms?.toLowerCase().includes(term)
+      );
+      setFilteredVisits(filtered);
+    } else {
+      if (!term) {
+        setFilteredConsultations(consultations);
+        return;
+      }
+
+      const filtered = consultations.filter(
         (consult) =>
           consult.patientName?.toLowerCase().includes(term) ||
           consult.doctorFullName?.toLowerCase().includes(term) ||
@@ -148,83 +201,50 @@ const ConsultationList = () => {
           consult.consultationNotes?.toLowerCase().includes(term) ||
           consult.instructions?.toLowerCase().includes(term)
       );
+      setFilteredConsultations(filtered);
     }
-
-    return filtered.sort((a, b) => {
-      const dateA = new Date(a.dateModified || a.dateCreated);
-      const dateB = new Date(b.dateModified || b.dateCreated);
-      return dateB - dateA;
-    });
-  }, [allConsultations, searchTerm]);
-
-  // Filtered pending visits
-  const filteredPendingVisits = useMemo(() => {
-    let filtered = allPendingVisits;
-
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      filtered = allPendingVisits.filter(
-        (visit) =>
-          visit.patientName?.toLowerCase().includes(term) ||
-          visit.doctorFullName?.toLowerCase().includes(term) ||
-          visit.patientFileNo?.toLowerCase().includes(term) ||
-          visit.patientMobile?.toLowerCase().includes(term) ||
-          visit.reason?.toLowerCase().includes(term) ||
-          visit.symptoms?.toLowerCase().includes(term)
-      );
-    }
-
-    return filtered.sort((a, b) => {
-      const timeA = a.visitTime || '00:00:00';
-      const timeB = b.visitTime || '00:00:00';
-      return timeA.localeCompare(timeB);
-    });
-  }, [allPendingVisits, searchTerm]);
-
-  // Statistics calculations
-  const statistics = useMemo(() => {
-    if (activeTab === 'pending') {
-      return {
-        todayPending: allPendingVisits.length,
-        uniquePatients: new Set(allPendingVisits.map(v => v.patientId)).size,
-        uniqueDoctors: new Set(allPendingVisits.map(v => v.doctorId)).size,
-      };
-    }
-
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todayConsultations = allConsultations.filter(c => {
-      const consultDate = c.dateCreated?.split('T')[0];
-      return consultDate === todayStr;
-    });
-
-    const uniquePatients = new Set(allConsultations.map(c => c.patientId)).size;
-    const uniqueDoctors = new Set(allConsultations.map(c => c.doctorId)).size;
-    const withFollowup = allConsultations.filter(c => c.nextConsultationDate).length;
-
-    return {
-      todayConsultations: todayConsultations.length,
-      totalConsultations: allConsultations.length,
-      uniquePatients,
-      uniqueDoctors,
-      withFollowup
-    };
-  }, [allConsultations, allPendingVisits, activeTab]);
-
-  // Handlers
-  const handleSearch = () => setSearchTerm(searchInput.trim());
+  };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') handleSearch();
   };
 
-  const applyFilters = () => {
-    setAppliedFilters({
-      fromDate,
-      toDate,
-      patientName: patientNameFilter,
-      doctorName: doctorNameFilter
-    });
+  // Apply advanced filters for Patient Visits
+  const applyVisitFilters = () => {
+    fetchPatientVisits();
   };
+
+  // Apply advanced filters for Consultations
+  const applyConsultFilters = () => {
+    fetchConsultations();
+  };
+
+  // Calculate statistics
+  const getStatistics = () => {
+    if (activeTab === 'pending') {
+      return {
+        totalVisits: filteredVisits.length,
+        uniquePatients: new Set(filteredVisits.map(v => v.patientId)).size,
+        uniqueDoctors: new Set(filteredVisits.map(v => v.doctorId)).size,
+        todayVisits: filteredVisits.filter(v => v.visitDate === today).length
+      };
+    }
+
+    const todayConsultations = filteredConsultations.filter(c => {
+      const consultDate = c.dateCreated?.split('T')[0];
+      return consultDate === today;
+    });
+
+    return {
+      todayConsultations: todayConsultations.length,
+      totalConsultations: filteredConsultations.length,
+      uniquePatients: new Set(filteredConsultations.map(c => c.patientId)).size,
+      uniqueDoctors: new Set(filteredConsultations.map(c => c.doctorId)).size,
+      withFollowup: filteredConsultations.filter(c => c.nextConsultationDate).length
+    };
+  };
+
+  const statistics = getStatistics();
 
   const handleViewDetails = (consultation) => {
     setSelectedConsultation(consultation);
@@ -243,13 +263,11 @@ const ConsultationList = () => {
   };
 
   const handleAddSuccess = () => {
-    // Refresh both tabs to update the lists
     if (activeTab === 'visited') {
       fetchConsultations();
+    } else {
+      fetchPatientVisits();
     }
-    // Always refresh pending visits when a consultation is added
-    // to remove the consulted patient from the pending list
-    fetchPendingVisits();
     setConsultingVisitId(null);
   };
 
@@ -282,30 +300,35 @@ const ConsultationList = () => {
 
   const clearAllFilters = () => {
     setSearchInput('');
-    setSearchTerm('');
-    setFromDate(today);
-    setToDate('');
-    setPatientNameFilter('');
-    setDoctorNameFilter('');
-    setAppliedFilters({
-      fromDate: today,
-      toDate: '',
-      patientName: '',
-      doctorName: ''
-    });
+    
+    if (activeTab === 'pending') {
+      setVisitFromDate('');
+      setVisitToDate('');
+      setVisitPatientNameFilter('');
+      setVisitDoctorNameFilter('');
+      // Reset to today's data
+      fetchPatientVisits();
+    } else {
+      setConsultFromDate(today);
+      setConsultToDate('');
+      setConsultPatientNameFilter('');
+      setConsultDoctorNameFilter('');
+      fetchConsultations();
+    }
   };
 
   const exportToCSV = () => {
     if (activeTab === 'pending') {
       const headers = [
-        'Patient Name', 'File No', 'Mobile', 'Doctor', 'Visit Time',
+        'Patient Name', 'File No', 'Mobile', 'Doctor', 'Visit Date', 'Visit Time',
         'Reason', 'Symptoms', 'BP', 'Temperature', 'Weight'
       ];
-      const csvData = filteredPendingVisits.map(visit => [
+      const csvData = filteredVisits.map(visit => [
         visit.patientName,
         visit.patientFileNo,
         visit.patientMobile,
         visit.doctorFullName,
+        formatDate(visit.visitDate),
         formatTime(visit.visitTime),
         visit.reason || '',
         visit.symptoms || '',
@@ -323,7 +346,7 @@ const ConsultationList = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `pending-visits-${today}.csv`;
+      a.download = `patient-visits-${today}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
     } else {
@@ -384,7 +407,7 @@ const ConsultationList = () => {
           onClick={() => setActiveTab('pending')}
         >
           <FiCalendar size={18} />
-          Pending Visits
+          Patient Visits
         </button>
         <button
           className={`consultation-tab ${activeTab === 'visited' ? 'active' : ''}`}
@@ -398,43 +421,43 @@ const ConsultationList = () => {
       {/* Toolbar */}
       <div className="consultation-toolbar">
         <div className="consultation-toolbar-left">
-          {activeTab === 'visited' && (
-            <button
-              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className={`consultation-filter-toggle-btn ${showAdvancedFilters ? 'active' : ''}`}
-            >
-              <FiFilter size={18} />
-              {showAdvancedFilters ? 'Hide' : 'Show'} Filters
-            </button>
-          )}
+          <button
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className={`consultation-filter-toggle-btn ${showAdvancedFilters ? 'active' : ''}`}
+          >
+            <FiFilter size={18} />
+            {showAdvancedFilters ? 'Hide' : 'Show'} Filters
+          </button>
 
-          {(appliedFilters.fromDate !== today ||
-            appliedFilters.toDate ||
-            appliedFilters.patientName ||
-            appliedFilters.doctorName ||
-            searchTerm) && (
+          {(visitFromDate || visitToDate || visitPatientNameFilter || visitDoctorNameFilter || 
+            consultFromDate !== today || consultToDate || consultPatientNameFilter || consultDoctorNameFilter || 
+            searchInput) && (
             <button onClick={clearAllFilters} className="consultation-clear-btn">
               Clear All
             </button>
           )}
         </div>
 
-        {/* No buttons on the right for either tab */}
         <div className="consultation-toolbar-right">
+          <button onClick={exportToCSV} className="consultation-export-btn">
+            <FiDownload size={18} />
+            Export CSV
+          </button>
         </div>
       </div>
 
-      {/* Advanced Filters (only for Visited Patients tab) */}
-      {activeTab === 'visited' && showAdvancedFilters && (
+      {/* Advanced Filters for Patient Visits */}
+      {activeTab === 'pending' && showAdvancedFilters && (
         <div className="consultation-advanced-filters">
           <div className="filter-row">
             <div className="filter-group">
               <label className="filter-label">From Date</label>
               <input
                 type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
+                value={visitFromDate}
+                onChange={(e) => setVisitFromDate(e.target.value)}
                 className="filter-input"
+                placeholder="Select start date"
               />
             </div>
 
@@ -442,9 +465,10 @@ const ConsultationList = () => {
               <label className="filter-label">To Date</label>
               <input
                 type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
+                value={visitToDate}
+                onChange={(e) => setVisitToDate(e.target.value)}
                 className="filter-input"
+                placeholder="Select end date"
               />
             </div>
 
@@ -453,8 +477,8 @@ const ConsultationList = () => {
               <input
                 type="text"
                 placeholder="Filter by patient..."
-                value={patientNameFilter}
-                onChange={(e) => setPatientNameFilter(e.target.value)}
+                value={visitPatientNameFilter}
+                onChange={(e) => setVisitPatientNameFilter(e.target.value)}
                 className="filter-input"
               />
             </div>
@@ -464,14 +488,80 @@ const ConsultationList = () => {
               <input
                 type="text"
                 placeholder="Filter by doctor..."
-                value={doctorNameFilter}
-                onChange={(e) => setDoctorNameFilter(e.target.value)}
+                value={visitDoctorNameFilter}
+                onChange={(e) => setVisitDoctorNameFilter(e.target.value)}
                 className="filter-input"
               />
             </div>
 
             <div className="filter-group apply-filter-btn-group">
-              <button onClick={applyFilters} className="consultation-add-btn">
+              <button onClick={applyVisitFilters} className="consultation-add-btn">
+                <FiSearch size={18} /> Search
+              </button>
+            </div>
+          </div>
+          
+          <div className="filter-info">
+            <small className="text-muted">
+              {visitFromDate && visitToDate 
+                ? `Showing visits from ${formatDate(visitFromDate)} to ${formatDate(visitToDate)}`
+                : visitFromDate 
+                ? `Showing visits for ${formatDate(visitFromDate)}`
+                : `Showing today's visits (${formatDate(today)})`
+              }
+            </small>
+          </div>
+        </div>
+      )}
+
+      {/* Advanced Filters for Consultations */}
+      {activeTab === 'visited' && showAdvancedFilters && (
+        <div className="consultation-advanced-filters">
+          <div className="filter-row">
+            <div className="filter-group">
+              <label className="filter-label">From Date</label>
+              <input
+                type="date"
+                value={consultFromDate}
+                onChange={(e) => setConsultFromDate(e.target.value)}
+                className="filter-input"
+              />
+            </div>
+
+            <div className="filter-group">
+              <label className="filter-label">To Date</label>
+              <input
+                type="date"
+                value={consultToDate}
+                onChange={(e) => setConsultToDate(e.target.value)}
+                className="filter-input"
+              />
+            </div>
+
+            <div className="filter-group">
+              <label className="filter-label">Patient Name</label>
+              <input
+                type="text"
+                placeholder="Filter by patient..."
+                value={consultPatientNameFilter}
+                onChange={(e) => setConsultPatientNameFilter(e.target.value)}
+                className="filter-input"
+              />
+            </div>
+
+            <div className="filter-group">
+              <label className="filter-label">Doctor Name</label>
+              <input
+                type="text"
+                placeholder="Filter by doctor..."
+                value={consultDoctorNameFilter}
+                onChange={(e) => setConsultDoctorNameFilter(e.target.value)}
+                className="filter-input"
+              />
+            </div>
+
+            <div className="filter-group apply-filter-btn-group">
+              <button onClick={applyConsultFilters} className="consultation-add-btn">
                 <FiSearch size={18} /> Search
               </button>
             </div>
@@ -486,7 +576,7 @@ const ConsultationList = () => {
             type="text"
             placeholder={
               activeTab === 'pending'
-                ? 'Search pending visits...'
+                ? 'Search patient visits...'
                 : 'Search by patient, doctor, symptoms, notes...'
             }
             value={searchInput}
@@ -508,8 +598,18 @@ const ConsultationList = () => {
               <FiCalendar size={24} />
             </div>
             <div className="stat-content">
-              <div className="stat-label">Today's Pending Visits</div>
-              <div className="stat-value">{statistics.todayPending}</div>
+              <div className="stat-label">Today's Visits</div>
+              <div className="stat-value">{statistics.todayVisits}</div>
+            </div>
+          </div>
+
+          <div className="consultation-stat-card stat-total">
+            <div className="stat-icon-wrapper">
+              <FiActivity size={24} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-label">Total Visits</div>
+              <div className="stat-value">{statistics.totalVisits}</div>
             </div>
           </div>
 
@@ -523,7 +623,7 @@ const ConsultationList = () => {
             </div>
           </div>
 
-          <div className="consultation-stat-card stat-total">
+          <div className="consultation-stat-card stat-followup">
             <div className="stat-icon-wrapper">
               <FiActivity size={24} />
             </div>
@@ -577,7 +677,7 @@ const ConsultationList = () => {
         </div>
       )}
 
-      {/* Table - Pending Visits */}
+      {/* Table - Patient Visits */}
       {activeTab === 'pending' && (
         <div className="consultation-table-container">
           <table className="consultation-table">
@@ -585,23 +685,21 @@ const ConsultationList = () => {
               <tr>
                 <th>Patient</th>
                 <th>Doctor</th>
-                <th>Visit Time</th>
+                <th>Visit Date & Time</th>
                 <th>Reason & Symptoms</th>
                 <th>Vitals</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredPendingVisits.length === 0 ? (
+              {filteredVisits.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="consultation-no-data">
-                    {searchTerm
-                      ? 'No pending visits found matching your search.'
-                      : 'No pending visits for today.'}
+                    No patient visits found.
                   </td>
                 </tr>
               ) : (
-                filteredPendingVisits.map((visit) => (
+                filteredVisits.map((visit) => (
                   <tr key={visit.id}>
                     <td>
                       <div className="consultation-name-cell">
@@ -623,7 +721,10 @@ const ConsultationList = () => {
                       </div>
                     </td>
                     <td>
-                      <div className="consultation-type">{formatTime(visit.visitTime)}</div>
+                      <div>
+                        <div className="consultation-name">{formatDate(visit.visitDate)}</div>
+                        <div className="consultation-type">{formatTime(visit.visitTime)}</div>
+                      </div>
                     </td>
                     <td>
                       <div className="consultation-reason-cell">
@@ -664,7 +765,7 @@ const ConsultationList = () => {
                           className="consultation-add-btn"
                         >
                           <FiPlus size={16} />
-                          Consultation
+                          Consult
                         </button>
                       </div>
                     </td>
@@ -695,9 +796,7 @@ const ConsultationList = () => {
               {filteredConsultations.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="consultation-no-data">
-                    {searchTerm || appliedFilters.patientName || appliedFilters.doctorName
-                      ? 'No consultations found matching your filters.'
-                      : 'No consultations recorded yet.'}
+                    No consultations found.
                   </td>
                 </tr>
               ) : (

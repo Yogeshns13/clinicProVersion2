@@ -3664,7 +3664,7 @@ export const getAppointmentList = async (clinicId = 0, options = {}) => {
       appointmentTime: appt.appointment_time,    // "HH:mm:ss"
       reason: appt.reason || "",
       slotId: appt.slot_id,
-      status: appt.status === 1 ? "scheduled" : "cancelled", 
+      status: appt.status,
       statusDesc: appt.status_desc || "Unknown",
       dateCreated: appt.date_created,
       dateModified: appt.date_modified
@@ -3902,6 +3902,7 @@ export const getPatientVisitList = async (clinicId = 0, options = {}) => {
       bpReading: visit.bp_reading || null,      // formatted "130/90"
       temperature: visit.temperature || null,
       weight: visit.weight || null,
+      consultationId: visit.consultation_id,
       dateCreated: visit.date_created || null,
       dateModified: visit.date_modified || null
     }));
