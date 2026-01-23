@@ -44,7 +44,7 @@ const InvoicePaymentList = () => {
   const [patientNameFilter, setPatientNameFilter] = useState('');
   const [paymentModeFilter, setPaymentModeFilter] = useState(0);
   const [appliedFilters, setAppliedFilters] = useState({ fromDate: todayDate, toDate: todayDate, patientName: '', paymentMode: 0 });
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(true);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -262,27 +262,6 @@ const InvoicePaymentList = () => {
           <div className="stat-content">
             <div className="stat-label">Total Payments</div>
             <div className="stat-value">{formatCurrency(statistics.total)}</div>
-          </div>
-        </div>
-        <div className="payment-stat-card stat-success">
-          <div className="stat-icon-wrapper"><FiCheckCircle size={24} /></div>
-          <div className="stat-content">
-            <div className="stat-label">Successful</div>
-            <div className="stat-value">{statistics.success}</div>
-          </div>
-        </div>
-        <div className="payment-stat-card stat-pending">
-          <div className="stat-icon-wrapper"><FiCalendar size={24} /></div>
-          <div className="stat-content">
-            <div className="stat-label">Pending</div>
-            <div className="stat-value">{statistics.pending}</div>
-          </div>
-        </div>
-        <div className="payment-stat-card stat-failed">
-          <div className="stat-icon-wrapper"><FiXCircle size={24} /></div>
-          <div className="stat-content">
-            <div className="stat-label">Failed</div>
-            <div className="stat-value">{statistics.failed}</div>
           </div>
         </div>
       </div>

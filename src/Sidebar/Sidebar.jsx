@@ -8,6 +8,8 @@ import {
   FiFileText,
   FiBarChart2,
   FiSettings,
+  FiMessageCircle,
+  FiUserCheck,
   FiLogOut,
   FiChevronDown,
   FiLayers,
@@ -84,7 +86,7 @@ const Sidebar = () => {
     },
     {
       id: "consultation",
-      icon: FiUsers,
+      icon: FiUserCheck,
       label: "Consultation",
       hasDropdown: true,
       subItems: [
@@ -96,7 +98,7 @@ const Sidebar = () => {
     },
     {
       id: "invoice",
-      icon: FiUsers,
+      icon: FiFileText,
       label: "invoice",
       hasDropdown: true,
       subItems: [

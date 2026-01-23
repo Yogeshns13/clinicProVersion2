@@ -21,8 +21,8 @@ const ConsultationChargeList = () => {
   // Date filter states - default to today
   const today = new Date().toISOString().split('T')[0];
   const [fromDate, setFromDate] = useState(today);
-  const [toDate, setToDate] = useState('');
-  const [showFilters, setShowFilters] = useState(true);
+  const [toDate, setToDate] = useState(today);
+  const [showFilters, setShowFilters] = useState(false);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -351,24 +351,6 @@ const ConsultationChargeList = () => {
           </div>
         </div>
       )}
-
-      {/* Statistics */}
-      <div className="charge-stats-grid">
-        <div className="charge-stat-card stat-count">
-          <div className="stat-icon-wrapper"><FiFileText size={24} /></div>
-          <div className="stat-content">
-            <div className="stat-label">Total Consultations</div>
-            <div className="stat-value">{getTotalCount()}</div>
-          </div>
-        </div>
-        <div className="charge-stat-card stat-today">
-          <div className="stat-icon-wrapper"><FiCalendar size={24} /></div>
-          <div className="stat-content">
-            <div className="stat-label">Today's Consultations</div>
-            <div className="stat-value">{getTodayCount()}</div>
-          </div>
-        </div>
-      </div>
 
       {/* Search */}
       <div className="charge-list-toolbar">

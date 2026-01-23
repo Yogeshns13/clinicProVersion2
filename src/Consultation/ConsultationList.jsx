@@ -34,11 +34,11 @@ const ConsultationList = () => {
 
   // Date Filters for Consultations
   const [consultFromDate, setConsultFromDate] = useState(today);
-  const [consultToDate, setConsultToDate] = useState('');
+  const [consultToDate, setConsultToDate] = useState(today);
   const [consultPatientNameFilter, setConsultPatientNameFilter] = useState('');
   const [consultDoctorNameFilter, setConsultDoctorNameFilter] = useState('');
 
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(true);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // UI States
   const [loading, setLoading] = useState(true);
@@ -589,93 +589,6 @@ const ConsultationList = () => {
           </button>
         </div>
       </div>
-
-      {/* Statistics Cards */}
-      {activeTab === 'pending' ? (
-        <div className="consultation-stats-grid">
-          <div className="consultation-stat-card stat-today">
-            <div className="stat-icon-wrapper">
-              <FiCalendar size={24} />
-            </div>
-            <div className="stat-content">
-              <div className="stat-label">Today's Visits</div>
-              <div className="stat-value">{statistics.todayVisits}</div>
-            </div>
-          </div>
-
-          <div className="consultation-stat-card stat-total">
-            <div className="stat-icon-wrapper">
-              <FiActivity size={24} />
-            </div>
-            <div className="stat-content">
-              <div className="stat-label">Total Visits</div>
-              <div className="stat-value">{statistics.totalVisits}</div>
-            </div>
-          </div>
-
-          <div className="consultation-stat-card stat-patients">
-            <div className="stat-icon-wrapper">
-              <FiUser size={24} />
-            </div>
-            <div className="stat-content">
-              <div className="stat-label">Unique Patients</div>
-              <div className="stat-value">{statistics.uniquePatients}</div>
-            </div>
-          </div>
-
-          <div className="consultation-stat-card stat-followup">
-            <div className="stat-icon-wrapper">
-              <FiActivity size={24} />
-            </div>
-            <div className="stat-content">
-              <div className="stat-label">Unique Doctors</div>
-              <div className="stat-value">{statistics.uniqueDoctors}</div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="consultation-stats-grid">
-          <div className="consultation-stat-card stat-today">
-            <div className="stat-icon-wrapper">
-              <FiCalendar size={24} />
-            </div>
-            <div className="stat-content">
-              <div className="stat-label">Today's Consultations</div>
-              <div className="stat-value">{statistics.todayConsultations}</div>
-            </div>
-          </div>
-
-          <div className="consultation-stat-card stat-total">
-            <div className="stat-icon-wrapper">
-              <FiActivity size={24} />
-            </div>
-            <div className="stat-content">
-              <div className="stat-label">Total Consultations</div>
-              <div className="stat-value">{statistics.totalConsultations}</div>
-            </div>
-          </div>
-
-          <div className="consultation-stat-card stat-patients">
-            <div className="stat-icon-wrapper">
-              <FiUser size={24} />
-            </div>
-            <div className="stat-content">
-              <div className="stat-label">Unique Patients</div>
-              <div className="stat-value">{statistics.uniquePatients}</div>
-            </div>
-          </div>
-
-          <div className="consultation-stat-card stat-followup">
-            <div className="stat-icon-wrapper">
-              <FiCalendar size={24} />
-            </div>
-            <div className="stat-content">
-              <div className="stat-label">With Follow-up</div>
-              <div className="stat-value">{statistics.withFollowup}</div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Table - Patient Visits */}
       {activeTab === 'pending' && (

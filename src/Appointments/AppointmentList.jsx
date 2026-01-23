@@ -416,47 +416,6 @@ const AppointmentList = () => {
         </div>
       )}
 
-      {/* Statistics Cards */}
-      <div className="clinic-stats">
-        <div className="clinic-stat-card scheduled">
-          <div className="clinic-stat-label">SCHEDULED</div>
-          <div className="clinic-stat-value">
-            {allAppointments.filter(a => a.status === 1).length}
-          </div>
-        </div>
-        <div className="clinic-stat-card confirmed">
-          <div className="clinic-stat-label">CONFIRMED</div>
-          <div className="clinic-stat-value">
-            {allAppointments.filter(a => a.status === 2).length}
-          </div>
-        </div>
-        <div className="clinic-stat-card inprogress">
-          <div className="clinic-stat-label">IN PROGRESS</div>
-          <div className="clinic-stat-value">
-            {allAppointments.filter(a => a.status === 3).length}
-          </div>
-        </div>
-        <div className="clinic-stat-card completed">
-          <div className="clinic-stat-label">COMPLETED</div>
-          <div className="clinic-stat-value">
-            {allAppointments.filter(a => a.status === 4).length}
-          </div>
-        </div>
-        <div className="clinic-stat-card cancelled">
-          <div className="clinic-stat-label">CANCELLED</div>
-          <div className="clinic-stat-value">
-            {allAppointments.filter(a => a.status === 5).length}
-          </div>
-        </div>
-        <div className="clinic-stat-card total">
-          <div className="clinic-stat-label">TOTAL</div>
-          <div className="clinic-stat-value">
-            {allAppointments.length}
-          </div>
-        </div>
-      </div>
-
-      {/* Table */}
       <div className="clinic-table-container">
         <table className="clinic-table">
           <thead>

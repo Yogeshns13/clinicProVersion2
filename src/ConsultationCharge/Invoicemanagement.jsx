@@ -48,7 +48,7 @@ const InvoiceList = () => {
   const [statusFilter, setStatusFilter] = useState(-1);
   const [invoiceTypeFilter, setInvoiceTypeFilter] = useState(0);
   const [appliedFilters, setAppliedFilters] = useState({ fromDate: today, toDate: today, patientName: '', status: -1, invoiceType: 0 });
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(true);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -348,27 +348,6 @@ const InvoiceList = () => {
           <div className="stat-content">
             <div className="stat-label">Total Amount</div>
             <div className="stat-value">{formatCurrency(statistics.total)}</div>
-          </div>
-        </div>
-        <div className="invoice-stat-card stat-paid">
-          <div className="stat-icon-wrapper"><FiFileText size={24} /></div>
-          <div className="stat-content">
-            <div className="stat-label">Paid Invoices</div>
-            <div className="stat-value">{statistics.paid}</div>
-          </div>
-        </div>
-        <div className="invoice-stat-card stat-pending">
-          <div className="stat-icon-wrapper"><FiCalendar size={24} /></div>
-          <div className="stat-content">
-            <div className="stat-label">Pending</div>
-            <div className="stat-value">{statistics.pending}</div>
-          </div>
-        </div>
-        <div className="invoice-stat-card stat-cancelled">
-          <div className="stat-icon-wrapper"><FiX size={24} /></div>
-          <div className="stat-content">
-            <div className="stat-label">Cancelled</div>
-            <div className="stat-value">{statistics.cancelled}</div>
           </div>
         </div>
       </div>
