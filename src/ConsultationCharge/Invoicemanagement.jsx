@@ -290,7 +290,7 @@ const InvoiceList = () => {
             <FiFilter size={18} />
             {showAdvancedFilters ? 'Hide' : 'Show'} Filters
           </button>
-          {(appliedFilters.fromDate || appliedFilters.toDate || appliedFilters.patientName || appliedFilters.status !== -1 || appliedFilters.invoiceType !== 0 || searchTerm) && (
+          {(appliedFilters.fromDate !== today || appliedFilters.toDate !== today || appliedFilters.patientName || appliedFilters.status !== -1 || appliedFilters.invoiceType !== 0 || searchTerm) && (
             <button onClick={clearAllFilters} className="invoice-clear-btn">Clear All</button>
           )}
         </div>

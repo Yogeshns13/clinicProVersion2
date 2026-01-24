@@ -211,7 +211,7 @@ const InvoicePaymentList = () => {
             <FiSearch size={18} />
             {showAdvancedFilters ? 'Hide' : 'Show'} Filters
           </button>
-          {(appliedFilters.fromDate || appliedFilters.toDate || appliedFilters.patientName || appliedFilters.paymentMode !== 0 || searchTerm) && (
+          {(appliedFilters.fromDate !== todayDate || appliedFilters.toDate !== todayDate || appliedFilters.patientName || appliedFilters.paymentMode !== 0 || searchTerm) && (
             <button onClick={clearAllFilters} className="payment-clear-btn">Clear All</button>
           )}
         </div>

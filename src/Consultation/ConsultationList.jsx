@@ -27,8 +27,8 @@ const ConsultationList = () => {
 
   // Date Filters for Patient Visits
   const today = new Date().toISOString().split('T')[0];
-  const [visitFromDate, setVisitFromDate] = useState('');
-  const [visitToDate, setVisitToDate] = useState('');
+  const [visitFromDate, setVisitFromDate] = useState(today);
+  const [visitToDate, setVisitToDate] = useState(today);
   const [visitPatientNameFilter, setVisitPatientNameFilter] = useState('');
   const [visitDoctorNameFilter, setVisitDoctorNameFilter] = useState('');
 
@@ -310,7 +310,7 @@ const ConsultationList = () => {
       fetchPatientVisits();
     } else {
       setConsultFromDate(today);
-      setConsultToDate('');
+      setConsultToDate(today);
       setConsultPatientNameFilter('');
       setConsultDoctorNameFilter('');
       fetchConsultations();
@@ -429,8 +429,8 @@ const ConsultationList = () => {
             {showAdvancedFilters ? 'Hide' : 'Show'} Filters
           </button>
 
-          {(visitFromDate || visitToDate || visitPatientNameFilter || visitDoctorNameFilter || 
-            consultFromDate !== today || consultToDate || consultPatientNameFilter || consultDoctorNameFilter || 
+          {(visitFromDate !== today || visitToDate !== today || visitPatientNameFilter || visitDoctorNameFilter ||
+            consultFromDate !== today || consultToDate !== today || consultPatientNameFilter || consultDoctorNameFilter ||
             searchInput) && (
             <button onClick={clearAllFilters} className="consultation-clear-btn">
               Clear All

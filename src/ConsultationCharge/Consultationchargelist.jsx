@@ -17,7 +17,7 @@ const ConsultationChargeList = () => {
   const [chargeConfigs, setChargeConfigs] = useState([]);
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Date filter states - default to today
   const today = new Date().toISOString().split('T')[0];
   const [fromDate, setFromDate] = useState(today);
@@ -125,13 +125,13 @@ const ConsultationChargeList = () => {
   const clearDateFilters = () => {
     const todayDate = new Date().toISOString().split('T')[0];
     setFromDate(todayDate);
-    setToDate('');
+    setToDate(todayDate);
   };
 
   const setTodayFilter = () => {
     const todayDate = new Date().toISOString().split('T')[0];
     setFromDate(todayDate);
-    setToDate('');
+    setToDate(todayDate);
   };
 
   const setThisWeekFilter = () => {
@@ -302,9 +302,11 @@ const ConsultationChargeList = () => {
             <FiFilter size={18} />
             {showFilters ? 'Hide' : 'Show'} Filters
           </button>
+          {(fromDate !== today || toDate !== today) &&(
           <button onClick={clearDateFilters} className="filter-clear-btn">
             <FiX size={16} /> Clear Filters
-          </button>
+          </button>)}
+
         </div>
         <div className="filter-toolbar-right">
           <span className="filter-info">
