@@ -62,9 +62,158 @@ GetLabTestMasterList
     "BranchID":1,
     "TestName":"",
     "TestType":0,   
-    "Status":-1    
-    
-   
-   
+    "Status":-1      
 }
+
+-----------------------------------------
+
+GetLabTestMasterList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "TestID":0,
+    "ClinicID": 1,
+    "BranchID":1,
+    "TestName":"",
+    "TestType":0,   
+    "Status":-1      
+}
+
+{
+    "result": [
+        {
+            "test_id": 2,
+            "unique_seq": 1,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "test_name": "WBC Count",
+            "short_name": "WBC",
+            "description": "Complete Blood WBC count with reference values",
+            "test_type": 1,
+            "test_type_desc": "Blood",
+            "normal_range": "4.7-6.1",
+            "units": "mg/dL",
+            "remarks": "Complete WBC blood count",
+            "fees": "100.00",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-26T13:44:38.000Z",
+            "date_modified": "2025-11-26T13:44:38.000Z"
+        },
+        {
+            "test_id": 1,
+            "unique_seq": 1,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "test_name": "RBC Count",
+            "short_name": "RBC",
+            "description": "Complete Blood RBC count with reference values",
+            "test_type": 1,
+            "test_type_desc": "Blood",
+            "normal_range": "4.7-6.1",
+            "units": "mg/dL",
+            "remarks": "Complete blood count",
+            "fees": "100.00",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-26T13:29:25.000Z",
+            "date_modified": "2025-11-26T13:37:40.000Z"
+        }
+    ]
+}
+
+------------------------------------------
+
+AddLabTestMaster
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,    
+    "BranchID"  :1,
+    "TestName":"Hemoglobin Count",
+    "ShortName":"HC",
+    "Description":"Complete Blood HC count with reference values",
+    "TestType":1,
+    "NormalRange":"4.7-6.1",
+    "Units":"mg/dL",
+    "Remarks":"Complete HC blood count",
+    "Fees":50.00,
+    "CGSTPercentage":9.00,    
+    "SGSTPercentage":9.00
+}
+
+{
+    "result": {
+        "OUT_TEST_ID": 3,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-----------------------------------------
+
+
+UpdateLabTestMaster
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,    
+    "TestID": 3,    
+    "TestName":"Henoglobin Count",
+    "ShortName":"HC",
+    "Description":"Complete Blood HC count with reference values",
+    "TestType":1,
+    "NormalRange":"4.7-6.1",
+    "Units":"mg/dL",
+    "Remarks":"Complete HC blood count",
+    "Fees":90.00,
+    "CGSTPercentage":9.00,    
+    "SGSTPercentage":9.00,
+    "Status":1
+}
+
+{
+    "result": {
+        "IN_TEST_ID": 3,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+----------------------------------------
+
+DeleteLabTestMaster
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+   "TestID": 1
+}
+
+{
+    "result": {
+        "IN_TEST_ID": 1,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+
 

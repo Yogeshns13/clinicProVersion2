@@ -15,7 +15,7 @@ import {
 import { addBranch } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import './BranchList.css';
+import styles from './BranchList.module.css';
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -120,9 +120,9 @@ const BranchList = () => {
   };
 
   const getStatusClass = (status) => {
-    if (status === 'active') return 'active';
-    if (status === 'inactive') return 'inactive';
-    return 'inactive';
+    if (status === 'active') return styles.active;
+    if (status === 'inactive') return styles.inactive;
+    return styles.inactive;
   };
 
   // ────────────────────────────────────────────────
@@ -208,24 +208,24 @@ const BranchList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className="clinic-loading">Loading branches...</div>;
+  if (loading) return <div className={styles.loading}>Loading branches...</div>;
 
-  if (error) return <div className="clinic-error">Error: {error.message || error}</div>;
+  if (error) return <div className={styles.error}>Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
   return (
-    <div className="clinic-list-wrapper">
+    <div className={styles.wrapper}>
       <ErrorHandler error={error} />
       <Header title="Branch Management" />
 
       {/* Toolbar */}
-      <div className="clinic-toolbar">
-        <div className="clinic-select-wrapper">
-          <FiHome className="clinic-select-icon" size={20} />
+      <div className={styles.toolbar}>
+        <div className={styles.selectWrapper}>
+          <FiHome className={styles.selectIcon} size={20} />
           <select
             value={selectedClinicId}
             onChange={(e) => setSelectedClinicId(e.target.value)}
-            className="clinic-select"
+            className={styles.select}
           >
             <option value="all">All Clinics</option>
             {clinics.map((clinic) => (
@@ -236,30 +236,30 @@ const BranchList = () => {
           </select>
         </div>
 
-        <div className="clinic-search-container">
+        <div className={styles.searchContainer}>
           <input
             type="text"
             placeholder="Search by branch name, clinic, location..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="clinic-search-input"
+            className={styles.searchInput}
           />
-          <button onClick={handleSearch} className="clinic-search-btn">
+          <button onClick={handleSearch} className={styles.searchBtn}>
             <FiSearch size={20} />
           </button>
         </div>
 
-        <div className="clinic-add-section">
-          <button onClick={openAddForm} className="branch-add-btn">
+        <div className={styles.addSection}>
+          <button onClick={openAddForm} className={styles.addBtn}>
             <FiPlus size={22} />Add Branch
           </button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="clinic-table-container">
-        <table className="clinic-table">
+      <div className={styles.tableContainer}>
+        <table className={styles.table}>
           <thead>
             <tr>
               <th>Branch Name</th>
@@ -273,7 +273,7 @@ const BranchList = () => {
           <tbody>
             {filteredBranches.length === 0 ? (
               <tr>
-                <td colSpan={6} className="clinic-no-data">
+                <td colSpan={6} className={styles.noData}>
                   {searchTerm ? 'No branches found.' : 'No branches registered yet.'}
                 </td>
               </tr>
@@ -281,13 +281,13 @@ const BranchList = () => {
               filteredBranches.map((branch) => (
                 <tr key={branch.id}>
                   <td>
-                    <div className="clinic-name-cell">
-                      <div className="clinic-avatar">
+                    <div className={styles.nameCell}>
+                      <div className={styles.avatar}>
                         {branch.name?.charAt(0).toUpperCase() || 'B'}
                       </div>
                       <div>
-                        <div className="clinic-name">{branch.name}</div>
-                        <div className="clinic-type">
+                        <div className={styles.name}>{branch.name}</div>
+                        <div className={styles.type}>
                           {getBranchTypeLabel(branch.branchType)}
                         </div>
                       </div>
@@ -295,18 +295,18 @@ const BranchList = () => {
                   </td>
                   <td>{branch.clinicName || '—'}</td>
                   <td>
-                    <span className="branch-type-badge">
+                    <span className={styles.branchTypeBadge}>
                       {getBranchTypeLabel(branch.branchType)}
                     </span>
                   </td>
                   <td>{branch.location || branch.address?.split(',')[0] || '—'}</td>
                   <td>
-                    <span className={`status-badge ${getStatusClass(branch.status)}`}>
+                    <span className={`${styles.statusBadge} ${getStatusClass(branch.status)}`}>
                       {branch.status.toUpperCase()}
                     </span>
                   </td>
                   <td>
-                    <button onClick={() => openDetails(branch)} className="clinic-details-btn">
+                    <button onClick={() => openDetails(branch)} className={styles.detailsBtn}>
                       View Details
                     </button>
                   </td>
@@ -319,57 +319,57 @@ const BranchList = () => {
 
       {/* ──────────────── Details Modal ──────────────── */}
       {selectedBranch && (
-        <div className="clinic-modal-overlay" onClick={closeModal}>
-          <div className="clinic-modal details-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="details-modal-header">
-              <div className="details-header-content">
-                <div className="clinic-avatar-large">
+        <div className={styles.modalOverlay} onClick={closeModal}>
+          <div className={`${styles.modal} ${styles.detailsModal}`} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.detailsModalHeader}>
+              <div className={styles.detailsHeaderContent}>
+                <div className={styles.avatarLarge}>
                   {selectedBranch.name?.charAt(0).toUpperCase() || 'B'}
                 </div>
                 <div>
                   <h2>{selectedBranch.name}</h2>
-                  <p className="clinic-subtitle">
+                  <p className={styles.subtitle}>
                     {getBranchTypeLabel(selectedBranch.branchType)}
                   </p>
                 </div>
               </div>
-              <div className="status-badge-large-wrapper">
-                <span className={`status-badge large ${getStatusClass(selectedBranch.status)}`}>
+              <div className={styles.statusBadgeLargeWrapper}>
+                <span className={`${styles.statusBadge} ${styles.large} ${getStatusClass(selectedBranch.status)}`}>
                   {selectedBranch.status.toUpperCase()}
                 </span>
               </div>
-              <button onClick={closeModal} className="clinic-modal-close">
+              <button onClick={closeModal} className={styles.modalClose}>
                 ×
               </button>
             </div>
 
-            <div className="details-modal-body">
-              <table className="details-table">
+            <div className={styles.detailsModalBody}>
+              <table className={styles.detailsTable}>
                 <tbody>
                   <tr>
-                    <td className="label">Clinic</td>
-                    <td className="value">{selectedBranch.clinicName || '—'}</td>
+                    <td className={styles.label}>Clinic</td>
+                    <td className={styles.value}>{selectedBranch.clinicName || '—'}</td>
                   </tr>
                   <tr>
-                    <td className="label">Branch Type</td>
-                    <td className="value">
+                    <td className={styles.label}>Branch Type</td>
+                    <td className={styles.value}>
                       {getBranchTypeLabel(selectedBranch.branchType)}
                     </td>
                   </tr>
                   <tr>
-                    <td className="label">Full Address</td>
-                    <td className="value">{selectedBranch.address || '—'}</td>
+                    <td className={styles.label}>Full Address</td>
+                    <td className={styles.value}>{selectedBranch.address || '—'}</td>
                   </tr>
                   <tr>
-                    <td className="label">Location</td>
-                    <td className="value">{selectedBranch.location || '—'}</td>
+                    <td className={styles.label}>Location</td>
+                    <td className={styles.value}>{selectedBranch.location || '—'}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <div className="clinic-modal-footer">
-              <button onClick={() => handleUpdateClick(selectedBranch)} className="btn-update">
+            <div className={styles.modalFooter}>
+              <button onClick={() => handleUpdateClick(selectedBranch)} className={styles.btnUpdate}>
                 Update Branch
               </button>
             </div>
@@ -379,25 +379,25 @@ const BranchList = () => {
 
       {/* ──────────────── Add Form Modal ──────────────── */}
       {isAddFormOpen && (
-        <div className="clinic-modal-overlay" onClick={closeAddForm}>
-          <div className="clinic-modal form-modal employee-form-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="clinic-modal-header">
+        <div className={styles.modalOverlay} onClick={closeAddForm}>
+          <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
               <h2>Add New Branch</h2>
-              <button onClick={closeAddForm} className="clinic-modal-close">
+              <button onClick={closeAddForm} className={styles.modalClose}>
                 <FiX />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="clinic-modal-body">
-              {formError && <div className="form-error">{formError}</div>}
-              {formSuccess && <div className="form-success">Branch added successfully!</div>}
+            <form onSubmit={handleSubmit} className={styles.modalBody}>
+              {formError && <div className={styles.formError}>{formError}</div>}
+              {formSuccess && <div className={styles.formSuccess}>Branch added successfully!</div>}
 
-              <div className="form-grid">
-                <h3 className="form-section-title">Branch Information</h3>
+              <div className={styles.formGrid}>
+                <h3 className={styles.formSectionTitle}>Branch Information</h3>
 
-                <div className="form-group full-width">
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>
-                    Clinic <span className="required">*</span>
+                    Clinic <span className={styles.required}>*</span>
                   </label>
                   <select
                     required
@@ -414,9 +414,9 @@ const BranchList = () => {
                   </select>
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>
-                    Branch Name <span className="required">*</span>
+                    Branch Name <span className={styles.required}>*</span>
                   </label>
                   <input
                     required
@@ -426,9 +426,9 @@ const BranchList = () => {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>
-                    Branch Type <span className="required">*</span>
+                    Branch Type <span className={styles.required}>*</span>
                   </label>
                   <select
                     required
@@ -444,7 +444,7 @@ const BranchList = () => {
                   </select>
                 </div>
 
-                <div className="form-group full-width">
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>Full Address</label>
                   <textarea
                     name="address"
@@ -454,7 +454,7 @@ const BranchList = () => {
                   />
                 </div>
 
-                <div className="form-group full-width">
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>Location (Area/City)</label>
                   <input
                     name="location"
@@ -464,11 +464,11 @@ const BranchList = () => {
                 </div>
               </div>
 
-              <div className="clinic-modal-footer">
-                <button type="button" onClick={closeAddForm} className="btn-cancel">
+              <div className={styles.modalFooter}>
+                <button type="button" onClick={closeAddForm} className={styles.btnCancel}>
                   Cancel
                 </button>
-                <button type="submit" disabled={formLoading} className="btn-submit">
+                <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
                   {formLoading ? 'Adding...' : 'Add Branch'}
                 </button>
               </div>

@@ -5,7 +5,7 @@ import { FiX, FiArrowLeft, FiSave } from 'react-icons/fi';
 import { getClinicList, updateClinic } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import './ClinicList.css';
+import styles from './ClinicList.module.css';
 
 // ────────────────────────────────────────────────
 const STATUS_OPTIONS = [
@@ -147,15 +147,15 @@ const UpdateClinic = () => {
   }
 
   if (loading) {
-    return <div className="clinic-loading">Loading clinic data...</div>;
+    return <div className={styles.clinicLoading}>Loading clinic data...</div>;
   }
 
   if (error) {
     return (
-      <div className="clinic-list-wrapper">
+      <div className={styles.clinicListWrapper}>
         <Header title="Update Clinic" />
-        <div className="clinic-error">Error: {error.message || error}</div>
-        <button onClick={handleBack} className="clinic-add-btn clinic-back-btn">
+        <div className={styles.clinicError}>Error: {error.message || error}</div>
+        <button onClick={handleBack} className={`${styles.clinicAddBtn} ${styles.clinicBackBtn}`}>
           <FiArrowLeft /> Back to List
         </button>
       </div>
@@ -164,10 +164,10 @@ const UpdateClinic = () => {
 
   if (!clinicData) {
     return (
-      <div className="clinic-list-wrapper">
+      <div className={styles.clinicListWrapper}>
         <Header title="Update Clinic" />
-        <div className="clinic-error">Clinic not found</div>
-        <button onClick={handleBack} className="clinic-add-btn clinic-back-btn">
+        <div className={styles.clinicError}>Clinic not found</div>
+        <button onClick={handleBack} className={`${styles.clinicAddBtn} ${styles.clinicBackBtn}`}>
           <FiArrowLeft /> Back to List
         </button>
       </div>
@@ -176,32 +176,32 @@ const UpdateClinic = () => {
 
   // ────────────────────────────────────────────────
   return (
-    <div className="clinic-list-wrapper">
+    <div className={styles.clinicListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Update Clinic" />
 
-      <div className="clinic-toolbar">
-        <button onClick={handleBack} className="clinic-add-btn">
+      <div className={styles.clinicToolbar}>
+        <button onClick={handleBack} className={styles.clinicAddBtn}>
            Back to List
         </button>
       </div>
 
-      <div className="clinic-table-container update-employee-container" style={{ padding: '20px', borderRadius: '17px' }}>
-        <div className="clinic-modal form-modal update-employee-form" style={{ maxWidth: 'none', width: '100%', maxHeight: 'none' }}>
-          <div className="clinic-modal-header update-employee-header">
+      <div className={`${styles.clinicTableContainer} ${styles.updateEmployeeContainer}`} style={{ padding: '20px', borderRadius: '17px' }}>
+        <div className={`${styles.clinicModal} ${styles.formModal} ${styles.updateEmployeeForm}`} style={{ maxWidth: 'none', width: '100%', maxHeight: 'none' }}>
+          <div className={`${styles.clinicModalHeader} ${styles.updateEmployeeHeader}`}>
             <h2>Update Clinic: {formData.clinicName}</h2>
           </div>
 
-          <form onSubmit={handleSubmit} className="clinic-modal-body">
-            {formError && <div className="form-error">{formError}</div>}
-            {formSuccess && <div className="form-success">Clinic updated successfully!</div>}
+          <form onSubmit={handleSubmit} className={styles.clinicModalBody}>
+            {formError && <div className={styles.formError}>{formError}</div>}
+            {formSuccess && <div className={styles.formSuccess}>Clinic updated successfully!</div>}
 
-            <div className="form-grid">
-              <h3 className="form-section-title">Basic Information</h3>
+            <div className={styles.formGrid}>
+              <h3 className={styles.formSectionTitle}>Basic Information</h3>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Clinic Name <span className="required">*</span>
+                  Clinic Name <span className={styles.required}>*</span>
                 </label>
                 <input
                   required
@@ -211,7 +211,7 @@ const UpdateClinic = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Clinic Type</label>
                 <input
                   name="clinicType"
@@ -220,9 +220,9 @@ const UpdateClinic = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Owner Name <span className="required">*</span>
+                  Owner Name <span className={styles.required}>*</span>
                 </label>
                 <input
                   required
@@ -232,7 +232,7 @@ const UpdateClinic = () => {
                 />
               </div>
 
-              <div className="form-group full-width">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>Address</label>
                 <textarea
                   name="address"
@@ -242,7 +242,7 @@ const UpdateClinic = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Location</label>
                 <input
                   name="location"
@@ -251,11 +251,11 @@ const UpdateClinic = () => {
                 />
               </div>
 
-              <h3 className="form-section-title">Contact Information</h3>
+              <h3 className={styles.formSectionTitle}>Contact Information</h3>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Mobile <span className="required">*</span>
+                  Mobile <span className={styles.required}>*</span>
                 </label>
                 <input
                   required
@@ -265,7 +265,7 @@ const UpdateClinic = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Alternate Mobile</label>
                 <input
                   name="altMobile"
@@ -274,7 +274,7 @@ const UpdateClinic = () => {
                 />
               </div>
 
-              <div className="form-group full-width">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>Email</label>
                 <input
                   type="email"
@@ -284,9 +284,9 @@ const UpdateClinic = () => {
                 />
               </div>
 
-              <h3 className="form-section-title">Tax Information</h3>
+              <h3 className={styles.formSectionTitle}>Tax Information</h3>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>GST Number</label>
                 <input
                   name="gstNo"
@@ -295,7 +295,7 @@ const UpdateClinic = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>CGST Percentage</label>
                 <input
                   type="number"
@@ -307,7 +307,7 @@ const UpdateClinic = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>SGST Percentage</label>
                 <input
                   type="number"
@@ -319,9 +319,9 @@ const UpdateClinic = () => {
                 />
               </div>
 
-              <h3 className="form-section-title">Billing Configuration</h3>
+              <h3 className={styles.formSectionTitle}>Billing Configuration</h3>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>File No Prefix</label>
                 <input
                   name="fileNoPrefix"
@@ -330,7 +330,7 @@ const UpdateClinic = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Invoice Prefix</label>
                 <input
                   name="invoicePrefix"
@@ -339,9 +339,9 @@ const UpdateClinic = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Status <span className="required">*</span>
+                  Status <span className={styles.required}>*</span>
                 </label>
                 <select required name="status" value={formData.status} onChange={handleInputChange}>
                   {STATUS_OPTIONS.map((status) => (
@@ -353,12 +353,12 @@ const UpdateClinic = () => {
               </div>
             </div>
 
-            <div className="clinic-modal-footer update-employee-footer">
-              <button type="button" onClick={handleBack} className="btn-cancel">
+            <div className={`${styles.clinicModalFooter} ${styles.updateEmployeeFooter}`}>
+              <button type="button" onClick={handleBack} className={styles.btnCancel}>
                 Cancel
               </button>
-              <button type="submit" disabled={formLoading} className="btn-submit">
-                <FiSave className="btn-icon" />
+              <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
+                <FiSave className={styles.btnIcon} />
                 {formLoading ? 'Updating...' : 'Update Clinic'}
               </button>
             </div>

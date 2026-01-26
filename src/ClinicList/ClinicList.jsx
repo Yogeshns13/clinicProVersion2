@@ -12,7 +12,7 @@ import {
 } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import './ClinicList.css';
+import styles from './ClinicList.module.css';
 
 // ────────────────────────────────────────────────
 const ClinicList = () => {
@@ -96,9 +96,9 @@ const ClinicList = () => {
   // ────────────────────────────────────────────────
   // Helper functions
   const getStatusClass = (status) => {
-    if (status === 'active') return 'active';
-    if (status === 'inactive') return 'inactive';
-    return 'inactive';
+    if (status === 'active') return styles.active;
+    if (status === 'inactive') return styles.inactive;
+    return styles.inactive;
   };
 
   // ────────────────────────────────────────────────
@@ -198,42 +198,42 @@ const ClinicList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className="clinic-loading">Loading clinics...</div>;
+  if (loading) return <div className={styles.clinicLoading}>Loading clinics...</div>;
 
-  if (error) return <div className="clinic-error">Error: {error.message || error}</div>;
+  if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
   return (
-    <div className="clinic-list-wrapper">
+    <div className={styles.clinicListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Clinic Management" />
 
       {/* Toolbar */}
-      <div className="clinic-toolbar">
-        <div className="clinic-search-container">
+      <div className={styles.clinicToolbar}>
+        <div className={styles.clinicSearchContainer}>
           <input
             type="text"
             placeholder="Search by name, owner, mobile, GST..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="clinic-search-input"
+            className={styles.clinicSearchInput}
           />
-          <button onClick={handleSearch} className="clinic-search-btn">
+          <button onClick={handleSearch} className={styles.clinicSearchBtn}>
             <FiSearch size={20} />
           </button>
         </div>
 
-        <div className="clinic-add-section">
-          <button onClick={openAddForm} className="clinic-add-btn">
+        <div className={styles.clinicAddSection}>
+          <button onClick={openAddForm} className={styles.clinicAddBtn}>
             <FiPlus size={22} /> Add Clinic
           </button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="clinic-table-container">
-        <table className="clinic-table">
+      <div className={styles.clinicTableContainer}>
+        <table className={styles.clinicTable}>
           <thead>
             <tr>
               <th>Clinic Name</th>
@@ -248,7 +248,7 @@ const ClinicList = () => {
           <tbody>
             {filteredClinics.length === 0 ? (
               <tr>
-                <td colSpan={7} className="clinic-no-data">
+                <td colSpan={7} className={styles.clinicNoData}>
                   {searchTerm ? 'No clinics found.' : 'No clinics registered yet.'}
                 </td>
               </tr>
@@ -256,13 +256,13 @@ const ClinicList = () => {
               filteredClinics.map((clinic) => (
                 <tr key={clinic.id}>
                   <td>
-                    <div className="clinic-name-cell">
-                      <div className="clinic-avatar">
+                    <div className={styles.clinicNameCell}>
+                      <div className={styles.clinicAvatar}>
                         {clinic.name?.charAt(0).toUpperCase() || 'C'}
                       </div>
                       <div>
-                        <div className="clinic-name">{clinic.name}</div>
-                        <div className="clinic-type">{clinic.email || '—'}</div>
+                        <div className={styles.clinicName}>{clinic.name}</div>
+                        <div className={styles.clinicType}>{clinic.email || '—'}</div>
                       </div>
                     </div>
                   </td>
@@ -271,12 +271,12 @@ const ClinicList = () => {
                   <td>{clinic.mobile || '—'}</td>
                   <td>{clinic.gstNo || '—'}</td>
                   <td>
-                    <span className={`status-badge ${getStatusClass(clinic.status)}`}>
+                    <span className={`${styles.statusBadge} ${getStatusClass(clinic.status)}`}>
                       {clinic.status.toUpperCase()}
                     </span>
                   </td>
                   <td>
-                    <button onClick={() => openDetails(clinic)} className="clinic-details-btn">
+                    <button onClick={() => openDetails(clinic)} className={styles.clinicDetailsBtn}>
                       View Details
                     </button>
                   </td>
@@ -289,81 +289,81 @@ const ClinicList = () => {
 
       {/* ──────────────── Details Modal ──────────────── */}
       {selectedClinic && (
-        <div className="clinic-modal-overlay" onClick={closeModal}>
-          <div className="clinic-modal details-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="details-modal-header">
-              <div className="details-header-content">
-                <div className="clinic-avatar-large">
+        <div className={styles.clinicModalOverlay} onClick={closeModal}>
+          <div className={`${styles.clinicModal} ${styles.detailsModal}`} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.detailsModalHeader}>
+              <div className={styles.detailsHeaderContent}>
+                <div className={styles.clinicAvatarLarge}>
                   {selectedClinic.name?.charAt(0).toUpperCase() || 'C'}
                 </div>
                 <div>
                   <h2>{selectedClinic.name}</h2>
-                  <p className="clinic-subtitle">{selectedClinic.clinicType || 'Clinic'}</p>
+                  <p className={styles.clinicSubtitle}>{selectedClinic.clinicType || 'Clinic'}</p>
                 </div>
               </div>
-              <div className="status-badge-large-wrapper">
-                <span className={`status-badge large ${getStatusClass(selectedClinic.status)}`}>
+              <div className={styles.statusBadgeLargeWrapper}>
+                <span className={`${styles.statusBadge} ${styles.large} ${getStatusClass(selectedClinic.status)}`}>
                   {selectedClinic.status.toUpperCase()}
                 </span>
               </div>
-              <button onClick={closeModal} className="clinic-modal-close">
+              <button onClick={closeModal} className={styles.clinicModalClose}>
                 ×
               </button>
             </div>
 
-            <div className="details-modal-body">
-              <table className="details-table">
+            <div className={styles.detailsModalBody}>
+              <table className={styles.detailsTable}>
                 <tbody>
                   <tr>
-                    <td className="label">Owner Name</td>
-                    <td className="value">{selectedClinic.ownerName || '—'}</td>
+                    <td className={styles.label}>Owner Name</td>
+                    <td className={styles.value}>{selectedClinic.ownerName || '—'}</td>
                   </tr>
                   <tr>
-                    <td className="label">Mobile</td>
-                    <td className="value">{selectedClinic.mobile || '—'}</td>
+                    <td className={styles.label}>Mobile</td>
+                    <td className={styles.value}>{selectedClinic.mobile || '—'}</td>
                   </tr>
                   <tr>
-                    <td className="label">Alt Mobile</td>
-                    <td className="value">{selectedClinic.altMobile || '—'}</td>
+                    <td className={styles.label}>Alt Mobile</td>
+                    <td className={styles.value}>{selectedClinic.altMobile || '—'}</td>
                   </tr>
                   <tr>
-                    <td className="label">Email</td>
-                    <td className="value">{selectedClinic.email || '—'}</td>
+                    <td className={styles.label}>Email</td>
+                    <td className={styles.value}>{selectedClinic.email || '—'}</td>
                   </tr>
                   <tr>
-                    <td className="label">Address</td>
-                    <td className="value">{selectedClinic.address || '—'}</td>
+                    <td className={styles.label}>Address</td>
+                    <td className={styles.value}>{selectedClinic.address || '—'}</td>
                   </tr>
                   <tr>
-                    <td className="label">Location</td>
-                    <td className="value">{selectedClinic.location || '—'}</td>
+                    <td className={styles.label}>Location</td>
+                    <td className={styles.value}>{selectedClinic.location || '—'}</td>
                   </tr>
                   <tr>
-                    <td className="label">GST No</td>
-                    <td className="value">{selectedClinic.gstNo || '—'}</td>
+                    <td className={styles.label}>GST No</td>
+                    <td className={styles.value}>{selectedClinic.gstNo || '—'}</td>
                   </tr>
                   <tr>
-                    <td className="label">CGST %</td>
-                    <td className="value">{selectedClinic.cgstPercentage || 0}%</td>
+                    <td className={styles.label}>CGST %</td>
+                    <td className={styles.value}>{selectedClinic.cgstPercentage || 0}%</td>
                   </tr>
                   <tr>
-                    <td className="label">SGST %</td>
-                    <td className="value">{selectedClinic.sgstPercentage || 0}%</td>
+                    <td className={styles.label}>SGST %</td>
+                    <td className={styles.value}>{selectedClinic.sgstPercentage || 0}%</td>
                   </tr>
                   <tr>
-                    <td className="label">File No Prefix</td>
-                    <td className="value">{selectedClinic.fileNoPrefix || '—'}</td>
+                    <td className={styles.label}>File No Prefix</td>
+                    <td className={styles.value}>{selectedClinic.fileNoPrefix || '—'}</td>
                   </tr>
                   <tr>
-                    <td className="label">Invoice Prefix</td>
-                    <td className="value">{selectedClinic.invoicePrefix || '—'}</td>
+                    <td className={styles.label}>Invoice Prefix</td>
+                    <td className={styles.value}>{selectedClinic.invoicePrefix || '—'}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <div className="clinic-modal-footer">
-              <button onClick={() => handleUpdateClick(selectedClinic)} className="btn-update">
+            <div className={styles.clinicModalFooter}>
+              <button onClick={() => handleUpdateClick(selectedClinic)} className={styles.btnUpdate}>
                 Update Clinic
               </button>
             </div>
@@ -373,26 +373,26 @@ const ClinicList = () => {
 
       {/* ──────────────── Add Form Modal ──────────────── */}
       {isAddFormOpen && (
-        <div className="clinic-modal-overlay" onClick={closeAddForm}>
-          <div className="clinic-modal form-modal employee-form-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="clinic-modal-header">
+        <div className={styles.clinicModalOverlay} onClick={closeAddForm}>
+          <div className={`${styles.clinicModal} ${styles.formModal} ${styles.employeeFormModal}`} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.clinicModalHeader}>
               <h2>Add New Clinic</h2>
-              <button onClick={closeAddForm} className="clinic-modal-close">
+              <button onClick={closeAddForm} className={styles.clinicModalClose}>
                 <FiX />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="clinic-modal-body">
-              {formError && <div className="form-error">{formError}</div>}
-              {formSuccess && <div className="form-success">Clinic added successfully!</div>}
+            <form onSubmit={handleSubmit} className={styles.clinicModalBody}>
+              {formError && <div className={styles.formError}>{formError}</div>}
+              {formSuccess && <div className={styles.formSuccess}>Clinic added successfully!</div>}
 
-              <div className="form-grid">
+              <div className={styles.formGrid}>
                 {/* Basic Information */}
-                <h3 className="form-section-title">Basic Information</h3>
+                <h3 className={styles.formSectionTitle}>Basic Information</h3>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>
-                    Clinic Name <span className="required">*</span>
+                    Clinic Name <span className={styles.required}>*</span>
                   </label>
                   <input
                     required
@@ -402,7 +402,7 @@ const ClinicList = () => {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>Clinic Type</label>
                   <input
                     name="clinicType"
@@ -411,9 +411,9 @@ const ClinicList = () => {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>
-                    Owner Name <span className="required">*</span>
+                    Owner Name <span className={styles.required}>*</span>
                   </label>
                   <input
                     required
@@ -423,7 +423,7 @@ const ClinicList = () => {
                   />
                 </div>
 
-                <div className="form-group full-width">
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>Address</label>
                   <textarea
                     name="address"
@@ -433,7 +433,7 @@ const ClinicList = () => {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>Location</label>
                   <input
                     name="location"
@@ -443,11 +443,11 @@ const ClinicList = () => {
                 </div>
 
                 {/* Contact Information */}
-                <h3 className="form-section-title">Contact Information</h3>
+                <h3 className={styles.formSectionTitle}>Contact Information</h3>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>
-                    Mobile <span className="required">*</span>
+                    Mobile <span className={styles.required}>*</span>
                   </label>
                   <input
                     required
@@ -457,7 +457,7 @@ const ClinicList = () => {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>Alternate Mobile</label>
                   <input
                     name="altMobile"
@@ -466,7 +466,7 @@ const ClinicList = () => {
                   />
                 </div>
 
-                <div className="form-group full-width">
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>Email</label>
                   <input
                     type="email"
@@ -477,9 +477,9 @@ const ClinicList = () => {
                 </div>
 
                 {/* Tax Information */}
-                <h3 className="form-section-title">Tax Information</h3>
+                <h3 className={styles.formSectionTitle}>Tax Information</h3>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>GST Number</label>
                   <input
                     name="gstNo"
@@ -488,7 +488,7 @@ const ClinicList = () => {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>CGST Percentage</label>
                   <input
                     type="number"
@@ -500,7 +500,7 @@ const ClinicList = () => {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>SGST Percentage</label>
                   <input
                     type="number"
@@ -513,9 +513,9 @@ const ClinicList = () => {
                 </div>
 
                 {/* Billing Configuration */}
-                <h3 className="form-section-title">Billing Configuration</h3>
+                <h3 className={styles.formSectionTitle}>Billing Configuration</h3>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>File No Prefix</label>
                   <input
                     name="fileNoPrefix"
@@ -524,7 +524,7 @@ const ClinicList = () => {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>Last File Sequence</label>
                   <input
                     type="number"
@@ -535,7 +535,7 @@ const ClinicList = () => {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>Invoice Prefix</label>
                   <input
                     name="invoicePrefix"
@@ -545,11 +545,11 @@ const ClinicList = () => {
                 </div>
               </div>
 
-              <div className="clinic-modal-footer">
-                <button type="button" onClick={closeAddForm} className="btn-cancel">
+              <div className={styles.clinicModalFooter}>
+                <button type="button" onClick={closeAddForm} className={styles.btnCancel}>
                   Cancel
                 </button>
-                <button type="submit" disabled={formLoading} className="btn-submit">
+                <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
                   {formLoading ? 'Adding...' : 'Add Clinic'}
                 </button>
               </div>

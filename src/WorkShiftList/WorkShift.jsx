@@ -14,7 +14,7 @@ import {
 } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import './WorkShift.css';
+import styles from './WorkShift.module.css';
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -59,9 +59,9 @@ const WorkShift = () => {
   // ────────────────────────────────────────────────
   // Get Clinic ID from localStorage
   const getStoredClinicId = () => {
-  const clinicId = localStorage.getItem('clinicID');
-  return clinicId ? parseInt(clinicId, 10) : null;
-};
+    const clinicId = localStorage.getItem('clinicID');
+    return clinicId ? parseInt(clinicId, 10) : null;
+  };
 
   // ────────────────────────────────────────────────
   // Helper function to calculate working hours
@@ -296,42 +296,42 @@ const WorkShift = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className="clinic-loading">Loading work shifts...</div>;
+  if (loading) return <div className={styles.loading}>Loading work shifts...</div>;
 
-  if (error) return <div className="clinic-error">Error: {error.message || error}</div>;
+  if (error) return <div className={styles.error}>Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
   return (
-    <div className="clinic-list-wrapper">
+    <div className={styles.shiftWrapper}>
       <ErrorHandler error={error} />
       <Header title="Work Shift Management" />
 
       {/* Toolbar */}
-      <div className="clinic-toolbar">
-        <div className="clinic-search-container">
+      <div className={styles.shiftToolbar}>
+        <div className={styles.searchContainer}>
           <input
             type="text"
             placeholder="Search by shift name, clinic, time..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="clinic-search-input"
+            className={styles.searchInput}
           />
-          <button onClick={handleSearch} className="clinic-search-btn branch-search-btn">
+          <button onClick={handleSearch} className={styles.searchBtn}>
             <FiSearch size={20} />
           </button>
         </div>
 
-        <div className="clinic-add-section">
-          <button onClick={openAddForm} className="clinic-add-btn branch-add-btn">
+        <div className={styles.addSection}>
+          <button onClick={openAddForm} className={styles.addBtn}>
             <FiPlus size={22} /> Add Shift
           </button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="clinic-table-container">
-        <table className="clinic-table">
+      <div className={styles.tableContainer}>
+        <table className={styles.shiftTable}>
           <thead>
             <tr>
               <th>Shift Name</th>
@@ -346,7 +346,7 @@ const WorkShift = () => {
           <tbody>
             {filteredShifts.length === 0 ? (
               <tr>
-                <td colSpan={7} className="clinic-no-data">
+                <td colSpan={7} className={styles.noData}>
                   {searchTerm ? 'No work shifts found.' : 'No work shifts registered yet.'}
                 </td>
               </tr>
@@ -354,12 +354,12 @@ const WorkShift = () => {
               filteredShifts.map((shift) => (
                 <tr key={shift.id}>
                   <td>
-                    <div className="clinic-name-cell">
-                      <div className="clinic-avatar">
+                    <div className={styles.shiftNameCell}>
+                      <div className={styles.shiftAvatar}>
                         {shift.shiftName?.charAt(0).toUpperCase() || 'S'}
                       </div>
                       <div>
-                        <div className="clinic-name">{shift.shiftName}</div>
+                        <div className={styles.shiftName}>{shift.shiftName}</div>
                       </div>
                     </div>
                   </td>
@@ -368,12 +368,12 @@ const WorkShift = () => {
                   <td>{formatTime(shift.timeEnd)}</td>
                   <td>{shift.workingHours ? `${shift.workingHours} hrs` : '—'}</td>
                   <td>
-                    <span className={`status-badge ${getStatusClass(shift.status)}`}>
+                    <span className={`${styles.statusBadge} ${styles[getStatusClass(shift.status)]}`}>
                       {shift.status.toUpperCase()}
                     </span>
                   </td>
                   <td>
-                    <button onClick={() => openDetails(shift)} className="clinic-details-btn">
+                    <button onClick={() => openDetails(shift)} className={styles.detailsBtn}>
                       View Details
                     </button>
                   </td>
@@ -386,30 +386,30 @@ const WorkShift = () => {
 
       {/* ──────────────── Details Modal ──────────────── */}
       {selectedShift && (
-        <div className="clinic-modal-overlay" onClick={closeModal}>
-          <div className="clinic-modal details-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="details-modal-header">
-              <div className="details-header-content">
-                <div className="clinic-avatar-large">
+        <div className={styles.modalOverlay} onClick={closeModal}>
+          <div className={`${styles.modal} ${styles.detailsModal}`} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.detailsModalHeader}>
+              <div className={styles.detailsHeaderContent}>
+                <div className={styles.shiftAvatarLarge}>
                   {selectedShift.shiftName?.charAt(0).toUpperCase() || 'S'}
                 </div>
                 <div>
                   <h2>{selectedShift.shiftName}</h2>
-                  <p className="clinic-subtitle">Work Shift</p>
+                  <p className={styles.shiftSubtitle}>Work Shift</p>
                 </div>
               </div>
-              <div className="status-badge-large-wrapper">
-                <span className={`status-badge large ${getStatusClass(selectedShift.status)}`}>
+              <div className={styles.statusBadgeLargeWrapper}>
+                <span className={`${styles.statusBadge} ${styles.large} ${styles[getStatusClass(selectedShift.status)]}`}>
                   {selectedShift.status.toUpperCase()}
                 </span>
               </div>
-              <button onClick={closeModal} className="clinic-modal-close">
+              <button onClick={closeModal} className={styles.modalClose}>
                 ×
               </button>
             </div>
 
-            <div className="details-modal-body">
-              <table className="details-table">
+            <div className={styles.detailsModalBody}>
+              <table className={styles.detailsTable}>
                 <tbody>
                   <tr>
                     <td className="label">Clinic</td>
@@ -445,16 +445,16 @@ const WorkShift = () => {
               </table>
             </div>
 
-            <div className="clinic-modal-footer">
+            <div className={styles.modalFooter}>
               <button 
                 onClick={() => openDeleteConfirm(selectedShift)} 
-                className="btn-hold"
+                className={styles.btnHold}
                 style={{ marginRight: 'auto' }}
               >
                 <FiTrash2 style={{ marginRight: '6px' }} />
                 Delete
               </button>
-              <button onClick={() => handleUpdateClick(selectedShift)} className="btn-update">
+              <button onClick={() => handleUpdateClick(selectedShift)} className={styles.btnUpdate}>
                 Update Shift
               </button>
             </div>
@@ -464,23 +464,23 @@ const WorkShift = () => {
 
       {/* ──────────────── Add Form Modal ──────────────── */}
       {isAddFormOpen && (
-        <div className="clinic-modal-overlay" onClick={closeAddForm}>
-          <div className="clinic-modal form-modal employee-form-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="clinic-modal-header">
+        <div className={styles.modalOverlay} onClick={closeAddForm}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
               <h2>Add New Work Shift</h2>
-              <button onClick={closeAddForm} className="clinic-modal-close">
+              <button onClick={closeAddForm} className={styles.modalClose}>
                 <FiX />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="clinic-modal-body">
-              {formError && <div className="form-error">{formError}</div>}
-              {formSuccess && <div className="form-success">Work shift added successfully!</div>}
+            <form onSubmit={handleSubmit} className={styles.modalBody}>
+              {formError && <div className={styles.formError}>{formError}</div>}
+              {formSuccess && <div className={styles.formSuccess}>Work shift added successfully!</div>}
 
-              <div className="form-grid">
-                <h3 className="form-section-title">Shift Information</h3>
+              <div className={styles.formGrid}>
+                <h3 className={styles.formSectionTitle}>Shift Information</h3>
 
-                <div className="form-group full-width">
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>
                     Shift Name <span className="required">*</span>
                   </label>
@@ -493,7 +493,7 @@ const WorkShift = () => {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>
                     Start Time <span className="required">*</span>
                   </label>
@@ -506,7 +506,7 @@ const WorkShift = () => {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>
                     End Time <span className="required">*</span>
                   </label>
@@ -519,7 +519,7 @@ const WorkShift = () => {
                   />
                 </div>
 
-                <div className="form-group full-width">
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>Working Hours</label>
                   <input
                     required
@@ -532,11 +532,11 @@ const WorkShift = () => {
                 </div>
               </div>
 
-              <div className="clinic-modal-footer">
-                <button type="button" onClick={closeAddForm} className="btn-cancel">
+              <div className={styles.modalFooter}>
+                <button type="button" onClick={closeAddForm} className={styles.btnCancel}>
                   Cancel
                 </button>
-                <button type="submit" disabled={formLoading} className="btn-submit">
+                <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
                   {formLoading ? 'Adding...' : 'Add Shift'}
                 </button>
               </div>
@@ -547,29 +547,29 @@ const WorkShift = () => {
 
       {/* ──────────────── Delete Confirmation Modal ──────────────── */}
       {deleteConfirmOpen && shiftToDelete && (
-        <div className="clinic-modal-overlay" onClick={closeDeleteConfirm}>
-          <div className="clinic-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px' }}>
-            <div className="clinic-modal-header">
+        <div className={styles.modalOverlay} onClick={closeDeleteConfirm}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px' }}>
+            <div className={styles.modalHeader}>
               <h2>Confirm Delete</h2>
-              <button onClick={closeDeleteConfirm} className="clinic-modal-close">
+              <button onClick={closeDeleteConfirm} className={styles.modalClose}>
                 <FiX />
               </button>
             </div>
 
-            <div className="clinic-modal-body">
+            <div className={styles.modalBody}>
               <p style={{ marginBottom: '20px', fontSize: '0.95rem', color: '#475569' }}>
                 Are you sure you want to delete the work shift <strong>"{shiftToDelete.shiftName}"</strong>? 
                 This action cannot be undone.
               </p>
             </div>
 
-            <div className="clinic-modal-footer">
-              <button onClick={closeDeleteConfirm} className="btn-cancel" disabled={deleteLoading}>
+            <div className={styles.modalFooter}>
+              <button onClick={closeDeleteConfirm} className={styles.btnCancel} disabled={deleteLoading}>
                 Cancel
               </button>
               <button 
                 onClick={handleDelete} 
-                className="btn-hold"
+                className={styles.btnHold}
                 disabled={deleteLoading}
                 style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}
               >

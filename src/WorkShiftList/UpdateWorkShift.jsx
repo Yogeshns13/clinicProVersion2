@@ -5,7 +5,7 @@ import { FiX, FiArrowLeft, FiSave } from 'react-icons/fi';
 import { getShiftList, updateShift } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import './WorkShift.css';
+import styles from './WorkShift.module.css';
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -39,10 +39,10 @@ const UpdateWorkShift = () => {
   const [formSuccess, setFormSuccess] = useState(false);
 
   // ────────────────────────────────────────────────
-const getStoredClinicId = () => {
-  const clinicId = localStorage.getItem('clinicID');
-  return clinicId ? parseInt(clinicId, 10) : null;
-};
+  const getStoredClinicId = () => {
+    const clinicId = localStorage.getItem('clinicID');
+    return clinicId ? parseInt(clinicId, 10) : null;
+  };
 
   // ────────────────────────────────────────────────
   // Helper functions
@@ -196,15 +196,15 @@ const getStoredClinicId = () => {
   }
 
   if (loading) {
-    return <div className="clinic-loading">Loading work shift data...</div>;
+    return <div className={styles.loading}>Loading work shift data...</div>;
   }
 
   if (error) {
     return (
-      <div className="clinic-list-wrapper">
+      <div className={styles.shiftWrapper}>
         <Header title="Update Work Shift" />
-        <div className="clinic-error">Error: {error.message || error}</div>
-        <button onClick={handleBack} className="clinic-add-btn clinic-back-btn">
+        <div className={styles.error}>Error: {error.message || error}</div>
+        <button onClick={handleBack} className={styles.backBtn}>
           <FiArrowLeft /> Back to List
         </button>
       </div>
@@ -213,10 +213,10 @@ const getStoredClinicId = () => {
 
   if (!shiftData) {
     return (
-      <div className="clinic-list-wrapper">
+      <div className={styles.shiftWrapper}>
         <Header title="Update Work Shift" />
-        <div className="clinic-error">Work shift not found</div>
-        <button onClick={handleBack} className="clinic-add-btn clinic-back-btn">
+        <div className={styles.error}>Work shift not found</div>
+        <button onClick={handleBack} className={styles.backBtn}>
           <FiArrowLeft /> Back to List
         </button>
       </div>
@@ -225,31 +225,31 @@ const getStoredClinicId = () => {
 
   // ────────────────────────────────────────────────
   return (
-    <div className="clinic-list-wrapper">
+    <div className={styles.shiftWrapper}>
       <ErrorHandler error={error} />
       <Header title="Update Work Shift" />
 
-      <div className="clinic-toolbar">
-        <button onClick={handleBack} className="clinic-add-btn">
+      <div className={styles.shiftToolbar}>
+        <button onClick={handleBack} className={styles.backBtn}>
           <FiArrowLeft style={{ marginRight: '8px' }} />
           Back to List
         </button>
       </div>
 
-      <div className="clinic-table-container update-employee-container" style={{ padding: '20px', borderRadius: '17px' }}>
-        <div className="clinic-modal form-modal update-employee-form" style={{ maxWidth: 'none', width: '100%', maxHeight: 'none' }}>
-          <div className="clinic-modal-header update-employee-header">
+      <div className={`${styles.tableContainer} ${styles.updateContainer}`} style={{ padding: '20px', borderRadius: '17px' }}>
+        <div className={`${styles.modal} ${styles.updateForm}`} style={{ maxWidth: 'none', width: '100%', maxHeight: 'none' }}>
+          <div className={`${styles.modalHeader} ${styles.updateHeader}`}>
             <h2>Update Work Shift: {formData.shiftName}</h2>
           </div>
 
-          <form onSubmit={handleSubmit} className="clinic-modal-body">
-            {formError && <div className="form-error">{formError}</div>}
-            {formSuccess && <div className="form-success">Work shift updated successfully!</div>}
+          <form onSubmit={handleSubmit} className={styles.modalBody}>
+            {formError && <div className={styles.formError}>{formError}</div>}
+            {formSuccess && <div className={styles.formSuccess}>Work shift updated successfully!</div>}
 
-            <div className="form-grid">
-              <h3 className="form-section-title">Shift Information</h3>
+            <div className={styles.formGrid}>
+              <h3 className={styles.formSectionTitle}>Shift Information</h3>
 
-              <div className="form-group full-width">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>
                   Shift Name <span className="required">*</span>
                 </label>
@@ -262,7 +262,7 @@ const getStoredClinicId = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
                   Start Time <span className="required">*</span>
                 </label>
@@ -275,7 +275,7 @@ const getStoredClinicId = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
                   End Time <span className="required">*</span>
                 </label>
@@ -288,7 +288,7 @@ const getStoredClinicId = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Working Hours</label>
                 <input
                   type="number"
@@ -300,7 +300,7 @@ const getStoredClinicId = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
                   Status <span className="required">*</span>
                 </label>
@@ -314,12 +314,12 @@ const getStoredClinicId = () => {
               </div>
             </div>
 
-            <div className="clinic-modal-footer update-employee-footer">
-              <button type="button" onClick={handleBack} className="btn-cancel">
+            <div className={`${styles.modalFooter} ${styles.updateFooter}`}>
+              <button type="button" onClick={handleBack} className={styles.btnCancel}>
                 Cancel
               </button>
-              <button type="submit" disabled={formLoading} className="btn-submit">
-                <FiSave className="btn-icon" style={{ marginRight: '6px' }} />
+              <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
+                <FiSave className={styles.btnIcon} style={{ marginRight: '6px' }} />
                 {formLoading ? 'Updating...' : 'Update Shift'}
               </button>
             </div>

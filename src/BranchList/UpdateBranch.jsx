@@ -5,7 +5,7 @@ import { FiX, FiArrowLeft, FiSave } from 'react-icons/fi';
 import { getBranchList, getClinicList, updateBranch } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import './BranchList.css';
+import styles from './BranchList.module.css';
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -138,15 +138,15 @@ const UpdateBranch = () => {
   }
 
   if (loading) {
-    return <div className="clinic-loading">Loading branch data...</div>;
+    return <div className={styles.loading}>Loading branch data...</div>;
   }
 
   if (error) {
     return (
-      <div className="clinic-list-wrapper">
+      <div className={styles.wrapper}>
         <Header title="Update Branch" />
-        <div className="clinic-error">Error: {error.message || error}</div>
-        <button onClick={handleBack} className="clinic-add-btn clinic-back-btn">
+        <div className={styles.error}>Error: {error.message || error}</div>
+        <button onClick={handleBack} className={`${styles.addBtn} ${styles.backBtn}`}>
           <FiArrowLeft /> Back to List
         </button>
       </div>
@@ -155,10 +155,10 @@ const UpdateBranch = () => {
 
   if (!branchData) {
     return (
-      <div className="clinic-list-wrapper">
+      <div className={styles.wrapper}>
         <Header title="Update Branch" />
-        <div className="clinic-error">Branch not found</div>
-        <button onClick={handleBack} className="clinic-add-btn clinic-back-btn">
+        <div className={styles.error}>Branch not found</div>
+        <button onClick={handleBack} className={`${styles.addBtn} ${styles.backBtn}`}>
           <FiArrowLeft /> Back to List
         </button>
       </div>
@@ -167,32 +167,32 @@ const UpdateBranch = () => {
 
   // ────────────────────────────────────────────────
   return (
-    <div className="clinic-list-wrapper">
+    <div className={styles.wrapper}>
       <ErrorHandler error={error} />
       <Header title="Update Branch" />
 
-      <div className="clinic-toolbar">
-        <button onClick={handleBack} className="clinic-add-btn">
-         Back to List
+      <div className={styles.toolbar}>
+        <button onClick={handleBack} className={styles.addBtn}>
+          Back to List
         </button>
       </div>
 
-      <div className="clinic-table-container update-employee-container" style={{ padding: '20px', borderRadius: '17px' }}>
-        <div className="clinic-modal form-modal update-employee-form" style={{ maxWidth: 'none', width: '100%', maxHeight: 'none' }}>
-          <div className="clinic-modal-header update-employee-header">
+      <div className={`${styles.tableContainer} ${styles.updateContainer}`} style={{ padding: '20px', borderRadius: '17px' }}>
+        <div className={`${styles.modal} ${styles.formModal} ${styles.updateForm}`} style={{ maxWidth: 'none', width: '100%', maxHeight: 'none' }}>
+          <div className={`${styles.modalHeader} ${styles.updateHeader}`}>
             <h2>Update Branch: {formData.branchName}</h2>
           </div>
 
-          <form onSubmit={handleSubmit} className="clinic-modal-body">
-            {formError && <div className="form-error">{formError}</div>}
-            {formSuccess && <div className="form-success">Branch updated successfully!</div>}
+          <form onSubmit={handleSubmit} className={styles.modalBody}>
+            {formError && <div className={styles.formError}>{formError}</div>}
+            {formSuccess && <div className={styles.formSuccess}>Branch updated successfully!</div>}
 
-            <div className="form-grid">
-              <h3 className="form-section-title">Branch Information</h3>
+            <div className={styles.formGrid}>
+              <h3 className={styles.formSectionTitle}>Branch Information</h3>
 
-              <div className="form-group full-width">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>
-                  Clinic <span className="required">*</span>
+                  Clinic <span className={styles.required}>*</span>
                 </label>
                 <select
                   required
@@ -209,9 +209,9 @@ const UpdateBranch = () => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Branch Name <span className="required">*</span>
+                  Branch Name <span className={styles.required}>*</span>
                 </label>
                 <input
                   required
@@ -221,9 +221,9 @@ const UpdateBranch = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Branch Type <span className="required">*</span>
+                  Branch Type <span className={styles.required}>*</span>
                 </label>
                 <select
                   required
@@ -239,7 +239,7 @@ const UpdateBranch = () => {
                 </select>
               </div>
 
-              <div className="form-group full-width">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>Full Address</label>
                 <textarea
                   name="address"
@@ -249,7 +249,7 @@ const UpdateBranch = () => {
                 />
               </div>
 
-              <div className="form-group full-width">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>Location (Area/City)</label>
                 <input
                   name="location"
@@ -258,9 +258,9 @@ const UpdateBranch = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Status <span className="required">*</span>
+                  Status <span className={styles.required}>*</span>
                 </label>
                 <select required name="status" value={formData.status} onChange={handleInputChange}>
                   {STATUS_OPTIONS.map((status) => (
@@ -272,12 +272,12 @@ const UpdateBranch = () => {
               </div>
             </div>
 
-            <div className="clinic-modal-footer update-employee-footer">
-              <button type="button" onClick={handleBack} className="btn-cancel">
+            <div className={`${styles.modalFooter} ${styles.updateFooter}`}>
+              <button type="button" onClick={handleBack} className={styles.btnCancel}>
                 Cancel
               </button>
-              <button type="submit" disabled={formLoading} className="btn-submit">
-                <FiSave className="btn-icon" />
+              <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
+                <FiSave className={styles.btnIcon} />
                 {formLoading ? 'Updating...' : 'Update Branch'}
               </button>
             </div>

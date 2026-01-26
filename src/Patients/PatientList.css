@@ -1,5 +1,6 @@
 /* src/components/PatientList.css */
 /* FULL CSS WITH ~15% SIZE REDUCTION APPLIED TO PADDINGS, FONTS, WIDTHS, HEIGHTS, RADII, ETC. */
+/* POPUP CONTAINERS REDUCED BY ADDITIONAL 15% */
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
@@ -39,95 +40,55 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* ==================== PROFILE HEADER ==================== */
-.header-profile-container {
-  position: relative;
-}
-
-.header-profile {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 3px;
-  border-radius: 50px;
-  cursor: pointer;
-  color: white;
-  font-size: 0.9rem;
-  font-weight: 500;
-  background-color: var(--accent-start);
-  transition: all 0.2s ease;
-}
-
-.header-profile:hover {
-  background: var(--accent-end);
-  transform: translateY(-1px);
-}
-
-.user-icon-wrapper {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--accent-start);
-}
-
-.user-icon-wrapper svg {
-  color: #ffffff;
-  stroke-width: 2;
-}
-
-/* ==================== PROFILE DROPDOWN ==================== */
-.profile-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 8px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
-  min-width: 180px;
-  z-index: 100;
-  overflow: hidden;
-  border: 1px solid rgba(34, 43, 108, 0.1);
-}
-
-.profile-dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  color: #1e293b;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.profile-dropdown-item:hover {
-  background: #f1f5f9;
-}
-
-.profile-dropdown-item svg {
-  color: #64748b;
-}
-
-.username-item {
-  border-bottom: 1px solid #e2e8f0;
-  font-weight: 600;
-}
-
 /* ==================== TOOLBAR ==================== */
 .clinic-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 20px;
   margin-bottom: 20px;
-  width: 100%;
+  flex-wrap: wrap;
 }
 
+/* Select Dropdowns */
+.clinic-select-wrapper {
+  position: relative;
+}
+
+.clinic-select {
+  height: 40px;
+  padding: 10px 35px 10px 15px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  color: var(--text-dark);
+  font-size: 0.94rem;
+  font-weight: 500;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  appearance: none;
+  min-width: 160px;
+}
+
+.clinic-select:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18), 0 8px 25px rgba(34, 43, 108, 0.12);
+}
+
+.clinic-select-wrapper::after {
+  content: '▼';
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #64748b;
+  font-size: 0.7rem;
+}
+
+/* Search Container */
 .clinic-toolbar .clinic-search-container {
   flex: 1;
   min-width: 255px;
@@ -135,7 +96,7 @@
 }
 
 .clinic-toolbar .clinic-search-input {
-  width: 80%;
+  width: 100%;
   height: 40px;
   padding: 15px 60px 15px 20px;
   background: white;
@@ -159,7 +120,7 @@
 
 .clinic-toolbar .clinic-search-btn {
   position: absolute;
-  right: 160px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
   width: 40px;
@@ -181,13 +142,18 @@
   box-shadow: 0 8px 24px rgba(32, 125, 156, 0.45);
 }
 
+/* Add Patient Button */
+.clinic-add-section {
+  display: flex;
+  align-items: center;
+}
+
 .patient-add-btn {
   display: flex;
   align-items: center;
   height: 40px;
-  width: 150px;
   gap: 10px;
-  padding: 10px 15px;
+  padding: 10px 20px;
   background: linear-gradient(135deg, #016183, var(--primary-end));
   color: var(--text-light);
   font-weight: 700;
@@ -200,7 +166,7 @@
   white-space: nowrap;
 }
 
-.clinic-add-btn:hover {
+.patient-add-btn:hover {
   transform: translateY(-3px);
   box-shadow: 0 14px 34px rgba(32, 125, 156, 0.45);
 }
@@ -289,6 +255,19 @@
   margin-top: 2px;
 }
 
+/* Branch Type Badge (for Blood Group) */
+.branch-type-badge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.1), rgba(48, 178, 181, 0.1));
+  border: 1px solid rgba(48, 178, 181, 0.3);
+  color: var(--accent-end);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
 /* ==================== STATUS BADGES ==================== */
 .status-badge {
   padding: 5px 12px;
@@ -300,7 +279,9 @@
 }
 
 .status-badge.active {
+  background: rgba(34, 197, 94, 0.15);
   color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .status-badge.inactive {
@@ -309,25 +290,13 @@
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-.status-badge.large {
-  padding: 9px 17px;
-  font-size: 0.77rem;
-}
-
-.branch-type-badge {
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.08), rgba(48, 178, 181, 0.08));
-  color: var(--primary-start);
-  border: 1px solid rgba(34, 43, 108, 0.15);
-}
-
 /* ==================== BUTTONS ==================== */
 .clinic-details-btn {
   position: relative;
   overflow: hidden;
+  padding: 7px 15px;
+  font-size: 0.75rem;
+  border-radius: 9px;
   background: linear-gradient(135deg, #016183, var(--primary-end));
   color: var(--text-light);
   border: none;
@@ -335,11 +304,8 @@
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
-  z-index: 1;
-  padding: 7px 15px;
-  font-size: 0.75rem;
-  border-radius: 9px;
   white-space: nowrap;
+  z-index: 1;
 }
 
 .clinic-details-btn::before {
@@ -371,7 +337,7 @@
   transform: translateY(-1px);
 }
 
-/* ==================== UTILITY CLASSES ==================== */
+/* ==================== UTILITY STATES ==================== */
 .clinic-no-data {
   text-align: center;
   padding: 68px 17px;
@@ -393,44 +359,6 @@
   color: #ef4444;
 }
 
-.clinic-select-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.clinic-select-icon {
-  position: absolute;
-  left: 14px;
-  color: var(--text-dark);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.clinic-select {
-  width: 100%;
-  height: 40px;
-  padding: 10px 14px 10px 44px;
-  background: white;
-  border: 1px solid #cbd5e1;
-  border-radius: 14px;
-  color: var(--text-dark);
-  font-size: 0.94rem;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  transition: all 0.3s ease;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
-  background-position: right 12px center;
-  background-repeat: no-repeat;
-  background-size: 12px;
-}
-
-.clinic-select:focus {
-  outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18), 0 8px 25px rgba(34, 43, 108, 0.12);
-}
-
 /* ==================== DARK MODE ==================== */
 .dark-mode {
   --glass-bg: rgba(30, 41, 59, 0.92);
@@ -440,15 +368,28 @@
 }
 
 .dark-mode .clinic-list-wrapper {
-  background-color: var(--text-dark);
-  background: #1e293b;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
 }
 
-.dark-mode .clinic-toolbar .clinic-search-input,
 .dark-mode .clinic-select {
   background: #1e293b;
   border-color: #475569;
   color: #e2e8f0;
+}
+
+.dark-mode .clinic-select-wrapper::after {
+  color: #94a3b8;
+}
+
+.dark-mode .clinic-toolbar .clinic-search-input {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark-mode .clinic-toolbar .clinic-search-input::placeholder {
+  color: #64748b;
 }
 
 .dark-mode .clinic-table-container {
@@ -469,39 +410,73 @@
   background-color: #334155;
 }
 
-.dark-mode .status-badge.active {
-  color: #9cc14d;
+.dark-mode .clinic-table tbody tr:hover {
+  background-color: rgba(48, 178, 181, 0.12) !important;
 }
 
-.dark-mode .profile-dropdown {
-  background: rgba(30, 41, 59, 0.9);
-  border: #ffffff 0.5px solid;
+.dark-mode .clinic-name {
+  color: #e2e8f0;
 }
 
-.dark-mode .profile-dropdown-item {
-  color: var(--text-light);
+.dark-mode .clinic-type {
+  color: #94a3b8;
 }
 
-.dark-mode .profile-dropdown-item:hover {
-  background: #000000;
-}
-
-.dark-mode .profile-dropdown-item svg {
+.dark-mode .branch-type-badge {
+  background: linear-gradient(135deg, rgba(48, 178, 181, 0.15), rgba(48, 178, 181, 0.2));
+  border-color: rgba(48, 178, 181, 0.4);
   color: var(--accent-end);
 }
 
+.dark-mode .status-badge.active {
+  background: rgba(34, 197, 94, 0.2);
+  color: #9cc14d;
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.dark-mode .status-badge.inactive {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
 /* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 1024px) {
+  .clinic-toolbar {
+    gap: 15px;
+  }
+
+  .clinic-select {
+    min-width: 140px;
+  }
+}
+
 @media (max-width: 768px) {
   .clinic-toolbar {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
+  }
+
+  .clinic-select-wrapper {
+    width: 100%;
+  }
+
+  .clinic-select {
+    width: 100%;
+    min-width: 100%;
   }
 
   .clinic-toolbar .clinic-search-container {
     min-width: 100%;
+    width: 100%;
   }
 
-  .clinic-add-btn {
+  .clinic-add-section {
+    width: 100%;
+  }
+
+  .patient-add-btn {
     width: 100%;
     justify-content: center;
   }
@@ -515,10 +490,54 @@
     padding: 7px 14px;
     font-size: 0.72rem;
   }
+
+  /* Make table scrollable on mobile */
+  .clinic-table-container {
+    overflow-x: auto;
+  }
+
+  .clinic-table {
+    min-width: 800px;
+  }
 }
 
 @media (max-width: 480px) {
   .clinic-list-wrapper {
     padding: 14px;
+  }
+
+  .clinic-toolbar {
+    gap: 10px;
+  }
+
+  .clinic-table th,
+  .clinic-table td {
+    padding: 10px 12px;
+    font-size: 0.7rem;
+  }
+
+  .clinic-name {
+    font-size: 0.8rem;
+  }
+
+  .clinic-type {
+    font-size: 0.68rem;
+  }
+
+  .clinic-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+
+  .clinic-details-btn {
+    padding: 6px 12px;
+    font-size: 0.7rem;
+  }
+
+  .branch-type-badge,
+  .status-badge {
+    padding: 4px 10px;
+    font-size: 0.65rem;
   }
 }

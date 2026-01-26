@@ -5,7 +5,7 @@ import { FiX, FiArrowLeft, FiSave } from 'react-icons/fi';
 import { getDepartmentList, getClinicList, getBranchList, updateDepartment } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import './DepartmentList.css';
+import styles from './DepartmentList.module.css'; // CSS Module import
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -145,15 +145,15 @@ const UpdateDepartment = () => {
   }
 
   if (loading) {
-    return <div className="clinic-loading">Loading department data...</div>;
+    return <div className={styles.clinicLoading}>Loading department data...</div>;
   }
 
   if (error) {
     return (
-      <div className="clinic-list-wrapper">
+      <div className={styles.clinicListWrapper}>
         <Header title="Update Department" />
-        <div className="clinic-error">Error: {error.message || error}</div>
-        <button onClick={handleBack} className="clinic-add-btn clinic-back-btn">
+        <div className={styles.clinicError}>Error: {error.message || error}</div>
+        <button onClick={handleBack} className={`${styles.clinicAddBtn} ${styles.clinicBackBtn}`}>
           <FiArrowLeft /> Back to List
         </button>
       </div>
@@ -162,10 +162,10 @@ const UpdateDepartment = () => {
 
   if (!departmentData) {
     return (
-      <div className="clinic-list-wrapper">
+      <div className={styles.clinicListWrapper}>
         <Header title="Update Department" />
-        <div className="clinic-error">Department not found</div>
-        <button onClick={handleBack} className="clinic-add-btn clinic-back-btn">
+        <div className={styles.clinicError}>Department not found</div>
+        <button onClick={handleBack} className={`${styles.clinicAddBtn} ${styles.clinicBackBtn}`}>
           <FiArrowLeft /> Back to List
         </button>
       </div>
@@ -174,32 +174,32 @@ const UpdateDepartment = () => {
 
   // ────────────────────────────────────────────────
   return (
-    <div className="clinic-list-wrapper">
+    <div className={styles.clinicListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Update Department" />
 
-      <div className="clinic-toolbar">
-        <button onClick={handleBack} className="clinic-add-btn">
-           Back to List
+      <div className={styles.clinicToolbar}>
+        <button onClick={handleBack} className={styles.clinicAddBtn}>
+          Back to List
         </button>
       </div>
 
-      <div className="clinic-table-container update-employee-container" style={{ padding: '20px', borderRadius: '17px' }}>
-        <div className="clinic-modal form-modal update-employee-form" style={{ maxWidth: 'none', width: '100%', maxHeight: 'none' }}>
-          <div className="clinic-modal-header update-employee-header">
+      <div className={`${styles.clinicTableContainer} ${styles.updateEmployeeContainer}`} style={{ padding: '20px', borderRadius: '17px' }}>
+        <div className={`${styles.clinicModal} ${styles.formModal} ${styles.updateEmployeeForm}`} style={{ maxWidth: 'none', width: '100%', maxHeight: 'none' }}>
+          <div className={`${styles.clinicModalHeader} ${styles.updateEmployeeHeader}`}>
             <h2>Update Department: {formData.departmentName}</h2>
           </div>
 
-          <form onSubmit={handleSubmit} className="clinic-modal-body">
-            {formError && <div className="form-error">{formError}</div>}
-            {formSuccess && <div className="form-success">Department updated successfully!</div>}
+          <form onSubmit={handleSubmit} className={styles.clinicModalBody}>
+            {formError && <div className={styles.formError}>{formError}</div>}
+            {formSuccess && <div className={styles.formSuccess}>Department updated successfully!</div>}
 
-            <div className="form-grid">
-              <h3 className="form-section-title">Department Information</h3>
+            <div className={styles.formGrid}>
+              <h3 className={styles.formSectionTitle}>Department Information</h3>
 
-              <div className="form-group full-width">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>
-                  Clinic <span className="required">*</span>
+                  Clinic <span className={styles.required}>*</span>
                 </label>
                 <select
                   required
@@ -216,9 +216,9 @@ const UpdateDepartment = () => {
                 </select>
               </div>
 
-              <div className="form-group full-width">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>
-                  Branch <span className="required">*</span>
+                  Branch <span className={styles.required}>*</span>
                 </label>
                 <select
                   required
@@ -236,9 +236,9 @@ const UpdateDepartment = () => {
                 </select>
               </div>
 
-              <div className="form-group full-width">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>
-                  Department Name <span className="required">*</span>
+                  Department Name <span className={styles.required}>*</span>
                 </label>
                 <input
                   required
@@ -248,7 +248,7 @@ const UpdateDepartment = () => {
                 />
               </div>
 
-              <div className="form-group full-width">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>Description / Profile</label>
                 <textarea
                   name="profile"
@@ -259,12 +259,12 @@ const UpdateDepartment = () => {
               </div>
             </div>
 
-            <div className="clinic-modal-footer update-employee-footer">
-              <button type="button" onClick={handleBack} className="btn-cancel">
+            <div className={`${styles.clinicModalFooter} ${styles.updateEmployeeFooter}`}>
+              <button type="button" onClick={handleBack} className={styles.btnCancel}>
                 Cancel
               </button>
-              <button type="submit" disabled={formLoading} className="btn-submit">
-                <FiSave className="btn-icon" />
+              <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
+                <FiSave className={styles.btnIcon} />
                 {formLoading ? 'Updating...' : 'Update Department'}
               </button>
             </div>

@@ -17,7 +17,7 @@ import {
 import { addDepartment } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import './DepartmentList.css';
+import styles from './DepartmentList.module.css'; // CSS Module import
 
 // ────────────────────────────────────────────────
 const DepartmentList = () => {
@@ -110,7 +110,6 @@ const DepartmentList = () => {
     fetchDepartments();
   }, [selectedClinicId, selectedBranchId]);
 
-  // Load branches for the add form when clinic is selected
   useEffect(() => {
     const fetchFormBranches = async () => {
       if (formData.clinicId && formData.clinicId !== '') {
@@ -176,7 +175,6 @@ const DepartmentList = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
-    // Reset branchId when clinic changes
     if (name === 'clinicId') {
       setFormData((prev) => ({ ...prev, [name]: value, branchId: '' }));
     } else {
@@ -199,7 +197,6 @@ const DepartmentList = () => {
         profile: formData.profile.trim(),
       });
 
-      // Clear cache after successful add
       clearCacheByType('GetDepartmentList');
 
       setFormSuccess(true);
@@ -207,7 +204,6 @@ const DepartmentList = () => {
         closeAddForm();
         const clinicId = selectedClinicId === 'all' ? 0 : Number(selectedClinicId) || 0;
         const branchId = selectedBranchId === 'all' ? 0 : Number(selectedBranchId) || 0;
-        // Force refresh to get updated data
         const data = await getDepartmentList(clinicId, branchId, {}, true);
         setDepartments(data);
         setAllDepartments(data);
@@ -230,24 +226,24 @@ const DepartmentList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className="clinic-loading">Loading departments...</div>;
+  if (loading) return <div className={styles.clinicLoading}>Loading departments...</div>;
 
-  if (error) return <div className="clinic-error">Error: {error.message || error}</div>;
+  if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
   return (
-    <div className="clinic-list-wrapper">
+    <div className={styles.clinicListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Department Management" />
 
       {/* Toolbar */}
-      <div className="clinic-toolbar">
-        <div className="clinic-select-wrapper">
-          <FiHome className="clinic-select-icon" size={20} />
+      <div className={styles.clinicToolbar}>
+        <div className={styles.clinicSelectWrapper}>
+          <FiHome className={styles.clinicSelectIcon} size={20} />
           <select
             value={selectedClinicId}
             onChange={(e) => setSelectedClinicId(e.target.value)}
-            className="clinic-select"
+            className={styles.clinicSelect}
           >
             <option value="all">All Clinics</option>
             {clinics.map((clinic) => (
@@ -258,12 +254,12 @@ const DepartmentList = () => {
           </select>
         </div>
 
-        <div className="clinic-select-wrapper">
-          <FiMapPin className="clinic-select-icon" size={20} />
+        <div className={styles.clinicSelectWrapper}>
+          <FiMapPin className={styles.clinicSelectIcon} size={20} />
           <select
             value={selectedBranchId}
             onChange={(e) => setSelectedBranchId(e.target.value)}
-            className="clinic-select"
+            className={styles.clinicSelect}
             disabled={selectedClinicId === 'all' || branches.length === 0}
           >
             <option value="all">All Branches</option>
@@ -275,30 +271,30 @@ const DepartmentList = () => {
           </select>
         </div>
 
-        <div className="clinic-search-container">
+        <div className={styles.clinicSearchContainer}>
           <input
             type="text"
             placeholder="Search by department name, clinic..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="clinic-search-input"
+            className={styles.clinicSearchInput}
           />
-          <button onClick={handleSearch} className="clinic-search-btn">
+          <button onClick={handleSearch} className={styles.clinicSearchBtn}>
             <FiSearch size={20} />
           </button>
         </div>
 
-        <div className="clinic-add-section">
-          <button onClick={openAddForm} className="clinic-add-btn">
+        <div className={styles.clinicAddSection}>
+          <button onClick={openAddForm} className={styles.clinicAddBtn}>
             <FiPlus size={22} /> Add Dept
           </button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="clinic-table-container">
-        <table className="clinic-table">
+      <div className={styles.clinicTableContainer}>
+        <table className={styles.clinicTable}>
           <thead>
             <tr>
               <th>Department Name</th>
@@ -311,7 +307,7 @@ const DepartmentList = () => {
           <tbody>
             {filteredDepartments.length === 0 ? (
               <tr>
-                <td colSpan={5} className="clinic-no-data">
+                <td colSpan={5} className={styles.clinicNoData}>
                   {searchTerm ? 'No departments found.' : 'No departments registered yet.'}
                 </td>
               </tr>
@@ -319,12 +315,12 @@ const DepartmentList = () => {
               filteredDepartments.map((department) => (
                 <tr key={department.id}>
                   <td>
-                    <div className="clinic-name-cell">
-                      <div className="clinic-avatar">
+                    <div className={styles.clinicNameCell}>
+                      <div className={styles.clinicAvatar}>
                         {department.name?.charAt(0).toUpperCase() || 'D'}
                       </div>
                       <div>
-                        <div className="clinic-name">{department.name}</div>
+                        <div className={styles.clinicName}>{department.name}</div>
                       </div>
                     </div>
                   </td>
@@ -332,7 +328,7 @@ const DepartmentList = () => {
                   <td>{department.clinicName || '—'}</td>
                   <td>{department.branchName || '—'}</td>
                   <td>
-                    <button onClick={() => openDetails(department)} className="clinic-details-btn">
+                    <button onClick={() => openDetails(department)} className={styles.clinicDetailsBtn}>
                       View Details
                     </button>
                   </td>
@@ -345,25 +341,25 @@ const DepartmentList = () => {
 
       {/* ──────────────── Details Modal ──────────────── */}
       {selectedDepartment && (
-        <div className="clinic-modal-overlay" onClick={closeModal}>
-          <div className="clinic-modal details-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="details-modal-header">
-              <div className="details-header-content">
-                <div className="clinic-avatar-large">
+        <div className={styles.clinicModalOverlay} onClick={closeModal}>
+          <div className={`${styles.clinicModal} ${styles.detailsModal}`} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.detailsModalHeader}>
+              <div className={styles.detailsHeaderContent}>
+                <div className={styles.clinicAvatarLarge}>
                   {selectedDepartment.name?.charAt(0).toUpperCase() || 'D'}
                 </div>
                 <div>
                   <h2>{selectedDepartment.name}</h2>
-                  <p className="clinic-subtitle">{selectedDepartment.profile || 'Department'}</p>
+                  <p className={styles.clinicSubtitle}>{selectedDepartment.profile || 'Department'}</p>
                 </div>
               </div>
-              <button onClick={closeModal} className="clinic-modal-close">
+              <button onClick={closeModal} className={styles.clinicModalClose}>
                 ×
               </button>
             </div>
 
-            <div className="details-modal-body">
-              <table className="details-table">
+            <div className={styles.detailsModalBody}>
+              <table className={styles.detailsTable}>
                 <tbody>
                   <tr>
                     <td className="label">Department Name</td>
@@ -385,8 +381,8 @@ const DepartmentList = () => {
               </table>
             </div>
 
-            <div className="clinic-modal-footer">
-              <button onClick={() => handleUpdateClick(selectedDepartment)} className="btn-update">
+            <div className={styles.clinicModalFooter}>
+              <button onClick={() => handleUpdateClick(selectedDepartment)} className={styles.btnUpdate}>
                 Update Department
               </button>
             </div>
@@ -396,25 +392,25 @@ const DepartmentList = () => {
 
       {/* ──────────────── Add Form Modal ──────────────── */}
       {isAddFormOpen && (
-        <div className="clinic-modal-overlay" onClick={closeAddForm}>
-          <div className="clinic-modal form-modal employee-form-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="clinic-modal-header">
+        <div className={styles.clinicModalOverlay} onClick={closeAddForm}>
+          <div className={`${styles.clinicModal} ${styles.formModal} ${styles.employeeFormModal}`} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.clinicModalHeader}>
               <h2>Add New Department</h2>
-              <button onClick={closeAddForm} className="clinic-modal-close">
+              <button onClick={closeAddForm} className={styles.clinicModalClose}>
                 <FiX />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="clinic-modal-body">
-              {formError && <div className="form-error">{formError}</div>}
-              {formSuccess && <div className="form-success">Department added successfully!</div>}
+            <form onSubmit={handleSubmit} className={styles.clinicModalBody}>
+              {formError && <div className={styles.formError}>{formError}</div>}
+              {formSuccess && <div className={styles.formSuccess}>Department added successfully!</div>}
 
-              <div className="form-grid">
-                <h3 className="form-section-title">Department Information</h3>
+              <div className={styles.formGrid}>
+                <h3 className={styles.formSectionTitle}>Department Information</h3>
 
-                <div className="form-group full-width">
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>
-                    Clinic <span className="required">*</span>
+                    Clinic <span className={styles.required}>*</span>
                   </label>
                   <select
                     required
@@ -431,9 +427,9 @@ const DepartmentList = () => {
                   </select>
                 </div>
 
-                <div className="form-group full-width">
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>
-                    Branch <span className="required">*</span>
+                    Branch <span className={styles.required}>*</span>
                   </label>
                   <select
                     required
@@ -457,9 +453,9 @@ const DepartmentList = () => {
                   </select>
                 </div>
 
-                <div className="form-group full-width">
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>
-                    Department Name <span className="required">*</span>
+                    Department Name <span className={styles.required}>*</span>
                   </label>
                   <input
                     required
@@ -469,7 +465,7 @@ const DepartmentList = () => {
                   />
                 </div>
 
-                <div className="form-group full-width">
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>Description / Profile</label>
                   <textarea
                     name="profile"
@@ -480,11 +476,11 @@ const DepartmentList = () => {
                 </div>
               </div>
 
-              <div className="clinic-modal-footer">
-                <button type="button" onClick={closeAddForm} className="btn-cancel">
+              <div className={styles.clinicModalFooter}>
+                <button type="button" onClick={closeAddForm} className={styles.btnCancel}>
                   Cancel
                 </button>
-                <button type="submit" disabled={formLoading} className="btn-submit">
+                <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
                   {formLoading ? 'Adding...' : 'Add Department'}
                 </button>
               </div>

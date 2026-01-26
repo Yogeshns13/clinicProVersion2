@@ -9,9 +9,6 @@ GenerateLabInvoice
     "OrderID":1,
     "InvoiceDate":"2025-11-28",
     "Discount":10   
-  
-
-   
 }
 
 
