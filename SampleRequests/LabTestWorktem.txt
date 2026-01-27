@@ -7,7 +7,6 @@ CreateWorkItemsForOrder
     "ClinicID": 1  ,    
     "OrderID":1
 }
--- Priority is a int from Text Table #15 1-Regular 2 -Urgent (refer text table for other values) 
 
 UpdateSampleCollection
 {
@@ -27,7 +26,7 @@ UpdateLabWorkItemResult
      "CHANNEL_ID":1,
      "REF_KEY":"hshshshshshshshshshsh",
      "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
-     "USER_ID" : 2000000, 
+     "USER_ID" : 2000000,
      "ClinicID": 1,
      "BranchID"  :1,
      "WorkID":1,
@@ -66,3 +65,23 @@ RejectLabWorkItem
 }
 
 
+____________________________________________________________________________
+
+CreateWorkItemsForOrder
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1  ,    
+    "OrderID":1
+}
+
+{
+    "result": {
+        "OK": 1,
+        "Error": "SUCCESS: 1 WORK ITEM(S) CREATED",
+        "WorkItemsCreated": 1
+    }
+}
+------------------------------------------------------------------

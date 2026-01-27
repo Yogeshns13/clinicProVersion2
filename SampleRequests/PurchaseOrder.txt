@@ -8,11 +8,8 @@ AddPurchaseOrder
     "BranchID":1,
     "PODate":"2025-12-01",
     "VendorID":1,
-    "Discount":0
-   
-   
+    "Discount":0 
 }
-
 
 DeletePurchaseOrder
 {
@@ -21,10 +18,8 @@ DeletePurchaseOrder
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000,
     "POID":1
-    
-    
-   
 }
+
 -- Status Text Table #30: 1-Draft, 2-Sent, 3-Confirmed, 4-Received, 5-Cancelled
 
 GetPurchaseOrderList
@@ -43,7 +38,100 @@ GetPurchaseOrderList
     "VendorName":"",
     "FromDate":"",
     "ToDate":"",
-    "Status":-1
-    
-   
+    "Status":-1  
 }
+
+_______________________________________________________________________________________________
+
+GetPurchaseOrderList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "POID":0,
+    "ClinicID": 1,
+    "BranchID":1,
+    "PONumber":"",
+    "VendorID":0,
+    "VendorName":"",
+    "FromDate":"",
+    "ToDate":"",
+    "Status":-1  
+}
+
+{
+    "result": [
+        {
+            "po_id": 1,
+            "unique_seq": 10002,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "po_number": "PO-1-10002",
+            "po_date": "2025-11-30T18:30:00.000Z",
+            "vendor_id": 1,
+            "vendor_name": "Apex",
+            "contact_person": "Sivanesh",
+            "vendor_mobile": "8765894765",
+            "total_amount": "1600.00",
+            "cgst_amount": "96.00",
+            "sgst_amount": "96.00",
+            "discount": "0.00",
+            "net_amount": "1792.00",
+            "status": 1,
+            "status_desc": "Draft",
+            "date_created": "2025-12-01T10:57:59.000Z",
+            "date_modified": "2025-12-01T10:59:06.000Z"
+        }
+    ]
+}
+
+------------------------------------------------------------
+
+AddPurchaseOrder
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,
+    "BranchID":1,
+    "PODate":"2025-12-01",
+    "VendorID":1,
+    "Discount":0 
+}
+
+{
+    "result": {
+        "OUT_PO_ID": 2,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-----------------------------------------------------------
+
+DeletePurchaseOrder
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "POID":1
+}
+
+{
+    "result": {
+        "IN_PO_ID": 3,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+----------------------------------------------------
+
+

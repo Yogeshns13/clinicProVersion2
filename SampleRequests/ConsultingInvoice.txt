@@ -47,8 +47,8 @@ GenerateConsultationInvoice
     "ClinicID":1,
     "BranchID":1,
     "ConsultationID":5000003,
-    "InvoiceDate":"2026-01-19",  
-    "Discount": 0 
+    "InvoiceDate":"2026-01-19",
+    "Discount": 0
     
 }
 

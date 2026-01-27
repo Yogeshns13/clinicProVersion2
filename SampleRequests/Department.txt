@@ -8,7 +8,6 @@ AddDepartment
     "BranchID"  :1,
     "DepartmentName":"Consultation",
     "Profile":"Consulation / Resgistration / Appointment "
-   
 }
 
 

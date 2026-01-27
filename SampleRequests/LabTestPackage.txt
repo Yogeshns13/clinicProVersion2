@@ -78,11 +78,22 @@ GetLabTestPackageList
             "PackName": "CBC Count",
             "PackShortName": "CBC",
             "Description": "Complete Blood  count",
-            "Fees": "200.00",
+            "Fees": "150.00",
             "CGSTPercentage": "9.00",
             "SGSTPercentage": "9.00",
             "Status": 1,
             "DateCreated": "2025-11-26T13:46:37.000Z"
+        },
+        {
+            "PackageID": 2,
+            "PackName": "CUC Count 1",
+            "PackShortName": "CUC 1",
+            "Description": "Complete Urine count",
+            "Fees": "150.00",
+            "CGSTPercentage": "9.00",
+            "SGSTPercentage": "9.00",
+            "Status": 1,
+            "DateCreated": "2026-01-26T06:12:44.000Z"
         }
     ]
 }

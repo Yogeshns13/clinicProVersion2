@@ -17,6 +17,7 @@ AddLabTestMaster
     "CGSTPercentage":9.00,    
     "SGSTPercentage":9.00
 }
+
 -- TestType is a int from Text Table #12 1-Blood 2 -Urine (refer text table for other values) 
 
 UpdateLabTestMaster
@@ -86,6 +87,52 @@ GetLabTestMasterList
 {
     "result": [
         {
+            "test_id": 4,
+            "unique_seq": 1,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "test_name": "Hemoglobin Count 2",
+            "short_name": "HC2",
+            "description": "Complete Blood HC count with reference values",
+            "test_type": 1,
+            "test_type_desc": "Blood",
+            "normal_range": "4.7-6.1",
+            "units": "mg/dL",
+            "remarks": "Complete HC blood count",
+            "fees": "60.00",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2026-01-26T07:20:53.000Z",
+            "date_modified": "2026-01-26T07:20:53.000Z"
+        },
+        {
+            "test_id": 3,
+            "unique_seq": 1,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "test_name": "Henoglobin Count",
+            "short_name": "HC",
+            "description": "Complete Blood HC count with reference values",
+            "test_type": 1,
+            "test_type_desc": "Blood",
+            "normal_range": "4.7-6.1",
+            "units": "mg/dL",
+            "remarks": "Complete HC blood count",
+            "fees": "90.00",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2026-01-26T07:19:08.000Z",
+            "date_modified": "2026-01-26T07:22:56.000Z"
+        },
+        {
             "test_id": 2,
             "unique_seq": 1,
             "clinic_id": 1,
@@ -129,7 +176,7 @@ GetLabTestMasterList
             "status": 1,
             "status_desc": "Active",
             "date_created": "2025-11-26T13:29:25.000Z",
-            "date_modified": "2025-11-26T13:37:40.000Z"
+            "date_modified": "2026-01-26T07:25:55.000Z"
         }
     ]
 }

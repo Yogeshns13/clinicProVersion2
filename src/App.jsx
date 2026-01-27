@@ -48,6 +48,10 @@ import ConsultationChargeConfig from "./ConsultationCharge/Consultationchargecon
 import ConsultationChargeList from "./ConsultationCharge/Consultationchargelist.jsx";
 import InvoiceManagement from "./ConsultationCharge/Invoicemanagement.jsx";
 import InvoicePaymentManagement from "./ConsultationCharge/Invoicepaymentmanagement.jsx";
+import ViewVendor from "./Vendor/ViewVendor.jsx";
+import VendorList from "./Vendor/VendorList.jsx";
+import AddVendor from "./Vendor/AddVendor.jsx";
+import UpdateVendor from "./Vendor/UpdateVendor.jsx";
 
 function App() {
   return (
@@ -108,6 +112,10 @@ function App() {
           <Route path="/consultation-charge" element={<ConsultationChargeList/>} />
           <Route path="/invoice-management" element={<InvoiceManagement/>} />
           <Route path="/invoice-payment" element={<InvoicePaymentManagement/>} />
+          <Route path="/vendor-list" element={<VendorList/>} />
+          <Route path="/view-vendor/:id" element={<ViewVendor/>} />
+          <Route path="/add-vendor" element={<AddVendor/>} />
+          <Route path="/update-vendor/:id" element={<UpdateVendor/>} />
 
           {/* Default redirect inside protected area */}
           <Route path="/admin" element={<Navigate to="/dashboard" replace />} />

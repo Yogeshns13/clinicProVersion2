@@ -1,0 +1,538 @@
+:root {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== MAIN WRAPPER ==================== */
+.listWrapper {
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ==================== TOOLBAR ==================== */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+/* Select Dropdowns */
+.selectWrapper {
+  position: relative;
+}
+
+.select {
+  height: 40px;
+  padding: 10px 35px 10px 15px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  color: var(--text-dark);
+  font-size: 0.94rem;
+  font-weight: 500;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  appearance: none;
+  min-width: 160px;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18), 0 8px 25px rgba(34, 43, 108, 0.12);
+}
+
+.selectWrapper::after {
+  content: '▼';
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #64748b;
+  font-size: 0.7rem;
+}
+
+/* Search Container */
+.toolbar .searchContainer {
+  flex: 1;
+  min-width: 255px;
+  position: relative;
+}
+
+.toolbar .searchInput {
+  width: 100%;
+  height: 40px;
+  padding: 15px 60px 15px 20px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  color: var(--text-dark);
+  font-size: 0.94rem;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  transition: all 0.3s ease;
+}
+
+.toolbar .searchInput::placeholder {
+  color: #94a3b8;
+}
+
+.toolbar .searchInput:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18), 0 8px 25px rgba(34, 43, 108, 0.12);
+}
+
+.toolbar .searchBtn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.35);
+}
+
+.toolbar .searchBtn:hover {
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 8px 24px rgba(32, 125, 156, 0.45);
+}
+
+/* Add Vendor Button */
+.addSection {
+  display: flex;
+  align-items: center;
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  gap: 10px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  font-weight: 700;
+  font-size: 0.94rem;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  white-space: nowrap;
+}
+
+.addBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(32, 125, 156, 0.45);
+}
+
+/* ==================== TABLE ==================== */
+.tableContainer {
+  background: white;
+  border-radius: 17px;
+  overflow: hidden;
+  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  padding: 12px 17px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+}
+
+.table td {
+  padding: 6px 17px;
+  border-bottom: 1px solid #e2e8f0;
+  color: var(--text-dark);
+  font-size: 0.75rem;
+  vertical-align: middle;
+}
+
+.table th:last-child,
+.table td:last-child {
+  text-align: right;
+  padding-right: 24px;
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #d5e6ec;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(48, 178, 181, 0.08) !important;
+  transition: background-color 0.25s ease;
+}
+
+/* ==================== TABLE CELLS ==================== */
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 33px;
+  height: 33px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  font-weight: bold;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 12px rgba(32, 125, 156, 0.35);
+  flex-shrink: 0;
+}
+
+.name {
+  font-weight: 700;
+  color: var(--text-dark);
+  font-size: 0.87rem;
+}
+
+.subInfo {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* Branch Type Badge (for GST) */
+.gstBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.1), rgba(48, 178, 181, 0.1));
+  border: 1px solid rgba(48, 178, 181, 0.3);
+  color: var(--accent-end);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+/* ==================== STATUS BADGES ==================== */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.statusBadge.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.statusBadge.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ==================== BUTTONS ==================== */
+.detailsBtn {
+  position: relative;
+  overflow: hidden;
+  padding: 7px 15px;
+  font-size: 0.75rem;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.detailsBtn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.detailsBtn:hover::before {
+  width: 170px;
+  height: 170px;
+}
+
+.detailsBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+.detailsBtn:active {
+  transform: translateY(-1px);
+}
+
+/* ==================== UTILITY STATES ==================== */
+.noData {
+  text-align: center;
+  padding: 68px 17px;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+.loading,
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  font-size: 1.3rem;
+  color: #64748b;
+}
+
+.error {
+  color: #ef4444;
+}
+
+/* ==================== DARK MODE ==================== */
+.darkMode {
+  --glass-bg: rgba(30, 41, 59, 0.92);
+  --text-dark: #e2e8f0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+}
+
+.darkMode .listWrapper {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+}
+
+.darkMode .select {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.darkMode .selectWrapper::after {
+  color: #94a3b8;
+}
+
+.darkMode .toolbar .searchInput {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.darkMode .toolbar .searchInput::placeholder {
+  color: #64748b;
+}
+
+.darkMode .tableContainer {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.darkMode .table th {
+  background: linear-gradient(135deg, #334155, #475569);
+}
+
+.darkMode .table td {
+  border-bottom-color: #475569;
+  color: #e2e8f0;
+}
+
+.darkMode .table tbody tr:nth-child(even) {
+  background-color: #334155;
+}
+
+.darkMode .table tbody tr:hover {
+  background-color: rgba(48, 178, 181, 0.12) !important;
+}
+
+.darkMode .name {
+  color: #e2e8f0;
+}
+
+.darkMode .subInfo {
+  color: #94a3b8;
+}
+
+.darkMode .gstBadge {
+  background: linear-gradient(135deg, rgba(48, 178, 181, 0.15), rgba(48, 178, 181, 0.2));
+  border-color: rgba(48, 178, 181, 0.4);
+  color: var(--accent-end);
+}
+
+.darkMode .statusBadge.active {
+  background: rgba(34, 197, 94, 0.2);
+  color: #9cc14d;
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.darkMode .statusBadge.inactive {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 1024px) {
+  .toolbar {
+    gap: 15px;
+  }
+
+  .select {
+    min-width: 140px;
+  }
+}
+
+@media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .selectWrapper {
+    width: 100%;
+  }
+
+  .select {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .toolbar .searchContainer {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .addSection {
+    width: 100%;
+  }
+
+  .addBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px 14px;
+  }
+
+  .detailsBtn {
+    padding: 7px 14px;
+    font-size: 0.72rem;
+  }
+
+  /* Make table scrollable on mobile */
+  .tableContainer {
+    overflow-x: auto;
+  }
+
+  .table {
+    min-width: 900px;
+  }
+}
+
+@media (max-width: 480px) {
+  .listWrapper {
+    padding: 14px;
+  }
+
+  .toolbar {
+    gap: 10px;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 12px;
+    font-size: 0.7rem;
+  }
+
+  .name {
+    font-size: 0.8rem;
+  }
+
+  .subInfo {
+    font-size: 0.68rem;
+  }
+
+  .avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+
+  .detailsBtn {
+    padding: 6px 12px;
+    font-size: 0.7rem;
+  }
+
+  .gstBadge,
+  .statusBadge {
+    padding: 4px 10px;
+    font-size: 0.65rem;
+  }
+}

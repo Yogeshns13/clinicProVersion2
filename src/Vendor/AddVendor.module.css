@@ -1,0 +1,404 @@
+/* AddVendor.module.css */
+/* COMPREHENSIVE CSS FOR ADD VENDOR MODAL */
+/* FULL CSS WITH ~15% SIZE REDUCTION APPLIED TO PADDINGS, FONTS, WIDTHS, HEIGHTS, RADII, ETC. */
+/* POPUP CONTAINERS REDUCED BY ADDITIONAL 15% */
+
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --success-color: #22c55e;
+  --success-dark: #16a34a;
+  --danger-color: #ef4444;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== MODAL OVERLAY ==================== */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 22, 41, 0.85);
+  backdrop-filter: blur(9px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+/* ==================== MODAL ==================== */
+.modal {
+  background: var(--glass-bg);
+  border-radius: 15px;
+  border: 2px solid var(--glass-border);
+  width: 100%;
+  max-width: 850px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(14px);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==================== MODAL HEADER ==================== */
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 17px 23px 0;
+  margin-bottom: 14px;
+}
+
+.modalHeader h2 {
+  font-size: 1.23rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0;
+  letter-spacing: -0.3px;
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.modalClose {
+  background: rgba(100, 116, 139, 0.15);
+  border: 2px solid rgba(100, 116, 139, 0.2);
+  width: 29px;
+  height: 29px;
+  border-radius: 50%;
+  color: #64748b;
+  font-size: 17px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.modalClose:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+  transform: rotate(90deg);
+}
+
+/* ==================== MODAL BODY ==================== */
+.modalBody {
+  padding: 0 29px 23px;
+  color: var(--text-dark);
+}
+
+/* ==================== MODAL FOOTER ==================== */
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 17px 23px;
+  border-top: 2px solid rgba(34, 43, 108, 0.15);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+}
+
+/* ==================== FORMS ==================== */
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(202px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.formSectionTitle {
+  grid-column: 1 / -1;
+  margin: 20px 0 10px 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(34, 43, 108, 0.15);
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.formSectionTitle:first-child {
+  margin-top: 0;
+}
+
+.formGroup {
+  margin-bottom: 12px;
+}
+
+.formGroup.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--primary-start);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.17px;
+}
+
+.formGroup .required {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.formGroup input,
+.formGroup textarea,
+.formGroup select {
+  width: 100%;
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid rgba(34, 43, 108, 0.2);
+  border-radius: 9px;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.formGroup input::placeholder,
+.formGroup textarea::placeholder {
+  color: rgba(30, 41, 59, 0.4);
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus,
+.formGroup select:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15), inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.formGroup textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* ==================== MESSAGES ==================== */
+.formError,
+.formSuccess {
+  padding: 9px 12px;
+  border-radius: 9px;
+  margin-bottom: 14px;
+  border: 2px solid;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.1);
+}
+
+.formError {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
+  color: #dc2626;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.formSuccess {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.2));
+  color: #059669;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+/* ==================== BUTTONS ==================== */
+.btnCancel {
+  padding: 10px 24px;
+  border-radius: 10px;
+  background: #e2e8f0;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btnCancel:hover {
+  background: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.btnSubmit {
+  padding: 10px 24px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  border: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+}
+
+.btnSubmit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.45);
+}
+
+.btnSubmit:active {
+  transform: translateY(-1px);
+}
+
+.btnSubmit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ==================== DARK MODE ==================== */
+.darkMode .modal {
+  background: rgba(30, 41, 59, 0.94);
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.darkMode .modalHeader h2 {
+  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.darkMode .modalFooter {
+  background: linear-gradient(135deg, #1e293b, #334155);
+}
+
+.darkMode .formSectionTitle {
+  color: var(--accent-end);
+  border-bottom-color: #475569;
+}
+
+.darkMode .formGroup label {
+  color: var(--accent-end);
+}
+
+.darkMode .formGroup input,
+.darkMode .formGroup textarea,
+.darkMode .formGroup select {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.darkMode .formGroup input::placeholder,
+.darkMode .formGroup textarea::placeholder {
+  color: #64748b;
+}
+
+.darkMode .btnCancel {
+  background: #334155;
+  color: #e2e8f0;
+  border-color: #475569;
+}
+
+.darkMode .btnCancel:hover {
+  background: #475569;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 768px) {
+  .modal {
+    max-width: 95%;
+  }
+
+  .modalHeader,
+  .modalBody,
+  .modalFooter {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .modalFooter {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btnCancel,
+  .btnSubmit {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .modalHeader h2 {
+    font-size: 1.1rem;
+  }
+
+  .formSectionTitle {
+    font-size: 0.95rem;
+  }
+
+  .formGroup label {
+    font-size: 0.8rem;
+  }
+
+  .formGroup input,
+  .formGroup textarea,
+  .formGroup select {
+    font-size: 0.85rem;
+    padding: 8px 10px;
+  }
+
+  .btnCancel,
+  .btnSubmit {
+    font-size: 0.8rem;
+    padding: 9px 20px;
+  }
+}
+
+/* ==================== CUSTOM SCROLLBAR ==================== */
+.modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.3);
+  border-radius: 10px;
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-radius: 10px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+}
+
+.darkMode .modal::-webkit-scrollbar-track {
+  background: rgba(51, 65, 85, 0.3);
+}

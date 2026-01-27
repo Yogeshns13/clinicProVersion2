@@ -22,12 +22,40 @@ AddMedicineMaster
    "CGSTPercentage":6.00,
    "SGSTPercentage":6.00,
    "Barcode":"WIll BE LATER"
-
-
-   
-
-   
 }
+
+Medicine Form
+
+1	Tablet	
+2	Capsule	
+3	Syrup	
+4	Injection	
+5	Ointment	
+6	Drops	
+7	Powder	
+8	Gel	
+9	Cream	
+10	Inhaler	
+
+Unit
+
+1	Strip	
+2	Bottle	
+3	Vial	
+4	Tube	
+5	Box	
+6	Ampoule	
+7	Sachet	
+8	Blister Pack	
+9	Jar	
+10	Roll
+
+Medicine Status
+
+1	Active	
+2	Inactive	
+3	Discontinued	
+4	Out of Stock
 
 -- Type Text Table 22 1- Tablet 2-Capsule 3-Syrup 4-Injection 5-Oinment 6-Drops 7-Powder 8-Gel 9-Cream 10-Inhaler
 -- Unit Text Table 27 1- Strip 2-Bottle 3-Vial 4-Tybe 5- Boxx 6- Ampoule 7-Sachet 8-Blister Pack 9 - Jar 10 - roll
@@ -48,18 +76,16 @@ UpdateMedicineMaster
     "Type": 1,  
     "DosageForm":"500 mg",
     "Unit": 1,
-   "HSNCode":"2924.29.90",
+    "HSNCode":"2924.29.90",
     "ReorderLevelQty":100,
-   "MRP": 11.00,
-   "PurchasePrice":8.00,
+    "MRP": 11.00,
+    "PurchasePrice":8.00,
    "SellPrice":9.00,
    "StockQuantity":1000,   
    "CGSTPercentage":6.00,
    "SGSTPercentage":6.00,
    "Barcode":"WIll BE LATER",
    "Status":1
-
-   
 }
 
 DeleteMedicineMaster
@@ -89,6 +115,190 @@ GetMedicineMasterList
     "HSNCode":"",
     "Barcode":"",
     "LowStockOnly":1,  
-   "Status":-1
-    
+   "Status":-1 
 }
+
+
+___________________________________________________________________________
+
+AddMedicineMaster
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "Name":"P 500",
+    "GenericName":"Parametamol 500",
+    "Composition":"Parametamol 500 mg",
+    "Manufacturer":"Apec Lab",   
+    "Type": 1,  
+    "DosageForm":"500 mg",
+    "Unit": 1,
+   "HSNCode":"2924.29.90",
+    "ReorderLevelQty":100,
+   "MRP": 10.00,
+   "PurchasePrice":8.00,
+   "SellPrice":9.00,
+   "StockQuantity":1000,   
+   "CGSTPercentage":6.00,
+   "SGSTPercentage":6.00,
+   "Barcode":"WIll BE LATER"
+}
+
+{
+    "result": {
+        "OUT_ID": 7,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-------------------------------------------------------
+
+GetMedicineMasterList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "MedicineID":0,
+    "ClinicID": 1,
+    "BranchID":1,
+    "Name":"",   
+    "Manufacturer":"",   
+    "Type": 0,    
+    "Unit": 0,
+    "HSNCode":"",
+    "Barcode":"",
+    "LowStockOnly":1,
+    "Status":-1 
+}
+
+{
+    "result": [
+        {
+            "medicine_id": 7,
+            "unique_seq": 2,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "name": "Parametamol",
+            "generic_name": "Parametamol 500",
+            "composition": "Parametamol 500 mg",
+            "manufacturer": "Apec Lab",
+            "type": 1,
+            "type_desc": "Tablet",
+            "dosage_form": "500 mg",
+            "unit": 1,
+            "unit_desc": "Strip",
+            "hsn_code": "2924.29.90",
+            "reorder_level_qty": 100,
+            "mrp": "10.00",
+            "purchase_price": "8.00",
+            "sell_price": "9.00",
+            "stock_quantity": 1000,
+            "cgst_percentage": "6.00",
+            "sgst_percentage": "6.00",
+            "barcode": "WIll BE LATER",
+            "status": 1,
+            "status_desc": "Active",
+            "is_low_stock": "No",
+            "date_created": "2026-01-27T05:38:23.000Z",
+            "date_modified": "2026-01-27T05:38:23.000Z"
+        },
+        {
+            "medicine_id": 1,
+            "unique_seq": 1,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "name": "P 500",
+            "generic_name": "Parametamol 500",
+            "composition": "Parametamol 500 mg",
+            "manufacturer": "Apec Lab",
+            "type": 1,
+            "type_desc": "Tablet",
+            "dosage_form": "500 mg",
+            "unit": 1,
+            "unit_desc": "Strip",
+            "hsn_code": "2924.29.90",
+            "reorder_level_qty": 100,
+            "mrp": "11.00",
+            "purchase_price": "8.45",
+            "sell_price": "9.00",
+            "stock_quantity": 730,
+            "cgst_percentage": "6.00",
+            "sgst_percentage": "6.00",
+            "barcode": "WIll BE LATER",
+            "status": 2,
+            "status_desc": "Inactive",
+            "is_low_stock": "No",
+            "date_created": "2025-11-29T08:47:02.000Z",
+            "date_modified": "2026-01-26T11:03:17.000Z"
+        }
+    ]
+}
+
+-----------------------------------------------------
+
+UpdateMedicineMaster
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID":1,
+    "MedicineID":7,
+    "Name":"P 500",
+    "GenericName":"Parametamol 500",
+    "Composition":"Parametamol 500 mg",
+    "Manufacturer":"Apec Lab",   
+    "Type": 1,  
+    "DosageForm":"500 mg",
+    "Unit": 1,
+   "HSNCode":"2924.29.90",
+    "ReorderLevelQty":100,
+   "MRP": 11.00,
+   "PurchasePrice":8.00,
+   "SellPrice":9.00,
+   "StockQuantity":1000,   
+   "CGSTPercentage":6.00,
+   "SGSTPercentage":6.00,
+   "Barcode":"WIll BE LATER",
+   "Status":1
+}
+
+{
+    "result": {
+        "IN_MEDICINE_ID": 7,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-------------------------------------------------------
+
+DeleteMedicineMaster
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "MedicineID":7
+}
+
+{
+    "result": {
+        "IN_MEDICINE_ID": 7,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+________________________________________________

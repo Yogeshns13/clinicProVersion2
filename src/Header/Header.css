@@ -1,3 +1,4 @@
+/* Header.css */
 .clinic-list-header {
   display: flex;
   justify-content: space-between;
@@ -8,6 +9,7 @@
   padding: 8px 17px;
   border-radius: 8px;
   color: #ffffff;
+  position: relative; /* Important for dropdown positioning */
 }
 
 .clinic-list-header h1 {
@@ -25,6 +27,161 @@
   font-weight: 500;
 }
 
+/* Profile Container */
+.header-profile-container {
+  position: relative;
+}
+
+.header-profile {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+
+.header-profile:hover {
+  opacity: 0.8;
+}
+
+.user-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+/* Profile Dropdown Popup */
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 12px); /* Position below the icon with gap */
+  right: 0;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 220px;
+  z-index: 1000;
+  overflow: hidden;
+  animation: dropdownSlide 0.2s ease-out;
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dropdown arrow/pointer */
+.profile-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 12px;
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  transform: rotate(45deg);
+  box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Dropdown Items */
+.profile-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  color: #334155;
+  font-size: 0.95rem;
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+}
+
+.profile-dropdown-item:hover {
+  background-color: #f1f5f9;
+}
+
+.profile-dropdown-item:active {
+  background-color: #e2e8f0;
+}
+
+/* Username Item (no hover effect) */
+.username-item {
+  cursor: default;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.username-item:hover {
+  background-color: #f8fafc;
+}
+
+/* Icon styling */
+.profile-dropdown-item svg {
+  flex-shrink: 0;
+  color: #64748b;
+}
+
+.username-item svg {
+  color: var(--accent-start, #3b82f6);
+}
+
+/* Dark Mode Styles */
 .dark-mode .clinic-list-header {
   background: linear-gradient(135deg, #1e293b, #334155);
+}
+
+.dark-mode .user-icon-wrapper {
+  color: #e2e8f0;
+}
+
+.dark-mode .profile-dropdown {
+  background: #1e293b;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .profile-dropdown::before {
+  background: #1e293b;
+  box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .profile-dropdown-item {
+  color: #e2e8f0;
+}
+
+.dark-mode .profile-dropdown-item:hover {
+  background-color: #334155;
+}
+
+.dark-mode .profile-dropdown-item:active {
+  background-color: #475569;
+}
+
+.dark-mode .username-item {
+  background-color: #0f172a;
+  border-bottom: 1px solid #334155;
+  color: #f1f5f9;
+}
+
+.dark-mode .username-item:hover {
+  background-color: #0f172a;
+}
+
+.dark-mode .profile-dropdown-item svg {
+  color: #94a3b8;
+}
+
+.dark-mode .username-item svg {
+  color: #60a5fa;
 }

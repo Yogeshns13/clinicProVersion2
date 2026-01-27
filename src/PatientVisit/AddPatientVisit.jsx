@@ -544,7 +544,6 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
                       onChange={handleChange}
                       placeholder="e.g., Regular checkup, Follow-up..."
                       className="form-input"
-                      readOnly={preSelectedAppointmentId && formData.reason}
                     />
                   </div>
 

@@ -3,36 +3,38 @@ AddLabTestOrder
     "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
-    "USER_ID" : 2000000, 
-    "ClinicID": 1,    
+    "USER_ID" : 2000000,
+    "ClinicID": 1,
     "BranchID"  :1,
     "ConsultationID":5000000,
     "VisitID":4000000,
-    "PatientID":2000000,    
+    "PatientID":2000000,
     "DoctorID":1000001,
-    "Priority":1,    
+    "Priority":1,
     "Notes":"CBC for the blood culture"
-
-   
 }
+
 -- Priority is a int from Text Table #15 1-Regular 2 -Urgent (refer text table for other values) 
+
+Table 14 - Lab Test Order Status
+1	Pending	
+2	Completed	
+3	Cancelled
 
 UpdateLabTestOrder
 {
-     "CHANNEL_ID":1,
+    "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
-    "USER_ID" : 2000000, 
+    "USER_ID" : 2000000,
     "ClinicID": 1,
-     "BranchID"  :1,
-     "OrderID":1,
-     "Priority":1, 
+    "BranchID": 1,
+    "OrderID": 1,
+    "Priority":1,
     "Notes":"CBC for the blood culture",
-     "FileID":1,
-     "Status":1,
-     "TestApprovedBy":1000001
-    
-   
+    "FileID":1,
+    "Status":1,
+    "TestApprovedBy":1000001 
 }
 
 DeleteLabTestOrder
@@ -44,6 +46,7 @@ DeleteLabTestOrder
    "OrderID": 1
    
 }
+
 GetLabTestOrderList
 {
     "CHANNEL_ID":1,
@@ -64,10 +67,141 @@ GetLabTestOrderList
     "TestID":0,
     "TestName":"",
     "Status":-1,
-    "Priority":0
+    "Priority":0  
+}
 
-    
-   
+______________________________________________________________________
+
+GetLabTestOrderList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "OrderID":0,
+    "Page":1,
+    "PageSize":20,
+    "ClinicID": 1,
+    "BranchID":1,
+    "ConsultationID":0,    
+    "VisitID":0,  
+    "PatientID":0,
+    "PatientName":"",
+    "DoctorID":0,
+    "DoctorName":"",
+    "TestID":0,
+    "TestName":"",
+    "Status":-1,
+    "Priority":0  
+}
+
+{
+    "result": [
+        {
+            "order_id": 1,
+            "unique_seq": 1,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "consultation_id": 5000000,
+            "visit_id": 4000000,
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Thivaakar AD",
+            "doctor_code": "EMP0014",
+            "file_id": 1,
+            "status": 2,
+            "status_desc": "Completed",
+            "priority": 1,
+            "priority_desc": "Routine",
+            "notes": "CBC for the blood culture",
+            "date_created": "2025-11-27T11:04:43.000Z",
+            "date_modified": "2025-11-28T08:41:15.000Z"
+        }
+    ]
+}
+
+------------------------------------------------------
+
+AddLabTestOrder
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "ConsultationID":5000018,
+    "VisitID":4000022,
+    "PatientID":2000046,
+    "DoctorID":1000004,
+    "Priority":1,
+    "Notes":"HC for the blood culture"
+}
+
+{
+    "result": {
+        "OUT_ORDER_ID": 2,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+----------------------------------------------------
+
+UpdateLabTestOrder
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "OrderID":2,
+    "Priority":1, 
+    "Notes":"HC and RWC for the blood culture",
+    "FileID":1,
+    "Status":1,
+    "TestApprovedBy":1000004
+
+
+}
+
+14 - TableID
+5 - In progress
+
+{
+    "result": {
+        "IN_ORDER_ID": 2,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+--------------------------------------------------
+
+DeleteLabTestOrder
+{               
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "OrderID": 2
    
 }
+
+{
+    "result": {
+        "IN_ORDER_ID": 2,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-----------------------------------------------
+
 
