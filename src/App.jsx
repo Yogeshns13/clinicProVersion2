@@ -52,6 +52,10 @@ import ViewVendor from "./Vendor/ViewVendor.jsx";
 import VendorList from "./Vendor/VendorList.jsx";
 import AddVendor from "./Vendor/AddVendor.jsx";
 import UpdateVendor from "./Vendor/UpdateVendor.jsx";
+import ViewMedicineMaster from "./MedicineMaster/ViewMedicineMaster.jsx";
+import MedicineMasterList from "./MedicineMaster/MedicineMasterList.jsx";
+import AddMedicineMaster from "./MedicineMaster/Addmedicinemaster.jsx";
+import UpdateMedicineMaster from "./MedicineMaster/UpdateMedicineMaster.jsx";
 
 function App() {
   return (
@@ -116,6 +120,10 @@ function App() {
           <Route path="/view-vendor/:id" element={<ViewVendor/>} />
           <Route path="/add-vendor" element={<AddVendor/>} />
           <Route path="/update-vendor/:id" element={<UpdateVendor/>} />
+          <Route path="/medicinemaster-list" element={<MedicineMasterList/>} />
+          <Route path="/add-medicinemaster" element={<AddMedicineMaster/>} />
+          <Route path="/update-medicinemaster/:id" element={<UpdateMedicineMaster/>} />
+          <Route path="/view-medicinemaster/:id" element={<ViewMedicineMaster/>} />
 
           {/* Default redirect inside protected area */}
           <Route path="/admin" element={<Navigate to="/dashboard" replace />} />

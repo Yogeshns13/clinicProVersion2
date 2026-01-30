@@ -1,0 +1,375 @@
+/* src/components/UpdateMedicineMaster.module.css */
+
+/* ==================== MAIN WRAPPER ==================== */
+.wrapper {
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  min-height: 100vh;
+  color: #1e293b;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ==================== CONTAINER ==================== */
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* ==================== BACK BUTTON ==================== */
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #016183, #225ca0);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  margin-bottom: 20px;
+}
+
+.backBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+/* ==================== MEDICINE INFO CARD ==================== */
+.infoCard {
+  background: white;
+  border-radius: 15px;
+  padding: 24px;
+  box-shadow: 0 8px 20px rgba(34, 43, 108, 0.08);
+  margin-bottom: 24px;
+  border: 2px solid rgba(48, 178, 181, 0.2);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.infoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.infoLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.infoValue {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* ==================== FORM ==================== */
+.form {
+  background: white;
+  border-radius: 17px;
+  overflow: hidden;
+  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  padding: 28px;
+}
+
+.formSection {
+  margin-bottom: 28px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(48, 178, 181, 0.04));
+  border-radius: 13px;
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.formSection:last-of-type {
+  margin-bottom: 0;
+}
+
+.formSectionTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #222b6c;
+  margin: 0 0 16px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #30b2b5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.formGroup {
+  margin-bottom: 16px;
+}
+
+.formGroup:last-child {
+  margin-bottom: 0;
+}
+
+.formLabel {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.formInput,
+.formSelect,
+.formTextarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #1e293b;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.formInput:focus,
+.formSelect:focus,
+.formTextarea:focus {
+  outline: none;
+  border-color: #30b2b5;
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.1);
+}
+
+.formSelect {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+}
+
+.formTextarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.formHint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* ==================== FORM ACTIONS ==================== */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 24px;
+  border-top: 2px solid rgba(34, 43, 108, 0.1);
+  margin-top: 28px;
+}
+
+.btnCancel,
+.btnSave {
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btnCancel {
+  background: linear-gradient(135deg, #64748b, #94a3b8);
+  color: white;
+  box-shadow: 0 3px 10px rgba(100, 116, 139, 0.3);
+}
+
+.btnCancel:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(100, 116, 139, 0.4);
+}
+
+.btnSave {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  box-shadow: 0 3px 10px rgba(34, 197, 94, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.btnSave::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btnSave:hover:not(:disabled)::before {
+  width: 200px;
+  height: 200px;
+}
+
+.btnSave:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(34, 197, 94, 0.45);
+}
+
+.btnCancel:disabled,
+.btnSave:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==================== LOADING & ERROR ==================== */
+.loading,
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  font-size: 1.3rem;
+  color: #64748b;
+}
+
+.error {
+  color: #ef4444;
+}
+
+/* ==================== DARK MODE ==================== */
+:global(.dark-mode) .wrapper {
+  background: #1e293b;
+}
+
+:global(.dark-mode) .infoCard {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .infoLabel {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .infoValue {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .form {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .formSection {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
+  border-color: #475569;
+}
+
+:global(.dark-mode) .formSectionTitle {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .formLabel {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .formInput,
+:global(.dark-mode) .formSelect,
+:global(.dark-mode) .formTextarea {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .formSelect {
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+:global(.dark-mode) .actions {
+  border-top-color: #475569;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .wrapper {
+    padding: 14px;
+  }
+
+  .infoCard {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .form {
+    padding: 20px;
+  }
+
+  .formSection {
+    padding: 16px;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .btnCancel,
+  .btnSave {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .formSectionTitle {
+    font-size: 1rem;
+  }
+
+  .infoValue {
+    font-size: 0.95rem;
+  }
+
+  .backBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -24,7 +24,7 @@ UpdateLabTestOrderItem
     "BranchID"  :1,
     "ItemID":1,
     "Status":1
-}
+}     
 
 
 GetLabTestOrderItemList
@@ -85,7 +85,7 @@ GetLabTestOrderItemList
             "Priority": 1,
             "OrderNotes": "CBC for the blood culture"
         },
-        {
+        { 
             "ItemID": 1,
             "OrderID": 1,
             "TestID": 1,

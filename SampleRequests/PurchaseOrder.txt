@@ -18,7 +18,7 @@ DeletePurchaseOrder
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000,
     "POID":1
-}
+}     
 
 -- Status Text Table #30: 1-Draft, 2-Sent, 3-Confirmed, 4-Received, 5-Cancelled
 

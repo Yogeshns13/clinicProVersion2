@@ -974,3 +974,5 @@ export const generateConsultationInvoice = async (invoiceData = {}) => {
     throw formattedError;
   }
 };
+
+

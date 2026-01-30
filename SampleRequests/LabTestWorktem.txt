@@ -35,19 +35,19 @@ UpdateLabWorkItemResult
      "NormalRange":"4.0–5.6 %",
      "Interpretation":1,
      "Remarks":"Normal findings",
-     "TestDoneBy":1000001 
+     "TestDoneBy":1000001
 }
 
 ApproveLabWorkItem
 {
-     "CHANNEL_ID":1,
+    "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",
-    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
-    "USER_ID" : 2000000, 
+    "SESSION_REF": "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID": 2000000, 
     "ClinicID": 1,
-    "BranchID"  :1,
+    "BranchID":1,
     "WorkID":1,
-    "TestApprovedBy":1000001,    
+    "TestApprovedBy":1000001,
     "ApprovalRemarks":"Normal findings"
 }
 
@@ -64,6 +64,37 @@ RejectLabWorkItem
     "RejectReason":"sample spoiled"
 }
 
+GetLabWorkItemList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+     "Page":1,
+    "PageSize":20,   
+    "ClinicID": 1,
+    "BranchID":1,
+     "Status":-1,
+    "PatientID":0,    
+    "DoctorID":0,
+    "TestID":0,
+     "OrderID":0,
+     "FromDate":"",
+    "ToDate":"",
+    "Search":""   
+      
+}
+
+Lab Test Order Status
+1	Pending	
+2	Completed	
+3	Cancelled	
+
+Lab Test work Status
+1	Pending
+2	InProgress
+3	Completed
+4	Rejected
 
 ____________________________________________________________________________
 
@@ -85,3 +116,197 @@ CreateWorkItemsForOrder
     }
 }
 ------------------------------------------------------------------
+
+GetLabWorkItemList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+     "Page":1,
+    "PageSize":20,   
+    "ClinicID": 1,
+    "BranchID":1,
+     "Status":-1,
+    "PatientID":0,    
+    "DoctorID":0,
+    "TestID":0,
+     "OrderID":0,
+     "FromDate":"",
+    "ToDate":"",
+    "Search":""   
+}
+
+{
+    "result": [
+        {
+            "WorkID": 4,
+            "OrderID": 2,
+            "ItemID": 3,
+            "PatientID": 2000046,
+            "PatientName": "Deepak K",
+            "FileNo": "CPT200012",
+            "Mobile": "6878978988",
+            "TestID": 1,
+            "TestName": "RBC Count",
+            "ResultValue": null,
+            "ResultUnits": null,
+            "NormalRange": null,
+            "Interpretation": 1,
+            "SampleCollectedTime": "2025-11-27T13:28:00.000Z",
+            "SampleCollectedPlace": "madurai",
+            "ResultEnteredTime": null,
+            "TechnicianName": 0,
+            "ApproverName": 0,
+            "Status": 2,
+            "DateCreated": "2026-01-26T11:02:45.000Z",
+            "Priority": 1,
+            "DoctorName": 0
+        },
+        {
+            "WorkID": 2,
+            "OrderID": 1,
+            "ItemID": 2,
+            "PatientID": 2000000,
+            "PatientName": "Gopi Nath",
+            "FileNo": "CPT200002",
+            "Mobile": "8765894765",
+            "TestID": 1,
+            "TestName": "RBC Count",
+            "ResultValue": "Negative 4.7 + ",
+            "ResultUnits": "mg/dL",
+            "NormalRange": "4.0–5.6 %",
+            "Interpretation": 1,
+            "SampleCollectedTime": "2026-01-26T13:28:00.000Z",
+            "SampleCollectedPlace": "madurai",
+            "ResultEnteredTime": "2025-11-27T13:43:11.000Z",
+            "TechnicianName": 0,
+            "ApproverName": 0,
+            "Status": 2,
+            "DateCreated": "2025-11-27T13:18:40.000Z",
+            "Priority": 1,
+            "DoctorName": 0
+        },
+        {
+            "WorkID": 3,
+            "OrderID": 1,
+            "ItemID": 2,
+            "PatientID": 2000000,
+            "PatientName": "Gopi Nath",
+            "FileNo": "CPT200002",
+            "Mobile": "8765894765",
+            "TestID": 2,
+            "TestName": "WBC Count",
+            "ResultValue": "Negative 4.7 + ",
+            "ResultUnits": "mg/dL",
+            "NormalRange": "4.0–5.6 %",
+            "Interpretation": 1,
+            "SampleCollectedTime": "2025-11-27T13:28:00.000Z",
+            "SampleCollectedPlace": "madurai",
+            "ResultEnteredTime": "2025-11-27T13:43:16.000Z",
+            "TechnicianName": 0,
+            "ApproverName": 0,
+            "Status": 2,
+            "DateCreated": "2025-11-27T13:18:40.000Z",
+            "Priority": 1,
+            "DoctorName": 0
+        }
+    ]
+}
+
+
+----------------------------------------------------------
+
+UpdateSampleCollection
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "WorkID":5,
+    "SampleCollectedTime":"2026-01-28 12:15:00",
+    "SampleCollectedPlace":"madurai" 
+}
+
+{
+    "result": {
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+------------------------------------------------------------
+
+UpdateLabWorkItemResult
+{
+     "CHANNEL_ID":1,
+     "REF_KEY":"hshshshshshshshshshsh",
+     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+     "USER_ID" : 2000000,
+     "ClinicID": 1,
+     "BranchID"  :1,
+     "WorkID":5,
+     "ResultValue":"Negative 5.2 + ",
+     "ResultUnits":"mg/dL",
+     "NormalRange":"4.7–6.1 %",
+     "Interpretation":1,
+     "Remarks":"Normal findings",
+     "TestDoneBy":1000001
+}
+
+{
+    "result": {
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+--------------------------------------------------------------
+
+ApproveLabWorkItem
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF": "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID": 2000000, 
+    "ClinicID": 1,
+    "BranchID":1,
+    "WorkID":5,
+    "TestApprovedBy":1000001,
+    "ApprovalRemarks":"Normal findings"
+}
+
+{
+    "result": {
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+--------------------------------------------------------------
+
+RejectLabWorkItem
+{
+     "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "WorkID":8,     
+    "TestApprovedBy":1000001,    
+    "RejectReason":"sample spoiled"
+}
+
+{
+    "result": {
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+---------------------------------------------------------------
+
+

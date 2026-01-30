@@ -25,7 +25,7 @@ UpdateLabTestOrder
 {
     "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",
-    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "SESSION_REF" : "jdyqt6e 5y3ndjne67363nnd",
     "USER_ID" : 2000000,
     "ClinicID": 1,
     "BranchID": 1,
@@ -43,8 +43,7 @@ DeleteLabTestOrder
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000, 
-   "OrderID": 1
-   
+    "OrderID": 1
 }
 
 GetLabTestOrderList
@@ -59,7 +58,7 @@ GetLabTestOrderList
     "ClinicID": 1,
     "BranchID":1,
     "ConsultationID":0,    
-    "VisitID":0,  
+    "VisitID":0,
     "PatientID":0,
     "PatientName":"",
     "DoctorID":0,
@@ -167,20 +166,18 @@ UpdateLabTestOrder
     "FileID":1,
     "Status":1,
     "TestApprovedBy":1000004
-
-
-}
+}      
 
 14 - TableID
 5 - In progress
 
-{
-    "result": {
-        "IN_ORDER_ID": 2,
-        "OUT_OK": 1,
-        "OUT_ERROR": "OK"
+    {
+        "result": {
+            "IN_ORDER_ID": 2,
+            "OUT_OK": 1,
+            "OUT_ERROR": "OK"
+        }
     }
-}
 
 --------------------------------------------------
 
@@ -203,5 +200,6 @@ DeleteLabTestOrder
 }
 
 -----------------------------------------------
+
 
 

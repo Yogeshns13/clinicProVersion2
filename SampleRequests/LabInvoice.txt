@@ -11,8 +11,50 @@ GenerateLabInvoice
     "Discount":10   
 }
 
+GetLabInvoiceDetailList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,    
+    "Page":1,
+    "PageSize":20,
+    "InvDetailID":0,
+    "ClinicID": 1,
+    "BranchID":1,
+    "InvoiceID":0,
+    "OrderID":0,
+    "TestID":0,
+    "TestName":"",
+    "PatientID":0
+   
+}
 
+______________________________________________________________________
 
+GenerateLabInvoice
+
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID": 1,    
+    "BranchID"  :1,
+    "OrderID":4,
+    "InvoiceDate":"2026-01-29",
+    "Discount":10
+}
+
+{
+    "result": {
+        "OUT_INVOICE_ID": 25,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+--------------------------------------------------------------
 
 GetLabInvoiceDetailList
 {
@@ -22,13 +64,160 @@ GetLabInvoiceDetailList
     "USER_ID" : 2000000,    
     "Page":1,
     "PageSize":20,
-     "InvDetailID":0,
-     "ClinicID": 1,  
-     "BranchID":1,
-     "InvoiceID"  :0, 
-     "OrderID":0,
+    "InvDetailID":0,
+    "ClinicID": 1,
+    "BranchID":1,
+    "InvoiceID":0,
+    "OrderID":0,
     "TestID":0,
     "TestName":"",
-     "PatientID":0
-   
+    "PatientID":0 
 }
+
+{
+    "result": [
+        {
+            "inv_detail_id": 5,
+            "unique_seq": 7,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_id": 25,
+            "invoice_no": "CPT-INV-LAB-000002",
+            "invoice_date": "2026-01-28T18:30:00.000Z",
+            "patient_id": 2000047,
+            "patient_name": "Vishnu Rajan",
+            "patient_mobile": "8767567898",
+            "patient_file_no": "CPT200013",
+            "order_id": 4,
+            "test_id": 3,
+            "test_name": "Henoglobin Count",
+            "master_test_name": "Henoglobin Count",
+            "test_short_name": "HC",
+            "amount": "110.00",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "cgst_amount": "9.90",
+            "sgst_amount": "9.90",
+            "net_amount": "129.80",
+            "date_created": "2026-01-29T06:18:28.000Z",
+            "date_modified": "2026-01-29T06:18:28.000Z"
+        },
+        {
+            "inv_detail_id": 4,
+            "unique_seq": 6,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_id": 25,
+            "invoice_no": "CPT-INV-LAB-000002",
+            "invoice_date": "2026-01-28T18:30:00.000Z",
+            "patient_id": 2000047,
+            "patient_name": "Vishnu Rajan",
+            "patient_mobile": "8767567898",
+            "patient_file_no": "CPT200013",
+            "order_id": 4,
+            "test_id": 2,
+            "test_name": "WBC Count",
+            "master_test_name": "WBC Count",
+            "test_short_name": "WBC",
+            "amount": "100.00",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "cgst_amount": "9.00",
+            "sgst_amount": "9.00",
+            "net_amount": "118.00",
+            "date_created": "2026-01-29T06:18:28.000Z",
+            "date_modified": "2026-01-29T06:18:28.000Z"
+        },
+        {
+            "inv_detail_id": 3,
+            "unique_seq": 5,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_id": 24,
+            "invoice_no": "CPT-INV-LAB-000001",
+            "invoice_date": "2026-01-27T18:30:00.000Z",
+            "patient_id": 2000048,
+            "patient_name": "Barath Nath",
+            "patient_mobile": "9087877889",
+            "patient_file_no": "CPT200014",
+            "order_id": 5,
+            "test_id": 2,
+            "test_name": "CUC Count 1",
+            "master_test_name": "WBC Count",
+            "test_short_name": "WBC",
+            "amount": "300.00",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "cgst_amount": "27.00",
+            "sgst_amount": "27.00",
+            "net_amount": "354.00",
+            "date_created": "2026-01-28T13:03:10.000Z",
+            "date_modified": "2026-01-28T13:03:10.000Z"
+        },
+        {
+            "inv_detail_id": 2,
+            "unique_seq": 4,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_id": 1,
+            "invoice_no": "CPT-INV-LAB-000003",
+            "invoice_date": "2025-11-27T18:30:00.000Z",
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "order_id": 1,
+            "test_id": 1,
+            "test_name": "CBC Count",
+            "master_test_name": "RBC Count",
+            "test_short_name": "RBC",
+            "amount": "200.00",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "cgst_amount": "18.00",
+            "sgst_amount": "18.00",
+            "net_amount": "236.00",
+            "date_created": "2025-11-28T08:55:16.000Z",
+            "date_modified": "2025-11-28T08:55:16.000Z"
+        },
+        {
+            "inv_detail_id": 1,
+            "unique_seq": 3,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_id": 1,
+            "invoice_no": "CPT-INV-LAB-000003",
+            "invoice_date": "2025-11-27T18:30:00.000Z",
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "order_id": 1,
+            "test_id": 1,
+            "test_name": "RBC Count",
+            "master_test_name": "RBC Count",
+            "test_short_name": "RBC",
+            "amount": "100.00",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "cgst_amount": "9.00",
+            "sgst_amount": "9.00",
+            "net_amount": "118.00",
+            "date_created": "2025-11-28T08:55:16.000Z",
+            "date_modified": "2025-11-28T08:55:16.000Z"
+        }
+    ]
+}
+
+-------------------------------------------------------------------------
+

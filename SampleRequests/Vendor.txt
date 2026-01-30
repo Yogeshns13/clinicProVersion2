@@ -14,7 +14,7 @@ AddVendor
     "Address":"Gomathipuram , Madurai",
     "GSTNo":"33ABCDE1234F1Z5",
     "LicenseDetail":"Test License"
-}
+}    
 
 UpdateVendor
 {

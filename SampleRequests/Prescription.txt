@@ -17,9 +17,6 @@ AddPrescription
     "IsRepeat":0,
    "RepeatCount": 0,
    "CreatedBy":1000001  (employee ID)
-   
-
-   
 }
 
 UpdatePrescription
@@ -36,11 +33,9 @@ UpdatePrescription
     "Notes":"Fever cold and head ache",
     "IsRepeat":0,
    "RepeatCount": 0,
-   "Status":1
-
-
-   
+   "Status":1,
 }
+
 DeletePrescription
 {
     "CHANNEL_ID":1,
@@ -49,6 +44,33 @@ DeletePrescription
     "USER_ID" : 2000000,
     "PrescriptionID":1
 }
+
+GetPrescriptionList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20, 
+    "PrescriptionID":0,
+    "ClinicID": 1,
+    "BranchID":1,
+    "ConsultationID":0,
+    "VisitID":0,    
+    "PatientID":0,
+    "PatientName":"",
+    "DoctorID":0,
+    "DoctorName":"",   
+    "CreatedBy":0,   
+    "FromDate":"",
+    "ToDate":"",
+    "IsRepeat":-1,
+    "Status":-1,
+    
+}
+
+______________________________________________________________________________
 
 GetPrescriptionList
 {
@@ -74,3 +96,152 @@ GetPrescriptionList
     "Status":-1,
     
 }
+
+{
+    "result": [
+        {
+            "prescription_id": 2,
+            "unique_seq": 3,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "consultation_id": 5000000,
+            "visit_id": 4000000,
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Thivaakar AD",
+            "doctor_code": "EMP0014",
+            "date_issued": "2025-11-28T18:30:00.000Z",
+            "valid_until": "2025-12-28T18:30:00.000Z",
+            "diagnosis": "having high fever",
+            "notes": "Fever cold and head ache",
+            "is_repeat": 0,
+            "is_repeat_desc": "No",
+            "repeat_count": 0,
+            "status": 1,
+            "status_desc": "Active",
+            "created_by": 1000001,
+            "created_by_name": "Thivaakar AD",
+            "date_created": "2025-12-01T06:39:51.000Z",
+            "date_modified": "2025-12-01T06:39:51.000Z"
+        },
+        {
+            "prescription_id": 1,
+            "unique_seq": 2,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "consultation_id": 5000000,
+            "visit_id": 4000000,
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Thivaakar AD",
+            "doctor_code": "EMP0014",
+            "date_issued": "2025-11-28T18:30:00.000Z",
+            "valid_until": "2025-12-28T18:30:00.000Z",
+            "diagnosis": "having high fever",
+            "notes": "Fever cold and head ache",
+            "is_repeat": 1,
+            "is_repeat_desc": "Yes",
+            "repeat_count": 2,
+            "status": 1,
+            "status_desc": "Active",
+            "created_by": 1000001,
+            "created_by_name": "Thivaakar AD",
+            "date_created": "2025-11-29T08:21:23.000Z",
+            "date_modified": "2025-11-29T08:28:55.000Z"
+        }
+    ]
+}
+
+---------------------------------------------------------------------
+
+AddPrescription
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "ConsultationID":5000000,
+    "VisitID":4000000,
+     "PatientID":2000000,
+    "DoctorID":1000001,   
+    "DateIssued": "2025-11-29",  
+    "ValidUntil":"2025-12-29",
+    "Diagnosis": "having high fever",
+   "Notes":"Fever cold and head ache",
+    "IsRepeat":0,
+   "RepeatCount": 0,
+   "CreatedBy":1000001  (employee ID)
+}
+
+{
+    "result": {
+        "OUT_ID": 6,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+------------------------------------------------------------------------
+
+UpdatePrescription
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "PrescriptionID":6,
+    "DateIssued": "2026-01-29",  
+    "ValidUntil":"2026-02-27",
+    "Notes":"Fever cold and head ache",
+    "IsRepeat":0,
+   "RepeatCount": 0,
+   "Status":1
+}
+
+{
+    "result": {
+        "IN_PRESCRIPTION_ID": 6,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+
+--------------------------------------------------------------------
+
+DeletePrescription
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "PrescriptionID":7
+}
+
+{
+    "result": {
+        "IN_PRESCRIPTION_ID": 7,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-------------------------------------------------------------------
+
+
+
+

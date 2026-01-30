@@ -1,0 +1,327 @@
+/* ViewMedicineMaster.module.css */
+
+/* ==================== ROOT & VARIABLES ==================== */
+:root {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+}
+
+/* ==================== MAIN WRAPPER ==================== */
+.wrapper {
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ==================== TOOLBAR / BACK BUTTON ==================== */
+.toolbar {
+  margin-bottom: 24px;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.25);
+}
+
+.backBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(32, 125, 156, 0.35);
+}
+
+/* ==================== MEDICINE DETAILS CARD ==================== */
+.detailsCard {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(34, 43, 108, 0.12);
+  border: 1px solid rgba(34, 43, 108, 0.08);
+}
+
+/* Header Section */
+.cardHeader {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(48, 178, 181, 0.04));
+  border-bottom: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.headerInfo h2 {
+  margin: 0 0 6px 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  margin: 0 0 10px 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+/* Badge Container */
+.badgeContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Status Badge */
+.statusBadge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  display: inline-block;
+}
+
+.statusBadge.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.statusBadge.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.statusBadge.large {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+}
+
+/* Low Stock Badge */
+.lowStockBadge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #92400e;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* ==================== DETAILS BODY ==================== */
+.cardBody {
+  padding: 24px;
+}
+
+.detailsSection {
+  margin-bottom: 32px;
+}
+
+.sectionTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(48, 178, 181, 0.3);
+}
+
+/* Details Grid */
+.detailsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px 24px;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fullWidthDetail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(34, 43, 108, 0.08);
+}
+
+.detailLabel {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.detailValue {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+}
+
+.lowStockText {
+  color: #d97706;
+}
+
+/* ==================== FOOTER ACTIONS ==================== */
+.cardFooter {
+  padding: 20px 24px;
+  border-top: 1px solid rgba(34, 43, 108, 0.1);
+  background: rgba(243, 244, 246, 0.4);
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.btnHold,
+.btnUpdate,
+.btnDelete {
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+}
+
+.btnUpdate {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: white;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+}
+
+.btnUpdate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(32, 125, 156, 0.4);
+}
+
+.btnDelete,
+.btnHold {
+  background: #ef4444;
+  color: white;
+}
+
+.btnDelete:hover,
+.btnHold:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+}
+
+/* ==================== LOADING & ERROR ==================== */
+.loading,
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  font-size: 1.3rem;
+  color: #64748b;
+}
+
+.error {
+  color: #ef4444;
+}
+
+/* ==================== DARK MODE ==================== */
+:global(.dark-mode) .wrapper {
+  background: #1e293b;
+}
+
+:global(.dark-mode) .detailsCard {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .cardHeader {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
+  border-bottom-color: #475569;
+}
+
+:global(.dark-mode) .subtitle {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .sectionTitle {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .detailLabel {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .detailValue {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .fullWidthDetail {
+  border-top-color: #475569;
+}
+
+:global(.dark-mode) .cardFooter {
+  background: rgba(15, 23, 42, 0.4);
+  border-top-color: #475569;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .detailsGrid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .cardFooter {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .btnHold,
+  .btnUpdate,
+  .btnDelete {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .cardHeader,
+  .cardBody,
+  .cardFooter {
+    padding: 16px;
+  }
+
+  .headerInfo h2 {
+    font-size: 1.3rem;
+  }
+
+  .backBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}

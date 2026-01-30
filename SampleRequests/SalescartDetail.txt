@@ -16,7 +16,6 @@ AddSalesCartDetail
 
 -- batch selection -> 'FIFO' or 'FEFO'
 
-
 DeleteSalesCartDetail
 {
     "CHANNEL_ID":1,
@@ -24,9 +23,6 @@ DeleteSalesCartDetail
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000,
     "CartDetailID":1
-    
-    
-   
 }
 -- Status Text Table #42 1- Created  2-Processed 3- Cancelled
 
@@ -48,6 +44,147 @@ GetSalesCartDetailList
      "MedicineName":"",
      "BatchNo":"",
     "Status":-1
-    
-   
 }
+
+___________________________________________________________
+
+GetSalesCartDetailList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "CartDetailID":0,
+    "CartID":0,
+    "ClinicID": 1,
+    "BranchID":1,
+    "PatientID":0,    
+    "PatientName":"",  
+     "MedicineID":0,
+     "MedicineName":"",
+     "BatchNo":"",
+    "Status":-1
+}
+
+{
+    "result": [
+        {
+            "cart_detail_id": 7,
+            "cart_id": 2,
+            "cart_header_id": 2,
+            "unique_seq": 7,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "patient_id": 2000000,
+            "customer_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "medicine_id": 1,
+            "medicine_name": "P 500",
+            "generic_name": "Parametamol 500",
+            "manufacturer": "Apec Lab",
+            "stock_id": 1,
+            "batch_no": "BT-202512A",
+            "expiry_date": "2025-12-19T18:30:00.000Z",
+            "quantity": 70,
+            "unit_price": "11.00",
+            "discount_percentage": "5.00",
+            "discount": "38.50",
+            "total_amount": "770.00",
+            "cgst_amount": "43.89",
+            "sgst_amount": "43.89",
+            "net_amount": "819.28",
+            "status": 1,
+            "status_desc": "Created",
+            "date_created": "2025-12-02T06:39:21.000Z",
+            "date_modified": "2025-12-02T06:39:21.000Z"
+        },
+        {
+            "cart_detail_id": 6,
+            "cart_id": 2,
+            "cart_header_id": 2,
+            "unique_seq": 6,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "patient_id": 2000000,
+            "customer_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "medicine_id": 1,
+            "medicine_name": "P 500",
+            "generic_name": "Parametamol 500",
+            "manufacturer": "Apec Lab",
+            "stock_id": 1,
+            "batch_no": "BT-202512A",
+            "expiry_date": "2025-12-19T18:30:00.000Z",
+            "quantity": 100,
+            "unit_price": "11.00",
+            "discount_percentage": "5.00",
+            "discount": "55.00",
+            "total_amount": "1100.00",
+            "cgst_amount": "62.70",
+            "sgst_amount": "62.70",
+            "net_amount": "1170.40",
+            "status": 1,
+            "status_desc": "Created",
+            "date_created": "2025-12-02T06:39:10.000Z",
+            "date_modified": "2025-12-02T06:39:10.000Z"
+        }
+    ]
+}
+
+------------------------------------------------------------------
+
+AddSalesCartDetail
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":1,
+    "BranchID":1,
+    "CartID":6,
+    "MedicineID":8,
+    "Quantity":50,
+    "UnitPrice":10.00,
+    "DiscountPercentage":10,
+    "BatchSelection":"FEFO"
+}
+
+{
+    "result": {
+        "OUT_CART_DETAIL_ID": 11,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-------------------------------------------------------------
+
+DeleteSalesCartDetail
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "CartDetailID":12
+}
+
+{
+    "result": {
+        "OUT_CART_DETAIL_ID": 12,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+----------------------------------------------------------
+
+
+

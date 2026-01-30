@@ -51,6 +51,10 @@ const ROUTE_PERMISSIONS = {
   "/view-vendor/:id": ["admin", "doctor", "receptionist"],
   "/add-vendor": ["admin", "doctor", "receptionist"],
   "/update-vendor/:id": ["admin", "doctor", "receptionist"],
+  "/medicinemaster-list": ["admin", "doctor", "receptionist"],
+  "/add-medicinemaster": ["admin", "doctor", "receptionist"],
+  "/update-medicinemaster/:id": ["admin", "doctor", "receptionist"],
+  "/view-medicinemaster/:id": ["admin", "doctor", "receptionist"],
 };
 
 const PrivateRoute = ({ children }) => {

@@ -22,8 +22,8 @@ AddPrescriptionDetail
     "RefillCount":0,
     "StartDate":"2025-11-29",
     "EndDate":"2025-12-05"
-
 }
+
 -- Form Text Table 22 1- Tablet 2-Capsule 3-Syrup 4-Injection 5-Oinment 6-Drops 7-Powder 8-Gel 9-Cream 10-Inhaler
 -- Route Text Tale 23 1- Oral 2- IV 3-IM 4-Topical 5-Nosal 6-Opthalmic 7-Sublinqual 8-Rectal 9-Inhalidation 10-Transdermal 
 -- FoodTiming Text table 24 1- Before Food 2-After Food 3-With Food 4-Empty Stomach
@@ -89,3 +89,175 @@ GetPrescriptionDetailList
     "Status":-1
     
 }
+
+___________________________________________________________________
+
+GetPrescriptionDetailList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20, 
+    "PrescriptionDetailID":0,
+     "ClinicID": 1,
+    "BranchID"  :1,
+    "PrescriptionID":0,
+    "ConsultationID":0,
+    "VisitID":0,
+    "PatientID":0,
+    "PatientName":"",
+    "DoctorID":0,
+    "DoctorName":"",
+     "MedicineID":0,    
+    "MedicineName":"",
+    "Form":0,   
+    "Route":0,
+    "FoodTiming":0,   
+    "RefillAllowed":0,   
+    "Status":-1
+    
+}
+
+{
+    "result": [
+        {
+            "prescription_detail_id": 1,
+            "unique_seq": 3,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "prescription_id": 1,
+            "consultation_id": 5000000,
+            "visit_id": 4000000,
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Thivaakar AD",
+            "doctor_code": "EMP0014",
+            "medicine_id": 1,
+            "medicine_name": "P 500",
+            "master_medicine_name": "P 500",
+            "generic_name": "Parametamol 500",
+            "form": 1,
+            "form_desc": "Tablet",
+            "strength": "500mg",
+            "dosage": "1 tablet",
+            "frequency": "3 times a day",
+            "duration": "7 days",
+            "route": 1,
+            "route_desc": "Oral",
+            "food_timing": 2,
+            "food_timing_desc": "After Food",
+            "instructions": "7 days course 3 times per day",
+            "quantity": "21.00",
+            "refill_allowed": 0,
+            "refill_allowed_desc": "No",
+            "refill_count": 0,
+            "start_date": "2025-11-28T18:30:00.000Z",
+            "end_date": "2025-12-04T18:30:00.000Z",
+            "status": 1,
+            "status_desc": "Active",
+            "date_created": "2025-11-29T09:24:02.000Z",
+            "date_modified": "2025-11-29T09:30:47.000Z"
+        }
+    ]
+}
+
+
+------------------------------------------------------------------------------
+
+AddPrescriptionDetail
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "PrescriptionID":6,
+    "MedicineID":7,    
+    "MedicineName":"P 500",
+    "Form":1,
+    "Strength":"500mg",
+    "Dosage":"1 tablet",
+    "Frequency":"3 times a day",
+    "Duration":"7 days",
+    "Route":1,
+    "FoodTiming":2,
+    "Instructions":"7 days course 3 times per day",
+    "Quantity":21,    
+    "RefillAllowed":0,
+    "RefillCount":0,
+    "StartDate":"2026-01-29",
+    "EndDate":"2026-02-28"
+}
+
+{
+    "result": {
+        "OUT_ID": 4,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+----------------------------------------------------------
+
+UpdatePrescriptionDetail
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "PrescriptionDetailID":4,
+    "Form":1,
+    "Strength":"500mg",
+    "Dosage":"1 tablet",
+    "Frequency":"4 times a day",
+    "Duration":"7 days",
+    "Route":1,
+    "FoodTiming":2,
+    "Instructions":"7 days course 3 times per day",
+    "Quantity":21,    
+    "RefillAllowed":0,
+    "RefillCount":0,
+    "StartDate":"2026-01-29",
+    "EndDate":"2026-02-28",
+    "Status":1
+}
+
+{
+    "result": {
+        "IN_DETAIL_ID": 4,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+------------------------------------------------------------------------
+
+
+DeletePrescriptionDetail
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "PrescriptionDetailID":1
+}
+
+{
+    "result": {
+        "IN_DETAIL_ID": 6,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+----------------------------------------------------------------------

@@ -33,3 +33,125 @@ GetPharmacyInvoiceDetailList
     "FromDate":"",
     "ToDate":""
 }
+
+_______________________________________________________________________________________________
+
+GetPharmacyInvoiceDetailList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "OrderID":0,
+    "Page":1,
+    "PageSize":20,
+    "InvDetailID":0,   
+    "ClinicID": 1, 
+    "BranchID":1,
+    "InvoiceID"  :0,    
+    "InvoiceNo":"",
+     "PatientID":0,
+    "PatientName":"",
+    "MedicineID":0,  
+    "MedicineName":0,
+    "BatchNo":"",
+    "FromDate":"",
+    "ToDate":""
+}
+
+{
+    "result": [
+        {
+            "inv_detail_id": 2,
+            "unique_seq": 4,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_id": 3,
+            "invoice_no": "CPT-INV-PHARM-000005",
+            "invoice_date": "2025-11-27T18:30:00.000Z",
+            "patient_id": 2000000,
+            "customer_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "medicine_id": 1,
+            "medicine_name": "P 500",
+            "generic_name": "Parametamol 500",
+            "manufacturer": "Apec Lab",
+            "hsn_code": "2924.29.90",
+            "batch_no": "BT-202512A",
+            "expiry_date": "2025-12-19T18:30:00.000Z",
+            "quantity": "100.00",
+            "unit_price": "11.00",
+            "amount": "1100.00",
+            "cgst_percentage": "6.00",
+            "sgst_percentage": "6.00",
+            "cgst_amount": "62.70",
+            "sgst_amount": "62.70",
+            "total_line_amount": "1225.40",
+            "date_created": "2025-12-02T06:21:52.000Z",
+            "date_modified": "2025-12-02T06:21:52.000Z"
+        },
+        {
+            "inv_detail_id": 1,
+            "unique_seq": 3,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "invoice_id": 3,
+            "invoice_no": "CPT-INV-PHARM-000005",
+            "invoice_date": "2025-11-27T18:30:00.000Z",
+            "patient_id": 2000000,
+            "customer_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "medicine_id": 1,
+            "medicine_name": "P 500",
+            "generic_name": "Parametamol 500",
+            "manufacturer": "Apec Lab",
+            "hsn_code": "2924.29.90",
+            "batch_no": "BT-202512A",
+            "expiry_date": "2025-12-19T18:30:00.000Z",
+            "quantity": "50.00",
+            "unit_price": "11.00",
+            "amount": "550.00",
+            "cgst_percentage": "6.00",
+            "sgst_percentage": "6.00",
+            "cgst_amount": "31.35",
+            "sgst_amount": "31.35",
+            "total_line_amount": "612.70",
+            "date_created": "2025-12-02T06:21:52.000Z",
+            "date_modified": "2025-12-02T06:21:52.000Z"
+        }
+    ]
+}
+
+--------------------------------------------------------------------------
+
+GeneratePharmacyInvoice
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID": 1,    
+    "BranchID"  :1,
+    "CartID":6,
+    "InvoiceDate":"2026-01-29",
+    "Discount":90     
+}
+
+{
+    "result": {
+        "OUT_INVOICE_ID": 27,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-------------------------------------------------------
+
+
+

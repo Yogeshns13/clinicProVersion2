@@ -65,7 +65,6 @@ GetConsultationList
     "ToDate":"",
     "NextConsultationDate":"",
     "InvoiceID":0
-   
 }
 
 ------------------------------------------------------------

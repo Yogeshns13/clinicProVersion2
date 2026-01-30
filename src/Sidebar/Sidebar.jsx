@@ -15,6 +15,7 @@ import {
   FiLayers,
   FiBriefcase,
   FiChevronRight,
+  FiPlusSquare,
 } from "react-icons/fi";
 import { HiOutlineChevronLeft, HiOutlineChevronRight } from "react-icons/hi";
 import { useAuth } from "../context/AuthContext";
@@ -110,11 +111,12 @@ const Sidebar = () => {
     },
     {
       id: "pharmacy",
-      icon: FiFileText,
+      icon: FiPlusSquare,
       label: "pharmacy",
       hasDropdown: true,
       subItems: [
         { to: "/vendor-list", label: "Vendor"},
+        { to: "/medicinemaster-list", label: "Medicine"},
       ],
       show: hasAccess(MENU_PERMISSIONS.pharmacy),
     },

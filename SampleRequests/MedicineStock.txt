@@ -11,8 +11,6 @@ AddMedicineStock
     "ExpiryDate":"2025-12-20",
     "QuantityIn":1000,   
     "PurchasePrice": 8.50
-    
-   
 }
 
 
@@ -29,7 +27,6 @@ UpdateMedicineStock
     "ExpiryDate":"2025-12-20",
     "QuantityIn":1000,   
     "PurchasePrice": 8.50
-   
 }
 
 
@@ -57,3 +54,157 @@ GetMedicineStockList
 -- Near Expiry Days -> 0 for all records
 -- Zero Stock -> -1 from all records
 -- Negative Stock -> 0 for all records
+
+___________________________________________________________________
+
+GetMedicineStockList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "StockID":0,
+    "ClinicID": 1,
+    "BranchID":1,
+    "MedicineID":0,   
+    "MedicineName":"",   
+    "BatchNo": "",    
+    "ExpiryFrom": "",
+    "ExpiryTo":"",
+    "NearExpiryDays":30,
+    "ZeroStock":0,  
+   "NegativeStock":0
+}
+
+{
+    "result": [
+        {
+            "stock_id": 1,
+            "unique_seq": 2,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "medicine_id": 1,
+            "medicine_name": "P 500",
+            "generic_name": "Parametamol 500",
+            "manufacturer": "Apec Lab",
+            "hsn_code": "2924.29.90",
+            "batch_no": "BT-202512A",
+            "expiry_date": "2025-12-19T18:30:00.000Z",
+            "quantity_in": 900,
+            "quantity_out": 320,
+            "balance_quantity": 580,
+            "purchase_price": "8.40",
+            "average_price": "8.40",
+            "stock_status_desc": "Expired",
+            "days_to_expiry": -40,
+            "date_created": "2025-12-01T06:16:40.000Z",
+            "date_modified": "2025-12-02T06:39:21.000Z"
+        },
+        {
+            "stock_id": 2,
+            "unique_seq": 3,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "medicine_id": 1,
+            "medicine_name": "P 500",
+            "generic_name": "Parametamol 500",
+            "manufacturer": "Apec Lab",
+            "hsn_code": "2924.29.90",
+            "batch_no": "BT-202512A",
+            "expiry_date": "2025-12-19T18:30:00.000Z",
+            "quantity_in": 100,
+            "quantity_out": 0,
+            "balance_quantity": 100,
+            "purchase_price": "8.75",
+            "average_price": "8.44",
+            "stock_status_desc": "Expired",
+            "days_to_expiry": -40,
+            "date_created": "2025-12-01T08:07:32.000Z",
+            "date_modified": "2025-12-01T08:07:32.000Z"
+        },
+        {
+            "stock_id": 3,
+            "unique_seq": 4,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "medicine_id": 1,
+            "medicine_name": "P 500",
+            "generic_name": "Parametamol 500",
+            "manufacturer": "Apec Lab",
+            "hsn_code": "2924.29.90",
+            "batch_no": "BT-202512A",
+            "expiry_date": "2025-12-19T18:30:00.000Z",
+            "quantity_in": 50,
+            "quantity_out": 0,
+            "balance_quantity": 50,
+            "purchase_price": "8.75",
+            "average_price": "8.45",
+            "stock_status_desc": "Expired",
+            "days_to_expiry": -40,
+            "date_created": "2025-12-01T08:10:18.000Z",
+            "date_modified": "2025-12-01T08:10:18.000Z"
+        }
+    ]
+}
+
+---------------------------------------------------------------
+AddMedicineStock
+
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "MedicineID":7,
+    "BatchNo":"BT-202517D",
+    "ExpiryDate":"2026-02-14",
+    "QuantityIn":500,   
+    "PurchasePrice": 8.50
+}
+
+{
+    "result": {
+        "OUT_ID": 14,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+--------------------------------------------------------------
+
+UpdateMedicineStock
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID":1,
+    "StockID":15,
+    "BatchNo":"BT-202517D",
+    "ExpiryDate":"2026-02-20",
+    "QuantityIn":400,   
+    "PurchasePrice": 8.50
+}
+
+{
+    "result": {
+        "IN_STOCK_ID": 15,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+------------------------------------------
+
+

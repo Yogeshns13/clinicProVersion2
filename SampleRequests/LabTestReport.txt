@@ -7,11 +7,11 @@ AddLabTestReport
     "ClinicID": 1  ,  
     "BranchID":1,
     "OrderID":1,
-     "ConsultationID":5000000,
+    "ConsultationID":5000000,
     "VisitID":4000000,
     "PatientID":2000000,    
     "DoctorID":1000001,
-    "FileID":1,    
+    "FileID":1,
     "VerifiedBy":1000001,
     "VerifiedDateTime":"2025-11-27 18:58:00",
     "Remarks":"Verified "
@@ -22,16 +22,22 @@ UpdateLabTestReport
     "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
-    "USER_ID" : 2000000, 
-    "ClinicID": 1  ,  
+    "USER_ID" : 2000000,
+    "ClinicID": 1,
     "BranchID":1,
     "ReportID":1,
     "VerifiedBy":1000001,
     "VerifiedDateTime":"2025-11-27 18:58:00",
-    "FileID":1,    
+    "FileID":1,
     "Remarks":"Verified ",
     "Status":3
 }
+
+Lab Report Status
+
+1	Created	
+2	Cancelled	
+3	Verified
 
 DeleteLabTestReport
 {
@@ -40,8 +46,8 @@ DeleteLabTestReport
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000,     
     "ReportID":1
-    
 }
+
 GetLabTestReportList
 {
     "CHANNEL_ID":1,
@@ -65,4 +71,142 @@ GetLabTestReportList
     "ToDate":"",
     "Status":-1  
 }
+
+----------------------------------------------------------------------
+
+GetLabTestReportList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+     "Page":1,
+    "PageSize":20,
+    "ReportID":0,
+    "ClinicID": 1,
+    "BranchID":1,
+     "OrderID":0,
+    "ConsultationID":0,    
+    "VisitID":0,  
+    "PatientID":0,
+    "PatientName":"",
+    "DoctorID":0,
+    "DoctorName":"",
+    "VerifiedBy":0,
+    "FromDate":"",
+    "ToDate":"",
+    "Status":-1  
+}
+
+{
+    "result": [
+        {
+            "report_id": 1,
+            "unique_seq": 1,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "order_id": 1,
+            "consultation_id": 5000000,
+            "visit_id": 4000000,
+            "patient_id": 2000000,
+            "patient_name": "Gopi Nath",
+            "patient_mobile": "8765894765",
+            "patient_file_no": "CPT200002",
+            "doctor_id": 1000001,
+            "doctor_full_name": "Thivaakar AD",
+            "doctor_code": "EMP0014",
+            "file_id": 1,
+            "verified_by": 1000001,
+            "verified_by_name": "Thivaakar AD",
+            "verified_datetime": "2025-11-27T13:28:00.000Z",
+            "remarks": "Verified ",
+            "status": 3,
+            "status_desc": "Verified",
+            "date_created": "2025-11-27T13:49:56.000Z",
+            "date_modified": "2025-11-27T13:57:04.000Z"
+        }
+    ]
+}
+
+-------------------------------------------------------------------------
+
+AddLabTestReport
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1  ,  
+    "BranchID":1,
+    "OrderID":4,
+    "ConsultationID":5000021,
+    "VisitID":4000025,
+    "PatientID":2000047,    
+    "DoctorID":1000004,
+    "FileID":1,    
+    "VerifiedBy":1000001,
+    "VerifiedDateTime":"2026-01-28 16:00:00",
+    "Remarks":"Verified "
+}
+
+{
+    "result": {
+        "OUT_REPORT_ID": 2,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+---------------------------------------------------------
+UpdateLabTestReport
+
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID": 1,
+    "BranchID":1,
+    "ReportID":4,
+    "VerifiedBy":1000001,
+    "VerifiedDateTime":"2026-01-29 13:00:00",
+    "FileID":5,
+    "Remarks":"Verified ",
+    "Status":3
+}
+
+{
+    "result": {
+        "IN_REPORT_ID": 4,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-----------------------------------------------------------
+
+DeleteLabTestReport
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,     
+    "ReportID":1
+}
+
+{
+    "result": {
+        "IN_REPORT_ID": 5,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-------------------------------------------------------------
+
+
+
+
+
 
