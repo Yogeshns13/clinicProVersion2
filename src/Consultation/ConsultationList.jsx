@@ -1,14 +1,13 @@
 // src/components/ConsultationList.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiPlus, FiCalendar, FiUser, FiActivity, FiFilter, FiDownload, FiFileText } from 'react-icons/fi';
+import { FiSearch, FiPlus, FiCalendar, FiFilter, FiDownload, FiFileText } from 'react-icons/fi';
 import { getPatientVisitList } from '../api/api.js';
 import { getConsultationList, addConsultation } from '../api/api-consultation.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddConsultation from './AddConsultation.jsx';
-import ViewConsultation from './ViewConsultation.jsx';
-import './ConsultationList.css';
+import styles from './ConsultationList.module.css';
 
 const ConsultationList = () => {
   const navigate = useNavigate();
@@ -33,8 +32,8 @@ const ConsultationList = () => {
   const [visitDoctorNameFilter, setVisitDoctorNameFilter] = useState('');
 
   // Date Filters for Consultations
-  const [consultFromDate, setConsultFromDate] = useState(today);
-  const [consultToDate, setConsultToDate] = useState(today);
+  const [consultFromDate, setConsultFromDate] = useState();
+  const [consultToDate, setConsultToDate] = useState();
   const [consultPatientNameFilter, setConsultPatientNameFilter] = useState('');
   const [consultDoctorNameFilter, setConsultDoctorNameFilter] = useState('');
 
@@ -44,8 +43,6 @@ const ConsultationList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [consultingVisitId, setConsultingVisitId] = useState(null);
 
   // Fetch Patient Visits with filters
@@ -63,20 +60,15 @@ const ConsultationList = () => {
         BranchID: branchId
       };
 
-      // Apply date filters logic
       if (visitFromDate && visitToDate) {
-        // Use date range when both dates are specified
         options.FromVisitDate = visitFromDate;
         options.ToVisitDate = visitToDate;
       } else if (visitFromDate) {
-        // Use FromVisitDate as single date
         options.VisitDate = visitFromDate;
       } else {
-        // Default to today's visits
         options.VisitDate = today;
       }
 
-      // Apply name filters
       if (visitPatientNameFilter.trim()) {
         options.PatientName = visitPatientNameFilter.trim();
       }
@@ -87,11 +79,9 @@ const ConsultationList = () => {
       console.log('Fetching patient visits with options:', options);
 
       const data = await getPatientVisitList(clinicId, options);
-      
-      // Filter: Only show visits where consultationId is 0 (not yet consulted)
+
       const unconsultedVisits = data.filter(visit => visit.consultationId === 0);
-      
-      // Sort by visit time
+
       const sortedData = unconsultedVisits.sort((a, b) => {
         const timeA = a.visitTime || '00:00:00';
         const timeB = b.visitTime || '00:00:00';
@@ -133,8 +123,7 @@ const ConsultationList = () => {
       if (consultDoctorNameFilter.trim()) options.DoctorName = consultDoctorNameFilter.trim();
 
       const data = await getConsultationList(clinicId, options);
-      
-      // Sort by date (most recent first)
+
       const sortedData = data.sort((a, b) => {
         const dateA = new Date(a.dateModified || a.dateCreated);
         const dateB = new Date(b.dateModified || b.dateCreated);
@@ -173,7 +162,6 @@ const ConsultationList = () => {
         setFilteredVisits(patientVisits);
         return;
       }
-
       const filtered = patientVisits.filter(
         (visit) =>
           visit.patientName?.toLowerCase().includes(term) ||
@@ -189,7 +177,6 @@ const ConsultationList = () => {
         setFilteredConsultations(consultations);
         return;
       }
-
       const filtered = consultations.filter(
         (consult) =>
           consult.patientName?.toLowerCase().includes(term) ||
@@ -209,51 +196,17 @@ const ConsultationList = () => {
     if (e.key === 'Enter') handleSearch();
   };
 
-  // Apply advanced filters for Patient Visits
   const applyVisitFilters = () => {
     fetchPatientVisits();
   };
 
-  // Apply advanced filters for Consultations
   const applyConsultFilters = () => {
     fetchConsultations();
   };
 
-  // Calculate statistics
-  const getStatistics = () => {
-    if (activeTab === 'pending') {
-      return {
-        totalVisits: filteredVisits.length,
-        uniquePatients: new Set(filteredVisits.map(v => v.patientId)).size,
-        uniqueDoctors: new Set(filteredVisits.map(v => v.doctorId)).size,
-        todayVisits: filteredVisits.filter(v => v.visitDate === today).length
-      };
-    }
-
-    const todayConsultations = filteredConsultations.filter(c => {
-      const consultDate = c.dateCreated?.split('T')[0];
-      return consultDate === today;
-    });
-
-    return {
-      todayConsultations: todayConsultations.length,
-      totalConsultations: filteredConsultations.length,
-      uniquePatients: new Set(filteredConsultations.map(c => c.patientId)).size,
-      uniqueDoctors: new Set(filteredConsultations.map(c => c.doctorId)).size,
-      withFollowup: filteredConsultations.filter(c => c.nextConsultationDate).length
-    };
-  };
-
-  const statistics = getStatistics();
-
   const handleViewDetails = (consultation) => {
-    setSelectedConsultation(consultation);
-    setIsDetailsModalOpen(true);
-  };
-
-  const closeDetailsModal = () => {
-    setSelectedConsultation(null);
-    setIsDetailsModalOpen(false);
+    // Navigate to view-consultation page with consultation ID as param
+    navigate(`/view-consultation/${consultation.id}`);
   };
 
   const openAddForm = () => setIsAddFormOpen(true);
@@ -269,10 +222,6 @@ const ConsultationList = () => {
       fetchPatientVisits();
     }
     setConsultingVisitId(null);
-  };
-
-  const handleUpdateClick = (consultation) => {
-    navigate(`/update-consultation/${consultation.id}`);
   };
 
   const handleConsultClick = (visit) => {
@@ -300,13 +249,11 @@ const ConsultationList = () => {
 
   const clearAllFilters = () => {
     setSearchInput('');
-    
     if (activeTab === 'pending') {
       setVisitFromDate('');
       setVisitToDate('');
       setVisitPatientNameFilter('');
       setVisitDoctorNameFilter('');
-      // Reset to today's data
       fetchPatientVisits();
     } else {
       setConsultFromDate(today);
@@ -336,12 +283,10 @@ const ConsultationList = () => {
         visit.temperature || '',
         visit.weight || ''
       ]);
-
       const csvContent = [
         headers.join(','),
         ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
       ].join('\n');
-
       const blob = new Blob([csvContent], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -370,12 +315,10 @@ const ConsultationList = () => {
         consult.nextConsultationDate || '',
         consult.dateCreated
       ]);
-
       const csvContent = [
         headers.join(','),
         ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
       ].join('\n');
-
       const blob = new Blob([csvContent], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -391,26 +334,26 @@ const ConsultationList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className="consultation-loading">Loading...</div>;
+  if (loading) return <div className={styles.loading}>Loading...</div>;
 
-  if (error) return <div className="consultation-error">Error: {error.message || error}</div>;
+  if (error) return <div className={styles.error}>Error: {error.message || error}</div>;
 
   return (
-    <div className="consultation-list-wrapper">
+    <div className={styles.wrapper}>
       <ErrorHandler error={error} />
       <Header title="Consultation Management" />
 
       {/* Tab Navigation */}
-      <div className="consultation-tabs">
+      <div className={styles.tabs}>
         <button
-          className={`consultation-tab ${activeTab === 'pending' ? 'active' : ''}`}
+          className={`${styles.tab} ${activeTab === 'pending' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('pending')}
         >
           <FiCalendar size={18} />
           Patient Visits
         </button>
         <button
-          className={`consultation-tab ${activeTab === 'visited' ? 'active' : ''}`}
+          className={`${styles.tab} ${activeTab === 'visited' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('visited')}
         >
           <FiFileText size={18} />
@@ -419,11 +362,11 @@ const ConsultationList = () => {
       </div>
 
       {/* Toolbar */}
-      <div className="consultation-toolbar">
-        <div className="consultation-toolbar-left">
+      <div className={styles.toolbar}>
+        <div className={styles.toolbarLeft}>
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className={`consultation-filter-toggle-btn ${showAdvancedFilters ? 'active' : ''}`}
+            className={`${styles.filterToggleBtn} ${showAdvancedFilters ? styles.filterToggleBtnActive : ''}`}
           >
             <FiFilter size={18} />
             {showAdvancedFilters ? 'Hide' : 'Show'} Filters
@@ -432,80 +375,73 @@ const ConsultationList = () => {
           {(visitFromDate !== today || visitToDate !== today || visitPatientNameFilter || visitDoctorNameFilter ||
             consultFromDate !== today || consultToDate !== today || consultPatientNameFilter || consultDoctorNameFilter ||
             searchInput) && (
-            <button onClick={clearAllFilters} className="consultation-clear-btn">
+            <button onClick={clearAllFilters} className={styles.clearBtn}>
               Clear All
             </button>
           )}
         </div>
 
-        <div className="consultation-toolbar-right">
-          <button onClick={exportToCSV} className="consultation-export-btn">
+        <div className={styles.toolbarRight}>
+          <button onClick={exportToCSV} className={styles.exportBtn}>
             <FiDownload size={18} />
             Export CSV
           </button>
         </div>
       </div>
 
-      {/* Advanced Filters for Patient Visits */}
+      {/* Advanced Filters - Patient Visits */}
       {activeTab === 'pending' && showAdvancedFilters && (
-        <div className="consultation-advanced-filters">
-          <div className="filter-row">
-            <div className="filter-group">
-              <label className="filter-label">From Date</label>
+        <div className={styles.advancedFilters}>
+          <div className={styles.filterRow}>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>From Date</label>
               <input
                 type="date"
                 value={visitFromDate}
                 onChange={(e) => setVisitFromDate(e.target.value)}
-                className="filter-input"
-                placeholder="Select start date"
+                className={styles.filterInput}
               />
             </div>
-
-            <div className="filter-group">
-              <label className="filter-label">To Date</label>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>To Date</label>
               <input
                 type="date"
                 value={visitToDate}
                 onChange={(e) => setVisitToDate(e.target.value)}
-                className="filter-input"
-                placeholder="Select end date"
+                className={styles.filterInput}
               />
             </div>
-
-            <div className="filter-group">
-              <label className="filter-label">Patient Name</label>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>Patient Name</label>
               <input
                 type="text"
                 placeholder="Filter by patient..."
                 value={visitPatientNameFilter}
                 onChange={(e) => setVisitPatientNameFilter(e.target.value)}
-                className="filter-input"
+                className={styles.filterInput}
               />
             </div>
-
-            <div className="filter-group">
-              <label className="filter-label">Doctor Name</label>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>Doctor Name</label>
               <input
                 type="text"
                 placeholder="Filter by doctor..."
                 value={visitDoctorNameFilter}
                 onChange={(e) => setVisitDoctorNameFilter(e.target.value)}
-                className="filter-input"
+                className={styles.filterInput}
               />
             </div>
-
-            <div className="filter-group apply-filter-btn-group">
-              <button onClick={applyVisitFilters} className="consultation-add-btn">
+            <div className={styles.applyFilterBtnGroup}>
+              <button onClick={applyVisitFilters} className={styles.searchBtn}>
                 <FiSearch size={18} /> Search
               </button>
             </div>
           </div>
-          
-          <div className="filter-info">
-            <small className="text-muted">
-              {visitFromDate && visitToDate 
+          <div className={styles.filterInfo}>
+            <small className={styles.textMuted}>
+              {visitFromDate && visitToDate
                 ? `Showing visits from ${formatDate(visitFromDate)} to ${formatDate(visitToDate)}`
-                : visitFromDate 
+                : visitFromDate
                 ? `Showing visits for ${formatDate(visitFromDate)}`
                 : `Showing today's visits (${formatDate(today)})`
               }
@@ -514,54 +450,50 @@ const ConsultationList = () => {
         </div>
       )}
 
-      {/* Advanced Filters for Consultations */}
+      {/* Advanced Filters - Consultations */}
       {activeTab === 'visited' && showAdvancedFilters && (
-        <div className="consultation-advanced-filters">
-          <div className="filter-row">
-            <div className="filter-group">
-              <label className="filter-label">From Date</label>
+        <div className={styles.advancedFilters}>
+          <div className={styles.filterRow}>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>From Date</label>
               <input
                 type="date"
                 value={consultFromDate}
                 onChange={(e) => setConsultFromDate(e.target.value)}
-                className="filter-input"
+                className={styles.filterInput}
               />
             </div>
-
-            <div className="filter-group">
-              <label className="filter-label">To Date</label>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>To Date</label>
               <input
                 type="date"
                 value={consultToDate}
                 onChange={(e) => setConsultToDate(e.target.value)}
-                className="filter-input"
+                className={styles.filterInput}
               />
             </div>
-
-            <div className="filter-group">
-              <label className="filter-label">Patient Name</label>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>Patient Name</label>
               <input
                 type="text"
                 placeholder="Filter by patient..."
                 value={consultPatientNameFilter}
                 onChange={(e) => setConsultPatientNameFilter(e.target.value)}
-                className="filter-input"
+                className={styles.filterInput}
               />
             </div>
-
-            <div className="filter-group">
-              <label className="filter-label">Doctor Name</label>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>Doctor Name</label>
               <input
                 type="text"
                 placeholder="Filter by doctor..."
                 value={consultDoctorNameFilter}
                 onChange={(e) => setConsultDoctorNameFilter(e.target.value)}
-                className="filter-input"
+                className={styles.filterInput}
               />
             </div>
-
-            <div className="filter-group apply-filter-btn-group">
-              <button onClick={applyConsultFilters} className="consultation-add-btn">
+            <div className={styles.applyFilterBtnGroup}>
+              <button onClick={applyConsultFilters} className={styles.searchBtn}>
                 <FiSearch size={18} /> Search
               </button>
             </div>
@@ -570,8 +502,8 @@ const ConsultationList = () => {
       )}
 
       {/* Quick Search Bar */}
-      <div className="consultation-search-wrapper">
-        <div className="consultation-search-container">
+      <div className={styles.searchWrapper}>
+        <div className={styles.searchContainer}>
           <input
             type="text"
             placeholder={
@@ -582,9 +514,9 @@ const ConsultationList = () => {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="consultation-search-input"
+            className={styles.searchInput}
           />
-          <button onClick={handleSearch} className="consultation-search-btn">
+          <button onClick={handleSearch} className={styles.searchIconBtn}>
             <FiSearch size={20} />
           </button>
         </div>
@@ -592,8 +524,8 @@ const ConsultationList = () => {
 
       {/* Table - Patient Visits */}
       {activeTab === 'pending' && (
-        <div className="consultation-table-container">
-          <table className="consultation-table">
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
             <thead>
               <tr>
                 <th>Patient</th>
@@ -607,7 +539,7 @@ const ConsultationList = () => {
             <tbody>
               {filteredVisits.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="consultation-no-data">
+                  <td colSpan={6} className={styles.noData}>
                     No patient visits found.
                   </td>
                 </tr>
@@ -615,13 +547,13 @@ const ConsultationList = () => {
                 filteredVisits.map((visit) => (
                   <tr key={visit.id}>
                     <td>
-                      <div className="consultation-name-cell">
-                        <div className="consultation-avatar">
+                      <div className={styles.nameCell}>
+                        <div className={styles.avatar}>
                           {visit.patientName?.charAt(0).toUpperCase() || 'P'}
                         </div>
                         <div>
-                          <div className="consultation-name">{visit.patientName}</div>
-                          <div className="consultation-type">
+                          <div className={styles.name}>{visit.patientName}</div>
+                          <div className={styles.subText}>
                             {visit.patientFileNo} • {visit.patientMobile}
                           </div>
                         </div>
@@ -629,53 +561,50 @@ const ConsultationList = () => {
                     </td>
                     <td>
                       <div>
-                        <div className="consultation-name">{visit.doctorFullName}</div>
-                        <div className="consultation-type">{visit.doctorCode || '—'}</div>
+                        <div className={styles.name}>{visit.doctorFullName}</div>
+                        <div className={styles.subText}>{visit.doctorCode || '—'}</div>
                       </div>
                     </td>
                     <td>
                       <div>
-                        <div className="consultation-name">{formatDate(visit.visitDate)}</div>
-                        <div className="consultation-type">{formatTime(visit.visitTime)}</div>
+                        <div className={styles.name}>{formatDate(visit.visitDate)}</div>
+                        <div className={styles.subText}>{formatTime(visit.visitTime)}</div>
                       </div>
                     </td>
                     <td>
-                      <div className="consultation-reason-cell">
+                      <div className={styles.reasonCell}>
                         {visit.reason && (
-                          <div className="reason-badge">{visit.reason}</div>
+                          <div className={styles.reasonBadge}>{visit.reason}</div>
                         )}
                         {visit.symptoms && (
-                          <div className="consultation-type">{visit.symptoms}</div>
+                          <div className={styles.subText}>{visit.symptoms}</div>
                         )}
                         {!visit.reason && !visit.symptoms && '—'}
                       </div>
                     </td>
                     <td>
-                      <div className="consultation-vitals-cell">
+                      <div className={styles.vitalsCell}>
                         {visit.bpReading && (
-                          <span className="vital-badge bp">{visit.bpReading}</span>
+                          <span className={`${styles.vitalBadge} ${styles.bp}`}>{visit.bpReading}</span>
                         )}
                         {visit.temperature && (
-                          <span className="vital-badge temp">
+                          <span className={`${styles.vitalBadge} ${styles.temp}`}>
                             {visit.temperature}°F
                           </span>
                         )}
                         {visit.weight && (
-                          <span className="vital-badge weight">
+                          <span className={`${styles.vitalBadge} ${styles.weight}`}>
                             {visit.weight}kg
                           </span>
                         )}
-                        {!visit.bpReading &&
-                          !visit.temperature &&
-                          !visit.weight &&
-                          '—'}
+                        {!visit.bpReading && !visit.temperature && !visit.weight && '—'}
                       </div>
                     </td>
                     <td>
-                      <div className="consultation-actions-cell">
+                      <div className={styles.actionsCell}>
                         <button
                           onClick={() => handleConsultClick(visit)}
-                          className="consultation-add-btn"
+                          className={styles.consultBtn}
                         >
                           <FiPlus size={16} />
                           Consult
@@ -690,10 +619,10 @@ const ConsultationList = () => {
         </div>
       )}
 
-      {/* Table - Visited Patients */}
+      {/* Table - Consulted Patients (View only — no Edit button) */}
       {activeTab === 'visited' && (
-        <div className="consultation-table-container">
-          <table className="consultation-table">
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
             <thead>
               <tr>
                 <th>Patient</th>
@@ -708,7 +637,7 @@ const ConsultationList = () => {
             <tbody>
               {filteredConsultations.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="consultation-no-data">
+                  <td colSpan={7} className={styles.noData}>
                     No consultations found.
                   </td>
                 </tr>
@@ -716,13 +645,13 @@ const ConsultationList = () => {
                 filteredConsultations.map((consultation) => (
                   <tr key={consultation.id}>
                     <td>
-                      <div className="consultation-name-cell">
-                        <div className="consultation-avatar">
+                      <div className={styles.nameCell}>
+                        <div className={styles.avatar}>
                           {consultation.patientName?.charAt(0).toUpperCase() || 'P'}
                         </div>
                         <div>
-                          <div className="consultation-name">{consultation.patientName}</div>
-                          <div className="consultation-type">
+                          <div className={styles.name}>{consultation.patientName}</div>
+                          <div className={styles.subText}>
                             {consultation.patientFileNo} • {consultation.patientMobile}
                           </div>
                         </div>
@@ -730,69 +659,60 @@ const ConsultationList = () => {
                     </td>
                     <td>
                       <div>
-                        <div className="consultation-name">{consultation.doctorFullName}</div>
-                        <div className="consultation-type">{consultation.doctorCode || '—'}</div>
+                        <div className={styles.name}>{consultation.doctorFullName}</div>
+                        <div className={styles.subText}>{consultation.doctorCode || '—'}</div>
                       </div>
                     </td>
                     <td>
-                      <div className="consultation-reason-cell">
+                      <div className={styles.reasonCell}>
                         {consultation.reason && (
-                          <div className="reason-badge">{consultation.reason}</div>
+                          <div className={styles.reasonBadge}>{consultation.reason}</div>
                         )}
                         {consultation.symptoms && (
-                          <div className="consultation-type">{consultation.symptoms}</div>
+                          <div className={styles.subText}>{consultation.symptoms}</div>
                         )}
                         {!consultation.reason && !consultation.symptoms && '—'}
                       </div>
                     </td>
                     <td>
-                      <div className="consultation-vitals-cell">
+                      <div className={styles.vitalsCell}>
                         {consultation.bpReading && (
-                          <span className="vital-badge bp">{consultation.bpReading}</span>
+                          <span className={`${styles.vitalBadge} ${styles.bp}`}>{consultation.bpReading}</span>
                         )}
                         {consultation.temperature && (
-                          <span className="vital-badge temp">
+                          <span className={`${styles.vitalBadge} ${styles.temp}`}>
                             {consultation.temperature}°F
                           </span>
                         )}
                         {consultation.weight && (
-                          <span className="vital-badge weight">
+                          <span className={`${styles.vitalBadge} ${styles.weight}`}>
                             {consultation.weight}kg
                           </span>
                         )}
-                        {!consultation.bpReading &&
-                          !consultation.temperature &&
-                          !consultation.weight &&
-                          '—'}
+                        {!consultation.bpReading && !consultation.temperature && !consultation.weight && '—'}
                       </div>
                     </td>
                     <td>
                       {consultation.nextConsultationDate ? (
-                        <span className="followup-badge">
+                        <span className={styles.followupBadge}>
                           {formatDate(consultation.nextConsultationDate)}
                         </span>
                       ) : (
-                        <span className="consultation-type">No follow-up</span>
+                        <span className={styles.subText}>No follow-up</span>
                       )}
                     </td>
                     <td>
-                      <div className="consultation-type">
+                      <div className={styles.subText}>
                         {formatDate(consultation.dateCreated)}
                       </div>
                     </td>
                     <td>
-                      <div className="consultation-actions-cell">
+                      <div className={styles.actionsCell}>
                         <button
                           onClick={() => handleViewDetails(consultation)}
-                          className="consultation-details-btn"
+                          className={styles.viewBtn}
                         >
                           View
-                        </button>
-                        <button
-                          onClick={() => handleUpdateClick(consultation)}
-                          className="consultation-edit-btn"
-                        >
-                          Edit
                         </button>
                       </div>
                     </td>
@@ -804,18 +724,12 @@ const ConsultationList = () => {
         </div>
       )}
 
-      {/* Modals */}
+      {/* Modal - Add Consultation */}
       <AddConsultation
         isOpen={isAddFormOpen}
         onClose={closeAddForm}
         onSuccess={handleAddSuccess}
         preSelectedVisitId={consultingVisitId}
-      />
-
-      <ViewConsultation
-        isOpen={isDetailsModalOpen}
-        onClose={closeDetailsModal}
-        consultationId={selectedConsultation?.id}
       />
     </div>
   );

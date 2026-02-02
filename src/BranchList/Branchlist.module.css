@@ -323,6 +323,21 @@
   font-size: 0.77rem;
 }
 
+.active {
+  color: #166534;
+}
+
+.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.large {
+  padding: 9px 17px;
+  font-size: 0.77rem;
+}
+
 .branchTypeBadge {
   padding: 5px 12px;
   border-radius: 26px;
@@ -509,7 +524,7 @@
 
 .subtitle {
   margin: 3px 0 0;
-  color: var(--text-light);
+  color: var(--primary-end);
   font-size: 0.6rem;
   font-weight: 500;
 }
@@ -556,6 +571,21 @@
   background: rgba(34, 43, 108, 0.05);
 }
 
+.label {
+  width: 35%;
+  font-weight: 1000;
+  color: #475569;
+  background: rgba(34, 43, 108, 0.05);
+  font-size: 0.8rem;
+}
+
+.value {
+  font-weight: 1000;
+  color: var(--text-dark);
+  font-size: 0.8rem;
+  background: rgba(34, 43, 108, 0.05);
+}
+
 /* Form Styles */
 .formGrid {
   display: grid;
@@ -566,12 +596,12 @@
 
 .formSectionTitle {
   grid-column: 1 / -1;
-  font-size: 1rem;
+  margin: 14px 0 8px;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--primary-start);
-  margin: 14px 0 8px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid rgba(34, 43, 108, 0.1);
+  border-bottom: 2px solid var(--accent-end);
+  padding-bottom: 5px;
 }
 
 .formGroup {
@@ -580,6 +610,10 @@
 }
 
 .formGroup.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.fullWidth {
   grid-column: 1 / -1;
 }
 
@@ -593,6 +627,11 @@
 }
 
 .formGroup .required {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.required {
   color: #dc2626;
   font-weight: 700;
 }
@@ -754,6 +793,11 @@
   max-height: none;
 }
 
+.updateHeader {
+  padding: 17px 23px 0;
+  margin-bottom: 14px;
+}
+
 .updateHeader h2 {
   background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
   -webkit-background-clip: text;
@@ -767,6 +811,7 @@
   gap: 12px;
   padding: 17px 23px;
   border-top: 2px solid rgba(34, 43, 108, 0.15);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
 }
 
 .backBtn {
@@ -906,143 +951,139 @@
   stroke-width: 2;
 }
 
-/* Dark Mode */
-.darkMode {
+/* ==================== DARK MODE ==================== */
+:global(.dark-mode) .wrapper {
   --glass-bg: rgba(30, 41, 59, 0.92);
   --text-dark: #e2e8f0;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: #e2e8f0;
+  background-color: var(--text-dark);
 }
 
-.darkMode .header {
-  background: #334155;
-}
-
-.darkMode .modalFooter {
+:global(.dark-mode) .modalFooter {
   background: linear-gradient(135deg, #1e293b, #334155);
 }
 
-.darkMode .searchInput,
-.darkMode .select {
+:global(.dark-mode) .searchInput {
   background: #1e293b;
   border-color: #475569;
   color: #e2e8f0;
 }
 
-.darkMode .tableContainer {
+:global(.dark-mode) .select {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .tableContainer {
   background: #1e293b;
   border-color: #475569;
 }
 
-.darkMode .table th {
+:global(.dark-mode) .table th {
   background: linear-gradient(135deg, #334155, #475569);
 }
 
-.darkMode .table td {
+:global(.dark-mode) .table td {
   border-bottom-color: #475569;
   color: #e2e8f0;
 }
 
-.darkMode .table tbody tr:nth-child(even) {
+:global(.dark-mode) .table tbody tr:nth-child(even) {
   background-color: #334155;
 }
 
-.darkMode .formGroup label {
+:global(.dark-mode) .formGroup label {
   color: var(--accent-end);
 }
 
-.darkMode .btnCancel {
+:global(.dark-mode) .btnCancel,
+:global(.dark-mode) .btnHold {
   background: linear-gradient(135deg, var(--primary-end));
   color: var(--text-light);
   border-color: var(--primary-end);
 }
 
-.darkMode .btnCancel:hover {
+:global(.dark-mode) .btnCancel:hover,
+:global(.dark-mode) .btnHold:hover {
   background: rgba(239, 68, 68);
   transform: translateY(-2px);
 }
 
-.darkMode .detailsTable td.label {
+:global(.dark-mode) .detailsTable td.label,
+:global(.dark-mode) .label {
   color: var(--accent-end);
   background-color: #1e293b;
 }
 
-.darkMode .detailsTable td.value {
+:global(.dark-mode) .detailsTable td.value,
+:global(.dark-mode) .value {
   background-color: #1e293b;
 }
 
-.darkMode .btnHold {
-  background: linear-gradient(135deg, var(--primary-end));
-  color: var(--text-light);
-}
-
-.darkMode .btnHold:hover {
-  background: rgba(239, 68, 68);
-  transform: translateY(-2px);
-}
-
-.darkMode .modalHeader h2,
-.darkMode .detailsModalHeader h2 {
+:global(.dark-mode) .modalHeader h2,
+:global(.dark-mode) .detailsModalHeader h2 {
   background: linear-gradient(135deg, var(--text-light), var(--accent-end));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.darkMode .statusBadge.active {
+:global(.dark-mode) .statusBadge.active,
+:global(.dark-mode) .active {
   color: #9cc14d;
 }
 
-.darkMode .profileDetailsBody h3 {
+:global(.dark-mode) .profileDetailsBody h3 {
   color: var(--accent-end);
 }
 
-.darkMode .profileRole {
+:global(.dark-mode) .profileRole {
   color: var(--text-light);
 }
 
-.darkMode .profileInfoItem p {
+:global(.dark-mode) .profileInfoItem p {
   color: var(--text-light);
 }
 
-.darkMode .profileInfoItem label {
+:global(.dark-mode) .profileInfoItem label {
   color: var(--accent-end);
 }
 
-.darkMode .wrapper {
-  background: var(--text-dark);
-  background-color: #1e293b;
-}
-
-.darkMode .profileDropdown {
+:global(.dark-mode) .profileDropdown {
   background: rgba(30, 41, 59, 0.9);
   border: #ffffff 0.5px solid;
 }
 
-.darkMode .profileDropdownItem {
+:global(.dark-mode) .profileDropdownItem {
   color: var(--text-light);
 }
 
-.darkMode .modal {
+:global(.dark-mode) .modal {
   background: rgba(30, 41, 59, 0.94);
   border-color: #475569;
   color: #e2e8f0;
 }
 
-.darkMode .profileDropdownItem:hover {
+:global(.dark-mode) .profileDropdownItem:hover {
   background: #000000;
 }
 
-.darkMode .profileDropdownItem svg {
+:global(.dark-mode) .profileDropdownItem svg {
   color: var(--accent-end);
 }
 
-.darkMode .formGroup input,
-.darkMode .formGroup textarea,
-.darkMode .formGroup select {
+:global(.dark-mode) .formGroup input,
+:global(.dark-mode) .formGroup textarea,
+:global(.dark-mode) .formGroup select {
   background: #1e293b;
   border-color: #475569;
   color: #e2e8f0;
+}
+
+:global(.dark-mode) .updateFooter {
+  background: linear-gradient(135deg, #1e293b, #334155);
 }
 
 /* Responsive */
@@ -1107,4 +1148,3 @@
     width: 100%;
   }
 }
-

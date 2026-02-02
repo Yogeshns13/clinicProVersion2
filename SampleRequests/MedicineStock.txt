@@ -13,7 +13,6 @@ AddMedicineStock
     "PurchasePrice": 8.50
 }
 
-
 UpdateMedicineStock
 {
     "CHANNEL_ID":1,
@@ -25,7 +24,7 @@ UpdateMedicineStock
     "StockID":1,
     "BatchNo":"BT-202512A",
     "ExpiryDate":"2025-12-20",
-    "QuantityIn":1000,   
+    "QuantityIn":1000,
     "PurchasePrice": 8.50
 }
 

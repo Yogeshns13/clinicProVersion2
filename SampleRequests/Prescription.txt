@@ -13,7 +13,7 @@ AddPrescription
     "DateIssued": "2025-11-29",  
     "ValidUntil":"2025-12-29",
     "Diagnosis": "having high fever",
-   "Notes":"Fever cold and head ache",
+    "Notes":"Fever cold and head ache",
     "IsRepeat":0,
    "RepeatCount": 0,
    "CreatedBy":1000001  (employee ID)
@@ -67,10 +67,8 @@ GetPrescriptionList
     "ToDate":"",
     "IsRepeat":-1,
     "Status":-1,
-    
 }
-
-______________________________________________________________________________
+____________________________________________________________________________
 
 GetPrescriptionList
 {

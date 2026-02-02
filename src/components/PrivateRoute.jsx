@@ -40,7 +40,7 @@ const ROUTE_PERMISSIONS = {
   "/view-patientvisit": ["admin", "doctor", "receptionist"],
   "/update-patientvisit/:id": ["admin", "doctor", "receptionist"],
   "/consultation-list": ["admin", "doctor", "receptionist"],
-  "/view-consultation": ["admin", "doctor", "receptionist"],
+  "/view-consultation/:id": ["admin", "doctor", "receptionist"],
   "/add-consultation": ["admin", "doctor", "receptionist"],
   "/update-consultation/:id": ["admin", "doctor", "receptionist"],
   "/consultationcharge-config": ["admin", "doctor", "receptionist"],
@@ -55,6 +55,8 @@ const ROUTE_PERMISSIONS = {
   "/add-medicinemaster": ["admin", "doctor", "receptionist"],
   "/update-medicinemaster/:id": ["admin", "doctor", "receptionist"],
   "/view-medicinemaster/:id": ["admin", "doctor", "receptionist"],
+  "/view-prescription/:id": ["admin", "doctor", "receptionist"],
+  "/view-laborder/:id": ["admin", "doctor", "receptionist"],
 };
 
 const PrivateRoute = ({ children }) => {

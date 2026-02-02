@@ -1,0 +1,762 @@
+/* ViewLabOrder.module.css - With Common Header Design */
+
+:root {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+}
+
+/* ==================== MAIN WRAPPER ==================== */
+.wrapper {
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ==================== TOOLBAR / BACK BUTTON ==================== */
+.toolbar {
+  margin-bottom: 24px;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.25);
+}
+
+.backBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(32, 125, 156, 0.35);
+}
+
+/* ==================== COMMON CARD HEADER DESIGN ==================== */
+.detailsCard {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(34, 43, 108, 0.12);
+  border: 1px solid rgba(34, 43, 108, 0.08);
+}
+
+/* Header Section */
+.cardHeader {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(48, 178, 181, 0.04));
+  border-bottom: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.headerInfo h2 {
+  margin: 0 0 6px 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  margin: 0 0 10px 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+/* Status Badge */
+.statusBadge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  display: inline-block;
+}
+
+.statusBadge.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.statusBadge.completed {
+  background: rgba(59, 130, 246, 0.15);
+  color: #1e40af;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.statusBadge.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.statusBadge.large {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 16px;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 2px;
+}
+
+.tabButton {
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.tabButton:hover {
+  color: #2563eb;
+  background: rgba(243, 244, 246, 0.6);
+}
+
+.tabButton.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+  font-weight: 600;
+}
+
+/* ==================== CARD BODY ==================== */
+.cardBody {
+  padding: 24px;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
+}
+
+.sectionTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sectionActions {
+  display: flex;
+  gap: 12px;
+}
+
+/* ==================== BUTTONS ==================== */
+.btnAdd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--success), #16a34a);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+}
+
+.btnAdd:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+.btnAddLarge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 32px;
+  background: linear-gradient(135deg, var(--success), #16a34a);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 3px 12px rgba(34, 197, 94, 0.3);
+  margin-top: 20px;
+}
+
+.btnAddLarge:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.45);
+}
+
+.btnEdit,
+.btnDelete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(34, 43, 108, 0.15);
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-size: 1rem;
+}
+
+.btnEdit {
+  color: var(--accent-start);
+}
+
+.btnEdit:hover {
+  background: linear-gradient(135deg, rgba(32, 125, 156, 0.1), rgba(48, 178, 181, 0.1));
+  border-color: var(--accent-start);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(32, 125, 156, 0.2);
+}
+
+.btnDelete {
+  color: var(--danger);
+}
+
+.btnDelete:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--danger);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
+}
+
+.btnDelete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==================== EMPTY STATE ==================== */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.emptyState svg {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.emptyState p {
+  margin: 4px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.hintText {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  font-weight: 400;
+  max-width: 500px;
+}
+
+/* ==================== ORDERS CONTAINER ==================== */
+.ordersContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ==================== ORDER CARD ==================== */
+.orderCard {
+  background: white;
+  border: 1px solid rgba(34, 43, 108, 0.12);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(34, 43, 108, 0.06);
+}
+
+.orderCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(34, 43, 108, 0.12);
+  border-color: rgba(48, 178, 181, 0.3);
+}
+
+.orderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.03), rgba(48, 178, 181, 0.03));
+  border-bottom: 1px solid rgba(34, 43, 108, 0.08);
+}
+
+.orderInfo {
+  flex: 1;
+}
+
+.orderTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.orderLabel {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-dark);
+}
+
+.orderMeta {
+  font-size: 0.8rem;
+  color: #64748b;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.orderActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.orderBody {
+  padding: 20px;
+}
+
+.orderDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.detailRow .detailLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.detailRow .detailValue {
+  font-size: 0.88rem;
+  color: var(--text-dark);
+  flex: 1;
+  font-weight: 500;
+}
+
+/* ==================== PRIORITY BADGES ==================== */
+.priorityBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.priorityBadge.routine {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.priorityBadge.urgent {
+  background: rgba(249, 115, 22, 0.15);
+  color: #9a3412;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.priorityBadge.stat {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ==================== STATUS BADGE ==================== */
+.statusBadgeSmall {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.1), rgba(48, 178, 181, 0.1));
+  color: var(--primary-start);
+  border: 1px solid rgba(34, 43, 108, 0.2);
+}
+
+/* ==================== MODAL ==================== */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(34, 43, 108, 0.1);
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(48, 178, 181, 0.04));
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.closeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeBtn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.modalBody {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(34, 43, 108, 0.1);
+  background: rgba(243, 244, 246, 0.4);
+}
+
+/* ==================== INFO BANNER ==================== */
+.infoBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.08), rgba(48, 178, 181, 0.08));
+  border: 1px solid rgba(34, 43, 108, 0.15);
+  border-radius: 10px;
+  margin-bottom: 24px;
+}
+
+.infoBanner svg {
+  flex-shrink: 0;
+  color: var(--accent-start);
+}
+
+.infoBanner h4 {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.infoBanner p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
+/* ==================== FORM ELEMENTS ==================== */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.formLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.formInput,
+.formTextarea {
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.formInput:focus,
+.formTextarea:focus {
+  outline: none;
+  border-color: var(--accent-start);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.1);
+}
+
+.formTextarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.formHint {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+.btnCancel {
+  padding: 10px 20px;
+  background: transparent;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnCancel:hover {
+  background: rgba(243, 244, 246, 0.8);
+  border-color: #94a3b8;
+  color: var(--text-dark);
+}
+
+.btnSubmit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+}
+
+.btnSubmit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(32, 125, 156, 0.4);
+}
+
+.btnSubmit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==================== VISIT INFO SECTION ==================== */
+.visitInfoSection {
+  margin-top: 24px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.02), rgba(48, 178, 181, 0.02));
+  border: 1px solid rgba(34, 43, 108, 0.08);
+  border-radius: 10px;
+}
+
+.visitInfoSection h4 {
+  margin: 0 0 12px 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-start);
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detailItem .detailLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.detailItem .detailValue {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* ==================== LOADING & ERROR STATES ==================== */
+.loading,
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.error {
+  color: var(--danger);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .wrapper {
+    padding: 12px;
+  }
+
+  .detailsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tabButton {
+    flex: 1 1 auto;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .sectionActions {
+    width: 100%;
+  }
+
+  .sectionActions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .orderHeader {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .orderActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .modalFooter {
+    flex-direction: column;
+  }
+
+  .modalFooter button {
+    width: 100%;
+  }
+
+  .btnAddLarge {
+    width: 100%;
+    padding: 14px 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cardHeader,
+  .cardBody {
+    padding: 16px;
+  }
+
+  .headerInfo h2 {
+    font-size: 1.3rem;
+  }
+
+  .sectionTitle {
+    font-size: 1rem;
+  }
+}

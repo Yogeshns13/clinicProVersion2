@@ -24,16 +24,14 @@ AddPrescriptionDetail
     "EndDate":"2025-12-05"
 }
 
--- Form Text Table 22 1- Tablet 2-Capsule 3-Syrup 4-Injection 5-Oinment 6-Drops 7-Powder 8-Gel 9-Cream 10-Inhaler
--- Route Text Tale 23 1- Oral 2- IV 3-IM 4-Topical 5-Nosal 6-Opthalmic 7-Sublinqual 8-Rectal 9-Inhalidation 10-Transdermal 
--- FoodTiming Text table 24 1- Before Food 2-After Food 3-With Food 4-Empty Stomach
+--   
 
 UpdatePrescriptionDetail
 {
     "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
-    "USER_ID" : 2000000, 
+    "USER_ID" : 2000000,
     "ClinicID": 1,
     "BranchID"  :1,
     "PrescriptionDetailID":1,

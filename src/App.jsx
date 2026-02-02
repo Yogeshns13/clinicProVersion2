@@ -56,6 +56,8 @@ import ViewMedicineMaster from "./MedicineMaster/ViewMedicineMaster.jsx";
 import MedicineMasterList from "./MedicineMaster/MedicineMasterList.jsx";
 import AddMedicineMaster from "./MedicineMaster/Addmedicinemaster.jsx";
 import UpdateMedicineMaster from "./MedicineMaster/UpdateMedicineMaster.jsx";
+import ViewPrescription from "./Consultation/ViewPrescription.jsx";
+import ViewLabOrder from "./Consultation/ViewLabOrder.jsx";
 
 function App() {
   return (
@@ -109,7 +111,7 @@ function App() {
           <Route path="/view-patientvisit" element={<ViewPatientVisit/>} />
           <Route path="/update-patientvisit/:id" element={<UpdatePatientVisit/>} />
           <Route path="/consultation-list" element={<ConsultationList/>} />
-          <Route path="/view-consultation" element={<ViewConsultation/>} />
+          <Route path="/view-consultation/:id" element={<ViewConsultation/>} />
           <Route path="/add-consultation" element={<AddConsultation/>} />
           <Route path="/update-consultation/:id" element={<UpdateConsultation/>} />
           <Route path="/consultationcharge-config" element={<ConsultationChargeConfig/>} />
@@ -124,6 +126,8 @@ function App() {
           <Route path="/add-medicinemaster" element={<AddMedicineMaster/>} />
           <Route path="/update-medicinemaster/:id" element={<UpdateMedicineMaster/>} />
           <Route path="/view-medicinemaster/:id" element={<ViewMedicineMaster/>} />
+          <Route path="/view-prescription/:id" element={<ViewPrescription/>} />
+          <Route path="/view-laborder/:id" element={<ViewLabOrder/>} />
 
           {/* Default redirect inside protected area */}
           <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
