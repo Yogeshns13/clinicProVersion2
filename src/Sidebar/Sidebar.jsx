@@ -106,6 +106,7 @@ const Sidebar = () => {
       hasDropdown: true,
       subItems: [
         { to: "/labtestmaster", label: "Lab Master"},
+        { to: "/laborder-list", label: "Lab Order"},
       ],
       show: hasAccess(MENU_PERMISSIONS.lab),
     },

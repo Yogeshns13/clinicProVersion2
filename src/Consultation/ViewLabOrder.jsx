@@ -24,6 +24,13 @@ const LAB_PRIORITIES = [
   { id: 3, name: 'Stat' }
 ];
 
+const LAB_STATUSES = [
+  { id: 1, name: 'Pending' },
+  { id: 2, name: 'Completed' },
+  { id: 3, name: 'Cancelled' },
+  { id: 6, name: 'External' }
+];
+
 const ViewLabOrder = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -41,7 +48,8 @@ const ViewLabOrder = () => {
   const [editingOrderId, setEditingOrderId] = useState(null);
   const [labOrderFormData, setLabOrderFormData] = useState({
     priority: 1,
-    notes: ''
+    notes: '',
+    status: 1
   });
 
   const [showLabOrderItemForm, setShowLabOrderItemForm] = useState(false);
@@ -201,7 +209,7 @@ const ViewLabOrder = () => {
     const { name, value } = e.target;
     setLabOrderFormData(prev => ({
       ...prev,
-      [name]: name === 'priority' ? Number(value) : value
+      [name]: (name === 'priority' || name === 'status') ? Number(value) : value
     }));
   };
 
@@ -267,7 +275,9 @@ const ViewLabOrder = () => {
         clinicId,
         branchId,
         priority: labOrderFormData.priority,
-        notes: labOrderFormData.notes
+        notes: labOrderFormData.notes,
+        status: labOrderFormData.status,
+        testApprovedBy: consultation.doctorId
       };
 
       const result = await updateLabTestOrder(updateData);
@@ -364,7 +374,8 @@ const ViewLabOrder = () => {
   const openEditLabOrderForm = (order) => {
     setLabOrderFormData({
       priority: order.priority,
-      notes: order.notes || ''
+      notes: order.notes || '',
+      status: order.status || 1
     });
     setIsEditMode(true);
     setEditingOrderId(order.id);
@@ -401,7 +412,8 @@ const ViewLabOrder = () => {
   const resetLabOrderForm = () => {
     setLabOrderFormData({
       priority: 1,
-      notes: ''
+      notes: '',
+      status: 1
     });
   };
 
@@ -677,10 +689,10 @@ const ViewLabOrder = () => {
               </div>
             </div>
 
-            {labOrders.filter(order => order.status === 1 || order.statusDesc?.toLowerCase() === 'active').length === 0 ? (
+            {labOrders.length === 0 ? (
               <div className={styles.emptyState}>
                 <FiFileText size={48} />
-                <p>No active lab test order found</p>
+                <p>No lab test order found</p>
                 <p className={styles.hintText}>
                   Click "Add Lab Order" to create a new lab test order for this consultation
                 </p>
@@ -690,148 +702,146 @@ const ViewLabOrder = () => {
               </div>
             ) : (
               <div className={styles.ordersContainer}>
-                {labOrders
-                  .filter(order => order.status === 1 || order.statusDesc?.toLowerCase() === 'active')
-                  .map((order) => {
-                    const orderItems = labOrderItems[order.id] || [];
-                    const hasItems = orderItems.length > 0;
+                {labOrders.map((order) => {
+                  const orderItems = labOrderItems[order.id] || [];
+                  const hasItems = orderItems.length > 0;
 
-                    return (
-                      <div key={order.id} className={styles.orderCard}>
-                        <div className={styles.orderHeader}>
-                          <div className={styles.orderInfo}>
-                            <div className={styles.orderTitle}>
-                              <span className={styles.orderLabel}>Order #{order.uniqueSeq}</span>
-                              <span className={`${styles.priorityBadge} ${styles[getPriorityClass(order.priority)]}`}>
-                                {order.priorityDesc || getPriorityName(order.priority)}
-                              </span>
-                              <span className={styles.statusBadgeSmall}>
-                                {order.statusDesc}
-                              </span>
-                            </div>
-                            <div className={styles.orderMeta}>
-                              <span>Created: {formatDateTime(order.dateCreated)}</span>
-                              {order.dateModified && (
-                                <span> • Modified: {formatDateTime(order.dateModified)}</span>
-                              )}
-                            </div>
+                  return (
+                    <div key={order.id} className={styles.orderCard}>
+                      <div className={styles.orderHeader}>
+                        <div className={styles.orderInfo}>
+                          <div className={styles.orderTitle}>
+                            <span className={styles.orderLabel}>Order #{order.uniqueSeq}</span>
+                            <span className={`${styles.priorityBadge} ${styles[getPriorityClass(order.priority)]}`}>
+                              {order.priorityDesc || getPriorityName(order.priority)}
+                            </span>
+                            <span className={styles.statusBadgeSmall}>
+                              {order.statusDesc}
+                            </span>
                           </div>
-                          <div className={styles.orderActions}>
-                            <button 
-                              onClick={() => openEditLabOrderForm(order)} 
-                              className={styles.btnEdit}
-                              title="Edit Order"
-                            >
-                              <FiEdit2 size={16} />
-                            </button>
-                            {!hasItems && (
-                              <button 
-                                onClick={() => handleDeleteLabOrder(order.id)} 
-                                className={styles.btnDelete}
-                                title="Delete Order"
-                                disabled={submitLoading}
-                              >
-                                <FiTrash2 size={16} />
-                              </button>
+                          <div className={styles.orderMeta}>
+                            <span>Created: {formatDateTime(order.dateCreated)}</span>
+                            {order.dateModified && (
+                              <span> • Modified: {formatDateTime(order.dateModified)}</span>
                             )}
                           </div>
                         </div>
-
-                        <div className={styles.orderBody}>
-                          <div className={styles.orderDetails}>
-                            <div className={styles.detailRow}>
-                              <span className={styles.detailLabel}>Patient:</span>
-                              <span className={styles.detailValue}>{order.patientName}</span>
-                            </div>
-                            <div className={styles.detailRow}>
-                              <span className={styles.detailLabel}>File No:</span>
-                              <span className={styles.detailValue}>{order.patientFileNo || '—'}</span>
-                            </div>
-                            <div className={styles.detailRow}>
-                              <span className={styles.detailLabel}>Doctor:</span>
-                              <span className={styles.detailValue}>{order.doctorFullName}</span>
-                            </div>
-                            {order.notes && (
-                              <div className={styles.detailRow}>
-                                <span className={styles.detailLabel}>Notes:</span>
-                                <span className={styles.detailValue}>{order.notes}</span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className={styles.itemsSection}>
-                            <div className={styles.itemsHeader}>
-                              <h4 className={styles.itemsTitle}>
-                                <FiClipboard size={18} />
-                                <span>Test Items ({orderItems.length})</span>
-                              </h4>
-                              <button 
-                                onClick={() => openAddLabOrderItemForm(order)} 
-                                className={styles.btnAddItem}
-                                disabled={submitLoading}
-                              >
-                                <FiPlus size={16} /> Add Test/Package
-                              </button>
-                            </div>
-
-                            {hasItems ? (
-                              <div className={styles.itemsList}>
-                                {orderItems.map((item) => (
-                                  <div key={item.itemId} className={styles.itemCard}>
-                                    <div className={styles.itemInfo}>
-                                      <div className={styles.itemType}>
-                                        {item.packageId > 0 ? (
-                                          <>
-                                            <FiPackage size={16} className={styles.packageIcon} />
-                                            <span className={styles.itemBadge}>Package</span>
-                                          </>
-                                        ) : (
-                                          <>
-                                            <FiClipboard size={16} className={styles.testIcon} />
-                                            <span className={styles.itemBadge}>Test</span>
-                                          </>
-                                        )}
-                                      </div>
-                                      <div className={styles.itemName}>
-                                        {item.testName || item.packageName || item.testOrPackageName || 'Unknown Item'}
-                                      </div>
-                                      {item.testShortName && (
-                                        <div className={styles.itemShortName}>{item.testShortName}</div>
-                                      )}
-                                    </div>
-
-                                    <div className={styles.itemActions}>
-                                      <button
-                                        onClick={() => handleViewItem(item)}
-                                        className={styles.btnViewItem}
-                                        title="View Details"
-                                      >
-                                        <FiFileText size={14} />
-                                      </button>
-                                      <button
-                                        onClick={() => handleDeleteLabOrderItem(order.id, item.itemId)}
-                                        className={styles.btnDeleteItem}
-                                        title="Delete Item"
-                                        disabled={submitLoading}
-                                      >
-                                        <FiTrash2 size={14} />
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className={styles.noItems}>
-                                <FiClipboard size={32} />
-                                <p>No test items added yet</p>
-                                <p className={styles.noItemsHint}>Click "Add Test/Package" to add items to this order</p>
-                              </div>
-                            )}
-                          </div>
+                        <div className={styles.orderActions}>
+                          <button 
+                            onClick={() => openEditLabOrderForm(order)} 
+                            className={styles.btnEdit}
+                            title="Edit Order"
+                          >
+                            <FiEdit2 size={16} />
+                          </button>
+                          {!hasItems && (
+                            <button 
+                              onClick={() => handleDeleteLabOrder(order.id)} 
+                              className={styles.btnDelete}
+                              title="Delete Order"
+                              disabled={submitLoading}
+                            >
+                              <FiTrash2 size={16} />
+                            </button>
+                          )}
                         </div>
                       </div>
-                    );
-                  })}
+
+                      <div className={styles.orderBody}>
+                        <div className={styles.orderDetails}>
+                          <div className={styles.detailRow}>
+                            <span className={styles.detailLabel}>Patient:</span>
+                            <span className={styles.detailValue}>{order.patientName}</span>
+                          </div>
+                          <div className={styles.detailRow}>
+                            <span className={styles.detailLabel}>File No:</span>
+                            <span className={styles.detailValue}>{order.patientFileNo || '—'}</span>
+                          </div>
+                          <div className={styles.detailRow}>
+                            <span className={styles.detailLabel}>Doctor:</span>
+                            <span className={styles.detailValue}>{order.doctorFullName}</span>
+                          </div>
+                          {order.notes && (
+                            <div className={styles.detailRow}>
+                              <span className={styles.detailLabel}>Notes:</span>
+                              <span className={styles.detailValue}>{order.notes}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className={styles.itemsSection}>
+                          <div className={styles.itemsHeader}>
+                            <h4 className={styles.itemsTitle}>
+                              <FiClipboard size={18} />
+                              <span>Test Items ({orderItems.length})</span>
+                            </h4>
+                            <button 
+                              onClick={() => openAddLabOrderItemForm(order)} 
+                              className={styles.btnAddItem}
+                              disabled={submitLoading}
+                            >
+                              <FiPlus size={16} /> Add Test/Package
+                            </button>
+                          </div>
+
+                          {hasItems ? (
+                            <div className={styles.itemsList}>
+                              {orderItems.map((item) => (
+                                <div key={item.itemId} className={styles.itemCard}>
+                                  <div className={styles.itemInfo}>
+                                    <div className={styles.itemType}>
+                                      {item.packageId > 0 ? (
+                                        <>
+                                          <FiPackage size={16} className={styles.packageIcon} />
+                                          <span className={styles.itemBadge}>Package</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <FiClipboard size={16} className={styles.testIcon} />
+                                          <span className={styles.itemBadge}>Test</span>
+                                        </>
+                                      )}
+                                    </div>
+                                    <div className={styles.itemName}>
+                                      {item.testName || item.packageName || item.testOrPackageName || 'Unknown Item'}
+                                    </div>
+                                    {item.testShortName && (
+                                      <div className={styles.itemShortName}>{item.testShortName}</div>
+                                    )}
+                                  </div>
+
+                                  <div className={styles.itemActions}>
+                                    <button
+                                      onClick={() => handleViewItem(item)}
+                                      className={styles.btnViewItem}
+                                      title="View Details"
+                                    >
+                                      <FiFileText size={14} />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteLabOrderItem(order.id, item.itemId)}
+                                      className={styles.btnDeleteItem}
+                                      title="Delete Item"
+                                      disabled={submitLoading}
+                                    >
+                                      <FiTrash2 size={14} />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className={styles.noItems}>
+                              <FiClipboard size={32} />
+                              <p>No test items added yet</p>
+                              <p className={styles.noItemsHint}>Click "Add Test/Package" to add items to this order</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -890,6 +900,26 @@ const ViewLabOrder = () => {
                   Routine: Normal processing | Urgent: Within 24 hours | Stat: Immediate
                 </span>
               </div>
+
+              {isEditMode && (
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Status *</label>
+                  <select
+                    name="status"
+                    value={labOrderFormData.status}
+                    onChange={handleLabOrderInputChange}
+                    className={styles.formInput}
+                    required
+                  >
+                    {LAB_STATUSES.map(status => (
+                      <option key={status.id} value={status.id}>{status.name}</option>
+                    ))}
+                  </select>
+                  <span className={styles.formHint}>
+                    Update the current status of this lab order
+                  </span>
+                </div>
+              )}
 
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Notes</label>
