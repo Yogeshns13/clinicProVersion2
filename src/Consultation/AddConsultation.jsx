@@ -1,10 +1,10 @@
 // src/components/AddConsultation.jsx
 import React, { useState, useEffect } from 'react';
-import { FiX, FiUser, FiCalendar, FiCheck, FiChevronRight, FiChevronLeft, FiPackage, FiSearch, FiPlus, FiTrash2, FiFileText } from 'react-icons/fi';
+import { FiX, FiUser, FiCalendar, FiCheck, FiChevronRight, FiChevronLeft, FiPackage, FiSearch, FiPlus, FiTrash2, FiFileText, FiClipboard } from 'react-icons/fi';
 import { getPatientVisitList} from '../api/api.js';
 import { addConsultation, getConsultationList  } from '../api/api-consultation.js';
 import { addPrescription, addPrescriptionDetail, getMedicineMasterList } from '../api/api-pharmacy.js';
-import { addLabTestOrder } from '../api/api-labtest.js';
+import { addLabTestOrder, getLabTestOrderItemList, addLabTestOrderItem, updateLabTestOrderItem, getLabTestMasterList, getLabTestPackageList } from '../api/api-labtest.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import './AddConsultation.css';
 
@@ -96,6 +96,27 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     notes: ''
   });
 
+  // Lab Test Order states
+  const [labTestOrderId, setLabTestOrderId] = useState(null);
+  const [labTestOrderCreated, setLabTestOrderCreated] = useState(false);
+  const [labTestOrderItems, setLabTestOrderItems] = useState([]);
+  
+  // Lab Test/Package search states
+  const [showLabTestItemForm, setShowLabTestItemForm] = useState(false);
+  const [labTests, setLabTests] = useState([]);
+  const [labPackages, setLabPackages] = useState([]);
+  const [loadingTests, setLoadingTests] = useState(false);
+  const [loadingPackages, setLoadingPackages] = useState(false);
+  const [addTab, setAddTab] = useState('tests');
+  const [searchTermTests, setSearchTermTests] = useState('');
+  const [searchTermPackages, setSearchTermPackages] = useState('');
+  const [filteredTests, setFilteredTests] = useState([]);
+  const [filteredPackages, setFilteredPackages] = useState([]);
+  const [selectedTests, setSelectedTests] = useState([]);
+  const [selectedPackages, setSelectedPackages] = useState([]);
+  const [existingTestIds, setExistingTestIds] = useState([]);
+  const [existingPackageIds, setExistingPackageIds] = useState([]);
+
   useEffect(() => {
     if (isOpen) {
       fetchTodayVisits();
@@ -160,6 +181,76 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     }
   };
 
+  const fetchLabTests = async () => {
+    try {
+      setLoadingTests(true);
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
+      const testOptions = {
+        Page: 1,
+        PageSize: 100,
+        BranchID: branchId,
+        Status: 1
+      };
+
+      const testsData = await getLabTestMasterList(clinicId, testOptions);
+      setLabTests(testsData || []);
+      setFilteredTests(testsData || []);
+    } catch (err) {
+      console.error('fetchLabTests error:', err);
+      alert('Failed to load lab tests');
+    } finally {
+      setLoadingTests(false);
+    }
+  };
+
+  const fetchLabPackages = async () => {
+    try {
+      setLoadingPackages(true);
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
+      const packageOptions = {
+        Page: 1,
+        PageSize: 100,
+        BranchID: branchId,
+        Status: 1
+      };
+
+      const packagesData = await getLabTestPackageList(clinicId, packageOptions);
+      setLabPackages(packagesData || []);
+      setFilteredPackages(packagesData || []);
+    } catch (err) {
+      console.error('fetchLabPackages error:', err);
+      alert('Failed to load lab packages');
+    } finally {
+      setLoadingPackages(false);
+    }
+  };
+
+  const fetchLabTestOrderItems = async () => {
+    if (!labTestOrderId) return;
+
+    try {
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
+      const itemOptions = {
+        Page: 1,
+        PageSize: 100,
+        BranchID: branchId,
+        OrderID: labTestOrderId,
+        Status: 1
+      };
+
+      const itemsData = await getLabTestOrderItemList(clinicId, itemOptions);
+      setLabTestOrderItems(itemsData || []);
+    } catch (err) {
+      console.error('fetchLabTestOrderItems error:', err);
+    }
+  };
+
   const handleMedicineSearch = () => {
     if (!medicineSearchQuery.trim()) {
       setFilteredMedicines(allMedicines);
@@ -174,6 +265,64 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     );
     
     setFilteredMedicines(filtered);
+  };
+
+  const handleSearchTests = () => {
+    const term = searchTermTests.toLowerCase().trim();
+    if (!term) {
+      setFilteredTests(labTests);
+      return;
+    }
+    const results = labTests.filter(test =>
+      test.testName?.toLowerCase().includes(term) ||
+      test.shortName?.toLowerCase().includes(term)
+    );
+    setFilteredTests(results);
+  };
+
+  const handleSearchPackages = () => {
+    const term = searchTermPackages.toLowerCase().trim();
+    if (!term) {
+      setFilteredPackages(labPackages);
+      return;
+    }
+    const results = labPackages.filter(pkg =>
+      pkg.packName?.toLowerCase().includes(term) ||
+      pkg.packShortName?.toLowerCase().includes(term)
+    );
+    setFilteredPackages(results);
+  };
+
+  const handleTestSelection = (testId) => {
+    if (existingTestIds.includes(testId)) {
+      return;
+    }
+    
+    setSelectedTests(prev =>
+      prev.includes(testId)
+        ? prev.filter(id => id !== testId)
+        : [...prev, testId]
+    );
+  };
+
+  const handlePackageSelection = (packageId) => {
+    if (existingPackageIds.includes(packageId)) {
+      return;
+    }
+    
+    setSelectedPackages(prev =>
+      prev.includes(packageId)
+        ? prev.filter(id => id !== packageId)
+        : [...prev, packageId]
+    );
+  };
+
+  const isTestAlreadyAdded = (testId) => {
+    return existingTestIds.includes(testId);
+  };
+
+  const isPackageAlreadyAdded = (packageId) => {
+    return existingPackageIds.includes(packageId);
   };
 
   const handleOpenMedicineSearch = () => {
@@ -476,16 +625,161 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
         notes: labTestFormData.notes
       };
 
-      await addLabTestOrder(labTestData);
+      const result = await addLabTestOrder(labTestData);
       
-      handleClose();
-      if (onSuccess) onSuccess();
+      if (result.success && result.orderId) {
+        setLabTestOrderId(result.orderId);
+        setLabTestOrderCreated(true);
+        alert('Lab test order created successfully!');
+      }
     } catch (err) {
       console.error('handleLabTestSubmit error:', err);
       setError(err);
     } finally {
       setSubmitLoading(false);
     }
+  };
+
+  const handleOpenLabTestItemForm = async () => {
+    setAddTab('tests');
+    setSearchTermTests('');
+    setSearchTermPackages('');
+    setSelectedTests([]);
+    setSelectedPackages([]);
+    setFilteredTests([]);
+    setFilteredPackages([]);
+    
+    // Extract existing test and package IDs
+    const existingTests = labTestOrderItems
+      .filter(item => item.testId && item.testId > 0)
+      .map(item => item.testId);
+    const existingPkgs = labTestOrderItems
+      .filter(item => item.packageId && item.packageId > 0)
+      .map(item => item.packageId);
+    
+    setExistingTestIds(existingTests);
+    setExistingPackageIds(existingPkgs);
+    
+    setShowLabTestItemForm(true);
+    
+    await Promise.all([fetchLabTests(), fetchLabPackages()]);
+  };
+
+  const handleAddSelectedItems = async (e) => {
+    e.preventDefault();
+
+    if (selectedTests.length === 0 && selectedPackages.length === 0) {
+      alert('Please select at least one test or package');
+      return;
+    }
+
+    if (!labTestOrderId) return;
+
+    try {
+      setSubmitLoading(true);
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
+      let successCount = 0;
+      let failCount = 0;
+
+      // Add selected tests
+      for (const testId of selectedTests) {
+        try {
+          const itemData = {
+            clinicId,
+            branchId,
+            OrderID: labTestOrderId,
+            PatientID: selectedVisit.patientId,
+            DoctorID: selectedVisit.doctorId,
+            TestID: testId,
+            PackageID: 0
+          };
+          await addLabTestOrderItem(itemData);
+          successCount++;
+        } catch (err) {
+          console.error(`Failed to add test ${testId}:`, err);
+          failCount++;
+        }
+      }
+
+      // Add selected packages
+      for (const packageId of selectedPackages) {
+        try {
+          const itemData = {
+            clinicId,
+            branchId,
+            OrderID: labTestOrderId,
+            PatientID: selectedVisit.patientId,
+            DoctorID: selectedVisit.doctorId,
+            TestID: 0,
+            PackageID: packageId
+          };
+          await addLabTestOrderItem(itemData);
+          successCount++;
+        } catch (err) {
+          console.error(`Failed to add package ${packageId}:`, err);
+          failCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        alert(`Successfully added ${successCount} item(s)${failCount > 0 ? ` (${failCount} failed)` : ''}`);
+        setShowLabTestItemForm(false);
+        setSelectedTests([]);
+        setSelectedPackages([]);
+        setSearchTermTests('');
+        setSearchTermPackages('');
+        setExistingTestIds([]);
+        setExistingPackageIds([]);
+        await fetchLabTestOrderItems();
+      } else {
+        alert('Failed to add any items. Please try again.');
+      }
+    } catch (err) {
+      console.error('handleAddSelectedItems error:', err);
+      alert('Error while adding items');
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  const handleDeleteLabOrderItem = async (itemId) => {
+    if (!window.confirm('Are you sure you want to delete this lab test item?')) {
+      return;
+    }
+
+    try {
+      setSubmitLoading(true);
+      setError(null);
+
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
+      const updateData = {
+        itemId: Number(itemId),
+        clinicId,
+        branchId,
+        status: 2
+      };
+
+      const result = await updateLabTestOrderItem(updateData);
+      
+      if (result.success) {
+        alert('Lab test item deleted successfully!');
+        await fetchLabTestOrderItems();
+      }
+    } catch (err) {
+      console.error('handleDeleteLabOrderItem error:', err);
+      setError(err);
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  const handleCompleteLabTests = () => {
+    handleClose();
+    if (onSuccess) onSuccess();
   };
 
   const handleSkipStep = () => {
@@ -504,6 +798,9 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     setConsultationId(null);
     setPrescriptionId(null);
     setPrescriptionCreated(false);
+    setLabTestOrderId(null);
+    setLabTestOrderCreated(false);
+    setLabTestOrderItems([]);
     setConsultationFormData({
       emrNotes: '',
       ehrNotes: '',
@@ -528,6 +825,10 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     setAllMedicines([]);
     setFilteredMedicines([]);
     setMedicineSearchQuery('');
+    setLabTests([]);
+    setLabPackages([]);
+    setSelectedTests([]);
+    setSelectedPackages([]);
     setError(null);
     onClose();
   };
@@ -553,6 +854,11 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const getFormName = (formId) => {
     const form = MEDICINE_FORMS.find(f => f.id === formId);
     return form ? form.name : 'Unknown';
+  };
+
+  const getPriorityName = (priorityId) => {
+    const priority = LAB_PRIORITIES.find(p => p.id === priorityId);
+    return priority ? priority.name : 'Unknown';
   };
 
   if (!isOpen) return null;
@@ -1126,56 +1432,146 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
 
         {currentWizardStep === 3 && (
           <div className="add-consultation-body">
-            <form onSubmit={handleLabTestSubmit} className="consultation-form">
-              <div className="form-section">
-                <h3 className="form-section-title">Lab Test Order</h3>
-                
-                <div className="form-group">
-                  <label className="form-label">Priority *</label>
-                  <select
-                    name="priority"
-                    value={labTestFormData.priority}
-                    onChange={handleLabTestInputChange}
-                    className="form-input"
-                    required
+            {!labTestOrderCreated ? (
+              <form onSubmit={handleLabTestSubmit} className="consultation-form">
+                <div className="prescription-info-banner">
+                  <FiFileText size={24} />
+                  <div>
+                    <h4>Create Lab Test Order</h4>
+                    <p>First, create the lab test order. You'll be able to add individual tests or packages after.</p>
+                  </div>
+                </div>
+
+                <div className="form-section">
+                  <h3 className="form-section-title">Lab Test Order</h3>
+                  
+                  <div className="form-group">
+                    <label className="form-label">Priority *</label>
+                    <select
+                      name="priority"
+                      value={labTestFormData.priority}
+                      onChange={handleLabTestInputChange}
+                      className="form-input"
+                      required
+                    >
+                      {LAB_PRIORITIES.map(priority => (
+                        <option key={priority.id} value={priority.id}>{priority.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Notes</label>
+                    <textarea
+                      name="notes"
+                      value={labTestFormData.notes}
+                      onChange={handleLabTestInputChange}
+                      placeholder="Lab test notes and instructions..."
+                      className="form-textarea"
+                      rows={4}
+                    />
+                  </div>
+                </div>
+
+                <div className="add-consultation-actions">
+                  <button 
+                    type="button" 
+                    onClick={handleSkipStep}
+                    className="btn-secondary"
+                    disabled={submitLoading}
                   >
-                    {LAB_PRIORITIES.map(priority => (
-                      <option key={priority.id} value={priority.id}>{priority.name}</option>
-                    ))}
-                  </select>
+                    Skip Lab Tests
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn-primary"
+                    disabled={submitLoading}
+                  >
+                    {submitLoading ? 'Creating...' : 'Create Lab Order'} <FiChevronRight size={18} />
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="consultation-form">
+                <div className="prescription-created-banner">
+                  <FiCheck size={24} />
+                  <div>
+                    <h4>Lab Test Order Created Successfully</h4>
+                    <p>Order ID: <strong>#{labTestOrderId}</strong> • Priority: <strong>{getPriorityName(labTestFormData.priority)}</strong> • Now you can add tests or packages</p>
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Notes</label>
-                  <textarea
-                    name="notes"
-                    value={labTestFormData.notes}
-                    onChange={handleLabTestInputChange}
-                    placeholder="Lab test notes and instructions..."
-                    className="form-textarea"
-                    rows={4}
-                  />
+                <div className="form-section">
+                  <div className="section-header-with-action">
+                    <h3 className="form-section-title">
+                      <FiClipboard size={20} />
+                      Test Items
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={handleOpenLabTestItemForm}
+                      className="btn-add-medicine"
+                    >
+                      <FiPlus size={18} /> Add Test/Package
+                    </button>
+                  </div>
+
+                  {labTestOrderItems.length === 0 ? (
+                    <div className="empty-medicines-state">
+                      <FiClipboard size={48} />
+                      <p>No test items added yet</p>
+                      <p className="hint-text">Click "Add Test/Package" to add lab tests or packages</p>
+                    </div>
+                  ) : (
+                    <div className="lab-items-list">
+                      {labTestOrderItems.map((item) => (
+                        <div key={item.itemId} className="lab-item-card">
+                          <div className="lab-item-info">
+                            <div className="lab-item-type">
+                              {item.packageId > 0 ? (
+                                <>
+                                  <FiPackage size={16} className="package-icon" />
+                                  <span className="lab-item-badge">Package</span>
+                                </>
+                              ) : (
+                                <>
+                                  <FiClipboard size={16} className="test-icon" />
+                                  <span className="lab-item-badge">Test</span>
+                                </>
+                              )}
+                            </div>
+                            <div className="lab-item-name">
+                              {item.testOrPackageName || 'Unknown Item'}
+                            </div>
+                            {item.fees > 0 && (
+                              <div className="lab-item-fee">₹{item.fees.toFixed(2)}</div>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteLabOrderItem(item.itemId)}
+                            className="btn-remove-medicine"
+                            disabled={submitLoading}
+                          >
+                            <FiTrash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="add-consultation-actions">
+                  <button 
+                    type="button" 
+                    onClick={handleCompleteLabTests}
+                    className="btn-primary"
+                  >
+                    Complete <FiCheck size={18} />
+                  </button>
                 </div>
               </div>
-
-              <div className="add-consultation-actions">
-                <button 
-                  type="button" 
-                  onClick={handleSkipStep}
-                  className="btn-secondary"
-                  disabled={submitLoading}
-                >
-                  Skip Lab Tests
-                </button>
-                <button 
-                  type="submit" 
-                  className="btn-primary"
-                  disabled={submitLoading}
-                >
-                  {submitLoading ? 'Saving...' : 'Complete'} <FiCheck size={18} />
-                </button>
-              </div>
-            </form>
+            )}
           </div>
         )}
 
@@ -1259,6 +1655,222 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                       ))}
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showLabTestItemForm && (
+          <div className="medicine-search-overlay">
+            <div className="medicine-search-modal medicine-search-modal-large">
+              <div className="medicine-search-header">
+                <h3>Add Test or Package</h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLabTestItemForm(false);
+                    setAddTab('tests');
+                    setSearchTermTests('');
+                    setSearchTermPackages('');
+                    setSelectedTests([]);
+                    setSelectedPackages([]);
+                    setExistingTestIds([]);
+                    setExistingPackageIds([]);
+                  }}
+                  className="close-search-btn"
+                >
+                  <FiX size={20} />
+                </button>
+              </div>
+
+              <div className="medicine-search-body">
+                <div className="lab-info-banner">
+                  <FiClipboard size={20} />
+                  <div>
+                    <h4>Select Tests and/or Packages</h4>
+                    <p>Choose items and click "Add Selected Items". Already added items are disabled.</p>
+                  </div>
+                </div>
+
+                <div className="lab-tab-container">
+                  <button
+                    type="button"
+                    className={`lab-tab-button ${addTab === 'tests' ? 'active' : ''}`}
+                    onClick={() => setAddTab('tests')}
+                  >
+                    Individual Tests
+                  </button>
+                  <button
+                    type="button"
+                    className={`lab-tab-button ${addTab === 'packages' ? 'active' : ''}`}
+                    onClick={() => setAddTab('packages')}
+                  >
+                    Test Packages
+                  </button>
+                </div>
+
+                {addTab === 'tests' ? (
+                  <>
+                    <div className="search-input-group">
+                      <input
+                        type="text"
+                        placeholder="Search tests..."
+                        value={searchTermTests}
+                        onChange={(e) => setSearchTermTests(e.target.value)}
+                        className="search-input"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSearchTests}
+                        className="search-btn"
+                        disabled={loadingTests}
+                      >
+                        <FiSearch size={18} /> Search
+                      </button>
+                    </div>
+
+                    {loadingTests ? (
+                      <div className="loading-medicines">
+                        <div className="spinner"></div>
+                        <p>Loading tests...</p>
+                      </div>
+                    ) : filteredTests.length === 0 ? (
+                      <div className="no-results">
+                        <FiClipboard size={48} />
+                        <p>{searchTermTests ? 'No matching tests found' : 'No tests loaded yet'}</p>
+                      </div>
+                    ) : (
+                      <div className="lab-selection-grid">
+                        {filteredTests.map((test) => {
+                          const alreadyAdded = isTestAlreadyAdded(test.id);
+                          return (
+                            <label 
+                              key={test.id} 
+                              className={`lab-selection-item ${alreadyAdded ? 'disabled' : ''}`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedTests.includes(test.id)}
+                                onChange={() => handleTestSelection(test.id)}
+                                className="lab-checkbox"
+                                disabled={alreadyAdded}
+                              />
+                              <div className="lab-selection-info">
+                                <span className="lab-selection-name">
+                                  {test.testName}
+                                  {alreadyAdded && <span className="already-added-badge">Already Added</span>}
+                                </span>
+                                {test.shortName && (
+                                  <span className="lab-selection-short">{test.shortName}</span>
+                                )}
+                                <span className="lab-selection-meta">
+                                  {test.testTypeDesc} • ₹{test.fees}
+                                </span>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="search-input-group">
+                      <input
+                        type="text"
+                        placeholder="Search packages..."
+                        value={searchTermPackages}
+                        onChange={(e) => setSearchTermPackages(e.target.value)}
+                        className="search-input"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSearchPackages}
+                        className="search-btn"
+                        disabled={loadingPackages}
+                      >
+                        <FiSearch size={18} /> Search
+                      </button>
+                    </div>
+
+                    {loadingPackages ? (
+                      <div className="loading-medicines">
+                        <div className="spinner"></div>
+                        <p>Loading packages...</p>
+                      </div>
+                    ) : filteredPackages.length === 0 ? (
+                      <div className="no-results">
+                        <FiPackage size={48} />
+                        <p>{searchTermPackages ? 'No matching packages found' : 'No packages loaded yet'}</p>
+                      </div>
+                    ) : (
+                      <div className="lab-selection-grid">
+                        {filteredPackages.map((pkg) => {
+                          const alreadyAdded = isPackageAlreadyAdded(pkg.id);
+                          return (
+                            <label 
+                              key={pkg.id} 
+                              className={`lab-selection-item ${alreadyAdded ? 'disabled' : ''}`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedPackages.includes(pkg.id)}
+                                onChange={() => handlePackageSelection(pkg.id)}
+                                className="lab-checkbox"
+                                disabled={alreadyAdded}
+                              />
+                              <div className="lab-selection-info">
+                                <span className="lab-selection-name">
+                                  {pkg.packName}
+                                  {alreadyAdded && <span className="already-added-badge">Already Added</span>}
+                                </span>
+                                {pkg.packShortName && (
+                                  <span className="lab-selection-short">{pkg.packShortName}</span>
+                                )}
+                                <span className="lab-selection-meta">
+                                  Package • ₹{pkg.fees}
+                                </span>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <div className="lab-selection-summary">
+                  <p>
+                    Selected: <strong>{selectedTests.length} test(s)</strong> +{' '}
+                    <strong>{selectedPackages.length} package(s)</strong>
+                  </p>
+                </div>
+
+                <div className="search-modal-footer">
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setShowLabTestItemForm(false);
+                      setSelectedTests([]);
+                      setSelectedPackages([]);
+                      setSearchTermTests('');
+                      setSearchTermPackages('');
+                      setExistingTestIds([]);
+                      setExistingPackageIds([]);
+                    }} 
+                    className="btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={handleAddSelectedItems}
+                    className="btn-primary"
+                    disabled={submitLoading || (selectedTests.length === 0 && selectedPackages.length === 0)}
+                  >
+                    {submitLoading ? 'Adding...' : 'Add Selected Items'} <FiCheck size={16} />
+                  </button>
                 </div>
               </div>
             </div>

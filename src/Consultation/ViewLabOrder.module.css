@@ -1,4 +1,4 @@
-/* ViewLabOrder.module.css - With Common Header Design */
+/* ViewLabOrder.module.css - Enhanced with Lab Order Items Styles */
 
 :root {
   --primary-start: #222b6c;
@@ -56,7 +56,6 @@
   border: 1px solid rgba(34, 43, 108, 0.08);
 }
 
-/* Header Section */
 .cardHeader {
   padding: 20px 24px;
   background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(48, 178, 181, 0.04));
@@ -79,7 +78,6 @@
   font-size: 0.9rem;
 }
 
-/* Status Badge */
 .statusBadge {
   padding: 6px 14px;
   border-radius: 20px;
@@ -113,7 +111,6 @@
   font-size: 0.85rem;
 }
 
-/* Tabs */
 .tabs {
   display: flex;
   gap: 6px;
@@ -420,7 +417,6 @@
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-/* ==================== STATUS BADGE ==================== */
 .statusBadgeSmall {
   display: inline-block;
   padding: 4px 10px;
@@ -430,6 +426,179 @@
   background: linear-gradient(135deg, rgba(34, 43, 108, 0.1), rgba(48, 178, 181, 0.1));
   color: var(--primary-start);
   border: 1px solid rgba(34, 43, 108, 0.2);
+}
+
+/* ==================== LAB ORDER ITEMS SECTION ==================== */
+.itemsSection {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 2px solid rgba(48, 178, 181, 0.15);
+}
+
+.itemsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.itemsTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin: 0;
+}
+
+.btnAddItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(32, 125, 156, 0.3);
+}
+
+.btnAddItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(32, 125, 156, 0.4);
+}
+
+.btnAddItem:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.itemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.itemCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.02), rgba(48, 178, 181, 0.02));
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.itemCard:hover {
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(48, 178, 181, 0.04));
+  border-color: rgba(48, 178, 181, 0.3);
+}
+
+.itemInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.itemType {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.testIcon {
+  color: var(--accent-start);
+}
+
+.packageIcon {
+  color: var(--warning);
+}
+
+.itemBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background: rgba(34, 43, 108, 0.1);
+  color: var(--primary-start);
+}
+
+.itemName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.itemShortName {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+.btnDeleteItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: white;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  color: var(--danger);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnDeleteItem:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--danger);
+  transform: scale(1.05);
+}
+
+.btnDeleteItem:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.noItems {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.noItems svg {
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+
+.noItems p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.noItemsHint {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 400;
 }
 
 /* ==================== MODAL ==================== */
@@ -458,6 +627,10 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
+}
+
+.modalLarge {
+  max-width: 900px;
 }
 
 .modalHeader {
@@ -670,6 +843,147 @@
   color: var(--text-dark);
 }
 
+/* ==================== SELECTION SECTION (for Tests/Packages) ==================== */
+.selectionSection {
+  margin-bottom: 24px;
+}
+
+.selectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin: 0 0 12px 0;
+}
+
+.selectionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  border-radius: 8px;
+  background: rgba(243, 244, 246, 0.3);
+}
+
+.selectionItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  background: white;
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selectionItem:hover {
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.02), rgba(48, 178, 181, 0.02));
+  border-color: var(--accent-start);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(34, 43, 108, 0.1);
+}
+
+.selectionItem.disabled {
+  opacity: 0.5;
+  background: rgba(148, 163, 184, 0.1);
+  cursor: not-allowed;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.selectionItem.disabled:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.checkbox {
+  margin-top: 2px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.checkbox:disabled {
+  cursor: not-allowed;
+}
+
+.selectionInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.selectionName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.alreadyAddedBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background: rgba(148, 163, 184, 0.2);
+  color: #475569;
+}
+
+.selectionShortName {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+.selectionMeta {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.selectionSummary {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(48, 178, 181, 0.05));
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 8px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+.selectionSummary p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+}
+
+.loadingSmall {
+  padding: 20px;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.noData {
+  padding: 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
 /* ==================== LOADING & ERROR STATES ==================== */
 .loading,
 .error {
@@ -684,6 +998,105 @@
 
 .error {
   color: var(--danger);
+}
+
+/* ────────────────────────────────────────────────
+   New styles for View button and item detail modal
+───────────────────────────────────────────────── */
+
+.itemActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btnViewItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: white;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: 6px;
+  color: var(--success);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnViewItem:hover {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: var(--success);
+  transform: scale(1.05);
+}
+
+.itemDetailSection {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.itemDetailSection h4 {
+  margin: 0 0 16px 0;
+  color: var(--primary-start);
+  font-size: 1.15rem;
+}
+
+/* ────────────────────────────────────────────────
+   New styles for improved Add modal (tabs + search)
+───────────────────────────────────────────────── */
+
+.tabContainer {
+  display: flex;
+  margin: 0 0 20px 0;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.searchContainer {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 220px;
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.searchInput:focus {
+  border-color: var(--accent-start);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
+}
+
+.searchBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.searchBtn:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  transform: translateY(-1px);
+}
+
+.searchBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ==================== RESPONSIVE ==================== */
@@ -732,6 +1145,21 @@
     justify-content: flex-end;
   }
 
+  .itemsHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .btnAddItem {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .selectionGrid {
+    grid-template-columns: 1fr;
+  }
+
   .modalFooter {
     flex-direction: column;
   }
@@ -743,6 +1171,10 @@
   .btnAddLarge {
     width: 100%;
     padding: 14px 32px;
+  }
+
+  .modal {
+    max-width: 95%;
   }
 }
 
@@ -758,5 +1190,15 @@
 
   .sectionTitle {
     font-size: 1rem;
+  }
+
+  .itemCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .btnDeleteItem {
+    align-self: flex-end;
   }
 }

@@ -1,0 +1,399 @@
+/* ViewLabMaster.module.css */
+
+:root {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== MODAL OVERLAY ==================== */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 22, 41, 0.85);
+  backdrop-filter: blur(9px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+/* ==================== MODAL ==================== */
+.modal {
+  background: var(--glass-bg);
+  border-radius: 15px;
+  border: 2px solid var(--glass-border);
+  width: 100%;
+  max-width: 650px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(14px);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.detailsModal {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  width: 100%;
+  max-width: 600px;
+  overflow: hidden;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== MODAL HEADER ==================== */
+.detailsModalHeader {
+  padding: 14px 20px 12px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
+  border-bottom: 1px solid rgba(34, 43, 108, 0.1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 60px;
+}
+
+.detailsHeaderContent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatarLarge {
+  width: 37px;
+  height: 37px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(32, 125, 156, 0.35);
+}
+
+.detailsModalHeader h2 {
+  font-size: 1.02rem;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  margin: 3px 0 0;
+  color: var(--primary-end);
+  font-size: 0.6rem;
+  font-weight: 500;
+}
+
+.statusBadgeLargeWrapper {
+  margin-right: 23px;
+}
+
+.modalClose {
+  background: rgba(100, 116, 139, 0.15);
+  border: 2px solid rgba(100, 116, 139, 0.2);
+  width: 29px;
+  height: 29px;
+  border-radius: 50%;
+  color: #64748b;
+  font-size: 17px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.modalClose:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+  transform: rotate(90deg);
+}
+
+/* ==================== MODAL BODY ==================== */
+.detailsModalBody {
+  padding: 14px 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ==================== DETAILS TABLE ==================== */
+.detailsTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+}
+
+.detailsTable tr {
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.detailsTable td {
+  padding: 8px 10px;
+  border: none;
+}
+
+.detailsTable td.label {
+  width: 35%;
+  font-weight: 1000;
+  color: #475569;
+  background: rgba(34, 43, 108, 0.05);
+  font-size: 0.8rem;
+}
+
+.detailsTable td.value {
+  font-weight: 1000;
+  color: var(--text-dark);
+  font-size: 0.8rem;
+  background: rgba(34, 43, 108, 0.05);
+}
+
+.label {
+  width: 35%;
+  font-weight: 1000;
+  color: #475569;
+  background: rgba(34, 43, 108, 0.05);
+  font-size: 0.8rem;
+}
+
+.value {
+  font-weight: 1000;
+  color: var(--text-dark);
+  font-size: 0.8rem;
+  background: rgba(34, 43, 108, 0.05);
+}
+
+/* ==================== STATUS BADGE ==================== */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.statusBadge.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.statusBadge.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.statusBadge.deprecated {
+  background: rgba(245, 158, 11, 0.15);
+  color: #92400e;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.statusBadge.large {
+  padding: 9px 17px;
+  font-size: 0.77rem;
+}
+
+.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.deprecated {
+  background: rgba(245, 158, 11, 0.15);
+  color: #92400e;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.large {
+  padding: 9px 17px;
+  font-size: 0.77rem;
+}
+
+/* ==================== MODAL FOOTER ==================== */
+.modalFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 17px 23px;
+  border-top: 2px solid rgba(34, 43, 108, 0.15);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+}
+
+/* ==================== BUTTON STYLES ==================== */
+.btnUpdate,
+.btnDelete {
+  position: relative;
+  overflow: hidden;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 10px 31px;
+  font-size: 0.85rem;
+  border-radius: 26px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btnUpdate {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+}
+
+.btnDelete {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(220, 38, 38, 0.3);
+}
+
+.btnUpdate::before,
+.btnDelete::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btnUpdate::before {
+  background: rgba(48, 178, 181, 0.35);
+}
+
+.btnDelete::before {
+  background: rgba(239, 68, 68, 0.35);
+}
+
+.btnUpdate:hover::before,
+.btnDelete:hover::before {
+  width: 170px;
+  height: 170px;
+}
+
+.btnUpdate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+.btnDelete:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(239, 68, 68, 0.45);
+}
+
+.btnUpdate:active,
+.btnDelete:active {
+  transform: translateY(-1px);
+}
+
+/* ==================== DARK MODE ==================== */
+:global(.dark-mode) .modal {
+  background: rgba(30, 41, 59, 0.94);
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .detailsTable td.label,
+:global(.dark-mode) .label {
+  color: var(--accent-end);
+  background-color: #1e293b;
+}
+
+:global(.dark-mode) .detailsTable td.value,
+:global(.dark-mode) .value {
+  background-color: #1e293b;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .detailsModalHeader h2 {
+  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+:global(.dark-mode) .statusBadge.active,
+:global(.dark-mode) .active {
+  color: #9cc14d;
+}
+
+:global(.dark-mode) .modalFooter {
+  background: linear-gradient(135deg, #1e293b, #334155);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .modal {
+    max-width: 92%;
+  }
+
+  .detailsModalHeader,
+  .detailsModalBody,
+  .modalFooter {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .modalFooter {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .btnUpdate,
+  .btnDelete {
+    width: 100%;
+    justify-content: center;
+  }
+}

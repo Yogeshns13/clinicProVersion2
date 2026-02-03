@@ -632,15 +632,6 @@ export const getLabTestPackageItemList = async (options = {}) => {
     throw authError;
   }
 
-  // Optional: stricter input validation in non-production
-  if (PRODUCTION_MODE !== true) {
-    if (!packageId || packageId < 1 || isNaN(packageId)) {
-      const error = new Error("Valid PackageID is required");
-      error.status = 400;
-      throw error;
-    }
-  }
-
   const finalClinicId  = PRODUCTION_MODE ? getClinicId()  : (options.ClinicID  || 0);
   const finalBranchId  = PRODUCTION_MODE ? getBranchId()  : (options.BranchID  || 0);
 
@@ -706,19 +697,6 @@ export const addLabPackageItem = async (packageItemData) => {
     throw validationError;
   }
 
-  if (PRODUCTION_MODE !== true) {
-    if (
-      packageItemData.packageId < 1 ||
-      isNaN(packageItemData.packageId) ||
-      packageItemData.testId < 1 ||
-      isNaN(packageItemData.testId)
-    ) {
-      const error = new Error("PackageID and TestID must be valid positive integers");
-      error.status = 400;
-      throw error;
-    }
-  }
-
   const finalClinicId  = PRODUCTION_MODE ? getClinicId()  : (packageItemData.clinicId  || 0);
   const finalBranchId  = PRODUCTION_MODE ? getBranchId()  : (packageItemData.branchId  || 0);
 
@@ -729,7 +707,7 @@ export const addLabPackageItem = async (packageItemData) => {
     USER_ID: parseInt(userId),
     ClinicID:  finalClinicId,
     BranchID:  finalBranchId,
-    PackageID: packageItemData.finalPackageId,
+    PackageID: packageItemData.packageId,
     TestID:    parseInt(packageItemData.testId),
   };
 

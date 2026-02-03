@@ -55,8 +55,19 @@ const ROUTE_PERMISSIONS = {
   "/add-medicinemaster": ["admin", "doctor", "receptionist"],
   "/update-medicinemaster/:id": ["admin", "doctor", "receptionist"],
   "/view-medicinemaster/:id": ["admin", "doctor", "receptionist"],
+  "/purchaseorder-list": ["admin", "doctor", "receptionist"],
+  "/add-puchaseorder": ["admin", "doctor", "receptionist"],
+  "/view-purchaseorder/:id": ["admin", "doctor", "receptionist"],
+  "/purchaseorderdetail-list": ["admin", "doctor", "receptionist"],
+  "/Add-purchaseorderdetail": ["admin", "doctor", "receptionist"],
+  "/update-purchaseorderdetail/:id": ["admin", "doctor", "receptionist"],
+  "/view-purchaseorderdetail/:id": ["admin", "doctor", "receptionist"],
   "/view-prescription/:id": ["admin", "doctor", "receptionist"],
   "/view-laborder/:id": ["admin", "doctor", "receptionist"],
+  "/labtestmaster": ["admin", "doctor", "receptionist"],
+  "/update-labmaster/:id": ["admin", "doctor", "receptionist"],
+  "/update-labpackage/:id": ["admin", "doctor", "receptionist"],
+  
 };
 
 const PrivateRoute = ({ children }) => {

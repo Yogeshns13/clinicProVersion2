@@ -58,6 +58,19 @@ import AddMedicineMaster from "./MedicineMaster/Addmedicinemaster.jsx";
 import UpdateMedicineMaster from "./MedicineMaster/UpdateMedicineMaster.jsx";
 import ViewPrescription from "./Consultation/ViewPrescription.jsx";
 import ViewLabOrder from "./Consultation/ViewLabOrder.jsx";
+import UpdateLabTestMaster from "./LabTestMaster/Updatelabtestmaster.jsx";
+import UpdateLabTestPackage from "./LabTestMaster/Updatelabtestpackage.jsx";
+import ViewLabPackage from "./LabTestMaster/ViewLabPackage.jsx";
+import ViewLabMaster from "./LabTestMaster/ViewLabMaster.jsx";
+import LabMasterList from "./LabTestMaster/Labmasterlist.jsx";
+import PurchaseOrderDetailList from "./PurchaseOrderDetail/PurchaseOrderDetailList.jsx";
+import AddPurchaseOrderDetail from "./PurchaseOrderDetail/AddPurchaseOrderDetail.jsx";
+import UpdatePurchaseOrderDetail from "./PurchaseOrderDetail/UpdatePurchaseOrderDetail.jsx";
+import ViewPurchaseOrderDetail from "./PurchaseOrderDetail/ViewPurchaseOrderDetail.jsx";
+import PurchaseOrderList from "./PurchaseOrder/PurchaseOrderList.jsx";
+import AddPurchaseOrder from "./PurchaseOrder/AddPurchaseOrder.jsx";
+import ViewPurchaseOrder from "./PurchaseOrder/ViewPurchaseOrder.jsx";
+
 
 function App() {
   return (
@@ -128,6 +141,18 @@ function App() {
           <Route path="/view-medicinemaster/:id" element={<ViewMedicineMaster/>} />
           <Route path="/view-prescription/:id" element={<ViewPrescription/>} />
           <Route path="/view-laborder/:id" element={<ViewLabOrder/>} />
+          <Route path="/labtestmaster" element={<LabMasterList/>} />
+          <Route path="/update-labmaster/:id" element={<UpdateLabTestMaster/>} />
+          <Route path="/update-labpackage/:id" element={<UpdateLabTestPackage/>} />
+          <Route path="/view-labpackage/:id" element={<ViewLabPackage/>} />
+          <Route path="/view-labmaster/:id" element={<ViewLabMaster/>} />
+          <Route path="/purchaseorder-list" element={<PurchaseOrderList/>} />
+          <Route path="/add-purchaseorder" element={<AddPurchaseOrder/>} />
+          <Route path="/view-purchaseorder/:id" element={<ViewPurchaseOrder/>} />
+          <Route path="/purchaseorderdetail-list" element={<PurchaseOrderDetailList/>} />
+          <Route path="/Add-purchaseorderdetail" element={<AddPurchaseOrderDetail/>} />
+          <Route path="/Update-purchaseorderdetail/:id" element={<UpdatePurchaseOrderDetail/>} />
+          <Route path="/view-purchaseorderdetail/:id" element={<ViewPurchaseOrderDetail/>} />
 
           {/* Default redirect inside protected area */}
           <Route path="/admin" element={<Navigate to="/dashboard" replace />} />

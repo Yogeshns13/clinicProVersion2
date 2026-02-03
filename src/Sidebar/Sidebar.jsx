@@ -38,6 +38,7 @@ const Sidebar = () => {
     employee: ["admin", "doctor", "receptionist"],
     patients: ["admin", "doctor", "receptionist"],
     consultation: ["admin", "doctor", "receptionist"],
+    lab: ["admin", "doctor", "receptionist"],
     invoice: ["admin", "doctor", "receptionist"],
     pharmacy: ["admin", "doctor", "receptionist"],
     appointments: ["admin", "doctor", "receptionist"],
@@ -99,6 +100,16 @@ const Sidebar = () => {
       show: hasAccess(MENU_PERMISSIONS.consultation),
     },
     {
+      id: "lab",
+      icon: FiPlusSquare,
+      label: "lab",
+      hasDropdown: true,
+      subItems: [
+        { to: "/labtestmaster", label: "Lab Master"},
+      ],
+      show: hasAccess(MENU_PERMISSIONS.lab),
+    },
+    {
       id: "invoice",
       icon: FiFileText,
       label: "invoice",
@@ -117,6 +128,8 @@ const Sidebar = () => {
       subItems: [
         { to: "/vendor-list", label: "Vendor"},
         { to: "/medicinemaster-list", label: "Medicine"},
+        { to: "/purchaseorder-list", label: "purchase Order"},
+        { to: "/purchaseorderdetail-list", label: "purchase Order Detail"},
       ],
       show: hasAccess(MENU_PERMISSIONS.pharmacy),
     },
