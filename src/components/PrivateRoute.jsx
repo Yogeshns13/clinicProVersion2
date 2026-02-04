@@ -68,6 +68,8 @@ const ROUTE_PERMISSIONS = {
   "/update-labmaster/:id": ["admin", "doctor", "receptionist"],
   "/update-labpackage/:id": ["admin", "doctor", "receptionist"],
   "/laborder-list": ["admin", "doctor", "receptionist"],
+  "/medicinestock-list": ["admin", "doctor", "receptionist"],
+  "/update-medicinestock/:id": ["admin", "doctor", "receptionist"],
   
 };
 

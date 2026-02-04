@@ -81,8 +81,7 @@ GetLabWorkItemList
      "OrderID":0,
      "FromDate":"",
     "ToDate":"",
-    "Search":""   
-      
+    "Search":""     
 }
 
 Lab Test Order Status

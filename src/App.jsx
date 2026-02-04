@@ -70,7 +70,9 @@ import ViewPurchaseOrderDetail from "./PurchaseOrderDetail/ViewPurchaseOrderDeta
 import PurchaseOrderList from "./PurchaseOrder/PurchaseOrderList.jsx";
 import AddPurchaseOrder from "./PurchaseOrder/AddPurchaseOrder.jsx";
 import ViewPurchaseOrder from "./PurchaseOrder/ViewPurchaseOrder.jsx";
-import LabOrderList from "./LabOrderList/LabOrderList.jsx";
+import LabWorkManagement from "./LabWork1/LabWorkManagement.jsx";
+import MedicineStockList from "./MedicineStock/MedicineStocklist.jsx";
+import UpdateMedicineStock from "./MedicineStock/UpdateMedicineStock.jsx";
 
 
 function App() {
@@ -154,7 +156,9 @@ function App() {
           <Route path="/Add-purchaseorderdetail" element={<AddPurchaseOrderDetail/>} />
           <Route path="/Update-purchaseorderdetail/:id" element={<UpdatePurchaseOrderDetail/>} />
           <Route path="/view-purchaseorderdetail/:id" element={<ViewPurchaseOrderDetail/>} />
-          <Route path="/laborder-list" element={<LabOrderList/>} />
+          <Route path="/laborder-list" element={<LabWorkManagement/>} />
+          <Route path="/medicinestock-list" element={<MedicineStockList/>} />
+          <Route path="/update-medicinestock/:id" element={<UpdateMedicineStock/>} />
 
           {/* Default redirect inside protected area */}
           <Route path="/admin" element={<Navigate to="/dashboard" replace />} />

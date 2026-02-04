@@ -85,9 +85,7 @@ GetPrescriptionDetailList
     "FoodTiming":0,   
     "RefillAllowed":0,   
     "Status":-1
-    
 }
-
 ___________________________________________________________________
 
 GetPrescriptionDetailList
