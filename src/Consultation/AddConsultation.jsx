@@ -465,7 +465,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
         temperature: selectedVisit.temperature || null,
         weight: selectedVisit.weight || null,
         emrNotes: consultationFormData.emrNotes.trim(),
-        ehrNotes: consultationFormData.ehrNotes.trim(),
+        ehrNotes: null,
         instructions: consultationFormData.instructions.trim(),
         consultationNotes: consultationFormData.consultationNotes.trim(),
         nextConsultationDate: consultationFormData.nextConsultationDate || '',
@@ -1009,9 +1009,10 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
             </div>
 
             <form onSubmit={handleConsultationSubmit} className="consultation-form">
+
               <div className="form-section">
-                <h3 className="form-section-title">Medical Records</h3>
-                
+                <h3 className="form-section-title">Consultation Details</h3>
+
                 <div className="form-group">
                   <label className="form-label">EMR Notes</label>
                   <textarea
@@ -1023,22 +1024,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                     rows={3}
                   />
                 </div>
-
-                <div className="form-group">
-                  <label className="form-label">EHR Notes</label>
-                  <textarea
-                    name="ehrNotes"
-                    value={consultationFormData.ehrNotes}
-                    onChange={handleConsultationInputChange}
-                    placeholder="Electronic Health Record notes..."
-                    className="form-textarea"
-                    rows={3}
-                  />
-                </div>
-              </div>
-
-              <div className="form-section">
-                <h3 className="form-section-title">Consultation Details</h3>
                 
                 <div className="form-group">
                   <label className="form-label">Consultation Notes *</label>

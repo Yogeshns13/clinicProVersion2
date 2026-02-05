@@ -109,7 +109,7 @@ const UpdatePatientVisit = () => {
           bpSystolic: visit.bpSystolic || '',
           bpDiastolic: visit.bpDiastolic || '',
           temperature: visit.temperature || '',
-          weight: visit.weight || ''
+          weight: visit.weight || '',
         };
 
         console.log('fetchVisitDetails: Setting form data:', newFormData);
@@ -209,7 +209,8 @@ const UpdatePatientVisit = () => {
         bpSystolic: formData.bpSystolic ? parseInt(formData.bpSystolic) : 0,
         bpDiastolic: formData.bpDiastolic ? parseInt(formData.bpDiastolic) : 0,
         temperature: formData.temperature ? parseFloat(formData.temperature) : 0,
-        weight: formData.weight ? parseFloat(formData.weight) : 0
+        weight: formData.weight ? parseFloat(formData.weight) : 0,
+        status: 0
       };
 
       console.log('handleSubmit: Submitting visit data:', visitData);

@@ -1,13 +1,14 @@
 // src/components/AppointmentList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiPlus, FiCalendar, FiX, FiCheck, FiFilter} from 'react-icons/fi';
-import { getAppointmentList, cancelAppointment } from '../api/api.js';
+import { FiSearch, FiPlus, FiCalendar, FiX, FiCheck, FiFilter, FiActivity} from 'react-icons/fi';
+import { getAppointmentList } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddAppointment from './AddAppointment.jsx';
 import AppointmentDetails from './ViewAppointment.jsx';
-import './AppointmentList.css';
+import AddAppointmentVisit from './Addappointmentvisit.jsx';
+import styles from './AppointmentList.module.css';
 
 const AppointmentList = () => {
   const navigate = useNavigate();
@@ -31,10 +32,9 @@ const AppointmentList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isAddVisitModalOpen, setIsAddVisitModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [cancelLoading, setCancelLoading] = useState(false);
 
   // Helper function to get status string from status code
   const getStatusString = (status) => {
@@ -171,30 +171,18 @@ const AppointmentList = () => {
     fetchAppointments();
   };
 
-  const openCancelModal = (appointment) => {
+  const handleAddVisitClick = (appointment) => {
     setSelectedAppointment(appointment);
-    setIsCancelModalOpen(true);
+    setIsAddVisitModalOpen(true);
   };
 
-  const closeCancelModal = () => {
+  const closeAddVisitModal = () => {
     setSelectedAppointment(null);
-    setIsCancelModalOpen(false);
+    setIsAddVisitModalOpen(false);
   };
 
-  const handleCancelAppointment = async () => {
-    if (!selectedAppointment) return;
-
-    setCancelLoading(true);
-    try {
-      await cancelAppointment(selectedAppointment.id);
-      fetchAppointments();
-      closeCancelModal();
-    } catch (err) {
-      console.error('Failed to cancel appointment:', err);
-      alert(err.message || 'Failed to cancel appointment');
-    } finally {
-      setCancelLoading(false);
-    }
+  const handleAddVisitSuccess = () => {
+    fetchAppointments();
   };
 
   const getStatusClass = (status) => {
@@ -240,46 +228,46 @@ const AppointmentList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className="clinic-loading">Loading appointments...</div>;
-  if (error) return <div className="clinic-error">Error: {error.message || error}</div>;
+  if (loading) return <div className={styles.clinicLoading}>Loading appointments...</div>;
+  if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
   return (
-    <div className="clinic-container">
-      <Header />
+    <div className={styles.clinicContainer}>
+      <Header title="Appointment Management"/>
 
       {/* Main Toolbar */}
-      <div className="clinic-toolbar">
-        <div className="clinic-toolbar-left">
+      <div className={styles.clinicToolbar}>
+        <div className={styles.clinicToolbarLeft}>
           <button 
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)} 
-            className={`filter-toggle-btn ${showAdvancedFilters ? 'active' : ''}`}
+            className={`${styles.filterToggleBtn} ${showAdvancedFilters ? styles.active : ''}`}
           >
             <FiFilter /> {showAdvancedFilters ? 'Hide Filters' : 'Show Filters'}
           </button>
 
           {hasActiveFilters() && (
-            <button onClick={clearAllFilters} className="clear-all-filters-btn">
+            <button onClick={clearAllFilters} className={styles.clearAllFiltersBtn}>
               <FiX /> Clear All Filters
             </button>
           )}
         </div>
 
-        <div className="clinic-toolbar-right">
-          <div className="clinic-search-container">
+        <div className={styles.clinicToolbarRight}>
+          <div className={styles.clinicSearchContainer}>
             <input
               type="text"
               placeholder="Quick search..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="clinic-search-input"
+              className={styles.clinicSearchInput}
             />
-            <button onClick={handleSearch} className="clinic-search-btn">
+            <button onClick={handleSearch} className={styles.clinicSearchBtn}>
               <FiSearch />
             </button>
           </div>
 
-          <button onClick={openAddForm} className="clinic-add-btn">
+          <button onClick={openAddForm} className={styles.clinicAddBtn}>
             <FiPlus /> New Appointment
           </button>
         </div>
@@ -287,10 +275,10 @@ const AppointmentList = () => {
 
       {/* Advanced Filters Section */}
       {showAdvancedFilters && (
-        <div className="advanced-filters-section">
-          <div className="filters-grid">
-            <div className="filter-group">
-              <label className="filter-label">Appointment Date</label>
+        <div className={styles.advancedFiltersSection}>
+          <div className={styles.filtersGrid}>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>Appointment Date</label>
               <input
                 type="date"
                 value={appointmentDate}
@@ -299,12 +287,12 @@ const AppointmentList = () => {
                   setFromDate('');
                   setToDate('');
                 }}
-                className="filter-input"
+                className={styles.filterInput}
               />
             </div>
 
-            <div className="filter-group">
-              <label className="filter-label">From Date</label>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>From Date</label>
               <input
                 type="date"
                 value={fromDate}
@@ -312,12 +300,12 @@ const AppointmentList = () => {
                   setFromDate(e.target.value);
                   setAppointmentDate('');
                 }}
-                className="filter-input"
+                className={styles.filterInput}
               />
             </div>
 
-            <div className="filter-group">
-              <label className="filter-label">To Date</label>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>To Date</label>
               <input
                 type="date"
                 value={toDate}
@@ -325,16 +313,16 @@ const AppointmentList = () => {
                   setToDate(e.target.value);
                   setAppointmentDate('');
                 }}
-                className="filter-input"
+                className={styles.filterInput}
               />
             </div>
 
-            <div className="filter-group">
-              <label className="filter-label">Status</label>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>Status</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="filter-select"
+                className={styles.filterSelect}
               >
                 <option value="all">All Status</option>
                 <option value="scheduled">Scheduled</option>
@@ -345,69 +333,69 @@ const AppointmentList = () => {
               </select>
             </div>
 
-            <div className="filter-group">
-              <label className="filter-label">Patient Name</label>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>Patient Name</label>
               <input
                 type="text"
                 placeholder="Enter patient name"
                 value={patientNameFilter}
                 onChange={(e) => setPatientNameFilter(e.target.value)}
-                className="filter-input"
+                className={styles.filterInput}
               />
             </div>
 
-            <div className="filter-group">
-              <label className="filter-label">Doctor Name</label>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>Doctor Name</label>
               <input
                 type="text"
                 placeholder="Enter doctor name"
                 value={doctorNameFilter}
                 onChange={(e) => setDoctorNameFilter(e.target.value)}
-                className="filter-input"
+                className={styles.filterInput}
               />
             </div>
 
-            <div className="filter-group filter-search-btn-group">
-              <label className="filter-label">&nbsp;</label>
-              <button onClick={handleApplyFilters} className="filter-search-btn">
+            <div className={`${styles.filterGroup} ${styles.filterSearchBtnGroup}`}>
+              <label className={styles.filterLabel}>&nbsp;</label>
+              <button onClick={handleApplyFilters} className={styles.filterSearchBtn}>
                 <FiSearch /> Apply Filters
               </button>
             </div>
           </div>
 
-          <div className="active-filters">
+          <div className={styles.activeFilters}>
             {appointmentDate && appointmentDate !== todayDate && (
-              <span className="filter-tag">
+              <span className={styles.filterTag}>
                 Date: {formatDate(appointmentDate)}
                 <button onClick={() => setAppointmentDate(todayDate)}><FiX /></button>
               </span>
             )}
             {fromDate && (
-              <span className="filter-tag">
+              <span className={styles.filterTag}>
                 From: {formatDate(fromDate)}
                 <button onClick={() => setFromDate('')}><FiX /></button>
               </span>
             )}
             {toDate && (
-              <span className="filter-tag">
+              <span className={styles.filterTag}>
                 To: {formatDate(toDate)}
                 <button onClick={() => setToDate('')}><FiX /></button>
               </span>
             )}
             {statusFilter !== 'all' && (
-              <span className="filter-tag">
+              <span className={styles.filterTag}>
                 Status: {statusFilter}
                 <button onClick={() => setStatusFilter('all')}><FiX /></button>
               </span>
             )}
             {patientNameFilter && (
-              <span className="filter-tag">
+              <span className={styles.filterTag}>
                 Patient: {patientNameFilter}
                 <button onClick={() => setPatientNameFilter('')}><FiX /></button>
               </span>
             )}
             {doctorNameFilter && (
-              <span className="filter-tag">
+              <span className={styles.filterTag}>
                 Doctor: {doctorNameFilter}
                 <button onClick={() => setDoctorNameFilter('')}><FiX /></button>
               </span>
@@ -416,8 +404,8 @@ const AppointmentList = () => {
         </div>
       )}
 
-      <div className="clinic-table-container">
-        <table className="clinic-table">
+      <div className={styles.clinicTableContainer}>
+        <table className={styles.clinicTable}>
           <thead>
             <tr>
               <th>Patient</th>
@@ -431,7 +419,7 @@ const AppointmentList = () => {
           <tbody>
             {filteredAppointments.length === 0 ? (
               <tr>
-                <td colSpan="6" className="clinic-empty-message">
+                <td colSpan="6" className={styles.clinicEmptyMessage}>
                   {searchTerm ? 'No appointments found matching your search.' : 'No appointments found.'}
                 </td>
               </tr>
@@ -439,52 +427,51 @@ const AppointmentList = () => {
               filteredAppointments.map((appt) => (
                 <tr key={appt.id}>
                   <td>
-                    <div className="clinic-patient-info">
-                      <div className="clinic-avatar">
+                    <div className={styles.clinicPatientInfo}>
+                      <div className={styles.clinicAvatar}>
                         {appt.patientName?.charAt(0).toUpperCase() || 'P'}
                       </div>
                       <div>
-                        <div className="clinic-patient-name">{appt.patientName}</div>
-                        <div className="clinic-patient-details">
+                        <div className={styles.clinicPatientName}>{appt.patientName}</div>
+                        <div className={styles.clinicPatientDetails}>
                           {appt.patientFileNo} • {appt.patientMobile}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td>
-                    <div className="clinic-doctor-name">{appt.doctorFullName}</div>
-                    <div className="clinic-doctor-code">{appt.doctorCode || '—'}</div>
+                    <div className={styles.clinicDoctorName}>{appt.doctorFullName}</div>
+                    <div className={styles.clinicDoctorCode}>{appt.doctorCode || '—'}</div>
                   </td>
                   <td>
-                    <div className="clinic-date">{formatDate(appt.appointmentDate)}</div>
-                    <div className="clinic-time">
+                    <div className={styles.clinicDate}>{formatDate(appt.appointmentDate)}</div>
+                    <div className={styles.clinicTime}>
                       <FiCalendar /> {formatTime(appt.appointmentTime)}
                     </div>
                   </td>
                   <td>
-                    <div className="clinic-reason">{appt.reason || '—'}</div>
+                    <div className={styles.clinicReason}>{appt.reason || '—'}</div>
                   </td>
                   <td>
-                    <span className={`clinic-status-badge ${getStatusClass(appt.status)}`}>
+                    <span className={`${styles.clinicStatusBadge} ${styles[getStatusClass(appt.status)]}`}>
                       {getStatusString(appt.status).toUpperCase()}
                     </span>
                   </td>
                   <td>
-                    <div className="clinic-actions">
+                    <div className={styles.clinicActions}>
                       <button
                         onClick={() => handleViewDetails(appt)}
-                        className="clinic-details-btn"
+                        className={styles.clinicDetailsBtn}
                       >
                         View Details
                       </button>
-                      {appt.status === 1 && (
-                        <button
-                          onClick={() => openCancelModal(appt)}
-                          className="clinic-details-btn cancel-btn"
-                        >
-                          Cancel
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleAddVisitClick(appt)}
+                        className={`${styles.clinicDetailsBtn} ${styles.addVisitBtn} ${appt.status !== 1 ? styles.disabled : ''}`}
+                        disabled={appt.status !== 1}
+                      >
+                        <FiActivity size={14} /> Add Visit
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -506,54 +493,16 @@ const AppointmentList = () => {
         isOpen={isDetailsModalOpen}
         onClose={closeDetailsModal}
         appointment={selectedAppointment}
+        onRefresh={fetchAppointments}
       />
 
-      {/* Cancel Appointment Confirmation Modal */}
-      {isCancelModalOpen && selectedAppointment && (
-        <div className="clinic-modal-overlay">
-          <div className="clinic-modal cancel-modal">
-            <h2>Cancel Appointment</h2>
-            <p>Are you sure you want to cancel this appointment?</p>
-            
-            <div className="cancel-appointment-details">
-              <div className="detail-row">
-                <strong>Patient:</strong> <span>{selectedAppointment.patientName}</span>
-              </div>
-              <div className="detail-row">
-                <strong>Doctor:</strong> <span>{selectedAppointment.doctorFullName}</span>
-              </div>
-              <div className="detail-row">
-                <strong>Date:</strong> <span>{formatDate(selectedAppointment.appointmentDate)}</span>
-              </div>
-              <div className="detail-row">
-                <strong>Time:</strong> <span>{formatTime(selectedAppointment.appointmentTime)}</span>
-              </div>
-              {selectedAppointment.reason && (
-                <div className="detail-row">
-                  <strong>Reason:</strong> <span>{selectedAppointment.reason}</span>
-                </div>
-              )}
-            </div>
-
-            <p className="warning-text">
-              This action cannot be undone. The appointment slot will become available again.
-            </p>
-
-            <div className="clinic-modal-actions">
-              <button onClick={closeCancelModal} className="clinic-cancel-btn">
-                Keep Appointment
-              </button>
-              <button
-                onClick={handleCancelAppointment}
-                className="clinic-submit-btn"
-                disabled={cancelLoading}
-              >
-                {cancelLoading ? 'Cancelling...' : 'Cancel Appointment'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Add Patient Visit Modal */}
+      <AddAppointmentVisit
+        isOpen={isAddVisitModalOpen}
+        onClose={closeAddVisitModal}
+        onSuccess={handleAddVisitSuccess}
+        appointment={selectedAppointment}
+      />
     </div>
   );
 };

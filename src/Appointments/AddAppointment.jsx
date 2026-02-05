@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiCalendar, FiClock, FiUser, FiSearch } from 'react-icons/fi';
 import { addAppointment, getPatientsList, getEmployeeList, getSlotList } from '../api/api.js';
-import './AppointmentList.css';
+import './AddAppointment.css';
 
 const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({

@@ -1,10 +1,12 @@
 // src/components/PatientVisitDetails.jsx
 import React, { useState, useEffect } from 'react';
-import { FiX, FiUser, FiCalendar, FiActivity, FiFileText, FiClock } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { FiX, FiUser, FiCalendar, FiActivity, FiFileText, FiClock, FiEdit } from 'react-icons/fi';
 import { getPatientVisitList } from '../api/api.js';
 import './ViewPatientVisit.css';
 
-const ViewPatientVisit = ({ isOpen, onClose, visitId }) => {
+const ViewPatientVisit = ({ isOpen, onClose, visitId, onEdit }) => {
+  const navigate = useNavigate();
   const [visit, setVisit] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -44,6 +46,16 @@ const ViewPatientVisit = ({ isOpen, onClose, visitId }) => {
       fetchVisitDetails();
     }
   }, [visitId, isOpen]);
+
+  const handleEdit = () => {
+    if (visitId) {
+      if (onEdit) {
+        onEdit(visitId);
+      } else {
+        navigate(`/update-patientvisit/${visitId}`);
+      }
+    }
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return '—';
@@ -277,6 +289,10 @@ const ViewPatientVisit = ({ isOpen, onClose, visitId }) => {
 
         {/* Footer */}
         <div className="visit-details-footer">
+          <button onClick={handleEdit} className="visit-details-edit-btn">
+            <FiEdit size={18} />
+            Edit Visit
+          </button>
           <button onClick={onClose} className="visit-details-close-btn">
             Close
           </button>

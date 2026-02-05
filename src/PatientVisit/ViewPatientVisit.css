@@ -1,32 +1,47 @@
 /* src/components/ViewPatientVisit.css */
-/* FULL CSS WITH ~15% SIZE REDUCTION APPLIED TO PADDINGS, FONTS, WIDTHS, HEIGHTS, RADII, ETC. */
-/* POPUP CONTAINERS REDUCED BY ADDITIONAL 15% */
 
-/* ==================== CSS VARIABLES ==================== */
-:root {
-  --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
-  --glass-bg: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(255, 255, 255, 0.4);
-  --vital-bp: #dc2626;
-  --vital-temp: #ea580c;
-  --vital-weight: #16a34a;
+/* ==================== OVERLAY & MODAL ==================== */
+.visit-details-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
 }
 
-/* ==================== ANIMATIONS ==================== */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.visit-details-modal {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.4s ease;
 }
 
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(22px);
+    transform: translateY(40px);
   }
   to {
     opacity: 1;
@@ -34,81 +49,47 @@
   }
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ==================== MODAL OVERLAY ==================== */
-.visit-details-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 22, 41, 0.85);
-  backdrop-filter: blur(9px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 12px;
-  animation: fadeIn 0.3s ease;
-}
-
-/* ==================== MODAL ==================== */
-.visit-details-modal {
-  background: var(--glass-bg);
-  border-radius: 15px;
-  border: 2px solid var(--glass-border);
-  width: 100%;
-  max-width: 850px;
-  max-height: 90vh;
-  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(14px);
-  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* ==================== MODAL HEADER ==================== */
+/* ==================== HEADER ==================== */
 .visit-details-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 17px 23px;
-  border-bottom: 2px solid rgba(34, 43, 108, 0.15);
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
-  flex-shrink: 0;
+  justify-content: space-between;
+  padding: 24px 30px;
+  background: linear-gradient(135deg, #225ca0, #30b2b5);
+  color: white;
+  border-radius: 20px 20px 0 0;
 }
 
 .visit-details-header-content {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .visit-details-header-icon {
-  color: var(--accent-end);
+  width: 42px;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
 }
 
 .visit-details-header h2 {
-  font-size: 1.23rem;
-  font-weight: 800;
-  color: var(--text-dark);
+  font-size: 1.5rem;
+  font-weight: 700;
   margin: 0;
-  letter-spacing: -0.3px;
-  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .visit-details-close {
-  background: rgba(100, 116, 139, 0.15);
-  border: 2px solid rgba(100, 116, 139, 0.2);
-  width: 29px;
-  height: 29px;
-  border-radius: 50%;
-  color: #64748b;
-  font-size: 17px;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 10px;
+  color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -117,108 +98,106 @@
 }
 
 .visit-details-close:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #dc2626;
+  background: rgba(255, 255, 255, 0.25);
   transform: rotate(90deg);
 }
 
-/* ==================== MODAL BODY ==================== */
+/* ==================== BODY ==================== */
 .visit-details-body {
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden;
-  padding: 20px 23px;
-  min-height: 0;
+  padding: 30px;
+  background: #f8fafc;
 }
 
-/* Custom scrollbar */
+/* Custom Scrollbar */
 .visit-details-body::-webkit-scrollbar {
   width: 8px;
 }
 
 .visit-details-body::-webkit-scrollbar-track {
-  background: rgba(34, 43, 108, 0.05);
+  background: #e2e8f0;
   border-radius: 10px;
 }
 
 .visit-details-body::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  background: #94a3b8;
   border-radius: 10px;
 }
 
 .visit-details-body::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+  background: #64748b;
 }
 
-/* ==================== LOADING STATE ==================== */
-.visit-details-loading {
+/* ==================== LOADING & ERROR ==================== */
+.visit-details-loading,
+.visit-details-error {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
-  gap: 16px;
-  min-height: 300px;
+  padding: 60px 20px;
+  gap: 20px;
 }
 
 .visit-details-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(48, 178, 181, 0.2);
-  border-top-color: var(--accent-end);
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #30b2b5;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .visit-details-loading p {
   color: #64748b;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 500;
 }
 
-/* ==================== ERROR STATE ==================== */
-.visit-details-error {
-  padding: 40px 20px;
-  text-align: center;
-}
-
 .visit-details-error p {
-  color: #dc2626;
-  font-size: 0.95rem;
-  font-weight: 600;
+  color: #ef4444;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
-/* ==================== DETAILS SECTIONS ==================== */
+/* ==================== SECTIONS ==================== */
 .visit-details-section {
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid rgba(34, 43, 108, 0.1);
-}
-
-.visit-details-section:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
 }
 
 .visit-details-section-title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.95rem;
+  gap: 10px;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: var(--primary-start);
-  margin: 0 0 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: #1e293b;
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
 }
 
-/* ==================== DETAILS GRID ==================== */
+.visit-details-section-title svg {
+  color: #30b2b5;
+}
+
+/* ==================== GRID LAYOUT ==================== */
 .visit-details-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
 }
 
 .visit-detail-item {
@@ -232,63 +211,60 @@
 }
 
 .visit-detail-label {
-  font-size: 0.75rem;
-  color: #64748b;
+  font-size: 0.85rem;
   font-weight: 600;
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .visit-detail-value {
-  font-size: 0.9rem;
-  color: var(--text-dark);
+  font-size: 1rem;
   font-weight: 600;
-  word-break: break-word;
+  color: #1e293b;
+  line-height: 1.6;
 }
 
 /* ==================== VITALS CARDS ==================== */
 .vitals-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
 }
 
 .vital-card {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border-radius: 14px;
+  padding: 20px;
   display: flex;
   align-items: center;
-  gap: 14px;
-  box-shadow: 0 5px 15px rgba(34, 43, 108, 0.08);
+  gap: 16px;
   border: 2px solid;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .vital-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .vital-card.bp-card {
-  border-color: rgba(220, 38, 38, 0.2);
-  background: linear-gradient(135deg, rgba(220, 38, 38, 0.02), rgba(220, 38, 38, 0.05));
+  border-color: rgba(220, 38, 38, 0.3);
 }
 
 .vital-card.temp-card {
-  border-color: rgba(234, 88, 12, 0.2);
-  background: linear-gradient(135deg, rgba(234, 88, 12, 0.02), rgba(234, 88, 12, 0.05));
+  border-color: rgba(234, 88, 12, 0.3);
 }
 
 .vital-card.weight-card {
-  border-color: rgba(22, 163, 74, 0.2);
-  background: linear-gradient(135deg, rgba(22, 163, 74, 0.02), rgba(22, 163, 74, 0.05));
+  border-color: rgba(22, 163, 74, 0.3);
 }
 
 .vital-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -296,18 +272,18 @@
 }
 
 .bp-card .vital-icon {
-  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(220, 38, 38, 0.2));
-  color: var(--vital-bp);
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
 }
 
 .temp-card .vital-icon {
-  background: linear-gradient(135deg, rgba(234, 88, 12, 0.1), rgba(234, 88, 12, 0.2));
-  color: var(--vital-temp);
+  background: rgba(234, 88, 12, 0.1);
+  color: #ea580c;
 }
 
 .weight-card .vital-icon {
-  background: linear-gradient(135deg, rgba(22, 163, 74, 0.1), rgba(22, 163, 74, 0.2));
-  color: var(--vital-weight);
+  background: rgba(22, 163, 74, 0.1);
+  color: #16a34a;
 }
 
 .vital-content {
@@ -315,159 +291,75 @@
 }
 
 .vital-label {
-  font-size: 0.72rem;
-  color: #64748b;
+  font-size: 0.8rem;
   font-weight: 600;
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 4px;
 }
 
 .vital-value {
-  font-size: 1.4rem;
+  font-size: 1.75rem;
   font-weight: 800;
+  color: #1e293b;
   line-height: 1;
-  margin-bottom: 2px;
-}
-
-.bp-card .vital-value {
-  color: var(--vital-bp);
-}
-
-.temp-card .vital-value {
-  color: var(--vital-temp);
-}
-
-.weight-card .vital-value {
-  color: var(--vital-weight);
+  margin-bottom: 4px;
 }
 
 .vital-unit {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 500;
   color: #94a3b8;
-  font-weight: 600;
 }
 
-/* ==================== MODAL FOOTER ==================== */
+/* ==================== FOOTER ==================== */
 .visit-details-footer {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  padding: 17px 23px;
-  border-top: 2px solid rgba(34, 43, 108, 0.15);
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
-  flex-shrink: 0;
+  padding: 20px 30px;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  border-radius: 0 0 20px 20px;
+}
+
+.visit-details-edit-btn,
+.visit-details-close-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.visit-details-edit-btn {
+  background: linear-gradient(135deg, #016183, #225ca0);
+  color: white;
+  box-shadow: 0 4px 12px rgba(32, 125, 156, 0.3);
+}
+
+.visit-details-edit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(32, 125, 156, 0.4);
 }
 
 .visit-details-close-btn {
-  padding: 12px 28px;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid rgba(100, 116, 139, 0.3);
-  background: rgba(100, 116, 139, 0.1);
+  background: #f1f5f9;
   color: #475569;
+  border: 1px solid #e2e8f0;
 }
 
 .visit-details-close-btn:hover {
-  background: rgba(100, 116, 139, 0.2);
+  background: #e2e8f0;
   transform: translateY(-2px);
-}
-
-/* ==================== DARK MODE ==================== */
-.dark-mode .visit-details-modal {
-  background: rgba(30, 41, 59, 0.94);
-  border-color: #475569;
-}
-
-.dark-mode .visit-details-header {
-  background: linear-gradient(135deg, #1e293b, #334155);
-}
-
-.dark-mode .visit-details-header h2 {
-  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.dark-mode .visit-details-body::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
-}
-
-.dark-mode .visit-details-section {
-  border-bottom-color: rgba(71, 85, 105, 0.3);
-}
-
-.dark-mode .visit-details-section-title {
-  color: var(--accent-end);
-}
-
-.dark-mode .visit-detail-label {
-  color: #94a3b8;
-}
-
-.dark-mode .visit-detail-value {
-  color: #e2e8f0;
-}
-
-.dark-mode .vital-card {
-  background: #1e293b;
-}
-
-.dark-mode .vital-card.bp-card {
-  background: linear-gradient(135deg, rgba(220, 38, 38, 0.05), rgba(220, 38, 38, 0.1));
-  border-color: rgba(220, 38, 38, 0.3);
-}
-
-.dark-mode .vital-card.temp-card {
-  background: linear-gradient(135deg, rgba(234, 88, 12, 0.05), rgba(234, 88, 12, 0.1));
-  border-color: rgba(234, 88, 12, 0.3);
-}
-
-.dark-mode .vital-card.weight-card {
-  background: linear-gradient(135deg, rgba(22, 163, 74, 0.05), rgba(22, 163, 74, 0.1));
-  border-color: rgba(22, 163, 74, 0.3);
-}
-
-.dark-mode .bp-card .vital-icon {
-  background: linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(220, 38, 38, 0.25));
-}
-
-.dark-mode .temp-card .vital-icon {
-  background: linear-gradient(135deg, rgba(234, 88, 12, 0.15), rgba(234, 88, 12, 0.25));
-}
-
-.dark-mode .weight-card .vital-icon {
-  background: linear-gradient(135deg, rgba(22, 163, 74, 0.15), rgba(22, 163, 74, 0.25));
-}
-
-.dark-mode .vital-label {
-  color: #94a3b8;
-}
-
-.dark-mode .vital-unit {
-  color: #64748b;
-}
-
-.dark-mode .visit-details-footer {
-  background: linear-gradient(135deg, #1e293b, #334155);
-}
-
-.dark-mode .visit-details-close-btn {
-  background: rgba(100, 116, 139, 0.2);
-  color: #cbd5e1;
-  border-color: rgba(100, 116, 139, 0.4);
-}
-
-.dark-mode .visit-details-close-btn:hover {
-  background: rgba(100, 116, 139, 0.3);
-}
-
-.dark-mode .visit-details-loading p {
-  color: #94a3b8;
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */
@@ -477,11 +369,20 @@
     max-height: 95vh;
   }
 
-  .visit-details-header,
-  .visit-details-body,
-  .visit-details-footer {
-    padding-left: 16px;
-    padding-right: 16px;
+  .visit-details-header {
+    padding: 20px;
+  }
+
+  .visit-details-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .visit-details-body {
+    padding: 20px;
+  }
+
+  .visit-details-section {
+    padding: 18px;
   }
 
   .visit-details-grid {
@@ -493,38 +394,112 @@
   }
 
   .visit-details-footer {
-    flex-direction: column;
+    padding: 16px 20px;
+    flex-direction: column-reverse;
+    gap: 10px;
   }
 
+  .visit-details-edit-btn,
   .visit-details-close-btn {
     width: 100%;
+    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
-  .visit-details-header h2 {
-    font-size: 1.05rem;
+  .visit-details-header-content {
+    gap: 10px;
   }
 
-  .visit-details-body {
+  .visit-details-header-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .visit-details-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .visit-detail-label {
+    font-size: 0.75rem;
+  }
+
+  .visit-detail-value {
+    font-size: 0.9rem;
+  }
+
+  .vital-card {
     padding: 16px;
   }
 
-  .visit-details-section-title {
-    font-size: 0.85rem;
+  .vital-icon {
+    width: 42px;
+    height: 42px;
   }
 
   .vital-value {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
   }
+}
 
-  .vital-icon {
-    width: 38px;
-    height: 38px;
-  }
+/* ==================== DARK MODE ==================== */
+.dark-mode .visit-details-modal {
+  background: #1e293b;
+}
 
-  .vital-icon svg {
-    width: 24px;
-    height: 24px;
-  }
+.dark-mode .visit-details-body {
+  background: #0f172a;
+}
+
+.dark-mode .visit-details-section {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark-mode .visit-details-section-title {
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+
+.dark-mode .visit-detail-label {
+  color: #94a3b8;
+}
+
+.dark-mode .visit-detail-value {
+  color: #e2e8f0;
+}
+
+.dark-mode .vital-card {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
+
+.dark-mode .vital-value {
+  color: #e2e8f0;
+}
+
+.dark-mode .visit-details-footer {
+  background: #1e293b;
+  border-top-color: #334155;
+}
+
+.dark-mode .visit-details-close-btn {
+  background: #334155;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+
+.dark-mode .visit-details-close-btn:hover {
+  background: #475569;
+}
+
+.dark-mode .visit-details-body::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark-mode .visit-details-body::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark-mode .visit-details-body::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }

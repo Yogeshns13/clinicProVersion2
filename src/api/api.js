@@ -3903,6 +3903,7 @@ export const getPatientVisitList = async (clinicId = 0, options = {}) => {
       temperature: visit.temperature || null,
       weight: visit.weight || null,
       consultationId: visit.consultation_id,
+      status: visit.status,
       dateCreated: visit.date_created || null,
       dateModified: visit.date_modified || null
     }));
@@ -4042,6 +4043,7 @@ export const updatePatientVisit = async (visitData) => {
     BPDiastolic: visitData.bpDiastolic ?? 0,
     Temperature: visitData.temperature ?? 0,
     Weight: visitData.weight ?? 0,
+    Status: visitData.status ?? 0,
   };
 
   console.log("updatePatientVisit payload:", payload);

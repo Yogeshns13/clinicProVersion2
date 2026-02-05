@@ -1,6 +1,5 @@
 /* src/components/PatientVisitList.css */
-/* FULL CSS WITH ~15% SIZE REDUCTION APPLIED TO PADDINGS, FONTS, WIDTHS, HEIGHTS, RADII, ETC. */
-/* POPUP CONTAINERS REDUCED BY ADDITIONAL 15% */
+/* SIMPLIFIED CSS - PATIENT VISITS ONLY */
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
@@ -15,6 +14,8 @@
   --vital-bp: #dc2626;
   --vital-temp: #ea580c;
   --vital-weight: #16a34a;
+  --success-green: #16a34a;
+  --warning-yellow: #f59e0b;
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -46,49 +47,6 @@
   min-height: 100vh;
   color: var(--text-dark);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* ==================== TAB NAVIGATION ==================== */
-.visit-tabs {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-  background: white;
-  padding: 8px;
-  border-radius: 14px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-}
-
-.visit-tab {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background: transparent;
-  color: #64748b;
-  font-weight: 600;
-  font-size: 0.94rem;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.visit-tab:hover {
-  background: rgba(48, 178, 181, 0.08);
-  color: var(--accent-end);
-}
-
-.visit-tab.active {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.35);
-}
-
-.visit-tab svg {
-  flex-shrink: 0;
 }
 
 /* ==================== TOOLBAR ==================== */
@@ -482,15 +440,43 @@
   border-color: rgba(22, 163, 74, 0.3);
 }
 
+/* ==================== STATUS BADGES ==================== */
+.status-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid;
+}
+
+.status-badge.initiated {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--warning-yellow);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.status-badge.ready {
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--success-green);
+  border-color: rgba(22, 163, 74, 0.3);
+}
+
 /* ==================== ACTION BUTTONS ==================== */
 .visit-actions-cell {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
-.visit-details-btn,
-.visit-edit-btn {
+.visit-ready-btn,
+.visit-details-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 7px 15px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -499,6 +485,29 @@
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
+}
+
+.visit-ready-btn {
+  background: linear-gradient(135deg, #15803d, var(--success-green));
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.3);
+}
+
+.visit-ready-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(22, 163, 74, 0.45);
+}
+
+.visit-ready-btn.disabled {
+  background: #94a3b8;
+  color: #cbd5e1;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.visit-ready-btn.disabled:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .visit-details-btn {
@@ -512,15 +521,141 @@
   box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
 }
 
-.visit-edit-btn {
-  background: rgba(100, 116, 139, 0.1);
-  color: #475569;
-  border: 1px solid rgba(100, 116, 139, 0.3);
+/* ==================== CONFIRMATION MODAL ==================== */
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
 }
 
-.visit-edit-btn:hover {
-  background: rgba(100, 116, 139, 0.2);
+.confirm-modal {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 100%;
+  animation: slideUp 0.4s ease;
+}
+
+.confirm-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 24px 30px;
+  background: linear-gradient(135deg, #15803d, var(--success-green));
+  color: white;
+  border-radius: 20px 20px 0 0;
+}
+
+.confirm-icon {
+  width: 42px;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.confirm-header h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.confirm-body {
+  padding: 30px;
+}
+
+.confirm-body p {
+  font-size: 1rem;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0 0 20px 0;
+}
+
+.confirm-details {
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.confirm-details p {
+  font-size: 0.9rem;
+  color: #1e293b;
+  margin: 8px 0;
+}
+
+.confirm-details strong {
+  color: var(--primary-start);
+  font-weight: 700;
+}
+
+.confirm-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 30px;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  border-radius: 0 0 20px 20px;
+}
+
+.confirm-btn-cancel,
+.confirm-btn-yes {
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.confirm-btn-cancel {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.confirm-btn-cancel:hover {
+  background: #e2e8f0;
   transform: translateY(-2px);
+}
+
+.confirm-btn-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirm-btn-yes {
+  background: linear-gradient(135deg, #15803d, var(--success-green));
+  color: white;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+.confirm-btn-yes:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4);
+}
+
+.confirm-btn-yes:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 /* ==================== UTILITY STATES ==================== */
@@ -618,20 +753,6 @@
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
 }
 
-.dark-mode .visit-tabs {
-  background: #1e293b;
-  border: 1px solid #475569;
-}
-
-.dark-mode .visit-tab {
-  color: #94a3b8;
-}
-
-.dark-mode .visit-tab:hover {
-  background: rgba(48, 178, 181, 0.15);
-  color: var(--accent-end);
-}
-
 .dark-mode .visit-select-wrapper,
 .dark-mode .visit-select,
 .dark-mode .visit-filter-toggle-btn,
@@ -701,14 +822,40 @@
   color: var(--accent-end);
 }
 
-.dark-mode .visit-edit-btn {
-  background: rgba(100, 116, 139, 0.2);
-  color: #cbd5e1;
-  border-color: rgba(100, 116, 139, 0.4);
+.dark-mode .confirm-modal {
+  background: #1e293b;
 }
 
-.dark-mode .visit-edit-btn:hover {
-  background: rgba(100, 116, 139, 0.3);
+.dark-mode .confirm-body {
+  background: #1e293b;
+}
+
+.dark-mode .confirm-body p {
+  color: #cbd5e1;
+}
+
+.dark-mode .confirm-details {
+  background: #0f172a;
+  border-color: #475569;
+}
+
+.dark-mode .confirm-details p {
+  color: #e2e8f0;
+}
+
+.dark-mode .confirm-footer {
+  background: #1e293b;
+  border-top-color: #475569;
+}
+
+.dark-mode .confirm-btn-cancel {
+  background: #334155;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+
+.dark-mode .confirm-btn-cancel:hover {
+  background: #475569;
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */
@@ -751,9 +898,10 @@
     gap: 6px;
   }
 
-  .visit-details-btn,
-  .visit-edit-btn {
+  .visit-ready-btn,
+  .visit-details-btn {
     width: 100%;
+    justify-content: center;
   }
 
   .visit-stats-grid {
@@ -776,19 +924,35 @@
   .filter-clear-btn {
     width: 100%;
   }
+
+  .confirm-modal {
+    max-width: 95%;
+  }
+
+  .confirm-header {
+    padding: 20px;
+  }
+
+  .confirm-body {
+    padding: 20px;
+  }
+
+  .confirm-footer {
+    padding: 16px 20px;
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .confirm-btn-cancel,
+  .confirm-btn-yes {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 480px) {
   .visit-list-wrapper {
     padding: 14px;
-  }
-
-  .visit-tabs {
-    flex-direction: column;
-  }
-
-  .visit-tab {
-    width: 100%;
   }
 
   .visit-name-cell {
@@ -802,5 +966,13 @@
 
   .vital-badge {
     width: fit-content;
+  }
+
+  .confirm-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .confirm-body p {
+    font-size: 0.9rem;
   }
 }

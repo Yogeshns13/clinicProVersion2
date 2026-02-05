@@ -1,7 +1,7 @@
-// src/components/AppointmentDetails.jsx
+// src/components/ViewAppointment.jsx
 import React, { useState, useEffect } from 'react';
 import { FiX, FiCalendar, FiUser, FiPhone, FiFileText, FiClock } from 'react-icons/fi';
-import { getAppointmentList } from '../api/api.js';
+import { getAppointmentList, cancelAppointment } from '../api/api.js';
 import './ViewAppointment.css';
 
 // ────────────────────────────────────────────────
@@ -25,10 +25,12 @@ const getStatusString = (status) => {
 };
 
 // ────────────────────────────────────────────────
-const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment }) => {
+const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRefresh }) => {
   const [appointment, setAppointment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   // ────────────────────────────────────────────────
   useEffect(() => {
@@ -72,6 +74,7 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment }) =>
 
     if (isOpen) {
       fetchAppointmentDetails();
+      setShowCancelConfirm(false);
     }
   }, [passedAppointment, isOpen]);
 
@@ -113,6 +116,37 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment }) =>
     if (statusStr === 'completed') return 'completed';
     if (statusStr === 'cancelled') return 'inactive';
     return 'inactive';
+  };
+
+  const handleCancelClick = () => {
+    setShowCancelConfirm(true);
+  };
+
+  const handleCancelAppointment = async () => {
+    if (!appointment) return;
+
+    setCancelLoading(true);
+    try {
+      await cancelAppointment(appointment.id);
+      
+      // Refresh the parent list
+      if (onRefresh) {
+        onRefresh();
+      }
+      
+      // Close the modal
+      onClose();
+    } catch (err) {
+      console.error('Failed to cancel appointment:', err);
+      setError({ message: err.message || 'Failed to cancel appointment' });
+    } finally {
+      setCancelLoading(false);
+      setShowCancelConfirm(false);
+    }
+  };
+
+  const handleCloseCancelConfirm = () => {
+    setShowCancelConfirm(false);
   };
 
   // ────────────────────────────────────────────────
@@ -293,12 +327,45 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment }) =>
                   </div>
                 </div>
               </div>
+
+              {/* Cancel Confirmation */}
+              {showCancelConfirm && (
+                <div className="appointment-cancel-confirmation">
+                  <p className="cancel-warning">
+                    Are you sure you want to cancel this appointment? This action cannot be undone.
+                  </p>
+                  <div className="cancel-actions">
+                    <button 
+                      onClick={handleCloseCancelConfirm} 
+                      className="cancel-no-btn"
+                      disabled={cancelLoading}
+                    >
+                      No, Keep It
+                    </button>
+                    <button 
+                      onClick={handleCancelAppointment} 
+                      className="cancel-yes-btn"
+                      disabled={cancelLoading}
+                    >
+                      {cancelLoading ? 'Cancelling...' : 'Yes, Cancel'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
 
         {/* Footer */}
         <div className="appointment-modal-footer">
+          {!showCancelConfirm && appointment && appointment.status === 1 && (
+            <button 
+              onClick={handleCancelClick} 
+              className="appointment-cancel-appointment-btn"
+            >
+              Cancel Appointment
+            </button>
+          )}
           <button onClick={onClose} className="appointment-close-btn">
             Close
           </button>

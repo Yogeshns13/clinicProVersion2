@@ -511,6 +511,140 @@
   background: rgba(51, 65, 85, 0.3);
 }
 
+/* ==================== CANCEL APPOINTMENT BUTTON ==================== */
+.appointment-cancel-appointment-btn {
+  padding: 12px 28px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--danger-color, #ef4444), #dc2626);
+  color: var(--text-light, #ffffff);
+  border: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+}
+
+.appointment-cancel-appointment-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.45);
+}
+
+.appointment-cancel-appointment-btn:active {
+  transform: translateY(-1px);
+}
+
+/* ==================== CANCEL CONFIRMATION ==================== */
+.appointment-cancel-confirmation {
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.15));
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  margin-top: 20px;
+}
+
+.cancel-warning {
+  color: #991b1b;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 15px 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.cancel-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.cancel-no-btn {
+  padding: 10px 24px;
+  border-radius: 10px;
+  background: #e2e8f0;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-no-btn:hover:not(:disabled) {
+  background: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.cancel-no-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cancel-yes-btn {
+  padding: 10px 24px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--danger-color, #ef4444), #dc2626);
+  color: white;
+  border: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+}
+
+.cancel-yes-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.45);
+}
+
+.cancel-yes-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ==================== DARK MODE CANCEL STYLES ==================== */
+.dark-mode .appointment-cancel-confirmation {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.dark-mode .cancel-warning {
+  color: #fca5a5;
+}
+
+.dark-mode .cancel-no-btn {
+  background: #334155;
+  color: #e2e8f0;
+  border-color: #475569;
+}
+
+.dark-mode .cancel-no-btn:hover:not(:disabled) {
+  background: #475569;
+}
+
+/* ==================== RESPONSIVE CANCEL STYLES ==================== */
+@media (max-width: 768px) {
+  .cancel-actions {
+    flex-direction: column;
+  }
+
+  .cancel-no-btn,
+  .cancel-yes-btn {
+    width: 100%;
+  }
+
+  .appointment-modal-footer {
+    flex-direction: column;
+  }
+
+  .appointment-cancel-appointment-btn,
+  .appointment-close-btn {
+    width: 100%;
+  }
+}
+
 /* ==================== PRINT STYLES ==================== */
 @media print {
   .appointment-modal-overlay {

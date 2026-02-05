@@ -53,7 +53,7 @@ const ConsultationList = () => {
 
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-
+      
       const options = {
         Page: 1,
         PageSize: 100,
@@ -80,7 +80,10 @@ const ConsultationList = () => {
 
       const data = await getPatientVisitList(clinicId, options);
 
-      const unconsultedVisits = data.filter(visit => visit.consultationId === 0);
+      const unconsultedVisits = data.filter(visit => 
+  visit.consultationId === 0 && 
+  visit.status === 1
+);
 
       const sortedData = unconsultedVisits.sort((a, b) => {
         const timeA = a.visitTime || '00:00:00';

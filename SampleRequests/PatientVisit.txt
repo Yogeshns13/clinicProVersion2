@@ -38,6 +38,29 @@ UpdatePatientVisit
    "Weight":88.5
 }
 
+UpdatePatientVisit
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "VisitID":4000000,    
+    "AppointmentID":1,    
+    "DoctorID":1000001,
+    "VisitDate": "2025-11-25",  
+    "VisitTime":"10:00:00",
+    "Reason": "having high fever",
+   "Symptoms":"Fever cold and head ache",
+    "BPSystolic":130,
+   "BPDiastolic": 90,
+   "Temperature":100.2,
+   "Weight":88.5,
+   "Status":1 
+}
+
+0	Initiated	Patient Visit Status
+1	ReadyToConsult	Patient Visit Status
+
 
 GetPatientVisitList
 {
@@ -55,12 +78,11 @@ GetPatientVisitList
     "DoctorID":0,
     "DoctorName":"",   
     "AppointmentID":0,   
-     "VisitDate":"",
+    "VisitDate":"",
     "FromVisitDate":"",
     "ToVisitDate":"",
     "Reason":""
 }
-
 
 ------------------------------------------------------------------------------
 
@@ -89,42 +111,75 @@ GetPatientVisitList
 {
     "result": [
         {
-            "visit_id": 4000019,
-            "unique_seq": 1016,
+            "visit_id": 4000038,
+            "unique_seq": 1031,
             "clinic_id": 1,
             "clinic_name": "ClinicPro Test",
             "branch_id": 1,
             "branch_name": "Test Main Branch",
-            "appointment_id": 3000026,
-            "patient_id": 2000003,
-            "patient_name": "Vishnu Kumar",
-            "patient_mobile": "9087130977",
-            "patient_file_no": "CPT200005",
+            "appointment_id": 3000045,
+            "patient_id": 2000047,
+            "patient_name": "Vishnu Rajan",
+            "patient_mobile": "8767567898",
+            "patient_file_no": "CPT200013",
             "doctor_id": 1000004,
             "doctor_full_name": "Gopi Nath",
             "doctor_code": "EMP0010",
             "doctor_name": "Gopi Nath",
-            "visit_date": "2026-01-22T18:30:00.000Z",
-            "visit_time": "16:00:00",
+            "visit_date": "2026-02-02T18:30:00.000Z",
+            "visit_time": "15:30:00",
             "reason": "Fever",
-            "symptoms": "Heavy Cough",
-            "bp_systolic": 120,
-            "bp_diastolic": 78,
-            "bp_reading": "120/78",
-            "temperature": "99.0",
-            "weight": "90.00",
-            "consultation_id": 0,
-            "date_created": "2026-01-23T08:23:52.000Z",
-            "date_modified": "2026-01-23T08:23:52.000Z"
+            "symptoms": "Cold",
+            "bp_systolic": 110,
+            "bp_diastolic": 74,
+            "bp_reading": "110/74",
+            "temperature": "97.0",
+            "weight": "60.00",
+            "consultation_id": 5000034,
+            "status": 0,
+            "status_desc": "Initiated",
+            "date_created": "2026-02-03T07:36:39.000Z",
+            "date_modified": "2026-02-03T07:36:39.000Z"
         },
         {
-            "visit_id": 4000018,
-            "unique_seq": 1015,
+            "visit_id": 4000039,
+            "unique_seq": 1032,
             "clinic_id": 1,
             "clinic_name": "ClinicPro Test",
             "branch_id": 1,
             "branch_name": "Test Main Branch",
-            "appointment_id": 3000025,
+            "appointment_id": 3000046,
+            "patient_id": 2000048,
+            "patient_name": "Barath Nath",
+            "patient_mobile": "9087877889",
+            "patient_file_no": "CPT200014",
+            "doctor_id": 1000004,
+            "doctor_full_name": "Gopi Nath",
+            "doctor_code": "EMP0010",
+            "doctor_name": "Gopi Nath",
+            "visit_date": "2026-02-02T18:30:00.000Z",
+            "visit_time": "10:00:00",
+            "reason": "having high fever",
+            "symptoms": "Fever cold and head ache",
+            "bp_systolic": 90,
+            "bp_diastolic": 120,
+            "bp_reading": "90/120",
+            "temperature": "99.0",
+            "weight": "70.00",
+            "consultation_id": 5000035,
+            "status": 1,
+            "status_desc": "ReadyToConsult",
+            "date_created": "2026-02-04T08:59:05.000Z",
+            "date_modified": "2026-02-04T13:49:18.000Z"
+        },
+        {
+            "visit_id": 4000035,
+            "unique_seq": 1028,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "appointment_id": 3000042,
             "patient_id": 2000010,
             "patient_name": "Santhi Priya",
             "patient_mobile": "8765894766",
@@ -133,48 +188,22 @@ GetPatientVisitList
             "doctor_full_name": "Gopi Nath",
             "doctor_code": "EMP0010",
             "doctor_name": "Gopi Nath",
-            "visit_date": "2026-01-22T18:30:00.000Z",
+            "visit_date": "2026-01-31T18:30:00.000Z",
             "visit_time": "15:30:00",
             "reason": "Fever",
-            "symptoms": "Cough",
-            "bp_systolic": 119,
-            "bp_diastolic": 80,
-            "bp_reading": "119/80",
+            "symptoms": "cough",
+            "bp_systolic": 118,
+            "bp_diastolic": 78,
+            "bp_reading": "118/78",
             "temperature": "100.0",
-            "weight": "78.00",
+            "weight": "60.00",
             "consultation_id": 0,
-            "date_created": "2026-01-23T05:55:40.000Z",
-            "date_modified": "2026-01-23T05:55:40.000Z"
+            "status": 0,
+            "status_desc": "Initiated",
+            "date_created": "2026-01-31T05:23:27.000Z",
+            "date_modified": "2026-01-31T05:23:27.000Z"
         },
-        {
-            "visit_id": 4000017,
-            "unique_seq": 1014,
-            "clinic_id": 1,
-            "clinic_name": "ClinicPro Test",
-            "branch_id": 1,
-            "branch_name": "Test Main Branch",
-            "appointment_id": 3000024,
-            "patient_id": 2000003,
-            "patient_name": "Vishnu Kumar",
-            "patient_mobile": "9087130977",
-            "patient_file_no": "CPT200005",
-            "doctor_id": 1000004,
-            "doctor_full_name": "Gopi Nath",
-            "doctor_code": "EMP0010",
-            "doctor_name": "Gopi Nath",
-            "visit_date": "2026-01-21T18:30:00.000Z",
-            "visit_time": "16:00:00",
-            "reason": "Fever",
-            "symptoms": "cold",
-            "bp_systolic": 114,
-            "bp_diastolic": 80,
-            "bp_reading": "114/80",
-            "temperature": "100.5",
-            "weight": "80.00",
-            "consultation_id": 0,
-            "date_created": "2026-01-22T11:56:10.000Z",
-            "date_modified": "2026-01-22T11:56:10.000Z"
-        },
+
     ]
 }
 
