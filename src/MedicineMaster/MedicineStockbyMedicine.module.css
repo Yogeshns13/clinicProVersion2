@@ -1,0 +1,630 @@
+/* src/components/MedicineStockByMedicine.module.css */
+
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+  --vital-bp: #dc2626;
+  --vital-temp: #ea580c;
+  --vital-weight: #16a34a;
+  --followup-color: #8b5cf6;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== MAIN WRAPPER ==================== */
+.wrapper {
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  animation: fadeIn 0.3s ease;
+}
+
+/* ==================== HEADER SECTION ==================== */
+.headerSection {
+  margin-bottom: 24px;
+ 
+}
+
+.statCard .medicineCard{
+  justify-content: center;
+
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: white;
+  color: var(--primary-start);
+  font-weight: 600;
+  font-size: 0.94rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 16px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+}
+
+.backBtn:hover {
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+  color: var(--text-light);
+  border-color: transparent;
+  transform: translateX(-4px);
+  box-shadow: 0 7px 24px rgba(34, 43, 108, 0.15);
+}
+
+.medicineCard {
+  background: white;
+  padding: 10px, 24px;
+  border-radius: 14px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  animation: slideUp 0.4s ease;
+}
+
+.medicineHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+}
+
+.avatarLarge {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  font-weight: bold;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 5px 20px rgba(32, 125, 156, 0.35);
+  flex-shrink: 0;
+}
+
+.medicineInfo {
+  flex: 1;
+}
+
+.medicineName {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--primary-start);
+  margin: 10px 10px 8px 20px;
+}
+
+.genericName {
+  font-size: 1rem;
+  color: #64748b;
+  margin: 0 0 6px 0;
+}
+
+.manufacturer {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.manufacturer strong {
+  color: var(--primary-start);
+}
+
+/* ==================== STATISTICS CARDS ==================== */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+  animation: slideUp 0.5s ease;
+}
+
+.statCard {
+  background: white;
+  padding: 10px;
+  border-radius: 14px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  transition: all 0.3s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.15);
+}
+
+.statCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+}
+
+.statCardTitle {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1px;
+}
+
+.statCardIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconGreen {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+}
+
+.iconWarning {
+  background: linear-gradient(135deg, #ea580c, #f97316);
+}
+
+.iconDanger {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+.statCardValue {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--primary-start);
+  margin: 0;
+}
+
+.statCardLabel {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* ==================== TABLE SECTION ==================== */
+.tableSection {
+  margin-bottom: 24px;
+  animation: slideUp 0.6s ease;
+}
+
+.tableSectionHeader {
+  margin-bottom: 16px;
+}
+
+.tableSectionHeader h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin: 0 0 6px 0;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.tableContainer {
+  background: white;
+  border-radius: 17px;
+  overflow: hidden;
+  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  padding: 14px 17px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+}
+
+.table td {
+  padding: 14px 17px;
+  border-bottom: 1px solid #e2e8f0;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  vertical-align: middle;
+}
+
+.table th:last-child,
+.table td:last-child {
+  text-align: center;
+}
+
+.table tbody tr {
+  transition: background-color 0.25s ease;
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #d5e6ec;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(48, 178, 181, 0.08) !important;
+}
+
+/* Row color indicators based on status */
+.table tbody tr.nearExpiry {
+  border-left: 4px solid #ea580c;
+}
+
+.table tbody tr.zeroStock {
+  border-left: 4px solid #dc2626;
+  opacity: 0.7;
+}
+
+.table tbody tr.negativeStock {
+  border-left: 4px solid #7c3aed;
+  opacity: 0.7;
+}
+
+/* ==================== TABLE CELLS ==================== */
+.batchCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.batchIcon {
+  color: var(--accent-end);
+}
+
+.batchNo {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.dateCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dateIcon {
+  color: #64748b;
+}
+
+.daysToExpiry {
+  font-size: 0.8rem;
+}
+
+.daysRemaining {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.daysExpired {
+  color: var(--vital-bp);
+  font-weight: 600;
+}
+
+.quantityCell {
+  font-weight: 600;
+  text-align: center;
+}
+
+.balanceBadge {
+  display: inline-block;
+  padding: 5px 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  border: 2px solid;
+}
+
+.goodBalance {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.mediumBalance {
+  background: rgba(234, 88, 12, 0.1);
+  color: var(--vital-temp);
+  border-color: rgba(234, 88, 12, 0.3);
+}
+
+.lowBalance {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--vital-bp);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.priceCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.priceIcon {
+  color: #16a34a;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 5px 12px;
+  font-weight: 600;
+  font-size: 0.72rem;
+  border-radius: 6px;
+  border: 1px solid;
+  text-transform: uppercase;
+}
+
+.statusBadge.nearExpiry {
+  background: rgba(234, 88, 12, 0.1);
+  color: var(--vital-temp);
+  border-color: rgba(234, 88, 12, 0.3);
+}
+
+.statusBadge.zeroStock {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--vital-bp);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.statusBadge.negativeStock {
+  background: rgba(124, 58, 237, 0.1);
+  color: #7c3aed;
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
+.statusBadge.normal {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.updateBtn {
+  padding: 7px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+}
+
+.updateBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+/* ==================== SUMMARY FOOTER ==================== */
+.summaryFooter {
+  background: white;
+  padding: 20px 24px;
+  border-radius: 14px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  animation: slideUp 0.7s ease;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.summaryLabel {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summaryValue {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--primary-start);
+}
+
+/* ==================== UTILITY STATES ==================== */
+.noData {
+  text-align: center;
+  padding: 68px 17px;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+.loading,
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  font-size: 1.3rem;
+  color: #64748b;
+}
+
+.error {
+  color: #ef4444;
+}
+
+/* ==================== DARK MODE ==================== */
+.darkMode {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.darkMode .backBtn {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.darkMode .backBtn:hover {
+  background: linear-gradient(135deg, #334155, #475569);
+}
+
+.darkMode .medicineCard {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.darkMode .medicineName {
+  color: var(--accent-end);
+}
+
+.darkMode .genericName,
+.darkMode .manufacturer {
+  color: #94a3b8;
+}
+
+.darkMode .manufacturer strong {
+  color: #cbd5e1;
+}
+
+.darkMode .statCard {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.darkMode .statCardValue {
+  color: var(--accent-end);
+}
+
+.darkMode .tableSectionHeader h3 {
+  color: var(--accent-end);
+}
+
+.darkMode .tableContainer {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.darkMode .table th {
+  background: linear-gradient(135deg, #334155, #475569);
+}
+
+.darkMode .table td {
+  border-bottom-color: #475569;
+  color: #e2e8f0;
+}
+
+.darkMode .table tbody tr:nth-child(even) {
+  background-color: #334155;
+}
+
+.darkMode .batchNo {
+  color: #e2e8f0;
+}
+
+.darkMode .summaryFooter {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.darkMode .summaryValue {
+  color: var(--accent-end);
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 768px) {
+  .wrapper {
+    padding: 14px;
+  }
+
+  .medicineHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .medicineName {
+    font-size: 1.4rem;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .table {
+    font-size: 0.75rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 12px;
+  }
+
+  .summaryFooter {
+    flex-direction: column;
+  }
+
+  .summaryItem {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 12px;
+    background: rgba(48, 178, 181, 0.05);
+    border-radius: 8px;
+  }
+
+  .summaryValue {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .avatarLarge {
+    width: 50px;
+    height: 50px;
+    font-size: 22px;
+  }
+
+  .statCardValue {
+    font-size: 1.8rem;
+  }
+
+  .updateBtn {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+}

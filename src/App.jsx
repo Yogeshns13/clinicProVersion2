@@ -6,10 +6,6 @@ import PrivateRoute from "./components/PrivateRoute";
 import AdminLayout from "./AdminLayout/AdminLayout.jsx";
 import LoginPage from "./LoginPage/LoginPage";
 import Dashboard from "./Dashboard/Dashboard.jsx";
-import Prescriptions from "./Prescriptions/Prescriptions.jsx";
-import Reports from "./Reports/Reports.jsx";
-import Settings from "./Settings/Settings.jsx";
-import Attendance from "./Attendance/Attendance.jsx";
 import ClinicList from "./ClinicList/ClinicList.jsx";
 import BranchList from "./BranchList/BranchList.jsx";
 import DepartmentList from "./DepartmentList/DepartmentList.jsx";
@@ -70,9 +66,12 @@ import ViewPurchaseOrderDetail from "./PurchaseOrderDetail/ViewPurchaseOrderDeta
 import PurchaseOrderList from "./PurchaseOrder/PurchaseOrderList.jsx";
 import AddPurchaseOrder from "./PurchaseOrder/AddPurchaseOrder.jsx";
 import ViewPurchaseOrder from "./PurchaseOrder/ViewPurchaseOrder.jsx";
-import LabWorkManagement from "./LabWork1/LabWorkManagement.jsx";
+import LabWorkManagement from "./LabWork/LabWorkManagement.jsx";
 import MedicineStockList from "./MedicineStock/MedicineStocklist.jsx";
 import UpdateMedicineStock from "./MedicineStock/UpdateMedicineStock.jsx";
+import LabWorkQueue from "./LabWork/LabWorkQueue.jsx";
+import MedicineStockByMedicine from "./MedicineMaster/MedicineStockbyMedicine.jsx";
+
 
 
 function App() {
@@ -111,10 +110,6 @@ function App() {
           <Route path="/view-patient/:id" element={<ViewPatient />} />
           <Route path="/add-patient" element={<AddPatient />} />
           <Route path="/update-patient/:id" element={<UpdatePatient />} />
-          <Route path="/prescriptions" element={<Prescriptions />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/attendance" element={<Attendance/>}/>
-          <Route path="/settings" element={<Settings />} />
           <Route path="/add-slotconfig" element={<AddSlotConfig/>}/>
           <Route path="/generate-slots" element={<GenerateSlots />} />
           <Route path="/slotconfig-list" element={<SlotConfigList/>}/>
@@ -139,6 +134,7 @@ function App() {
           <Route path="/add-vendor" element={<AddVendor/>} />
           <Route path="/update-vendor/:id" element={<UpdateVendor/>} />
           <Route path="/medicinemaster-list" element={<MedicineMasterList/>} />
+          <Route path="/medicine-stock/:id" element={<MedicineStockByMedicine/>} />
           <Route path="/add-medicinemaster" element={<AddMedicineMaster/>} />
           <Route path="/update-medicinemaster/:id" element={<UpdateMedicineMaster/>} />
           <Route path="/view-medicinemaster/:id" element={<ViewMedicineMaster/>} />
@@ -149,6 +145,7 @@ function App() {
           <Route path="/update-labpackage/:id" element={<UpdateLabTestPackage/>} />
           <Route path="/view-labpackage/:id" element={<ViewLabPackage/>} />
           <Route path="/view-labmaster/:id" element={<ViewLabMaster/>} />
+          <Route path="/labwork-list" element={<LabWorkQueue/>} />
           <Route path="/purchaseorder-list" element={<PurchaseOrderList/>} />
           <Route path="/add-purchaseorder" element={<AddPurchaseOrder/>} />
           <Route path="/view-purchaseorder/:id" element={<ViewPurchaseOrder/>} />
@@ -159,6 +156,7 @@ function App() {
           <Route path="/laborder-list" element={<LabWorkManagement/>} />
           <Route path="/medicinestock-list" element={<MedicineStockList/>} />
           <Route path="/update-medicinestock/:id" element={<UpdateMedicineStock/>} />
+          
 
           {/* Default redirect inside protected area */}
           <Route path="/admin" element={<Navigate to="/dashboard" replace />} />

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiSearch } from 'react-icons/fi';
 import { addPatient, getPatientsList } from '../api/api.js';
-import './PatientList.css';
+import styles from './AddPatient.module.css';   // ← CSS Modules import
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -115,7 +115,6 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
     setHasFamilyPatient(checked);
     
     if (!checked) {
-      // Reset family patient data when unchecked
       setSearchMobile('');
       setSearchResults([]);
       setSearchError('');
@@ -231,26 +230,29 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="clinic-modal-overlay" onClick={onClose}>
-      <div className="clinic-modal form-modal employee-form-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="clinic-modal-header">
+    <div className={styles.clinicModalOverlay} onClick={onClose}>
+      <div 
+        className={`${styles.clinicModal} ${styles.formModal} ${styles.employeeFormModal}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className={styles.clinicModalHeader}>
           <h2>Add New Patient</h2>
-          <button onClick={onClose} className="clinic-modal-close">
+          <button onClick={onClose} className={styles.clinicModalClose}>
             <FiX />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="clinic-modal-body">
-          {formError && <div className="form-error">{formError}</div>}
-          {formSuccess && <div className="form-success">Patient added successfully!</div>}
+        <form onSubmit={handleSubmit} className={styles.clinicModalBody}>
+          {formError && <div className={styles.formError}>{formError}</div>}
+          {formSuccess && <div className={styles.formSuccess}>Patient added successfully!</div>}
 
-          <div className="form-grid">
+          <div className={styles.formGrid}>
             {/* Basic Information */}
-            <h3 className="form-section-title">Basic Information</h3>
+            <h3 className={styles.formSectionTitle}>Basic Information</h3>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>
-                First Name <span className="required">*</span>
+                First Name <span className={styles.required}>*</span>
               </label>
               <input
                 required
@@ -261,9 +263,9 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>
-                Last Name <span className="required">*</span>
+                Last Name <span className={styles.required}>*</span>
               </label>
               <input
                 required
@@ -274,9 +276,9 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>
-                Gender <span className="required">*</span>
+                Gender <span className={styles.required}>*</span>
               </label>
               <select 
                 required
@@ -293,7 +295,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               </select>
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Birth Date</label>
               <input
                 type="date"
@@ -303,9 +305,9 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>
-                Age <span className="required">*</span>
+                Age <span className={styles.required}>*</span>
               </label>
               <input
                 required
@@ -318,9 +320,9 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>
-                Blood Group <span className="required">*</span>
+                Blood Group <span className={styles.required}>*</span>
               </label>
               <select 
                 required
@@ -337,7 +339,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               </select>
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Marital Status</label>
               <select
                 name="maritalStatus"
@@ -354,11 +356,11 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
             </div>
 
             {/* Contact Information */}
-            <h3 className="form-section-title">Contact Information</h3>
+            <h3 className={styles.formSectionTitle}>Contact Information</h3>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>
-                Mobile <span className="required">*</span>
+                Mobile <span className={styles.required}>*</span>
               </label>
               <input
                 required
@@ -369,7 +371,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Alternate Mobile</label>
               <input
                 name="altMobile"
@@ -379,7 +381,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Email</label>
               <input
                 type="email"
@@ -390,7 +392,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label>Emergency Contact</label>
               <input
                 name="emergencyContactNo"
@@ -400,7 +402,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
-            <div className="form-group full-width">
+            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
               <label>Address</label>
               <textarea
                 name="address"
@@ -412,9 +414,9 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
             </div>
 
             {/* Family Patient Link Section */}
-            <h3 className="form-section-title">Family Patient Link</h3>
+            <h3 className={styles.formSectionTitle}>Family Patient Link</h3>
 
-            <div className="form-group full-width">
+            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
@@ -428,7 +430,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
 
             {hasFamilyPatient && (
               <>
-                <div className="form-group full-width">
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>Search Patient by Mobile Number</label>
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <input
@@ -442,7 +444,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                       type="button"
                       onClick={handleSearchPatients}
                       disabled={searchLoading}
-                      className="btn-submit"
+                      className={styles.btnSubmit}
                       style={{ 
                         width: 'auto', 
                         padding: '0 20px',
@@ -463,7 +465,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                 </div>
 
                 {searchResults.length > 0 && (
-                  <div className="form-group full-width">
+                  <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                     <label>Select Family Patient</label>
                     <div style={{ 
                       maxHeight: '200px', 
@@ -516,7 +518,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                 )}
 
                 {selectedFamilyPatient && (
-                  <div className="form-group full-width">
+                  <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                     <div style={{
                       padding: '15px',
                       backgroundColor: '#e8f5e9',
@@ -534,9 +536,9 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
             )}
 
             {/* Medical Information */}
-            <h3 className="form-section-title">Medical Information</h3>
+            <h3 className={styles.formSectionTitle}>Medical Information</h3>
 
-            <div className="form-group full-width">
+            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
               <label>Allergies</label>
               <textarea
                 name="allergies"
@@ -547,7 +549,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
-            <div className="form-group full-width">
+            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
               <label>Existing Medical Conditions</label>
               <textarea
                 name="existingMedicalConditions"
@@ -558,7 +560,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
-            <div className="form-group full-width">
+            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
               <label>Past Surgeries</label>
               <textarea
                 name="pastSurgeries"
@@ -569,7 +571,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
-            <div className="form-group full-width">
+            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
               <label>Current Medications</label>
               <textarea
                 name="currentMedications"
@@ -580,7 +582,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
-            <div className="form-group full-width">
+            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
               <label>Family Medical History</label>
               <textarea
                 name="familyMedicalHistory"
@@ -591,7 +593,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
-            <div className="form-group full-width">
+            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
               <label>Immunization Records</label>
               <textarea
                 name="immunizationRecords"
@@ -603,11 +605,11 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
             </div>
           </div>
 
-          <div className="clinic-modal-footer">
-            <button type="button" onClick={onClose} className="btn-cancel">
+          <div className={styles.clinicModalFooter}>
+            <button type="button" onClick={onClose} className={styles.btnCancel}>
               Cancel
             </button>
-            <button type="submit" disabled={formLoading} className="btn-submit">
+            <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
               {formLoading ? 'Saving...' : 'Save Patient'}
             </button>
           </div>

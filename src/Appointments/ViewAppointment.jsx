@@ -185,13 +185,6 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRe
 
           {!loading && !error && appointment && (
             <>
-              {/* Status Badge */}
-              <div className="appointment-status-section">
-                <span className={`appointment-status-badge ${getStatusClass(appointment.status)}`}>
-                  {getStatusString(appointment.status).toUpperCase()}
-                </span>
-              </div>
-
               {/* Patient Information */}
               <div className="appointment-details-section">
                 <h3 className="appointment-section-title">

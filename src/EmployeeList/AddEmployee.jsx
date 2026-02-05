@@ -11,7 +11,7 @@ import {
   getShiftList,
   addWorkDays  
 } from '../api/api.js';
-import './AddEmployee.css';
+import styles from './AddEmployee.module.css';
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -671,38 +671,38 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     switch (currentStep) {
       case 1:
         return (
-          <form onSubmit={handleStep1Submit} className="clinic-modal-body">
-            {formError && <div className="form-error">{formError}</div>}
-            {formSuccess && <div className="form-success">Employee added successfully!</div>}
+          <form onSubmit={handleStep1Submit} className={styles.clinicModalBody}>
+            {formError && <div className={styles.formError}>{formError}</div>}
+            {formSuccess && <div className={styles.formSuccess}>Employee added successfully!</div>}
 
-            <div className="form-grid">
+            <div className={styles.formGrid}>
               {/* Photo Upload Section */}
-              <h3 className="form-section-title">Photo Upload</h3>
+              <h3 className={styles.formSectionTitle}>Photo Upload</h3>
               
-              <div className="form-group full-width">
-                <div className="photo-upload-container">
-                  <div className="photo-preview-section">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                <div className={styles.photoUploadContainer}>
+                  <div className={styles.photoPreviewSection}>
                     {photoUrl ? (
-                      <div className="photo-preview">
+                      <div className={styles.photoPreview}>
                         <img src={photoUrl} alt="Employee Preview" />
                         <button
                           type="button"
                           onClick={handleRemovePhoto}
-                          className="remove-photo-btn"
+                          className={styles.removePhotoBtn}
                           title="Remove photo"
                         >
                           <FiX />
                         </button>
                       </div>
                     ) : (
-                      <div className="photo-placeholder">
+                      <div className={styles.photoPlaceholder}>
                         <FiUpload size={40} />
                         <p>No photo selected</p>
                       </div>
                     )}
                   </div>
 
-                  <div className="photo-upload-controls">
+                  <div className={styles.photoUploadControls}>
                     <input
                       type="file"
                       id="photoInput"
@@ -710,7 +710,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                       onChange={handlePhotoUpload}
                       style={{ display: 'none' }}
                     />
-                    <label htmlFor="photoInput" className="btn-select-photo">
+                    <label htmlFor="photoInput" className={styles.btnSelectPhoto}>
                       Select Photo
                     </label>
                     
@@ -719,19 +719,19 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                         type="button"
                         onClick={handlePhotoUploadSubmit}
                         disabled={isPhotoUploading}
-                        className="btn-upload-photo"
+                        className={styles.btnUploadPhoto}
                       >
                         {isPhotoUploading ? 'Uploading...' : 'Upload Photo'}
                       </button>
                     )}
                     
                     {photoUploadStatus && (
-                      <p className={`photo-status ${photoUploaded ? 'success' : 'info'}`}>
+                      <p className={`${styles.photoStatus} ${photoUploaded ? styles.success : styles.info}`}>
                         {photoUploadStatus}
                       </p>
                     )}
                     
-                    <p className="photo-hint">
+                    <p className={styles.photoHint}>
                       JPG, JPEG, or PNG. Max size: 4MB
                     </p>
                   </div>
@@ -739,11 +739,11 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
               </div>
 
               {/* Basic Information */}
-              <h3 className="form-section-title">Basic Information</h3>
+              <h3 className={styles.formSectionTitle}>Basic Information</h3>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Employee Code <span className="required">*</span>
+                  Employee Code <span className={styles.required}>*</span>
                 </label>
                 <input
                   required
@@ -753,9 +753,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  First Name <span className="required">*</span>
+                  First Name <span className={styles.required}>*</span>
                 </label>
                 <input
                   required
@@ -765,9 +765,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Last Name <span className="required">*</span>
+                  Last Name <span className={styles.required}>*</span>
                 </label>
                 <input
                   required
@@ -777,7 +777,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Gender</label>
                 <select name="gender" value={formData.gender} onChange={handleInputChange}>
                   <option value="0">Select Gender</option>
@@ -789,7 +789,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Birth Date</label>
                 <input
                   type="date"
@@ -799,7 +799,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Blood Group</label>
                 <select name="bloodGroup" value={formData.bloodGroup} onChange={handleInputChange}>
                   <option value="0">Select Blood Group</option>
@@ -811,7 +811,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Marital Status</label>
                 <select
                   name="maritalStatus"
@@ -828,9 +828,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
               </div>
 
               {/* Contact Information */}
-              <h3 className="form-section-title">Contact Information</h3>
+              <h3 className={styles.formSectionTitle}>Contact Information</h3>
 
-              <div className="form-group full-width">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>Address</label>
                 <textarea
                   name="address"
@@ -840,9 +840,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Mobile <span className="required">*</span>
+                  Mobile <span className={styles.required}>*</span>
                 </label>
                 <input
                   required
@@ -852,7 +852,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Alternate Mobile</label>
                 <input
                   name="altMobile"
@@ -861,7 +861,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group full-width">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>Email</label>
                 <input
                   type="email"
@@ -872,11 +872,11 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
               </div>
 
               {/* Professional Information */}
-              <h3 className="form-section-title">Professional Information</h3>
+              <h3 className={styles.formSectionTitle}>Professional Information</h3>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Department <span className="required">*</span>
+                  Department <span className={styles.required}>*</span>
                 </label>
                 <select
                   required
@@ -893,9 +893,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Designation <span className="required">*</span>
+                  Designation <span className={styles.required}>*</span>
                 </label>
                 <select
                   required
@@ -912,7 +912,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Qualification</label>
                 <input
                   name="qualification"
@@ -921,7 +921,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Specialization</label>
                 <input
                   name="specialization"
@@ -930,7 +930,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>License Number</label>
                 <input
                   name="licenseNo"
@@ -939,7 +939,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>License Expiry</label>
                 <input
                   type="date"
@@ -949,7 +949,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Experience (Years)</label>
                 <input
                   type="number"
@@ -960,7 +960,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>University Name</label>
                 <input
                   name="universityName"
@@ -970,24 +970,24 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
               </div>
 
               {/* Other Details */}
-              <h3 className="form-section-title">Other Details</h3>
+              <h3 className={styles.formSectionTitle}>Other Details</h3>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>PF Number</label>
                 <input name="pfNo" value={formData.pfNo} onChange={handleInputChange} />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>ESI Number</label>
                 <input name="esiNo" value={formData.esiNo} onChange={handleInputChange} />
               </div>
             </div>
 
-            <div className="clinic-modal-footer">
-              <button type="button" onClick={onClose} className="btn-cancel">
+            <div className={styles.clinicModalFooter}>
+              <button type="button" onClick={onClose} className={styles.btnCancel}>
                 Cancel
               </button>
-              <button type="submit" disabled={formLoading} className="btn-submit">
+              <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
                 {formLoading ? 'Saving...' : 'Save & Next'}
               </button>
             </div>
@@ -996,51 +996,51 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
 
       case 2:
         return (
-          <form onSubmit={handleStep2Submit} className="clinic-modal-body">
-            {formError && <div className="form-error">{formError}</div>}
-            {formSuccess && <div className="form-success">Employee proof added successfully!</div>}
+          <form onSubmit={handleStep2Submit} className={styles.clinicModalBody}>
+            {formError && <div className={styles.formError}>{formError}</div>}
+            {formSuccess && <div className={styles.formSuccess}>Employee proof added successfully!</div>}
 
-            <div className="form-grid">
-              <h3 className="form-section-title">Employee ID Proof Details</h3>
+            <div className={styles.formGrid}>
+              <h3 className={styles.formSectionTitle}>Employee ID Proof Details</h3>
               
               {/* File Upload Section */}
-              <div className="form-group full-width">
-                <div className="photo-upload-container">
-                  <div className="photo-preview-section">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                <div className={styles.photoUploadContainer}>
+                  <div className={styles.photoPreviewSection}>
                     {proofFileUrl ? (
-                      <div className="photo-preview">
+                      <div className={styles.photoPreview}>
                         <img src={proofFileUrl} alt="ID Proof Preview" />
                         <button
                           type="button"
                           onClick={handleRemoveProofFile}
-                          className="remove-photo-btn"
+                          className={styles.removePhotoBtn}
                           title="Remove file"
                         >
                           <FiX />
                         </button>
                       </div>
                     ) : proofFile && proofFile.type === 'application/pdf' ? (
-                      <div className="photo-placeholder">
+                      <div className={styles.photoPlaceholder}>
                         <FiUpload size={40} />
                         <p>PDF Selected: {proofFile.name}</p>
                         <button
                           type="button"
                           onClick={handleRemoveProofFile}
-                          className="remove-photo-btn"
+                          className={styles.removePhotoBtn}
                           title="Remove file"
                         >
                           <FiX />
                         </button>
                       </div>
                     ) : (
-                      <div className="photo-placeholder">
+                      <div className={styles.photoPlaceholder}>
                         <FiUpload size={40} />
                         <p>No file selected</p>
                       </div>
                     )}
                   </div>
 
-                  <div className="photo-upload-controls">
+                  <div className={styles.photoUploadControls}>
                     <input
                       type="file"
                       id="proofFileInput"
@@ -1048,7 +1048,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                       onChange={handleProofFileUpload}
                       style={{ display: 'none' }}
                     />
-                    <label htmlFor="proofFileInput" className="btn-select-photo">
+                    <label htmlFor="proofFileInput" className={styles.btnSelectPhoto}>
                       Select ID Proof File
                     </label>
                     
@@ -1057,28 +1057,28 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                         type="button"
                         onClick={handleProofFileUploadSubmit}
                         disabled={isProofUploading}
-                        className="btn-upload-photo"
+                        className={styles.btnUploadPhoto}
                       >
                         {isProofUploading ? 'Uploading...' : 'Upload ID Proof'}
                       </button>
                     )}
                     
                     {proofUploadStatus && (
-                      <p className={`photo-status ${proofFileUploaded ? 'success' : 'info'}`}>
+                      <p className={`${styles.photoStatus} ${proofFileUploaded ? styles.success : styles.info}`}>
                         {proofUploadStatus}
                       </p>
                     )}
                     
-                    <p className="photo-hint">
+                    <p className={styles.photoHint}>
                       JPG, JPEG, PNG, or PDF. Max size: 5MB
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Proof Type <span className="required">*</span>
+                  Proof Type <span className={styles.required}>*</span>
                 </label>
                 <select
                   required
@@ -1095,9 +1095,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  ID Number <span className="required">*</span>
+                  ID Number <span className={styles.required}>*</span>
                 </label>
                 <input
                   required
@@ -1108,7 +1108,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Detail</label>
                 <input
                   name="detail"
@@ -1118,7 +1118,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Expiry Date</label>
                 <input
                   type="date"
@@ -1129,14 +1129,14 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
               </div>
             </div>
 
-            <div className="clinic-modal-footer">
-              <button type="button" onClick={handlePrevious} className="btn-cancel">
+            <div className={styles.clinicModalFooter}>
+              <button type="button" onClick={handlePrevious} className={styles.btnCancel}>
                 Previous
               </button>
-              <button type="button" onClick={handleSkipStep} className="btn-secondary">
+              <button type="button" onClick={handleSkipStep} className={styles.btnSecondary}>
                 Skip
               </button>
-              <button type="submit" disabled={formLoading} className="btn-submit">
+              <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
                 {formLoading ? 'Saving...' : 'Save & Next'}
               </button>
             </div>
@@ -1145,16 +1145,16 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
 
       case 3:
         return (
-          <form onSubmit={handleStep3Submit} className="clinic-modal-body">
-            {formError && <div className="form-error">{formError}</div>}
-            {formSuccess && <div className="form-success">Beneficiary account added successfully!</div>}
+          <form onSubmit={handleStep3Submit} className={styles.clinicModalBody}>
+            {formError && <div className={styles.formError}>{formError}</div>}
+            {formSuccess && <div className={styles.formSuccess}>Beneficiary account added successfully!</div>}
 
-            <div className="form-grid">
-              <h3 className="form-section-title">Beneficiary Account Details</h3>
+            <div className={styles.formGrid}>
+              <h3 className={styles.formSectionTitle}>Beneficiary Account Details</h3>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Account Holder Name <span className="required">*</span>
+                  Account Holder Name <span className={styles.required}>*</span>
                 </label>
                 <input
                   required
@@ -1165,9 +1165,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Account Number <span className="required">*</span>
+                  Account Number <span className={styles.required}>*</span>
                 </label>
                 <input
                   required
@@ -1178,9 +1178,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  IFSC Code <span className="required">*</span>
+                  IFSC Code <span className={styles.required}>*</span>
                 </label>
                 <input
                   required
@@ -1191,7 +1191,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>Bank Name</label>
                 <input
                   name="BankName"
@@ -1201,7 +1201,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group full-width">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>Bank Address</label>
                 <textarea
                   name="BankAddress"
@@ -1212,8 +1212,8 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 />
               </div>
 
-              <div className="form-group full-width">
-                <label className="checkbox-label">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                <label className={styles.checkboxLabel}>
                   <input
                     type="checkbox"
                     name="IsDefault"
@@ -1225,14 +1225,14 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
               </div>
             </div>
 
-            <div className="clinic-modal-footer">
-              <button type="button" onClick={handlePrevious} className="btn-cancel">
+            <div className={styles.clinicModalFooter}>
+              <button type="button" onClick={handlePrevious} className={styles.btnCancel}>
                 Previous
               </button>
-              <button type="button" onClick={handleSkipStep} className="btn-secondary">
+              <button type="button" onClick={handleSkipStep} className={styles.btnSecondary}>
                 Skip
               </button>
-              <button type="submit" disabled={formLoading} className="btn-submit">
+              <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
                 {formLoading ? 'Saving...' : 'Save & Next'}
               </button>
             </div>
@@ -1241,16 +1241,16 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
 
       case 4:
         return (
-          <form onSubmit={handleStep4Submit} className="clinic-modal-body">
-            {formError && <div className="form-error">{formError}</div>}
-            {formSuccess && <div className="form-success">Employee shift and workdays assigned successfully!</div>}
+          <form onSubmit={handleStep4Submit} className={styles.clinicModalBody}>
+            {formError && <div className={styles.formError}>{formError}</div>}
+            {formSuccess && <div className={styles.formSuccess}>Employee shift and workdays assigned successfully!</div>}
 
-            <div className="form-grid">
-              <h3 className="form-section-title">Employee Shift Assignment</h3>
+            <div className={styles.formGrid}>
+              <h3 className={styles.formSectionTitle}>Employee Shift Assignment</h3>
 
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Shift <span className="required">*</span>
+                  Shift <span className={styles.required}>*</span>
                 </label>
                 <select
                   required
@@ -1268,35 +1268,35 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 </select>
               </div>
 
-              <h3 className="form-section-title">Work Days</h3>
+              <h3 className={styles.formSectionTitle}>Work Days</h3>
               
-              <div className="form-group full-width">
-                <div className="workdays-container">
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                <div className={styles.workdaysContainer}>
                   {WORK_DAYS.map((day) => (
                     <button
                       key={day.id}
                       type="button"
-                      className={`workday-box ${selectedWorkDays.includes(day.id) ? 'selected' : ''}`}
+                      className={`${styles.workdayBox} ${selectedWorkDays.includes(day.id) ? styles.selected : ''}`}
                       onClick={() => handleWorkDayToggle(day.id)}
                     >
                       {day.label}
                     </button>
                   ))}
                 </div>
-                <p className="workdays-hint">
+                <p className={styles.workdaysHint}>
                   Select the days this employee will work
                 </p>
               </div>
             </div>
 
-            <div className="clinic-modal-footer">
-              <button type="button" onClick={handlePrevious} className="btn-cancel">
+            <div className={styles.clinicModalFooter}>
+              <button type="button" onClick={handlePrevious} className={styles.btnCancel}>
                 Previous
               </button>
-              <button type="button" onClick={handleSkipStep} className="btn-secondary">
+              <button type="button" onClick={handleSkipStep} className={styles.btnSecondary}>
                 Skip & Finish
               </button>
-              <button type="submit" disabled={formLoading} className="btn-submit">
+              <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
                 {formLoading ? 'Saving...' : 'Save & Finish'}
               </button>
             </div>
@@ -1309,35 +1309,35 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
   };
 
   return (
-    <div className="clinic-modal-overlay" onClick={onClose}>
-      <div className="clinic-modal form-modal employee-form-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="clinic-modal-header">
+    <div className={styles.clinicModalOverlay} onClick={onClose}>
+      <div className={styles.clinicModal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.clinicModalHeader}>
           <h2>
             Add New Employee - Step {currentStep} of 4
-            {createdEmployeeId && <span className="employee-id-badge"> (ID: {createdEmployeeId})</span>}
+            {createdEmployeeId && <span className={styles.employeeIdBadge}> (ID: {createdEmployeeId})</span>}
           </h2>
-          <button onClick={onClose} className="clinic-modal-close">
+          <button onClick={onClose} className={styles.clinicModalClose}>
             <FiX />
           </button>
         </div>
 
         {/* Step indicator */}
-        <div className="step-indicator">
-          <div className={`step ${currentStep >= 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
-            <div className="step-number">1</div>
-            <div className="step-label">Basic Info</div>
+        <div className={styles.stepIndicator}>
+          <div className={`${styles.step} ${currentStep >= 1 ? styles.active : ''} ${currentStep > 1 ? styles.completed : ''}`}>
+            <div className={styles.stepNumber}>1</div>
+            <div className={styles.stepLabel}>Basic Info</div>
           </div>
-          <div className={`step ${currentStep >= 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
-            <div className="step-number">2</div>
-            <div className="step-label">ID Proof</div>
+          <div className={`${styles.step} ${currentStep >= 2 ? styles.active : ''} ${currentStep > 2 ? styles.completed : ''}`}>
+            <div className={styles.stepNumber}>2</div>
+            <div className={styles.stepLabel}>ID Proof</div>
           </div>
-          <div className={`step ${currentStep >= 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}>
-            <div className="step-number">3</div>
-            <div className="step-label">Bank Account</div>
+          <div className={`${styles.step} ${currentStep >= 3 ? styles.active : ''} ${currentStep > 3 ? styles.completed : ''}`}>
+            <div className={styles.stepNumber}>3</div>
+            <div className={styles.stepLabel}>Bank Account</div>
           </div>
-          <div className={`step ${currentStep >= 4 ? 'active' : ''}`}>
-            <div className="step-number">4</div>
-            <div className="step-label">Shift & Workdays</div>
+          <div className={`${styles.step} ${currentStep >= 4 ? styles.active : ''}`}>
+            <div className={styles.stepNumber}>4</div>
+            <div className={styles.stepLabel}>Shift & Workdays</div>
           </div>
         </div>
 

@@ -6,7 +6,7 @@ import { getInvoiceList, cancelInvoice, addInvoicePayment } from '../api/api-inv
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import ViewInvoice from './ViewInvoice.jsx';
-import './Invoicemanagement.css';
+import styles from './InvoiceManagement.module.css';
 
 const INVOICE_STATUSES = [
   { id: 1, label: 'Draft' },
@@ -42,12 +42,12 @@ const InvoiceList = () => {
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const today = new Date().toISOString().split('T')[0];
-  const [fromDate, setFromDate] = useState(today);
-  const [toDate, setToDate] = useState(today);
+  const [fromDate, setFromDate] = useState();
+  const [toDate, setToDate] = useState();
   const [patientNameFilter, setPatientNameFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState(-1);
   const [invoiceTypeFilter, setInvoiceTypeFilter] = useState(0);
-  const [appliedFilters, setAppliedFilters] = useState({ fromDate: today, toDate: today, patientName: '', status: -1, invoiceType: 0 });
+  const [appliedFilters, setAppliedFilters] = useState({ patientName: '', status: -1, invoiceType: 0 });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -94,7 +94,7 @@ const InvoiceList = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!event.target.closest('.invoice-actions-dropdown')) {
+      if (!event.target.closest(`.${styles.invoiceActionsDropdown}`)) {
         setActiveDropdown(null);
       }
     };
@@ -257,7 +257,7 @@ const InvoiceList = () => {
     const statusMap = {
       1: 'draft', 2: 'issued', 3: 'paid', 4: 'partial', 5: 'cancelled', 6: 'refunded', 7: 'credit'
     };
-    return `status-badge ${statusMap[status] || 'draft'}`;
+    return `${styles.statusBadge} ${styles[statusMap[status]] || styles.draft}`;
   };
 
   const getStatusLabel = (status) => {
@@ -269,92 +269,84 @@ const InvoiceList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className="invoice-loading">Loading invoices...</div>;
+  if (loading) return <div className={styles.invoiceLoading}>Loading invoices...</div>;
 
   return (
-    <div className="invoice-list-wrapper">
+    <div className={styles.invoiceListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Invoice Management" />
 
       {formSuccess && !isPaymentModalOpen && (
-        <div className="form-success">{formSuccess}</div>
+        <div className={styles.formSuccess}>{formSuccess}</div>
       )}
 
       {/* Toolbar */}
-      <div className="invoice-toolbar">
-        <div className="invoice-toolbar-left">
+      <div className={styles.invoiceToolbar}>
+        <div className={styles.invoiceToolbarLeft}>
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className={`invoice-filter-toggle-btn ${showAdvancedFilters ? 'active' : ''}`}
+            className={`${styles.invoiceFilterToggleBtn} ${showAdvancedFilters ? styles.active : ''}`}
           >
             <FiFilter size={18} />
             {showAdvancedFilters ? 'Hide' : 'Show'} Filters
           </button>
-          {(appliedFilters.fromDate !== today || appliedFilters.toDate !== today || appliedFilters.patientName || appliedFilters.status !== -1 || appliedFilters.invoiceType !== 0 || searchTerm) && (
-            <button onClick={clearAllFilters} className="invoice-clear-btn">Clear All</button>
+          {(appliedFilters.patientName || appliedFilters.status !== -1 || appliedFilters.invoiceType !== 0 || searchTerm) && (
+            <button onClick={clearAllFilters} className={styles.invoiceClearBtn}>Clear All</button>
           )}
         </div>
       </div>
 
       {/* Advanced Filters */}
       {showAdvancedFilters && (
-        <div className="invoice-advanced-filters">
-          <div className="filter-row">
-            <div className="filter-group">
-              <label className="filter-label">From Date</label>
-              <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="filter-input" />
+        <div className={styles.invoiceAdvancedFilters}>
+          <div className={styles.filterRow}>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>From Date</label>
+              <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className={styles.filterInput} />
             </div>
-            <div className="filter-group">
-              <label className="filter-label">To Date</label>
-              <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="filter-input" />
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>To Date</label>
+              <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className={styles.filterInput} />
             </div>
-            <div className="filter-group">
-              <label className="filter-label">Patient Name</label>
-              <input type="text" placeholder="Filter by patient..." value={patientNameFilter} onChange={(e) => setPatientNameFilter(e.target.value)} className="filter-input" />
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>Patient Name</label>
+              <input type="text" placeholder="Filter by patient..." value={patientNameFilter} onChange={(e) => setPatientNameFilter(e.target.value)} className={styles.filterInput} />
             </div>
-            <div className="filter-group">
-              <label className="filter-label">Invoice Type</label>
-              <select value={invoiceTypeFilter} onChange={(e) => setInvoiceTypeFilter(Number(e.target.value))} className="filter-input">
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>Invoice Type</label>
+              <select value={invoiceTypeFilter} onChange={(e) => setInvoiceTypeFilter(Number(e.target.value))} className={styles.filterInput}>
                 <option value={0}>All Types</option>
                 {INVOICE_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
               </select>
             </div>
-            <div className="filter-group">
-              <label className="filter-label">Status</label>
-              <select value={statusFilter} onChange={(e) => setStatusFilter(Number(e.target.value))} className="filter-input">
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>Status</label>
+              <select value={statusFilter} onChange={(e) => setStatusFilter(Number(e.target.value))} className={styles.filterInput}>
                 <option value={-1}>All Statuses</option>
                 {INVOICE_STATUSES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
               </select>
             </div>
-            <div className="filter-group apply-filter-btn-group">
-              <button onClick={applyFilters} className="invoice-add-btn"><FiSearch size={18} /> Search</button>
+            <div className={`${styles.filterGroup} ${styles.applyFilterBtnGroup}`}>
+              <button onClick={applyFilters} className={styles.invoiceAddBtn}><FiSearch size={18} /> Search</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Search Bar */}
-      <div className="invoice-search-wrapper">
-        <div className="invoice-search-container">
-          <input type="text" placeholder="Search by invoice no, patient..." value={searchInput} onChange={(e) => setSearchInput(e.target.value)} onKeyPress={handleKeyPress} className="invoice-search-input" />
-          <button onClick={handleSearch} className="invoice-search-btn"><FiSearch size={20} /></button>
-        </div>
-      </div>
-
       {/* Statistics */}
-      <div className="invoice-stats-grid">
-        <div className="invoice-stat-card stat-total">
-          <div className="stat-icon-wrapper"><FiDollarSign size={24} /></div>
-          <div className="stat-content">
-            <div className="stat-label">Total Amount</div>
-            <div className="stat-value">{formatCurrency(statistics.total)}</div>
+      <div className={styles.invoiceStatsGrid}>
+        <div className={`${styles.invoiceStatCard} ${styles.statTotal}`}>
+          <div className={styles.statIconWrapper}><FiDollarSign size={24} /></div>
+          <div className={styles.statContent}>
+            <div className={styles.statLabel}>Total Amount</div>
+            <div className={styles.statValue}>{formatCurrency(statistics.total)}</div>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="invoice-table-container">
-        <table className="invoice-table">
+      <div className={styles.invoiceTableContainer}>
+        <table className={styles.invoiceTable}>
           <thead>
             <tr>
               <th>Invoice No</th>
@@ -370,7 +362,7 @@ const InvoiceList = () => {
           <tbody>
             {filteredInvoices.length === 0 ? (
               <tr>
-                <td colSpan={8} className="invoice-no-data">
+                <td colSpan={8} className={styles.invoiceNoData}>
                   {searchTerm || appliedFilters.patientName ? 'No invoices found.' : 'No invoices yet.'}
                 </td>
               </tr>
@@ -379,47 +371,47 @@ const InvoiceList = () => {
                 const balanceAmount = calculateBalanceAmount(invoice.netAmount, invoice.paidAmount);
                 return (
                   <tr key={invoice.id}>
-                    <td><div className="invoice-no-badge">{invoice.invoiceNo}</div></td>
+                    <td><div className={styles.invoiceNoBadge}>{invoice.invoiceNo}</div></td>
                     <td>
-                      <div className="patient-cell">
-                        <FiUser size={16} className="patient-icon" />
+                      <div className={styles.patientCell}>
+                        <FiUser size={16} className={styles.patientIcon} />
                         <div>
-                          <div className="patient-name">{invoice.patientName}</div>
-                          <div className="patient-info">{invoice.patientFileNo}</div>
+                          <div className={styles.patientName}>{invoice.patientName}</div>
+                          <div className={styles.patientInfo}>{invoice.patientFileNo}</div>
                         </div>
                       </div>
                     </td>
-                    <td><span className="date-text">{formatDate(invoice.invoiceDate)}</span></td>
-                    <td><span className="amount-text total">{formatCurrency(invoice.netAmount)}</span></td>
-                    <td><span className="discount-text">{formatCurrency(invoice.paidAmount)}</span></td>
-                    <td><span className="amount-text">{formatCurrency(balanceAmount)}</span></td>
+                    <td><span className={styles.dateText}>{formatDate(invoice.invoiceDate)}</span></td>
+                    <td><span className={`${styles.amountText} ${styles.total}`}>{formatCurrency(invoice.netAmount)}</span></td>
+                    <td><span className={styles.discountText}>{formatCurrency(invoice.paidAmount)}</span></td>
+                    <td><span className={styles.amountText}>{formatCurrency(balanceAmount)}</span></td>
                     <td><span className={getStatusBadgeClass(invoice.status)}>{getStatusLabel(invoice.status)}</span></td>
                     <td>
-                      <div className="invoice-actions-cell">
+                      <div className={styles.invoiceActionsCell}>
                         <button 
                           onClick={() => openViewModal(invoice)} 
-                          className="invoice-view-btn"
+                          className={styles.invoiceViewBtn}
                           title="View Details"
                         >
                           <FiEye size={16} />
                           Details
                         </button>
-                        <div className="invoice-actions-dropdown">
+                        <div className={styles.invoiceActionsDropdown}>
                           {invoice.status !== 5 && (
                           <button 
                             onClick={(e) => toggleDropdown(invoice.id, e)} 
-                            className="invoice-actions-btn"
+                            className={styles.invoiceActionsBtn}
                             title="Actions"
                           >
                             <FiMoreVertical size={18} />
                           </button>
                           )}
                           {activeDropdown === invoice.id && (
-                            <div className="invoice-dropdown-menu">
+                            <div className={styles.invoiceDropdownMenu}>
                               {invoice.status !== 3 && invoice.status !== 5 && (
                                 <button 
                                   onClick={() => openPaymentModal(invoice)} 
-                                  className="invoice-dropdown-item payment"
+                                  className={`${styles.invoiceDropdownItem} ${styles.payment}`}
                                 >
                                   <FiDollarSign size={16} />
                                   Add Payment
@@ -428,7 +420,7 @@ const InvoiceList = () => {
                               {invoice.status !== 5 && (
                                 <button 
                                   onClick={() => handleCancelInvoice(invoice)} 
-                                  className="invoice-dropdown-item cancel"
+                                  className={`${styles.invoiceDropdownItem} ${styles.cancel}`}
                                 >
                                   <FiX size={16} />
                                   Cancel Invoice
@@ -456,42 +448,42 @@ const InvoiceList = () => {
 
       {/* Add Payment Modal */}
       {isPaymentModalOpen && (
-        <div className="invoice-modal-overlay">
-          <div className="invoice-modal">
-            <div className="invoice-modal-header">
+        <div className={styles.invoiceModalOverlay}>
+          <div className={styles.invoiceModal}>
+            <div className={styles.invoiceModalHeader}>
               <h2>Add Payment</h2>
-              <button onClick={closeModals} className="invoice-modal-close">×</button>
+              <button onClick={closeModals} className={styles.invoiceModalClose}>×</button>
             </div>
             <form onSubmit={handleAddPayment}>
-              <div className="invoice-modal-body">
-                {formError && <div className="form-error">{formError}</div>}
-                {formSuccess && <div className="form-success">{formSuccess}</div>}
-                <div className="invoice-info-display">
+              <div className={styles.invoiceModalBody}>
+                {formError && <div className={styles.formError}>{formError}</div>}
+                {formSuccess && <div className={styles.formSuccess}>{formSuccess}</div>}
+                <div className={styles.invoiceInfoDisplay}>
                   <p><strong>Invoice:</strong> {selectedInvoice?.invoiceNo}</p>
                   <p><strong>Patient:</strong> {selectedInvoice?.patientName}</p>
                   <p><strong>Total:</strong> {formatCurrency(selectedInvoice?.netAmount)}</p>
                   <p><strong>Balance:</strong> {formatCurrency(calculateBalanceAmount(selectedInvoice?.netAmount, selectedInvoice?.paidAmount))}</p>
                 </div>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Payment Date <span className="required">*</span></label>
+                <div className={styles.formGrid}>
+                  <div className={styles.formGroup}>
+                    <label>Payment Date <span className={styles.required}>*</span></label>
                     <input type="date" name="paymentDate" value={paymentData.paymentDate} onChange={handlePaymentInputChange} disabled={formLoading} required />
                   </div>
-                  <div className="form-group">
-                    <label>Payment Mode <span className="required">*</span></label>
-                    <select name="paymentMode" value={paymentData.paymentMode} onChange={handlePaymentInputChange} disabled={formLoading} required className="form-select">
+                  <div className={styles.formGroup}>
+                    <label>Payment Mode <span className={styles.required}>*</span></label>
+                    <select name="paymentMode" value={paymentData.paymentMode} onChange={handlePaymentInputChange} disabled={formLoading} required className={styles.formSelect}>
                       <option value="">Select mode</option>
                       {PAYMENT_MODES.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
                     </select>
                   </div>
-                  <div className="form-group">
-                    <label>Amount (₹) <span className="required">*</span></label>
+                  <div className={styles.formGroup}>
+                    <label>Amount (₹) <span className={styles.required}>*</span></label>
                     <input type="number" name="amount" value={paymentData.amount} onChange={handlePaymentInputChange} placeholder="0.00" step="0.01" min="0" disabled={formLoading} required />
                   </div>
 
                   {/* Conditional Reference No field */}
                   {[3, 4, 7].includes(Number(paymentData.paymentMode)) && (
-                    <div className="form-group">
+                    <div className={styles.formGroup}>
                       <label>Reference No</label>
                       <input
                         type="text"
@@ -504,15 +496,15 @@ const InvoiceList = () => {
                     </div>
                   )}
 
-                  <div className="form-group full-width">
+                  <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                     <label>Remarks</label>
                     <textarea name="remarks" value={paymentData.remarks} onChange={handlePaymentInputChange} placeholder="Additional notes..." rows="3" disabled={formLoading} />
                   </div>
                 </div>
               </div>
-              <div className="invoice-modal-footer">
-                <button type="button" onClick={closeModals} className="btn-cancel" disabled={formLoading}>Cancel</button>
-                <button type="submit" className="btn-submit" disabled={formLoading}>{formLoading ? 'Recording...' : 'Record Payment'}</button>
+              <div className={styles.invoiceModalFooter}>
+                <button type="button" onClick={closeModals} className={styles.btnCancel} disabled={formLoading}>Cancel</button>
+                <button type="submit" className={styles.btnSubmit} disabled={formLoading}>{formLoading ? 'Recording...' : 'Record Payment'}</button>
               </div>
             </form>
           </div>

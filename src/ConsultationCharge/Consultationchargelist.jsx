@@ -10,7 +10,7 @@ import {
 } from '../api/api-consultation.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import './Consultationchargelist.css';
+import styles from './ConsultationChargeList.module.css';
 
 const ConsultationChargeList = () => {
   const [consultations, setConsultations] = useState([]);
@@ -20,8 +20,8 @@ const ConsultationChargeList = () => {
 
   // Date filter states - default to today
   const today = new Date().toISOString().split('T')[0];
-  const [fromDate, setFromDate] = useState(today);
-  const [toDate, setToDate] = useState(today);
+  const [fromDate, setFromDate] = useState();
+  const [toDate, setToDate] = useState();
   const [showFilters, setShowFilters] = useState(false);
   
   const [loading, setLoading] = useState(true);
@@ -124,8 +124,8 @@ const ConsultationChargeList = () => {
 
   const clearDateFilters = () => {
     const todayDate = new Date().toISOString().split('T')[0];
-    setFromDate(todayDate);
-    setToDate(todayDate);
+    setFromDate();
+    setToDate();
   };
 
   const setTodayFilter = () => {
@@ -283,33 +283,33 @@ const ConsultationChargeList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className="charge-list-loading">Loading consultations...</div>;
+  if (loading) return <div className={styles.chargeListLoading}>Loading consultations...</div>;
 
   return (
-    <div className="charge-list-wrapper">
+    <div className={styles.chargeListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Consultation Charges" />
 
-      {formSuccess && !isInvoiceFormOpen && <div className="form-success">{formSuccess}</div>}
+      {formSuccess && !isInvoiceFormOpen && <div className={styles.formSuccess}>{formSuccess}</div>}
 
       {/* Date Filter Section */}
-      <div className="charge-filter-toolbar">
-        <div className="filter-toolbar-left">
+      <div className={styles.chargeFilterToolbar}>
+        <div className={styles.filterToolbarLeft}>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`filter-toggle-btn ${showFilters ? 'active' : ''}`}
+            className={`${styles.filterToggleBtn} ${showFilters ? styles.active : ''}`}
           >
             <FiFilter size={18} />
             {showFilters ? 'Hide' : 'Show'} Filters
           </button>
-          {(fromDate !== today || toDate !== today) &&(
-          <button onClick={clearDateFilters} className="filter-clear-btn">
+          {(fromDate == today || toDate == today) &&(
+          <button onClick={clearDateFilters} className={styles.filterClearBtn}>
             <FiX size={16} /> Clear Filters
           </button>)}
 
         </div>
-        <div className="filter-toolbar-right">
-          <span className="filter-info">
+        <div className={styles.filterToolbarRight}>
+          <span className={styles.filterInfo}>
             <FiCalendar size={16} />
             {getDateRangeText()}
           </span>
@@ -317,63 +317,63 @@ const ConsultationChargeList = () => {
       </div>
 
       {showFilters && (
-        <div className="charge-date-filters">
-          <div className="filter-row">
-            <div className="filter-group">
-              <label className="filter-label">From Date <span className="required">*</span></label>
+        <div className={styles.chargeDateFilters}>
+          <div className={styles.filterRow}>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>From Date <span className={styles.required}>*</span></label>
               <input 
                 type="date" 
                 value={fromDate} 
                 onChange={(e) => setFromDate(e.target.value)} 
-                className="filter-input" 
+                className={styles.filterInput} 
                 max={today}
                 required
               />
             </div>
-            <div className="filter-group">
-              <label className="filter-label">To Date</label>
+            <div className={styles.filterGroup}>
+              <label className={styles.filterLabel}>To Date</label>
               <input 
                 type="date" 
                 value={toDate} 
                 onChange={(e) => setToDate(e.target.value)} 
-                className="filter-input" 
+                className={styles.filterInput} 
                 max={today}
               />
             </div>
-            <div className="filter-group">
-              <button onClick={applyDateFilters} className="filter-apply-btn">
+            <div className={styles.filterGroup}>
+              <button onClick={applyDateFilters} className={styles.filterApplyBtn}>
                 <FiSearch size={16} /> Apply
               </button>
             </div>
           </div>
-          <div className="filter-quick-actions">
-            <button onClick={setTodayFilter} className="quick-filter-btn">Today</button>
-            <button onClick={setThisWeekFilter} className="quick-filter-btn">This Week</button>
-            <button onClick={setThisMonthFilter} className="quick-filter-btn">This Month</button>
+          <div className={styles.filterQuickActions}>
+            <button onClick={setTodayFilter} className={styles.quickFilterBtn}>Today</button>
+            <button onClick={setThisWeekFilter} className={styles.quickFilterBtn}>This Week</button>
+            <button onClick={setThisMonthFilter} className={styles.quickFilterBtn}>This Month</button>
           </div>
         </div>
       )}
 
       {/* Search */}
-      <div className="charge-list-toolbar">
-        <div className="charge-list-search-container">
+      <div className={styles.chargeListToolbar}>
+        <div className={styles.chargeListSearchContainer}>
           <input 
             type="text" 
             placeholder="Search by patient, doctor, file no, reason..." 
             value={searchInput} 
             onChange={(e) => setSearchInput(e.target.value)} 
             onKeyPress={handleKeyPress} 
-            className="charge-list-search-input" 
+            className={styles.chargeListSearchInput} 
           />
-          <button onClick={handleSearch} className="charge-list-search-btn">
+          <button onClick={handleSearch} className={styles.chargeListSearchBtn}>
             <FiSearch size={20} />
           </button>
         </div>
       </div>
 
       {/* Consultations Table */}
-      <div className="charge-list-table-container">
-        <table className="charge-list-table">
+      <div className={styles.chargeListTableContainer}>
+        <table className={styles.chargeListTable}>
           <thead>
             <tr>
               <th>Patient</th>
@@ -388,7 +388,7 @@ const ConsultationChargeList = () => {
           <tbody>
             {filteredConsultations.length === 0 ? (
               <tr>
-                <td colSpan={7} className="charge-list-no-data">
+                <td colSpan={7} className={styles.chargeListNoData}>
                   {searchTerm ? 'No consultations found.' : 'No consultations for the selected date range.'}
                 </td>
               </tr>
@@ -396,38 +396,37 @@ const ConsultationChargeList = () => {
               filteredConsultations.map((consult) => (
                 <tr key={consult.id}>
                   <td>
-                    <div className="patient-cell">
+                    <div className={styles.patientCell}>
                       <div>
-                        <div className="patient-name">{consult.patientName}</div>
-                        <div className="patient-info">{consult.patientFileNo}</div>
+                        <div className={styles.patientName}>{consult.patientName}</div>
+                        <div className={styles.patientInfo}>{consult.patientFileNo}</div>
                         {consult.patientMobile && (
-                          <div className="patient-info">{consult.patientMobile}</div>
+                          <div className={styles.patientInfo}>{consult.patientMobile}</div>
                         )}
                       </div>
                     </div>
                   </td>
                   <td>
-                    <span className="doctor-name">{consult.doctorFullName}</span>
+                    <span className={styles.doctorName}>{consult.doctorFullName}</span>
                     {consult.doctorCode && (
-                      <div className="charge-code">{consult.doctorCode}</div>
+                      <div className={styles.chargeCode}>{consult.doctorCode}</div>
                     )}
                   </td>
-                  <td><span className="date-text">{formatDate(consult.dateCreated)}</span></td>
-                  <td><span className="reason-text">{consult.reason || '—'}</span></td>
-                  <td><span className="symptoms-text">{consult.symptoms || '—'}</span></td>
+                  <td><span className={styles.dateText}>{formatDate(consult.dateCreated)}</span></td>
+                  <td><span className={styles.reasonText}>{consult.reason || '—'}</span></td>
+                  <td><span className={styles.symptomsText}>{consult.symptoms || '—'}</span></td>
                   <td>
-                    <div className="vitals-cell">
-                      {consult.bpReading && <div className="vital-item">BP: {consult.bpReading}</div>}
-                      {consult.temperature && <div className="vital-item">Temp: {consult.temperature}°</div>}
-                      {consult.weight && <div className="vital-item">Wt: {consult.weight} kg</div>}
-                      {!consult.bpReading && !consult.temperature && !consult.weight && '—'}
+                    <div className={styles.vitalsCell}>
+                      {consult.bpReading && <span className={styles.vitalItem}>BP: {consult.bpReading}</span>}
+                      {consult.temperature && <span className={styles.vitalItem}>Temp: {consult.temperature}°</span>}
+                      {consult.weight && <span className={styles.vitalItem}>Wt: {consult.weight} kg</span>}
                     </div>
                   </td>
                   <td>
-                    <div className="charge-list-actions-cell">
+                    <div className={styles.chargeListActionsCell}>
                       <button 
                         onClick={() => openInvoiceForm(consult)} 
-                        className="invoice-btn" 
+                        className={styles.invoiceBtn} 
                         title="Make Invoice"
                       >
                         <FiFileText size={16} /> Make Invoice
@@ -443,19 +442,19 @@ const ConsultationChargeList = () => {
 
       {/* Generate Invoice Modal */}
       {isInvoiceFormOpen && (
-        <div className="charge-list-modal-overlay">
-          <div className="charge-list-modal">
-            <div className="charge-list-modal-header">
+        <div className={styles.chargeListModalOverlay}>
+          <div className={styles.chargeListModal}>
+            <div className={styles.chargeListModalHeader}>
               <h2>Generate Invoice</h2>
-              <button onClick={closeForm} className="charge-list-modal-close">×</button>
+              <button onClick={closeForm} className={styles.chargeListModalClose}>×</button>
             </div>
             <form onSubmit={handleGenerateInvoice}>
-              <div className="charge-list-modal-body">
-                {formError && <div className="form-error">{formError}</div>}
-                {formSuccess && <div className="form-success">{formSuccess}</div>}
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Charge Type <span className="required">*</span></label>
+              <div className={styles.chargeListModalBody}>
+                {formError && <div className={styles.formError}>{formError}</div>}
+                {formSuccess && <div className={styles.formSuccess}>{formSuccess}</div>}
+                <div className={styles.formGrid}>
+                  <div className={styles.formGroup}>
+                    <label>Charge Type <span className={styles.required}>*</span></label>
                     <select 
                       name="chargeId" 
                       value={invoiceFormData.chargeId} 
@@ -471,8 +470,8 @@ const ConsultationChargeList = () => {
                       ))}
                     </select>
                   </div>
-                  <div className="form-group">
-                    <label>Charge Amount (₹) <span className="required">*</span></label>
+                  <div className={styles.formGroup}>
+                    <label>Charge Amount (₹) <span className={styles.required}>*</span></label>
                     <input 
                       type="number" 
                       name="chargeAmount" 
@@ -485,8 +484,8 @@ const ConsultationChargeList = () => {
                       required 
                     />
                   </div>
-                  <div className="form-group">
-                    <label>Invoice Date <span className="required">*</span></label>
+                  <div className={styles.formGroup}>
+                    <label>Invoice Date <span className={styles.required}>*</span></label>
                     <input 
                       type="date" 
                       name="invoiceDate" 
@@ -497,7 +496,7 @@ const ConsultationChargeList = () => {
                       required 
                     />
                   </div>
-                  <div className="form-group">
+                  <div className={styles.formGroup}>
                     <label>Discount (₹)</label>
                     <input 
                       type="number" 
@@ -512,11 +511,11 @@ const ConsultationChargeList = () => {
                   </div>
                 </div>
               </div>
-              <div className="charge-list-modal-footer">
-                <button type="button" onClick={closeForm} className="btn-cancel" disabled={formLoading}>
+              <div className={styles.chargeListModalFooter}>
+                <button type="button" onClick={closeForm} className={styles.btnCancel} disabled={formLoading}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-submit" disabled={formLoading}>
+                <button type="submit" className={styles.btnSubmit} disabled={formLoading}>
                   {formLoading ? 'Processing...' : 'Generate Invoice'}
                 </button>
               </div>

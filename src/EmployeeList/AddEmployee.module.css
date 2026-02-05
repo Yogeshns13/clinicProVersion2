@@ -1,4 +1,4 @@
-/* AddEmployee.css - Cleaned & Focused version for AddEmployee.jsx */
+/* AddEmployee.module.css - CSS Module version for AddEmployee.jsx */
 
 /* ==================== CSS VARIABLES (keep only what's used) ==================== */
 :root {
@@ -34,7 +34,7 @@
 }
 
 /* ==================== MODAL STRUCTURE ==================== */
-.clinic-modal-overlay {
+.clinicModalOverlay {
   position: fixed;
   inset: 0;
   background: rgba(15, 22, 41, 0.85);
@@ -47,12 +47,12 @@
   animation: fadeIn 0.3s ease;
 }
 
-.clinic-modal {
+.clinicModal {
   background: var(--glass-bg);
   border-radius: 15px;
   border: 2px solid var(--glass-border);
   width: 100%;
-  max-width: 850px;               /* wider for multi-step form */
+  max-width: 850px;
   max-height: 92vh;
   overflow-y: auto;
   box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35);
@@ -60,7 +60,7 @@
   animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.clinic-modal-header {
+.clinicModalHeader {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -68,7 +68,7 @@
   margin-bottom: 8px;
 }
 
-.clinic-modal-header h2 {
+.clinicModalHeader h2 {
   font-size: 1.35rem;
   font-weight: 800;
   margin: 0;
@@ -78,7 +78,7 @@
   background-clip: text;
 }
 
-.clinic-modal-close {
+.clinicModalClose {
   background: rgba(100, 116, 139, 0.15);
   border: 2px solid rgba(100, 116, 139, 0.2);
   width: 32px;
@@ -93,18 +93,18 @@
   transition: all 0.25s ease;
 }
 
-.clinic-modal-close:hover {
+.clinicModalClose:hover {
   background: rgba(239, 68, 68, 0.2);
   color: #dc2626;
   transform: rotate(90deg);
 }
 
-.clinic-modal-body {
+.clinicModalBody {
   padding: 0 25px 25px;
 }
 
 /* ==================== STEP INDICATOR ==================== */
-.step-indicator {
+.stepIndicator {
   display: flex;
   justify-content: space-between;
   padding: 16px 30px;
@@ -114,7 +114,7 @@
   margin-bottom: 12px;
 }
 
-.step-indicator::before {
+.stepIndicator::before {
   content: '';
   position: absolute;
   top: 50%;
@@ -135,7 +135,7 @@
   flex: 1;
 }
 
-.step-number {
+.stepNumber {
   width: 38px;
   height: 38px;
   border-radius: 50%;
@@ -149,19 +149,19 @@
   transition: all 0.3s ease;
 }
 
-.step.active .step-number,
-.step.completed .step-number {
+.step.active .stepNumber,
+.step.completed .stepNumber {
   border-color: var(--accent-end);
   background: var(--accent-end);
   color: white;
 }
 
-.step.completed .step-number::after {
+.step.completed .stepNumber::after {
   content: '✓';
   font-size: 18px;
 }
 
-.step-label {
+.stepLabel {
   margin-top: 6px;
   font-size: 0.8rem;
   font-weight: 500;
@@ -169,14 +169,14 @@
   text-align: center;
 }
 
-.step.active .step-label,
-.step.completed .step-label {
+.step.active .stepLabel,
+.step.completed .stepLabel {
   color: var(--accent-end);
   font-weight: 600;
 }
 
 /* ==================== FORM SECTION TITLES ==================== */
-.form-section-title {
+.formSectionTitle {
   grid-column: 1 / -1;
   font-size: 1.15rem;
   font-weight: 700;
@@ -191,35 +191,36 @@
 }
 
 /* ==================== FORM LAYOUT ==================== */
-.form-grid {
+.formGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 18px;
   margin-bottom: 16px;
 }
 
-.form-group {
+.formGroup {
   display: flex;
   flex-direction: column;
 }
 
-.form-group.full-width {
+.formGroup.fullWidth {
   grid-column: 1 / -1;
 }
 
-.form-group label {
+.formGroup label {
   color: var(--primary-start);
-  font-size: 0.5rem;
+  font-size: 0.9rem;
   font-weight: 600;
+  margin-bottom: 6px;
 }
 
-.form-group .required {
+.formGroup .required {
   color: #dc2626;
 }
 
-.form-group input,
-.form-group textarea,
-.form-group select {
+.formGroup input,
+.formGroup textarea,
+.formGroup select {
   padding: 10px 14px;
   border: 1.5px solid #cbd5e1;
   border-radius: 8px;
@@ -227,16 +228,16 @@
   transition: all 0.25s ease;
 }
 
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
+.formGroup input:focus,
+.formGroup textarea:focus,
+.formGroup select:focus {
   outline: none;
   border-color: var(--accent-end);
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
 }
 
 /* ==================== PHOTO / FILE UPLOAD ==================== */
-.photo-upload-container {
+.photoUploadContainer {
   display: flex;
   gap: 22px;
   align-items: flex-start;
@@ -246,12 +247,12 @@
   border: 1px solid rgba(34,43,108,0.12);
 }
 
-.photo-preview-section {
+.photoPreviewSection {
   flex-shrink: 0;
 }
 
-.photo-preview,
-.photo-placeholder {
+.photoPreview,
+.photoPlaceholder {
   width: 135px;
   height: 135px;
   border-radius: 10px;
@@ -265,13 +266,13 @@
   position: relative;
 }
 
-.photo-preview img {
+.photoPreview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.photo-placeholder {
+.photoPlaceholder {
   border-style: dashed;
   color: #64748b;
   flex-direction: column;
@@ -279,7 +280,7 @@
   font-size: 0.78rem;
 }
 
-.remove-photo-btn {
+.removePhotoBtn {
   position: absolute;
   top: 6px;
   right: 6px;
@@ -296,19 +297,19 @@
   transition: transform 0.2s;
 }
 
-.remove-photo-btn:hover {
+.removePhotoBtn:hover {
   transform: scale(1.1);
 }
 
-.photo-upload-controls {
+.photoUploadControls {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.btn-select-photo,
-.btn-upload-photo {
+.btnSelectPhoto,
+.btnUploadPhoto {
   padding: 9px 20px;
   border: none;
   border-radius: 8px;
@@ -318,53 +319,53 @@
   width: fit-content;
 }
 
-.btn-select-photo {
+.btnSelectPhoto {
   background: linear-gradient(135deg, #016183, var(--primary-end));
   color: white;
 }
 
-.btn-upload-photo {
+.btnUploadPhoto {
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: white;
 }
 
-.btn-upload-photo:disabled {
+.btnUploadPhoto:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.photo-status {
+.photoStatus {
   padding: 8px 12px;
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 500;
 }
 
-.photo-status.success {
+.photoStatus.success {
   background: rgba(34,197,94,0.15);
   color: #059669;
   border: 1px solid rgba(34,197,94,0.3);
 }
 
-.photo-status.info {
+.photoStatus.info {
   background: rgba(59,130,246,0.12);
   color: #2563eb;
 }
 
-.photo-hint {
+.photoHint {
   font-size: 0.75rem;
   color: #64748b;
 }
 
 /* ==================== WORKDAYS SELECTION ==================== */
-.workdays-container {
+.workdaysContainer {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin: 12px 0;
 }
 
-.workday-box {
+.workdayBox {
   padding: 10px 18px;
   border: 1.5px solid #cbd5e1;
   border-radius: 8px;
@@ -375,14 +376,20 @@
   font-weight: 500;
 }
 
-.workday-box.selected {
+.workdayBox.selected {
   background: var(--accent-end);
   color: white;
   border-color: var(--accent-end);
 }
 
+.workdaysHint {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 8px;
+}
+
 /* ==================== FOOTER BUTTONS ==================== */
-.clinic-modal-footer {
+.clinicModalFooter {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
@@ -391,9 +398,9 @@
   background: rgba(255,255,255,0.4);
 }
 
-.btn-cancel,
-.btn-submit,
-.btn-secondary {
+.btnCancel,
+.btnSubmit,
+.btnSecondary {
   padding: 10px 22px;
   border-radius: 8px;
   font-weight: 600;
@@ -402,46 +409,46 @@
   border: none;
 }
 
-.btn-cancel,
-.btn-secondary {
+.btnCancel,
+.btnSecondary {
   background: #6b7280;
   color: white;
 }
 
-.btn-submit {
+.btnSubmit {
   background: linear-gradient(135deg, #016183, var(--primary-end));
   color: white;
 }
 
-.btn-submit:disabled,
-.btn-secondary:disabled {
+.btnSubmit:disabled,
+.btnSecondary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
 /* ==================== MESSAGES ==================== */
-.form-error,
-.form-success {
+.formError,
+.formSuccess {
   padding: 10px 14px;
   border-radius: 8px;
   margin-bottom: 16px;
   font-weight: 500;
 }
 
-.form-error {
+.formError {
   background: rgba(239,68,68,0.15);
   color: #dc2626;
   border: 1px solid rgba(239,68,68,0.3);
 }
 
-.form-success {
+.formSuccess {
   background: rgba(34,197,94,0.15);
   color: #059669;
   border: 1px solid rgba(34,197,94,0.3);
 }
 
 /* ==================== EMPLOYEE ID BADGE ==================== */
-.employee-id-badge {
+.employeeIdBadge {
   font-size: 0.85rem;
   font-weight: 600;
   color: #059669;
@@ -451,37 +458,54 @@
   margin-left: 10px;
 }
 
+/* ==================== CHECKBOX LABEL ==================== */
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.checkboxLabel input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.checkboxLabel span {
+  font-weight: 500;
+}
+
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
-  .clinic-modal {
+  .clinicModal {
     max-width: 94%;
   }
 
-  .form-grid {
+  .formGrid {
     grid-template-columns: 1fr;
   }
 
-  .photo-upload-container {
+  .photoUploadContainer {
     flex-direction: column;
     align-items: center;
   }
 
-  .clinic-modal-footer {
+  .clinicModalFooter {
     flex-direction: column;
     gap: 12px;
   }
 
-  .btn-cancel,
-  .btn-submit,
-  .btn-secondary {
+  .btnCancel,
+  .btnSubmit,
+  .btnSecondary {
     width: 100%;
   }
 
-  .step-indicator {
+  .stepIndicator {
     padding: 12px 16px;
   }
 
-  .step-number {
+  .stepNumber {
     width: 34px;
     height: 34px;
     font-size: 0.9rem;

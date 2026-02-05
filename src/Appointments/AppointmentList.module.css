@@ -366,7 +366,7 @@
 }
 
 .clinicTable td {
-  padding: 15px 17px;
+  padding: 6px 17px;
   border-bottom: 1px solid #e2e8f0;
   color: var(--text-dark);
   font-size: 0.85rem;

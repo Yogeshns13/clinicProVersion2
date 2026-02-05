@@ -1,10 +1,11 @@
 // src/components/LabWork/LabOrderList.jsx
 import React, { useState, useEffect } from 'react';
-import { FiSearch, FiCalendar, FiFilter, FiEye, FiCheckCircle, FiClock, FiAlertCircle } from 'react-icons/fi';
+import { FiSearch, FiCalendar, FiFilter, FiEye, FiCheckCircle, FiClock, FiAlertCircle, FiFileText } from 'react-icons/fi';
 import { 
   getLabTestOrderList, 
   updateLabTestOrder, 
-  createWorkItemsForOrder 
+  createWorkItemsForOrder,
+  generateLabInvoice 
 } from '../api/api-labtest.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
@@ -30,6 +31,7 @@ const LabOrderList = ({ onNavigateToWorkQueue }) => {
   const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
   const [isUpdateOrderOpen, setIsUpdateOrderOpen] = useState(false);
   const [isConfirmWorkOpen, setIsConfirmWorkOpen] = useState(false);
+  const [isMakeInvoiceOpen, setIsMakeInvoiceOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   // Status options for Lab Test Orders
@@ -135,6 +137,11 @@ const LabOrderList = ({ onNavigateToWorkQueue }) => {
     setIsConfirmWorkOpen(true);
   };
 
+  const handleMakeInvoiceClick = (order) => {
+    setSelectedOrder(order);
+    setIsMakeInvoiceOpen(true);
+  };
+
   const handleConfirmMakeWork = async () => {
     if (!selectedOrder) return;
 
@@ -153,6 +160,26 @@ const LabOrderList = ({ onNavigateToWorkQueue }) => {
     } catch (err) {
       console.error('Error creating work items:', err);
       alert(err.message || 'Failed to create work items');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerateInvoice = async (invoiceData) => {
+    try {
+      setLoading(true);
+      
+      await generateLabInvoice(invoiceData);
+      
+      setIsMakeInvoiceOpen(false);
+      setSelectedOrder(null);
+      
+      await fetchOrders();
+      
+      alert('Invoice generated successfully!');
+    } catch (err) {
+      console.error('Error generating invoice:', err);
+      alert(err.message || 'Failed to generate invoice');
     } finally {
       setLoading(false);
     }
@@ -317,15 +344,21 @@ const LabOrderList = ({ onNavigateToWorkQueue }) => {
           )}
         </div>
 
-        <div className={styles.toolbarRight}>
-          <button 
-            onClick={() => onNavigateToWorkQueue && onNavigateToWorkQueue()}
-            className={styles.workQueueBtn}
-          >
-            <FiAlertCircle size={18} />
-            Go to Work Queue
+        <div className={styles.searchWrapper}>
+        <div className={styles.searchContainer}>
+          <input
+            type="text"
+            placeholder="Search orders by patient name..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className={styles.searchInput}
+          />
+          <button onClick={handleSearch} className={styles.searchIconBtn}>
+            <FiSearch size={20} />
           </button>
         </div>
+      </div>
       </div>
 
       {/* Advanced Filters */}
@@ -365,23 +398,6 @@ const LabOrderList = ({ onNavigateToWorkQueue }) => {
           </div>
         </div>
       )}
-
-      {/* Search Bar */}
-      <div className={styles.searchWrapper}>
-        <div className={styles.searchContainer}>
-          <input
-            type="text"
-            placeholder="Search orders by patient name..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className={styles.searchInput}
-          />
-          <button onClick={handleSearch} className={styles.searchIconBtn}>
-            <FiSearch size={20} />
-          </button>
-        </div>
-      </div>
 
       {/* Orders Table */}
       <div className={styles.tableContainer}>
@@ -469,14 +485,41 @@ const LabOrderList = ({ onNavigateToWorkQueue }) => {
                       >
                         <FiEye size={16} />
                       </button>
-                      <button
-                        onClick={() => handleMakeWorkClick(order)}
-                        className={styles.makeWorkBtn}
-                        disabled={order.status === 5 || order.status === 2}
-                        title={order.status === 5 ? 'Already in progress' : order.status === 2 ? 'Already completed' : 'Create work items'}
-                      >
-                        {order.status === 5 ? 'In Progress' : 'Make Work'}
-                      </button>
+                      
+                      <div className={styles.actionDropdownWrapper}>
+                        <button className={styles.actionBtn}>
+                          Actions
+                        </button>
+                        <div className={styles.actionDropdown}>
+                          <button
+                            onClick={() => handleMakeWorkClick(order)}
+                            className={styles.dropdownItem}
+                            disabled={order.status === 5 || order.status === 2 || order.status === 3 || order.status === 6}
+                          >
+                            {order.status === 5 ? 'In Progress' : 'Make Work'}
+                          </button>
+                          
+                          {(order.status === 1 || order.status === 5) && (
+                            <button
+                              onClick={() => handleMakeInvoiceClick(order)}
+                              className={styles.dropdownItem}
+                            >
+                              <FiFileText size={14} />
+                              Make Invoice
+                            </button>
+                          )}
+                          
+                          {order.status === 4 && (
+                            <button
+                              className={`${styles.dropdownItem} ${styles.invoicedItem}`}
+                              disabled
+                            >
+                              <FiCheckCircle size={14} />
+                              Invoiced!
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -522,6 +565,17 @@ const LabOrderList = ({ onNavigateToWorkQueue }) => {
             setSelectedOrder(null);
           }}
           onConfirm={handleConfirmMakeWork}
+        />
+      )}
+
+      {isMakeInvoiceOpen && selectedOrder && (
+        <MakeInvoiceModal
+          order={selectedOrder}
+          onClose={() => {
+            setIsMakeInvoiceOpen(false);
+            setSelectedOrder(null);
+          }}
+          onSubmit={handleGenerateInvoice}
         />
       )}
     </div>
@@ -748,6 +802,105 @@ const ConfirmMakeWorkModal = ({ order, onClose, onConfirm }) => {
             Cancel
           </button>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// Make Invoice Modal Component
+const MakeInvoiceModal = ({ order, onClose, onSubmit }) => {
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const [formData, setFormData] = useState({
+    invoiceDate: getTodayDate(),
+    discount: 0
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    const clinicId = Number(localStorage.getItem('clinicID'));
+    const branchId = Number(localStorage.getItem('branchID'));
+    
+    const invoiceData = {
+      orderId: order.id,
+      clinicId: clinicId,
+      branchId: branchId,
+      invoiceDate: formData.invoiceDate,
+      discount: Number(formData.discount)
+    };
+    
+    onSubmit(invoiceData);
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h2>Generate Invoice</h2>
+          <button onClick={onClose} className={styles.closeBtn}>×</button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className={styles.modalBody}>
+            <div className={styles.confirmIcon}>
+              <FiFileText size={48} />
+            </div>
+            <p className={styles.confirmText}>
+              Generate invoice for Order #{order.id}
+            </p>
+            <div className={styles.confirmDetails}>
+              <div className={styles.confirmDetailRow}>
+                <span className={styles.confirmLabel}>Patient:</span>
+                <span className={styles.confirmValue}>{order.patientName}</span>
+              </div>
+              <div className={styles.confirmDetailRow}>
+                <span className={styles.confirmLabel}>Doctor:</span>
+                <span className={styles.confirmValue}>{order.doctorFullName}</span>
+              </div>
+            </div>
+
+            <div className={styles.invoiceFormGrid}>
+              <div className={styles.formGroup}>
+                <label>Invoice Date *</label>
+                <input
+                  type="date"
+                  value={formData.invoiceDate}
+                  onChange={(e) => setFormData({...formData, invoiceDate: e.target.value})}
+                  className={styles.formInput}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Discount</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.discount}
+                  onChange={(e) => setFormData({...formData, discount: e.target.value})}
+                  className={styles.formInput}
+                  placeholder="Enter discount amount"
+                />
+              </div>
+            </div>
+          </div>
+          <div className={styles.modalFooter}>
+            <button type="submit" className={styles.confirmBtn}>
+              <FiFileText size={18} />
+              Generate Invoice
+            </button>
+            <button type="button" onClick={onClose} className={styles.cancelBtn}>
+              Cancel
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

@@ -120,7 +120,7 @@ const ViewMedicineMaster = () => {
   // ────────────────────────────────────────────────
   // Handlers
   const handleUpdateClick = () => {
-    navigate(`/update-medicine-master/${medicine.id}`);
+    navigate(`/update-medicinemaster/${medicine.id}`);
   };
 
   const handleDelete = async () => {
@@ -131,7 +131,7 @@ const ViewMedicineMaster = () => {
     try {
       setError(null);
       await deleteMedicineMaster(medicine.id);
-      navigate('/medicine-master-list');
+      navigate('/medicinemaster-list');
     } catch (err) {
       console.error('Delete medicine failed:', err);
       setError({ message: err.message || 'Failed to delete medicine.' });
@@ -179,7 +179,7 @@ const ViewMedicineMaster = () => {
             </p>
             <div className={styles.badgeContainer}>
               <span className={`${styles.statusBadge} ${styles[getStatusClass(medicine.status)]} ${styles.large}`}>
-                {medicine.status.toUpperCase()}
+                {medicine.status}
               </span>
               {medicine.isLowStock && (
                 <span className={styles.lowStockBadge}>
@@ -270,7 +270,7 @@ const ViewMedicineMaster = () => {
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Status</span>
                 <span className={`${styles.statusBadge} ${styles[getStatusClass(medicine.status)]}`}>
-                  {medicine.status.toUpperCase()}
+                  {medicine.status}
                 </span>
               </div>
             </div>

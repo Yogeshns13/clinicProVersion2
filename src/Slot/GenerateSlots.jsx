@@ -1,6 +1,7 @@
 // src/components/GenerateSlots.jsx
 import React, { useState, useEffect } from 'react';
 import { generateSlots } from '../api/api.js';
+import styles from './GenerateSlots.module.css';  
 
 const GenerateSlots = ({ isOpen, onClose, onSuccess }) => {
   const [generationType, setGenerationType] = useState('days'); // 'days' or 'dateRange'
@@ -61,7 +62,6 @@ const GenerateSlots = ({ isOpen, onClose, onSuccess }) => {
         return;
       }
 
-      // Check if fromDate is before toDate
       if (new Date(formData.fromDate) > new Date(formData.toDate)) {
         setError('From date must be before to date');
         return;
@@ -79,7 +79,6 @@ const GenerateSlots = ({ isOpen, onClose, onSuccess }) => {
         branchId: Number(branchId),
       };
 
-      // Add either daysAhead or date range based on selection
       if (generationType === 'days') {
         payload.daysAhead = Number(formData.daysAhead);
       } else {
@@ -106,27 +105,30 @@ const GenerateSlots = ({ isOpen, onClose, onSuccess }) => {
 
   if (!isOpen) return null;
 
-  // Get today's date for min attribute
   const today = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="clinic-modal-overlay">
-      <div className="clinic-modal form-modal">
-        <div className="clinic-modal-header">
+    <div className={styles.modalOverlay}>
+      <div className={styles.modal}>
+        <div className={styles.modalHeader}>
           <h2>Generate Appointment Slots</h2>
-          <button onClick={onClose} className="clinic-modal-close" disabled={loading}>
+          <button 
+            onClick={onClose} 
+            className={styles.modalCloseBtn}
+            disabled={loading}
+          >
             ×
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="clinic-modal-body">
-            {error && <div className="form-error">{error}</div>}
-            {success && <div className="form-success">{success}</div>}
+          <div className={styles.modalBody}>
+            {error && <div className={styles.formError}>{error}</div>}
+            {success && <div className={styles.formSuccess}>{success}</div>}
 
             {/* Generation Type Selection */}
-            <div className="generation-type-selector">
-              <label className="radio-option">
+            <div className={styles.generationTypeSelector}>
+              <label className={styles.radioOption}>
                 <input
                   type="radio"
                   name="generationType"
@@ -135,10 +137,10 @@ const GenerateSlots = ({ isOpen, onClose, onSuccess }) => {
                   onChange={() => handleGenerationTypeChange('days')}
                   disabled={loading}
                 />
-                <span className="radio-label">Days Ahead</span>
+                <span className={styles.radioLabel}>Days Ahead</span>
               </label>
 
-              <label className="radio-option">
+              <label className={styles.radioOption}>
                 <input
                   type="radio"
                   name="generationType"
@@ -147,16 +149,16 @@ const GenerateSlots = ({ isOpen, onClose, onSuccess }) => {
                   onChange={() => handleGenerationTypeChange('dateRange')}
                   disabled={loading}
                 />
-                <span className="radio-label">Date Range</span>
+                <span className={styles.radioLabel}>Date Range</span>
               </label>
             </div>
 
             {/* Days Ahead Input */}
             {generationType === 'days' && (
-              <div className="form-grid">
-                <div className="form-group full-width">
+              <div className={styles.formGrid}>
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>
-                    Number of Days Ahead <span className="required">*</span>
+                    Number of Days Ahead <span className={styles.required}>*</span>
                   </label>
                   <input
                     type="number"
@@ -168,8 +170,9 @@ const GenerateSlots = ({ isOpen, onClose, onSuccess }) => {
                     required
                     disabled={loading}
                     placeholder="e.g., 30"
+                    className={styles.formInput}
                   />
-                  <small className="form-hint">
+                  <small className={styles.formHint}>
                     Slots will be generated for the next {formData.daysAhead || 0} days
                   </small>
                 </div>
@@ -178,10 +181,10 @@ const GenerateSlots = ({ isOpen, onClose, onSuccess }) => {
 
             {/* Date Range Inputs */}
             {generationType === 'dateRange' && (
-              <div className="form-grid">
-                <div className="form-group">
+              <div className={styles.formGrid}>
+                <div className={styles.formGroup}>
                   <label>
-                    From Date <span className="required">*</span>
+                    From Date <span className={styles.required}>*</span>
                   </label>
                   <input
                     type="date"
@@ -191,12 +194,13 @@ const GenerateSlots = ({ isOpen, onClose, onSuccess }) => {
                     min={today}
                     required
                     disabled={loading}
+                    className={styles.formInput}
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>
-                    To Date <span className="required">*</span>
+                    To Date <span className={styles.required}>*</span>
                   </label>
                   <input
                     type="date"
@@ -206,13 +210,14 @@ const GenerateSlots = ({ isOpen, onClose, onSuccess }) => {
                     min={formData.fromDate || today}
                     required
                     disabled={loading}
+                    className={styles.formInput}
                   />
                 </div>
               </div>
             )}
 
             {/* Info Box */}
-            <div className="generate-info-box">
+            <div className={styles.generateInfoBox}>
               <h4>Important Information</h4>
               <ul>
                 <li>Slots will be generated based on your active slot configurations</li>
@@ -223,18 +228,18 @@ const GenerateSlots = ({ isOpen, onClose, onSuccess }) => {
             </div>
           </div>
 
-          <div className="clinic-modal-footer">
-            <button 
-              type="button" 
-              onClick={onClose} 
-              className="btn-cancel"
+          <div className={styles.modalFooter}>
+            <button
+              type="button"
+              onClick={onClose}
+              className={styles.btnCancel}
               disabled={loading}
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
-              className="btn-submit"
+            <button
+              type="submit"
+              className={styles.btnSubmit}
               disabled={loading}
             >
               {loading ? 'Generating...' : 'Generate Slots'}

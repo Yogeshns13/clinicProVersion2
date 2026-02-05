@@ -190,7 +190,7 @@ const UpdateMedicineMaster = () => {
       await updateMedicineMaster(updateData);
       
       // Navigate back to medicine list
-      navigate('/medicine-master-list');
+      navigate('/medicinemaster-list');
     } catch (err) {
       console.error('handleSubmit error:', err);
       setError(err);

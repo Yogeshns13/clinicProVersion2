@@ -6,6 +6,7 @@ import {
   FiUsers,
   FiCalendar,
   FiFileText,
+  FiPackage,
   FiBarChart2,
   FiSettings,
   FiMessageCircle,
@@ -107,8 +108,23 @@ const Sidebar = () => {
       subItems: [
         { to: "/labtestmaster", label: "Lab Master"},
         { to: "/laborder-list", label: "Lab Order"},
+        { to: "/labwork-list", label: "Lab Work"},
       ],
       show: hasAccess(MENU_PERMISSIONS.lab),
+    },
+    {
+      id: "pharmacy",
+      icon: FiPackage,
+      label: "pharmacy",
+      hasDropdown: true,
+      subItems: [
+        { to: "/vendor-list", label: "Vendor"},
+        { to: "/medicinemaster-list", label: "Medicine"},
+        { to: "/medicinestock-list", label: "Medicine Stock"},
+        { to: "/purchaseorder-list", label: "purchase Order"},
+        { to: "/purchaseorderdetail-list", label: "purchase Order Detail"},
+      ],
+      show: hasAccess(MENU_PERMISSIONS.pharmacy),
     },
     {
       id: "invoice",
@@ -121,24 +137,6 @@ const Sidebar = () => {
       ],
       show: hasAccess(MENU_PERMISSIONS.invoice),
     },
-    {
-      id: "pharmacy",
-      icon: FiPlusSquare,
-      label: "pharmacy",
-      hasDropdown: true,
-      subItems: [
-        { to: "/vendor-list", label: "Vendor"},
-        { to: "/medicinemaster-list", label: "Medicine"},
-        { to: "/medicinestock-list", label: "Medicine Stock"},
-        { to: "/purchaseorder-list", label: "purchase Order"},
-        { to: "/purchaseorderdetail-list", label: "purchase Order Detail"},
-      ],
-      show: hasAccess(MENU_PERMISSIONS.pharmacy),
-    },
-    { to: "/prescriptions", icon: FiFileText, label: "Prescriptions", show: hasAccess(MENU_PERMISSIONS.prescriptions) },
-    { to: "/reports", icon: FiBarChart2, label: "Reports", show: hasAccess(MENU_PERMISSIONS.reports) },
-    { to: "/attendance", icon: FiBarChart2, label: "Attendance", show: hasAccess(MENU_PERMISSIONS.attendance) },
-    { to: "/settings", icon: FiSettings, label: "Settings", show: hasAccess(MENU_PERMISSIONS.settings) },
   ].filter(item => item.show !== false);
 
   const toggleDropdown = (id) => {

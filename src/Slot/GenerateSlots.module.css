@@ -1,0 +1,284 @@
+/* GenerateSlots.module.css */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 520px;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.modalHeader h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.modalCloseBtn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.modalCloseBtn:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+.modalBody {
+  padding: 24px;
+}
+
+.formError {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 10px;
+  color: #ef4444;
+  font-size: 0.9rem;
+}
+
+.formSuccess {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 10px;
+  color: #16a34a;
+  font-size: 0.9rem;
+}
+
+.generationTypeSelector {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: rgba(34, 43, 108, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(34, 43, 108, 0.08);
+}
+
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid rgba(34, 43, 108, 0.15);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.radioOption:hover {
+  border-color: var(--accent-end, #0891b2);
+  background: rgba(14, 165, 233, 0.04);
+}
+
+.radioOption input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-end, #0891b2);
+}
+
+.radioLabel {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.formGrid {
+  display: grid;
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.formGroup label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.formInput {
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: var(--accent-end, #0891b2);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+}
+
+.formInput:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.formHint {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+.generateInfoBox {
+  margin-top: 24px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(14, 165, 233, 0.04));
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  border-radius: 12px;
+}
+
+.generateInfoBox h4 {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--primary-start, #1e40af);
+}
+
+.generateInfoBox ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style: disc;
+}
+
+.generateInfoBox li {
+  margin: 8px 0;
+  font-size: 0.86rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.modalFooter {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 20px 24px;
+  border-top: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.btnCancel,
+.btnSubmit {
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.btnCancel {
+  background: rgba(100, 116, 139, 0.1);
+  color: #475569;
+  border: 1px solid rgba(100, 116, 139, 0.25);
+}
+
+.btnCancel:hover:not(:disabled) {
+  background: rgba(100, 116, 139, 0.2);
+}
+
+.btnSubmit {
+  background: linear-gradient(135deg, var(--accent-start, #0ea5e9), var(--accent-end, #0891b2));
+  color: white;
+  border: none;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.25);
+}
+
+.btnSubmit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.35);
+}
+
+.btnCancel:disabled,
+.btnSubmit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ────────────────────────────────────────────────
+   Responsive adjustments
+───────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .modal {
+    width: 94%;
+  }
+
+  .modalHeader {
+    padding: 16px 20px;
+  }
+
+  .modalBody {
+    padding: 20px;
+  }
+
+  .modalFooter {
+    padding: 16px 20px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btnCancel,
+  .btnSubmit {
+    width: 100%;
+  }
+
+  .generationTypeSelector {
+    flex-direction: column;
+    gap: 12px;
+  }
+}

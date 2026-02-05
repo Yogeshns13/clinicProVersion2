@@ -1,6 +1,7 @@
 // src/components/AddSlotConfig.jsx
 import React, { useState, useEffect } from 'react';
 import { addSlotConfig } from '../api/api.js';
+import styles from './AddSlotConfig.module.css';
 
 const DURATION_OPTIONS = [
   { id: 1, label: 'Daily', createDays: 30 },
@@ -51,36 +52,18 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
 
   // Update available shifts when doctor is selected
   useEffect(() => {
-    console.log('Doctor ID Selected:', formData.doctorId);
-    console.log('Doctor Shifts:', doctorShifts);
-    console.log('All Shifts:', shifts);
-    
     if (formData.doctorId && doctorShifts && shifts) {
-      // Find all shift mappings for this doctor
       const doctorShiftMappings = doctorShifts.filter(
-        ds => {
-          console.log('Comparing:', ds.employeeId, 'with', Number(formData.doctorId));
-          return ds.employeeId === Number(formData.doctorId);
-        }
+        ds => ds.employeeId === Number(formData.doctorId)
       );
-      
-      console.log('Doctor Shift Mappings:', doctorShiftMappings);
-      
-      // Get the shift IDs for this doctor
+
       const doctorShiftIds = doctorShiftMappings.map(ds => ds.shiftId);
-      console.log('Doctor Shift IDs:', doctorShiftIds);
-      
-      // Filter shifts to only show the ones assigned to this doctor
-      const filtered = shifts.filter(shift => {
-        console.log('Checking shift:', shift.id, 'in', doctorShiftIds);
-        return doctorShiftIds.includes(shift.id);
-      });
-      
-      console.log('Filtered Shifts:', filtered);
-      
+
+      const filtered = shifts.filter(shift => doctorShiftIds.includes(shift.id));
+
       setAvailableShifts(filtered);
-      
-      // Reset shift selection if current selection is not in available shifts
+
+      // Reset shift if not valid anymore
       if (formData.shiftId && !doctorShiftIds.includes(Number(formData.shiftId))) {
         setFormData(prev => ({ ...prev, shiftId: '' }));
       }
@@ -107,7 +90,6 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
     setError('');
     setSuccess('');
 
-    // Validation
     if (!formData.doctorId) {
       setError('Please select a doctor');
       return;
@@ -123,7 +105,6 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
       return;
     }
 
-    // For Specific Day (duration=3), slot date is required
     if (Number(formData.duration) === 3 && !formData.slotDate) {
       setError('Please select a specific date');
       return;
@@ -173,25 +154,29 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
   const showDatePicker = Number(formData.duration) === 3;
 
   return (
-    <div className="clinic-modal-overlay">
-      <div className="clinic-modal form-modal">
-        <div className="clinic-modal-header">
+    <div className={styles.clinicModalOverlay}>
+      <div className={styles.clinicModal}>
+        <div className={styles.clinicModalHeader}>
           <h2>Add Slot Configuration</h2>
-          <button onClick={onClose} className="clinic-modal-close" disabled={loading}>
+          <button 
+            onClick={onClose} 
+            className={styles.clinicModalClose}
+            disabled={loading}
+          >
             ×
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="clinic-modal-body">
-            {error && <div className="form-error">{error}</div>}
-            {success && <div className="form-success">{success}</div>}
+          <div className={styles.clinicModalBody}>
+            {error && <div className={styles.formError}>{error}</div>}
+            {success && <div className={styles.formSuccess}>{success}</div>}
 
-            <div className="form-grid">
+            <div className={styles.formGrid}>
               {/* Doctor Selection */}
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Doctor <span className="required">*</span>
+                  Doctor <span className={styles.required}>*</span>
                 </label>
                 <select
                   name="doctorId"
@@ -210,9 +195,9 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
               </div>
 
               {/* Shift Selection */}
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Shift <span className="required">*</span>
+                  Shift <span className={styles.required}>*</span>
                 </label>
                 <select
                   name="shiftId"
@@ -237,9 +222,9 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
               </div>
 
               {/* Duration Type */}
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Duration Type <span className="required">*</span>
+                  Duration Type <span className={styles.required}>*</span>
                 </label>
                 <select
                   name="duration"
@@ -258,9 +243,9 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
               </div>
 
               {/* Slot Interval */}
-              <div className="form-group">
+              <div className={styles.formGroup}>
                 <label>
-                  Slot Interval (minutes) <span className="required">*</span>
+                  Slot Interval (minutes) <span className={styles.required}>*</span>
                 </label>
                 <input
                   type="number"
@@ -276,11 +261,11 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
                 />
               </div>
 
-              {/* Specific Date - Only shown when duration is Specific Day */}
+              {/* Specific Date */}
               {showDatePicker && (
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label>
-                    Specific Date <span className="required">*</span>
+                    Specific Date <span className={styles.required}>*</span>
                   </label>
                   <input
                     type="date"
@@ -294,21 +279,21 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
                 </div>
               )}
 
-              {/* Create Slot Days - Read-only display */}
-              <div className="form-group">
+              {/* Read-only days display */}
+              <div className={styles.formGroup}>
                 <label>Create Slots For (Days)</label>
                 <input
                   type="number"
                   value={createSlotDays}
                   disabled
                   readOnly
-                  className="readonly-input"
+                  className={styles.readonlyInput}
                 />
               </div>
             </div>
 
-            {/* Info Box */}
-            <div className="config-info-box">
+            {/* Summary box */}
+            <div className={styles.configInfoBox}>
               <h4>Configuration Summary</h4>
               <p>
                 <strong>Duration Type:</strong>{' '}
@@ -327,18 +312,18 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
             </div>
           </div>
 
-          <div className="clinic-modal-footer">
+          <div className={styles.clinicModalFooter}>
             <button 
               type="button" 
               onClick={onClose} 
-              className="btn-cancel"
+              className={styles.btnCancel}
               disabled={loading}
             >
               Cancel
             </button>
             <button 
               type="submit" 
-              className="btn-submit"
+              className={styles.btnSubmit}
               disabled={loading}
             >
               {loading ? 'Adding...' : 'Add Configuration'}

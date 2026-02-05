@@ -463,15 +463,22 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
             </button>
           )}
         </div>
-
-        <div className={styles.toolbarRight}>
-          <button 
-            onClick={() => onNavigateToOrders && onNavigateToOrders()}
-            className={styles.backBtn}
-          >
-            ← Back to Orders
+        <div className={styles.searchWrapper}>
+        <div className={styles.searchContainer}>
+          <input
+            type="text"
+            placeholder="Search by patient name, test name..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className={styles.searchInput}
+          />
+          <button onClick={handleSearch} className={styles.searchIconBtn}>
+            <FiSearch size={20} />
           </button>
         </div>
+      </div>
+        
       </div>
 
       {/* Advanced Filters */}
@@ -505,23 +512,6 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
           </div>
         </div>
       )}
-
-      {/* Search Bar */}
-      <div className={styles.searchWrapper}>
-        <div className={styles.searchContainer}>
-          <input
-            type="text"
-            placeholder="Search by patient name, test name..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className={styles.searchInput}
-          />
-          <button onClick={handleSearch} className={styles.searchIconBtn}>
-            <FiSearch size={20} />
-          </button>
-        </div>
-      </div>
 
       {/* Grouped Work Items */}
       <div className={styles.workQueueContainer}>

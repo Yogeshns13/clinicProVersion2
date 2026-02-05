@@ -10,7 +10,8 @@ import {
   FiAlertCircle,
   FiCheckCircle,
   FiEdit,
-  FiEye
+  FiEye,
+  FiLayers
 } from 'react-icons/fi';
 import { getMedicineMasterList } from '../api/api-pharmacy.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
@@ -183,6 +184,17 @@ const MedicineMasterList = () => {
     navigate(`/update-medicinemaster/${medicine.id}`);
   };
 
+  // Navigate to Stock page for specific medicine
+  const handleViewStock = (medicine) => {
+    navigate(`/medicine-stock/${medicine.id}`, { 
+      state: { 
+        medicineName: medicine.name,
+        genericName: medicine.genericName,
+        manufacturer: medicine.manufacturer
+      } 
+    });
+  };
+
   const closeModals = () => {
     setIsAddFormOpen(false);
   };
@@ -274,7 +286,7 @@ const MedicineMasterList = () => {
             </div>
           </div>
           <p className={styles.statCardValue}>{statistics.totalMedicines}</p>
-          <p className={styles.statCardLabel}>In inventory</p>
+          
         </div>
 
         <div className={styles.statCard}>
@@ -285,7 +297,7 @@ const MedicineMasterList = () => {
             </div>
           </div>
           <p className={styles.statCardValue}>{statistics.activeCount}</p>
-          <p className={styles.statCardLabel}>Currently active</p>
+         
         </div>
 
         <div className={styles.statCard}>
@@ -296,7 +308,7 @@ const MedicineMasterList = () => {
             </div>
           </div>
           <p className={styles.statCardValue}>{statistics.lowStockCount}</p>
-          <p className={styles.statCardLabel}>Needs reorder</p>
+          
         </div>
 
         <div className={styles.statCard}>
@@ -307,7 +319,7 @@ const MedicineMasterList = () => {
             </div>
           </div>
           <p className={styles.statCardValue}>{formatCurrency(statistics.totalValue)}</p>
-          <p className={styles.statCardLabel}>Inventory worth</p>
+          
         </div>
       </div>
 
@@ -330,6 +342,21 @@ const MedicineMasterList = () => {
             </button>
           )}
         </div>
+       
+        <div className={styles.searchContainer}>
+          <input
+            type="text"
+            placeholder="Search by name, generic name, manufacturer, type, HSN, barcode..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className={styles.searchInput}
+          />
+          <button onClick={handleSearch} className={styles.searchBtn}>
+            <FiSearch size={20} />
+          </button>
+        </div>
+    
 
         <div className={styles.toolbarRight}>
           <button onClick={exportToCSV} className={styles.exportBtn}>
@@ -460,22 +487,6 @@ const MedicineMasterList = () => {
         </div>
       )}
 
-      {/* Quick Search Bar */}
-      <div className={styles.searchWrapper}>
-        <div className={styles.searchContainer}>
-          <input
-            type="text"
-            placeholder="Search by name, generic name, manufacturer, type, HSN, barcode..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className={styles.searchInput}
-          />
-          <button onClick={handleSearch} className={styles.searchBtn}>
-            <FiSearch size={20} />
-          </button>
-        </div>
-      </div>
 
       {/* Table */}
       <div className={styles.tableContainer}>
@@ -487,7 +498,6 @@ const MedicineMasterList = () => {
               <th>Manufacturer</th>
               <th>Pricing</th>
               <th>Stock</th>
-              <th>Tax</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -511,7 +521,7 @@ const MedicineMasterList = () => {
                         <div className={styles.name}>{medicine.name}</div>
                         <div className={styles.type}>
                           {medicine.genericName && `${medicine.genericName}`}
-                          {medicine.hsnCode && ` • HSN: ${medicine.hsnCode}`}
+                         
                         </div>
                       </div>
                     </div>
@@ -529,9 +539,9 @@ const MedicineMasterList = () => {
                     <div className={styles.pricingCell}>
                       <span className={styles.priceBadge}>
                         MRP: {formatCurrency(medicine.mrp)}
-                      </span>
-                      <span className={styles.priceBadge}>
+                        <span>  |  </span>
                         Sell: {formatCurrency(medicine.sellPrice)}
+
                       </span>
                     </div>
                   </td>
@@ -552,16 +562,7 @@ const MedicineMasterList = () => {
                       )}
                     </div>
                   </td>
-                  <td>
-                    <div className={styles.taxCell}>
-                      <span className={styles.taxBadge}>
-                        CGST: {medicine.cgstPercentage}%
-                      </span>
-                      <span className={styles.taxBadge}>
-                        SGST: {medicine.sgstPercentage}%
-                      </span>
-                    </div>
-                  </td>
+                  
                   <td>
                     <span className={`${styles.statusBadge} ${
                       medicine.status === 'active' ? styles.statusActive : styles.statusInactive
@@ -571,6 +572,13 @@ const MedicineMasterList = () => {
                   </td>
                   <td>
                     <div className={styles.actionsCell}>
+                      <button
+                        onClick={() => handleViewStock(medicine)}
+                        className={styles.stockBtn}
+                        title="View Stock"
+                      >
+                        <FiLayers size={16} />
+                      </button>
                       <button
                         onClick={() => handleViewDetails(medicine)}
                         className={styles.detailsBtn}

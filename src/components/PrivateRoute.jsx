@@ -24,10 +24,6 @@ const ROUTE_PERMISSIONS = {
   "/add-patient": ["admin", "doctor", "receptionist"],
   "/update-patient/:id": ["admin", "doctor", "receptionist"],
   "/appointments": ["admin", "doctor", "receptionist"],
-  "/prescriptions": ["admin", "doctor"],
-  "/reports": ["admin", "doctor"],
-  "/attendance": ["admin","doctor"],
-  "/settings": ["admin"],
   "/add-slotconfig": ["admin", "doctor", "receptionist"],
   "/generate-slots": ["admin", "doctor", "receptionist"],
   "/slotconfig-list": ["admin", "doctor", "receptionist"],
@@ -65,10 +61,12 @@ const ROUTE_PERMISSIONS = {
   "/view-prescription/:id": ["admin", "doctor", "receptionist"],
   "/view-laborder/:id": ["admin", "doctor", "receptionist"],
   "/labtestmaster": ["admin", "doctor", "receptionist"],
+  "/labwork-list": ["admin", "doctor", "receptionist"],
   "/update-labmaster/:id": ["admin", "doctor", "receptionist"],
   "/update-labpackage/:id": ["admin", "doctor", "receptionist"],
   "/laborder-list": ["admin", "doctor", "receptionist"],
   "/medicinestock-list": ["admin", "doctor", "receptionist"],
+  "/medicine-stock/:id": ["admin", "doctor", "receptionist"],
   "/update-medicinestock/:id": ["admin", "doctor", "receptionist"],
   
 };

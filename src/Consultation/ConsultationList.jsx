@@ -383,13 +383,6 @@ const ConsultationList = () => {
             </button>
           )}
         </div>
-
-        <div className={styles.toolbarRight}>
-          <button onClick={exportToCSV} className={styles.exportBtn}>
-            <FiDownload size={18} />
-            Export CSV
-          </button>
-        </div>
       </div>
 
       {/* Advanced Filters - Patient Visits */}

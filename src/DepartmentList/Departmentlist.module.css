@@ -548,7 +548,7 @@
   display: block;
   margin-bottom: 4px;
   color: var(--primary-start);
-  font-size: 0.5rem;
+  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.17px;
 }
@@ -701,7 +701,7 @@
 
 .clinicSubtitle {
   margin: 3px 0 0;
-  color: var(--text-light);
+  color: var(--primary-end);
   font-size: 0.6rem;
   font-weight: 500;
 }

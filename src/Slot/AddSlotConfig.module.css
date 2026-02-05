@@ -1,0 +1,216 @@
+/* AddSlotConfig.module.css */
+
+.clinicModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.clinicModal {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 580px;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.clinicModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.clinicModalHeader h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.clinicModalClose {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clinicModalClose:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  transform: rotate(90deg);
+}
+
+.clinicModalBody {
+  padding: 24px;
+}
+
+.formError {
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 10px;
+  color: #dc2626;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+.formSuccess {
+  padding: 12px 16px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 10px;
+  color: #15803d;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 24px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroup label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.formGroup select,
+.formGroup input {
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.94rem;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.formGroup select:focus,
+.formGroup input:focus {
+  outline: none;
+  border-color: var(--accent-end, #0ea5e9);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+}
+
+.formGroup select:disabled,
+.formGroup input:disabled {
+  background: #f1f5f9;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.readonlyInput {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  font-weight: 500;
+  cursor: default;
+}
+
+.configInfoBox {
+  margin-top: 28px;
+  padding: 18px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(48, 178, 181, 0.04));
+  border-radius: 12px;
+  border: 1px solid rgba(34, 43, 108, 0.08);
+}
+
+.configInfoBox h4 {
+  margin: 0 0 14px 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--primary-start, #1e40af);
+}
+
+.configInfoBox p {
+  margin: 8px 0;
+  font-size: 0.88rem;
+  color: #475569;
+}
+
+.clinicModalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid rgba(34, 43, 108, 0.08);
+}
+
+.btnCancel,
+.btnSubmit {
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 0.94rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+}
+
+.btnCancel {
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+}
+
+.btnCancel:hover {
+  background: rgba(100, 116, 139, 0.2);
+}
+
+.btnSubmit {
+  background: linear-gradient(135deg, var(--accent-start, #0284c7), var(--accent-end, #0ea5e9));
+  color: white;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.25);
+}
+
+.btnSubmit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.35);
+}
+
+.btnSubmit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .clinicModal {
+    width: 94%;
+  }
+}
