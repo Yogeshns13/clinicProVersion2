@@ -1,7 +1,7 @@
 // src/components/PatientVisitList.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiPlus, FiCalendar, FiFilter, FiCheckCircle } from 'react-icons/fi';
+import { FiSearch, FiPlus, FiCalendar, FiFilter, FiCheckCircle, FiX } from 'react-icons/fi';
 import { getPatientVisitList, updatePatientVisit } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
@@ -30,10 +30,17 @@ const PatientVisitList = () => {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState(null);
   
-  // Confirmation Modal States
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  // Update Modal States
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [visitToUpdate, setVisitToUpdate] = useState(null);
   const [updating, setUpdating] = useState(false);
+  const [formData, setFormData] = useState({
+    symptoms: '',
+    bpSystolic: '',
+    bpDiastolic: '',
+    temperature: '',
+    weight: ''
+  });
 
   // Statistics
   const [statistics, setStatistics] = useState({
@@ -208,18 +215,42 @@ const PatientVisitList = () => {
     navigate(`/update-patientvisit/${visitId}`);
   };
 
-  // Ready to Consult handlers
-  const handleReadyToConsult = (visit) => {
+  // Initialize Visit handlers
+  const handleInitializeVisit = (visit) => {
     setVisitToUpdate(visit);
-    setShowConfirmModal(true);
+    // Pre-fill existing vitals if available
+    setFormData({
+      symptoms: visit.symptoms || '',
+      bpSystolic: visit.bpSystolic || '',
+      bpDiastolic: visit.bpDiastolic || '',
+      temperature: visit.temperature || '',
+      weight: visit.weight || ''
+    });
+    setShowUpdateModal(true);
   };
 
-  const closeConfirmModal = () => {
-    setShowConfirmModal(false);
+  const closeUpdateModal = () => {
+    setShowUpdateModal(false);
     setVisitToUpdate(null);
+    setFormData({
+      symptoms: '',
+      bpSystolic: '',
+      bpDiastolic: '',
+      temperature: '',
+      weight: ''
+    });
   };
 
-  const confirmReadyToConsult = async () => {
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault();
     if (!visitToUpdate) return;
 
     try {
@@ -240,28 +271,28 @@ const PatientVisitList = () => {
         visitDate: formattedDate,
         visitTime: visitToUpdate.visitTime,
         reason: visitToUpdate.reason || '',
-        symptoms: visitToUpdate.symptoms || '',
-        bpSystolic: visitToUpdate.bpSystolic || 0,
-        bpDiastolic: visitToUpdate.bpDiastolic || 0,
-        temperature: visitToUpdate.temperature || 0,
-        weight: visitToUpdate.weight || 0,
-        status: 1 
+        symptoms: formData.symptoms.trim(),
+        bpSystolic: Number(formData.bpSystolic) || 0,
+        bpDiastolic: Number(formData.bpDiastolic) || 0,
+        temperature: Number(formData.temperature) || 0,
+        weight: Number(formData.weight) || 0,
+        status: 1  // Set status to 1 (Ready to Consult)
       };
 
-      console.log('Updating visit status to Ready to Consult:', visitData);
+      console.log('Updating visit with vitals data:', visitData);
 
       await updatePatientVisit(visitData);
 
       // Close modal and refresh list
-      closeConfirmModal();
+      closeUpdateModal();
       await fetchVisits();
       
       // Show success message (optional)
-      console.log('Visit status updated successfully');
+      console.log('Visit updated successfully - Status changed to Ready to Consult');
     } catch (err) {
-      console.error('Failed to update visit status:', err);
+      console.error('Failed to update visit:', err);
       setError({
-        message: err.message || 'Failed to update visit status'
+        message: err.message || 'Failed to update visit'
       });
     } finally {
       setUpdating(false);
@@ -408,7 +439,6 @@ const PatientVisitList = () => {
               <th>Visit Date & Time</th>
               <th>Reason</th>
               <th>Vitals</th>
-              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -477,24 +507,21 @@ const PatientVisitList = () => {
                     </div>
                   </td>
                   <td>
-                    {getStatusBadge(visit.status)}
-                  </td>
-                  <td>
                     <div className="visit-actions-cell">
                       {visit.status === 0 ? (
                         <button 
-                          onClick={() => handleReadyToConsult(visit)} 
-                          className="visit-ready-btn"
-                          title="Mark as Ready to Consult"
+                          onClick={() => handleInitializeVisit(visit)} 
+                          className="visit-initialize-btn"
+                          title="Initialize Visit"
                         >
                           <FiCheckCircle size={16} />
-                          Ready to Consult
+                          Initialized
                         </button>
                       ) : (
                         <button 
                           className="visit-ready-btn disabled"
                           disabled
-                          title="Already marked as Ready to Consult"
+                          title="Visit is Ready to Consult"
                         >
                           <FiCheckCircle size={16} />
                           Ready to Consult
@@ -530,40 +557,166 @@ const PatientVisitList = () => {
         onEdit={handleEditFromModal}
       />
 
-      {/* Confirmation Modal */}
-      {showConfirmModal && (
-        <div className="confirm-overlay">
-          <div className="confirm-modal">
-            <div className="confirm-header">
-              <FiCheckCircle size={24} className="confirm-icon" />
-              <h3>Confirm Status Update</h3>
+      {/* Update Visit Modal */}
+      {showUpdateModal && visitToUpdate && (
+        <div className="update-overlay">
+          <div className="update-modal">
+            <div className="update-header">
+              <div className="update-header-content">
+                <FiCheckCircle size={24} className="update-icon" />
+                <h3>Initialize Visit - Add Vitals</h3>
+              </div>
+              <button 
+                onClick={closeUpdateModal} 
+                className="update-close-btn"
+                disabled={updating}
+              >
+                <FiX size={24} />
+              </button>
             </div>
-            <div className="confirm-body">
-              <p>Are you sure you want to mark this visit as <strong>Ready to Consult</strong>?</p>
-              {visitToUpdate && (
-                <div className="confirm-details">
-                  <p><strong>Patient:</strong> {visitToUpdate.patientName}</p>
-                  <p><strong>Doctor:</strong> {visitToUpdate.doctorFullName}</p>
-                  <p><strong>Date:</strong> {formatDate(visitToUpdate.visitDate)} at {formatTime(visitToUpdate.visitTime)}</p>
+
+            <form onSubmit={handleUpdateSubmit}>
+              <div className="update-body">
+                {/* Visit Info Section */}
+                <div className="update-info-section">
+                  <h4>Visit Information</h4>
+                  <div className="update-info-grid">
+                    <div className="info-item">
+                      <label>Patient:</label>
+                      <span>{visitToUpdate.patientName}</span>
+                    </div>
+                    <div className="info-item">
+                      <label>Doctor:</label>
+                      <span>{visitToUpdate.doctorFullName}</span>
+                    </div>
+                    <div className="info-item">
+                      <label>Date:</label>
+                      <span>{formatDate(visitToUpdate.visitDate)}</span>
+                    </div>
+                    <div className="info-item">
+                      <label>Time:</label>
+                      <span>{formatTime(visitToUpdate.visitTime)}</span>
+                    </div>
+                    {visitToUpdate.reason && (
+                      <div className="info-item full-width">
+                        <label>Reason:</label>
+                        <span>{visitToUpdate.reason}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-            <div className="confirm-footer">
-              <button 
-                onClick={closeConfirmModal} 
-                className="confirm-btn-cancel"
-                disabled={updating}
-              >
-                No, Cancel
-              </button>
-              <button 
-                onClick={confirmReadyToConsult} 
-                className="confirm-btn-yes"
-                disabled={updating}
-              >
-                {updating ? 'Updating...' : 'Yes, Confirm'}
-              </button>
-            </div>
+
+                {/* Vitals Input Section */}
+                <div className="update-form-section">
+                  <h4>Patient Vitals</h4>
+                  
+                  <div className="form-group">
+                    <label htmlFor="symptoms">Symptoms</label>
+                    <textarea
+                      id="symptoms"
+                      name="symptoms"
+                      value={formData.symptoms}
+                      onChange={handleFormChange}
+                      placeholder="Enter patient symptoms..."
+                      rows="3"
+                      className="form-textarea"
+                    />
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="bpSystolic">
+                        BP Systolic <span className="unit-label">(mmHg)</span>
+                      </label>
+                      <input
+                        type="number"
+                        id="bpSystolic"
+                        name="bpSystolic"
+                        value={formData.bpSystolic}
+                        onChange={handleFormChange}
+                        placeholder="120"
+                        min="0"
+                        max="300"
+                        className="form-input"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="bpDiastolic">
+                        BP Diastolic <span className="unit-label">(mmHg)</span>
+                      </label>
+                      <input
+                        type="number"
+                        id="bpDiastolic"
+                        name="bpDiastolic"
+                        value={formData.bpDiastolic}
+                        onChange={handleFormChange}
+                        placeholder="80"
+                        min="0"
+                        max="200"
+                        className="form-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="temperature">
+                        Temperature <span className="unit-label">(°F)</span>
+                      </label>
+                      <input
+                        type="number"
+                        id="temperature"
+                        name="temperature"
+                        value={formData.temperature}
+                        onChange={handleFormChange}
+                        placeholder="98.6"
+                        min="0"
+                        max="120"
+                        step="0.1"
+                        className="form-input"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="weight">
+                        Weight <span className="unit-label">(kg)</span>
+                      </label>
+                      <input
+                        type="number"
+                        id="weight"
+                        name="weight"
+                        value={formData.weight}
+                        onChange={handleFormChange}
+                        placeholder="70"
+                        min="0"
+                        max="500"
+                        step="0.1"
+                        className="form-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="update-footer">
+                <button 
+                  type="button"
+                  onClick={closeUpdateModal} 
+                  className="update-btn-cancel"
+                  disabled={updating}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="update-btn-submit"
+                  disabled={updating}
+                >
+                  {updating ? 'Updating...' : 'Submit & Mark Ready'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

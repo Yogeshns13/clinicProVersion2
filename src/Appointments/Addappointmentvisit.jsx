@@ -81,10 +81,10 @@ const AddAppointmentVisit = ({ isOpen, onClose, onSuccess, appointment }) => {
         VisitTime: appointment.appointmentTime,
         reason: formData.reason.trim(),
         symptoms: formData.symptoms.trim(),
-        bpSystolic: formData.bpSystolic ? parseFloat(formData.bpSystolic) : 0,
-        bpDiastolic: formData.bpDiastolic ? parseFloat(formData.bpDiastolic) : 0,
-        temperature: formData.temperature ? parseFloat(formData.temperature) : 0,
-        weight: formData.weight ? parseFloat(formData.weight) : 0
+        bpSystolic: formData.bpSystolic ,
+        bpDiastolic: formData.bpDiastolic,
+        temperature: formData.temperature,
+        weight: formData.weight 
       };
 
       const result = await addPatientVisit(visitData);
@@ -193,91 +193,7 @@ const AddAppointmentVisit = ({ isOpen, onClose, onSuccess, appointment }) => {
                 required
               />
             </div>
-
-            {/* Symptoms */}
-            <div className={styles.addVisitFormGroup}>
-              <label className={styles.addVisitLabel}>
-                <FiActivity size={16} />
-                Symptoms
-              </label>
-              <textarea
-                name="symptoms"
-                value={formData.symptoms}
-                onChange={handleInputChange}
-                placeholder="Enter symptoms (optional)"
-                className={styles.addVisitTextarea}
-                rows="3"
-              />
-            </div>
-
-            {/* Vitals Section */}
-            <div className={styles.addVisitVitalsSection}>
-              <h3>
-                <FiThermometer size={18} />
-                Vital Signs (Optional)
-              </h3>
-
-              <div className={styles.addVisitVitalsGrid}>
-                {/* Blood Pressure */}
-                <div className={styles.addVisitFormGroup}>
-                  <label className={styles.addVisitLabel}>BP Systolic (mmHg)</label>
-                  <input
-                    type="number"
-                    name="bpSystolic"
-                    value={formData.bpSystolic}
-                    onChange={handleInputChange}
-                    placeholder="e.g., 120"
-                    className={styles.addVisitInput}
-                    min="0"
-                    step="1"
-                  />
-                </div>
-
-                <div className={styles.addVisitFormGroup}>
-                  <label className={styles.addVisitLabel}>BP Diastolic (mmHg)</label>
-                  <input
-                    type="number"
-                    name="bpDiastolic"
-                    value={formData.bpDiastolic}
-                    onChange={handleInputChange}
-                    placeholder="e.g., 80"
-                    className={styles.addVisitInput}
-                    min="0"
-                    step="1"
-                  />
-                </div>
-
-                {/* Temperature */}
-                <div className={styles.addVisitFormGroup}>
-                  <label className={styles.addVisitLabel}>Temperature (°F)</label>
-                  <input
-                    type="number"
-                    name="temperature"
-                    value={formData.temperature}
-                    onChange={handleInputChange}
-                    placeholder="e.g., 98.6"
-                    className={styles.addVisitInput}
-                    min="0"
-                    step="0.1"
-                  />
-                </div>
-
-                {/* Weight */}
-                <div className={styles.addVisitFormGroup}>
-                  <label className={styles.addVisitLabel}>Weight (kg)</label>
-                  <input
-                    type="number"
-                    name="weight"
-                    value={formData.weight}
-                    onChange={handleInputChange}
-                    placeholder="e.g., 70"
-                    className={styles.addVisitInput}
-                    min="0"
-                    step="0.1"
-                  />
-                </div>
-              </div>
-            </div>
+            
           </form>
         </div>
 

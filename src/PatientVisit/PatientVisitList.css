@@ -472,6 +472,7 @@
   flex-wrap: wrap;
 }
 
+.visit-initialize-btn,
 .visit-ready-btn,
 .visit-details-btn {
   display: flex;
@@ -485,6 +486,17 @@
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
+}
+
+.visit-initialize-btn {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(48, 178, 181, 0.3);
+}
+
+.visit-initialize-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
 }
 
 .visit-ready-btn {
@@ -521,8 +533,8 @@
   box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
 }
 
-/* ==================== CONFIRMATION MODAL ==================== */
-.confirm-overlay {
+/* ==================== UPDATE MODAL ==================== */
+.update-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -536,28 +548,40 @@
   z-index: 1000;
   padding: 20px;
   animation: fadeIn 0.3s ease;
+  overflow-y: auto;
 }
 
-.confirm-modal {
+.update-modal {
   background: white;
   border-radius: 20px;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
-  max-width: 500px;
+  max-width: 700px;
   width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
   animation: slideUp 0.4s ease;
 }
 
-.confirm-header {
+.update-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 30px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: white;
+  border-radius: 20px 20px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.update-header-content {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 24px 30px;
-  background: linear-gradient(135deg, #15803d, var(--success-green));
-  color: white;
-  border-radius: 20px 20px 0 0;
 }
 
-.confirm-icon {
+.update-icon {
   width: 42px;
   height: 42px;
   background: rgba(255, 255, 255, 0.2);
@@ -568,42 +592,154 @@
   padding: 8px;
 }
 
-.confirm-header h3 {
+.update-header h3 {
   font-size: 1.3rem;
   font-weight: 700;
   margin: 0;
 }
 
-.confirm-body {
+.update-close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.update-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.update-close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.update-body {
   padding: 30px;
 }
 
-.confirm-body p {
-  font-size: 1rem;
-  color: #475569;
-  line-height: 1.6;
-  margin: 0 0 20px 0;
-}
-
-.confirm-details {
+/* Visit Info Section */
+.update-info-section {
   background: #f8fafc;
-  padding: 16px;
+  padding: 20px;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
+  margin-bottom: 24px;
 }
 
-.confirm-details p {
-  font-size: 0.9rem;
-  color: #1e293b;
-  margin: 8px 0;
-}
-
-.confirm-details strong {
-  color: var(--primary-start);
+.update-info-section h4 {
+  font-size: 1rem;
   font-weight: 700;
+  color: var(--primary-start);
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.confirm-footer {
+.update-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.info-item label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item span {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* Form Section */
+.update-form-section {
+  margin-top: 24px;
+}
+
+.update-form-section h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-start);
+  margin-bottom: 8px;
+}
+
+.unit-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  background: white;
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  color: var(--text-dark);
+  font-size: 0.94rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.update-footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -612,10 +748,12 @@
   background: white;
   border-top: 1px solid #e2e8f0;
   border-radius: 0 0 20px 20px;
+  position: sticky;
+  bottom: 0;
 }
 
-.confirm-btn-cancel,
-.confirm-btn-yes {
+.update-btn-cancel,
+.update-btn-submit {
   padding: 12px 24px;
   font-size: 0.95rem;
   font-weight: 600;
@@ -626,34 +764,34 @@
   white-space: nowrap;
 }
 
-.confirm-btn-cancel {
+.update-btn-cancel {
   background: #f1f5f9;
   color: #475569;
   border: 1px solid #e2e8f0;
 }
 
-.confirm-btn-cancel:hover {
+.update-btn-cancel:hover {
   background: #e2e8f0;
   transform: translateY(-2px);
 }
 
-.confirm-btn-cancel:disabled {
+.update-btn-cancel:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.confirm-btn-yes {
+.update-btn-submit {
   background: linear-gradient(135deg, #15803d, var(--success-green));
   color: white;
   box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
-.confirm-btn-yes:hover {
+.update-btn-submit:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4);
 }
 
-.confirm-btn-yes:disabled {
+.update-btn-submit:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
@@ -822,39 +960,55 @@
   color: var(--accent-end);
 }
 
-.dark-mode .confirm-modal {
+.dark-mode .update-modal {
   background: #1e293b;
 }
 
-.dark-mode .confirm-body {
+.dark-mode .update-body {
   background: #1e293b;
 }
 
-.dark-mode .confirm-body p {
-  color: #cbd5e1;
-}
-
-.dark-mode .confirm-details {
+.dark-mode .update-info-section {
   background: #0f172a;
   border-color: #475569;
 }
 
-.dark-mode .confirm-details p {
+.dark-mode .update-info-section h4 {
+  color: var(--accent-end);
+}
+
+.dark-mode .info-item span {
   color: #e2e8f0;
 }
 
-.dark-mode .confirm-footer {
+.dark-mode .update-form-section h4 {
+  color: var(--accent-end);
+  border-bottom-color: #475569;
+}
+
+.dark-mode .form-group label {
+  color: var(--accent-end);
+}
+
+.dark-mode .form-input,
+.dark-mode .form-textarea {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark-mode .update-footer {
   background: #1e293b;
   border-top-color: #475569;
 }
 
-.dark-mode .confirm-btn-cancel {
+.dark-mode .update-btn-cancel {
   background: #334155;
   color: #cbd5e1;
   border-color: #475569;
 }
 
-.dark-mode .confirm-btn-cancel:hover {
+.dark-mode .update-btn-cancel:hover {
   background: #475569;
 }
 
@@ -898,6 +1052,7 @@
     gap: 6px;
   }
 
+  .visit-initialize-btn,
   .visit-ready-btn,
   .visit-details-btn {
     width: 100%;
@@ -925,26 +1080,39 @@
     width: 100%;
   }
 
-  .confirm-modal {
+  .update-modal {
     max-width: 95%;
+    max-height: 95vh;
   }
 
-  .confirm-header {
+  .update-header {
     padding: 20px;
   }
 
-  .confirm-body {
+  .update-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .update-body {
     padding: 20px;
   }
 
-  .confirm-footer {
+  .update-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .update-footer {
     padding: 16px 20px;
     flex-direction: column-reverse;
     gap: 10px;
   }
 
-  .confirm-btn-cancel,
-  .confirm-btn-yes {
+  .update-btn-cancel,
+  .update-btn-submit {
     width: 100%;
     justify-content: center;
   }
@@ -968,11 +1136,30 @@
     width: fit-content;
   }
 
-  .confirm-header h3 {
-    font-size: 1.1rem;
+  .update-header h3 {
+    font-size: 1rem;
   }
 
-  .confirm-body p {
+  .update-info-section h4,
+  .update-form-section h4 {
     font-size: 0.9rem;
+  }
+
+  .info-item label {
+    font-size: 0.7rem;
+  }
+
+  .info-item span {
+    font-size: 0.85rem;
+  }
+
+  .form-group label {
+    font-size: 0.8rem;
+  }
+
+  .form-input,
+  .form-textarea {
+    font-size: 0.9rem;
+    padding: 10px 14px;
   }
 }

@@ -66,8 +66,7 @@ export const loginUser = async (username, password) => {
     REF_KEY: generateRefKey(),
     SESSION_REF: sessionRef,
     USER_ID: 0,
-    UserName: username,
-    Password: password
+    UserName: username,    Password: password
   };
 
   try {
@@ -79,8 +78,8 @@ export const loginUser = async (username, password) => {
       // Save user data including PROFILE_NAME
       localStorage.setItem("userId", result.USER_ID);
       localStorage.setItem("profileName", result.PROFILE_NAME);      
-      localStorage.setItem("clinicID", result.BRANCH_ID);
-      localStorage.setItem("branchID", result.CLINIC_ID);
+      localStorage.setItem("clinicID", result.CLINIC_ID);
+      localStorage.setItem("branchID", result.BRANCH_ID);
       localStorage.setItem("isLoggedIn", "true");
       console.log("Result:", result);
       return { success: true, data: result };
@@ -106,7 +105,8 @@ export const renewToken = async () => {
   try {
     const response = await API.post("/RenewToken", payload);
     const responseTime = getReadableTime();
-    console.log(`[RenewToken] Response at: ${responseTime}`, response.data);
+    console.log(`[Renew
+    Token] Response at: ${responseTime}`, response.data);
     const result = response.data?.result;
     if (result?.OUT_OK === 1 && result?.USER_ID) { 
       const profileName = result?.PROFILE_NAME || result?.profileName || localStorage.getItem("profile_name");
@@ -3965,10 +3965,10 @@ export const addPatientVisit = async (visitData) => {
     VisitTime: visitData.VisitTime || "",             // HH:MM:SS or HH:MM
     Reason: visitData.reason || "",
     Symptoms: visitData.symptoms || "",
-    BPSystolic: visitData.bpSystolic ?? 0,
-    BPDiastolic: visitData.bpDiastolic ?? 0,
-    Temperature: visitData.temperature ?? 0,
-    Weight: visitData.weight ?? 0,
+    BPSystolic: visitData.bpSystolic ,
+    BPDiastolic: visitData.bpDiastolic ,
+    Temperature: visitData.temperature,
+    Weight: visitData.weight ,
   };
 
   console.log("Add Patient Visit Payload:", payload);

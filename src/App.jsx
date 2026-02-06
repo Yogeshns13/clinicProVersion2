@@ -66,11 +66,11 @@ import ViewPurchaseOrderDetail from "./PurchaseOrderDetail/ViewPurchaseOrderDeta
 import PurchaseOrderList from "./PurchaseOrder/PurchaseOrderList.jsx";
 import AddPurchaseOrder from "./PurchaseOrder/AddPurchaseOrder.jsx";
 import ViewPurchaseOrder from "./PurchaseOrder/ViewPurchaseOrder.jsx";
-import LabWorkManagement from "./LabWork/LabWorkManagement.jsx";
 import MedicineStockList from "./MedicineStock/MedicineStocklist.jsx";
 import UpdateMedicineStock from "./MedicineStock/UpdateMedicineStock.jsx";
 import LabWorkQueue from "./LabWork/LabWorkQueue.jsx";
 import MedicineStockByMedicine from "./MedicineMaster/MedicineStockbyMedicine.jsx";
+import LabOrderList from "./LabWork/LabOrderList.jsx";
 
 
 
@@ -153,7 +153,7 @@ function App() {
           <Route path="/Add-purchaseorderdetail" element={<AddPurchaseOrderDetail/>} />
           <Route path="/Update-purchaseorderdetail/:id" element={<UpdatePurchaseOrderDetail/>} />
           <Route path="/view-purchaseorderdetail/:id" element={<ViewPurchaseOrderDetail/>} />
-          <Route path="/laborder-list" element={<LabWorkManagement/>} />
+          <Route path="/laborder-list" element={<LabOrderList/>} />
           <Route path="/medicinestock-list" element={<MedicineStockList/>} />
           <Route path="/update-medicinestock/:id" element={<UpdateMedicineStock/>} />
           

@@ -1,4 +1,4 @@
-/* LabWorkDetail.module.css */
+/* LabWorkDetail.module.css - Complete Version for LabWorkDetailModal */
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
@@ -82,6 +82,10 @@
   justify-content: space-between;
   align-items: center;
   gap: 20px;
+}
+
+.headerContent {
+  flex: 1;
 }
 
 .headerContent h2 {
@@ -190,6 +194,7 @@
   font-size: 0.85rem;
   color: var(--text-dark);
   font-weight: 600;
+  text-align: right;
 }
 
 /* ==================== STEPS CONTAINER ==================== */
@@ -322,7 +327,8 @@
 }
 
 .formInput,
-.formTextarea {
+.formTextarea,
+.formSelect {
   width: 100%;
   padding: 12px 16px;
   background: rgba(255, 255, 255, 0.9);
@@ -333,10 +339,12 @@
   font-weight: 500;
   transition: all 0.3s ease;
   font-family: inherit;
+  box-sizing: border-box;
 }
 
 .formInput:focus,
-.formTextarea:focus {
+.formTextarea:focus,
+.formSelect:focus {
   outline: none;
   border-color: var(--accent-end);
   box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
@@ -346,6 +354,7 @@
 .formTextarea {
   resize: vertical;
   min-height: 100px;
+  line-height: 1.5;
 }
 
 /* ==================== REVIEW SECTION ==================== */
@@ -394,6 +403,7 @@
   font-size: 0.9rem;
   color: var(--text-dark);
   font-weight: 700;
+  text-align: right;
 }
 
 /* ==================== FORM ACTIONS ==================== */

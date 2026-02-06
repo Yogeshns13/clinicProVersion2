@@ -453,12 +453,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     setFormSuccess(false);
 
     try {
-      const clinicId = localStorage.getItem('clinicID');
-      const branchId = localStorage.getItem('branchID');
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
 
       const payload = {
-        clinicId: clinicId ? Number(clinicId) : 0,
-        branchID: branchId ? Number(branchId) : 0,
+        clinicId:  clinicId,
+        branchID: branchId,
         employeeCode: formData.employeeCode.trim(),
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),

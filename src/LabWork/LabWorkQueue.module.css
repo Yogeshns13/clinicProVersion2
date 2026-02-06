@@ -1,4 +1,4 @@
-/* LabWorkQueue.module.css */
+/* LabWorkQueue.module.css - Complete Version for LabWorkQueue.jsx */
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
@@ -115,6 +115,7 @@
   justify-content: center;
   color: var(--text-light);
   box-shadow: 0 5px 17px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
 }
 
 .statContent {
@@ -226,27 +227,27 @@
   transform: translateY(-2px);
 }
 
-.backBtn {
+.workQueueBtn {
   display: flex;
   align-items: center;
   gap: 8px;
   height: 40px;
   padding: 10px 20px;
-  background: white;
-  color: var(--primary-start);
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
   font-weight: 700;
   font-size: 0.94rem;
-  border: 2px solid var(--primary-start);
+  border: none;
   border-radius: 14px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
+  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
   white-space: nowrap;
 }
 
-.backBtn:hover {
-  background: var(--primary-start);
-  color: var(--text-light);
-  transform: translateY(-2px);
+.workQueueBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(32, 125, 156, 0.45);
 }
 
 /* ==================== ADVANCED FILTERS ==================== */
@@ -290,6 +291,7 @@
   font-size: 0.94rem;
   font-weight: 500;
   transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .filterInput:focus {
@@ -348,6 +350,7 @@
   font-size: 0.94rem;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .searchInput::placeholder {
@@ -391,6 +394,16 @@
   gap: 20px;
 }
 
+.noData {
+  text-align: center;
+  padding: 68px 20px;
+  color: #64748b;
+  font-size: 1.1rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.1);
+}
+
 /* ==================== ORDER GROUP ==================== */
 .orderGroup {
   background: white;
@@ -428,6 +441,7 @@
   align-items: center;
   gap: 16px;
   flex: 1;
+  min-width: 0;
 }
 
 .expandIcon {
@@ -452,6 +466,7 @@
 
 .orderInfo {
   flex: 1;
+  min-width: 0;
 }
 
 .orderTitle {
@@ -529,6 +544,7 @@
 
 .statItem svg {
   color: var(--accent-end);
+  flex-shrink: 0;
 }
 
 .orderHeaderRight {
@@ -592,34 +608,6 @@
 }
 
 .addReportBtn:active {
-  transform: translateY(0);
-}
-
-/* ==================== UPDATE REPORT BUTTON ==================== */
-.updateReportBtn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #0284c7, #0369a1);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  box-shadow: 0 3px 12px rgba(2, 132, 199, 0.3);
-}
-
-.updateReportBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4);
-  background: linear-gradient(135deg, #0369a1, #075985);
-}
-
-.updateReportBtn:active {
   transform: translateY(0);
 }
 
@@ -759,6 +747,7 @@
   border: 1px solid;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .statussuccess {
@@ -832,6 +821,7 @@
   justify-content: center;
   z-index: 1000;
   animation: fadeIn 0.2s ease-out;
+  backdrop-filter: blur(4px);
 }
 
 /* Confirmation Dialog */
@@ -967,6 +957,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 32px;
+  height: 32px;
 }
 
 .closeBtn:hover:not(:disabled) {
@@ -1067,6 +1059,7 @@
   transition: all 0.3s ease;
   font-family: inherit;
   background: white;
+  box-sizing: border-box;
 }
 
 .formSelect:focus,
@@ -1126,19 +1119,12 @@
   transform: none;
 }
 
-/* ==================== UTILITY STATES ==================== */
-.noData {
-  text-align: center;
-  padding: 68px 20px;
-  color: #64748b;
-  font-size: 1.1rem;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.1);
-}
-
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {
+  .wrapper {
+    padding: 14px;
+  }
+
   .statsContainer {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
@@ -1155,7 +1141,7 @@
   }
 
   .select,
-  .backBtn {
+  .workQueueBtn {
     width: 100%;
   }
 
@@ -1237,10 +1223,6 @@
 }
 
 @media (max-width: 480px) {
-  .wrapper {
-    padding: 14px;
-  }
-
   .statsContainer {
     grid-template-columns: 1fr;
   }

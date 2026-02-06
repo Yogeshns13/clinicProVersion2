@@ -1,5 +1,6 @@
 // src/components/LabWork/LabOrderList.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiCalendar, FiFilter, FiEye, FiCheckCircle, FiClock, FiAlertCircle, FiFileText } from 'react-icons/fi';
 import { 
   getLabTestOrderList, 
@@ -11,7 +12,9 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './LabOrderList.module.css';
 
-const LabOrderList = ({ onNavigateToWorkQueue }) => {
+const LabOrderList = () => {
+  const navigate = useNavigate();
+  
   // Data States
   const [orders, setOrders] = useState([]);
   
@@ -344,21 +347,15 @@ const LabOrderList = ({ onNavigateToWorkQueue }) => {
           )}
         </div>
 
-        <div className={styles.searchWrapper}>
-        <div className={styles.searchContainer}>
-          <input
-            type="text"
-            placeholder="Search orders by patient name..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className={styles.searchInput}
-          />
-          <button onClick={handleSearch} className={styles.searchIconBtn}>
-            <FiSearch size={20} />
+        <div className={styles.toolbarRight}>
+          <button 
+            onClick={() => navigate('/labwork-list')}
+            className={styles.workQueueBtn}
+          >
+            <FiAlertCircle size={18} />
+            Go to Work Queue
           </button>
         </div>
-      </div>
       </div>
 
       {/* Advanced Filters */}

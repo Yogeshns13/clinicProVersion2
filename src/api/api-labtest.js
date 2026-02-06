@@ -2197,7 +2197,7 @@ export const updateLabTestReport = async (reportData) => {
 
   
   // Format VerifiedDateTime if provided (accepts ISO string or "YYYY-MM-DD HH:mm:ss")
-  const verifiedDateTime = "";
+  let verifiedDateTime = "";
   if (reportData.verifiedDateTime) {
     const dt = reportData.verifiedDateTime.trim();
     if (dt.includes("T")) {

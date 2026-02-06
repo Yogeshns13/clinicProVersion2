@@ -1,19 +1,30 @@
 // src/components/LabWork/LabWorkQueue.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   FiSearch, FiCalendar, FiFilter, FiChevronDown, FiChevronRight, 
-  FiClock, FiCheckCircle, FiAlertCircle, FiPackage, FiActivity, FiFileText, FiX 
+  FiClock, FiCheckCircle, FiAlertCircle, FiPackage, FiActivity, FiFileText, FiX,
+  FiSave, FiXCircle, FiUser
 } from 'react-icons/fi';
-import { getLabWorkItemsList } from '../api/api-labtest.js';
-import { updateLabTestOrder } from '../api/api-labtest.js';
-import { addLabTestReport } from '../api/api-labtest.js';
-import { getLabTestOrderList } from '../api/api-labtest.js';
+import { 
+  getLabWorkItemsList, 
+  updateLabTestOrder, 
+  addLabTestReport, 
+  getLabTestOrderList,
+  updateSampleCollection,
+  updateLabWorkItemResult,
+  approveLabWorkItem,
+  rejectLabWorkItem
+} from '../api/api-labtest.js';
 import { getEmployeeList } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './LabWorkQueue.module.css';
+import detailStyles from './LabWorkDetail.module.css';
 
-const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
+const LabWorkQueue = () => {
+  const navigate = useNavigate();
+  
   // Data States
   const [workItems, setWorkItems] = useState([]);
   const [groupedWorkItems, setGroupedWorkItems] = useState({});
@@ -37,6 +48,12 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
   const [selectedOrderForReport, setSelectedOrderForReport] = useState(null);
   const [orderDetails, setOrderDetails] = useState(null);
   const [submittingReport, setSubmittingReport] = useState(false);
+  const [reportMessage, setReportMessage] = useState({ type: '', text: '' });
+  
+  // Work Detail Modal States
+  const [showWorkDetailModal, setShowWorkDetailModal] = useState(false);
+  const [selectedWorkItem, setSelectedWorkItem] = useState(null);
+  const [selectedOrderData, setSelectedOrderData] = useState(null);
   
   // Report Form States
   const [reportForm, setReportForm] = useState({
@@ -64,8 +81,8 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
         Page: 1,
         PageSize: 100,
         BranchID: branchId,
-        Designation: 1, // Assuming 1 is for doctors - adjust if needed
-        Status: 1 // Active only
+        Designation: 1,
+        Status: 1
       };
       
       const employeeList = await getEmployeeList(clinicId, options);
@@ -129,7 +146,6 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
 
       setGroupedWorkItems(grouped);
       
-      // Auto-expand if only one order
       if (Object.keys(grouped).length === 1) {
         setExpandedOrders(new Set([Number(Object.keys(grouped)[0])]));
       }
@@ -217,9 +233,29 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
     });
   };
 
-  // Check if all work items in an order are completed
   const isOrderFullyCompleted = (items) => {
     return items.every(item => item.status === 3);
+  };
+
+  // Handle Process Button Click
+  const handleProcessWorkItem = (item, orderData) => {
+    setSelectedWorkItem(item);
+    setSelectedOrderData(orderData);
+    setShowWorkDetailModal(true);
+  };
+
+  // Handle Work Detail Modal Close
+  const handleCloseWorkDetail = () => {
+    setShowWorkDetailModal(false);
+    setSelectedWorkItem(null);
+    setSelectedOrderData(null);
+    fetchWorkItems(); // Refresh data when modal closes
+  };
+
+  // Handle Work Detail Save
+  const handleSaveWorkDetail = () => {
+    // This will be called from child to notify parent
+    // We'll fetch on modal close instead
   };
 
   // Handle Add Report Button Click
@@ -235,7 +271,6 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
     try {
       setSubmittingReport(true);
       
-      // Step 1: Fetch order details
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
       
@@ -255,12 +290,11 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
       const orderDetail = orderList[0];
       setOrderDetails(orderDetail);
       
-      // Step 2: Update order status to 2 (Completed)
       const updateData = {
         orderId: selectedOrderForReport.orderId,
         clinicId: clinicId,
         branchId: branchId,
-        status: 2, // Completed
+        status: 2,
         fileId: orderDetail.fileId || 0,
         priority: orderDetail.priority || 1,
         notes: orderDetail.notes || '',
@@ -269,9 +303,8 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
       
       await updateLabTestOrder(updateData);
       
-      // Step 3: Reset report form with current date/time
       const now = new Date();
-      const formattedDateTime = now.toISOString().slice(0, 16); // Format for datetime-local input
+      const formattedDateTime = now.toISOString().slice(0, 16);
       
       setReportForm({
         verifiedBy: 0,
@@ -279,12 +312,12 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
         remarks: ''
       });
       
-      // Step 4: Open report modal
       setShowReportModal(true);
       
     } catch (err) {
       console.error('Error processing add report:', err);
       setError(err);
+      setReportMessage({ type: 'error', text: err.message || 'Failed to process report request' });
     } finally {
       setSubmittingReport(false);
     }
@@ -300,17 +333,18 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
     e.preventDefault();
     
     if (!reportForm.verifiedBy || reportForm.verifiedBy === 0) {
-      alert('Please select a verified by doctor');
+      setReportMessage({ type: 'error', text: 'Please select a verified by doctor' });
       return;
     }
     
     if (!reportForm.verifiedDateTime) {
-      alert('Please select verified date and time');
+      setReportMessage({ type: 'error', text: 'Please select verified date and time' });
       return;
     }
     
     try {
       setSubmittingReport(true);
+      setReportMessage({ type: '', text: '' });
       
       const reportData = {
         orderId: orderDetails.id,
@@ -329,23 +363,24 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
       const result = await addLabTestReport(reportData);
       
       if (result.success) {
-        alert('Lab test report added successfully!');
-        setShowReportModal(false);
-        setSelectedOrderForReport(null);
-        setOrderDetails(null);
-        setReportForm({
-          verifiedBy: 0,
-          verifiedDateTime: '',
-          remarks: ''
-        });
-        
-        // Refresh the work items list
-        fetchWorkItems();
+        setReportMessage({ type: 'success', text: 'Lab test report added successfully!' });
+        setTimeout(() => {
+          setShowReportModal(false);
+          setSelectedOrderForReport(null);
+          setOrderDetails(null);
+          setReportForm({
+            verifiedBy: 0,
+            verifiedDateTime: '',
+            remarks: ''
+          });
+          setReportMessage({ type: '', text: '' });
+          fetchWorkItems();
+        }, 1500);
       }
       
     } catch (err) {
       console.error('Error submitting report:', err);
-      alert(err.message || 'Failed to add lab test report');
+      setReportMessage({ type: 'error', text: err.message || 'Failed to add lab test report' });
     } finally {
       setSubmittingReport(false);
     }
@@ -355,6 +390,7 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
     setShowReportModal(false);
     setSelectedOrderForReport(null);
     setOrderDetails(null);
+    setReportMessage({ type: '', text: '' });
     setReportForm({
       verifiedBy: 0,
       verifiedDateTime: '',
@@ -362,7 +398,6 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
     });
   };
 
-  // Calculate stats
   const totalOrders = Object.keys(groupedWorkItems).length;
   const totalWorkItems = workItems.length;
   const pendingItems = workItems.filter(item => item.status === 1).length;
@@ -463,22 +498,16 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
             </button>
           )}
         </div>
-        <div className={styles.searchWrapper}>
-        <div className={styles.searchContainer}>
-          <input
-            type="text"
-            placeholder="Search by patient name, test name..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className={styles.searchInput}
-          />
-          <button onClick={handleSearch} className={styles.searchIconBtn}>
-            <FiSearch size={20} />
+
+        <div className={styles.toolbarRight}>
+          <button 
+            onClick={() => navigate('/laborder-list')}
+            className={styles.workQueueBtn}
+          >
+            <FiAlertCircle size={18} />
+            Go to Orders
           </button>
         </div>
-      </div>
-        
       </div>
 
       {/* Advanced Filters */}
@@ -531,7 +560,6 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
 
             return (
               <div key={orderId} className={styles.orderGroup}>
-                {/* Order Header */}
                 <div 
                   className={styles.orderHeader}
                   onClick={() => toggleOrderExpansion(Number(orderId))}
@@ -542,7 +570,6 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
                     </button>
                     
                     <div className={styles.orderInfo}>
-                      
                       <div className={styles.orderMeta}>
                         <div className={styles.patientInfo}>
                           <div className={styles.avatar}>
@@ -587,7 +614,6 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
                       </div>
                     </div>
                     
-                    {/* Add Report Button - Only show when all items are completed */}
                     {isFullyCompleted && (
                       <button
                         onClick={(e) => {
@@ -603,7 +629,6 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
                   </div>
                 </div>
 
-                {/* Work Items List */}
                 {isExpanded && (
                   <div className={styles.workItemsList}>
                     <table className={styles.table}>
@@ -676,7 +701,7 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  onSelectWorkItem && onSelectWorkItem(item, orderData);
+                                  handleProcessWorkItem(item, orderData);
                                 }}
                                 className={styles.processBtn}
                               >
@@ -694,6 +719,17 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
           })
         )}
       </div>
+
+      {/* Work Detail Modal */}
+      {showWorkDetailModal && selectedWorkItem && selectedOrderData && (
+        <LabWorkDetailModal
+          workItem={selectedWorkItem}
+          orderData={selectedOrderData}
+          onClose={handleCloseWorkDetail}
+          onSave={handleSaveWorkDetail}
+          employees={doctors}
+        />
+      )}
 
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
@@ -745,7 +781,12 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
             
             <form onSubmit={handleSubmitReport} className={styles.reportForm}>
               <div className={styles.modalBody}>
-                {/* Order Information */}
+                {reportMessage.text && (
+                  <div className={`${styles.message} ${styles[reportMessage.type]}`}>
+                    {reportMessage.text}
+                  </div>
+                )}
+
                 <div className={styles.orderInfoSection}>
                   <h4>Order Information</h4>
                   <div className={styles.infoGrid}>
@@ -764,7 +805,6 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
                   </div>
                 </div>
 
-                {/* Form Fields */}
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>
                     Verified By <span className={styles.required}>*</span>
@@ -833,6 +873,664 @@ const LabWorkQueue = ({ onSelectWorkItem, onNavigateToOrders }) => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+// Lab Work Detail Modal Component (Integrated)
+const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees }) => {
+  const [sampleData, setSampleData] = useState({
+    sampleCollectedTime: workItem.sampleCollectedTime 
+      ? new Date(workItem.sampleCollectedTime).toISOString().slice(0, 16)
+      : new Date().toISOString().slice(0, 16),
+    sampleCollectedPlace: workItem.sampleCollectedPlace || ''
+  });
+
+  const [resultData, setResultData] = useState({
+    resultValue: workItem.resultValue || '',
+    resultUnits: workItem.resultUnits || '',
+    normalRange: workItem.normalRange || '',
+    interpretation: workItem.interpretation || null,
+    remarks: '',
+    testDoneBy: 0
+  });
+
+  const [approvalData, setApprovalData] = useState({
+    testApprovedBy: 0,
+    approvalRemarks: ''
+  });
+
+  const [rejectionData, setRejectionData] = useState({
+    testApprovedBy: 0,
+    rejectReason: ''
+  });
+
+  const [activeStep, setActiveStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
+
+  const interpretationOptions = [
+    { value: null, label: 'Not specified' },
+    { value: 1, label: 'Normal' },
+    { value: 2, label: 'Abnormal - High' },
+    { value: 3, label: 'Abnormal - Low' },
+    { value: 4, label: 'Critical' }
+  ];
+
+  // Only determine initial step on mount, not on workItem changes
+  useEffect(() => {
+    let initialStep = 1;
+    if (!workItem.sampleCollectedTime) {
+      initialStep = 1;
+    } else if (!workItem.resultValue) {
+      initialStep = 2;
+    } else {
+      initialStep = 3;
+    }
+    setActiveStep(initialStep);
+  }, []); // Empty dependency array - only run once on mount
+
+  const handleSampleSave = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setStatusMessage({ type: '', text: '' });
+
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
+      const formattedDateTime = sampleData.sampleCollectedTime.replace('T', ' ') + ':00';
+
+      await updateSampleCollection({
+        workId: workItem.workId,
+        clinicId,
+        branchId,
+        sampleCollectedTime: formattedDateTime,
+        sampleCollectedPlace: sampleData.sampleCollectedPlace
+      });
+
+      setStatusMessage({ type: 'success', text: 'Sample collection details saved successfully!' });
+      
+      // Move to next step after short delay
+      setTimeout(() => {
+        setActiveStep(2);
+        setStatusMessage({ type: '', text: '' });
+      }, 1000);
+      
+    } catch (err) {
+      console.error('Error saving sample collection:', err);
+      setError(err);
+      setStatusMessage({ type: 'error', text: err.message || 'Failed to save sample collection' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResultSave = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setStatusMessage({ type: '', text: '' });
+
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
+      await updateLabWorkItemResult({
+        workId: workItem.workId,
+        clinicId,
+        branchId,
+        resultValue: resultData.resultValue,
+        resultUnits: resultData.resultUnits,
+        normalRange: resultData.normalRange,
+        interpretation: resultData.interpretation,
+        remarks: resultData.remarks,
+        testDoneBy: resultData.testDoneBy
+      });
+
+      setStatusMessage({ type: 'success', text: 'Test results saved successfully!' });
+      
+      // Move to next step after short delay
+      setTimeout(() => {
+        setActiveStep(3);
+        setStatusMessage({ type: '', text: '' });
+      }, 1000);
+      
+    } catch (err) {
+      console.error('Error saving results:', err);
+      setError(err);
+      setStatusMessage({ type: 'error', text: err.message || 'Failed to save results' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async () => {
+    try {
+      if (!approvalData.testApprovedBy) {
+        setStatusMessage({ type: 'error', text: 'Please select an approver' });
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+      setStatusMessage({ type: '', text: '' });
+
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
+      await approveLabWorkItem({
+        workId: workItem.workId,
+        clinicId,
+        branchId,
+        testApprovedBy: approvalData.testApprovedBy,
+        approvalRemarks: approvalData.approvalRemarks
+      });
+
+      setStatusMessage({ type: 'success', text: 'Work item approved successfully!' });
+      
+      setTimeout(() => {
+        setShowApprovalModal(false);
+        onClose && onClose();
+      }, 1000);
+      
+    } catch (err) {
+      console.error('Error approving work item:', err);
+      setError(err);
+      setStatusMessage({ type: 'error', text: err.message || 'Failed to approve work item' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReject = async () => {
+    try {
+      if (!rejectionData.testApprovedBy) {
+        setStatusMessage({ type: 'error', text: 'Please select an approver' });
+        return;
+      }
+
+      if (!rejectionData.rejectReason.trim()) {
+        setStatusMessage({ type: 'error', text: 'Please provide a reason for rejection' });
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+      setStatusMessage({ type: '', text: '' });
+
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
+      await rejectLabWorkItem({
+        WorkID: workItem.workId,
+        clinicId,
+        branchID: branchId,
+        TestApprovedBy: rejectionData.testApprovedBy,
+        RejectReason: rejectionData.rejectReason
+      });
+
+      setStatusMessage({ type: 'success', text: 'Work item rejected successfully!' });
+      
+      setTimeout(() => {
+        setShowRejectionModal(false);
+        onClose && onClose();
+      }, 1000);
+      
+    } catch (err) {
+      console.error('Error rejecting work item:', err);
+      setError(err);
+      setStatusMessage({ type: 'error', text: err.message || 'Failed to reject work item' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStepStatus = (step) => {
+    if (step < activeStep) return 'completed';
+    if (step === activeStep) return 'active';
+    return 'pending';
+  };
+
+  return (
+    <div className={detailStyles.modalOverlay} onClick={onClose}>
+      <div className={detailStyles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <ErrorHandler error={error} />
+        
+        <div className={detailStyles.modalHeader}>
+          <div className={detailStyles.headerContent}>
+            <h2>Process Lab Work Item</h2>
+            <div className={detailStyles.headerMeta}>
+              <span className={detailStyles.workIdBadge}>Work ID: #{workItem.workId}</span>
+              <span className={detailStyles.orderIdBadge}>Order ID: #{workItem.orderId}</span>
+            </div>
+          </div>
+          <button onClick={onClose} className={detailStyles.closeBtn}>
+            <FiX size={24} />
+          </button>
+        </div>
+
+        {statusMessage.text && (
+          <div className={`${detailStyles.statusMessage} ${detailStyles[statusMessage.type]}`}>
+            {statusMessage.text}
+          </div>
+        )}
+
+        <div className={detailStyles.infoSection}>
+          <div className={detailStyles.infoCard}>
+            <div className={detailStyles.infoHeader}>
+              <FiUser size={18} />
+              <h3>Patient Information</h3>
+            </div>
+            <div className={detailStyles.infoContent}>
+              <div className={detailStyles.infoRow}>
+                <span className={detailStyles.infoLabel}>Name:</span>
+                <span className={detailStyles.infoValue}>{orderData.patientName}</span>
+              </div>
+              <div className={detailStyles.infoRow}>
+                <span className={detailStyles.infoLabel}>File No:</span>
+                <span className={detailStyles.infoValue}>{orderData.fileNo}</span>
+              </div>
+              <div className={detailStyles.infoRow}>
+                <span className={detailStyles.infoLabel}>Mobile:</span>
+                <span className={detailStyles.infoValue}>{orderData.mobile}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className={detailStyles.infoCard}>
+            <div className={detailStyles.infoHeader}>
+              <FiActivity size={18} />
+              <h3>Test Information</h3>
+            </div>
+            <div className={detailStyles.infoContent}>
+              <div className={detailStyles.infoRow}>
+                <span className={detailStyles.infoLabel}>Test Name:</span>
+                <span className={detailStyles.infoValue}>{workItem.testName}</span>
+              </div>
+              <div className={detailStyles.infoRow}>
+                <span className={detailStyles.infoLabel}>Test ID:</span>
+                <span className={detailStyles.infoValue}>{workItem.testId}</span>
+              </div>
+              <div className={detailStyles.infoRow}>
+                <span className={detailStyles.infoLabel}>Doctor:</span>
+                <span className={detailStyles.infoValue}>{orderData.doctorName || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className={detailStyles.stepsContainer}>
+          <div className={`${detailStyles.step} ${detailStyles[getStepStatus(1)]}`}>
+            <div className={detailStyles.stepIcon}>
+              {getStepStatus(1) === 'completed' ? <FiCheckCircle size={20} /> : <FiClock size={20} />}
+            </div>
+            <div className={detailStyles.stepContent}>
+              <div className={detailStyles.stepTitle}>Sample Collection</div>
+              <div className={detailStyles.stepDesc}>Record collection details</div>
+            </div>
+          </div>
+
+          <div className={detailStyles.stepConnector}></div>
+
+          <div className={`${detailStyles.step} ${detailStyles[getStepStatus(2)]}`}>
+            <div className={detailStyles.stepIcon}>
+              {getStepStatus(2) === 'completed' ? <FiCheckCircle size={20} /> : <FiFileText size={20} />}
+            </div>
+            <div className={detailStyles.stepContent}>
+              <div className={detailStyles.stepTitle}>Enter Results</div>
+              <div className={detailStyles.stepDesc}>Record test results</div>
+            </div>
+          </div>
+
+          <div className={detailStyles.stepConnector}></div>
+
+          <div className={`${detailStyles.step} ${detailStyles[getStepStatus(3)]}`}>
+            <div className={detailStyles.stepIcon}>
+              {getStepStatus(3) === 'completed' ? <FiCheckCircle size={20} /> : <FiCheckCircle size={20} />}
+            </div>
+            <div className={detailStyles.stepContent}>
+              <div className={detailStyles.stepTitle}>Approval</div>
+              <div className={detailStyles.stepDesc}>Review and approve</div>
+            </div>
+          </div>
+        </div>
+
+        <div className={detailStyles.modalBody}>
+          {activeStep === 1 && (
+            <div className={detailStyles.formSection}>
+              <div className={detailStyles.sectionHeader}>
+                <FiClock size={20} />
+                <h3>Sample Collection Details</h3>
+              </div>
+
+              <div className={detailStyles.formGrid}>
+                <div className={detailStyles.formGroup}>
+                  <label>Collection Date & Time *</label>
+                  <input
+                    type="datetime-local"
+                    value={sampleData.sampleCollectedTime}
+                    onChange={(e) => setSampleData({...sampleData, sampleCollectedTime: e.target.value})}
+                    className={detailStyles.formInput}
+                    required
+                  />
+                </div>
+
+                <div className={detailStyles.formGroup}>
+                  <label>Collection Place</label>
+                  <input
+                    type="text"
+                    value={sampleData.sampleCollectedPlace}
+                    onChange={(e) => setSampleData({...sampleData, sampleCollectedPlace: e.target.value})}
+                    className={detailStyles.formInput}
+                    placeholder="e.g., Lab Room 1, Patient Room"
+                  />
+                </div>
+              </div>
+
+              <div className={detailStyles.formActions}>
+                <button 
+                  onClick={handleSampleSave} 
+                  className={detailStyles.saveBtn}
+                  disabled={loading}
+                >
+                  <FiSave size={18} />
+                  {loading ? 'Saving...' : 'Save & Continue'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeStep === 2 && (
+            <div className={detailStyles.formSection}>
+              <div className={detailStyles.sectionHeader}>
+                <FiFileText size={20} />
+                <h3>Test Results Entry</h3>
+              </div>
+
+              <div className={detailStyles.formGrid}>
+                <div className={detailStyles.formGroup}>
+                  <label>Result Value *</label>
+                  <input
+                    type="text"
+                    value={resultData.resultValue}
+                    onChange={(e) => setResultData({...resultData, resultValue: e.target.value})}
+                    className={detailStyles.formInput}
+                    placeholder="e.g., 120"
+                    required
+                  />
+                </div>
+
+                <div className={detailStyles.formGroup}>
+                  <label>Result Units</label>
+                  <input
+                    type="text"
+                    value={resultData.resultUnits}
+                    onChange={(e) => setResultData({...resultData, resultUnits: e.target.value})}
+                    className={detailStyles.formInput}
+                    placeholder="e.g., mg/dL, mmol/L"
+                  />
+                </div>
+
+                <div className={detailStyles.formGroup}>
+                  <label>Normal Range</label>
+                  <input
+                    type="text"
+                    value={resultData.normalRange}
+                    onChange={(e) => setResultData({...resultData, normalRange: e.target.value})}
+                    className={detailStyles.formInput}
+                    placeholder="e.g., 70-100"
+                  />
+                </div>
+
+                <div className={detailStyles.formGroup}>
+                  <label>Interpretation</label>
+                  <select
+                    value={resultData.interpretation || ''}
+                    onChange={(e) => setResultData({...resultData, interpretation: e.target.value ? Number(e.target.value) : null})}
+                    className={detailStyles.formInput}
+                  >
+                    {interpretationOptions.map(opt => (
+                      <option key={opt.value} value={opt.value || ''}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className={detailStyles.formGroup}>
+                  <label>Test Done By</label>
+                  <select
+                    value={resultData.testDoneBy}
+                    onChange={(e) => setResultData({...resultData, testDoneBy: Number(e.target.value)})}
+                    className={detailStyles.formInput}
+                  >
+                    <option value={0}>Select Technician</option>
+                    {employees.map(emp => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name} ({emp.employeeCode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className={detailStyles.formGroupFull}>
+                  <label>Remarks</label>
+                  <textarea
+                    value={resultData.remarks}
+                    onChange={(e) => setResultData({...resultData, remarks: e.target.value})}
+                    className={detailStyles.formTextarea}
+                    rows={3}
+                    placeholder="Any additional notes or observations..."
+                  />
+                </div>
+              </div>
+
+              <div className={detailStyles.formActions}>
+                <button 
+                  onClick={() => setActiveStep(1)} 
+                  className={detailStyles.backBtn}
+                >
+                  ← Back
+                </button>
+                <button 
+                  onClick={handleResultSave} 
+                  className={detailStyles.saveBtn}
+                  disabled={loading || !resultData.resultValue}
+                >
+                  <FiSave size={18} />
+                  {loading ? 'Saving...' : 'Save & Continue'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeStep === 3 && (
+            <div className={detailStyles.formSection}>
+              <div className={detailStyles.sectionHeader}>
+                <FiCheckCircle size={20} />
+                <h3>Review & Approval</h3>
+              </div>
+
+              <div className={detailStyles.reviewSection}>
+                <div className={detailStyles.reviewCard}>
+                  <h4>Sample Collection</h4>
+                  <div className={detailStyles.reviewRow}>
+                    <span>Date & Time:</span>
+                    <strong>
+                      {workItem.sampleCollectedTime 
+                        ? new Date(workItem.sampleCollectedTime).toLocaleString()
+                        : sampleData.sampleCollectedTime
+                        ? new Date(sampleData.sampleCollectedTime).toLocaleString()
+                        : 'Not recorded'}
+                    </strong>
+                  </div>
+                  <div className={detailStyles.reviewRow}>
+                    <span>Place:</span>
+                    <strong>{workItem.sampleCollectedPlace || sampleData.sampleCollectedPlace || 'Not specified'}</strong>
+                  </div>
+                </div>
+
+                <div className={detailStyles.reviewCard}>
+                  <h4>Test Results</h4>
+                  <div className={detailStyles.reviewRow}>
+                    <span>Value:</span>
+                    <strong>{workItem.resultValue || resultData.resultValue || 'Not entered'} {workItem.resultUnits || resultData.resultUnits}</strong>
+                  </div>
+                  <div className={detailStyles.reviewRow}>
+                    <span>Normal Range:</span>
+                    <strong>{workItem.normalRange || resultData.normalRange || 'Not specified'}</strong>
+                  </div>
+                  <div className={detailStyles.reviewRow}>
+                    <span>Interpretation:</span>
+                    <strong>
+                      {interpretationOptions.find(opt => opt.value === (workItem.interpretation || resultData.interpretation))?.label || 'Not specified'}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className={detailStyles.formActions}>
+                <button 
+                  onClick={() => setActiveStep(2)} 
+                  className={detailStyles.backBtn}
+                >
+                  ← Back
+                </button>
+                <button 
+                  onClick={() => setShowRejectionModal(true)} 
+                  className={detailStyles.rejectBtn}
+                >
+                  <FiXCircle size={18} />
+                  Reject
+                </button>
+                <button 
+                  onClick={() => setShowApprovalModal(true)} 
+                  className={detailStyles.approveBtn}
+                >
+                  <FiCheckCircle size={18} />
+                  Approve
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {showApprovalModal && (
+          <div className={detailStyles.confirmOverlay} onClick={() => !loading && setShowApprovalModal(false)}>
+            <div className={detailStyles.confirmModal} onClick={(e) => e.stopPropagation()}>
+              <div className={detailStyles.confirmHeader}>
+                <h3>Approve Work Item</h3>
+                <button onClick={() => !loading && setShowApprovalModal(false)} className={detailStyles.confirmCloseBtn} disabled={loading}>
+                  <FiX size={20} />
+                </button>
+              </div>
+              <div className={detailStyles.confirmBody}>
+                {statusMessage.text && (
+                  <div className={`${detailStyles.statusMessage} ${detailStyles[statusMessage.type]}`}>
+                    {statusMessage.text}
+                  </div>
+                )}
+                <div className={detailStyles.formGroup}>
+                  <label>Approved By *</label>
+                  <select
+                    value={approvalData.testApprovedBy}
+                    onChange={(e) => setApprovalData({...approvalData, testApprovedBy: Number(e.target.value)})}
+                    className={detailStyles.formInput}
+                    required
+                    disabled={loading}
+                  >
+                    <option value={0}>Select Doctor</option>
+                    {employees.map(emp => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name} ({emp.employeeCode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className={detailStyles.formGroup}>
+                  <label>Approval Remarks</label>
+                  <textarea
+                    value={approvalData.approvalRemarks}
+                    onChange={(e) => setApprovalData({...approvalData, approvalRemarks: e.target.value})}
+                    className={detailStyles.formTextarea}
+                    rows={3}
+                    placeholder="Optional remarks..."
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+              <div className={detailStyles.confirmFooter}>
+                <button onClick={() => !loading && setShowApprovalModal(false)} className={detailStyles.cancelBtn} disabled={loading}>
+                  Cancel
+                </button>
+                <button onClick={handleApprove} className={detailStyles.confirmApproveBtn} disabled={loading}>
+                  <FiCheckCircle size={18} />
+                  {loading ? 'Approving...' : 'Approve'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showRejectionModal && (
+          <div className={detailStyles.confirmOverlay} onClick={() => !loading && setShowRejectionModal(false)}>
+            <div className={detailStyles.confirmModal} onClick={(e) => e.stopPropagation()}>
+              <div className={detailStyles.confirmHeader}>
+                <h3>Reject Work Item</h3>
+                <button onClick={() => !loading && setShowRejectionModal(false)} className={detailStyles.confirmCloseBtn} disabled={loading}>
+                  <FiX size={20} />
+                </button>
+              </div>
+              <div className={detailStyles.confirmBody}>
+                {statusMessage.text && (
+                  <div className={`${detailStyles.statusMessage} ${detailStyles[statusMessage.type]}`}>
+                    {statusMessage.text}
+                  </div>
+                )}
+                <div className={detailStyles.formGroup}>
+                  <label>Rejected By *</label>
+                  <select
+                    value={rejectionData.testApprovedBy}
+                    onChange={(e) => setRejectionData({...rejectionData, testApprovedBy: Number(e.target.value)})}
+                    className={detailStyles.formInput}
+                    required
+                    disabled={loading}
+                  >
+                    <option value={0}>Select Doctor</option>
+                    {employees.map(emp => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name} ({emp.employeeCode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className={detailStyles.formGroup}>
+                  <label>Rejection Reason *</label>
+                  <textarea
+                    value={rejectionData.rejectReason}
+                    onChange={(e) => setRejectionData({...rejectionData, rejectReason: e.target.value})}
+                    className={detailStyles.formTextarea}
+                    rows={4}
+                    placeholder="Please provide a detailed reason for rejection..."
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+              <div className={detailStyles.confirmFooter}>
+                <button onClick={() => !loading && setShowRejectionModal(false)} className={detailStyles.cancelBtn} disabled={loading}>
+                  Cancel
+                </button>
+                <button onClick={handleReject} className={detailStyles.confirmRejectBtn} disabled={loading}>
+                  <FiXCircle size={18} />
+                  {loading ? 'Rejecting...' : 'Reject'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

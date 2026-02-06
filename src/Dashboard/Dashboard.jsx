@@ -14,7 +14,7 @@ import {
   FiUpload,
   FiClock,
 } from "react-icons/fi";
-import scope from "../assets/scope.svg";
+import scope from "../assets/account.png";
 
 const Dashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());

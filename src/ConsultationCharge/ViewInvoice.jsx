@@ -131,13 +131,6 @@ const ViewInvoice = ({ isOpen, onClose, invoiceId }) => {
 
           {!loading && !error && invoice && (
             <>
-              {/* Status Badge */}
-              <div className="invoice-status-section">
-                <span className={`invoice-status-badge ${getStatusClass(invoice.status)}`}>
-                  {getStatusLabel(invoice.status)}
-                </span>
-              </div>
-
               {/* Invoice Information */}
               <div className="invoice-details-section">
                 <h3 className="invoice-section-title">

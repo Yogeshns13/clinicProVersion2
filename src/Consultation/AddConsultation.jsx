@@ -69,10 +69,10 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const [consultationFormData, setConsultationFormData] = useState({
     emrNotes: '',
     ehrNotes: '',
-    instructions: '',
+    instructions: 'Follow the Medications',
     consultationNotes: '',
     nextConsultationDate: '',
-    treatmentPlan: ''
+    treatmentPlan: 'No Need'
   });
 
   const [prescriptionFormData, setPrescriptionFormData] = useState({
@@ -1284,16 +1284,30 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                               </div>
 
                               <div className="form-group">
-                                <label className="form-label">Frequency *</label>
-                                <input
-                                  type="text"
-                                  value={detail.frequency}
-                                  onChange={(e) => updatePrescriptionDetail(detail.tempId, 'frequency', e.target.value)}
-                                  placeholder="e.g., Twice daily"
-                                  className="form-input"
-                                  required
-                                />
-                              </div>
+  <label className="form-label">Frequency *</label>
+  <select
+    value={detail.frequency}
+    onChange={(e) => updatePrescriptionDetail(detail.tempId, 'frequency', e.target.value)}
+    className="form-input"
+    required
+  >
+    <option value="" disabled>
+      Select frequency
+    </option>
+    
+    <option value="Once daily">Once daily</option>
+    <option value="Twice daily">Twice daily</option>
+    <option value="Three times daily">Three times daily</option>
+    <option value="Four times daily">Four times daily</option>
+    <option value="Every 6 hours">Every 6 hours</option>
+    <option value="Every 8 hours">Every 8 hours</option>
+    <option value="Every 12 hours">Every 12 hours</option>
+    <option value="At bedtime">At bedtime</option>
+    <option value="Once Monthly">Once Monthly</option>
+    <option value="Once Weekly">Once Weekly</option>
+    <option value="As needed (PRN)">As needed (PRN)</option>
+  </select>
+</div>
                             </div>
 
                             <div className="form-row">
