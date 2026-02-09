@@ -1,13 +1,17 @@
 // src/components/LabWork/LabOrderList.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiCalendar, FiFilter, FiEye, FiCheckCircle, FiClock, FiAlertCircle, FiFileText } from 'react-icons/fi';
+import { FiSearch, FiCalendar, FiFilter, FiEye, FiCheckCircle, FiClock, FiAlertCircle, FiFileText, FiX, FiUser, FiEdit } from 'react-icons/fi';
 import { 
   getLabTestOrderList, 
   updateLabTestOrder, 
   createWorkItemsForOrder,
-  generateLabInvoice 
+  generateLabInvoice,
+  addLabTestReport,
+  getLabTestReportList,
+  updateLabTestReport
 } from '../api/api-labtest.js';
+import { getEmployeeList } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './LabOrderList.module.css';
@@ -17,6 +21,8 @@ const LabOrderList = () => {
   
   // Data States
   const [orders, setOrders] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [orderReports, setOrderReports] = useState({}); // Map of orderId -> reportId
   
   // Filter States
   const [searchInput, setSearchInput] = useState('');
@@ -37,6 +43,24 @@ const LabOrderList = () => {
   const [isMakeInvoiceOpen, setIsMakeInvoiceOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
+  // Report Modal States
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [selectedOrderForReport, setSelectedOrderForReport] = useState(null);
+  const [orderDetails, setOrderDetails] = useState(null);
+  const [submittingReport, setSubmittingReport] = useState(false);
+  const [reportMessage, setReportMessage] = useState({ type: '', text: '' });
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [currentReportId, setCurrentReportId] = useState(null);
+  
+  // Report Form States
+  const [reportForm, setReportForm] = useState({
+    verifiedBy: 0,
+    verifiedDateTime: '',
+    remarks: '',
+    status: 1 // Default to "Created" status
+  });
+
   // Status options for Lab Test Orders
   const statusOptions = [
     { id: -1, label: 'All Statuses', color: 'default' },
@@ -48,12 +72,69 @@ const LabOrderList = () => {
     { id: 6, label: 'External', color: 'external' }
   ];
 
+  // Status options for Lab Test Reports
+  const reportStatusOptions = [
+    { id: -1, label: 'No Change', color: 'default' },
+    { id: 1, label: 'Created', color: 'info' },
+    { id: 2, label: 'Cancelled', color: 'danger' },
+    { id: 3, label: 'Verified', color: 'success' }
+  ];
+
   // Priority options
   const priorityOptions = [
     { id: 1, label: 'Normal' },
     { id: 2, label: 'Urgent' },
     { id: 3, label: 'STAT' }
   ];
+
+  // Fetch Doctors List
+  const fetchDoctors = async () => {
+    try {
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+      
+      const options = {
+        Page: 1,
+        PageSize: 100,
+        BranchID: branchId,
+        Designation: 1,
+        Status: 1
+      };
+      
+      const employeeList = await getEmployeeList(clinicId, options);
+      setDoctors(employeeList);
+    } catch (err) {
+      console.error('Failed to fetch doctors:', err);
+    }
+  };
+
+  // Fetch Lab Test Reports to check if orders have reports
+  const fetchLabTestReports = async () => {
+    try {
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+      
+      const options = {
+        Page: 1,
+        PageSize: 100,
+        BranchID: branchId
+      };
+      
+      const reports = await getLabTestReportList(clinicId, options);
+      
+      // Create a map of orderId -> reportId
+      const reportsMap = {};
+      reports.forEach(report => {
+        if (report.orderId) {
+          reportsMap[report.orderId] = report.id;
+        }
+      });
+      
+      setOrderReports(reportsMap);
+    } catch (err) {
+      console.error('Failed to fetch lab test reports:', err);
+    }
+  };
 
   // Fetch Lab Test Orders
   const fetchOrders = async () => {
@@ -90,6 +171,9 @@ const LabOrderList = () => {
       });
 
       setOrders(sortedData);
+      
+      // Fetch reports after orders are loaded
+      await fetchLabTestReports();
     } catch (err) {
       console.error('fetchOrders error:', err);
       setError(
@@ -104,6 +188,7 @@ const LabOrderList = () => {
 
   useEffect(() => {
     fetchOrders();
+    fetchDoctors();
   }, []);
 
   const handleSearch = () => {
@@ -206,6 +291,257 @@ const LabOrderList = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle Add Report Button Click
+  const handleAddReportClick = (order) => {
+    setIsUpdateMode(false);
+    setCurrentReportId(null);
+    setSelectedOrderForReport(order);
+    setShowConfirmDialog(true);
+  };
+
+  // Handle Update Report Button Click
+  const handleUpdateReportClick = async (order) => {
+    try {
+      setSubmittingReport(true);
+      
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+      
+      // Fetch the existing report for this order
+      const reportOptions = {
+        OrderID: order.id,
+        BranchID: branchId,
+        Page: 1,
+        PageSize: 1
+      };
+      
+      const reports = await getLabTestReportList(clinicId, reportOptions);
+      
+      if (!reports || reports.length === 0) {
+        throw new Error('Report not found for this order');
+      }
+      
+      const existingReport = reports[0];
+      
+      // Fetch order details
+      const orderListOptions = {
+        OrderID: order.id,
+        BranchID: branchId,
+        Page: 1,
+        PageSize: 1
+      };
+      
+      const orderList = await getLabTestOrderList(clinicId, orderListOptions);
+      
+      if (!orderList || orderList.length === 0) {
+        throw new Error('Order details not found');
+      }
+      
+      const orderDetail = orderList[0];
+      setOrderDetails(orderDetail);
+      
+      // Set form with existing report data
+      setIsUpdateMode(true);
+      setCurrentReportId(existingReport.id);
+      setSelectedOrderForReport(order);
+      
+      const formattedDateTime = existingReport.verifiedDateTime 
+        ? new Date(existingReport.verifiedDateTime).toISOString().slice(0, 16)
+        : new Date().toISOString().slice(0, 16);
+      
+      setReportForm({
+        verifiedBy: existingReport.verifiedBy || 0,
+        verifiedDateTime: formattedDateTime,
+        remarks: existingReport.remarks || '',
+        status: existingReport.status ?? 1 // Use existing status or default to "Created"
+      });
+      
+      setShowReportModal(true);
+      
+    } catch (err) {
+      console.error('Error loading report for update:', err);
+      setError(err);
+      alert(err.message || 'Failed to load report details');
+    } finally {
+      setSubmittingReport(false);
+    }
+  };
+
+  // Handle Confirmation Dialog
+  const handleConfirmYes = async () => {
+    setShowConfirmDialog(false);
+    
+    try {
+      setSubmittingReport(true);
+      
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+      
+      const orderListOptions = {
+        OrderID: selectedOrderForReport.id,
+        BranchID: branchId,
+        Page: 1,
+        PageSize: 1
+      };
+      
+      const orderList = await getLabTestOrderList(clinicId, orderListOptions);
+      
+      if (!orderList || orderList.length === 0) {
+        throw new Error('Order details not found');
+      }
+      
+      const orderDetail = orderList[0];
+      setOrderDetails(orderDetail);
+      
+      const updateData = {
+        orderId: selectedOrderForReport.id,
+        clinicId: clinicId,
+        branchId: branchId,
+        status: 2,
+        fileId: orderDetail.fileId || 0,
+        priority: orderDetail.priority || 1,
+        notes: orderDetail.notes || '',
+        testApprovedBy: orderDetail.doctorId || 0
+      };
+      
+      await updateLabTestOrder(updateData);
+      
+      const now = new Date();
+      const formattedDateTime = now.toISOString().slice(0, 16);
+      
+      setReportForm({
+        verifiedBy: 0,
+        verifiedDateTime: formattedDateTime,
+        remarks: '',
+        status: 1 // Default to "Created" status
+      });
+      
+      setShowReportModal(true);
+      
+    } catch (err) {
+      console.error('Error processing add report:', err);
+      setError(err);
+      setReportMessage({ type: 'error', text: err.message || 'Failed to process report request' });
+    } finally {
+      setSubmittingReport(false);
+    }
+  };
+
+  const handleConfirmNo = () => {
+    setShowConfirmDialog(false);
+    setSelectedOrderForReport(null);
+  };
+
+  // Handle Report Form Submission
+  const handleSubmitReport = async (e) => {
+    e.preventDefault();
+    
+    if (!reportForm.verifiedBy || reportForm.verifiedBy === 0) {
+      setReportMessage({ type: 'error', text: 'Please select a verified by doctor' });
+      return;
+    }
+    
+    if (!reportForm.verifiedDateTime) {
+      setReportMessage({ type: 'error', text: 'Please select verified date and time' });
+      return;
+    }
+    
+    try {
+      setSubmittingReport(true);
+      setReportMessage({ type: '', text: '' });
+      
+      if (isUpdateMode) {
+        // Update existing report
+        const updateReportData = {
+          reportId: currentReportId,
+          clinicId: orderDetails.clinicId,
+          branchId: orderDetails.branchId,
+          fileId: orderDetails.fileId || 0,
+          verifiedBy: reportForm.verifiedBy,
+          verifiedDateTime: reportForm.verifiedDateTime,
+          remarks: reportForm.remarks,
+          status: reportForm.status
+        };
+        
+        const result = await updateLabTestReport(updateReportData);
+        
+        if (result.success) {
+          setReportMessage({ type: 'success', text: 'Lab test report updated successfully!' });
+          setTimeout(() => {
+            setShowReportModal(false);
+            setSelectedOrderForReport(null);
+            setOrderDetails(null);
+            setIsUpdateMode(false);
+            setCurrentReportId(null);
+            setReportForm({
+              verifiedBy: 0,
+              verifiedDateTime: '',
+              remarks: '',
+              status: 1 // Default to "Created" status
+            });
+            setReportMessage({ type: '', text: '' });
+            fetchOrders();
+          }, 1500);
+        }
+      } else {
+        // Add new report
+        const reportData = {
+          orderId: orderDetails.id,
+          consultationId: orderDetails.consultationId,
+          visitId: orderDetails.visitId,
+          patientId: orderDetails.patientId,
+          doctorId: orderDetails.doctorId,
+          clinicId: orderDetails.clinicId,
+          branchId: orderDetails.branchId,
+          fileId: orderDetails.fileId || 0,
+          verifiedBy: reportForm.verifiedBy,
+          verifiedDateTime: reportForm.verifiedDateTime,
+          remarks: reportForm.remarks
+        };
+        
+        const result = await addLabTestReport(reportData);
+        
+        if (result.success) {
+          setReportMessage({ type: 'success', text: 'Lab test report added successfully!' });
+          setTimeout(() => {
+            setShowReportModal(false);
+            setSelectedOrderForReport(null);
+            setOrderDetails(null);
+            setReportForm({
+              verifiedBy: 0,
+              verifiedDateTime: '',
+              remarks: '',
+              status: 1 // Default to "Created" status
+            });
+            setReportMessage({ type: '', text: '' });
+            fetchOrders();
+          }, 1500);
+        }
+      }
+      
+    } catch (err) {
+      console.error('Error submitting report:', err);
+      setReportMessage({ type: 'error', text: err.message || `Failed to ${isUpdateMode ? 'update' : 'add'} lab test report` });
+    } finally {
+      setSubmittingReport(false);
+    }
+  };
+
+  const handleCloseReportModal = () => {
+    setShowReportModal(false);
+    setSelectedOrderForReport(null);
+    setOrderDetails(null);
+    setIsUpdateMode(false);
+    setCurrentReportId(null);
+    setReportMessage({ type: '', text: '' });
+    setReportForm({
+      verifiedBy: 0,
+      verifiedDateTime: '',
+      remarks: '',
+      status: 1 // Default to "Created" status
+    });
   };
 
   const formatDate = (dateStr) => {
@@ -420,107 +756,131 @@ const LabOrderList = () => {
                 </td>
               </tr>
             ) : (
-              orders.map((order) => (
-                <tr key={order.id} className={styles.tableRow}>
-                  <td>
-                    <div className={styles.orderIdCell}>
-                      <div className={styles.orderIcon}>
-                        {getOrderStatusIcon(order.status)}
+              orders.map((order) => {
+                const hasReport = orderReports[order.id];
+                
+                return (
+                  <tr key={order.id} className={styles.tableRow}>
+                    <td>
+                      <div className={styles.orderIdCell}>
+                        <div className={styles.orderIcon}>
+                          {getOrderStatusIcon(order.status)}
+                        </div>
+                        <div>
+                          <div className={styles.orderId}>#{order.id}</div>
+                          <div className={styles.orderSeq}>Seq: {order.uniqueSeq}</div>
+                        </div>
                       </div>
+                    </td>
+                    <td>
+                      <div className={styles.nameCell}>
+                        <div className={styles.avatar}>
+                          {order.patientName?.charAt(0).toUpperCase() || 'P'}
+                        </div>
+                        <div>
+                          <div className={styles.name}>{order.patientName}</div>
+                          <div className={styles.subText}>
+                            {order.patientFileNo} • {order.patientMobile}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
                       <div>
-                        <div className={styles.orderId}>#{order.id}</div>
-                        <div className={styles.orderSeq}>Seq: {order.uniqueSeq}</div>
+                        <div className={styles.name}>{order.doctorFullName}</div>
+                        <div className={styles.subText}>{order.doctorCode || '—'}</div>
                       </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.nameCell}>
-                      <div className={styles.avatar}>
-                        {order.patientName?.charAt(0).toUpperCase() || 'P'}
-                      </div>
-                      <div>
-                        <div className={styles.name}>{order.patientName}</div>
+                    </td>
+                    <td>
+                      <span className={`${styles.badge} ${getStatusBadgeClass(order.status)}`}>
+                        {order.statusDesc}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`${styles.badge} ${getPriorityBadgeClass(order.priority)}`}>
+                        {order.priorityDesc}
+                      </span>
+                    </td>
+                    <td>
+                      <div className={styles.dateCell}>
+                        <div className={styles.name}>{formatDate(order.dateCreated)}</div>
                         <div className={styles.subText}>
-                          {order.patientFileNo} • {order.patientMobile}
+                          {new Date(order.dateCreated).toLocaleTimeString('en-US', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div>
-                      <div className={styles.name}>{order.doctorFullName}</div>
-                      <div className={styles.subText}>{order.doctorCode || '—'}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`${styles.badge} ${getStatusBadgeClass(order.status)}`}>
-                      {order.statusDesc}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`${styles.badge} ${getPriorityBadgeClass(order.priority)}`}>
-                      {order.priorityDesc}
-                    </span>
-                  </td>
-                  <td>
-                    <div className={styles.dateCell}>
-                      <div className={styles.name}>{formatDate(order.dateCreated)}</div>
-                      <div className={styles.subText}>
-                        {new Date(order.dateCreated).toLocaleTimeString('en-US', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.actionsCell}>
-                      <button
-                        onClick={() => handleViewOrderDetails(order)}
-                        className={styles.viewBtn}
-                        title="View Details"
-                      >
-                        <FiEye size={16} />
-                      </button>
-                      
-                      <div className={styles.actionDropdownWrapper}>
-                        <button className={styles.actionBtn}>
-                          Actions
+                    </td>
+                    <td>
+                      <div className={styles.actionsCell}>
+                        <button
+                          onClick={() => handleViewOrderDetails(order)}
+                          className={styles.viewBtn}
+                          title="View Details"
+                        >
+                          <FiEye size={16} />
                         </button>
-                        <div className={styles.actionDropdown}>
-                          <button
-                            onClick={() => handleMakeWorkClick(order)}
-                            className={styles.dropdownItem}
-                            disabled={order.status === 5 || order.status === 2 || order.status === 3 || order.status === 6}
-                          >
-                            {order.status === 5 ? 'In Progress' : 'Make Work'}
+                        
+                        <div className={styles.actionDropdownWrapper}>
+                          <button className={styles.actionBtn}>
+                            Actions
                           </button>
-                          
-                          {(order.status === 1 || order.status === 5) && (
+                          <div className={styles.actionDropdown}>
                             <button
-                              onClick={() => handleMakeInvoiceClick(order)}
+                              onClick={() => handleMakeWorkClick(order)}
                               className={styles.dropdownItem}
+                              disabled={order.status === 5 || order.status === 2 || order.status === 3 || order.status === 6}
                             >
-                              <FiFileText size={14} />
-                              Make Invoice
+                              {order.status === 5 ? 'In Progress' : 'Make Work'}
                             </button>
-                          )}
-                          
-                          {order.status === 4 && (
-                            <button
-                              className={`${styles.dropdownItem} ${styles.invoicedItem}`}
-                              disabled
-                            >
-                              <FiCheckCircle size={14} />
-                              Invoiced!
-                            </button>
-                          )}
+                            
+                            {(order.status === 2) && !hasReport && (
+                              <button
+                                onClick={() => handleAddReportClick(order)}
+                                className={styles.dropdownItem}
+                              >
+                                <FiFileText size={14} />
+                                Add Report
+                              </button>
+                            )}
+                            
+                            {(order.status === 2) && hasReport && (
+                              <button
+                                onClick={() => handleUpdateReportClick(order)}
+                                className={styles.dropdownItem}
+                              >
+                                <FiEdit size={14} />
+                                Update Report
+                              </button>
+                            )}
+                            
+                            {(order.status === 1 || order.status === 5) && (
+                              <button
+                                onClick={() => handleMakeInvoiceClick(order)}
+                                className={styles.dropdownItem}
+                              >
+                                <FiFileText size={14} />
+                                Make Invoice
+                              </button>
+                            )}
+                            
+                            {order.status === 4 && (
+                              <button
+                                className={`${styles.dropdownItem} ${styles.invoicedItem}`}
+                                disabled
+                              >
+                                <FiCheckCircle size={14} />
+                                Invoiced!
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
@@ -574,6 +934,165 @@ const LabOrderList = () => {
           }}
           onSubmit={handleGenerateInvoice}
         />
+      )}
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.confirmDialog}>
+            <div className={styles.confirmHeader}>
+              <h3>Confirm Add Report</h3>
+            </div>
+            <div className={styles.confirmBody}>
+              <p>Are you sure you want to add a report for Order #{selectedOrderForReport?.id}?</p>
+              <p className={styles.confirmSubtext}>
+                This will update the order status to Completed and open the report form.
+              </p>
+            </div>
+            <div className={styles.confirmFooter}>
+              <button 
+                onClick={handleConfirmNo} 
+                className={styles.cancelModalBtn}
+                disabled={submittingReport}
+              >
+                No
+              </button>
+              <button 
+                onClick={handleConfirmYes} 
+                className={styles.confirmModalBtn}
+                disabled={submittingReport}
+              >
+                {submittingReport ? 'Processing...' : 'Yes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Update Report Modal */}
+      {showReportModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.reportModal}>
+            <div className={styles.reportModalHeader}>
+              <h3>{isUpdateMode ? 'Update Lab Test Report' : 'Add Lab Test Report'}</h3>
+              <button 
+                onClick={handleCloseReportModal} 
+                className={styles.reportCloseBtn}
+                disabled={submittingReport}
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmitReport} className={styles.reportForm}>
+              <div className={styles.reportModalBody}>
+                {reportMessage.text && (
+                  <div className={`${styles.reportMessage} ${styles[reportMessage.type]}`}>
+                    {reportMessage.text}
+                  </div>
+                )}
+
+                <div className={styles.orderInfoSection}>
+                  <h4>Order Information</h4>
+                  <div className={styles.infoGrid}>
+                    <div className={styles.infoItem}>
+                      <span className={styles.infoLabel}>Order ID:</span>
+                      <span className={styles.infoValue}>#{orderDetails?.id}</span>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <span className={styles.infoLabel}>Patient:</span>
+                      <span className={styles.infoValue}>{orderDetails?.patientName}</span>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <span className={styles.infoLabel}>Doctor:</span>
+                      <span className={styles.infoValue}>{orderDetails?.doctorFullName}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.reportFormGroup}>
+                  <label className={styles.reportFormLabel}>
+                    Verified By <span className={styles.reportRequired}>*</span>
+                  </label>
+                  <select
+                    value={reportForm.verifiedBy}
+                    onChange={(e) => setReportForm({ ...reportForm, verifiedBy: Number(e.target.value) })}
+                    className={styles.reportFormSelect}
+                    required
+                    disabled={submittingReport}
+                  >
+                    <option value={0}>Select Doctor</option>
+                    {doctors.map(doctor => (
+                      <option key={doctor.id} value={doctor.id}>
+                        {doctor.name} ({doctor.employeeCode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className={styles.reportFormGroup}>
+                  <label className={styles.reportFormLabel}>
+                    Verified Date & Time <span className={styles.reportRequired}>*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={reportForm.verifiedDateTime}
+                    onChange={(e) => setReportForm({ ...reportForm, verifiedDateTime: e.target.value })}
+                    className={styles.reportFormInput}
+                    required
+                    disabled={submittingReport}
+                  />
+                </div>
+
+                {isUpdateMode && (
+                  <div className={styles.reportFormGroup}>
+                    <label className={styles.reportFormLabel}>Status</label>
+                    <select
+                      value={reportForm.status}
+                      onChange={(e) => setReportForm({ ...reportForm, status: Number(e.target.value) })}
+                      className={styles.reportFormSelect}
+                      disabled={submittingReport}
+                    >
+                      {reportStatusOptions.map(opt => (
+                        <option key={opt.id} value={opt.id}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div className={styles.reportFormGroup}>
+                  <label className={styles.reportFormLabel}>Remarks</label>
+                  <textarea
+                    value={reportForm.remarks}
+                    onChange={(e) => setReportForm({ ...reportForm, remarks: e.target.value })}
+                    className={styles.reportFormTextarea}
+                    rows={4}
+                    placeholder="Enter any additional remarks..."
+                    disabled={submittingReport}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.reportModalFooter}>
+                <button 
+                  type="button"
+                  onClick={handleCloseReportModal} 
+                  className={styles.reportCancelBtn}
+                  disabled={submittingReport}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className={styles.reportSubmitBtn}
+                  disabled={submittingReport}
+                >
+                  {submittingReport ? (isUpdateMode ? 'Updating...' : 'Submitting...') : (isUpdateMode ? 'Update Report' : 'Submit Report')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

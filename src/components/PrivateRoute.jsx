@@ -54,7 +54,7 @@ const ROUTE_PERMISSIONS = {
   "/purchaseorder-list": ["admin", "doctor", "receptionist"],
   "/add-puchaseorder": ["admin", "doctor", "receptionist"],
   "/view-purchaseorder/:id": ["admin", "doctor", "receptionist"],
-  "/purchaseorderdetail-list": ["admin", "doctor", "receptionist"],
+  "/purchaseorderitem": ["admin", "doctor", "receptionist"],
   "/Add-purchaseorderdetail": ["admin", "doctor", "receptionist"],
   "/update-purchaseorderdetail/:id": ["admin", "doctor", "receptionist"],
   "/view-purchaseorderdetail/:id": ["admin", "doctor", "receptionist"],

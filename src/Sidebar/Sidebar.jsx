@@ -121,8 +121,7 @@ const Sidebar = () => {
         { to: "/vendor-list", label: "Vendor"},
         { to: "/medicinemaster-list", label: "Medicine"},
         { to: "/medicinestock-list", label: "Medicine Stock"},
-        { to: "/purchaseorder-list", label: "purchase Order"},
-        { to: "/purchaseorderdetail-list", label: "purchase Order Detail"},
+        { to: "/purchaseorder-list", label: "purchase Order"}
       ],
       show: hasAccess(MENU_PERMISSIONS.pharmacy),
     },

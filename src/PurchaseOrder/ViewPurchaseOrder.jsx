@@ -1,10 +1,11 @@
 // src/components/ViewPurchaseOrder.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import { getPurchaseOrderList, deletePurchaseOrder } from '../api/api-pharmacy.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
+import PurchaseOrderItems from './PurchaseOrderItems.jsx';
 import styles from './ViewPurchaseOrder.module.css';
 
 // ────────────────────────────────────────────────
@@ -12,11 +13,14 @@ const ViewPurchaseOrder = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // State
   const [purchaseOrder, setPurchaseOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('details'); // 'details' or 'items'
 
   // ────────────────────────────────────────────────
+  // Fetch Purchase Order Details
   useEffect(() => {
     const fetchPurchaseOrderDetails = async () => {
       try {
@@ -75,22 +79,27 @@ const ViewPurchaseOrder = () => {
   };
 
   const getStatusClass = (status) => {
-    if (status === 'active' || status === 1) return 'active';
-    if (status === 'inactive' || status === 0) return 'inactive';
-    return 'inactive';
+    if (status === 1) return 'draft';
+    if (status === 2) return 'sent';
+    if (status === 3) return 'confirmed';
+    if (status === 4) return 'partiallyReceived';
+    if (status === 5) return 'fullyReceived';
+    if (status === 6) return 'cancelled';
+    return 'draft';
   };
 
-  const getStatusLabel = (po) => {
-    if (po.statusDesc) return po.statusDesc.toUpperCase();
-    if (po.status === 1 || po.status === 'active') return 'ACTIVE';
-    if (po.status === 0 || po.status === 'inactive') return 'INACTIVE';
-    return 'UNKNOWN';
+  const getStatusLabel = (status) => {
+    if (status === 1) return 'Draft';
+    if (status === 2) return 'Sent';
+    if (status === 3) return 'Confirmed';
+    if (status === 4) return 'Partially Received';
+    if (status === 5) return 'Fully Received';
+    if (status === 6) return 'Cancelled';
+    return 'Unknown';
   };
 
   // ────────────────────────────────────────────────
   // Handlers
-  
-
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this purchase order?')) {
       return;
@@ -128,158 +137,189 @@ const ViewPurchaseOrder = () => {
       <ErrorHandler error={error} />
       <Header title="Purchase Order Details" />
 
-      {/* Back Button */}
-      <div className={styles.toolbar}>
-        <button onClick={handleBack} className={styles.backBtn}>
-          <FiArrowLeft size={20} /> Back to List
-        </button>
-      </div>
+      {/* Header Section */}
+      <div className={styles.pageHeader}>
+        <div className={styles.headerTop}>
+          <button onClick={handleBack} className={styles.backBtn}>
+            <FiArrowLeft size={20} /> Back to List
+          </button>
+          <div className={styles.headerActions}>
+            <button onClick={handleDelete} className={styles.deleteBtn}>
+              <FiTrash2 size={18} /> Delete
+            </button>
+          </div>
+        </div>
 
-      {/* Purchase Order Details Card */}
-      <div className={styles.detailsCard}>
-        
-        {/* Header Section */}
-        <div className={styles.cardHeader}>
-          <div className={styles.headerInfo}>
-            <h2>
-              {purchaseOrder.poNumber || 'N/A'}
-            </h2>
-            <p className={styles.subtitle}>
-              Vendor: {purchaseOrder.vendorName || '—'} | Contact: {purchaseOrder.contactPerson || '—'} | Mobile: {purchaseOrder.vendorMobile || '—'}
-            </p>
-            <span className={`${styles.statusBadge} ${styles.large} ${styles[getStatusClass(purchaseOrder.status)]}`}>
-              {getStatusLabel(purchaseOrder)}
+        {/* PO Info Banner */}
+        <div className={styles.infoBanner}>
+          <div className={styles.bannerLeft}>
+            <h1 className={styles.poNumber}>{purchaseOrder.poNumber || 'N/A'}</h1>
+            <div className={styles.poMeta}>
+              <span className={styles.metaItem}>
+                <strong>Vendor:</strong> {purchaseOrder.vendorName || '—'}
+              </span>
+              <span className={styles.metaDivider}>|</span>
+              <span className={styles.metaItem}>
+                <strong>Date:</strong> {formatDate(purchaseOrder.poDate)}
+              </span>
+              <span className={styles.metaDivider}>|</span>
+              <span className={styles.metaItem}>
+                <strong>Contact:</strong> {purchaseOrder.contactPerson || '—'}
+              </span>
+            </div>
+          </div>
+          <div className={styles.bannerRight}>
+            <span className={`${styles.statusBadge} ${styles[getStatusClass(purchaseOrder.status)]}`}>
+              {getStatusLabel(purchaseOrder.status)}
             </span>
           </div>
         </div>
 
-        {/* Details Body */}
-        <div className={styles.cardBody}>
-          
-          {/* Section 1: Basic Information */}
-          <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Basic Information</h3>
-
-            <div className={styles.detailsGrid}>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>PO ID</span>
-                <span className={styles.detailValue}>{purchaseOrder.id || '—'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>PO Number</span>
-                <span className={styles.detailValue}>{purchaseOrder.poNumber || '—'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>PO Date</span>
-                <span className={styles.detailValue}>{formatDate(purchaseOrder.poDate)}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Status</span>
-                <span className={`${styles.statusBadge} ${styles[getStatusClass(purchaseOrder.status)]}`}>
-                  {getStatusLabel(purchaseOrder)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 2: Vendor Information */}
-          <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Vendor Information</h3>
-            <div className={styles.detailsGrid}>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Vendor ID</span>
-                <span className={styles.detailValue}>{purchaseOrder.vendorId || '—'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Vendor Name</span>
-                <span className={styles.detailValue}>{purchaseOrder.vendorName || '—'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Contact Person</span>
-                <span className={styles.detailValue}>{purchaseOrder.contactPerson || '—'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Vendor Mobile</span>
-                <span className={styles.detailValue}>{purchaseOrder.vendorMobile || '—'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 3: Amount Details */}
-          <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Amount Details</h3>
-            <div className={styles.detailsGrid}>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Total Amount</span>
-                <span className={`${styles.detailValue} ${styles.amountValue}`}>
-                  {formatAmount(purchaseOrder.totalAmount)}
-                </span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>CGST Amount</span>
-                <span className={`${styles.detailValue} ${styles.amountValue}`}>
-                  {formatAmount(purchaseOrder.cgstAmount)}
-                </span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>SGST Amount</span>
-                <span className={`${styles.detailValue} ${styles.amountValue}`}>
-                  {formatAmount(purchaseOrder.sgstAmount)}
-                </span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Discount</span>
-                <span className={`${styles.detailValue} ${styles.amountValue}`}>
-                  {purchaseOrder.discount ? `${purchaseOrder.discount}%` : '—'}
-                </span>
-              </div>
-              <div className={`${styles.detailItem} ${styles.highlight}`}>
-                <span className={styles.detailLabel}>Net Amount</span>
-                <span className={`${styles.detailValue} ${styles.amountValue} ${styles.netAmount}`}>
-                  {formatAmount(purchaseOrder.netAmount)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 4: Clinic Information */}
-          <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Clinic Information</h3>
-            <div className={styles.detailsGrid}>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Clinic Name</span>
-                <span className={styles.detailValue}>{purchaseOrder.clinicName || '—'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Branch Name</span>
-                <span className={styles.detailValue}>{purchaseOrder.branchName || '—'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 5: Timestamps */}
-          <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Record Information</h3>
-            <div className={styles.detailsGrid}>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Date Created</span>
-                <span className={styles.detailValue}>{formatDate(purchaseOrder.dateCreated)}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Last Modified</span>
-                <span className={styles.detailValue}>{formatDate(purchaseOrder.dateModified)}</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Footer Actions */}
-        <div className={styles.cardFooter}>
-          <button onClick={handleDelete} className={`${styles.btnHold} ${styles.btnDelete}`}>
-            Delete Purchase Order
+        {/* Tabs */}
+        <div className={styles.tabs}>
+          <button
+            className={`${styles.tab} ${activeTab === 'details' ? styles.activeTab : ''}`}
+            onClick={() => setActiveTab('details')}
+          >
+            Order Details
+          </button>
+          <button
+            className={`${styles.tab} ${activeTab === 'items' ? styles.activeTab : ''}`}
+            onClick={() => setActiveTab('items')}
+          >
+            Order Items
           </button>
         </div>
+      </div>
+
+      {/* Tab Content */}
+      <div className={styles.tabContent}>
+        {activeTab === 'details' ? (
+          // ORDER DETAILS TAB
+          <div className={styles.detailsCard}>
+            <div className={styles.cardBody}>
+              
+              {/* Section 1: Basic Information */}
+              <div className={styles.detailsSection}>
+                <h3 className={styles.sectionTitle}>Basic Information</h3>
+                <div className={styles.detailsGrid}>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>PO ID</span>
+                    <span className={styles.detailValue}>{purchaseOrder.id || '—'}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>PO Number</span>
+                    <span className={styles.detailValue}>{purchaseOrder.poNumber || '—'}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>PO Date</span>
+                    <span className={styles.detailValue}>{formatDate(purchaseOrder.poDate)}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Status</span>
+                    <span className={`${styles.statusBadge} ${styles[getStatusClass(purchaseOrder.status)]}`}>
+                      {getStatusLabel(purchaseOrder.status)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Vendor Information */}
+              <div className={styles.detailsSection}>
+                <h3 className={styles.sectionTitle}>Vendor Information</h3>
+                <div className={styles.detailsGrid}>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Vendor ID</span>
+                    <span className={styles.detailValue}>{purchaseOrder.vendorId || '—'}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Vendor Name</span>
+                    <span className={styles.detailValue}>{purchaseOrder.vendorName || '—'}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Contact Person</span>
+                    <span className={styles.detailValue}>{purchaseOrder.contactPerson || '—'}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Vendor Mobile</span>
+                    <span className={styles.detailValue}>{purchaseOrder.vendorMobile || '—'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Amount Details */}
+              <div className={styles.detailsSection}>
+                <h3 className={styles.sectionTitle}>Amount Details</h3>
+                <div className={styles.detailsGrid}>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Total Amount</span>
+                    <span className={`${styles.detailValue} ${styles.amountValue}`}>
+                      {formatAmount(purchaseOrder.totalAmount)}
+                    </span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>CGST Amount</span>
+                    <span className={`${styles.detailValue} ${styles.amountValue}`}>
+                      {formatAmount(purchaseOrder.cgstAmount)}
+                    </span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>SGST Amount</span>
+                    <span className={`${styles.detailValue} ${styles.amountValue}`}>
+                      {formatAmount(purchaseOrder.sgstAmount)}
+                    </span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Discount</span>
+                    <span className={`${styles.detailValue} ${styles.amountValue}`}>
+                      {purchaseOrder.discount ? `${purchaseOrder.discount}%` : '—'}
+                    </span>
+                  </div>
+                  <div className={`${styles.detailItem} ${styles.highlight}`}>
+                    <span className={styles.detailLabel}>Net Amount</span>
+                    <span className={`${styles.detailValue} ${styles.amountValue} ${styles.netAmount}`}>
+                      {formatAmount(purchaseOrder.netAmount)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 4: Clinic Information */}
+              <div className={styles.detailsSection}>
+                <h3 className={styles.sectionTitle}>Clinic Information</h3>
+                <div className={styles.detailsGrid}>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Clinic Name</span>
+                    <span className={styles.detailValue}>{purchaseOrder.clinicName || '—'}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Branch Name</span>
+                    <span className={styles.detailValue}>{purchaseOrder.branchName || '—'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 5: Timestamps */}
+              <div className={styles.detailsSection}>
+                <h3 className={styles.sectionTitle}>Record Information</h3>
+                <div className={styles.detailsGrid}>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Date Created</span>
+                    <span className={styles.detailValue}>{formatDate(purchaseOrder.dateCreated)}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Last Modified</span>
+                    <span className={styles.detailValue}>{formatDate(purchaseOrder.dateModified)}</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        ) : (
+          // ORDER ITEMS TAB
+          <PurchaseOrderItems poId={id} purchaseOrder={purchaseOrder} />
+        )}
       </div>
     </div>
   );

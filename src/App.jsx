@@ -59,18 +59,17 @@ import UpdateLabTestPackage from "./LabTestMaster/Updatelabtestpackage.jsx";
 import ViewLabPackage from "./LabTestMaster/ViewLabPackage.jsx";
 import ViewLabMaster from "./LabTestMaster/ViewLabMaster.jsx";
 import LabMasterList from "./LabTestMaster/Labmasterlist.jsx";
-import PurchaseOrderDetailList from "./PurchaseOrderDetail/PurchaseOrderDetailList.jsx";
-import AddPurchaseOrderDetail from "./PurchaseOrderDetail/AddPurchaseOrderDetail.jsx";
-import UpdatePurchaseOrderDetail from "./PurchaseOrderDetail/UpdatePurchaseOrderDetail.jsx";
-import ViewPurchaseOrderDetail from "./PurchaseOrderDetail/ViewPurchaseOrderDetail.jsx";
-import PurchaseOrderList from "./PurchaseOrder/PurchaseOrderList.jsx";
-import AddPurchaseOrder from "./PurchaseOrder/AddPurchaseOrder.jsx";
-import ViewPurchaseOrder from "./PurchaseOrder/ViewPurchaseOrder.jsx";
 import MedicineStockList from "./MedicineStock/MedicineStocklist.jsx";
 import UpdateMedicineStock from "./MedicineStock/UpdateMedicineStock.jsx";
 import LabWorkQueue from "./LabWork/LabWorkQueue.jsx";
 import MedicineStockByMedicine from "./MedicineMaster/MedicineStockbyMedicine.jsx";
 import LabOrderList from "./LabWork/LabOrderList.jsx";
+import PurchaseOrderList from "./PurchaseOrder/PurchaseOrderList.jsx";
+import AddPurchaseOrder from "./PurchaseOrder/AddPurchaseOrder.jsx";
+import ViewPurchaseOrder from "./PurchaseOrder/ViewPurchaseOrder.jsx";
+import PurchaseOrderItems from "./PurchaseOrder/PurchaseOrderItems.jsx";
+import AddPurchaseOrderDetail from "./PurchaseOrder/AddPurchaseOrderDetail.jsx";
+import UpdatePurchaseOrderDetail from "./PurchaseOrder/UpdatePurchaseOrderDetail.jsx";
 
 
 
@@ -149,10 +148,9 @@ function App() {
           <Route path="/purchaseorder-list" element={<PurchaseOrderList/>} />
           <Route path="/add-purchaseorder" element={<AddPurchaseOrder/>} />
           <Route path="/view-purchaseorder/:id" element={<ViewPurchaseOrder/>} />
-          <Route path="/purchaseorderdetail-list" element={<PurchaseOrderDetailList/>} />
-          <Route path="/Add-purchaseorderdetail" element={<AddPurchaseOrderDetail/>} />
-          <Route path="/Update-purchaseorderdetail/:id" element={<UpdatePurchaseOrderDetail/>} />
-          <Route path="/view-purchaseorderdetail/:id" element={<ViewPurchaseOrderDetail/>} />
+          <Route path="/purchaseorderitem" element={<PurchaseOrderItems/>} />
+          <Route path="/add-purchaseorderdetail" element={<AddPurchaseOrderDetail/>} />
+          <Route path="/update-purchaseorderdetail/:id" element={<UpdatePurchaseOrderDetail/>} />
           <Route path="/laborder-list" element={<LabOrderList/>} />
           <Route path="/medicinestock-list" element={<MedicineStockList/>} />
           <Route path="/update-medicinestock/:id" element={<UpdateMedicineStock/>} />

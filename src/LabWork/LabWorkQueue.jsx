@@ -3,14 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiSearch, FiCalendar, FiFilter, FiChevronDown, FiChevronRight, 
-  FiClock, FiCheckCircle, FiAlertCircle, FiPackage, FiActivity, FiFileText, FiX,
-  FiSave, FiXCircle, FiUser
+  FiClock, FiCheckCircle, FiAlertCircle, FiPackage, FiActivity, FiX,
+  FiSave, FiXCircle, FiUser, FiFileText
 } from 'react-icons/fi';
 import { 
   getLabWorkItemsList, 
-  updateLabTestOrder, 
-  addLabTestReport, 
-  getLabTestOrderList,
   updateSampleCollection,
   updateLabWorkItemResult,
   approveLabWorkItem,
@@ -42,25 +39,10 @@ const LabWorkQueue = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Report Modal States
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [selectedOrderForReport, setSelectedOrderForReport] = useState(null);
-  const [orderDetails, setOrderDetails] = useState(null);
-  const [submittingReport, setSubmittingReport] = useState(false);
-  const [reportMessage, setReportMessage] = useState({ type: '', text: '' });
-  
   // Work Detail Modal States
   const [showWorkDetailModal, setShowWorkDetailModal] = useState(false);
   const [selectedWorkItem, setSelectedWorkItem] = useState(null);
   const [selectedOrderData, setSelectedOrderData] = useState(null);
-  
-  // Report Form States
-  const [reportForm, setReportForm] = useState({
-    verifiedBy: 0,
-    verifiedDateTime: '',
-    remarks: ''
-  });
 
   // Status options
   const statusOptions = [
@@ -258,146 +240,6 @@ const LabWorkQueue = () => {
     // We'll fetch on modal close instead
   };
 
-  // Handle Add Report Button Click
-  const handleAddReportClick = (orderData) => {
-    setSelectedOrderForReport(orderData);
-    setShowConfirmDialog(true);
-  };
-
-  // Handle Confirmation Dialog
-  const handleConfirmYes = async () => {
-    setShowConfirmDialog(false);
-    
-    try {
-      setSubmittingReport(true);
-      
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
-      
-      const orderListOptions = {
-        OrderID: selectedOrderForReport.orderId,
-        BranchID: branchId,
-        Page: 1,
-        PageSize: 1
-      };
-      
-      const orderList = await getLabTestOrderList(clinicId, orderListOptions);
-      
-      if (!orderList || orderList.length === 0) {
-        throw new Error('Order details not found');
-      }
-      
-      const orderDetail = orderList[0];
-      setOrderDetails(orderDetail);
-      
-      const updateData = {
-        orderId: selectedOrderForReport.orderId,
-        clinicId: clinicId,
-        branchId: branchId,
-        status: 2,
-        fileId: orderDetail.fileId || 0,
-        priority: orderDetail.priority || 1,
-        notes: orderDetail.notes || '',
-        testApprovedBy: orderDetail.doctorId || 0
-      };
-      
-      await updateLabTestOrder(updateData);
-      
-      const now = new Date();
-      const formattedDateTime = now.toISOString().slice(0, 16);
-      
-      setReportForm({
-        verifiedBy: 0,
-        verifiedDateTime: formattedDateTime,
-        remarks: ''
-      });
-      
-      setShowReportModal(true);
-      
-    } catch (err) {
-      console.error('Error processing add report:', err);
-      setError(err);
-      setReportMessage({ type: 'error', text: err.message || 'Failed to process report request' });
-    } finally {
-      setSubmittingReport(false);
-    }
-  };
-
-  const handleConfirmNo = () => {
-    setShowConfirmDialog(false);
-    setSelectedOrderForReport(null);
-  };
-
-  // Handle Report Form Submission
-  const handleSubmitReport = async (e) => {
-    e.preventDefault();
-    
-    if (!reportForm.verifiedBy || reportForm.verifiedBy === 0) {
-      setReportMessage({ type: 'error', text: 'Please select a verified by doctor' });
-      return;
-    }
-    
-    if (!reportForm.verifiedDateTime) {
-      setReportMessage({ type: 'error', text: 'Please select verified date and time' });
-      return;
-    }
-    
-    try {
-      setSubmittingReport(true);
-      setReportMessage({ type: '', text: '' });
-      
-      const reportData = {
-        orderId: orderDetails.id,
-        consultationId: orderDetails.consultationId,
-        visitId: orderDetails.visitId,
-        patientId: orderDetails.patientId,
-        doctorId: orderDetails.doctorId,
-        clinicId: orderDetails.clinicId,
-        branchId: orderDetails.branchId,
-        fileId: orderDetails.fileId || 0,
-        verifiedBy: reportForm.verifiedBy,
-        verifiedDateTime: reportForm.verifiedDateTime,
-        remarks: reportForm.remarks
-      };
-      
-      const result = await addLabTestReport(reportData);
-      
-      if (result.success) {
-        setReportMessage({ type: 'success', text: 'Lab test report added successfully!' });
-        setTimeout(() => {
-          setShowReportModal(false);
-          setSelectedOrderForReport(null);
-          setOrderDetails(null);
-          setReportForm({
-            verifiedBy: 0,
-            verifiedDateTime: '',
-            remarks: ''
-          });
-          setReportMessage({ type: '', text: '' });
-          fetchWorkItems();
-        }, 1500);
-      }
-      
-    } catch (err) {
-      console.error('Error submitting report:', err);
-      setReportMessage({ type: 'error', text: err.message || 'Failed to add lab test report' });
-    } finally {
-      setSubmittingReport(false);
-    }
-  };
-
-  const handleCloseReportModal = () => {
-    setShowReportModal(false);
-    setSelectedOrderForReport(null);
-    setOrderDetails(null);
-    setReportMessage({ type: '', text: '' });
-    setReportForm({
-      verifiedBy: 0,
-      verifiedDateTime: '',
-      remarks: ''
-    });
-  };
-
   const totalOrders = Object.keys(groupedWorkItems).length;
   const totalWorkItems = workItems.length;
   const pendingItems = workItems.filter(item => item.status === 1).length;
@@ -556,7 +398,6 @@ const LabWorkQueue = () => {
             const orderStatus = getOrderStatus(orderData.items);
             const completedCount = orderData.items.filter(item => item.status === 3).length;
             const totalCount = orderData.items.length;
-            const isFullyCompleted = isOrderFullyCompleted(orderData.items);
 
             return (
               <div key={orderId} className={styles.orderGroup}>
@@ -613,19 +454,6 @@ const LabWorkQueue = () => {
                         {Math.round((completedCount / totalCount) * 100)}%
                       </div>
                     </div>
-                    
-                    {isFullyCompleted && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddReportClick(orderData);
-                        }}
-                        className={styles.addReportBtn}
-                      >
-                        <FiFileText size={18} />
-                        Add Report
-                      </button>
-                    )}
                   </div>
                 </div>
 
@@ -729,149 +557,6 @@ const LabWorkQueue = () => {
           onSave={handleSaveWorkDetail}
           employees={doctors}
         />
-      )}
-
-      {/* Confirmation Dialog */}
-      {showConfirmDialog && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.confirmDialog}>
-            <div className={styles.confirmHeader}>
-              <h3>Confirm Add Report</h3>
-            </div>
-            <div className={styles.confirmBody}>
-              <p>Are you sure you want to add a report for Order #{selectedOrderForReport?.orderId}?</p>
-              <p className={styles.confirmSubtext}>
-                This will update the order status to Completed and open the report form.
-              </p>
-            </div>
-            <div className={styles.confirmFooter}>
-              <button 
-                onClick={handleConfirmNo} 
-                className={styles.cancelBtn}
-                disabled={submittingReport}
-              >
-                No
-              </button>
-              <button 
-                onClick={handleConfirmYes} 
-                className={styles.confirmBtn}
-                disabled={submittingReport}
-              >
-                {submittingReport ? 'Processing...' : 'Yes'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Report Modal */}
-      {showReportModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.reportModal}>
-            <div className={styles.modalHeader}>
-              <h3>Add Lab Test Report</h3>
-              <button 
-                onClick={handleCloseReportModal} 
-                className={styles.closeBtn}
-                disabled={submittingReport}
-              >
-                <FiX size={24} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleSubmitReport} className={styles.reportForm}>
-              <div className={styles.modalBody}>
-                {reportMessage.text && (
-                  <div className={`${styles.message} ${styles[reportMessage.type]}`}>
-                    {reportMessage.text}
-                  </div>
-                )}
-
-                <div className={styles.orderInfoSection}>
-                  <h4>Order Information</h4>
-                  <div className={styles.infoGrid}>
-                    <div className={styles.infoItem}>
-                      <span className={styles.infoLabel}>Order ID:</span>
-                      <span className={styles.infoValue}>#{orderDetails?.id}</span>
-                    </div>
-                    <div className={styles.infoItem}>
-                      <span className={styles.infoLabel}>Patient:</span>
-                      <span className={styles.infoValue}>{orderDetails?.patientName}</span>
-                    </div>
-                    <div className={styles.infoItem}>
-                      <span className={styles.infoLabel}>Doctor:</span>
-                      <span className={styles.infoValue}>{orderDetails?.doctorFullName}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>
-                    Verified By <span className={styles.required}>*</span>
-                  </label>
-                  <select
-                    value={reportForm.verifiedBy}
-                    onChange={(e) => setReportForm({ ...reportForm, verifiedBy: Number(e.target.value) })}
-                    className={styles.formSelect}
-                    required
-                    disabled={submittingReport}
-                  >
-                    <option value={0}>Select Doctor</option>
-                    {doctors.map(doctor => (
-                      <option key={doctor.id} value={doctor.id}>
-                        {doctor.name} ({doctor.employeeCode})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>
-                    Verified Date & Time <span className={styles.required}>*</span>
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={reportForm.verifiedDateTime}
-                    onChange={(e) => setReportForm({ ...reportForm, verifiedDateTime: e.target.value })}
-                    className={styles.formInput}
-                    required
-                    disabled={submittingReport}
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Remarks</label>
-                  <textarea
-                    value={reportForm.remarks}
-                    onChange={(e) => setReportForm({ ...reportForm, remarks: e.target.value })}
-                    className={styles.formTextarea}
-                    rows={4}
-                    placeholder="Enter any additional remarks..."
-                    disabled={submittingReport}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.modalFooter}>
-                <button 
-                  type="button"
-                  onClick={handleCloseReportModal} 
-                  className={styles.cancelBtn}
-                  disabled={submittingReport}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className={styles.submitBtn}
-                  disabled={submittingReport}
-                >
-                  {submittingReport ? 'Submitting...' : 'Submit Report'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
       )}
     </div>
   );

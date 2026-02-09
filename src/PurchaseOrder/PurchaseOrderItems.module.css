@@ -1,0 +1,740 @@
+/* PurchaseOrderItems.module.css */
+/* COMPREHENSIVE CSS FOR PURCHASE ORDER ITEMS COMPONENT */
+
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --success-color: #22c55e;
+  --success-dark: #16a34a;
+  --danger-color: #ef4444;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== MAIN WRAPPER ==================== */
+.itemsWrapper {
+  animation: fadeIn 0.3s ease;
+}
+
+/* ==================== HEADER ==================== */
+.itemsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: white;
+  border-radius: 15px 15px 0 0;
+  border-bottom: 2px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.1);
+  border: 1px solid rgba(34, 43, 108, 0.08);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.headerIcon {
+  color: var(--accent-end);
+  flex-shrink: 0;
+}
+
+.headerTitle {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-dark);
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.headerSubtitle {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
+
+/* ==================== ADD BUTTON ==================== */
+.addBtn {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  gap: 10px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  font-weight: 700;
+  font-size: 0.94rem;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  white-space: nowrap;
+}
+
+.addBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(32, 125, 156, 0.45);
+}
+
+/* ==================== ERROR BANNER ==================== */
+.errorBanner {
+  padding: 15px 20px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
+  color: #dc2626;
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  border-radius: 10px;
+  margin: 20px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* ==================== EMPTY STATE ==================== */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  background: white;
+  border-radius: 0 0 15px 15px;
+  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.1);
+  text-align: center;
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.emptyIcon {
+  color: #cbd5e1;
+  margin-bottom: 20px;
+}
+
+.emptyState h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 10px 0;
+}
+
+.emptyState p {
+  font-size: 1rem;
+  color: #64748b;
+  margin: 0 0 25px 0;
+}
+
+/* ==================== TABLE CONTAINER ==================== */
+.tableContainer {
+  background: white;
+  border-radius: 0 0 17px 17px;
+  overflow: hidden;
+  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+/* ==================== TABLE HEADER ==================== */
+.table th {
+  text-align: left;
+  padding: 12px 17px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+}
+
+.table td {
+  padding: 6px 17px;
+  border-bottom: 1px solid #e2e8f0;
+  color: var(--text-dark);
+  font-size: 0.75rem;
+  vertical-align: middle;
+}
+
+.table th:last-child,
+.table td:last-child {
+  text-align: right;
+  padding-right: 24px;
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #d5e6ec;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(48, 178, 181, 0.08) !important;
+  transition: background-color 0.25s ease;
+}
+
+/* ==================== MEDICINE CELL ==================== */
+.medicineCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.medicineAvatar {
+  width: 33px;
+  height: 33px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  font-weight: bold;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 12px rgba(32, 125, 156, 0.35);
+  flex-shrink: 0;
+}
+
+.medicineName {
+  font-weight: 700;
+  color: var(--text-dark);
+  font-size: 0.87rem;
+}
+
+/* ==================== TAX CELL ==================== */
+.taxCell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.taxLabel {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.taxValue {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+/* ==================== BADGES ==================== */
+.quantityBadge,
+.priceBadge,
+.amountBadge,
+.totalBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  display: inline-block;
+}
+
+.quantityBadge {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(99, 102, 241, 0.2));
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #4338ca;
+}
+
+.priceBadge {
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.1), rgba(48, 178, 181, 0.1));
+  border: 1px solid rgba(48, 178, 181, 0.3);
+  color: var(--accent-end);
+}
+
+.amountBadge {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.2));
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #166534;
+}
+
+.totalBadge {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.2));
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: #7c3aed;
+  font-size: 0.75rem;
+}
+
+/* ==================== STATUS BADGES ==================== */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.statusBadge.ordered {
+  background: rgba(59, 130, 246, 0.15);
+  color: #1e40af;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.statusBadge.partiallyReceived {
+  background: rgba(251, 191, 36, 0.15);
+  color: #92400e;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.statusBadge.fullyReceived {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.statusBadge.cancelled {
+  background: rgba(107, 114, 128, 0.15);
+  color: #374151;
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.statusBadge.rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ==================== ACTION BUTTONS ==================== */
+.actionButtons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.editBtn,
+.deleteBtn {
+  position: relative;
+  overflow: hidden;
+  padding: 7px 15px;
+  font-size: 0.75rem;
+  border-radius: 9px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.editBtn {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+}
+
+.editBtn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.editBtn:hover::before {
+  width: 170px;
+  height: 170px;
+}
+
+.editBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+.editBtn:active {
+  transform: translateY(-1px);
+}
+
+.deleteBtn {
+  background: linear-gradient(135deg, var(--danger-color), #dc2626);
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.3);
+}
+
+.deleteBtn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(239, 68, 68, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.deleteBtn:hover::before {
+  width: 170px;
+  height: 170px;
+}
+
+.deleteBtn:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(239, 68, 68, 0.45);
+}
+
+.deleteBtn:active {
+  transform: translateY(-1px);
+}
+
+/* ==================== SUMMARY FOOTER ==================== */
+.summaryFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 30px;
+  padding: 25px 30px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
+  border-radius: 0 0 15px 15px;
+  border-top: 2px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 -4px 12px rgba(34, 43, 108, 0.05);
+  flex-wrap: wrap;
+}
+
+.summaryItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* label left, value right */
+  width: 10%;
+  display: inline-flex;
+  gap: 2px;
+}
+
+.grandTotal {
+  font-weight: 600;
+}
+
+.summaryLabel,
+.summaryValue {
+  white-space: nowrap; /* prevents wrapping */
+}
+
+
+.summaryItem:hover {
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
+  border-color: rgba(48, 178, 181, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 43, 108, 0.08);
+}
+
+
+.grandTotal:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(139, 92, 246, 0.18));
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.grandTotal .summaryLabel {
+  color: #7c3aed;
+}
+
+.grandTotal .summaryValue {
+  font-size: 1.2rem;
+  color: #7c3aed;
+  font-weight: 500;
+}
+
+/* ==================== LOADING STATE ==================== */
+.loading,
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  font-size: 1.3rem;
+  color: #64748b;
+}
+
+.error {
+  color: #ef4444;
+}
+
+/* ==================== DARK MODE ==================== */
+.darkMode {
+  --glass-bg: rgba(30, 41, 59, 0.92);
+  --text-dark: #e2e8f0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+}
+
+.darkMode .itemsHeader {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.darkMode .headerTitle {
+  color: #e2e8f0;
+}
+
+.darkMode .headerSubtitle {
+  color: #94a3b8;
+}
+
+.darkMode .emptyState {
+  background: #1e293b;
+}
+
+.darkMode .emptyState h3 {
+  color: #e2e8f0;
+}
+
+.darkMode .emptyState p {
+  color: #94a3b8;
+}
+
+.darkMode .tableContainer {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.darkMode .table th {
+  background: linear-gradient(135deg, #334155, #475569);
+}
+
+.darkMode .table td {
+  border-bottom-color: #475569;
+  color: #e2e8f0;
+}
+
+.darkMode .table tbody tr:nth-child(even) {
+  background-color: #334155;
+}
+
+.darkMode .table tbody tr:hover {
+  background-color: rgba(48, 178, 181, 0.12) !important;
+}
+
+.darkMode .medicineName {
+  color: #e2e8f0;
+}
+
+.darkMode .taxLabel {
+  color: #94a3b8;
+}
+
+.darkMode .taxValue {
+  color: #e2e8f0;
+}
+
+.darkMode .summaryFooter {
+  background: linear-gradient(135deg, rgba(48, 178, 181, 0.08), rgba(48, 178, 181, 0.12));
+  border-top-color: #475569;
+}
+
+.darkMode .summaryItem {
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
+  border-color: #475569;
+}
+
+.darkMode .summaryItem:hover {
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.08), rgba(48, 178, 181, 0.08));
+  border-color: rgba(48, 178, 181, 0.2);
+}
+
+.darkMode .summaryLabel {
+  color: #94a3b8;
+}
+
+.darkMode .summaryValue {
+  color: #e2e8f0;
+}
+
+.darkMode .grandTotal {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.2));
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.darkMode .grandTotal:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.25));
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 1024px) {
+  .summaryFooter {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .itemsHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+    padding: 20px;
+  }
+
+  .headerLeft {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .addBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tableContainer {
+    border-radius: 0 0 12px 12px;
+  }
+
+  .table {
+    min-width: 1000px;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px 14px;
+  }
+
+  .summaryFooter {
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+  }
+
+  .summaryItem {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .grandTotal {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .itemsHeader {
+    padding: 15px;
+  }
+
+  .headerTitle {
+    font-size: 1.1rem;
+  }
+
+  .headerSubtitle {
+    font-size: 0.85rem;
+  }
+
+  .emptyState {
+    padding: 60px 15px;
+  }
+
+  .emptyIcon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .emptyState h3 {
+    font-size: 1.3rem;
+  }
+
+  .emptyState p {
+    font-size: 0.9rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 12px;
+    font-size: 0.7rem;
+  }
+
+  .medicineAvatar {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+
+  .medicineName {
+    font-size: 0.8rem;
+  }
+
+  .taxLabel {
+    font-size: 0.68rem;
+  }
+
+  .taxValue {
+    font-size: 0.8rem;
+  }
+
+  .quantityBadge,
+  .priceBadge,
+  .amountBadge,
+  .statusBadge {
+    padding: 4px 10px;
+    font-size: 0.65rem;
+  }
+
+  .totalBadge {
+    padding: 5px 11px;
+    font-size: 0.7rem;
+  }
+
+  .editBtn,
+  .deleteBtn {
+    padding: 6px 12px;
+    font-size: 0.7rem;
+  }
+
+  .summaryFooter {
+    padding: 15px;
+  }
+
+  .summaryItem {
+    padding: 12px 15px;
+  }
+
+  .summaryLabel {
+    font-size: 0.75rem;
+  }
+
+  .summaryValue {
+    font-size: 0.95rem;
+  }
+
+  .grandTotal .summaryValue {
+    font-size: 1.2rem;
+  }
+}
