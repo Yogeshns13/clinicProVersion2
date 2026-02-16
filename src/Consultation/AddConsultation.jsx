@@ -1,902 +1,528 @@
 // src/components/AddConsultation.jsx
-import React, { useState, useEffect } from 'react';
-import { FiX, FiCalendar, FiCheck, FiPackage, FiSearch, FiTrash2, FiFileText, FiClipboard, FiChevronDown, FiEye, FiUser, FiList, FiArrowLeft, FiFilter } from 'react-icons/fi';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  FiX, FiCalendar, FiCheck, FiSearch, FiTrash2,
+  FiChevronDown, FiChevronRight, FiUser, FiList,
+  FiArrowLeft, FiPlus, FiAlertCircle, FiFileText, FiPackage
+} from 'react-icons/fi';
 import { getPatientVisitList, getPatientsList } from '../api/api.js';
 import { addConsultation, getConsultationList } from '../api/api-consultation.js';
-import { addPrescription, addPrescriptionDetail, getMedicineMasterList, getPrescriptionList, getPrescriptionDetailList } from '../api/api-pharmacy.js';
-import { addLabTestOrder, getLabTestOrderItemList, addLabTestOrderItem, updateLabTestOrderItem, getLabTestMasterList, getLabTestPackageList, getLabTestOrderList } from '../api/api-labtest.js';
+import { addPrescription, addPrescriptionDetail, getMedicineMasterList } from '../api/api-pharmacy.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import './AddConsultation.css';
 
-const MEDICINE_FORMS = [
-  { id: 1, name: 'Tablet' },
-  { id: 2, name: 'Capsule' },
-  { id: 3, name: 'Syrup' },
-  { id: 4, name: 'Injection' },
-  { id: 5, name: 'Ointment' },
-  { id: 6, name: 'Drops' },
-  { id: 7, name: 'Powder' },
-  { id: 8, name: 'Gel' },
-  { id: 9, name: 'Cream' },
-  { id: 10, name: 'Inhaler' }
+/* ─── Constants ─────────────────────────────────────────────── */
+const TIMING_OPTIONS = [
+  { code: 'M', full: 'Morning' },
+  { code: 'A', full: 'Afternoon' },
+  { code: 'E', full: 'Evening' },
+  { code: 'N', full: 'Night' },
 ];
 
-const MEDICINE_ROUTES = [
-  { id: 1, name: 'Oral' },
-  { id: 2, name: 'IV' },
-  { id: 3, name: 'IM' },
-  { id: 4, name: 'Topical' },
-  { id: 5, name: 'Nasal' },
-  { id: 6, name: 'Ophthalmic' },
-  { id: 7, name: 'Sublingual' },
-  { id: 8, name: 'Rectal' },
-  { id: 9, name: 'Inhalation' },
-  { id: 10, name: 'Transdermal' }
+const FOOD_OPTIONS = [
+  { id: 1, label: 'Before' },
+  { id: 2, label: 'After' },
+  { id: 3, label: 'With' },
+  { id: 4, label: 'Empty' },
 ];
 
-const FOOD_TIMINGS = [
-  { id: 1, name: 'Before Food' },
-  { id: 2, name: 'After Food' },
-  { id: 3, name: 'With Food' },
-  { id: 4, name: 'Empty Stomach' }
-];
+/* ─── Helpers ─────────────────────────────────────────────────── */
+const generateTempId = () => Date.now() + Math.random();
 
-const LAB_PRIORITIES = [
-  { id: 1, name: 'Routine' },
-  { id: 2, name: 'Urgent' },
-  { id: 3, name: 'Stat' }
-];
+const createContainer = (medicine = null) => ({
+  tempId: generateTempId(),
+  medicineId: medicine?.id || 0,
+  medicineName: medicine?.name || '',
+  form: medicine?.type || 0,
+  strength: medicine?.dosageForm || '',
+  defaultRoute: medicine?.defaultRoute || 1,
+  timings: [],          // ['M','A','E','N']
+  foodTiming: 0,        // 1-4
+  days: '',
+  dosePerIntake: '',    // maps to Dosage
+  quantity: 0,
+  notes: '',
+  refillAllowed: 0,
+  refillCount: 0,
+  expanded: true,
+});
 
+const calcQuantity = (days, timings) => {
+  const d = parseInt(days) || 0;
+  const t = timings.length;
+  return d > 0 && t > 0 ? d * t : 0;
+};
+
+const buildFrequency = (timings) =>
+  timings.length ? timings.map(c => TIMING_OPTIONS.find(t => t.code === c)?.full).join('-') : '';
+
+const formatDate = (ds) => {
+  if (!ds) return '—';
+  return new Date(ds).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const formatTime = (ts) => {
+  if (!ts) return '—';
+  const [h, m] = ts.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${period}`;
+};
+
+const today = () => new Date().toISOString().split('T')[0];
+const thirtyDaysLater = () =>
+  new Date(Date.now() + 30 * 86400 * 1000).toISOString().split('T')[0];
+
+/* ─── Medicine Container Sub-component ──────────────────────── */
+const MedicineContainer = ({ container, onUpdate, onRemove }) => {
+  const toggleTiming = (code) => {
+    const timings = container.timings.includes(code)
+      ? container.timings.filter(c => c !== code)
+      : [...container.timings, code];
+    const qty = calcQuantity(container.days, timings);
+    onUpdate(container.tempId, { timings, quantity: qty });
+  };
+
+  const handleDaysChange = (val) => {
+    const qty = calcQuantity(val, container.timings);
+    onUpdate(container.tempId, { days: val, quantity: qty });
+  };
+
+  return (
+    <div className={`med-container ${container.expanded ? 'expanded' : 'collapsed'}`}>
+      {/* Header */}
+      <div className="med-container-header">
+        <button
+          type="button"
+          className="med-toggle-btn"
+          onClick={() => onUpdate(container.tempId, { expanded: !container.expanded })}
+          title={container.expanded ? 'Collapse' : 'Expand'}
+        >
+          {container.expanded ? <FiChevronDown size={14} /> : <FiChevronRight size={14} />}
+        </button>
+        <span className="med-name-label">
+          {container.medicineName || <em className="med-unassigned">Unassigned Medicine</em>}
+        </span>
+        {container.quantity > 0 && !container.expanded && (
+          <span className="med-qty-pill">Qty {container.quantity}</span>
+        )}
+        <button
+          type="button"
+          className="med-remove-btn"
+          onClick={() => onRemove(container.tempId)}
+          title="Remove"
+        >
+          <FiX size={14} />
+        </button>
+      </div>
+
+      {/* Body */}
+      {container.expanded && (
+        <div className="med-container-body">
+          {/* Medicine name input if not pre-filled */}
+          {!container.medicineId && (
+            <div className="med-field-row">
+              <label className="med-label">Medicine Name *</label>
+              <input
+                type="text"
+                className="med-input"
+                value={container.medicineName}
+                onChange={e => onUpdate(container.tempId, { medicineName: e.target.value })}
+                placeholder="Type medicine name..."
+              />
+            </div>
+          )}
+
+          {/* Timing row */}
+          <div className="med-field-row">
+            <label className="med-label">Timing</label>
+            <div className="timing-btn-group">
+              {TIMING_OPTIONS.map(t => (
+                <button
+                  key={t.code}
+                  type="button"
+                  className={`timing-btn ${container.timings.includes(t.code) ? 'active' : ''}`}
+                  onClick={() => toggleTiming(t.code)}
+                  title={t.full}
+                >
+                  {t.code}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Food row */}
+          <div className="med-field-row">
+            <label className="med-label">Food</label>
+            <div className="food-btn-group">
+              {FOOD_OPTIONS.map(f => (
+                <button
+                  key={f.id}
+                  type="button"
+                  className={`food-btn ${container.foodTiming === f.id ? 'active' : ''}`}
+                  onClick={() => onUpdate(container.tempId, { foodTiming: f.id })}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Days + Qty + Dose */}
+          <div className="med-numbers-row">
+            <div className="med-num-field">
+              <label className="med-label">Dose *</label>
+              <input
+                type="text"
+                className="med-input med-input-sm"
+                value={container.dosePerIntake}
+                onChange={e => onUpdate(container.tempId, { dosePerIntake: e.target.value })}
+                placeholder="1 tab"
+              />
+            </div>
+            <div className="med-num-field">
+              <label className="med-label">Days</label>
+              <input
+                type="number"
+                className="med-input med-input-sm"
+                value={container.days}
+                onChange={e => handleDaysChange(e.target.value)}
+                placeholder="7"
+                min="1"
+              />
+            </div>
+            <div className="med-num-field">
+              <label className="med-label">Qty</label>
+              <input
+                type="number"
+                className="med-input med-input-sm med-qty-display"
+                value={container.quantity}
+                onChange={e => onUpdate(container.tempId, { quantity: Number(e.target.value) })}
+                placeholder="0"
+                min="0"
+                step="0.5"
+              />
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div className="med-field-row">
+            <label className="med-label">Notes (Optional)</label>
+            <textarea
+              className="med-input med-textarea"
+              value={container.notes}
+              onChange={e => onUpdate(container.tempId, { notes: e.target.value })}
+              placeholder="Additional instructions..."
+              rows={2}
+            />
+          </div>
+
+          {/* Refill */}
+          <div className="med-refill-row">
+            <label className="med-check-label">
+              <input
+                type="checkbox"
+                checked={container.refillAllowed === 1}
+                onChange={e => onUpdate(container.tempId, {
+                  refillAllowed: e.target.checked ? 1 : 0,
+                  refillCount: e.target.checked ? container.refillCount : 0
+                })}
+                className="med-checkbox"
+              />
+              <span>Refill Allowed</span>
+            </label>
+            {container.refillAllowed === 1 && (
+              <div className="med-refill-count">
+                <label className="med-label">Count</label>
+                <input
+                  type="number"
+                  className="med-input med-input-sm"
+                  value={container.refillCount}
+                  onChange={e => onUpdate(container.tempId, { refillCount: Number(e.target.value) })}
+                  min="1"
+                  max="12"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ─── Main Component ─────────────────────────────────────────── */
 const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null }) => {
-  // Main view state: 'create' | 'patient-details' | 'consultation-list' | 'consultation-view'
-  const [mainView, setMainView] = useState('create');
- 
-  const [visitSelectionStep, setVisitSelectionStep] = useState(1);
+  /* ── view state ── */
+  const [mainView, setMainView] = useState('create');   // 'create' | 'patient-details' | 'consult-list'
+  const [visitStep, setVisitStep] = useState(1);
+
+  /* ── visit / patient ── */
   const [todayVisits, setTodayVisits] = useState([]);
   const [selectedVisit, setSelectedVisit] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+
+  /* ── consultation form ── */
+  const [consultationNotes, setConsultationNotes] = useState('');
+  const [treatmentPlan, setTreatmentPlan] = useState('');
+  const [nextConsultationDate, setNextConsultationDate] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
-  
-  // Patient Details view
-  const [selectedPatient, setSelectedPatient] = useState(null);
-  const [patientDetails, setPatientDetails] = useState(null);
-  const [loadingPatient, setLoadingPatient] = useState(false);
-  
-  // Consultation List view with date filtering
-  const [consultationList, setConsultationList] = useState([]);
-  const [filteredConsultationList, setFilteredConsultationList] = useState([]);
-  const [loadingConsultations, setLoadingConsultations] = useState(false);
-  const [consultationDateFilter, setConsultationDateFilter] = useState({
-    fromDate: '',
-    toDate: ''
-  });
- 
-  // Consultation Details view
-  const [selectedConsultation, setSelectedConsultation] = useState(null);
-  const [consultationDetails, setConsultationDetails] = useState(null);
-  const [prescriptionDetails, setPrescriptionDetails] = useState([]);
-  const [labOrderDetails, setLabOrderDetails] = useState(null);
-  const [labOrderItems, setLabOrderItems] = useState([]);
-  const [loadingConsultationDetails, setLoadingConsultationDetails] = useState(false);
-  
-  // Section completion states
   const [consultationId, setConsultationId] = useState(null);
   const [prescriptionId, setPrescriptionId] = useState(null);
-  const [labTestOrderId, setLabTestOrderId] = useState(null);
-  
-  // Form data
-  const [consultationFormData, setConsultationFormData] = useState({
-    emrNotes: '',
-    consultationNotes: '',
-    nextConsultationDate: '',
-    treatmentPlan: ''
-  });
-  const [prescriptionFormData, setPrescriptionFormData] = useState({
-    isRepeat: 0,
-    repeatCount: 0,
-    dateIssued: new Date().toISOString().split('T')[0],
-    validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  });
- 
-  // Medicine selection states
+
+  /* ── medicine containers (Panel 2) ── */
+  const [containers, setContainers] = useState([]);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmedSuccess, setConfirmedSuccess] = useState(false);
+
+  /* ── medicine search (Panel 3) ── */
   const [allMedicines, setAllMedicines] = useState([]);
   const [filteredMedicines, setFilteredMedicines] = useState([]);
-  const [medicineSearchQuery, setMedicineSearchQuery] = useState('');
-  const [searchingMedicines, setSearchingMedicines] = useState(false);
-  const [selectedMedicineIds, setSelectedMedicineIds] = useState([]);
-  const [labTestFormData, setLabTestFormData] = useState({
-    priority: 1,
-    notes: ''
-  });
-  const [labTestOrderItems, setLabTestOrderItems] = useState([]);
- 
-  // Lab Test/Package states
-  const [allLabTests, setAllLabTests] = useState([]);
-  const [allLabPackages, setAllLabPackages] = useState([]);
-  const [loadingTests, setLoadingTests] = useState(false);
-  const [loadingPackages, setLoadingPackages] = useState(false);
-  const [selectedTestIds, setSelectedTestIds] = useState([]);
-  const [selectedPackageIds, setSelectedPackageIds] = useState([]);
-  const [showTestDropdown, setShowTestDropdown] = useState(false);
-  const [showPackageDropdown, setShowPackageDropdown] = useState(false);
-  const [testSearchQuery, setTestSearchQuery] = useState('');
-  const [packageSearchQuery, setPackageSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loadingMeds, setLoadingMeds] = useState(false);
+  const [selectedMedIds, setSelectedMedIds] = useState([]);
 
+  /* ── side views ── */
+  const [patientDetails, setPatientDetails] = useState(null);
+  const [loadingPatient, setLoadingPatient] = useState(false);
+  const [consultList, setConsultList] = useState([]);
+  const [loadingConsults, setLoadingConsults] = useState(false);
+
+  const [error, setError] = useState(null);
+
+  /* ─── Effects ──────────────────────────────────────────────── */
   useEffect(() => {
-    if (isOpen) {
-      fetchTodayVisits();
-    }
+    if (isOpen) fetchTodayVisits();
   }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && preSelectedVisitId && todayVisits.length > 0) {
-      const preSelected = todayVisits.find(v => v.id === preSelectedVisitId);
-      if (preSelected) {
-        setSelectedVisit(preSelected);
-        setVisitSelectionStep(2);
-      }
+      const v = todayVisits.find(v => v.id === preSelectedVisitId);
+      if (v) { setSelectedVisit(v); setVisitStep(2); }
     }
   }, [isOpen, preSelectedVisitId, todayVisits]);
 
-  // Load medicines when prescription is created
   useEffect(() => {
-    if (prescriptionId) {
-      fetchAllMedicines();
-    }
+    if (prescriptionId) fetchMedicines();
   }, [prescriptionId]);
 
-  // Load lab tests/packages when lab order is created
-  useEffect(() => {
-    if (labTestOrderId) {
-      fetchLabTests();
-      fetchLabPackages();
-      fetchLabTestOrderItems();
-    }
-  }, [labTestOrderId]);
-
-  // Filter consultations when date filter changes
-  useEffect(() => {
-    filterConsultations();
-  }, [consultationDateFilter, consultationList]);
-
+  /* ─── Fetch helpers ─────────────────────────────────────────── */
   const fetchTodayVisits = async () => {
     try {
       setLoading(true);
       setError(null);
-     
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-      const today = new Date().toISOString().split('T')[0];
-      const options = {
-        Page: 1,
-        PageSize: 50,
-        BranchID: branchId,
-        VisitDate: today
-      };
-      const visits = await getPatientVisitList(clinicId, options);
+      const visits = await getPatientVisitList(clinicId, {
+        Page: 1, PageSize: 50, BranchID: branchId, VisitDate: today()
+      });
       setTodayVisits(visits);
-    } catch (err) {
-      console.error('fetchTodayVisits error:', err);
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(err); }
+    finally { setLoading(false); }
+  };
+
+  const fetchMedicines = async () => {
+    try {
+      setLoadingMeds(true);
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+      const meds = await getMedicineMasterList(clinicId, {
+        BranchID: branchId, PageSize: 200, Status: 1
+      });
+      setAllMedicines(meds);
+      setFilteredMedicines(meds);
+    } catch (err) { console.error(err); }
+    finally { setLoadingMeds(false); }
   };
 
   const fetchPatientDetails = async (patientId) => {
     try {
       setLoadingPatient(true);
       setError(null);
-     
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-      const options = {
-        Page: 1,
-        PageSize: 1,
-        BranchID: branchId,
-        PatientID: patientId,
-        Status: 1
-      };
-      const patients = await getPatientsList(clinicId, options);
-     
-      if (patients && patients.length > 0) {
-        setPatientDetails(patients[0]);
-      } else {
-        setError({ message: 'Patient details not found' });
-      }
-    } catch (err) {
-      console.error('fetchPatientDetails error:', err);
-      setError(err);
-    } finally {
-      setLoadingPatient(false);
-    }
-  };
-
-  const fetchConsultationList = async (patientId) => {
-    try {
-      setLoadingConsultations(true);
-      setError(null);
-     
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
-      const options = {
-        Page: 1,
-        PageSize: 100,
-        BranchID: branchId,
-        PatientID: patientId,
-        Status: 1
-      };
-      const consultations = await getConsultationList(clinicId, options);
-      setConsultationList(consultations || []);
-      setFilteredConsultationList(consultations || []);
-    } catch (err) {
-      console.error('fetchConsultationList error:', err);
-      setError(err);
-    } finally {
-      setLoadingConsultations(false);
-    }
-  };
-
-  const filterConsultations = () => {
-    if (!consultationDateFilter.fromDate && !consultationDateFilter.toDate) {
-      setFilteredConsultationList(consultationList);
-      return;
-    }
-
-    const filtered = consultationList.filter(consultation => {
-      const consultDate = new Date(consultation.dateCreated);
-      const fromDate = consultationDateFilter.fromDate ? new Date(consultationDateFilter.fromDate) : null;
-      const toDate = consultationDateFilter.toDate ? new Date(consultationDateFilter.toDate) : null;
-
-      if (fromDate && consultDate < fromDate) return false;
-      if (toDate) {
-        const endOfDay = new Date(toDate);
-        endOfDay.setHours(23, 59, 59, 999);
-        if (consultDate > endOfDay) return false;
-      }
-      return true;
-    });
-
-    setFilteredConsultationList(filtered);
-  };
-
-  const handleDateFilterChange = (field, value) => {
-    setConsultationDateFilter(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const clearDateFilter = () => {
-    setConsultationDateFilter({
-      fromDate: '',
-      toDate: ''
-    });
-  };
-
-  const fetchConsultationDetails = async (consultation) => {
-    try {
-      setLoadingConsultationDetails(true);
-      setError(null);
-     
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
-      setConsultationDetails(consultation);
-      
-      // Fetch prescription list for this consultation
-      const prescOptions = {
-        Page: 1,
-        PageSize: 10,
-        BranchID: branchId,
-        ConsultationID: consultation.id,
-        Status: 1
-      };
-      const prescriptions = await getPrescriptionList(clinicId, prescOptions);
-     
-      if (prescriptions && prescriptions.length > 0) {
-        const prescription = prescriptions[0];
-       
-        // Fetch prescription details
-        const detailOptions = {
-          Page: 1,
-          PageSize: 100,
-          BranchID: branchId,
-          PrescriptionID: prescription.id,
-          Status: 1
-        };
-       
-        const details = await getPrescriptionDetailList(clinicId, detailOptions);
-        setPrescriptionDetails(details || []);
-      } else {
-        setPrescriptionDetails([]);
-      }
-      
-      // Fetch lab test order for this consultation
-      const labOrderOptions = {
-        Page: 1,
-        PageSize: 10,
-        BranchID: branchId,
-        ConsultationID: consultation.id,
-        Status: 1
-      };
-      const labOrders = await getLabTestOrderList(clinicId, labOrderOptions);
-     
-      if (labOrders && labOrders.length > 0) {
-        const labOrder = labOrders[0];
-        setLabOrderDetails(labOrder);
-       
-        // Fetch lab order items
-        const itemOptions = {
-          Page: 1,
-          PageSize: 100,
-          BranchID: branchId,
-          OrderID: labOrder.id,
-          Status: 1
-        };
-       
-        const items = await getLabTestOrderItemList(clinicId, itemOptions);
-        setLabOrderItems(items || []);
-      } else {
-        setLabOrderDetails(null);
-        setLabOrderItems([]);
-      }
-    } catch (err) {
-      console.error('fetchConsultationDetails error:', err);
-      setError(err);
-    } finally {
-      setLoadingConsultationDetails(false);
-    }
-  };
-
-  const fetchAllMedicines = async () => {
-    try {
-      setSearchingMedicines(true);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
-     
-      const results = await getMedicineMasterList(clinicId, {
-        BranchID: branchId,
-        PageSize: 100,
-        Status: 1
+      const pts = await getPatientsList(clinicId, {
+        Page: 1, PageSize: 1, BranchID: branchId, PatientID: patientId, Status: 1
       });
-     
-      setAllMedicines(results);
-      setFilteredMedicines(results);
-    } catch (err) {
-      console.error('fetchAllMedicines error:', err);
-      setError(err);
-    } finally {
-      setSearchingMedicines(false);
-    }
+      setPatientDetails(pts?.[0] || null);
+    } catch (err) { setError(err); }
+    finally { setLoadingPatient(false); }
   };
 
-  const fetchLabTests = async () => {
+  const fetchConsultList = async (patientId) => {
     try {
-      setLoadingTests(true);
+      setLoadingConsults(true);
+      setError(null);
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-      const testOptions = {
-        Page: 1,
-        PageSize: 100,
-        BranchID: branchId,
-        Status: 1
-      };
-      const testsData = await getLabTestMasterList(clinicId, testOptions);
-      setAllLabTests(testsData || []);
-    } catch (err) {
-      console.error('fetchLabTests error:', err);
-      setError(err);
-    } finally {
-      setLoadingTests(false);
-    }
+      const list = await getConsultationList(clinicId, {
+        Page: 1, PageSize: 100, BranchID: branchId, PatientID: patientId, Status: 1
+      });
+      setConsultList(list || []);
+    } catch (err) { setError(err); }
+    finally { setLoadingConsults(false); }
   };
 
-  const fetchLabPackages = async () => {
-    try {
-      setLoadingPackages(true);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
-      const packageOptions = {
-        Page: 1,
-        PageSize: 100,
-        BranchID: branchId,
-        Status: 1
-      };
-      const packagesData = await getLabTestPackageList(clinicId, packageOptions);
-      setAllLabPackages(packagesData || []);
-    } catch (err) {
-      console.error('fetchLabPackages error:', err);
-      setError(err);
-    } finally {
-      setLoadingPackages(false);
-    }
+  /* ─── Handlers ──────────────────────────────────────────────── */
+  const handleVisitSelect = (v) => {
+    setSelectedVisit(v);
+    setVisitStep(2);
   };
 
-  const fetchLabTestOrderItems = async () => {
-    if (!labTestOrderId) return;
-    try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
-      const itemOptions = {
-        Page: 1,
-        PageSize: 100,
-        BranchID: branchId,
-        OrderID: labTestOrderId,
-        Status: 1
-      };
-      const itemsData = await getLabTestOrderItemList(clinicId, itemOptions);
-      setLabTestOrderItems(itemsData || []);
-    } catch (err) {
-      console.error('fetchLabTestOrderItems error:', err);
-    }
-  };
-
-  const handleMedicineSearch = () => {
-    if (!medicineSearchQuery.trim()) {
-      setFilteredMedicines(allMedicines);
-      return;
-    }
-   
-    const query = medicineSearchQuery.toLowerCase();
-    const filtered = allMedicines.filter(medicine =>
-      medicine.name.toLowerCase().includes(query) ||
-      (medicine.genericName && medicine.genericName.toLowerCase().includes(query)) ||
-      (medicine.manufacturer && medicine.manufacturer.toLowerCase().includes(query))
-    );
-   
-    setFilteredMedicines(filtered);
-  };
-
-  const handleMedicineSelection = (medicineId) => {
-    setSelectedMedicineIds(prev =>
-      prev.includes(medicineId)
-        ? prev.filter(id => id !== medicineId)
-        : [...prev, medicineId]
-    );
-  };
-
-  const handleAddSelectedMedicines = () => {
-    if (selectedMedicineIds.length === 0) {
-      alert('Please select at least one medicine');
-      return;
-    }
-    selectedMedicineIds.forEach(medicineId => {
-      const medicine = allMedicines.find(m => m.id === medicineId);
-      if (medicine) {
-        const defaultRoute = medicine.defaultRoute || 1;
-       
-        const newDetail = {
-          tempId: Date.now() + Math.random(),
-          medicineId: medicine.id,
-          medicineName: medicine.name,
-          form: medicine.type || 1,
-          strength: medicine.dosageForm || '',
-          dosage: '',
-          frequency: '',
-          duration: '',
-          durationDays: '',
-          route: defaultRoute,
-          foodTiming: 2,
-          instructions: '',
-          quantity: 1,
-          refillAllowed: 0,
-          refillCount: 0,
-          startDate: new Date().toISOString().split('T')[0],
-          endDate: ''
-        };
-       
-        setPrescriptionDetails(prev => [...prev, newDetail]);
-      }
-    });
-    setSelectedMedicineIds([]);
-    setMedicineSearchQuery('');
-    setFilteredMedicines(allMedicines);
-  };
-
-  const handleTestSelection = (testId) => {
-    setSelectedTestIds(prev =>
-      prev.includes(testId)
-        ? prev.filter(id => id !== testId)
-        : [...prev, testId]
-    );
-  };
-
-  const handlePackageSelection = (packageId) => {
-    setSelectedPackageIds(prev =>
-      prev.includes(packageId)
-        ? prev.filter(id => id !== packageId)
-        : [...prev, packageId]
-    );
-  };
-
-  const handleAddSelectedLabItems = async () => {
-    if (selectedTestIds.length === 0 && selectedPackageIds.length === 0) {
-      alert('Please select at least one test or package');
-      return;
-    }
-    if (!labTestOrderId) return;
-    try {
-      setSubmitLoading(true);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
-      let successCount = 0;
-      let failCount = 0;
-      for (const testId of selectedTestIds) {
-        try {
-          const itemData = {
-            clinicId,
-            branchId,
-            OrderID: labTestOrderId,
-            PatientID: selectedVisit.patientId,
-            DoctorID: selectedVisit.doctorId,
-            TestID: testId,
-            PackageID: 0
-          };
-          await addLabTestOrderItem(itemData);
-          successCount++;
-        } catch (err) {
-          console.error(`Failed to add test ${testId}:`, err);
-          failCount++;
-        }
-      }
-      for (const packageId of selectedPackageIds) {
-        try {
-          const itemData = {
-            clinicId,
-            branchId,
-            OrderID: labTestOrderId,
-            PatientID: selectedVisit.patientId,
-            DoctorID: selectedVisit.doctorId,
-            TestID: 0,
-            PackageID: packageId
-          };
-          await addLabTestOrderItem(itemData);
-          successCount++;
-        } catch (err) {
-          console.error(`Failed to add package ${packageId}:`, err);
-          failCount++;
-        }
-      }
-      if (successCount > 0) {
-        alert(`Successfully added ${successCount} item(s)${failCount > 0 ? ` (${failCount} failed)` : ''}`);
-        setSelectedTestIds([]);
-        setSelectedPackageIds([]);
-        await fetchLabTestOrderItems();
-      } else {
-        alert('Failed to add any items. Please try again.');
-      }
-    } catch (err) {
-      console.error('handleAddSelectedLabItems error:', err);
-      alert('Error while adding items');
-    } finally {
-      setSubmitLoading(false);
-    }
-  };
-
-  const handleVisitSelect = (visit) => {
-    setSelectedVisit(visit);
-    setSelectedPatient({ id: visit.patientId, name: visit.patientName });
-    setVisitSelectionStep(2);
-  };
-
-  const handleViewPatientDetails = () => {
-    if (selectedVisit) {
-      fetchPatientDetails(selectedVisit.patientId);
-      setMainView('patient-details');
-    }
-  };
-
-  const handleViewConsultationList = () => {
-    if (selectedVisit) {
-      fetchConsultationList(selectedVisit.patientId);
-      setMainView('consultation-list');
-    }
-  };
-
-  const handleViewConsultationDetails = (consultation) => {
-    setSelectedConsultation(consultation);
-    fetchConsultationDetails(consultation);
-    setMainView('consultation-view');
-  };
-
-  const handleBackToCreate = () => {
-    setMainView('create');
-    setPatientDetails(null);
-    setConsultationList([]);
-    setFilteredConsultationList([]);
-    setConsultationDateFilter({ fromDate: '', toDate: '' });
-    setSelectedConsultation(null);
-    setConsultationDetails(null);
-    setPrescriptionDetails([]);
-    setLabOrderDetails(null);
-    setLabOrderItems([]);
-  };
-
-  const handleConsultationInputChange = (e) => {
-    const { name, value } = e.target;
-    setConsultationFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handlePrescriptionInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    if (name === 'isRepeat') {
-      setPrescriptionFormData(prev => ({
-        ...prev,
-        isRepeat: checked ? 1 : 0,
-        repeatCount: checked ? prev.repeatCount : 0
-      }));
-    } else {
-      setPrescriptionFormData(prev => ({
-        ...prev,
-        [name]: type === 'number' ? Number(value) : value
-      }));
-    }
-  };
-
-  const handleLabTestInputChange = (e) => {
-    const { name, value } = e.target;
-    setLabTestFormData(prev => ({
-      ...prev,
-      [name]: name === 'priority' ? Number(value) : value
-    }));
-  };
-
-  const calculateEndDate = (startDate, durationDays) => {
-    if (!startDate || !durationDays || durationDays <= 0) return '';
-   
-    const start = new Date(startDate);
-    const end = new Date(start);
-    end.setDate(start.getDate() + parseInt(durationDays));
-   
-    return end.toISOString().split('T')[0];
-  };
-
-  const updatePrescriptionDetail = (tempId, field, value) => {
-    setPrescriptionDetails(prev =>
-      prev.map(detail => {
-        if (detail.tempId === tempId) {
-          const updated = { ...detail, [field]: value };
-         
-          if (field === 'durationDays') {
-            const days = parseInt(value) || 0;
-            updated.duration = days > 0 ? `${days} Days` : '';
-            if (updated.startDate && days > 0) {
-              updated.endDate = calculateEndDate(updated.startDate, days);
-            }
-          }
-         
-          if (field === 'startDate' && updated.durationDays) {
-            updated.endDate = calculateEndDate(value, updated.durationDays);
-          }
-         
-          return updated;
-        }
-        return detail;
-      })
-    );
-  };
-
-  const removePrescriptionDetail = (tempId) => {
-    setPrescriptionDetails(prev => prev.filter(detail => detail.tempId !== tempId));
-  };
-
-  const handleConsultationSubmit = async (e) => {
+  const handleAddConsultation = async (e) => {
     e.preventDefault();
-   
-    if (!selectedVisit) {
-      setError({ message: 'Please select a patient visit' });
-      return;
-    }
+    if (!consultationNotes.trim()) { setError({ message: 'Consultation Notes are required' }); return; }
+    if (!selectedVisit) { setError({ message: 'No visit selected' }); return; }
+
     try {
       setSubmitLoading(true);
       setError(null);
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-      const consultationData = {
-        clinicId,
-        branchId,
+
+      /* 1 — Add Consultation */
+      const consultResult = await addConsultation({
+        clinicId, branchId,
         visitId: selectedVisit.id,
         patientId: selectedVisit.patientId,
         doctorId: selectedVisit.doctorId,
         reason: selectedVisit.reason || '',
         symptoms: selectedVisit.symptoms || '',
-        bpSystolic: selectedVisit.bpSystolic || null,
-        bpDiastolic: selectedVisit.bpDiastolic || null,
-        temperature: selectedVisit.temperature || null,
-        weight: selectedVisit.weight || null,
-        emrNotes: consultationFormData.emrNotes.trim(),
+        bpSystolic: selectedVisit.bpSystolic ?? null,
+        bpDiastolic: selectedVisit.bpDiastolic ?? null,
+        temperature: selectedVisit.temperature ?? null,
+        weight: selectedVisit.weight ?? null,
+        emrNotes: '',
         ehrNotes: '',
         instructions: '',
-        consultationNotes: consultationFormData.consultationNotes.trim(),
-        nextConsultationDate: consultationFormData.nextConsultationDate || '',
-        treatmentPlan: consultationFormData.treatmentPlan.trim()
-      };
-      const result = await addConsultation(consultationData);
-     
-      if (result.success && result.consultationId) {
-        setConsultationId(result.consultationId);
-        alert('Consultation created successfully!');
-      }
-    } catch (err) {
-      console.error('handleConsultationSubmit error:', err);
-      setError(err);
-    } finally {
-      setSubmitLoading(false);
-    }
-  };
+        consultationNotes: consultationNotes.trim(),
+        nextConsultationDate: nextConsultationDate || '',
+        treatmentPlan: treatmentPlan.trim(),
+      });
 
-  const handleCreatePrescription = async (e) => {
-    e.preventDefault();
-   
-    if (!consultationId) {
-      setError({ message: 'Please complete consultation first' });
-      return;
-    }
-    try {
-      setSubmitLoading(true);
-      setError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
-      const prescriptionData = {
-        clinicId,
-        branchId,
-        ConsultationID: consultationId,
-        VisitID: selectedVisit.id,
-        PatientID: selectedVisit.patientId,
-        DoctorID: selectedVisit.doctorId,
-        DateIssued: prescriptionFormData.dateIssued,
-        ValidUntil: prescriptionFormData.validUntil,
+      if (!consultResult.success || !consultResult.consultationId) throw new Error('Failed to create consultation');
+      const newConsultId = consultResult.consultationId;
+      setConsultationId(newConsultId);
+
+      /* 2 — Fetch that consultation to get full details */
+      const consultDetails = await getConsultationList(clinicId, {
+        Page: 1, PageSize: 1, BranchID: branchId,
+        ConsultationID: newConsultId, Status: 1
+      });
+      const detail = consultDetails?.[0];
+
+      /* 3 — Add Prescription */
+      const prescResult = await addPrescription({
+        clinicId, branchId,
+        ConsultationID: newConsultId,
+        VisitID: detail?.visitId ?? selectedVisit.id,
+        PatientID: detail?.patientId ?? selectedVisit.patientId,
+        DoctorID: detail?.doctorId ?? selectedVisit.doctorId,
+        DateIssued: today(),
+        ValidUntil: thirtyDaysLater(),
         Diagnosis: null,
-        Notes: null,
-        IsRepeat: prescriptionFormData.isRepeat,
-        RepeatCount: prescriptionFormData.repeatCount,
-        CreatedBy: selectedVisit.doctorId
-      };
-      const prescResult = await addPrescription(prescriptionData);
-     
-      if (prescResult.success && prescResult.prescriptionId) {
-        setPrescriptionId(prescResult.prescriptionId);
-        alert('Prescription created successfully!');
-      }
+        Notes: detail?.consultationNotes || null,
+        IsRepeat: 0,
+        RepeatCount: 0,
+        CreatedBy: detail?.doctorId ?? selectedVisit.doctorId,
+      });
+
+      if (!prescResult.success || !prescResult.prescriptionId) throw new Error('Failed to create prescription');
+      setPrescriptionId(prescResult.prescriptionId);
+
     } catch (err) {
-      console.error('handleCreatePrescription error:', err);
+      console.error('handleAddConsultation:', err);
       setError(err);
     } finally {
       setSubmitLoading(false);
     }
   };
 
-  const handleSavePrescriptionDetails = async () => {
-    if (!prescriptionId) {
-      setError({ message: 'Please create prescription first' });
-      return;
+  /* ── Container updates ── */
+  const updateContainer = (tempId, changes) => {
+    setContainers(prev => prev.map(c => c.tempId === tempId ? { ...c, ...changes } : c));
+  };
+
+  const removeContainer = (tempId) => {
+    setContainers(prev => prev.filter(c => c.tempId !== tempId));
+  };
+
+  const addBlankContainer = () => {
+    setContainers(prev => [...prev, createContainer()]);
+  };
+
+  /* ── Medicine search ── */
+  const handleSearch = () => {
+    const q = searchQuery.toLowerCase().trim();
+    setFilteredMedicines(q
+      ? allMedicines.filter(m =>
+          m.name.toLowerCase().includes(q) ||
+          (m.genericName && m.genericName.toLowerCase().includes(q)))
+      : allMedicines
+    );
+  };
+
+  const handleSearchKey = (e) => { if (e.key === 'Enter') handleSearch(); };
+
+  const toggleMedSelection = (id) => {
+    setSelectedMedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const handleAddSelectedMeds = () => {
+    if (!selectedMedIds.length) return;
+    const newContainers = selectedMedIds.map(id => createContainer(allMedicines.find(m => m.id === id)));
+    setContainers(prev => [...prev, ...newContainers]);
+    setSelectedMedIds([]);
+  };
+
+  /* ── Confirm Medicines ── */
+  const handleConfirmMedicines = async () => {
+    if (!prescriptionId) { setError({ message: 'No prescription found' }); return; }
+    if (!containers.length) { setError({ message: 'Add at least one medicine' }); return; }
+
+    for (const c of containers) {
+      if (!c.medicineName.trim()) { setError({ message: 'All medicines must have a name' }); return; }
+      if (!c.dosePerIntake.trim()) { setError({ message: `Dose is required for ${c.medicineName}` }); return; }
+      if (c.quantity <= 0) { setError({ message: `Quantity must be > 0 for ${c.medicineName}` }); return; }
     }
-    if (prescriptionDetails.length === 0) {
-      setError({ message: 'Please add at least one medicine' });
-      return;
-    }
-    for (const detail of prescriptionDetails) {
-      if (!detail.dosage.trim()) {
-        setError({ message: `Dosage is required for ${detail.medicineName}` });
-        return;
-      }
-      if (!detail.frequency.trim()) {
-        setError({ message: `Frequency is required for ${detail.medicineName}` });
-        return;
-      }
-      if (detail.quantity <= 0) {
-        setError({ message: `Quantity must be greater than 0 for ${detail.medicineName}` });
-        return;
-      }
-    }
+
     try {
-      setSubmitLoading(true);
+      setConfirmLoading(true);
       setError(null);
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-      for (const detail of prescriptionDetails) {
-        const detailData = {
-          clinicId,
-          branchId,
+
+      for (const c of containers) {
+        await addPrescriptionDetail({
+          clinicId, branchId,
           PrescriptionID: prescriptionId,
-          MedicineID: detail.medicineId,
-          MedicineName: detail.medicineName,
-          Form: detail.form,
-          Strength: detail.strength,
-          Dosage: detail.dosage,
-          Frequency: detail.frequency,
-          Duration: detail.duration,
-          Route: detail.route,
-          FoodTiming: detail.foodTiming,
-          Instructions: detail.instructions,
-          Quantity: detail.quantity,
-          RefillAllowed: detail.refillAllowed,
-          RefillCount: detail.refillCount,
-          StartDate: detail.startDate,
-          EndDate: detail.endDate
-        };
-       
-        await addPrescriptionDetail(detailData);
+          MedicineID: c.medicineId,
+          MedicineName: c.medicineName,
+          Form: c.form,
+          Strength: c.strength,
+          Dosage: c.dosePerIntake,
+          Frequency: buildFrequency(c.timings),
+          Duration: c.days ? `${c.days} Days` : '',
+          Route: c.defaultRoute,
+          FoodTiming: c.foodTiming,
+          Instructions: c.notes,
+          Quantity: c.quantity,
+          RefillAllowed: c.refillAllowed,
+          RefillCount: c.refillCount,
+          StartDate: '',
+          EndDate: '',
+        });
       }
-     
-      alert('Prescription details saved successfully!');
+
+      setConfirmedSuccess(true);
     } catch (err) {
-      console.error('handleSavePrescriptionDetails error:', err);
+      console.error('handleConfirmMedicines:', err);
       setError(err);
     } finally {
-      setSubmitLoading(false);
+      setConfirmLoading(false);
     }
   };
 
-  const handleLabTestSubmit = async (e) => {
-    e.preventDefault();
-   
-    if (!consultationId) {
-      setError({ message: 'Please complete consultation first' });
-      return;
-    }
-    try {
-      setSubmitLoading(true);
-      setError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
-      const labTestData = {
-        clinicId,
-        branchId,
-        ConsultationID: consultationId,
-        VisitID: selectedVisit.id,
-        PatientID: selectedVisit.patientId,
-        doctorId: selectedVisit.doctorId,
-        priority: labTestFormData.priority,
-        notes: labTestFormData.notes
-      };
-      const result = await addLabTestOrder(labTestData);
-     
-      if (result.success && result.orderId) {
-        setLabTestOrderId(result.orderId);
-        alert('Lab test order created successfully!');
-      }
-    } catch (err) {
-      console.error('handleLabTestSubmit error:', err);
-      setError(err);
-    } finally {
-      setSubmitLoading(false);
-    }
-  };
-
-  const handleDeleteLabOrderItem = async (itemId) => {
-    if (!window.confirm('Are you sure you want to delete this lab test item?')) {
-      return;
-    }
-    try {
-      setSubmitLoading(true);
-      setError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
-      const updateData = {
-        itemId: Number(itemId),
-        clinicId,
-        branchId,
-        status: 2
-      };
-      const result = await updateLabTestOrderItem(updateData);
-     
-      if (result.success) {
-        alert('Lab test item deleted successfully!');
-        await fetchLabTestOrderItems();
-      }
-    } catch (err) {
-      console.error('handleDeleteLabOrderItem error:', err);
-      setError(err);
-    } finally {
-      setSubmitLoading(false);
-    }
-  };
-
+  /* ── Complete & Close ── */
   const handleComplete = () => {
     handleClose();
     if (onSuccess) onSuccess();
@@ -904,1039 +530,474 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
 
   const handleClose = () => {
     setMainView('create');
-    setVisitSelectionStep(1);
+    setVisitStep(1);
     setSelectedVisit(null);
-    setSelectedPatient(null);
-    setPatientDetails(null);
-    setConsultationList([]);
-    setFilteredConsultationList([]);
-    setConsultationDateFilter({ fromDate: '', toDate: '' });
-    setSelectedConsultation(null);
-    setConsultationDetails(null);
-    setPrescriptionDetails([]);
-    setLabOrderDetails(null);
-    setLabOrderItems([]);
+    setTodayVisits([]);
+    setConsultationNotes('');
+    setTreatmentPlan('');
+    setNextConsultationDate('');
     setConsultationId(null);
     setPrescriptionId(null);
-    setLabTestOrderId(null);
-    setLabTestOrderItems([]);
-    setConsultationFormData({
-      emrNotes: '',
-      consultationNotes: '',
-      nextConsultationDate: '',
-      treatmentPlan: ''
-    });
-    setPrescriptionFormData({
-      isRepeat: 0,
-      repeatCount: 0,
-      dateIssued: new Date().toISOString().split('T')[0],
-      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    });
-    setPrescriptionDetails([]);
-    setLabTestFormData({
-      priority: 1,
-      notes: ''
-    });
+    setContainers([]);
     setAllMedicines([]);
     setFilteredMedicines([]);
-    setMedicineSearchQuery('');
-    setSelectedMedicineIds([]);
-    setAllLabTests([]);
-    setAllLabPackages([]);
-    setSelectedTestIds([]);
-    setSelectedPackageIds([]);
+    setSearchQuery('');
+    setSelectedMedIds([]);
+    setPatientDetails(null);
+    setConsultList([]);
+    setConfirmedSuccess(false);
     setError(null);
     onClose();
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '—';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  const formatTime = (timeStr) => {
-    if (!timeStr) return '—';
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const hour12 = hours % 12 || 12;
-    return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
-  };
-
-  const getFormName = (formId) => {
-    const form = MEDICINE_FORMS.find(f => f.id === formId);
-    return form ? form.name : 'Unknown';
-  };
-
-  const getRouteName = (routeId) => {
-    const route = MEDICINE_ROUTES.find(r => r.id === routeId);
-    return route ? route.name : 'Unknown';
-  };
-
-  const getFoodTimingName = (timingId) => {
-    const timing = FOOD_TIMINGS.find(t => t.id === timingId);
-    return timing ? timing.name : 'Unknown';
-  };
-
-  const getAlreadyAddedTestIds = () => {
-    return labTestOrderItems
-      .filter(item => item.testId && item.testId > 0)
-      .map(item => item.testId);
-  };
-
-  const getAlreadyAddedPackageIds = () => {
-    return labTestOrderItems
-      .filter(item => item.packageId && item.packageId > 0)
-      .map(item => item.packageId);
-  };
-
-  const filteredTests = allLabTests.filter(test =>
-    !testSearchQuery || test.testName?.toLowerCase().includes(testSearchQuery.toLowerCase())
-  );
-
-  const filteredPackages = allLabPackages.filter(pkg =>
-    !packageSearchQuery || pkg.packName?.toLowerCase().includes(packageSearchQuery.toLowerCase())
-  );
-
+  /* ─── Early return ──────────────────────────────────────────── */
   if (!isOpen) return null;
 
+  const panelsActive = !!prescriptionId;
+
+  /* ─── Render ─────────────────────────────────────────────────── */
   return (
-    <div className="add-consultation-overlay">
-      <div className="add-consultation-modal add-consultation-modal-compact">
-        <div className="add-consultation-header">
-          <div>
-            <h2>
-              {mainView === 'create' && 'Add New Consultation'}
-              {mainView === 'patient-details' && 'Patient Details'}
-              {mainView === 'consultation-list' && 'Consultation History'}
-              {mainView === 'consultation-view' && 'Consultation Details'}
-            </h2>
-            <p className="add-consultation-subtitle">
-              {visitSelectionStep === 1 && mainView === 'create'
-                ? 'Select Patient Visit'
-                : selectedVisit?.patientName || 'View Details'}
-            </p>
+    <div className="ac-overlay">
+      <div className="ac-modal">
+        {/* ── Header ── */}
+        <div className="ac-header">
+          <div className="ac-header-left">
+            {(mainView !== 'create' || visitStep === 2) && (
+              <button
+                className="ac-back-btn"
+                onClick={() => {
+                  if (mainView !== 'create') {
+                    setMainView('create');
+                    setPatientDetails(null);
+                    setConsultList([]);
+                  } else if (visitStep === 2 && !consultationId) {
+                    setVisitStep(1);
+                    setSelectedVisit(null);
+                  }
+                }}
+              >
+                <FiArrowLeft size={16} />
+              </button>
+            )}
+            <div>
+              <h2 className="ac-title">
+                {mainView === 'patient-details' ? 'Patient Details' :
+                  mainView === 'consult-list' ? 'Consultation History' :
+                  visitStep === 1 ? 'Select Patient Visit' : 'New Consultation'}
+              </h2>
+              {selectedVisit && (
+                <p className="ac-subtitle">{selectedVisit.patientName} · {selectedVisit.doctorFullName}</p>
+              )}
+            </div>
           </div>
-          <button onClick={handleClose} className="add-consultation-close-btn">
-            <FiX size={24} />
-          </button>
+
+          <div className="ac-header-actions">
+            {visitStep === 2 && mainView === 'create' && (
+              <>
+                <button className="ac-nav-btn" onClick={() => {
+                  if (selectedVisit) { fetchPatientDetails(selectedVisit.patientId); setMainView('patient-details'); }
+                }}>
+                  <FiUser size={14} /> Patient
+                </button>
+                <button className="ac-nav-btn" onClick={() => {
+                  if (selectedVisit) { fetchConsultList(selectedVisit.patientId); setMainView('consult-list'); }
+                }}>
+                  <FiList size={14} /> History
+                </button>
+              </>
+            )}
+            <button className="ac-close-btn" onClick={handleClose}><FiX size={20} /></button>
+          </div>
         </div>
+
         <ErrorHandler error={error} />
-        <div className="add-consultation-body add-consultation-body-compact">
-          {/* Main View Switcher */}
-          {mainView === 'create' && visitSelectionStep === 1 ? (
-            <>
+
+        {/* ── Body ── */}
+        <div className="ac-body">
+
+          {/* ════════════════ VISIT SELECTION (Step 1) ════════════════ */}
+          {mainView === 'create' && visitStep === 1 && (
+            <div className="ac-visit-picker">
               {loading ? (
-                <div className="add-consultation-loading">Loading today's visits...</div>
+                <div className="ac-loading"><div className="ac-spinner" /><span>Loading today's visits...</span></div>
               ) : todayVisits.length === 0 ? (
-                <div className="add-consultation-no-data">
+                <div className="ac-empty">
                   <FiCalendar size={48} />
                   <p>No patient visits recorded today</p>
-                  <p className="add-consultation-hint">
-                    Please add a patient visit first before creating a consultation
-                  </p>
+                  <span>Add a patient visit first before creating a consultation</span>
                 </div>
               ) : (
-                <div className="visit-selection-grid">
-                  {todayVisits.map((visit) => (
-                    <div
-                      key={visit.id}
-                      className="visit-card"
-                      onClick={() => handleVisitSelect(visit)}
-                    >
-                      <div className="visit-card-header">
-                        <div className="visit-avatar">
-                          {visit.patientName?.charAt(0).toUpperCase() || 'P'}
-                        </div>
+                <div className="visit-grid">
+                  {todayVisits.map(v => (
+                    <div key={v.id} className="visit-card" onClick={() => handleVisitSelect(v)}>
+                      <div className="visit-card-top">
+                        <div className="visit-avatar">{v.patientName?.charAt(0).toUpperCase() || 'P'}</div>
                         <div className="visit-info">
-                          <div className="visit-patient-name">{visit.patientName}</div>
-                          <div className="visit-details">
-                            {visit.patientFileNo} • {visit.patientMobile}
-                          </div>
+                          <div className="visit-patient">{v.patientName}</div>
+                          <div className="visit-meta">{v.patientFileNo} · {v.patientMobile}</div>
                         </div>
                       </div>
-                     
-                      <div className="visit-card-body">
-                        <div className="visit-field">
-                          <span className="visit-label">Doctor:</span>
-                          <span className="visit-value">{visit.doctorFullName}</span>
-                        </div>
-                        <div className="visit-field">
-                          <span className="visit-label">Time:</span>
-                          <span className="visit-value">
-                            {formatDate(visit.visitDate)} at {formatTime(visit.visitTime)}
-                          </span>
-                        </div>
-                        {visit.reason && (
-                          <div className="visit-field">
-                            <span className="visit-label">Reason:</span>
-                            <span className="visit-value">{visit.reason}</span>
-                          </div>
-                        )}
-                       
-                        {(visit.bpReading || visit.temperature || visit.weight) && (
-                          <div className="visit-vitals">
-                            {visit.bpReading && (
-                              <span className="vital-badge bp">{visit.bpReading}</span>
-                            )}
-                            {visit.temperature && (
-                              <span className="vital-badge temp">{visit.temperature}°F</span>
-                            )}
-                            {visit.weight && (
-                              <span className="vital-badge weight">{visit.weight}kg</span>
-                            )}
-                          </div>
-                        )}
+                      <div className="visit-card-mid">
+                        <span className="visit-field-label">Dr.</span>
+                        <span className="visit-field-val">{v.doctorFullName}</span>
                       </div>
-                     
-                      <div className="visit-card-footer">
-                        <button className="select-visit-btn">
-                          Select Visit <FiCheck size={16} />
-                        </button>
+                      <div className="visit-card-mid">
+                        <span className="visit-field-label">Time</span>
+                        <span className="visit-field-val">{formatDate(v.visitDate)} at {formatTime(v.visitTime)}</span>
                       </div>
+                      {v.reason && (
+                        <div className="visit-card-mid">
+                          <span className="visit-field-label">Reason</span>
+                          <span className="visit-field-val visit-reason">{v.reason}</span>
+                        </div>
+                      )}
+                      {(v.bpReading || v.temperature || v.weight) && (
+                        <div className="visit-vitals">
+                          {v.bpReading && <span className="vital-chip bp">{v.bpReading}</span>}
+                          {v.temperature && <span className="vital-chip temp">{v.temperature}°F</span>}
+                          {v.weight && <span className="vital-chip wt">{v.weight} kg</span>}
+                        </div>
+                      )}
+                      <button className="visit-select-btn">Select <FiCheck size={13} /></button>
                     </div>
                   ))}
                 </div>
               )}
-            </>
-          ) : mainView === 'create' && visitSelectionStep === 2 ? (
-            <>
-              {/* Action Buttons */}
-              <div className="view-action-buttons">
-                <button
-                  onClick={handleViewPatientDetails}
-                  className="view-action-btn patient-btn"
-                >
-                  <FiUser size={16} />
-                  View Patient Details
-                </button>
-                <button
-                  onClick={handleViewConsultationList}
-                  className="view-action-btn consultation-btn"
-                >
-                  <FiList size={16} />
-                  View Consultation History
-                </button>
-              </div>
+            </div>
+          )}
 
-              {/* Visit Details Display */}
-              {selectedVisit && (
-                <div className="visit-details-display">
-                  <h4 className="visit-details-title">Visit Information</h4>
-                  <div className="visit-details-grid">
-                    {selectedVisit.reason && (
-                      <div className="visit-detail-item">
-                        <label>Reason</label>
-                        <span>{selectedVisit.reason}</span>
-                      </div>
-                    )}
-                    {selectedVisit.symptoms && (
-                      <div className="visit-detail-item">
-                        <label>Symptoms</label>
-                        <span>{selectedVisit.symptoms}</span>
-                      </div>
-                    )}
-                    {selectedVisit.bpReading && (
-                      <div className="visit-detail-item">
-                        <label>Blood Pressure</label>
-                        <span className="vital-text bp-text">{selectedVisit.bpReading}</span>
-                      </div>
-                    )}
-                    {selectedVisit.temperature && (
-                      <div className="visit-detail-item">
-                        <label>Temperature</label>
-                        <span className="vital-text temp-text">{selectedVisit.temperature}°F</span>
-                      </div>
-                    )}
-                    {selectedVisit.weight && (
-                      <div className="visit-detail-item">
-                        <label>Weight</label>
-                        <span className="vital-text weight-text">{selectedVisit.weight} kg</span>
-                      </div>
-                    )}
-                  </div>
+          {/* ════════════════ 3-PANEL LAYOUT (Step 2) ════════════════ */}
+          {mainView === 'create' && visitStep === 2 && (
+            <div className="three-panel-layout">
+
+              {/* ─── PANEL 1 : Add Consultation ─── */}
+              <div className="panel panel-consult">
+                <div className="panel-header panel-header-1">
+                  <span className="panel-badge">1</span>
+                  <h3>Add Consultation</h3>
+                  {consultationId && <FiCheck className="panel-done-icon" size={16} />}
                 </div>
-              )}
-              
-              {/* Original Create Consultation Form */}
-              <div className="compact-form-container">
-                {/* Section 1: Consultation */}
-                <div className="compact-section">
-                  <div className="compact-section-header">
-                    <span className="section-badge">1</span>
-                    <h3>Consultation</h3>
-                    {consultationId && <FiCheck className="check-icon" />}
-                  </div>
-                  <form onSubmit={handleConsultationSubmit} className="compact-section-body">
-                    <div className="form-row-compact">
-                      <div className="form-group-compact">
-                        <label className="label-compact">EMR Notes</label>
-                        <textarea
-                          name="emrNotes"
-                          value={consultationFormData.emrNotes}
-                          onChange={handleConsultationInputChange}
-                          placeholder="EMR notes..."
-                          className="input-compact textarea-compact"
-                          rows={2}
-                          disabled={!!consultationId}
-                        />
+                <div className="panel-body">
+                  {consultationId ? (
+                    <div className="consult-done-state">
+                      <div className="done-badge">
+                        <FiCheck size={18} />
+                        <span>Consultation & Prescription Created</span>
                       </div>
-                     
-                      <div className="form-group-compact">
-                        <label className="label-compact">Consultation Notes *</label>
-                        <textarea
-                          name="consultationNotes"
-                          value={consultationFormData.consultationNotes}
-                          onChange={handleConsultationInputChange}
-                          placeholder="Consultation notes..."
-                          className="input-compact textarea-compact"
-                          rows={2}
-                          required
-                          disabled={!!consultationId}
-                        />
+                      <div className="done-ids">
+                        <span>Consultation ID <strong>#{consultationId}</strong></span>
+                        <span>Prescription ID <strong>#{prescriptionId}</strong></span>
                       </div>
+                      {confirmedSuccess && (
+                        <div className="success-done-badge">
+                          <FiCheck size={14} /> Medicines Confirmed
+                        </div>
+                      )}
+                      <button className="btn-complete" onClick={handleComplete}>
+                        Complete &amp; Close <FiCheck size={15} />
+                      </button>
                     </div>
-                    <div className="form-row-compact">
-                      <div className="form-group-compact">
-                        <label className="label-compact">Treatment Plan</label>
+                  ) : (
+                    <form onSubmit={handleAddConsultation} className="consult-form">
+                      {/* Visit snapshot */}
+                      {selectedVisit && (
+                        <div className="visit-snapshot">
+                          {selectedVisit.reason && (
+                            <div className="snap-row"><span className="snap-label">Reason</span><span>{selectedVisit.reason}</span></div>
+                          )}
+                          {selectedVisit.symptoms && (
+                            <div className="snap-row"><span className="snap-label">Symptoms</span><span>{selectedVisit.symptoms}</span></div>
+                          )}
+                          {(selectedVisit.bpReading || selectedVisit.temperature || selectedVisit.weight) && (
+                            <div className="snap-vitals">
+                              {selectedVisit.bpReading && <span className="vital-chip bp">{selectedVisit.bpReading}</span>}
+                              {selectedVisit.temperature && <span className="vital-chip temp">{selectedVisit.temperature}°F</span>}
+                              {selectedVisit.weight && <span className="vital-chip wt">{selectedVisit.weight} kg</span>}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="cf-group">
+                        <label className="cf-label">Consultation Notes <span className="cf-required">*</span></label>
                         <textarea
-                          name="treatmentPlan"
-                          value={consultationFormData.treatmentPlan}
-                          onChange={handleConsultationInputChange}
-                          placeholder="Treatment plan..."
-                          className="input-compact textarea-compact"
-                          rows={2}
-                          disabled={!!consultationId}
+                          className="cf-textarea"
+                          rows={4}
+                          required
+                          value={consultationNotes}
+                          onChange={e => setConsultationNotes(e.target.value)}
+                          placeholder="Enter consultation notes..."
                         />
                       </div>
-                      <div className="form-group-compact">
-                        <label className="label-compact">Next Consultation Date</label>
+
+                      <div className="cf-group">
+                        <label className="cf-label">Treatment Plan <span className="cf-optional">(Optional)</span></label>
+                        <textarea
+                          className="cf-textarea"
+                          rows={3}
+                          value={treatmentPlan}
+                          onChange={e => setTreatmentPlan(e.target.value)}
+                          placeholder="Treatment plan..."
+                        />
+                      </div>
+
+                      <div className="cf-group">
+                        <label className="cf-label">Next Consultation Date <span className="cf-optional">(Optional)</span></label>
                         <input
                           type="date"
-                          name="nextConsultationDate"
-                          value={consultationFormData.nextConsultationDate}
-                          onChange={handleConsultationInputChange}
-                          className="input-compact"
-                          min={new Date().toISOString().split('T')[0]}
-                          disabled={!!consultationId}
+                          className="cf-input"
+                          value={nextConsultationDate}
+                          onChange={e => setNextConsultationDate(e.target.value)}
+                          min={today()}
                         />
                       </div>
-                    </div>
-                    {!consultationId && (
-                      <button type="submit" className="btn-submit-compact" disabled={submitLoading}>
-                        {submitLoading ? 'Submitting...' : 'Submit Consultation'}
+
+                      <button type="submit" className="btn-add-consultation" disabled={submitLoading}>
+                        {submitLoading ? (
+                          <><div className="btn-spinner" /> Processing...</>
+                        ) : (
+                          <><FiCheck size={15} /> Add Consultation</>
+                        )}
                       </button>
-                    )}
-                  </form>
-                </div>
-                {/* Section 2: Prescription */}
-                <div className="compact-section">
-                  <div className="compact-section-header">
-                    <span className="section-badge">2</span>
-                    <h3>Prescription</h3>
-                    {prescriptionId && <FiCheck className="check-icon" />}
-                  </div>
-                  <div className="compact-section-body">
-                    {!prescriptionId ? (
-                      <form onSubmit={handleCreatePrescription}>
-                        <div className="form-row-compact">
-                          <div className="form-group-compact">
-                            <label className="label-compact">Date Issued *</label>
-                            <input
-                              type="date"
-                              name="dateIssued"
-                              value={prescriptionFormData.dateIssued}
-                              onChange={handlePrescriptionInputChange}
-                              className="input-compact"
-                              required
-                              disabled={!consultationId}
-                            />
-                          </div>
-                          <div className="form-group-compact">
-                            <label className="label-compact">Valid Until *</label>
-                            <input
-                              type="date"
-                              name="validUntil"
-                              value={prescriptionFormData.validUntil}
-                              onChange={handlePrescriptionInputChange}
-                              className="input-compact"
-                              min={prescriptionFormData.dateIssued}
-                              required
-                              disabled={!consultationId}
-                            />
-                          </div>
-                          <div className="form-group-compact">
-                            <label className="checkbox-label-compact">
-                              <input
-                                type="checkbox"
-                                name="isRepeat"
-                                checked={prescriptionFormData.isRepeat === 1}
-                                onChange={handlePrescriptionInputChange}
-                                className="checkbox-compact"
-                                disabled={!consultationId}
-                              />
-                              <span>Repeat</span>
-                            </label>
-                          </div>
-                          {prescriptionFormData.isRepeat === 1 && (
-                            <div className="form-group-compact">
-                              <label className="label-compact">Repeat Count</label>
-                              <input
-                                type="number"
-                                name="repeatCount"
-                                value={prescriptionFormData.repeatCount}
-                                onChange={handlePrescriptionInputChange}
-                                className="input-compact"
-                                min="1"
-                                max="12"
-                                disabled={!consultationId}
-                              />
-                            </div>
-                          )}
-                        </div>
-                        <button
-                          type="submit"
-                          className="btn-submit-compact"
-                          disabled={!consultationId || submitLoading}
-                        >
-                          {submitLoading ? 'Creating...' : 'Create Prescription'}
-                        </button>
-                      </form>
-                    ) : (
-                      <>
-                        <div className="id-badge-compact">
-                          <FiFileText size={14} />
-                          <span><strong>Prescription Created</strong></span>
-                        </div>
-                        {/* Medicine Search & Selection */}
-                        <div className="medicine-search-inline">
-                          <div className="search-inline-header">
-                            <h4>Select Medicines</h4>
-                          </div>
-                         
-                          <div className="search-inline-input">
-                            <FiSearch size={16} />
-                            <input
-                              type="text"
-                              value={medicineSearchQuery}
-                              onChange={(e) => {
-                                setMedicineSearchQuery(e.target.value);
-                                handleMedicineSearch();
-                              }}
-                              placeholder="Search medicines..."
-                              className="input-search-inline"
-                            />
-                          </div>
-                          <div className="medicine-checkbox-list">
-                            {searchingMedicines ? (
-                              <div className="loading-inline">
-                                <div className="spinner-small"></div>
-                                <span>Loading...</span>
-                              </div>
-                            ) : filteredMedicines.length === 0 ? (
-                              <div className="empty-inline">No medicines found</div>
-                            ) : (
-                              filteredMedicines.slice(0, 10).map(medicine => (
-                                <label key={medicine.id} className="checkbox-item-inline">
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedMedicineIds.includes(medicine.id)}
-                                    onChange={() => handleMedicineSelection(medicine.id)}
-                                    className="checkbox-inline"
-                                  />
-                                  <span className="checkbox-item-name">{medicine.name}</span>
-                                </label>
-                              ))
-                            )}
-                          </div>
-                          {selectedMedicineIds.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={handleAddSelectedMedicines}
-                              className="btn-add-selected"
-                            >
-                              Add {selectedMedicineIds.length} Selected Medicine(s)
-                            </button>
-                          )}
-                        </div>
-                        {/* Added Medicines */}
-                        {prescriptionDetails.length > 0 && (
-                          <div className="medicines-compact">
-                            <h4 className="section-subtitle">Added Medicines</h4>
-                            <div className="medicines-list-compact">
-                              {prescriptionDetails.map((detail) => (
-                                <div key={detail.tempId} className="medicine-card-compact">
-                                  <div className="medicine-header-compact">
-                                    <strong>{detail.medicineName}</strong>
-                                    <button
-                                      type="button"
-                                      onClick={() => removePrescriptionDetail(detail.tempId)}
-                                      className="btn-remove-compact"
-                                    >
-                                      <FiTrash2 size={12} />
-                                    </button>
-                                  </div>
-                                  <div className="form-grid-compact">
-                                    <div className="form-group-compact">
-                                      <label className="label-compact">Dosage *</label>
-                                      <input
-                                        type="text"
-                                        value={detail.dosage}
-                                        onChange={(e) => updatePrescriptionDetail(detail.tempId, 'dosage', e.target.value)}
-                                        placeholder="1 tablet"
-                                        className="input-compact input-mini"
-                                        required
-                                      />
-                                    </div>
-                                    <div className="form-group-compact">
-                                      <label className="label-compact">Frequency *</label>
-                                      <select
-                                        value={detail.frequency}
-                                        onChange={(e) => updatePrescriptionDetail(detail.tempId, 'frequency', e.target.value)}
-                                        className="input-compact input-mini"
-                                        required
-                                      >
-                                        <option value="">Select</option>
-                                        <option value="Once daily">Once daily</option>
-                                        <option value="Twice daily">Twice daily</option>
-                                        <option value="Three times daily">Three times daily</option>
-                                        <option value="Four times daily">Four times daily</option>
-                                        <option value="Every 6 hours">Every 6 hours</option>
-                                        <option value="Every 8 hours">Every 8 hours</option>
-                                        <option value="Every 12 hours">Every 12 hours</option>
-                                        <option value="At bedtime">At bedtime</option>
-                                        <option value="Once Weekly">Once Weekly</option>
-                                        <option value="As needed (PRN)">As needed (PRN)</option>
-                                      </select>
-                                    </div>
-                                    <div className="form-group-compact">
-                                      <label className="label-compact">Duration (Days)</label>
-                                      <input
-                                        type="number"
-                                        value={detail.durationDays}
-                                        onChange={(e) => updatePrescriptionDetail(detail.tempId, 'durationDays', e.target.value)}
-                                        placeholder="7"
-                                        className="input-compact input-mini"
-                                        min="1"
-                                      />
-                                    </div>
-                                    <div className="form-group-compact">
-                                      <label className="label-compact">Route</label>
-                                      <select
-                                        value={detail.route}
-                                        onChange={(e) => updatePrescriptionDetail(detail.tempId, 'route', Number(e.target.value))}
-                                        className="input-compact input-mini"
-                                      >
-                                        {MEDICINE_ROUTES.map(route => (
-                                          <option key={route.id} value={route.id}>{route.name}</option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                    <div className="form-group-compact">
-                                      <label className="label-compact">Food Timing</label>
-                                      <select
-                                        value={detail.foodTiming}
-                                        onChange={(e) => updatePrescriptionDetail(detail.tempId, 'foodTiming', Number(e.target.value))}
-                                        className="input-compact input-mini"
-                                      >
-                                        {FOOD_TIMINGS.map(timing => (
-                                          <option key={timing.id} value={timing.id}>{timing.name}</option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                    <div className="form-group-compact">
-                                      <label className="label-compact">Quantity *</label>
-                                      <input
-                                        type="number"
-                                        value={detail.quantity}
-                                        onChange={(e) => updatePrescriptionDetail(detail.tempId, 'quantity', Number(e.target.value))}
-                                        className="input-compact input-mini"
-                                        min="0.5"
-                                        step="0.5"
-                                        required
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="form-group-compact">
-                                    <label className="label-compact">Instructions (Optional)</label>
-                                    <textarea
-                                      value={detail.instructions}
-                                      onChange={(e) => updatePrescriptionDetail(detail.tempId, 'instructions', e.target.value)}
-                                      placeholder="Additional instructions..."
-                                      className="input-compact textarea-compact"
-                                      rows={1}
-                                    />
-                                  </div>
-                                  <div className="form-row-compact">
-                                    <div className="form-group-compact">
-                                      <label className="checkbox-label-compact">
-                                        <input
-                                          type="checkbox"
-                                          checked={detail.refillAllowed === 1}
-                                          onChange={(e) => updatePrescriptionDetail(detail.tempId, 'refillAllowed', e.target.checked ? 1 : 0)}
-                                          className="checkbox-compact"
-                                        />
-                                        <span>Refill Allowed</span>
-                                      </label>
-                                    </div>
-                                    {detail.refillAllowed === 1 && (
-                                      <div className="form-group-compact">
-                                        <label className="label-compact">Refill Count</label>
-                                        <input
-                                          type="number"
-                                          value={detail.refillCount}
-                                          onChange={(e) => updatePrescriptionDetail(detail.tempId, 'refillCount', Number(e.target.value))}
-                                          className="input-compact input-mini"
-                                          min="1"
-                                          max="12"
-                                        />
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={handleSavePrescriptionDetails}
-                              className="btn-submit-compact"
-                              disabled={submitLoading}
-                            >
-                              {submitLoading ? 'Saving...' : 'Save All Medicines'}
-                            </button>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-                {/* Section 3: Lab Tests */}
-                <div className="compact-section">
-                  <div className="compact-section-header">
-                    <span className="section-badge">3</span>
-                    <h3>Lab Tests (Optional)</h3>
-                    {labTestOrderId && <FiCheck className="check-icon" />}
-                  </div>
-                  <div className="compact-section-body">
-                    {!labTestOrderId ? (
-                      <form onSubmit={handleLabTestSubmit}>
-                        <div className="form-row-compact">
-                          <div className="form-group-compact">
-                            <label className="label-compact">Priority *</label>
-                            <select
-                              name="priority"
-                              value={labTestFormData.priority}
-                              onChange={handleLabTestInputChange}
-                              className="input-compact"
-                              required
-                              disabled={!consultationId}
-                            >
-                              {LAB_PRIORITIES.map(priority => (
-                                <option key={priority.id} value={priority.id}>{priority.name}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="form-group-compact">
-                            <label className="label-compact">Notes</label>
-                            <textarea
-                              name="notes"
-                              value={labTestFormData.notes}
-                              onChange={handleLabTestInputChange}
-                              placeholder="Lab notes..."
-                              className="input-compact textarea-compact"
-                              rows={2}
-                              disabled={!consultationId}
-                            />
-                          </div>
-                        </div>
-                        <button
-                          type="submit"
-                          className="btn-submit-compact"
-                          disabled={!consultationId || submitLoading}
-                        >
-                          {submitLoading ? 'Creating...' : 'Create Lab Order'}
-                        </button>
-                      </form>
-                    ) : (
-                      <>
-                        <div className="id-badge-compact">
-                          <FiClipboard size={14} />
-                          <span><strong>Order Created</strong></span>
-                        </div>
-                        {/* Lab Test & Package Inline Panels */}
-                        <div className="lab-dropdowns-container">
-                          <div className="form-row-compact">
-                            {/* Tests Panel */}
-                            <div className="inline-panel">
-                              <button
-                                type="button"
-                                onClick={() => { setShowTestDropdown(!showTestDropdown); setShowPackageDropdown(false); }}
-                                className="inline-panel-trigger"
-                              >
-                                <span>
-                                  {selectedTestIds.length > 0
-                                    ? `Lab Tests (${selectedTestIds.length} selected)`
-                                    : 'Lab Tests'}
-                                </span>
-                                <FiChevronDown size={16} className={showTestDropdown ? 'chevron-open' : ''} />
-                              </button>
-                              {showTestDropdown && (
-                                <div className="inline-panel-body">
-                                  <div className="inline-panel-search">
-                                    <FiSearch size={13} />
-                                    <input
-                                      type="text"
-                                      value={testSearchQuery}
-                                      onChange={(e) => setTestSearchQuery(e.target.value)}
-                                      placeholder="Search tests..."
-                                      className="inline-panel-search-input"
-                                    />
-                                  </div>
-                                  <div className="inline-panel-list">
-                                    {loadingTests ? (
-                                      <div className="loading-inline"><div className="spinner-small"></div> Loading...</div>
-                                    ) : filteredTests.length === 0 ? (
-                                      <div className="empty-inline">No tests found</div>
-                                    ) : (
-                                      filteredTests.map(test => {
-                                        const alreadyAdded = getAlreadyAddedTestIds().includes(test.id);
-                                        return (
-                                          <label key={test.id} className={`inline-panel-item ${alreadyAdded ? 'disabled' : ''}`}>
-                                            <input
-                                              type="checkbox"
-                                              checked={selectedTestIds.includes(test.id)}
-                                              onChange={() => handleTestSelection(test.id)}
-                                              className="checkbox-inline"
-                                              disabled={alreadyAdded}
-                                            />
-                                            <span className="checkbox-item-name">
-                                              {test.testName}
-                                              {alreadyAdded && <span className="added-tag">Added</span>}
-                                            </span>
-                                          </label>
-                                        );
-                                      })
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            {/* Packages Panel */}
-                            <div className="inline-panel">
-                              <button
-                                type="button"
-                                onClick={() => { setShowPackageDropdown(!showPackageDropdown); setShowTestDropdown(false); }}
-                                className="inline-panel-trigger"
-                              >
-                                <span>
-                                  {selectedPackageIds.length > 0
-                                    ? `Lab Packages (${selectedPackageIds.length} selected)`
-                                    : 'Lab Packages'}
-                                </span>
-                                <FiChevronDown size={16} className={showPackageDropdown ? 'chevron-open' : ''} />
-                              </button>
-                              {showPackageDropdown && (
-                                <div className="inline-panel-body">
-                                  <div className="inline-panel-search">
-                                    <FiSearch size={13} />
-                                    <input
-                                      type="text"
-                                      value={packageSearchQuery}
-                                      onChange={(e) => setPackageSearchQuery(e.target.value)}
-                                      placeholder="Search packages..."
-                                      className="inline-panel-search-input"
-                                    />
-                                  </div>
-                                  <div className="inline-panel-list">
-                                    {loadingPackages ? (
-                                      <div className="loading-inline"><div className="spinner-small"></div> Loading...</div>
-                                    ) : filteredPackages.length === 0 ? (
-                                      <div className="empty-inline">No packages found</div>
-                                    ) : (
-                                      filteredPackages.map(pkg => {
-                                        const alreadyAdded = getAlreadyAddedPackageIds().includes(pkg.id);
-                                        return (
-                                          <label key={pkg.id} className={`inline-panel-item ${alreadyAdded ? 'disabled' : ''}`}>
-                                            <input
-                                              type="checkbox"
-                                              checked={selectedPackageIds.includes(pkg.id)}
-                                              onChange={() => handlePackageSelection(pkg.id)}
-                                              className="checkbox-inline"
-                                              disabled={alreadyAdded}
-                                            />
-                                            <span className="checkbox-item-name">
-                                              {pkg.packName}
-                                              {alreadyAdded && <span className="added-tag">Added</span>}
-                                            </span>
-                                          </label>
-                                        );
-                                      })
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          {(selectedTestIds.length > 0 || selectedPackageIds.length > 0) && (
-                            <button
-                              type="button"
-                              onClick={handleAddSelectedLabItems}
-                              className="btn-add-selected"
-                              disabled={submitLoading}
-                            >
-                              {submitLoading ? 'Adding...' : `Add ${selectedTestIds.length + selectedPackageIds.length} Selected Item(s)`}
-                            </button>
-                          )}
-                        </div>
-                        {/* Added Lab Items */}
-                        {labTestOrderItems.length > 0 && (
-                          <div className="medicines-compact">
-                            <h4 className="section-subtitle">Added Test Items</h4>
-                            <div className="lab-items-compact">
-                              {labTestOrderItems.map((item) => (
-                                <div key={item.itemId} className="lab-item-compact">
-                                  <div className="lab-item-info-compact">
-                                    {item.packageId > 0 ? (
-                                      <FiPackage size={12} className="package-icon" />
-                                    ) : (
-                                      <FiClipboard size={12} className="test-icon" />
-                                    )}
-                                    <span>{item.testOrPackageName || 'Unknown'}</span>
-                                    {item.fees > 0 && (
-                                      <span className="lab-fee-compact">₹{item.fees.toFixed(2)}</span>
-                                    )}
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteLabOrderItem(item.itemId)}
-                                    className="btn-remove-compact"
-                                    disabled={submitLoading}
-                                  >
-                                    <FiTrash2 size={12} />
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-                {/* Complete Button */}
-                <div className="complete-section">
-                  <button
-                    type="button"
-                    onClick={handleComplete}
-                    className="btn-complete-compact"
-                    disabled={!consultationId}
-                  >
-                    Complete & Close <FiCheck size={16} />
-                  </button>
+                    </form>
+                  )}
                 </div>
               </div>
-            </>
-          ) : mainView === 'patient-details' ? (
-            <div className="details-view-container">
-              <button onClick={handleBackToCreate} className="back-btn">
-                <FiArrowLeft size={16} />
-                Back to Consultation
+
+              {/* ─── PANEL 2 : Prescription Details ─── */}
+              <div className={`panel panel-prescription ${!panelsActive ? 'panel-disabled' : ''}`}>
+                <div className="panel-header panel-header-2">
+                  <span className="panel-badge">2</span>
+                  <h3>Prescription Details</h3>
+                  {confirmedSuccess && <FiCheck className="panel-done-icon" size={16} />}
+                  {!panelsActive && <span className="panel-lock">Complete Step 1 first</span>}
+                </div>
+                <div className="panel-body">
+                  {!panelsActive ? (
+                    <div className="panel-placeholder">
+                      <FiFileText size={36} />
+                      <p>Prescription details will appear here</p>
+                    </div>
+                  ) : (
+                    <>
+                      {containers.length === 0 ? (
+                        <div className="panel-placeholder">
+                          <FiPackage size={32} />
+                          <p>No medicines added yet</p>
+                          <span>Select from the medicine list →</span>
+                        </div>
+                      ) : (
+                        <div className="containers-list">
+                          {containers.map(c => (
+                            <MedicineContainer
+                              key={c.tempId}
+                              container={c}
+                              onUpdate={updateContainer}
+                              onRemove={removeContainer}
+                            />
+                          ))}
+                        </div>
+                      )}
+
+                      <button type="button" className="btn-add-more" onClick={addBlankContainer}>
+                        <FiPlus size={14} /> Add Medicine Manually
+                      </button>
+
+                      {containers.length > 0 && !confirmedSuccess && (
+                        <button
+                          type="button"
+                          className="btn-confirm-meds"
+                          onClick={handleConfirmMedicines}
+                          disabled={confirmLoading}
+                        >
+                          {confirmLoading ? (
+                            <><div className="btn-spinner" /> Saving...</>
+                          ) : (
+                            <><FiCheck size={15} /> Confirm {containers.length} Medicine{containers.length > 1 ? 's' : ''}</>
+                          )}
+                        </button>
+                      )}
+
+                      {confirmedSuccess && (
+                        <div className="success-done-badge">
+                          <FiCheck size={14} /> {containers.length} medicine(s) saved successfully
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* ─── PANEL 3 : Medicine List ─── */}
+              <div className={`panel panel-meds ${!panelsActive ? 'panel-disabled' : ''}`}>
+                <div className="panel-header panel-header-3">
+                  <span className="panel-badge">3</span>
+                  <h3>Medicine List</h3>
+                  {!panelsActive && <span className="panel-lock">Complete Step 1 first</span>}
+                </div>
+                <div className="panel-body">
+                  {!panelsActive ? (
+                    <div className="panel-placeholder">
+                      <FiSearch size={36} />
+                      <p>Medicine search will be available here</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Search */}
+                      <div className="med-search-bar">
+                        <input
+                          type="text"
+                          className="med-search-input"
+                          value={searchQuery}
+                          onChange={e => setSearchQuery(e.target.value)}
+                          onKeyDown={handleSearchKey}
+                          placeholder="Search by name or generic..."
+                        />
+                        <button type="button" className="med-search-btn" onClick={handleSearch}>
+                          <FiSearch size={15} />
+                        </button>
+                      </div>
+
+                      {/* Multi-select note */}
+                      {selectedMedIds.length > 0 && (
+                        <div className="med-selection-bar">
+                          <span>{selectedMedIds.length} selected</span>
+                          <button type="button" className="btn-add-selected-meds" onClick={handleAddSelectedMeds}>
+                            <FiPlus size={13} /> Add Selected
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Medicine list */}
+                      <div className="med-list-scroll">
+                        {loadingMeds ? (
+                          <div className="ac-loading"><div className="ac-spinner" /><span>Loading...</span></div>
+                        ) : filteredMedicines.length === 0 ? (
+                          <div className="ac-empty"><p>No medicines found</p></div>
+                        ) : (
+                          filteredMedicines.map(m => {
+                            const isSelected = selectedMedIds.includes(m.id);
+                            const alreadyAdded = containers.some(c => c.medicineId === m.id);
+                            return (
+                              <label
+                                key={m.id}
+                                className={`med-list-item ${isSelected ? 'selected' : ''} ${alreadyAdded ? 'already-added' : ''}`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => toggleMedSelection(m.id)}
+                                  className="med-list-checkbox"
+                                />
+                                <div className="med-list-info">
+                                  <span className="med-list-name">{m.name}</span>
+                                  {m.genericName && <span className="med-list-generic">{m.genericName}</span>}
+                                  <div className="med-list-meta">
+                                    {m.typeDesc && <span className="med-chip">{m.typeDesc}</span>}
+                                    {m.dosageForm && <span className="med-chip">{m.dosageForm}</span>}
+                                    {alreadyAdded && <span className="med-chip added">Added</span>}
+                                  </div>
+                                </div>
+                              </label>
+                            );
+                          })
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ════════════════ PATIENT DETAILS VIEW ════════════════ */}
+          {mainView === 'patient-details' && (
+            <div className="side-view-container">
+              <button className="ac-back-btn-inline" onClick={() => { setMainView('create'); setPatientDetails(null); }}>
+                <FiArrowLeft size={15} /> Back to Consultation
               </button>
               {loadingPatient ? (
-                <div className="add-consultation-loading">Loading patient details...</div>
+                <div className="ac-loading"><div className="ac-spinner" /><span>Loading patient details...</span></div>
               ) : patientDetails ? (
-                <div className="patient-details-card">
-                  <div className="patient-header-section">
-                    <div className="patient-avatar-large">
-                      {patientDetails.patientName?.charAt(0).toUpperCase() || 'P'}
-                    </div>
-                    <div className="patient-info-large">
+                <div className="patient-detail-card">
+                  <div className="patient-detail-header">
+                    <div className="pt-avatar-lg">{patientDetails.patientName?.charAt(0).toUpperCase() || 'P'}</div>
+                    <div>
                       <h3>{patientDetails.patientName}</h3>
-                      <div className="patient-meta">
-                        <span className="meta-badge">File No: {patientDetails.fileNo}</span>
-                        <span className="meta-badge">{patientDetails.genderDesc}</span>
-                        {patientDetails.age && <span className="meta-badge">{patientDetails.age} years</span>}
+                      <div className="pt-meta-chips">
+                        <span className="meta-chip">{patientDetails.fileNo}</span>
+                        {patientDetails.genderDesc && <span className="meta-chip">{patientDetails.genderDesc}</span>}
+                        {patientDetails.age && <span className="meta-chip">{patientDetails.age} yrs</span>}
+                        {patientDetails.bloodGroupDesc && <span className="meta-chip">{patientDetails.bloodGroupDesc}</span>}
                       </div>
                     </div>
                   </div>
-                  <div className="details-grid details-grid-three-col">
-                    <div className="detail-item">
-                      <label>Mobile</label>
-                      <span>{patientDetails.mobile || '—'}</span>
-                    </div>
-                    {patientDetails.altMobile && (
-                      <div className="detail-item">
-                        <label>Alt. Mobile</label>
-                        <span>{patientDetails.altMobile}</span>
+                  <div className="pt-details-grid">
+                    {[
+                      ['Mobile', patientDetails.mobile],
+                      ['Alt. Mobile', patientDetails.altMobile],
+                      ['Email', patientDetails.email],
+                      ['Birth Date', patientDetails.birthDate ? formatDate(patientDetails.birthDate) : null],
+                      ['Marital Status', patientDetails.maritalStatusDesc],
+                      ['Emergency Contact', patientDetails.emergencyContactNo],
+                    ].filter(([, v]) => v).map(([label, val]) => (
+                      <div key={label} className="pt-detail-item">
+                        <label>{label}</label><span>{val}</span>
                       </div>
-                    )}
-                    {patientDetails.email && (
-                      <div className="detail-item">
-                        <label>Email</label>
-                        <span>{patientDetails.email}</span>
-                      </div>
-                    )}
-                    {patientDetails.birthDate && (
-                      <div className="detail-item">
-                        <label>Birth Date</label>
-                        <span>{formatDate(patientDetails.birthDate)}</span>
-                      </div>
-                    )}
-                    {patientDetails.bloodGroupDesc && (
-                      <div className="detail-item">
-                        <label>Blood Group</label>
-                        <span>{patientDetails.bloodGroupDesc}</span>
-                      </div>
-                    )}
-                    {patientDetails.maritalStatusDesc && (
-                      <div className="detail-item">
-                        <label>Marital Status</label>
-                        <span>{patientDetails.maritalStatusDesc}</span>
-                      </div>
-                    )}
+                    ))}
                     {patientDetails.address && (
-                      <div className="detail-item full-width">
-                        <label>Address</label>
-                        <span>{patientDetails.address}</span>
-                      </div>
-                    )}
-                    {patientDetails.emergencyContactNo && (
-                      <div className="detail-item">
-                        <label>Emergency Contact</label>
-                        <span>{patientDetails.emergencyContactNo}</span>
-                      </div>
+                      <div className="pt-detail-item full"><label>Address</label><span>{patientDetails.address}</span></div>
                     )}
                     {patientDetails.allergies && (
-                      <div className="detail-item full-width">
-                        <label>Allergies</label>
-                        <span className="highlight-text">{patientDetails.allergies}</span>
+                      <div className="pt-detail-item full highlight">
+                        <label>⚠ Allergies</label><span>{patientDetails.allergies}</span>
                       </div>
                     )}
                     {patientDetails.existingMedicalConditions && (
-                      <div className="detail-item full-width">
-                        <label>Existing Medical Conditions</label>
-                        <span>{patientDetails.existingMedicalConditions}</span>
-                      </div>
-                    )}
-                    {patientDetails.pastSurgeries && (
-                      <div className="detail-item full-width">
-                        <label>Past Surgeries</label>
-                        <span>{patientDetails.pastSurgeries}</span>
-                      </div>
+                      <div className="pt-detail-item full"><label>Medical Conditions</label><span>{patientDetails.existingMedicalConditions}</span></div>
                     )}
                     {patientDetails.currentMedications && (
-                      <div className="detail-item full-width">
-                        <label>Current Medications</label>
-                        <span>{patientDetails.currentMedications}</span>
-                      </div>
+                      <div className="pt-detail-item full"><label>Current Medications</label><span>{patientDetails.currentMedications}</span></div>
                     )}
                     {patientDetails.familyMedicalHistory && (
-                      <div className="detail-item full-width">
-                        <label>Family Medical History</label>
-                        <span>{patientDetails.familyMedicalHistory}</span>
-                      </div>
-                    )}
-                    {patientDetails.immunizationRecords && (
-                      <div className="detail-item full-width">
-                        <label>Immunization Records</label>
-                        <span>{patientDetails.immunizationRecords}</span>
-                      </div>
+                      <div className="pt-detail-item full"><label>Family History</label><span>{patientDetails.familyMedicalHistory}</span></div>
                     )}
                   </div>
                 </div>
               ) : (
-                <div className="add-consultation-no-data">
-                  <p>Patient details not available</p>
-                </div>
+                <div className="ac-empty"><p>Patient details not available</p></div>
               )}
             </div>
-          ) : mainView === 'consultation-list' ? (
-            <div className="details-view-container">
-              <button onClick={handleBackToCreate} className="back-btn">
-                <FiArrowLeft size={16} />
-                Back to Consultation
+          )}
+
+          {/* ════════════════ CONSULTATION HISTORY VIEW ════════════════ */}
+          {mainView === 'consult-list' && (
+            <div className="side-view-container">
+              <button className="ac-back-btn-inline" onClick={() => { setMainView('create'); setConsultList([]); }}>
+                <FiArrowLeft size={15} /> Back to Consultation
               </button>
-
-              {/* Date Filter */}
-              <div className="consultation-filter-bar">
-                <div className="filter-header">
-                  <FiFilter size={14} />
-                  <span>Filter by Date</span>
-                </div>
-                <div className="filter-inputs">
-                  <div className="filter-group">
-                    <label>From Date</label>
-                    <input
-                      type="date"
-                      value={consultationDateFilter.fromDate}
-                      onChange={(e) => handleDateFilterChange('fromDate', e.target.value)}
-                      className="filter-input"
-                    />
-                  </div>
-                  <div className="filter-group">
-                    <label>To Date</label>
-                    <input
-                      type="date"
-                      value={consultationDateFilter.toDate}
-                      onChange={(e) => handleDateFilterChange('toDate', e.target.value)}
-                      className="filter-input"
-                      min={consultationDateFilter.fromDate}
-                    />
-                  </div>
-                  {(consultationDateFilter.fromDate || consultationDateFilter.toDate) && (
-                    <button onClick={clearDateFilter} className="clear-filter-btn">
-                      Clear
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {loadingConsultations ? (
-                <div className="add-consultation-loading">Loading consultation history...</div>
-              ) : filteredConsultationList.length === 0 ? (
-                <div className="add-consultation-no-data">
-                  <FiList size={48} />
-                  <p>No consultations found</p>
-                  {(consultationDateFilter.fromDate || consultationDateFilter.toDate) && (
-                    <p className="add-consultation-hint">Try adjusting the date filter</p>
-                  )}
-                </div>
+              {loadingConsults ? (
+                <div className="ac-loading"><div className="ac-spinner" /><span>Loading history...</span></div>
+              ) : consultList.length === 0 ? (
+                <div className="ac-empty"><FiList size={48} /><p>No consultations found</p></div>
               ) : (
-                <div className="consultation-history-table-container">
-                  <table className="consultation-history-table">
+                <div className="consult-history-table-wrap">
+                  <table className="consult-history-table">
                     <thead>
                       <tr>
                         <th>Date</th>
                         <th>Doctor</th>
                         <th>Reason</th>
                         <th>Notes</th>
-                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredConsultationList.map((consultation) => (
-                        <tr key={consultation.id}>
-                          <td>{formatDate(consultation.dateCreated)}</td>
-                          <td>{consultation.doctorFullName}</td>
-                          <td>{consultation.reason || '—'}</td>
-                          <td className="notes-cell">
-                            {consultation.consultationNotes ? (
-                              <span className="notes-preview-table">{consultation.consultationNotes}</span>
-                            ) : '—'}
-                          </td>
-                          <td>
-                            <button
-                              onClick={() => handleViewConsultationDetails(consultation)}
-                              className="view-details-table-btn"
-                            >
-                              <FiEye size={14} />
-                              View
-                            </button>
-                          </td>
+                      {consultList.map(c => (
+                        <tr key={c.id}>
+                          <td>{formatDate(c.dateCreated)}</td>
+                          <td>{c.doctorFullName}</td>
+                          <td>{c.reason || '—'}</td>
+                          <td className="notes-cell">{c.consultationNotes || '—'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1944,102 +1005,9 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                 </div>
               )}
             </div>
-          ) : mainView === 'consultation-view' ? (
-            <div className="details-view-container">
-              <button onClick={() => setMainView('consultation-list')} className="back-btn">
-                <FiArrowLeft size={16} />
-                Back to List
-              </button>
-              {loadingConsultationDetails ? (
-                <div className="add-consultation-loading">Loading consultation details...</div>
-              ) : consultationDetails ? (
-                <div className="consultation-full-details">
-                  {/* Consultation Info */}
-                  <div className="detail-section">
-                    <h3 className="section-title">Consultation Information</h3>
-                    <div className="details-grid">
-                      <div className="detail-item">
-                        <label>Consultation ID</label>
-                        <span>{consultationDetails.id}</span>
-                      </div>
-                      <div className="detail-item">
-                        <label>Date</label>
-                        <span>{formatDate(consultationDetails.dateCreated)}</span>
-                      </div>
-                      <div className="detail-item">
-                        <label>Doctor</label>
-                        <span>{consultationDetails.doctorFullName}</span>
-                      </div>
-                      {consultationDetails.reason && (
-                        <div className="detail-item full-width">
-                          <label>Reason</label>
-                          <span>{consultationDetails.reason}</span>
-                        </div>
-                      )}
-                      {consultationDetails.symptoms && (
-                        <div className="detail-item full-width">
-                          <label>Symptoms</label>
-                          <span>{consultationDetails.symptoms}</span>
-                        </div>
-                      )}
-                      {consultationDetails.consultationNotes && (
-                        <div className="detail-item full-width">
-                          <label>Consultation Notes</label>
-                          <span>{consultationDetails.consultationNotes}</span>
-                        </div>
-                      )}
-                      {consultationDetails.treatmentPlan && (
-                        <div className="detail-item full-width">
-                          <label>Treatment Plan</label>
-                          <span>{consultationDetails.treatmentPlan}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+          )}
 
-                  {/* Prescription Details - Simplified */}
-                  {prescriptionDetails.length > 0 && (
-                    <div className="detail-section">
-                      <h3 className="section-title">Prescription</h3>
-                      <div className="simple-prescription-list">
-                        {prescriptionDetails.map((detail, index) => (
-                          <div key={detail.id} className="simple-prescription-item">
-                            <span className="medicine-number-simple">#{index + 1}</span>
-                            <span className="medicine-name-simple">{detail.medicineName}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Lab Order Details - Simplified */}
-                  {labOrderItems.length > 0 && (
-                    <div className="detail-section">
-                      <h3 className="section-title">Lab Tests</h3>
-                      <div className="simple-lab-list">
-                        {labOrderItems.map((item, index) => (
-                          <div key={item.itemId} className="simple-lab-item">
-                            <span className="lab-number-simple">#{index + 1}</span>
-                            {item.packageId > 0 ? (
-                              <FiPackage size={14} className="package-icon-simple" />
-                            ) : (
-                              <FiClipboard size={14} className="test-icon-simple" />
-                            )}
-                            <span className="lab-name-simple">{item.testOrPackageName}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="add-consultation-no-data">
-                  <p>Consultation details not available</p>
-                </div>
-              )}
-            </div>
-          ) : null}
-        </div>
+        </div>{/* /ac-body */}
       </div>
     </div>
   );

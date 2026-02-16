@@ -1,15 +1,11 @@
 // src/components/layout/Sidebar.jsx
-import  { useState } from "react";
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   FiHome,
   FiUsers,
-  FiCalendar,
   FiFileText,
   FiPackage,
-  FiBarChart2,
-  FiSettings,
-  FiMessageCircle,
   FiUserCheck,
   FiLogOut,
   FiChevronDown,
@@ -18,11 +14,9 @@ import {
   FiChevronRight,
   FiPlusSquare,
 } from "react-icons/fi";
-import { HiOutlineChevronLeft, HiOutlineChevronRight } from "react-icons/hi";
 import { useAuth } from "../context/AuthContext";
 import "./Sidebar.css";
 import logo from "../assets/cplogo.png";
-import { AiFillProfile } from "react-icons/ai";
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -30,117 +24,115 @@ const Sidebar = () => {
   const { logout, profileName } = useAuth();
   const navigate = useNavigate();
 
-  const hasAccess = (roles) => {
-    return roles.includes(profileName?.toLowerCase());
-  };
-
-  const MENU_PERMISSIONS = {
-    clinic: ["admin", "spradmin","fronttdesk","nurse","pharmacy","labtest","accounts"],
-    employee: ["admin", "spradmin","fronttdesk","nurse"],
-    patients: ["admin", "spradmin","fronttdesk","nurse","accounts"],
-    consultation: ["admin", "spradmin","fronttdesk","nurse","accounts"],
-    lab: ["admin", "spradmin","fronttdesk","nurse","labtest","accounts"],
-    invoice: ["admin", "spradmin","fronttdesk","nurse","pharmacy","accounts","accounts"],
-    pharmacy: ["admin", "spradmin","fronttdesk","nurse","pharmacy"],
+  const hasAccess = (roles = []) => {
+    return (
+      roles.length === 0 ||
+      roles.includes(profileName?.toLowerCase())
+    );
   };
 
   const mainMenuItems = [
-    { to: "/dashboard", icon: FiHome, label: "Dashboard" },
+    {
+      to: "/dashboard",
+      icon: FiHome,
+      label: "Dashboard",
+    },
     {
       id: "clinic",
       icon: FiLayers,
       label: "Clinic",
+      roles: ["admin", "spradmin","doctor","fronttdesk", "nurse", "pharmacy", "labtest", "accounts"],
       hasDropdown: true,
       subItems: [
-        { to: "/clinic-list", label: "Clinic" },
-        { to: "/branch-list", label: "Branch" },
-        { to: "/dept-list", label: "Department" },
+        {to: "/clinic-list", label: "Clinic", roles: ["admin", "spradmin", "doctor", "fronttdesk", "nurse", "pharmacy", "labtest", "accounts"],},
+        {to: "/branch-list",  label: "Branch", roles: ["admin", "spradmin","doctor", "fronttdesk", "nurse", "pharmacy", "labtest", "accounts"],},
+        {to: "/dept-list", label: "Department", roles: ["admin", "spradmin", "fronttdesk", "nurse", "pharmacy", "labtest", "accounts"],},
       ],
-      show: hasAccess(MENU_PERMISSIONS.clinic),
     },
     {
       id: "employee",
       icon: FiBriefcase,
       label: "Employee",
+      roles: ["admin", "spradmin","fronttdesk"],
       hasDropdown: true,
       subItems: [
-        { to: "/work-shift", label: "Work Shift" },
-        { to: "/employee-list", label: "Employee" },
+        {to: "/work-shift", label: "Work Shift", roles: ["admin", "spradmin", "fronttdesk", "nurse"],},
+        {to: "/employee-list", label: "Employee List", roles: ["admin", "spradmin", "fronttdesk", "nurse"],},
       ],
-      show: hasAccess(MENU_PERMISSIONS.employee),
     },
     {
       id: "patients",
       icon: FiUsers,
       label: "Patients",
+      roles: ["admin", "spradmin", "doctor", "nurse", "fronttdesk", "accounts"],
       hasDropdown: true,
       subItems: [
-        { to: "/patient-list", label: "Patients" },
-        { to: "/slotconfig-list", label: "SlotConfig List" },
-        { to: "/slot-list", label: "Slot-List" },
-        { to: "/appointment-list", label: "Appoinment List" },
-        { to: "/patientvisit-list", label: "Patient Visit List"},
+        {to: "/patient-list", label: "Patients", roles: ["admin", "spradmin", "nurse", "doctor", "fronttdesk", "accounts"],},
+        {to: "/slotconfig-list", label: "SlotConfig List", roles: ["admin", "spradmin", "fronttdesk"],},
+        {to: "/slot-list", label: "Slot List", roles: ["admin", "spradmin", "nurse", "doctor", "fronttdesk"],},
+        {to: "/appointment-list", label: "Appointment List", roles: ["admin", "spradmin", "fronttdesk","doctor", "nurse"],},
+        {to: "/patientvisit-list", label: "Patient Visit", roles: ["admin", "spradmin", "fronttdesk","doctor","nurse"],},
       ],
-      show: hasAccess(MENU_PERMISSIONS.patients),
     },
     {
       id: "consultation",
       icon: FiUserCheck,
       label: "Consultation",
+      roles: ["admin", "spradmin", "doctor", "nurse", "fronttdesk", "accounts"],
       hasDropdown: true,
       subItems: [
-        { to: "/consultation-list", label: "Consultation List"},
-        { to: "/consultationcharge-config", label: "Consul Charge Config"},
-        { to: "/consultation-charge", label: "Consultation Charge"},
+        {to: "/consultation-list", label: "Consultation List", roles: ["admin", "spradmin", "nurse", "doctor", "fronttdesk", "accounts"],},
+        {to: "/consultationcharge-config", label: "Consul Charge Config", roles: ["admin", "spradmin", "fronttdesk", "accounts"],},
+        {to: "/consultation-charge", label: "Consultation Charge", roles: ["admin", "spradmin", "fronttdesk", "accounts"],},
       ],
-      show: hasAccess(MENU_PERMISSIONS.consultation),
     },
     {
       id: "lab",
       icon: FiPlusSquare,
-      label: "lab",
+      label: "Lab",
+      roles: ["admin", "spradmin", "labtest","doctor", "fronttdesk", "accounts"],
       hasDropdown: true,
       subItems: [
-        { to: "/labtestmaster", label: "Lab Master"},
-        { to: "/laborder-list", label: "Lab Order"},
-        { to: "/labwork-list", label: "Lab Work"},
-        { to: "/lab-report-list", label: "Lab Reports"},
-        { to: "/lab-invoice", label: "Lab Invoice"},
+        {to: "/labtestmaster", label: "Lab Master", roles: ["admin", "spradmin", "labtest", "accounts"],},
+        {to: "/laborder-list", label: "Lab Order", roles: ["admin", "spradmin", "labtest"],},
+        {to: "/labwork-list", label: "Lab Work", roles: ["admin", "spradmin", "labtest"],},
+        {to: "/lab-report-list", label: "Lab Reports", roles: ["admin", "spradmin", "labtest","doctor", "fronttdesk"],},
+        {to: "/lab-invoice", label: "Lab Invoice", roles: ["admin", "spradmin", "labtest"],},
+
       ],
-      show: hasAccess(MENU_PERMISSIONS.lab),
     },
     {
       id: "pharmacy",
       icon: FiPackage,
-      label: "pharmacy",
+      label: "Pharmacy",
+      roles: ["admin", "spradmin", "pharmacy","doctor", "fronttdesk", "accounts"],
       hasDropdown: true,
       subItems: [
-        { to: "/vendor-list", label: "Vendor"},
-        { to: "/medicinemaster-list", label: "Medicine"},
-        { to: "/medicinestock-list", label: "Medicine Stock"},
-        { to: "/purchaseorder-list", label: "purchase Order"},
-        { to: "/salescart-list", label: "Sales Cart"},
-        { to: "/pharmacy-invoice", label: "Pharmacy Invoice"},
+        {to: "/vendor-list", label: "Vendor", roles: ["admin", "spradmin", "pharmacy"],},
+        {to: "/medicinemaster-list", label: "Medicine", roles: ["admin", "spradmin", "pharmacy", "doctor", "fronttdesk", "accounts"],},
+        {to: "/medicinestock-list", label: "Medicine Stock", roles: ["admin", "spradmin", "pharmacy", "doctor", "fronttdesk"],},
+        {to: "/purchaseorder-list", label: "purchase Order", roles: ["admin", "spradmin", "pharmacy"],},
+        {to: "/salescart-list", label: "Sales Cart", roles: ["admin", "spradmin", "pharmacy"],},
+        {to: "/pharmacy-invoice", label: "Pharmacy Invoice", roles: ["admin", "spradmin", "pharmacy"],},
       ],
-      show: hasAccess(MENU_PERMISSIONS.pharmacy),
     },
     {
       id: "invoice",
       icon: FiFileText,
-      label: "invoice",
+      label: "Invoice",
+      roles: ["admin", "spradmin", "accounts","doctor", "fronttdesk", "pharmacy", "labtest"],
       hasDropdown: true,
       subItems: [
-        { to: "/invoice-management", label: "Invoice"},
-        { to: "/invoice-payment", label: "Invoice Payment"},
+        {to: "/invoice-management", label: "Invoice Management", roles: ["admin", "spradmin", "accounts", "doctor", "fronttdesk", "pharmacy", "labtest"],},
+        {to: "/invoice-payment", label: "Invoice Payment", roles: ["admin", "spradmin", "accounts", "doctor", "fronttdesk", "pharmacy", "labtest"],},
       ],
-      show: hasAccess(MENU_PERMISSIONS.invoice),
     },
-  ].filter(item => item.show !== false);
+  ];
 
   const toggleDropdown = (id) => {
-    setOpenDropdowns(prev => ({
+    setOpenDropdowns((prev) => ({
       ...prev,
-      [id]: !prev[id]
+      [id]: !prev[id],
     }));
   };
 
@@ -150,18 +142,20 @@ const Sidebar = () => {
     navigate("/login", { replace: true });
   };
 
+  const filteredMenu = mainMenuItems.filter((item) =>
+    hasAccess(item.roles)
+  );
+
   return (
     <aside className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
-      {/* Logo & Collapse Button */}
       <div className="sidebar-top">
         <div className="logo-wrap">
           <img src={logo} alt="Clinic Pro" className="logo-img" />
         </div>
       </div>
-      
-      {/* Navigation */}
+
       <nav className="nav">
-        {mainMenuItems.map((item) => {
+        {filteredMenu.map((item) => {
           const Icon = item.icon;
 
           if (!item.hasDropdown) {
@@ -169,12 +163,17 @@ const Sidebar = () => {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+                className={({ isActive }) =>
+                  `nav-item ${isActive ? "active" : ""}`
+                }
                 end
               >
-                {Icon && <Icon className="nav-icon" size={24} />}
-                {!isCollapsed && <span className="nav-label">{item.label}</span>}
-                {isCollapsed && <div className="tooltip">{item.label}</div>}
+                {Icon && <Icon size={22} />}
+                {!isCollapsed && (
+                  <span className="nav-label">
+                    {item.label}
+                  </span>
+                )}
               </NavLink>
             );
           }
@@ -184,51 +183,70 @@ const Sidebar = () => {
           return (
             <div key={item.id} className="dropdown-wrapper">
               <div
-                className={`nav-item dropdown-toggle ${isOpen ? "open" : ""}`}
+                className={`nav-item dropdown-toggle ${
+                  isOpen ? "open" : ""
+                }`}
                 onClick={() => toggleDropdown(item.id)}
               >
-                <Icon className="nav-icon" size={24} />
+                <Icon size={22} />
                 {!isCollapsed && (
                   <>
-                    <span className="nav-label">{item.label}</span>
+                    <span className="nav-label">
+                      {item.label}
+                    </span>
                     {isOpen ? (
-                      <FiChevronDown className="dropdown-arrow" size={18} />
+                      <FiChevronDown size={16} />
                     ) : (
-                      <FiChevronRight className="dropdown-arrow" size={18} />
+                      <FiChevronRight size={16} />
                     )}
                   </>
                 )}
-                {isCollapsed && <div className="tooltip">{item.label}</div>}
               </div>
 
               {!isCollapsed && isOpen && (
                 <div className="dropdown-menu">
-                  {item.subItems.map((sub) => (
-                    <NavLink
-                      key={sub.to}
-                      to={sub.to}
-                      className={({ isActive }) => `dropdown-item ${isActive ? "active" : ""}`}
-                      end
-                    >
-                      <span className="dropdown-label">{sub.label}</span>
-                    </NavLink>
-                  ))}
+                  {item.subItems
+                    .filter((sub) =>
+                      hasAccess(sub.roles)
+                    )
+                    .map((sub) => (
+                      <NavLink
+                        key={sub.to}
+                        to={sub.to}
+                        className={({ isActive }) =>
+                          `dropdown-item ${
+                            isActive ? "active" : ""
+                          }`
+                        }
+                        end
+                      >
+                        {sub.label}
+                      </NavLink>
+                    ))}
                 </div>
               )}
             </div>
           );
         })}
 
-        <NavLink to="/login" className="nav-item logout" onClick={handleLogout}>
-          <FiLogOut className="nav-icon" size={24} />
-          {!isCollapsed && <span className="nav-label">Logout</span>}
-          {isCollapsed && <div className="tooltip">Logout</div>}
+        <NavLink
+          to="/login"
+          className="nav-item logout"
+          onClick={handleLogout}
+        >
+          <FiLogOut size={22} />
+          {!isCollapsed && (
+            <span className="nav-label">Logout</span>
+          )}
         </NavLink>
       </nav>
 
       <div className="sidebar-footer">
-        {!isCollapsed && <small>© {new Date().getFullYear()} Clinic Pro</small>}
-        {isCollapsed && <div className="tooltip">© {new Date().getFullYear()}</div>}
+        {!isCollapsed && (
+          <small>
+            © {new Date().getFullYear()} Clinic Pro
+          </small>
+        )}
       </div>
     </aside>
   );

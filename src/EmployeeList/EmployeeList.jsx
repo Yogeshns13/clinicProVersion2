@@ -1,7 +1,7 @@
 // src/components/EmployeeList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiPlus, FiHome } from 'react-icons/fi';
+import { FiSearch, FiPlus, FiHome, FiHardDrive } from 'react-icons/fi';
 import { getEmployeeList, getDepartmentList} from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
@@ -159,7 +159,6 @@ const EmployeeList = () => {
       {/* Toolbar */}
       <div className="clinic-toolbar">
         <div className="clinic-select-wrapper">
-          <FiHome className="clinic-select-icon" size={20} />
           <select
             value={selectedDepartmentId}
             onChange={(e) => setSelectedDepartmentId(e.target.value)}
