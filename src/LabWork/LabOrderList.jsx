@@ -1,7 +1,7 @@
 // src/components/LabWork/LabOrderList.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiCalendar, FiFilter, FiEye, FiCheckCircle, FiClock, FiAlertCircle, FiFileText, FiX, FiUser, FiEdit } from 'react-icons/fi';
+import { FiSearch, FiX, FiCalendar, FiFilter, FiEye, FiCheckCircle, FiClock, FiAlertCircle, FiFileText, FiEdit } from 'react-icons/fi';
 import { 
   getLabTestOrderList, 
   updateLabTestOrder, 
@@ -21,16 +21,29 @@ const LabOrderList = () => {
   
   // Data States
   const [orders, setOrders] = useState([]);
+  const [allOrders, setAllOrders] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [orderReports, setOrderReports] = useState({}); // Map of orderId -> reportId
   
-  // Filter States
-  const [searchInput, setSearchInput] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [statusFilter, setStatusFilter] = useState(-1);
+  // Filter inputs (not applied until search)
+  const [filterInputs, setFilterInputs] = useState({
+    searchType: 'patientName', // patientName, doctorName, testName
+    searchValue: '',
+    status: -1,
+    priority: 0,
+    dateFrom: '',
+    dateTo: ''
+  });
+
+  // Applied filters
+  const [appliedFilters, setAppliedFilters] = useState({
+    searchType: 'patientName',
+    searchValue: '',
+    status: -1,
+    priority: 0,
+    dateFrom: '',
+    dateTo: ''
+  });
 
   // UI States
   const [loading, setLoading] = useState(true);
@@ -45,7 +58,6 @@ const LabOrderList = () => {
 
   // Report Modal States
   const [showReportModal, setShowReportModal] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedOrderForReport, setSelectedOrderForReport] = useState(null);
   const [orderDetails, setOrderDetails] = useState(null);
   const [submittingReport, setSubmittingReport] = useState(false);
@@ -82,6 +94,7 @@ const LabOrderList = () => {
 
   // Priority options
   const priorityOptions = [
+    { id: 0, label: 'All Priorities' },
     { id: 1, label: 'Normal' },
     { id: 2, label: 'Urgent' },
     { id: 3, label: 'STAT' }
@@ -147,20 +160,8 @@ const LabOrderList = () => {
       const options = {
         Page: 1,
         PageSize: 100,
-        BranchID: branchId,
-        Status: statusFilter
+        BranchID: branchId
       };
-
-      if (searchInput.trim()) {
-        options.PatientName = searchInput.trim();
-      }
-
-      if (fromDate && toDate) {
-        options.FromDate = fromDate;
-        options.ToDate = toDate;
-      } else if (dateFilter) {
-        options.DateCreated = dateFilter;
-      }
 
       const data = await getLabTestOrderList(clinicId, options);
 
@@ -171,6 +172,7 @@ const LabOrderList = () => {
       });
 
       setOrders(sortedData);
+      setAllOrders(sortedData);
       
       // Fetch reports after orders are loaded
       await fetchLabTestReports();
@@ -191,23 +193,91 @@ const LabOrderList = () => {
     fetchDoctors();
   }, []);
 
+  // Computed filtered orders based on applied filters
+  const filteredOrders = useMemo(() => {
+    let filtered = allOrders;
+
+    // Apply search filter based on search type
+    if (appliedFilters.searchValue) {
+      const term = appliedFilters.searchValue.toLowerCase();
+      
+      switch (appliedFilters.searchType) {
+        case 'patientName':
+          filtered = filtered.filter(o => o.patientName?.toLowerCase().includes(term));
+          break;
+        case 'doctorName':
+          filtered = filtered.filter(o => o.doctorFullName?.toLowerCase().includes(term));
+          break;
+        case 'testName':
+          // Note: testName is not in the current order object, but keeping for API compatibility
+          filtered = filtered.filter(o => o.notes?.toLowerCase().includes(term));
+          break;
+        default:
+          break;
+      }
+    }
+
+    // Status filter
+    if (appliedFilters.status !== -1) {
+      filtered = filtered.filter(o => o.status === Number(appliedFilters.status));
+    }
+
+    // Priority filter
+    if (appliedFilters.priority !== 0) {
+      filtered = filtered.filter(o => o.priority === Number(appliedFilters.priority));
+    }
+
+    // Date from filter
+    if (appliedFilters.dateFrom) {
+      const fromDate = new Date(appliedFilters.dateFrom);
+      filtered = filtered.filter(o => {
+        if (!o.dateCreated) return false;
+        const orderDate = new Date(o.dateCreated);
+        return orderDate >= fromDate;
+      });
+    }
+
+    // Date to filter
+    if (appliedFilters.dateTo) {
+      const toDate = new Date(appliedFilters.dateTo);
+      toDate.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(o => {
+        if (!o.dateCreated) return false;
+        const orderDate = new Date(o.dateCreated);
+        return orderDate <= toDate;
+      });
+    }
+
+    return filtered;
+  }, [allOrders, appliedFilters]);
+
+  // Filter handlers
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilterInputs(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSearch = () => {
-    fetchOrders();
+    setAppliedFilters({ ...filterInputs });
+  };
+
+  const handleClearFilters = () => {
+    const emptyFilters = {
+      searchType: 'patientName',
+      searchValue: '',
+      status: -1,
+      priority: 0,
+      dateFrom: '',
+      dateTo: ''
+    };
+    setFilterInputs(emptyFilters);
+    setAppliedFilters(emptyFilters);
   };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
-  };
-
-  const clearAllFilters = () => {
-    setSearchInput('');
-    setDateFilter('');
-    setFromDate('');
-    setToDate('');
-    setStatusFilter(-1);
-    fetchOrders();
   };
 
   const handleViewOrderDetails = (order) => {
@@ -293,12 +363,54 @@ const LabOrderList = () => {
     }
   };
 
-  // Handle Add Report Button Click
-  const handleAddReportClick = (order) => {
-    setIsUpdateMode(false);
-    setCurrentReportId(null);
-    setSelectedOrderForReport(order);
-    setShowConfirmDialog(true);
+  const handleAddReportClick = async (order) => {
+    try {
+      setSubmittingReport(true);
+      setIsUpdateMode(false);
+      setCurrentReportId(null);
+      
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+      
+      // Fetch order details
+      const orderListOptions = {
+        OrderID: order.id,
+        BranchID: branchId,
+        Page: 1,
+        PageSize: 1
+      };
+      
+      const orderList = await getLabTestOrderList(clinicId, orderListOptions);
+      
+      if (!orderList || orderList.length === 0) {
+        throw new Error('Order details not found');
+      }
+      
+      const orderDetail = orderList[0];
+      setOrderDetails(orderDetail);
+      setSelectedOrderForReport(order);
+      
+      // Set default form values
+      const now = new Date();
+      const formattedDateTime = now.toISOString().slice(0, 16);
+      
+      setReportForm({
+        verifiedBy: 0,
+        verifiedDateTime: formattedDateTime,
+        remarks: '',
+        status: 1 // Default to "Created" status
+      });
+      
+      // Show the report modal directly
+      setShowReportModal(true);
+      
+    } catch (err) {
+      console.error('Error processing add report:', err);
+      setError(err);
+      setReportMessage({ type: 'error', text: err.message || 'Failed to process report request' });
+    } finally {
+      setSubmittingReport(false);
+    }
   };
 
   // Handle Update Report Button Click
@@ -367,71 +479,6 @@ const LabOrderList = () => {
     } finally {
       setSubmittingReport(false);
     }
-  };
-
-  // Handle Confirmation Dialog
-  const handleConfirmYes = async () => {
-    setShowConfirmDialog(false);
-    
-    try {
-      setSubmittingReport(true);
-      
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
-      
-      const orderListOptions = {
-        OrderID: selectedOrderForReport.id,
-        BranchID: branchId,
-        Page: 1,
-        PageSize: 1
-      };
-      
-      const orderList = await getLabTestOrderList(clinicId, orderListOptions);
-      
-      if (!orderList || orderList.length === 0) {
-        throw new Error('Order details not found');
-      }
-      
-      const orderDetail = orderList[0];
-      setOrderDetails(orderDetail);
-      
-      const updateData = {
-        orderId: selectedOrderForReport.id,
-        clinicId: clinicId,
-        branchId: branchId,
-        status: 2,
-        fileId: orderDetail.fileId || 0,
-        priority: orderDetail.priority || 1,
-        notes: orderDetail.notes || '',
-        testApprovedBy: orderDetail.doctorId || 0
-      };
-      
-      await updateLabTestOrder(updateData);
-      
-      const now = new Date();
-      const formattedDateTime = now.toISOString().slice(0, 16);
-      
-      setReportForm({
-        verifiedBy: 0,
-        verifiedDateTime: formattedDateTime,
-        remarks: '',
-        status: 1 // Default to "Created" status
-      });
-      
-      setShowReportModal(true);
-      
-    } catch (err) {
-      console.error('Error processing add report:', err);
-      setError(err);
-      setReportMessage({ type: 'error', text: err.message || 'Failed to process report request' });
-    } finally {
-      setSubmittingReport(false);
-    }
-  };
-
-  const handleConfirmNo = () => {
-    setShowConfirmDialog(false);
-    setSelectedOrderForReport(null);
   };
 
   // Handle Report Form Submission
@@ -602,7 +649,7 @@ const LabOrderList = () => {
             <FiClock size={24} />
           </div>
           <div className={styles.statContent}>
-            <div className={styles.statValue}>{orders.filter(o => o.status === 1).length}</div>
+            <div className={styles.statValue}>{allOrders.filter(o => o.status === 1).length}</div>
             <div className={styles.statLabel}>Pending Orders</div>
           </div>
         </div>
@@ -612,7 +659,7 @@ const LabOrderList = () => {
             <FiAlertCircle size={24} />
           </div>
           <div className={styles.statContent}>
-            <div className={styles.statValue}>{orders.filter(o => o.status === 5).length}</div>
+            <div className={styles.statValue}>{allOrders.filter(o => o.status === 5).length}</div>
             <div className={styles.statLabel}>In Progress</div>
           </div>
         </div>
@@ -622,7 +669,7 @@ const LabOrderList = () => {
             <FiCheckCircle size={24} />
           </div>
           <div className={styles.statContent}>
-            <div className={styles.statValue}>{orders.filter(o => o.status === 2).length}</div>
+            <div className={styles.statValue}>{allOrders.filter(o => o.status === 2).length}</div>
             <div className={styles.statLabel}>Completed</div>
           </div>
         </div>
@@ -632,112 +679,108 @@ const LabOrderList = () => {
             <FiEye size={24} />
           </div>
           <div className={styles.statContent}>
-            <div className={styles.statValue}>{orders.length}</div>
+            <div className={styles.statValue}>{allOrders.length}</div>
             <div className={styles.statLabel}>Total Orders</div>
           </div>
         </div>
       </div>
 
-      {/* Toolbar */}
-      <div className={styles.toolbar}>
-        <div className={styles.toolbarLeft}>
-          <div className={styles.selectWrapper}>
-            <FiCalendar className={styles.selectIcon} size={20} />
+      {/* Filters Container */}
+      <div className={styles.filtersContainer}>
+        <div className={styles.filtersGrid}>
+          <div className={styles.searchGroup}>
+            <select
+              name="searchType"
+              value={filterInputs.searchType}
+              onChange={handleFilterChange}
+              className={styles.searchTypeSelect}
+            >
+              <option value="patientName">Patient Name</option>
+              <option value="doctorName">Doctor Name</option>
+              <option value="testName">Test/Notes</option>
+            </select>
+            
             <input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => {
-                setDateFilter(e.target.value);
-                setFromDate('');
-                setToDate('');
-              }}
-              className={styles.select}
+              type="text"
+              name="searchValue"
+              placeholder={`Search by ${
+                filterInputs.searchType === 'patientName' ? 'Patient Name' :
+                filterInputs.searchType === 'doctorName' ? 'Doctor Name' :
+                'Test/Notes'
+              }`}
+              value={filterInputs.searchValue}
+              onChange={handleFilterChange}
+              onKeyPress={handleKeyPress}
+              className={styles.searchInput}
             />
           </div>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(Number(e.target.value))}
-            className={styles.select}
-          >
-            {statusOptions.map(opt => (
-              <option key={opt.id} value={opt.id}>{opt.label}</option>
-            ))}
-          </select>
-
-          <button 
-            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)} 
-            className={`${styles.filterToggleBtn} ${showAdvancedFilters ? styles.active : ''}`}
-          >
-            <FiFilter size={18} />
-            {showAdvancedFilters ? 'Hide' : 'Show'} Filters
-          </button>
-
-          {(dateFilter || fromDate || toDate || searchInput || statusFilter !== -1) && (
-            <button 
-              onClick={clearAllFilters} 
-              className={styles.clearBtn}
+          <div className={styles.filterGroup}>
+            <select
+              name="status"
+              value={filterInputs.status}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
             >
-              Clear All
+              {statusOptions.map(opt => (
+                <option key={opt.id} value={opt.id}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <select
+              name="priority"
+              value={filterInputs.priority}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            >
+              {priorityOptions.map(opt => (
+                <option key={opt.id} value={opt.id}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <input
+              type="date"
+              name="dateFrom"
+              placeholder="Date From"
+              value={filterInputs.dateFrom}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            />
+          </div>
+
+          <div className={styles.filterGroup}>
+            <input
+              type="date"
+              name="dateTo"
+              placeholder="Date To"
+              value={filterInputs.dateTo}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            />
+          </div>
+
+          <div className={styles.filterActions}>
+            <button onClick={handleSearch} className={styles.searchButton}>
+              <FiSearch size={18} />
+              Search
             </button>
-          )}
-        </div>
-
-        <div className={styles.toolbarRight}>
-          <button 
-            onClick={() => navigate('/labwork-list')}
-            className={styles.workQueueBtn}
-          >
-            <FiAlertCircle size={18} />
-            Go to Work Queue
-          </button>
-        </div>
-      </div>
-
-      {/* Advanced Filters */}
-      {showAdvancedFilters && (
-        <div className={styles.advancedFilters}>
-          <div className={styles.filterRow}>
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>From Date</label>
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => {
-                  setFromDate(e.target.value);
-                  setDateFilter('');
-                }}
-                className={styles.filterInput}
-              />
-            </div>
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>To Date</label>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => {
-                  setToDate(e.target.value);
-                  setDateFilter('');
-                }}
-                className={styles.filterInput}
-              />
-            </div>
-            <div className={styles.filterActions}>
-              <button onClick={handleSearch} className={styles.searchBtn}>
-                <FiSearch size={18} />
-                Apply Filters
-              </button>
-            </div>
+            <button onClick={handleClearFilters} className={styles.clearButton}>
+              <FiX size={18} />
+              Clear
+            </button>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Orders Table */}
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Order Info</th>
               <th>Patient Details</th>
               <th>Doctor</th>
               <th>Status</th>
@@ -747,31 +790,20 @@ const LabOrderList = () => {
             </tr>
           </thead>
           <tbody>
-            {orders.length === 0 ? (
+            {filteredOrders.length === 0 ? (
               <tr>
-                <td colSpan={7} className={styles.noData}>
-                  {searchInput
+                <td colSpan={6} className={styles.noData}>
+                  {Object.values(appliedFilters).some(v => v && v !== -1 && v !== 0 && v !== 'patientName') 
                     ? 'No orders found matching your search.'
                     : 'No lab test orders found.'}
                 </td>
               </tr>
             ) : (
-              orders.map((order) => {
+              filteredOrders.map((order) => {
                 const hasReport = orderReports[order.id];
                 
                 return (
                   <tr key={order.id} className={styles.tableRow}>
-                    <td>
-                      <div className={styles.orderIdCell}>
-                        <div className={styles.orderIcon}>
-                          {getOrderStatusIcon(order.status)}
-                        </div>
-                        <div>
-                          <div className={styles.orderId}>#{order.id}</div>
-                          <div className={styles.orderSeq}>Seq: {order.uniqueSeq}</div>
-                        </div>
-                      </div>
-                    </td>
                     <td>
                       <div className={styles.nameCell}>
                         <div className={styles.avatar}>
@@ -905,7 +937,7 @@ const LabOrderList = () => {
         <UpdateOrderModal
           order={selectedOrder}
           statusOptions={statusOptions}
-          priorityOptions={priorityOptions}
+          priorityOptions={priorityOptions.filter(p => p.id !== 0)}
           onClose={() => {
             setIsUpdateOrderOpen(false);
             setSelectedOrder(null);
@@ -934,39 +966,6 @@ const LabOrderList = () => {
           }}
           onSubmit={handleGenerateInvoice}
         />
-      )}
-
-      {/* Confirmation Dialog */}
-      {showConfirmDialog && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.confirmDialog}>
-            <div className={styles.confirmHeader}>
-              <h3>Confirm Add Report</h3>
-            </div>
-            <div className={styles.confirmBody}>
-              <p>Are you sure you want to add a report for Order #{selectedOrderForReport?.id}?</p>
-              <p className={styles.confirmSubtext}>
-                This will update the order status to Completed and open the report form.
-              </p>
-            </div>
-            <div className={styles.confirmFooter}>
-              <button 
-                onClick={handleConfirmNo} 
-                className={styles.cancelModalBtn}
-                disabled={submittingReport}
-              >
-                No
-              </button>
-              <button 
-                onClick={handleConfirmYes} 
-                className={styles.confirmModalBtn}
-                disabled={submittingReport}
-              >
-                {submittingReport ? 'Processing...' : 'Yes'}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Add/Update Report Modal */}
@@ -1191,7 +1190,7 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
     priority: order.priority,
     notes: order.notes || '',
     fileId: order.fileId || 0,
-    testApprovedBy: 0
+    testApprovedBy: order.doctorId
   });
 
   const handleSubmit = (e) => {

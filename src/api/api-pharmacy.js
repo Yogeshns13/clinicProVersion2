@@ -391,6 +391,7 @@ export const getMedicineMasterList = async (clinicId = 0, options = {}) => {
       typeDesc: med.type_desc || "Unknown",
       dosageForm: med.dosage_form || null,
       unit: med.unit,
+      defaultRoute: med.default_route,
       unitDesc: med.unit_desc || "Unknown",
       hsnCode: med.hsn_code || "",
       reorderLevelQty: med.reorder_level_qty ?? 0,
@@ -461,6 +462,7 @@ export const addMedicineMaster = async (medicineData) => {
     Manufacturer: medicineData.manufacturer || "",
     Type: medicineData.type ?? 0,
     DosageForm: medicineData.dosageForm || "",
+    DefaultRoute: medicineData.defaultRoute ?? 1,
     Unit: medicineData.unit ?? 0,
     HSNCode: medicineData.hsnCode || "",
     ReorderLevelQty: medicineData.reorderLevelQty ?? 0,
@@ -566,6 +568,7 @@ export const updateMedicineMaster = async (medicineData) => {
     Manufacturer: medicineData.manufacturer?.trim() || "",
     Type: medicineData.type ?? 0,
     DosageForm: medicineData.dosageForm?.trim() || "",
+    DefaultRoute: medicineData.defaultRoute ?? 1,
     Unit: medicineData.unit ?? 0,
     HSNCode: medicineData.hsnCode?.trim() || "",
     ReorderLevelQty: medicineData.reorderLevelQty ?? 0,
@@ -2345,9 +2348,7 @@ export const addSalesCart = async (cartData) => {
     ClinicID: finalClinicId,
     BranchID: finalBranchId,
     PatientID: parseInt(cartData.PatientID),
-    Name: cartData.Name?.trim() || "",               // usually empty for registered patients
-    ConsultationID: cartData.ConsultationID ?? 0,
-    VisitID: cartData.VisitID ?? 0
+    Name: cartData.Name?.trim() || "",    
   };
 
   console.log("Add SalesCart payload:", payload);

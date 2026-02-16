@@ -121,6 +121,8 @@ export const addConsultation = async (consultationData) => {
     TreatmentPlan: consultationData.treatmentPlan || "",
   };
 
+  console.log("Add Consultation:",payload);
+
   try {
     const response = await API.post("/AddConsultation", payload);
     const result = response.data?.result;
@@ -972,6 +974,96 @@ export const generateConsultationInvoice = async (invoiceData = {}) => {
     formattedError.code = error.response?.status || 500;
 
     throw formattedError;
+  }
+};
+
+export const getLabInvoiceDetailList = async (clinicId = 0, options = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Optional: stricter validation in non-production (same as getInvoiceList)
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  // Determine final IDs based on environment (consistent with getInvoiceList)
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,
+    InvDetailID: options.InvDetailID || 0,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    InvoiceID: options.InvoiceID || 0,
+    OrderID: options.OrderID || 0,
+    TestID: options.TestID || 0,
+    TestName: options.TestName || "",
+    PatientID: options.PatientID || 0,
+  };
+
+  console.log("getLabInvoiceDetailList payload:", payload);
+
+  try {
+    const response = await API.post("/GetLabInvoiceDetailList", payload);
+
+    // Safely handle result array
+    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    console.log("GetLabInvoiceDetailList response:", results);
+
+    return results.map((detail) => ({
+      id: detail.inv_detail_id,
+      uniqueSeq: detail.unique_seq,
+      clinicId: detail.clinic_id,
+      clinicName: detail.clinic_name || "",
+      branchId: detail.branch_id,
+      branchName: detail.branch_name || "",
+      invoiceId: detail.invoice_id,
+      invoiceNo: detail.invoice_no || "",
+      invoiceDate: detail.invoice_date || null,
+      patientId: detail.patient_id,
+      patientName: detail.patient_name || "",
+      patientMobile: detail.patient_mobile || null,
+      patientFileNo: detail.patient_file_no || null,
+      orderId: detail.order_id ?? null,
+      testId: detail.test_id,
+      testName: detail.test_name || "",
+      masterTestName: detail.master_test_name || "",
+      testShortName: detail.test_short_name || "",
+      amount: detail.amount ? parseFloat(detail.amount) : null,
+      cgstPercentage: detail.cgst_percentage ? parseFloat(detail.cgst_percentage) : null,
+      sgstPercentage: detail.sgst_percentage ? parseFloat(detail.sgst_percentage) : null,
+      cgstAmount: detail.cgst_amount ? parseFloat(detail.cgst_amount) : null,
+      sgstAmount: detail.sgst_amount ? parseFloat(detail.sgst_amount) : null,
+      netAmount: detail.net_amount ? parseFloat(detail.net_amount) : null,
+
+      dateCreated: detail.date_created || null,
+      dateModified: detail.date_modified || null,
+    }));
+  } catch (error) {
+    console.error("getLabInvoiceDetailList failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || "Failed to fetch lab invoice details",
+    };
+
+    throw err;
   }
 };
 

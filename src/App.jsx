@@ -70,8 +70,12 @@ import ViewPurchaseOrder from "./PurchaseOrder/ViewPurchaseOrder.jsx";
 import PurchaseOrderItems from "./PurchaseOrder/PurchaseOrderItems.jsx";
 import AddPurchaseOrderDetail from "./PurchaseOrder/AddPurchaseOrderDetail.jsx";
 import UpdatePurchaseOrderDetail from "./PurchaseOrder/UpdatePurchaseOrderDetail.jsx";
-
-
+import LabReportList from "./LabReport/LabReportList.jsx";
+import UpdateLabReport from "./LabReport/UpdateLabReport.jsx";
+import LabInvoiceList from "./LabTestMaster/LabInvoiceList.jsx";
+import PharmacyInvoiceList from "./MedicineMaster/PharmacyInvoiceList.jsx";
+import SalesCartDetailList from "./SalesCart/SalesCartDetailList.jsx";
+import SalesCartList from "./SalesCart/SalesCartList.jsx";
 
 function App() {
   return (
@@ -154,6 +158,12 @@ function App() {
           <Route path="/laborder-list" element={<LabOrderList/>} />
           <Route path="/medicinestock-list" element={<MedicineStockList/>} />
           <Route path="/update-medicinestock/:id" element={<UpdateMedicineStock/>} />
+          <Route path="/lab-report-list" element={<LabReportList/>} />
+          <Route path="/update-lab-report/:id" element={<UpdateLabReport/>} />
+          <Route path="/lab-invoice" element={<LabInvoiceList/>} />
+          <Route path="/pharmacy-invoice" element={<PharmacyInvoiceList/>} />
+          <Route path="/salescart-list" element={<SalesCartList/>} />
+          <Route path="/salescartdetail-list/:id" element={<SalesCartDetailList/>} />
           
 
           {/* Default redirect inside protected area */}

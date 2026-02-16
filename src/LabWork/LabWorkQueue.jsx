@@ -11,7 +11,9 @@ import {
   updateSampleCollection,
   updateLabWorkItemResult,
   approveLabWorkItem,
-  rejectLabWorkItem
+  rejectLabWorkItem,
+  getLabTestOrderList,
+  updateLabTestOrder
 } from '../api/api-labtest.js';
 import { getEmployeeList } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
@@ -28,12 +30,28 @@ const LabWorkQueue = () => {
   const [expandedOrders, setExpandedOrders] = useState(new Set());
   const [doctors, setDoctors] = useState([]);
   
-  // Filter States
-  const [searchInput, setSearchInput] = useState('');
-  const [statusFilter, setStatusFilter] = useState(-1);
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  // ORDER STATUS TRACKING - NEW: Store actual order statuses from API
+  const [orderStatuses, setOrderStatuses] = useState({});
+  
+  // Filter inputs (not applied until search)
+  const [filterInputs, setFilterInputs] = useState({
+    searchType: 'patientName',
+    searchValue: '',
+    status: -1,
+    doctorId: 0,
+    dateFrom: '',
+    dateTo: ''
+  });
+
+  // Applied filters
+  const [appliedFilters, setAppliedFilters] = useState({
+    searchType: 'patientName',
+    searchValue: '',
+    status: -1,
+    doctorId: 0,
+    dateFrom: '',
+    dateTo: ''
+  });
 
   // UI States
   const [loading, setLoading] = useState(true);
@@ -43,6 +61,11 @@ const LabWorkQueue = () => {
   const [showWorkDetailModal, setShowWorkDetailModal] = useState(false);
   const [selectedWorkItem, setSelectedWorkItem] = useState(null);
   const [selectedOrderData, setSelectedOrderData] = useState(null);
+
+  // Mark as Complete States
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
+  const [orderToComplete, setOrderToComplete] = useState(null);
+  const [completingOrder, setCompletingOrder] = useState(false);
 
   // Status options
   const statusOptions = [
@@ -74,6 +97,36 @@ const LabWorkQueue = () => {
     }
   };
 
+  // NEW: Fetch order statuses for all unique order IDs
+  const fetchOrderStatuses = async (orderIds) => {
+    try {
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+      
+      const statusesMap = {};
+      
+      // Fetch status for each unique order ID
+      for (const orderId of orderIds) {
+        try {
+          const orderDetails = await getLabTestOrderList(clinicId, {
+            OrderID: orderId,
+            BranchID: branchId
+          });
+          
+          if (orderDetails && orderDetails.length > 0) {
+            statusesMap[orderId] = orderDetails[0].status;
+          }
+        } catch (err) {
+          console.error(`Failed to fetch status for order ${orderId}:`, err);
+        }
+      }
+      
+      setOrderStatuses(statusesMap);
+    } catch (err) {
+      console.error('Failed to fetch order statuses:', err);
+    }
+  };
+
   // Fetch Lab Work Items
   const fetchWorkItems = async () => {
     try {
@@ -86,21 +139,67 @@ const LabWorkQueue = () => {
         Page: 1,
         PageSize: 100,
         BranchID: branchId,
-        Status: statusFilter
+        Status: appliedFilters.status
       };
 
-      if (searchInput.trim()) {
-        options.Search = searchInput.trim();
+      // Apply search based on search type
+      if (appliedFilters.searchValue.trim()) {
+        const searchTerm = appliedFilters.searchValue.trim();
+        
+        switch (appliedFilters.searchType) {
+          case 'orderId':
+            options.OrderID = Number(searchTerm) || 0;
+            break;
+          default:
+            options.Search = searchTerm;
+            break;
+        }
       }
 
-      if (fromDate && toDate) {
-        options.FromDate = fromDate;
-        options.ToDate = toDate;
+      if (appliedFilters.doctorId > 0) {
+        options.DoctorID = appliedFilters.doctorId;
+      }
+
+      if (appliedFilters.dateFrom && appliedFilters.dateTo) {
+        options.FromDate = appliedFilters.dateFrom;
+        options.ToDate = appliedFilters.dateTo;
       }
 
       const data = await getLabWorkItemsList(clinicId, options);
 
-      const sortedData = data.sort((a, b) => {
+      // Additional client-side filtering for non-API supported searches
+      let filteredData = data;
+      
+      if (appliedFilters.searchValue.trim() && appliedFilters.searchType !== 'orderId') {
+        const term = appliedFilters.searchValue.toLowerCase();
+        
+        switch (appliedFilters.searchType) {
+          case 'patientName':
+            filteredData = filteredData.filter(item => 
+              item.patientName?.toLowerCase().includes(term)
+            );
+            break;
+          case 'mobile':
+            filteredData = filteredData.filter(item => 
+              item.mobile?.toLowerCase().includes(term)
+            );
+            break;
+          case 'fileNo':
+            filteredData = filteredData.filter(item => 
+              item.fileNo?.toLowerCase().includes(term)
+            );
+            break;
+          case 'testName':
+            filteredData = filteredData.filter(item => 
+              item.testName?.toLowerCase().includes(term)
+            );
+            break;
+          default:
+            break;
+        }
+      }
+
+      const sortedData = filteredData.sort((a, b) => {
         const dateA = new Date(a.dateCreated);
         const dateB = new Date(b.dateCreated);
         return dateB - dateA;
@@ -128,6 +227,12 @@ const LabWorkQueue = () => {
 
       setGroupedWorkItems(grouped);
       
+      // NEW: Fetch order statuses for all orders
+      const uniqueOrderIds = Object.keys(grouped).map(Number);
+      if (uniqueOrderIds.length > 0) {
+        await fetchOrderStatuses(uniqueOrderIds);
+      }
+      
       if (Object.keys(grouped).length === 1) {
         setExpandedOrders(new Set([Number(Object.keys(grouped)[0])]));
       }
@@ -144,22 +249,34 @@ const LabWorkQueue = () => {
     fetchDoctors();
   }, []);
 
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilterInputs(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSearch = () => {
+    setAppliedFilters({ ...filterInputs });
     fetchWorkItems();
+  };
+
+  const handleClearFilters = () => {
+    const emptyFilters = {
+      searchType: 'patientName',
+      searchValue: '',
+      status: -1,
+      doctorId: 0,
+      dateFrom: '',
+      dateTo: ''
+    };
+    setFilterInputs(emptyFilters);
+    setAppliedFilters(emptyFilters);
+    setTimeout(() => fetchWorkItems(), 100);
   };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
-  };
-
-  const clearAllFilters = () => {
-    setSearchInput('');
-    setFromDate('');
-    setToDate('');
-    setStatusFilter(-1);
-    fetchWorkItems();
   };
 
   const toggleOrderExpansion = (orderId) => {
@@ -215,8 +332,52 @@ const LabWorkQueue = () => {
     });
   };
 
+  const getProgressColors = (percentage) => {
+    if (percentage === 100) {
+      return {
+        gradient: 'linear-gradient(90deg, #207d9c, #30b2b5)',
+        textColor: '#30b2b5'
+      };
+    } else if (percentage >= 71) {
+      return {
+        gradient: 'linear-gradient(90deg, #16a34a, #22c55e)',
+        textColor: '#16a34a'
+      };
+    } else if (percentage >= 31) {
+      return {
+        gradient: 'linear-gradient(90deg, #eab308, #fbbf24)',
+        textColor: '#eab308'
+      };
+    } else {
+      return {
+        gradient: 'linear-gradient(90deg, #dc2626, #ef4444)',
+        textColor: '#dc2626'
+      };
+    }
+  };
+
   const isOrderFullyCompleted = (items) => {
     return items.every(item => item.status === 3);
+  };
+
+  // NEW: Check if order should show as completed
+  // Shows "Completed" badge when:
+  // 1. All work items are status 3 (completed) AND
+  // 2. Order status is 2 (marked as complete)
+  const isOrderMarkedComplete = (orderId, items) => {
+    const allWorkItemsCompleted = items.every(item => item.status === 3);
+    const orderStatus = orderStatuses[orderId];
+    return allWorkItemsCompleted && orderStatus === 2;
+  };
+
+  // NEW: Check if order should show "Mark as Complete" button
+  // Shows button when:
+  // 1. All work items are status 3 (completed) AND
+  // 2. Order status is NOT 2 (not yet marked as complete)
+  const shouldShowMarkCompleteButton = (orderId, items) => {
+    const allWorkItemsCompleted = items.every(item => item.status === 3);
+    const orderStatus = orderStatuses[orderId];
+    return allWorkItemsCompleted && orderStatus !== 2;
   };
 
   // Handle Process Button Click
@@ -231,13 +392,86 @@ const LabWorkQueue = () => {
     setShowWorkDetailModal(false);
     setSelectedWorkItem(null);
     setSelectedOrderData(null);
-    fetchWorkItems(); // Refresh data when modal closes
+    fetchWorkItems();
   };
 
   // Handle Work Detail Save
   const handleSaveWorkDetail = () => {
     // This will be called from child to notify parent
-    // We'll fetch on modal close instead
+  };
+
+  // Handle Mark as Complete Click
+  const handleMarkCompleteClick = (orderId, orderData) => {
+    setOrderToComplete({ orderId, orderData });
+    setShowCompleteConfirm(true);
+  };
+
+  // Handle Confirm Mark as Complete
+  const handleConfirmMarkComplete = async () => {
+    if (!orderToComplete) return;
+
+    try {
+      setCompletingOrder(true);
+      setError(null);
+
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+
+      // Fetch order details to get fileId, priority, notes, and doctorId
+      const orderDetails = await getLabTestOrderList(clinicId, {
+        OrderID: orderToComplete.orderId,
+        BranchID: branchId
+      });
+
+      if (!orderDetails || orderDetails.length === 0) {
+        throw new Error('Order details not found');
+      }
+
+      const orderDetail = orderDetails[0];
+
+      // Prepare update data
+      const updateData = {
+        orderId: orderToComplete.orderId,
+        clinicId: clinicId,
+        branchId: branchId,
+        status: 2, // Status 2 as requested
+        fileId: orderDetail.fileId || 0,
+        priority: orderDetail.priority || 1,
+        notes: orderDetail.notes || '',
+        testApprovedBy: orderDetail.doctorId || 0
+      };
+
+      // Call update API
+      await updateLabTestOrder(updateData);
+
+      // NEW: Update local order status state immediately
+      setOrderStatuses(prev => ({
+        ...prev,
+        [orderToComplete.orderId]: 2
+      }));
+
+      // Close confirmation modal
+      setShowCompleteConfirm(false);
+      setOrderToComplete(null);
+
+      // Refresh work items (this will also refresh order statuses)
+      await fetchWorkItems();
+
+    } catch (err) {
+      console.error('Error marking order as complete:', err);
+      setError({
+        message: err.message || 'Failed to mark order as complete',
+        status: err.status || 500
+      });
+    } finally {
+      setCompletingOrder(false);
+    }
+  };
+
+  // Handle Cancel Mark Complete
+  const handleCancelMarkComplete = () => {
+    setShowCompleteConfirm(false);
+    setOrderToComplete(null);
   };
 
   const totalOrders = Object.keys(groupedWorkItems).length;
@@ -303,27 +537,105 @@ const LabWorkQueue = () => {
         </div>
       </div>
 
+      {/* Filters */}
+      <div className={styles.filtersContainer}>
+        <div className={styles.filtersGrid}>
+          <div className={styles.searchGroup}>
+            <select
+              name="searchType"
+              value={filterInputs.searchType}
+              onChange={handleFilterChange}
+              className={styles.searchTypeSelect}
+            >
+              <option value="patientName">Patient Name</option>
+              <option value="mobile">Mobile</option>
+              <option value="fileNo">File No</option>
+              <option value="orderId">Order ID</option>
+              <option value="testName">Test Name</option>
+            </select>
+            
+            <input
+              type="text"
+              name="searchValue"
+              placeholder={`Search by ${
+                filterInputs.searchType === 'patientName' ? 'Patient Name' :
+                filterInputs.searchType === 'mobile' ? 'Mobile' :
+                filterInputs.searchType === 'fileNo' ? 'File No' :
+                filterInputs.searchType === 'orderId' ? 'Order ID' :
+                'Test Name'
+              }`}
+              value={filterInputs.searchValue}
+              onChange={handleFilterChange}
+              onKeyPress={handleKeyPress}
+              className={styles.searchInput}
+            />
+          </div>
+
+          <div className={styles.filterGroup}>
+            <select
+              name="status"
+              value={filterInputs.status}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            >
+              {statusOptions.map(opt => (
+                <option key={opt.id} value={opt.id}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <select
+              name="doctorId"
+              value={filterInputs.doctorId}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            >
+              <option value={0}>All Doctors</option>
+              {doctors.map(doc => (
+                <option key={doc.id} value={doc.id}>
+                  {doc.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <input
+              type="date"
+              name="dateFrom"
+              value={filterInputs.dateFrom}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            />
+          </div>
+
+          <div className={styles.filterGroup}>
+            <input
+              type="date"
+              name="dateTo"
+              value={filterInputs.dateTo}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            />
+          </div>
+
+          <div className={styles.filterActions}>
+            <button onClick={handleSearch} className={styles.searchButton}>
+              <FiSearch size={18} />
+              Search
+            </button>
+            <button onClick={handleClearFilters} className={styles.clearButton}>
+              <FiX size={18} />
+              Clear
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Toolbar */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarLeft}>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(Number(e.target.value))}
-            className={styles.select}
-          >
-            {statusOptions.map(opt => (
-              <option key={opt.id} value={opt.id}>{opt.label}</option>
-            ))}
-          </select>
-
-          <button 
-            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)} 
-            className={`${styles.filterToggleBtn} ${showAdvancedFilters ? styles.active : ''}`}
-          >
-            <FiFilter size={18} />
-            {showAdvancedFilters ? 'Hide' : 'Show'} Filters
-          </button>
-
           <button onClick={expandAll} className={styles.expandBtn}>
             <FiChevronDown size={18} />
             Expand All
@@ -333,12 +645,6 @@ const LabWorkQueue = () => {
             <FiChevronRight size={18} />
             Collapse All
           </button>
-
-          {(fromDate || toDate || searchInput || statusFilter !== -1) && (
-            <button onClick={clearAllFilters} className={styles.clearBtn}>
-              Clear All
-            </button>
-          )}
         </div>
 
         <div className={styles.toolbarRight}>
@@ -352,44 +658,12 @@ const LabWorkQueue = () => {
         </div>
       </div>
 
-      {/* Advanced Filters */}
-      {showAdvancedFilters && (
-        <div className={styles.advancedFilters}>
-          <div className={styles.filterRow}>
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>From Date</label>
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className={styles.filterInput}
-              />
-            </div>
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>To Date</label>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className={styles.filterInput}
-              />
-            </div>
-            <div className={styles.filterActions}>
-              <button onClick={handleSearch} className={styles.searchBtn}>
-                <FiSearch size={18} />
-                Apply Filters
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Grouped Work Items */}
       <div className={styles.workQueueContainer}>
         {Object.keys(groupedWorkItems).length === 0 ? (
           <div className={styles.noData}>
-            {searchInput
-              ? 'No work items found matching your search.'
+            {Object.values(appliedFilters).some(v => v && v !== 'patientName' && v !== -1 && v !== 0)
+              ? 'No work items found matching your filters.'
               : 'No work items found.'}
           </div>
         ) : (
@@ -398,6 +672,12 @@ const LabWorkQueue = () => {
             const orderStatus = getOrderStatus(orderData.items);
             const completedCount = orderData.items.filter(item => item.status === 3).length;
             const totalCount = orderData.items.length;
+            const progressPercentage = Math.round((completedCount / totalCount) * 100);
+            const progressColors = getProgressColors(progressPercentage);
+            
+            // NEW: Use new helper functions to determine button/badge display
+            const showMarkCompleteBtn = shouldShowMarkCompleteButton(Number(orderId), orderData.items);
+            const showCompletedBadge = isOrderMarkedComplete(Number(orderId), orderData.items);
 
             return (
               <div key={orderId} className={styles.orderGroup}>
@@ -447,13 +727,41 @@ const LabWorkQueue = () => {
                       <div className={styles.progressBar}>
                         <div 
                           className={styles.progressFill}
-                          style={{ width: `${(completedCount / totalCount) * 100}%` }}
+                          style={{ 
+                            width: `${progressPercentage}%`,
+                            background: progressColors.gradient
+                          }}
                         />
                       </div>
-                      <div className={styles.progressText}>
-                        {Math.round((completedCount / totalCount) * 100)}%
+                      <div 
+                        className={styles.progressText}
+                        style={{ color: progressColors.textColor }}
+                      >
+                        {progressPercentage}%
                       </div>
                     </div>
+
+                    {/* Mark as Complete Button - Shows when all work items are complete but order not marked */}
+                    {showMarkCompleteBtn && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMarkCompleteClick(Number(orderId), orderData);
+                        }}
+                        className={styles.markCompleteBtn}
+                      >
+                        <FiCheckCircle size={18} />
+                        Mark as Complete
+                      </button>
+                    )}
+
+                    {/* Completed Badge - Shows when all work items are complete AND order is marked */}
+                    {showCompletedBadge && (
+                      <div className={styles.completedBadge}>
+                        <FiCheckCircle size={18} />
+                        Completed
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -462,7 +770,6 @@ const LabWorkQueue = () => {
                     <table className={styles.table}>
                       <thead>
                         <tr>
-                          <th>Work ID</th>
                           <th>Test Name</th>
                           <th>Result</th>
                           <th>Sample Collection</th>
@@ -474,15 +781,8 @@ const LabWorkQueue = () => {
                         {orderData.items.map((item) => (
                           <tr key={item.workId} className={styles.workItemRow}>
                             <td>
-                              <div className={styles.workIdCell}>
-                                <FiActivity className={styles.workIcon} />
-                                <span className={styles.workId}>#{item.workId}</span>
-                              </div>
-                            </td>
-                            <td>
                               <div>
                                 <div className={styles.testName}>{item.testName}</div>
-                                <div className={styles.testId}>Test ID: {item.testId}</div>
                               </div>
                             </td>
                             <td>
@@ -558,11 +858,40 @@ const LabWorkQueue = () => {
           employees={doctors}
         />
       )}
+
+      {/* Mark as Complete Confirmation Modal */}
+      {showCompleteConfirm && orderToComplete && (
+        <div className={styles.modalOverlay} onClick={handleCancelMarkComplete}>
+          <div className={styles.confirmDialog} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.confirmHeader}>
+              <h3>Mark Order as Complete</h3>
+              <button onClick={handleCancelMarkComplete} className={styles.closeBtn} disabled={completingOrder}>
+                <FiX size={20} />
+              </button>
+            </div>
+            <div className={styles.confirmBody}>
+              <p>Are you sure you want to mark this order as complete?</p>
+              <p><strong>Order ID:</strong> #{orderToComplete.orderId}</p>
+              <p><strong>Patient:</strong> {orderToComplete.orderData.patientName}</p>
+              <p className={styles.confirmSubtext}>This will update the order status to "In Progress".</p>
+            </div>
+            <div className={styles.confirmFooter}>
+              <button onClick={handleCancelMarkComplete} className={styles.cancelBtn} disabled={completingOrder}>
+                Cancel
+              </button>
+              <button onClick={handleConfirmMarkComplete} className={styles.confirmBtn} disabled={completingOrder}>
+                <FiCheckCircle size={18} />
+                {completingOrder ? 'Processing...' : 'Yes, Mark Complete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-// Lab Work Detail Modal Component (Integrated)
+// Lab Work Detail Modal Component - Keeping the same as before
 const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees }) => {
   const [sampleData, setSampleData] = useState({
     sampleCollectedTime: workItem.sampleCollectedTime 
@@ -605,7 +934,6 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
     { value: 4, label: 'Critical' }
   ];
 
-  // Only determine initial step on mount, not on workItem changes
   useEffect(() => {
     let initialStep = 1;
     if (!workItem.sampleCollectedTime) {
@@ -616,7 +944,7 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
       initialStep = 3;
     }
     setActiveStep(initialStep);
-  }, []); // Empty dependency array - only run once on mount
+  }, []);
 
   const handleSampleSave = async () => {
     try {
@@ -639,7 +967,6 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
 
       setStatusMessage({ type: 'success', text: 'Sample collection details saved successfully!' });
       
-      // Move to next step after short delay
       setTimeout(() => {
         setActiveStep(2);
         setStatusMessage({ type: '', text: '' });
@@ -677,7 +1004,6 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
 
       setStatusMessage({ type: 'success', text: 'Test results saved successfully!' });
       
-      // Move to next step after short delay
       setTimeout(() => {
         setActiveStep(3);
         setStatusMessage({ type: '', text: '' });

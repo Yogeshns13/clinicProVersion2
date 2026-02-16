@@ -722,6 +722,7 @@
   font-weight: 500;
   transition: all 0.3s ease;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
 }
 
 .formGroup input::placeholder,
@@ -780,6 +781,12 @@
   z-index: 1;
 }
 
+.btnSubmit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
 .modalFooter .btnUpdate {
   padding: 10px 31px;
   border-radius: 26px;
@@ -802,13 +809,13 @@
 }
 
 .btnUpdate:hover::before,
-.btnSubmit:hover::before {
+.btnSubmit:not(:disabled):hover::before {
   width: 170px;
   height: 170px;
 }
 
 .btnUpdate:hover,
-.btnSubmit:hover {
+.btnSubmit:not(:disabled):hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
 }
@@ -875,6 +882,182 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* ──────────────────────────────────────────────────
+   MEDICINE SEARCHABLE DROPDOWN
+────────────────────────────────────────────────── */
+
+.medicineDropdownWrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* The "closed" trigger that shows selected medicine or placeholder */
+.medicineSelectTrigger {
+  width: 100%;
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid rgba(34, 43, 108, 0.2);
+  border-radius: 9px;
+  color: var(--text-dark);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  min-height: 38px;
+  user-select: none;
+}
+
+.medicineSelectTrigger:hover {
+  border-color: var(--accent-end);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.medicineSelectTrigger.placeholder span {
+  color: rgba(30, 41, 59, 0.4);
+}
+
+.medicineTriggerActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.medicineClearBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(100, 116, 139, 0.15);
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.medicineClearBtn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+.medicineChevron {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+/* The search input shown when dropdown is open */
+.medicineSearchInput {
+  width: 100%;
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid var(--accent-end) !important;
+  border-radius: 9px 9px 0 0 !important;
+  color: var(--text-dark);
+  font-size: 0.8rem;
+  font-weight: 500;
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15), inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  outline: none;
+}
+
+/* The dropdown list */
+.medicineDropdownList {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid var(--accent-end);
+  border-top: none;
+  border-radius: 0 0 9px 9px;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 9999;
+  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.18);
+  animation: dropdownSlide 0.18s ease;
+}
+
+@keyframes dropdownSlide {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar styling for the dropdown */
+.medicineDropdownList::-webkit-scrollbar {
+  width: 5px;
+}
+.medicineDropdownList::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+.medicineDropdownList::-webkit-scrollbar-thumb {
+  background: var(--accent-end);
+  border-radius: 4px;
+}
+
+.medicineDropdownItem {
+  padding: 9px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(34, 43, 108, 0.07);
+  transition: background 0.15s ease;
+}
+
+.medicineDropdownItem:last-child {
+  border-bottom: none;
+}
+
+.medicineDropdownItem:hover {
+  background: rgba(48, 178, 181, 0.1);
+}
+
+.medicineDropdownItemActive {
+  background: rgba(48, 178, 181, 0.15);
+}
+
+.medicineDropdownItemName {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1.3;
+}
+
+.medicineDropdownItemMeta {
+  font-size: 0.68rem;
+  color: #64748b;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.medicineDropdownLoading,
+.medicineDropdownEmpty {
+  padding: 16px 12px;
+  text-align: center;
+  font-size: 0.78rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Small badge showing the resolved Medicine ID */
+.medicineIdBadge {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 2px 9px;
+  background: rgba(34, 43, 108, 0.08);
+  color: var(--primary-start);
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 
 /* ==================== DARK MODE ==================== */
@@ -989,6 +1172,53 @@
 }
 
 :global(.dark-mode) .daysToExpiry {
+  color: #94a3b8;
+}
+
+/* Dark mode: Medicine dropdown */
+:global(.dark-mode) .medicineSelectTrigger {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .medicineSelectTrigger.placeholder span {
+  color: #64748b;
+}
+
+:global(.dark-mode) .medicineSearchInput {
+  background: #1e293b;
+  border-color: var(--accent-end) !important;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .medicineDropdownList {
+  background: #1e293b;
+  border-color: var(--accent-end);
+}
+
+:global(.dark-mode) .medicineDropdownItem {
+  border-bottom-color: #334155;
+}
+
+:global(.dark-mode) .medicineDropdownItem:hover {
+  background: rgba(48, 178, 181, 0.15);
+}
+
+:global(.dark-mode) .medicineDropdownItemName {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .medicineDropdownItemMeta {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .medicineIdBadge {
+  background: rgba(48, 178, 181, 0.15);
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .medicineClearBtn {
   color: #94a3b8;
 }
 

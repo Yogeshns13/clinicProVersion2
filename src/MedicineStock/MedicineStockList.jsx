@@ -1,5 +1,5 @@
 // src/components/MedicineStockList.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FiSearch,
@@ -7,10 +7,12 @@ import {
   FiX,
   FiHome,
   FiFilter,
+  FiChevronDown,
 } from 'react-icons/fi';
 import { 
   getMedicineStockList,
   addMedicineStock,
+  getMedicineMasterList,
 } from '../api/api-pharmacy.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
@@ -55,6 +57,26 @@ const MedicineStockList = () => {
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
 
+  // Medicine dropdown (for Add Form)
+  const [medicineList, setMedicineList] = useState([]);
+  const [medicineListLoading, setMedicineListLoading] = useState(false);
+  const [medicineSearch, setMedicineSearch] = useState('');
+  const [showMedicineDropdown, setShowMedicineDropdown] = useState(false);
+  const [selectedMedicineName, setSelectedMedicineName] = useState('');
+  const medicineDropdownRef = useRef(null);
+
+  // ────────────────────────────────────────────────
+  // Close medicine dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (medicineDropdownRef.current && !medicineDropdownRef.current.contains(e.target)) {
+        setShowMedicineDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // ────────────────────────────────────────────────
   // Data fetching
   useEffect(() => {
@@ -66,7 +88,6 @@ const MedicineStockList = () => {
         const clinicId = Number(localStorage.getItem('clinicID'));
         const branchId = Number(localStorage.getItem('branchID'));
 
-        // Build options based on selected filter
         const options = {
           BranchID: branchId,
         };
@@ -84,14 +105,12 @@ const MedicineStockList = () => {
           options.ZeroStock = -1;
           options.NegativeStock = 1;
         } else {
-          // 'all' - default values to get all records
           options.NearExpiryDays = 0;
           options.ZeroStock = -1;
           options.NegativeStock = 0;
         }
 
         const data = await getMedicineStockList(clinicId, options);
-        
         setStockList(data);
         setAllStockList(data);
       } catch (err) {
@@ -109,6 +128,27 @@ const MedicineStockList = () => {
   }, [selectedFilter]);
 
   // ────────────────────────────────────────────────
+  // Fetch medicine master list for dropdown
+  const fetchMedicineList = async () => {
+    try {
+      setMedicineListLoading(true);
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+      const data = await getMedicineMasterList(clinicId, {
+        BranchID: branchId,
+        PageSize: 50,
+        Status: 1,
+      });
+      setMedicineList(data);
+    } catch (err) {
+      console.error('fetchMedicineList error:', err);
+      setMedicineList([]);
+    } finally {
+      setMedicineListLoading(false);
+    }
+  };
+
+  // ────────────────────────────────────────────────
   // Computed values
   const filteredStockList = useMemo(() => {
     if (!searchTerm.trim()) return allStockList;
@@ -123,6 +163,18 @@ const MedicineStockList = () => {
         stock.branchName?.toLowerCase().includes(term)
     );
   }, [allStockList, searchTerm]);
+
+  // Filtered medicine list for the dropdown search
+  const filteredMedicineList = useMemo(() => {
+    if (!medicineSearch.trim()) return medicineList;
+    const term = medicineSearch.toLowerCase();
+    return medicineList.filter(
+      (med) =>
+        med.name?.toLowerCase().includes(term) ||
+        med.genericName?.toLowerCase().includes(term) ||
+        med.manufacturer?.toLowerCase().includes(term)
+    );
+  }, [medicineList, medicineSearch]);
 
   // ────────────────────────────────────────────────
   // Helper functions
@@ -151,13 +203,13 @@ const MedicineStockList = () => {
   // ────────────────────────────────────────────────
   // Handlers
   const handleSearch = () => setSearchTerm(searchInput.trim());
-  
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') handleSearch();
   };
 
   const openDetails = (stock) => setSelectedStock(stock);
-  
+
   const closeModal = () => setSelectedStock(null);
 
   const openAddForm = () => {
@@ -168,9 +220,13 @@ const MedicineStockList = () => {
       QuantityIn: '',
       PurchasePrice: '',
     });
+    setSelectedMedicineName('');
+    setMedicineSearch('');
+    setShowMedicineDropdown(false);
     setFormError('');
     setFormSuccess(false);
     setIsAddFormOpen(true);
+    fetchMedicineList();
   };
 
   const closeAddForm = () => {
@@ -178,11 +234,34 @@ const MedicineStockList = () => {
     setFormLoading(false);
     setFormError('');
     setFormSuccess(false);
+    setSelectedMedicineName('');
+    setMedicineSearch('');
+    setShowMedicineDropdown(false);
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle medicine selection from dropdown
+  const handleMedicineSelect = (medicine) => {
+    setFormData((prev) => ({ ...prev, MedicineID: medicine.id }));
+    setSelectedMedicineName(medicine.name);
+    setMedicineSearch('');
+    setShowMedicineDropdown(false);
+  };
+
+  const handleMedicineInputFocus = () => {
+    setShowMedicineDropdown(true);
+    setMedicineSearch('');
+  };
+
+  const handleClearMedicine = () => {
+    setFormData((prev) => ({ ...prev, MedicineID: '' }));
+    setSelectedMedicineName('');
+    setMedicineSearch('');
+    setShowMedicineDropdown(false);
   };
 
   const handleSubmit = async (e) => {
@@ -209,7 +288,6 @@ const MedicineStockList = () => {
       setFormSuccess(true);
       setTimeout(async () => {
         closeAddForm();
-        // Refresh data
         const options = {
           BranchID: branchId,
           NearExpiryDays: 0,
@@ -330,7 +408,7 @@ const MedicineStockList = () => {
                     <div>{formatDate(stock.expiryDate)}</div>
                     {stock.daysToExpiry != null && (
                       <div className={styles.daysToExpiry}>
-                        {stock.daysToExpiry >= 0 
+                        {stock.daysToExpiry >= 0
                           ? `${stock.daysToExpiry} days left`
                           : `Expired ${Math.abs(stock.daysToExpiry)} days ago`
                         }
@@ -476,18 +554,94 @@ const MedicineStockList = () => {
               <div className={styles.formGrid}>
                 <h3 className={styles.formSectionTitle}>Stock Information</h3>
 
-                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                {/* ── Medicine Name Searchable Dropdown ── */}
+                <div className={`${styles.formGroup} ${styles.fullWidth}`} ref={medicineDropdownRef}>
                   <label>
-                    Medicine ID <span className={styles.required}>*</span>
+                    Medicine Name <span className={styles.required}>*</span>
                   </label>
+
+                  {/* Hidden required input to trigger native validation */}
                   <input
-                    required
-                    type="number"
+                    type="hidden"
                     name="MedicineID"
                     value={formData.MedicineID}
-                    onChange={handleInputChange}
-                    placeholder="Enter Medicine ID"
+                    required
                   />
+
+                  <div className={styles.medicineDropdownWrapper}>
+                    {/* Trigger / selected display */}
+                    {!showMedicineDropdown && (
+                      <div
+                        className={`${styles.medicineSelectTrigger} ${!formData.MedicineID ? styles.placeholder : ''}`}
+                        onClick={handleMedicineInputFocus}
+                      >
+                        <span>
+                          {selectedMedicineName || (medicineListLoading ? 'Loading medicines...' : 'Select a medicine...')}
+                        </span>
+                        <div className={styles.medicineTriggerActions}>
+                          {formData.MedicineID && (
+                            <button
+                              type="button"
+                              className={styles.medicineClearBtn}
+                              onClick={(e) => { e.stopPropagation(); handleClearMedicine(); }}
+                              title="Clear selection"
+                            >
+                              <FiX size={14} />
+                            </button>
+                          )}
+                          <FiChevronDown size={16} className={styles.medicineChevron} />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Search input (shown when open) */}
+                    {showMedicineDropdown && (
+                      <input
+                        autoFocus
+                        type="text"
+                        className={styles.medicineSearchInput}
+                        placeholder="Type to search medicine..."
+                        value={medicineSearch}
+                        onChange={(e) => setMedicineSearch(e.target.value)}
+                        onBlur={() => {
+                          // small delay so click on item registers
+                          setTimeout(() => setShowMedicineDropdown(false), 150);
+                        }}
+                      />
+                    )}
+
+                    {/* Dropdown list */}
+                    {showMedicineDropdown && (
+                      <div className={styles.medicineDropdownList}>
+                        {medicineListLoading ? (
+                          <div className={styles.medicineDropdownLoading}>
+                            Loading medicines...
+                          </div>
+                        ) : filteredMedicineList.length === 0 ? (
+                          <div className={styles.medicineDropdownEmpty}>
+                            No medicines found
+                          </div>
+                        ) : (
+                          filteredMedicineList.map((med) => (
+                            <div
+                              key={med.id}
+                              className={`${styles.medicineDropdownItem} ${formData.MedicineID === med.id ? styles.medicineDropdownItemActive : ''}`}
+                              onMouseDown={() => handleMedicineSelect(med)}
+                            >
+                              <div className={styles.medicineDropdownItemName}>
+                                {med.name}
+                              </div>
+                              <div className={styles.medicineDropdownItemMeta}>
+                               
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  
                 </div>
 
                 <div className={styles.formGroup}>
@@ -552,7 +706,11 @@ const MedicineStockList = () => {
                 <button type="button" onClick={closeAddForm} className={styles.btnCancel}>
                   Cancel
                 </button>
-                <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
+                <button
+                  type="submit"
+                  disabled={formLoading || !formData.MedicineID}
+                  className={styles.btnSubmit}
+                >
                   {formLoading ? 'Adding...' : 'Add Stock'}
                 </button>
               </div>

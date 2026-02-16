@@ -24,8 +24,7 @@ AddPrescriptionDetail
     "EndDate":"2025-12-05"
 }
 
---   
-
+-----------------------
 UpdatePrescriptionDetail
 {
     "CHANNEL_ID":1,

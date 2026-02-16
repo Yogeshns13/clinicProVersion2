@@ -146,7 +146,7 @@
   justify-content: center;
   font-weight: 600;
   color: #6b7280;
-  transition: all 0.3s ease;
+  transition: all 0.3s ease; 
 }
 
 .step.active .stepNumber,
@@ -473,6 +473,13 @@
 
 .checkboxLabel span {
   font-weight: 500;
+}
+
+.inputError {
+  color: #dc2626;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  min-height: 1rem;
 }
 
 /* ==================== RESPONSIVE ==================== */

@@ -1,4 +1,4 @@
-/* LabWorkQueue.module.css - Complete Version for LabWorkQueue.jsx */
+/* LabWorkQueue.module.css - Complete Version with New Filter Styles */
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
@@ -138,6 +138,143 @@
   letter-spacing: 0.5px;
 }
 
+/* ==================== NEW FILTERS (LabReportList Style) ==================== */
+.filtersContainer {
+  background: white;
+  border-radius: 17px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  animation: slideUp 0.3s ease;
+}
+
+.filtersGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+  gap: 15px;
+  align-items: end;
+}
+
+.searchGroup {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+}
+
+.searchTypeSelect {
+  min-width: 140px;
+  height: 40px;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px 0 0 10px;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.searchTypeSelect:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+.searchInput {
+  flex: 1;
+  height: 40px;
+  padding: 10px 15px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0 10px 10px 0;
+  border-left: none;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.searchInput::placeholder {
+  color: #94a3b8;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-left: 1px solid var(--accent-end);
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.filterInput {
+  width: 100%;
+  height: 40px;
+  padding: 10px 15px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.filterInput::placeholder {
+  color: #94a3b8;
+}
+
+.filterInput:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+.filterActions {
+  display: flex;
+  gap: 10px;
+}
+
+.searchButton,
+.clearButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 10px 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.searchButton {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+}
+
+.searchButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+}
+
+.clearButton {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.clearButton:hover {
+  background: #cbd5e1;
+  transform: translateY(-2px);
+}
+
 /* ==================== TOOLBAR ==================== */
 .toolbar {
   display: flex;
@@ -156,28 +293,6 @@
   flex-wrap: wrap;
 }
 
-.select {
-  height: 40px;
-  padding: 10px 14px;
-  background: white;
-  border: 1px solid #cbd5e1;
-  border-radius: 14px;
-  color: var(--text-dark);
-  font-size: 0.94rem;
-  font-weight: 500;
-  cursor: pointer;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  transition: all 0.3s ease;
-  min-width: 150px;
-}
-
-.select:focus {
-  outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18), 0 8px 25px rgba(34, 43, 108, 0.12);
-}
-
-.filterToggleBtn,
 .expandBtn,
 .collapseBtn {
   display: flex;
@@ -196,35 +311,10 @@
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
 }
 
-.filterToggleBtn:hover,
 .expandBtn:hover,
 .collapseBtn:hover {
   border-color: var(--accent-end);
   color: var(--accent-end);
-}
-
-.filterToggleBtn.active {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
-  border-color: transparent;
-}
-
-.clearBtn {
-  height: 40px;
-  padding: 10px 16px;
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
-  font-weight: 600;
-  font-size: 0.94rem;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.clearBtn:hover {
-  background: rgba(239, 68, 68, 0.2);
-  transform: translateY(-2px);
 }
 
 .workQueueBtn {
@@ -248,143 +338,6 @@
 .workQueueBtn:hover {
   transform: translateY(-3px);
   box-shadow: 0 14px 34px rgba(32, 125, 156, 0.45);
-}
-
-/* ==================== ADVANCED FILTERS ==================== */
-.advancedFilters {
-  background: white;
-  padding: 20px;
-  border-radius: 14px;
-  margin-bottom: 20px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  animation: slideUp 0.3s ease;
-}
-
-.filterRow {
-  display: flex;
-  align-items: flex-end;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.filterGroup {
-  flex: 1;
-  min-width: 200px;
-}
-
-.filterLabel {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--primary-start);
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.filterInput {
-  width: 100%;
-  height: 40px;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 2px solid rgba(34, 43, 108, 0.2);
-  border-radius: 10px;
-  color: var(--text-dark);
-  font-size: 0.94rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-}
-
-.filterInput:focus {
-  outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.filterActions {
-  display: flex;
-  gap: 10px;
-}
-
-.searchBtn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
-  font-weight: 700;
-  font-size: 0.94rem;
-  border: none;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: all 0.4s ease;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
-  white-space: nowrap;
-}
-
-.searchBtn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 34px rgba(32, 125, 156, 0.45);
-}
-
-/* ==================== SEARCH BAR ==================== */
-.searchWrapper {
-  margin-bottom: 20px;
-}
-
-.searchContainer {
-  position: relative;
-  max-width: 600px;
-}
-
-.searchInput {
-  width: 100%;
-  height: 48px;
-  padding: 15px 60px 15px 20px;
-  background: white;
-  border: 1px solid #cbd5e1;
-  border-radius: 14px;
-  color: var(--text-dark);
-  font-size: 0.94rem;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-}
-
-.searchInput::placeholder {
-  color: #94a3b8;
-}
-
-.searchInput:focus {
-  outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18), 0 8px 25px rgba(34, 43, 108, 0.12);
-}
-
-.searchIconBtn {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.35);
-}
-
-.searchIconBtn:hover {
-  transform: translateY(-50%) scale(1.08);
-  box-shadow: 0 8px 24px rgba(32, 125, 156, 0.45);
 }
 
 /* ==================== WORK QUEUE CONTAINER ==================== */
@@ -572,15 +525,14 @@
 
 .progressFill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent-start), var(--accent-end));
   border-radius: 10px;
-  transition: width 0.5s ease;
+  transition: width 0.5s ease, background 0.3s ease;
 }
 
 .progressText {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--accent-end);
+  transition: color 0.3s ease;
 }
 
 /* ==================== ADD REPORT BUTTON ==================== */
@@ -806,6 +758,53 @@
   box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
 }
 
+/* ==================== MARK AS COMPLETE BUTTON ==================== */
+.markCompleteBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: var(--text-light);
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 5px 15px rgba(22, 163, 74, 0.3);
+}
+
+.markCompleteBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(22, 163, 74, 0.4);
+  background: linear-gradient(135deg, #15803d, #166534);
+}
+
+.markCompleteBtn:active {
+  transform: translateY(0);
+}
+
+/* ==================== COMPLETED BADGE ==================== */
+.completedBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.15), rgba(22, 163, 74, 0.2));
+  color: var(--success);
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 2px solid rgba(22, 163, 74, 0.3);
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.completedBadge svg {
+  flex-shrink: 0;
+}
+
 /* ==================== MODALS ==================== */
 
 /* Modal Overlay */
@@ -838,6 +837,9 @@
 .confirmHeader {
   padding: 20px 24px;
   border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .confirmHeader h3 {
@@ -1120,6 +1122,33 @@
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 1200px) {
+  .filtersGrid {
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+  }
+}
+
+@media (max-width: 968px) {
+  .filtersGrid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .searchGroup {
+    grid-column: 1 / -1;
+  }
+
+  .filterActions {
+    grid-column: 1 / -1;
+    justify-content: stretch;
+  }
+
+  .searchButton,
+  .clearButton {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
 @media (max-width: 768px) {
   .wrapper {
     padding: 14px;
@@ -1127,6 +1156,30 @@
 
   .statsContainer {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .filtersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .searchGroup {
+    flex-direction: column;
+  }
+
+  .searchTypeSelect {
+    border-radius: 10px 10px 0 0;
+    border-bottom: none;
+  }
+
+  .searchInput {
+    border-radius: 0 0 10px 10px;
+    border-left: 1px solid #cbd5e1;
+    border-top: none;
+  }
+
+  .searchInput:focus {
+    border-left: 1px solid var(--accent-end);
+    border-top: 1px solid var(--accent-end);
   }
 
   .toolbar {
@@ -1140,9 +1193,11 @@
     flex-direction: column;
   }
 
-  .select,
+  .expandBtn,
+  .collapseBtn,
   .workQueueBtn {
     width: 100%;
+    justify-content: center;
   }
 
   .orderHeader {
@@ -1168,6 +1223,13 @@
     width: 100%;
   }
 
+  .markCompleteBtn,
+  .completedBadge {
+    width: 100%;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
   .addReportBtn {
     margin-left: 0;
   }
@@ -1181,15 +1243,6 @@
   .table td {
     padding: 10px 12px;
     font-size: 0.75rem;
-  }
-
-  .filterRow {
-    flex-direction: column;
-  }
-
-  .filterGroup {
-    width: 100%;
-    min-width: 100%;
   }
 
   /* Modal Responsive */

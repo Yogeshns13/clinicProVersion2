@@ -47,9 +47,9 @@ GetMedicineStockList
     "ExpiryTo":"",
     "NearExpiryDays":30,
     "ZeroStock":1,  
-   "NegativeStock":1
-    
+   "NegativeStock":1   
 }
+
 -- Near Expiry Days -> 0 for all records
 -- Zero Stock -> -1 from all records
 -- Negative Stock -> 0 for all records

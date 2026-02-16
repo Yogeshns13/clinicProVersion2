@@ -133,7 +133,7 @@ export const uploadPhoto = async (file) => {
     }
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('fileType', fileType);
+    formData.append('fileType', fileType); 
     formData.append('ClinicID', getClinicId());
 
     const response = await axios.post(UPLOAD_API_URL, formData, {

@@ -35,18 +35,13 @@ const Sidebar = () => {
   };
 
   const MENU_PERMISSIONS = {
-    clinic: ["admin", "doctor", "receptionist", "nurse"],
-    employee: ["admin", "doctor", "receptionist"],
-    patients: ["admin", "doctor", "receptionist"],
-    consultation: ["admin", "doctor", "receptionist"],
-    lab: ["admin", "doctor", "receptionist"],
-    invoice: ["admin", "doctor", "receptionist"],
-    pharmacy: ["admin", "doctor", "receptionist"],
-    appointments: ["admin", "doctor", "receptionist"],
-    prescriptions: ["admin", "doctor"],
-    reports: ["admin", "doctor"],
-    attendance: ["admin", "doctor"],
-    settings: ["admin"],
+    clinic: ["admin", "spradmin","fronttdesk","nurse","pharmacy","labtest","accounts"],
+    employee: ["admin", "spradmin","fronttdesk","nurse"],
+    patients: ["admin", "spradmin","fronttdesk","nurse","accounts"],
+    consultation: ["admin", "spradmin","fronttdesk","nurse","accounts"],
+    lab: ["admin", "spradmin","fronttdesk","nurse","labtest","accounts"],
+    invoice: ["admin", "spradmin","fronttdesk","nurse","pharmacy","accounts","accounts"],
+    pharmacy: ["admin", "spradmin","fronttdesk","nurse","pharmacy"],
   };
 
   const mainMenuItems = [
@@ -109,6 +104,8 @@ const Sidebar = () => {
         { to: "/labtestmaster", label: "Lab Master"},
         { to: "/laborder-list", label: "Lab Order"},
         { to: "/labwork-list", label: "Lab Work"},
+        { to: "/lab-report-list", label: "Lab Reports"},
+        { to: "/lab-invoice", label: "Lab Invoice"},
       ],
       show: hasAccess(MENU_PERMISSIONS.lab),
     },
@@ -121,7 +118,9 @@ const Sidebar = () => {
         { to: "/vendor-list", label: "Vendor"},
         { to: "/medicinemaster-list", label: "Medicine"},
         { to: "/medicinestock-list", label: "Medicine Stock"},
-        { to: "/purchaseorder-list", label: "purchase Order"}
+        { to: "/purchaseorder-list", label: "purchase Order"},
+        { to: "/salescart-list", label: "Sales Cart"},
+        { to: "/pharmacy-invoice", label: "Pharmacy Invoice"},
       ],
       show: hasAccess(MENU_PERMISSIONS.pharmacy),
     },
