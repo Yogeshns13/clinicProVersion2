@@ -4,6 +4,96 @@ import { FiX, FiUser, FiCalendar, FiActivity, FiCheckCircle } from 'react-icons/
 import { addPatientVisit, getPatientsList, getEmployeeList, getAppointmentList } from '../api/api.js';
 import './AddPatientVisit.css';
 
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'VisitDate':
+      if (!value) return 'Visit date is required';
+      const visitDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      visitDate.setHours(0, 0, 0, 0);
+      
+      if (visitDate < today) return 'Visit date cannot be in the past';
+      return '';
+
+    case 'VisitTime':
+      if (!value) return 'Visit time is required';
+      return '';
+
+    case 'reason':
+      if (value && value.length > 200) return 'Reason must not exceed 200 characters';
+      return '';
+
+    case 'symptoms':
+      if (value && value.length > 500) return 'Symptoms must not exceed 500 characters';
+      return '';
+
+    case 'bpSystolic':
+      if (value === '' || value === null || value === undefined) return '';
+      const systolic = Number(value);
+      if (isNaN(systolic)) return 'Must be a valid number';
+      if (systolic < 0) return 'Cannot be negative';
+      if (systolic > 0 && systolic < 50) return 'The number should be 50-250 mmHg';
+      if (systolic > 250) return 'The number should be 50-250 mmHg';
+      return '';
+
+    case 'bpDiastolic':
+      if (value === '' || value === null || value === undefined) return '';
+      const diastolic = Number(value);
+      if (isNaN(diastolic)) return 'Must be a valid number';
+      if (diastolic < 0) return 'Cannot be negative';
+      if (diastolic > 0 && diastolic < 30) return 'The number should be 30-150 mmHg';
+      if (diastolic > 150) return 'The number should be 30-150 mmHg';
+      return '';
+
+    case 'temperature':
+      if (value === '' || value === null || value === undefined) return '';
+      const temp = Number(value);
+      if (isNaN(temp)) return 'Must be a valid number';
+      if (temp < 0) return 'Cannot be negative';
+      if (temp > 0 && temp < 90) return 'The number should be 90-110°F';
+      if (temp > 110) return 'The number should be 90-110°F';
+      return '';
+
+    case 'weight':
+      if (value === '' || value === null || value === undefined) return '';
+      const weight = Number(value);
+      if (isNaN(weight)) return 'Must be a valid number';
+      if (weight < 0) return 'Cannot be negative';
+      if (weight > 0 && weight < 1) return 'The number should be 1-500 kg';
+      if (weight > 500) return 'The number should be 1-500 kg';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+    case 'bpSystolic':
+    case 'bpDiastolic':
+      return value.replace(/[^0-9]/g, '');
+    
+    case 'temperature':
+    case 'weight':
+      if (value === '') return value;
+      const filtered = value.replace(/[^0-9.]/g, '');
+      const parts = filtered.split('.');
+      if (parts.length > 2) {
+        return parts[0] + '.' + parts.slice(1).join('');
+      }
+      return filtered;
+    
+    default:
+      return value;
+  }
+};
+
+const getTodayDate = () => {
+  return new Date().toISOString().split('T')[0];
+};
+
 const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId = null }) => {
   const [visitMode, setVisitMode] = useState('without'); // 'with' or 'without'
   
@@ -32,6 +122,7 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
   
   const [searchPatient, setSearchPatient] = useState('');
   const [searchDoctor, setSearchDoctor] = useState('');
+  const [validationMessages, setValidationMessages] = useState({});
 
   const formatDateForInput = (dateString) => {
     if (!dateString) return '';
@@ -44,11 +135,10 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
 
   useEffect(() => {
     if (isOpen) {
-      // If preSelectedAppointmentId exists, we're coming from pending appointments
       if (preSelectedAppointmentId) {
         fetchSingleAppointment(preSelectedAppointmentId);
       } else {
-        // When opened from "Add Visit" button in Visited Patients, always go without appointment
+    
         setVisitMode('without');
         fetchPatients();
         fetchDoctors();
@@ -56,7 +146,6 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
     }
   }, [isOpen, preSelectedAppointmentId]);
 
-  // Fetch single appointment for pending appointment workflow
   const fetchSingleAppointment = async (appointmentId) => {
     try {
       setLoadingAppointments(true);
@@ -153,6 +242,7 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
     setVisitMode(mode);
     setSelectedAppointment(null);
     setError(null);
+    setValidationMessages({}); 
     setFormData({
       appointmentId: 0,
       PatientID: '',
@@ -187,9 +277,18 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    const filteredValue = filterInput(name, value);
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: filteredValue
+    }));
+
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
     }));
   };
 
@@ -235,6 +334,7 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
       });
       setVisitMode('without');
       setSelectedAppointment(null);
+      setValidationMessages({}); 
 
       onSuccess();
       onClose();
@@ -515,9 +615,16 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
                         name="VisitDate"
                         value={formData.VisitDate}
                         onChange={handleChange}
+                        min={getTodayDate()}
                         required
                         className="form-input"
                       />
+                      
+                      {validationMessages.VisitDate && (
+                        <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                          {validationMessages.VisitDate}
+                        </span>
+                      )}
                     </div>
 
                     <div className="form-group">
@@ -532,6 +639,12 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
                         required
                         className="form-input"
                       />
+                      
+                      {validationMessages.VisitTime && (
+                        <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                          {validationMessages.VisitTime}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -544,7 +657,14 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
                       onChange={handleChange}
                       placeholder="e.g., Regular checkup, Follow-up..."
                       className="form-input"
+                      maxLength="200"
                     />
+                    
+                    {validationMessages.reason && (
+                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                        {validationMessages.reason}
+                      </span>
+                    )}
                   </div>
 
                   <div className="form-group">
@@ -556,7 +676,14 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
                       rows="3"
                       placeholder="Describe patient symptoms..."
                       className="form-textarea"
+                      maxLength="500"
                     />
+                    
+                    {validationMessages.symptoms && (
+                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                        {validationMessages.symptoms}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -570,27 +697,37 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
                     <div className="form-group">
                       <label className="form-label">Systolic BP (mmHg)</label>
                       <input
-                        type="number"
+                        type="text"
                         name="bpSystolic"
                         value={formData.bpSystolic}
                         onChange={handleChange}
                         placeholder="120"
-                        min="0"
                         className="form-input"
                       />
+                      
+                      {validationMessages.bpSystolic && (
+                        <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                          {validationMessages.bpSystolic}
+                        </span>
+                      )}
                     </div>
 
                     <div className="form-group">
                       <label className="form-label">Diastolic BP (mmHg)</label>
                       <input
-                        type="number"
+                        type="text"
                         name="bpDiastolic"
                         value={formData.bpDiastolic}
                         onChange={handleChange}
                         placeholder="80"
-                        min="0"
                         className="form-input"
                       />
+                      
+                      {validationMessages.bpDiastolic && (
+                        <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                          {validationMessages.bpDiastolic}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -598,29 +735,37 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
                     <div className="form-group">
                       <label className="form-label">Temperature (°F)</label>
                       <input
-                        type="number"
+                        type="text"
                         name="temperature"
                         value={formData.temperature}
                         onChange={handleChange}
                         placeholder="98.6"
-                        step="0.1"
-                        min="0"
                         className="form-input"
                       />
+                      
+                      {validationMessages.temperature && (
+                        <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                          {validationMessages.temperature}
+                        </span>
+                      )}
                     </div>
 
                     <div className="form-group">
                       <label className="form-label">Weight (kg)</label>
                       <input
-                        type="number"
+                        type="text"
                         name="weight"
                         value={formData.weight}
                         onChange={handleChange}
                         placeholder="70"
-                        step="0.1"
-                        min="0"
                         className="form-input"
                       />
+                      
+                      {validationMessages.weight && (
+                        <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                          {validationMessages.weight}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -9,17 +9,17 @@ export default defineConfig({
     port: 3000,      // Ensure this matches your desired port
     proxy: {
       '/api': {
-        target: 'http://192.168.0.2:5001',
+        target: 'https://cp-api.techchasesoftwarehost.in',
         changeOrigin: true,
         secure: false,
       },
       '/upload': {
-        target: 'http://192.168.0.2:5002',
+        target: 'https://cp-api.techchasesoftwarehost.in',
         changeOrigin: true,
         secure: false,
       },
       '/file': {
-        target: 'http://192.168.0.2:5002',
+        target: 'https://cp-api.techchasesoftwarehost.in',
         changeOrigin: true,
         secure: false,
       },

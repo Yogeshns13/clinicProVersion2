@@ -16,9 +16,39 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import './EmployeeShift.css';
 
-// ────────────────────────────────────────────────
-// CONSTANTS
-// ────────────────────────────────────────────────
+
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'shiftName':
+      if (!value || !value.trim()) return 'Test name is required';
+      if (value.trim().length < 3) return 'Test name must be at least 3 characters';
+      if (value.trim().length > 100) return 'Test name must not exceed 100 characters';
+      return '';
+
+
+    case 'selectedShiftId':
+      if (!value || value === 0 || value === '0') return 'Please select a shift';
+      return '';
+
+    case 'workDays':
+      if (!value || value.length === 0) return 'Please select at least one work day';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+        case 'shiftName':
+      return value.replace(/[^a-zA-Z\s]/g, '');
+    
+    default:
+      return value;
+  }
+};
+
 const WORK_DAYS = [
   { id: 1, label: 'Sunday' },
   { id: 2, label: 'Monday' },
@@ -29,7 +59,6 @@ const WORK_DAYS = [
   { id: 7, label: 'Saturday' },
 ];
 
-// Helper function to get day name from day number
 const getDayName = (dayNumber) => {
   const days = {
     1: "Sunday",
@@ -43,52 +72,37 @@ const getDayName = (dayNumber) => {
   return days[dayNumber] || "Unknown";
 };
 
-// ────────────────────────────────────────────────
 const EmployeeShift = () => {
-  const { id } = useParams(); // Employee ID from URL
+  const { id } = useParams(); 
   const navigate = useNavigate();
-
-  // Employee & Shift data
   const [employee, setEmployee] = useState(null);
   const [employeeShiftList, setEmployeeShiftList] = useState([]);
   const [availableShifts, setAvailableShifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // WorkDays data
   const [workDaysList, setWorkDaysList] = useState([]);
   const [workDaysLoading, setWorkDaysLoading] = useState(false);
-
-  // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedShiftId, setSelectedShiftId] = useState(0);
-
-  // WorkDays modal states
   const [isWorkDaysModalOpen, setIsWorkDaysModalOpen] = useState(false);
   const [selectedWorkDays, setSelectedWorkDays] = useState([]);
   const [workDaysFormLoading, setWorkDaysFormLoading] = useState(false);
   const [workDaysFormError, setWorkDaysFormError] = useState('');
   const [workDaysFormSuccess, setWorkDaysFormSuccess] = useState(false);
-
-  // Delete confirmation modal
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [shiftToDelete, setShiftToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
-
-  // Delete WorkDay confirmation modal
   const [isDeleteWorkDayModalOpen, setIsDeleteWorkDayModalOpen] = useState(false);
   const [workDayToDelete, setWorkDayToDelete] = useState(null);
   const [isDeletingWorkDay, setIsDeletingWorkDay] = useState(false);
   const [deleteWorkDayError, setDeleteWorkDayError] = useState('');
-
-  // Form submission states
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
+  const [validationMessages, setValidationMessages] = useState({});
+  const [workDaysValidationMessages, setWorkDaysValidationMessages] = useState({});
 
-  // ────────────────────────────────────────────────
-  // Fetch employee details and shift assignments
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -111,21 +125,18 @@ const EmployeeShift = () => {
           return;
         }
 
-        // Fetch employee shift assignments
         const shiftData = await getEmployeeShiftList(clinicId, {
           EmployeeID: Number(id),
         });
 
         setEmployeeShiftList(shiftData || []);
 
-        // Fetch all available shifts
         const shifts = await getShiftList(clinicId, {
-          Status: 1 // Only active shifts
+          Status: 1 
         });
 
         setAvailableShifts(shifts || []);
 
-        // Fetch work days for this employee
         await fetchWorkDays();
 
       } catch (err) {
@@ -161,9 +172,8 @@ const EmployeeShift = () => {
       
       console.log('Work days raw response:', workDaysRaw);
       
-      // Process the work days and add dayName - Filter out status === 2
       const processedWorkDays = (workDaysRaw || [])
-        .filter(wd => wd.status !== 'inactive' && wd.status !== 2) // Filter out inactive/deleted work days
+        .filter(wd => wd.status !== 'inactive' && wd.status !== 2) 
         .map(wd => ({
           ...wd,
           dayName: getDayName(wd.workDay)
@@ -205,75 +215,78 @@ const EmployeeShift = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // WorkDays Handlers
-  // ────────────────────────────────────────────────
   const handleOpenWorkDaysModal = () => {
-    // Pre-select existing work days
     const existingDayIds = workDaysList.map(wd => wd.workDay);
     console.log('Pre-selecting work days:', existingDayIds);
     setSelectedWorkDays(existingDayIds);
     setWorkDaysFormError('');
     setWorkDaysFormSuccess(false);
+    setWorkDaysValidationMessages({});
     setIsWorkDaysModalOpen(true);
   };
+
 
   const handleCloseWorkDaysModal = () => {
     setIsWorkDaysModalOpen(false);
     setSelectedWorkDays([]);
     setWorkDaysFormError('');
     setWorkDaysFormSuccess(false);
+    setWorkDaysValidationMessages({}); 
   };
 
   const handleWorkDayToggle = (dayId) => {
     setSelectedWorkDays((prev) => {
-      if (prev.includes(dayId)) {
-        return prev.filter((id) => id !== dayId);
-      } else {
-        return [...prev, dayId];
-      }
+      const newSelection = prev.includes(dayId)
+        ? prev.filter((id) => id !== dayId)
+        : [...prev, dayId];
+      
+      const validationMessage = getLiveValidationMessage('workDays', newSelection);
+      setWorkDaysValidationMessages((prevMsg) => ({
+        ...prevMsg,
+        workDays: validationMessage,
+      }));
+      
+      return newSelection;
     });
   };
 
   const handleWorkDaysSubmit = async (e) => {
     e.preventDefault();
+    
+    if (selectedWorkDays.length === 0) {
+      setWorkDaysFormError('Please select at least one work day');
+      return;
+    }
+
     setWorkDaysFormLoading(true);
     setWorkDaysFormError('');
     setWorkDaysFormSuccess(false);
 
     try {
       const clinicId = localStorage.getItem('clinicID');
-      
-      // Get existing work day IDs
       const existingDayIds = workDaysList.map(wd => wd.workDay);
-      
-      // Find days to add (selected but not in existing)
       const daysToAdd = selectedWorkDays.filter(dayId => !existingDayIds.includes(dayId));
-      
-      // Find days to remove (existing but not in selected)
       const daysToRemove = workDaysList.filter(wd => !selectedWorkDays.includes(wd.workDay));
 
       console.log('Days to add:', daysToAdd);
       console.log('Days to remove:', daysToRemove);
 
-      // Add new work days
       for (const dayId of daysToAdd) {
         const payload = {
           ClinicID: clinicId ? Number(clinicId) : 0,
+            lastName: formData.shiftName.trim(),
           EmployeeID: Number(id),
           WorkDay: dayId,
         };
         await addWorkDays(payload);
       }
 
-      // Remove unselected work days
       for (const workDay of daysToRemove) {
         await deleteWorkDays(workDay.id);
       }
 
       setWorkDaysFormSuccess(true);
       
-      // Refresh work days list
       setTimeout(async () => {
         await fetchWorkDays();
         handleCloseWorkDaysModal();
@@ -286,9 +299,6 @@ const EmployeeShift = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Delete WorkDay Handlers
-  // ────────────────────────────────────────────────
   const handleOpenDeleteWorkDayModal = (workDay) => {
     setWorkDayToDelete(workDay);
     setDeleteWorkDayError('');
@@ -311,10 +321,8 @@ const EmployeeShift = () => {
       console.log('Deleting work day:', workDayToDelete);
       await deleteWorkDays(workDayToDelete.id);
       
-      // Refresh work days list
       await fetchWorkDays();
       
-      // Close modal
       handleCloseDeleteWorkDayModal();
     } catch (err) {
       console.error('Delete work day failed:', err);
@@ -324,9 +332,6 @@ const EmployeeShift = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Delete Shift Handlers
-  // ────────────────────────────────────────────────
   const handleOpenDeleteModal = (shift) => {
     setShiftToDelete(shift);
     setDeleteError('');
@@ -348,14 +353,12 @@ const EmployeeShift = () => {
     try {
       const clinicId = Number(localStorage.getItem('clinicID'));
       await deleteEmployeeShift(shiftToDelete.shiftMapId);
-      
-      // Refresh shift list
+    
       const shiftData = await getEmployeeShiftList(clinicId, {
         EmployeeID: Number(id),
       });
       setEmployeeShiftList(shiftData || []);
       
-      // Close modal
       handleCloseDeleteModal();
     } catch (err) {
       console.error('Delete shift failed:', err);
@@ -365,13 +368,11 @@ const EmployeeShift = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Modal Handlers
-  // ────────────────────────────────────────────────
   const handleOpenAddModal = () => {
     setSelectedShiftId(0);
     setFormError('');
     setFormSuccess(false);
+    setValidationMessages({}); 
     setIsAddModalOpen(true);
   };
 
@@ -380,6 +381,17 @@ const EmployeeShift = () => {
     setSelectedShiftId(0);
     setFormError('');
     setFormSuccess(false);
+    setValidationMessages({}); 
+  };
+
+  const handleShiftChange = (value) => {
+    const shiftId = Number(value);
+    setSelectedShiftId(shiftId);
+    const validationMessage = getLiveValidationMessage('selectedShiftId', shiftId);
+    setValidationMessages((prev) => ({
+      ...prev,
+      selectedShiftId: validationMessage,
+    }));
   };
 
   // ────────────────────────────────────────────────
@@ -549,12 +561,12 @@ const EmployeeShift = () => {
 
                   <div className="details-grid">
                     <div className="detail-item">
-                      <span className="detail-label">Shift Name</span>
+                      <span className="detail-label" >Shift Name</span>
                       <span className="detail-value">{shift.shiftName}</span>
                     </div>
                     <div className="detail-item">
                       <span className="detail-label">Employee Code</span>
-                      <span className="detail-value">{shift.employeeCode || '—'}</span>
+                      <span onChange={handleInputChange} className="detail-value">{shift.employeeCode || '—'}</span>
                     </div>
                     <div className="detail-item">
                       <span className="detail-label">Start Time</span>
@@ -633,7 +645,7 @@ const EmployeeShift = () => {
                   <select
                     required
                     value={selectedShiftId}
-                    onChange={(e) => setSelectedShiftId(Number(e.target.value))}
+                    onChange={(e) => handleShiftChange(e.target.value)}
                   >
                     <option value="0">Choose a shift</option>
                     {availableShifts.map((shift) => (
@@ -642,6 +654,12 @@ const EmployeeShift = () => {
                       </option>
                     ))}
                   </select>
+                  
+                  {validationMessages.selectedShiftId && (
+                    <span style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {validationMessages.selectedShiftId}
+                    </span>
+                  )}
                   <p className="form-hint">
                     Select the work shift to assign to this employee
                   </p>
@@ -688,7 +706,11 @@ const EmployeeShift = () => {
                 <button type="button" onClick={handleCloseAddModal} className="btn-cancel">
                   Cancel
                 </button>
-                <button type="submit" disabled={formLoading} className="btn-submit">
+                <button 
+                  type="submit" 
+                  disabled={formLoading || (selectedShiftId === 0)} 
+                  className="btn-submit"
+                >
                   {formLoading ? 'Assigning...' : 'Assign Shift'}
                 </button>
               </div>
@@ -730,8 +752,14 @@ const EmployeeShift = () => {
                       </button>
                     ))}
                   </div>
+                  
+                  {workDaysValidationMessages.workDays && (
+                    <span style={{ color: '#dc2626', fontSize: '12px', marginTop: '8px', display: 'block' }}>
+                      {workDaysValidationMessages.workDays}
+                    </span>
+                  )}
                   <p className="workdays-hint">
-                    Select the days this employee will work
+                    Select the days this employee will work (at least one day required)
                   </p>
                 </div>
               </div>
@@ -740,7 +768,11 @@ const EmployeeShift = () => {
                 <button type="button" onClick={handleCloseWorkDaysModal} className="btn-cancel">
                   Cancel
                 </button>
-                <button type="submit" disabled={workDaysFormLoading} className="btn-submit">
+                <button 
+                  type="submit" 
+                  disabled={workDaysFormLoading || selectedWorkDays.length === 0} 
+                  className="btn-submit"
+                >
                   {workDaysFormLoading ? 'Saving...' : 'Save Work Days'}
                 </button>
               </div>

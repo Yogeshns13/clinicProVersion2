@@ -7,13 +7,67 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './LabMaster.module.css';
 
-// ────────────────────────────────────────────────
-// CONSTANTS
-// ────────────────────────────────────────────────
 const STATUS_OPTIONS = [
   { id: 1, label: 'Active' },
   { id: 2, label: 'Inactive' },
 ];
+
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'packName':
+      if (!value || !value.trim()) return 'Test name is required';
+      if (value.trim().length < 3) return 'Test name must be at least 3 characters';
+      if (value.trim().length > 100) return 'Test name must not exceed 100 characters';
+      return '';
+    case 'packShortName':
+      if (!value || !value.trim()) return 'Test name is required';
+      if (value.trim().length < 3) return 'Test name must be at least 3 characters';
+      if (value.trim().length > 100) return 'Test name must not exceed 100 characters';
+      return '';
+
+    case 'description':
+      if (value && value.length > 500) return 'Description must not exceed 500 characters';
+      return '';
+
+    case 'fees':
+      if (value === '' || value === null) return '';
+      const feeVal = Number(value);
+      if (isNaN(feeVal)) return 'Fees must be a valid number';
+      if (feeVal < 0) return 'Fees cannot be negative';
+      return '';
+
+    case 'cgstPercentage':
+    case 'sgstPercentage':
+      if (value === '' || value === null) return '';
+      const taxVal = Number(value);
+      if (isNaN(taxVal)) return 'Must be a valid number';
+      if (taxVal < 0) return 'Cannot be negative';
+      if (taxVal > 100) return 'Cannot exceed 100%';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+    case 'packName':
+    case 'packShortName':
+      return value.replace(/[^a-zA-Z\s]/g, '');
+
+    case 'description':
+      return value.replace(/[^a-zA-Z0-9\s\-&(),.;:!?]/g, '');
+
+    case 'fees':
+    case 'cgstPercentage':
+    case 'sgstPercentage':
+      return value.replace(/[^0-9.]/g, '').replace(/(\..*?)\./g, '$1');
+
+    default:
+      return value;
+  }
+};
 
 // ────────────────────────────────────────────────
 const UpdateLabTestPackage = () => {
@@ -39,6 +93,7 @@ const UpdateLabTestPackage = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
+  const [validationMessages, setValidationMessages] = useState({});
 
   // ────────────────────────────────────────────────
   useEffect(() => {
@@ -89,7 +144,16 @@ const UpdateLabTestPackage = () => {
   // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    const filteredValue = filterInput(name, value);
+
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+
+    const message = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: message,
+    }));
   };
 
   const handleBack = () => {
@@ -197,6 +261,11 @@ const UpdateLabTestPackage = () => {
                   onChange={handleInputChange}
                   placeholder="e.g., Full Body Checkup"
                 />
+                {validationMessages.packName && (
+                  <span className={styles.validationMessage}>
+                    {validationMessages.packName}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -210,6 +279,11 @@ const UpdateLabTestPackage = () => {
                   onChange={handleInputChange}
                   placeholder="e.g., FBC"
                 />
+                {validationMessages.packShortName && (
+                  <span className={styles.validationMessage}>
+                    {validationMessages.packShortName}
+                  </span>
+                )}
               </div>
 
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -221,6 +295,11 @@ const UpdateLabTestPackage = () => {
                   onChange={handleInputChange}
                   placeholder="Brief description of the package"
                 />
+                {validationMessages.description && (
+                  <span className={styles.validationMessage}>
+                    {validationMessages.description}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -233,6 +312,11 @@ const UpdateLabTestPackage = () => {
                   onChange={handleInputChange}
                   placeholder="0.00"
                 />
+                {validationMessages.fees && (
+                  <span className={styles.validationMessage}>
+                    {validationMessages.fees}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -244,6 +328,11 @@ const UpdateLabTestPackage = () => {
                   value={formData.cgstPercentage}
                   onChange={handleInputChange}
                 />
+                {validationMessages.cgstPercentage && (
+                  <span className={styles.validationMessage}>
+                    {validationMessages.cgstPercentage}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -255,6 +344,11 @@ const UpdateLabTestPackage = () => {
                   value={formData.sgstPercentage}
                   onChange={handleInputChange}
                 />
+                {validationMessages.sgstPercentage && (
+                  <span className={styles.validationMessage}>
+                    {validationMessages.sgstPercentage}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>

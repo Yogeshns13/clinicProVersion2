@@ -8,6 +8,99 @@ import Header from '../Header/Header.jsx';
 import './UpdatePatientVisit.css';
 import BranchList from '../BranchList/BranchList.jsx';
 
+
+const getLiveValidationMessage = (fieldName, value) => {
+  // Returns validation message while typing (empty string = valid)
+  switch (fieldName) {
+    case 'visitDate':
+      if (!value) return 'Visit date is required';
+      const visitDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      visitDate.setHours(0, 0, 0, 0);
+      
+      if (visitDate < today) return 'Visit date cannot be in the past';
+      return '';
+
+    case 'visitTime':
+      if (!value) return 'Visit time is required';
+      return '';
+
+    case 'reason':
+      if (value && value.length > 200) return 'Reason must not exceed 200 characters';
+      return '';
+
+    case 'symptoms':
+      if (value && value.length > 500) return 'Symptoms must not exceed 500 characters';
+      return '';
+
+    case 'bpSystolic':
+      if (value === '' || value === null || value === undefined) return '';
+      const systolic = Number(value);
+      if (isNaN(systolic)) return 'Must be a valid number';
+      if (systolic < 0) return 'Cannot be negative';
+      if (systolic > 0 && systolic < 50) return 'The number should be 50-250 mmHg';
+      if (systolic > 250) return 'The number should be 50-250 mmHg';
+      return '';
+
+    case 'bpDiastolic':
+      if (value === '' || value === null || value === undefined) return '';
+      const diastolic = Number(value);
+      if (isNaN(diastolic)) return 'Must be a valid number';
+      if (diastolic < 0) return 'Cannot be negative';
+      if (diastolic > 0 && diastolic < 30) return 'The number should be 30-150 mmHg';
+      if (diastolic > 150) return 'The number should be 30-150 mmHg';
+      return '';
+
+    case 'temperature':
+      if (value === '' || value === null || value === undefined) return '';
+      const temp = Number(value);
+      if (isNaN(temp)) return 'Must be a valid number';
+      if (temp < 0) return 'Cannot be negative';
+      if (temp > 0 && temp < 90) return 'The number should be 90-110°F';
+      if (temp > 110) return 'The number should be 90-110°F';
+      return '';
+
+    case 'weight':
+      if (value === '' || value === null || value === undefined) return '';
+      const weight = Number(value);
+      if (isNaN(weight)) return 'Must be a valid number';
+      if (weight < 0) return 'Cannot be negative';
+      if (weight > 0 && weight < 1) return 'The number should be 1-500 kg';
+      if (weight > 500) return 'The number should be 1-500 kg';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+    case 'bpSystolic':
+    case 'bpDiastolic':
+      return value.replace(/[^0-9]/g, '');
+    
+    case 'temperature':
+    case 'weight':
+      if (value === '') return value;
+      const filtered = value.replace(/[^0-9.]/g, '');
+      const parts = filtered.split('.');
+      if (parts.length > 2) {
+        return parts[0] + '.' + parts.slice(1).join('');
+      }
+      return filtered;
+    
+    default:
+      return value;
+  }
+};
+
+const getTodayDate = () => {
+  return new Date().toISOString().split('T')[0];
+};
+
 const UpdatePatientVisit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -33,6 +126,7 @@ const UpdatePatientVisit = () => {
   const [error, setError] = useState(null);
   const [patientInfo, setPatientInfo] = useState(null);
   const [hasAppointment, setHasAppointment] = useState(false);
+  const [validationMessages, setValidationMessages] = useState({});
 
   useEffect(() => {
     fetchVisitDetails();
@@ -46,10 +140,8 @@ const UpdatePatientVisit = () => {
     }
     
     try {
-      // Handle both ISO format and date-only format
       const date = new Date(dateString);
       
-      // Check if date is valid
       if (isNaN(date.getTime())) {
         console.error('formatDateForInput: Invalid date:', dateString);
         return '';
@@ -115,7 +207,6 @@ const UpdatePatientVisit = () => {
         console.log('fetchVisitDetails: Setting form data:', newFormData);
         setFormData(newFormData);
 
-        // Check if visit has an appointment
         if (visit.appointmentId && visit.appointmentId !== 0) {
           setHasAppointment(true);
           fetchAppointmentDetails(visit.appointmentId);
@@ -173,11 +264,21 @@ const UpdatePatientVisit = () => {
     }
   };
 
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+  
+    const filteredValue = filterInput(name, value);
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: filteredValue
+    }));
+
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
     }));
   };
 
@@ -344,10 +445,17 @@ const UpdatePatientVisit = () => {
                   name="visitDate"
                   value={formData.visitDate}
                   onChange={handleChange}
+                  min={getTodayDate()}
                   required
                   disabled={hasAppointment}
                   className="form-input"
                 />
+                
+                {validationMessages.visitDate && !hasAppointment && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.visitDate}
+                  </span>
+                )}
               </div>
 
               <div className="form-group">
@@ -363,6 +471,12 @@ const UpdatePatientVisit = () => {
                   disabled={hasAppointment}
                   className="form-input"
                 />
+                
+                {validationMessages.visitTime && !hasAppointment && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.visitTime}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -375,7 +489,14 @@ const UpdatePatientVisit = () => {
                 onChange={handleChange}
                 placeholder="e.g., Regular checkup, Follow-up..."
                 className="form-input"
+                maxLength="200"
               />
+              
+              {validationMessages.reason && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.reason}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
@@ -387,7 +508,14 @@ const UpdatePatientVisit = () => {
                 rows="4"
                 placeholder="Describe patient symptoms..."
                 className="form-textarea"
+                maxLength="500"
               />
+              
+              {validationMessages.symptoms && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.symptoms}
+                </span>
+              )}
             </div>
           </div>
 
@@ -397,27 +525,37 @@ const UpdatePatientVisit = () => {
               <div className="form-group">
                 <label className="form-label">Systolic BP (mmHg)</label>
                 <input
-                  type="number"
+                  type="text"
                   name="bpSystolic"
                   value={formData.bpSystolic}
                   onChange={handleChange}
                   placeholder="120"
-                  min="0"
                   className="form-input"
                 />
+              
+                {validationMessages.bpSystolic && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.bpSystolic}
+                  </span>
+                )}
               </div>
 
               <div className="form-group">
                 <label className="form-label">Diastolic BP (mmHg)</label>
                 <input
-                  type="number"
+                  type="text"
                   name="bpDiastolic"
                   value={formData.bpDiastolic}
                   onChange={handleChange}
                   placeholder="80"
-                  min="0"
                   className="form-input"
                 />
+    
+                {validationMessages.bpDiastolic && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.bpDiastolic}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -425,29 +563,35 @@ const UpdatePatientVisit = () => {
               <div className="form-group">
                 <label className="form-label">Temperature (°F)</label>
                 <input
-                  type="number"
+                  type="text"
                   name="temperature"
                   value={formData.temperature}
                   onChange={handleChange}
                   placeholder="98.6"
-                  step="0.1"
-                  min="0"
                   className="form-input"
                 />
+                {validationMessages.temperature && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.temperature}
+                  </span>
+                )}
               </div>
 
               <div className="form-group">
                 <label className="form-label">Weight (kg)</label>
                 <input
-                  type="number"
+                  type="text"
                   name="weight"
                   value={formData.weight}
                   onChange={handleChange}
                   placeholder="70"
-                  step="0.1"
-                  min="0"
                   className="form-input"
                 />
+                {validationMessages.weight && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.weight}
+                </span>
+                )}
               </div>
             </div>
           </div>

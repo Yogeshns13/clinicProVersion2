@@ -46,6 +46,9 @@ const SalesCartList = () => {
   const [searchInput, setSearchInput] = useState('');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
+  // ── CHANGE 1: track prescription IDs that have been carted this session ──
+  const [cartedPrescriptionIds, setCartedPrescriptionIds] = useState(new Set());
+
   // ── Prescription filters ──────────────────────────────
   const today = new Date().toISOString().split('T')[0];
   const [presFromDate, setPresFromDate] = useState(today);
@@ -171,7 +174,7 @@ const SalesCartList = () => {
       if (!term) { setFilteredSalesCarts(salesCarts); return; }
       setFilteredSalesCarts(salesCarts.filter(
         (c) =>
-          c.patientName?.toLowerCase().includes(term) ||
+          c.customerName?.toLowerCase().includes(term) ||
           c.patientFileNo?.toLowerCase().includes(term) ||
           c.patientMobile?.toLowerCase().includes(term)
       ));
@@ -350,6 +353,9 @@ const SalesCartList = () => {
           cartId,
         }));
       } else {
+        // CHANGE 2: mark this prescription as carted so its button disables
+        setCartedPrescriptionIds((prev) => new Set([...prev, prescription.id]));
+
         setConfirm((prev) => ({
           ...prev,
           submitting: false,
@@ -612,68 +618,76 @@ const SalesCartList = () => {
                   </td>
                 </tr>
               ) : (
-                filteredPrescriptions.map((pres) => (
-                  <tr key={pres.id}>
-                    <td>
-                      <div className={styles.nameCell}>
-                        <div className={styles.avatar}>
-                          {pres.patientName?.charAt(0).toUpperCase() || 'P'}
-                        </div>
-                        <div>
-                          <div className={styles.name}>{pres.patientName}</div>
-                          <div className={styles.subText}>
-                            {pres.patientFileNo} • {pres.patientMobile || '—'}
+                filteredPrescriptions.map((pres) => {
+                  // CHANGE 3: check if this prescription was already carted
+                  const isCarted = cartedPrescriptionIds.has(pres.id);
+                  return (
+                    <tr key={pres.id}>
+                      <td>
+                        <div className={styles.nameCell}>
+                          <div className={styles.avatar}>
+                            {pres.patientName?.charAt(0).toUpperCase() || 'P'}
+                          </div>
+                          <div>
+                            <div className={styles.name}>{pres.patientName}</div>
+                            <div className={styles.subText}>
+                              {pres.patientFileNo} • {pres.patientMobile || '—'}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className={styles.name}>{pres.doctorFullName}</div>
-                      <div className={styles.subText}>{pres.doctorCode || '—'}</div>
-                    </td>
-                    <td>
-                      <div className={styles.name}>{formatDate(pres.dateIssued)}</div>
-                    </td>
-                    <td>
-                      <div className={styles.name}>{formatDate(pres.validUntil)}</div>
-                    </td>
-                    <td>
-                      <div className={styles.diagnosisCell}>
-                        {pres.diagnosis ? (
-                          <span className={styles.diagnosisBadge}>{pres.diagnosis}</span>
-                        ) : '—'}
-                        {pres.notes && (
-                          <div className={styles.subText}>{pres.notes}</div>
+                      </td>
+                      <td>
+                        <div className={styles.name}>{pres.doctorFullName}</div>
+                        <div className={styles.subText}>{pres.doctorCode || '—'}</div>
+                      </td>
+                      <td>
+                        <div className={styles.name}>{formatDate(pres.dateIssued)}</div>
+                      </td>
+                      <td>
+                        <div className={styles.name}>{formatDate(pres.validUntil)}</div>
+                      </td>
+                      <td>
+                        <div className={styles.diagnosisCell}>
+                          {pres.diagnosis ? (
+                            <span className={styles.diagnosisBadge}>{pres.diagnosis}</span>
+                          ) : '—'}
+                          {pres.notes && (
+                            <div className={styles.subText}>{pres.notes}</div>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        {pres.isRepeat ? (
+                          <span className={`${styles.badge} ${styles.repeatBadge}`}>
+                            Repeat ({pres.repeatCount})
+                          </span>
+                        ) : (
+                          <span className={`${styles.badge} ${styles.newBadge}`}>New</span>
                         )}
-                      </div>
-                    </td>
-                    <td>
-                      {pres.isRepeat ? (
-                        <span className={`${styles.badge} ${styles.repeatBadge}`}>
-                          Repeat ({pres.repeatCount})
+                      </td>
+                      <td>
+                        <span className={`${styles.badge} ${pres.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}>
+                          {pres.statusDesc}
                         </span>
-                      ) : (
-                        <span className={`${styles.badge} ${styles.newBadge}`}>New</span>
-                      )}
-                    </td>
-                    <td>
-                      <span className={`${styles.badge} ${pres.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}>
-                        {pres.statusDesc}
-                      </span>
-                    </td>
-                    <td>
-                      <div className={styles.actionsCell}>
-                        <button
-                          onClick={() => handleAddToCartClick(pres)}
-                          className={styles.addCartBtn}
-                        >
-                          <FiShoppingCart size={15} />
-                          Add to Cart
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td>
+                        <div className={styles.actionsCell}>
+                          <button
+                            onClick={() => handleAddToCartClick(pres)}
+                            className={`${styles.addCartBtn} ${isCarted ? styles.addCartBtnDone : ''}`}
+                            disabled={isCarted}
+                          >
+                            {isCarted ? (
+                              <><FiCheckCircle size={15} /> Cart Added</>
+                            ) : (
+                              <><FiShoppingCart size={15} /> Add to Cart</>
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -709,17 +723,7 @@ const SalesCartList = () => {
                       <span className={styles.cartIdBadge}>#{cart.id}</span>
                     </td>
                     <td>
-                      <div className={styles.nameCell}>
-                        <div className={styles.avatar}>
-                          {cart.patientName?.charAt(0).toUpperCase() || 'P'}
-                        </div>
-                        <div>
-                          <div className={styles.name}>{cart.patientName}</div>
-                          <div className={styles.subText}>
-                            {cart.patientFileNo} • {cart.patientMobile || '—'}
-                          </div>
-                        </div>
-                      </div>
+                      <div className={styles.name}>{cart.customerName || '—'}</div>
                     </td>
                     <td>
                       <span className={styles.itemCountBadge}>

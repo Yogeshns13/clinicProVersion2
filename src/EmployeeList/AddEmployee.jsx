@@ -13,9 +13,239 @@ import {
 } from '../api/api.js';
 import styles from './AddEmployee.module.css';
 
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'employeeCode':
+      if (!value || !value.trim()) return 'Employee code is required';
+      if (value.trim().length < 3) return 'Employee code must be at least 3 characters';
+      if (value.trim().length > 20) return 'Employee code must not exceed 20 characters';
+      return '';
+
+    case 'firstName':
+    case 'lastName':
+      if (!value || !value.trim()) return `${fieldName === 'firstName' ? 'First' : 'Last'} name is required`;
+      if (value.trim().length < 2) return `${fieldName === 'firstName' ? 'First' : 'Last'} name must be at least 2 characters`;
+      if (value.trim().length > 50) return `${fieldName === 'firstName' ? 'First' : 'Last'} name must not exceed 50 characters`;
+      return '';
+
+    case 'mobile':
+      if (!value || !value.trim()) return 'Mobile number is required';
+      if (value.trim().length < 10) return 'Mobile number must be 10 digits';
+      if (value.trim().length === 10) {
+        if (!/^[6-9]\d{9}$/.test(value.trim())) {
+          return 'Mobile number must start with 6-9';
+        }
+      }
+      if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
+      return '';
+
+    case 'altMobile':
+      if (value && value.trim()) {
+        if (value.trim().length < 10) return 'Mobile number must be 10 digits';
+        if (value.trim().length === 10) {
+          if (!/^[6-9]\d{9}$/.test(value.trim())) {
+            return 'Mobile number must start with 6-9';
+          }
+        }
+        if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
+      }
+      return '';
+
+    case 'email':
+      if (value && value.trim()) {
+        if (!value.includes('@')) return 'Email must contain @';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
+          return 'Please enter a valid email address';
+        }
+      }
+      return '';
+
+    case 'birthDate':
+      if (value) {
+        const birthDate = new Date(value);
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) ? age - 1 : age;
+        
+        if (actualAge < 18) return 'Employee must be at least 18 years old';
+        if (actualAge > 100) return 'Please enter a valid birth date';
+      }
+      return '';
+
+    case 'licenseExpiryDate':
+      if (value) {
+        const expiryDate = new Date(value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (expiryDate < today) return 'License expiry date must be in the future';
+      }
+      return '';
+
+    case 'address':
+      if (value && value.length > 500) return 'Address must not exceed 500 characters';
+      return '';
+
+    case 'qualification':
+    case 'specialization':
+      if (value && value.length > 100) return 'Field must not exceed 100 characters';
+      return '';
+
+    case 'universityName':
+      if (!value || !value.trim()) return 'University name is required';
+      if (value.trim().length < 3) return 'University name must be at least 3 characters';
+      if (value.trim().length > 100) return 'University name must not exceed 100 characters';
+      return '';
+
+    case 'licenseNo':
+    case 'pfNo':
+    case 'esiNo':
+      if (value && value.length > 50) return 'Field must not exceed 50 characters';
+      return '';
+
+    case 'experienceYears':
+      if (value !== '' && value !== null && value !== undefined) {
+        const years = Number(value);
+        if (isNaN(years)) return 'Must be a number';
+        if (years < 0) return 'Cannot be negative';
+        if (years > 50) return 'Experience cannot exceed 50 years';
+      }
+      return '';
+
+  case 'idNumber':
+  return value.replace(/[^A-Z0-9]/g, '');
+
+    case 'detail':
+      if (value && value.length > 100) return 'Field must not exceed 100 characters';
+      return '';
+
+    case 'expiryDate':
+      if (value) {
+        const expiryDate = new Date(value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (expiryDate < today) return 'Expiry date must be in the future';
+      }
+      return '';
+
+    case 'AccountHolderName':
+      if (!value || !value.trim()) return 'Account holder name is required';
+      if (value.trim().length < 3) return 'Name must be at least 3 characters';
+      if (value.trim().length > 100) return 'Name must not exceed 100 characters';
+      return '';
+case 'AccountNo':
+  if (!value || !value.trim()) return 'Account number is required';
+  if (!/^\d+$/.test(value.trim())) return 'Account number must contain only digits';
+  if (value.trim().length < 9) return 'Account number must be at least 9 digits';
+  return '';
+
+case 'IFSCCode':
+  if (!value || !value.trim()) return 'IFSC code is required';
+
+  const ifscValue = value.trim();
+  
+  if (ifscValue.length > 0 && ifscValue.length <= 4) {
+    if (!/^[A-Z]+$/.test(ifscValue)) {
+      return 'First 4 characters must be letters only';
+    }
+  }
+  
+  if (ifscValue.length === 5) {
+    if (!/^[A-Z]{4}0$/.test(ifscValue)) {
+      return '5th character must be 0';
+    }
+  }
+  
+if (ifscValue.length > 5) {
+  if (!/^[A-Z]{4}0\d*$/.test(ifscValue)) {
+    return 'After 5th character, only numbers allowed (no letters or special characters)';
+  }
+}
+  if (ifscValue.length < 11) return 'IFSC code must be 11 characters';
+  if (ifscValue.length === 11) {
+    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscValue)) {
+      return 'Invalid IFSC format (e.g., HDFC0000269)';
+    }
+  }
+  if (ifscValue.length > 11) return 'IFSC code must be exactly 11 characters';
+  
+  return '';
+
+    case 'BankName':
+      if (value && value.length > 100) return 'Bank name must not exceed 100 characters';
+      return '';
+
+    case 'BankAddress':
+      if (value && value.length > 500) return 'Bank address must not exceed 500 characters';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  // Returns filtered value based on field type
+  switch (fieldName) {
+    case 'firstName':
+    case 'lastName':
+    case 'AccountHolderName':
+    case 'BankName':
+      return value.replace(/[^a-zA-Z\s]/g, '');
+    
+    case 'mobile':
+    case 'altMobile':
+    case 'AccountNo':
+      return value.replace(/[^0-9]/g, '');
+
+    case 'employeeCode':
+      return value
+        .replace(/[^A-Za-z0-9_-]/g, '') 
+        .toUpperCase();                   
+
+    case 'qualification':
+    case 'specialization':
+      return value.replace(/[^a-zA-Z\s.,()]/g, '');
+
+    case 'universityName':
+      return value.replace(/[^a-zA-Z\s]/g, '');
+    
+    case 'licenseNo':
+    case 'pfNo':
+    case 'esiNo':
+      return value.replace(/[^A-Za-z0-9-_]/g, '');
+
+    case 'idNumber':
+      return value.replace(/[^A-Za-z0-9]/g, ''),value.toUpperCase();
+    
+    case 'IFSCCode':
+      return value.replace(/[^A-Z0-9]/g, ''),value.toUpperCase();
+    
+    case 'experienceYears':
+      return value.replace(/[^0-9]/g, '');
+    
+    default:
+      return value;
+  }
+};
+
+const getMaxBirthDate = () => {
+  const today = new Date();
+  const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+  return maxDate.toISOString().split('T')[0];
+};
+
+const getTodayDate = () => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
+
 // ────────────────────────────────────────────────
 // CONSTANTS
 // ────────────────────────────────────────────────
+
 const GENDER_OPTIONS = [
   { id: 1, label: 'Male' },
   { id: 2, label: 'Female' },
@@ -63,7 +293,6 @@ const DESIGNATION_OPTIONS = [
   { id: 10, label: 'Others' },
 ];
 
-// ADD: Workdays constant
 const WORK_DAYS = [
   { id: 1, label: 'Sunday' },
   { id: 2, label: 'Monday' },
@@ -76,15 +305,10 @@ const WORK_DAYS = [
 
 // ────────────────────────────────────────────────
 const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
-  // Current step state (1-4)
   const [currentStep, setCurrentStep] = useState(1);
   const [createdEmployeeId, setCreatedEmployeeId] = useState(null);
-
-  // ADD: Shift list state
   const [shifts, setShifts] = useState([]);
   const [shiftsLoading, setShiftsLoading] = useState(false);
-
-  // Step 1: Basic Employee Information
   const [formData, setFormData] = useState({
     employeeCode: '',
     firstName: '',
@@ -114,14 +338,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     photoFileId: 0,
   });
 
-  // Photo upload states (Step 1)
   const [photo, setPhoto] = useState(null);
   const [photoUrl, setPhotoUrl] = useState(null);
   const [photoUploaded, setPhotoUploaded] = useState(false);
   const [photoUploadStatus, setPhotoUploadStatus] = useState('');
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
 
-  // Step 2: Employee Proof Details
   const [proofData, setProofData] = useState({
     proofType: 0,
     idNumber: '',
@@ -136,7 +358,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
   const [proofUploadStatus, setProofUploadStatus] = useState('');
   const [isProofUploading, setIsProofUploading] = useState(false);
 
-  // Step 3: Beneficiary Account Details
   const [beneficiaryData, setBeneficiaryData] = useState({
     AccountHolderName: '',
     AccountNo: '',
@@ -146,33 +367,30 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     IsDefault: false,
   });
 
-  // Step 4: Shift Details
   const [shiftData, setShiftData] = useState({
     ShiftID: 0,
   });
 
-  // ADD: Selected workdays state
   const [selectedWorkDays, setSelectedWorkDays] = useState([]);
-
-  // Form states
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
+  const [validationMessages, setValidationMessages] = useState({});
+  const [proofValidationMessages, setProofValidationMessages] = useState({});
+  const [beneficiaryValidationMessages, setBeneficiaryValidationMessages] = useState({});
 
-  // ADD: Fetch shifts when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchShifts();
     }
   }, [isOpen]);
 
-  // ADD: Function to fetch shifts
   const fetchShifts = async () => {
     setShiftsLoading(true);
     try {
       const clinicId = localStorage.getItem('clinicID');
       const shiftList = await getShiftList(clinicId ? Number(clinicId) : 0, {
-        Status: 1 // Only fetch active shifts
+        Status: 1 
       });
       setShifts(shiftList);
     } catch (err) {
@@ -183,7 +401,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     }
   };
 
-  // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
       resetForm();
@@ -255,6 +472,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
 
     setFormError('');
     setFormSuccess(false);
+    setValidationMessages({});
+    setProofValidationMessages({});
+    setBeneficiaryValidationMessages({});
   };
 
   // ────────────────────────────────────────────────
@@ -329,12 +549,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     setFormData((prev) => ({ ...prev, photoFileId: 0 }));
   };
 
-  // ────────────────────────────────────────────────
-  // ID Proof Upload Handlers (Step 2)
-  // ────────────────────────────────────────────────
   const handleProofFileUpload = (e) => {
     const file = e.target.files[0];
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024; 
 
     if (!file) {
       setProofUploadStatus('No file selected.');
@@ -411,20 +628,54 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
   // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    const filteredValue = filterInput(name, value);
+    
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
   };
 
   const handleProofInputChange = (e) => {
     const { name, value } = e.target;
-    setProofData((prev) => ({ ...prev, [name]: value }));
+    
+    const filteredValue = filterInput(name, value);
+    
+    setProofData((prev) => ({ ...prev, [name]: filteredValue }));
+
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setProofValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
   };
 
   const handleBeneficiaryInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setBeneficiaryData((prev) => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
-    }));
+    
+    if (type === 'checkbox') {
+      setBeneficiaryData((prev) => ({ 
+        ...prev, 
+        [name]: checked 
+      }));
+    } else {
+      const filteredValue = filterInput(name, value);
+      
+      setBeneficiaryData((prev) => ({ 
+        ...prev, 
+        [name]: filteredValue 
+      }));
+
+      const validationMessage = getLiveValidationMessage(name, filteredValue);
+      setBeneficiaryValidationMessages((prev) => ({
+        ...prev,
+        [name]: validationMessage,
+      }));
+    }
   };
 
   const handleShiftInputChange = (e) => {
@@ -432,7 +683,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     setShiftData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ADD: Workday toggle handler
   const handleWorkDayToggle = (dayId) => {
     setSelectedWorkDays((prev) => {
       if (prev.includes(dayId)) {
@@ -443,9 +693,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     });
   };
 
-  // ────────────────────────────────────────────────
-  // Step 1: Submit Basic Employee Info
-  // ────────────────────────────────────────────────
   const handleStep1Submit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
@@ -489,8 +736,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
       setCreatedEmployeeId(result.employeeId);
       setFormSuccess(true);
       setFormError('');
-      
-      // Move to step 2 after short delay
       setTimeout(() => {
         setFormSuccess(false);
         setCurrentStep(2);
@@ -503,9 +748,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Step 2: Submit Employee Proof
-  // ────────────────────────────────────────────────
   const handleStep2Submit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
@@ -533,7 +775,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
       setFormSuccess(true);
       setFormError('');
       
-      // Move to step 3 after short delay
       setTimeout(() => {
         setFormSuccess(false);
         setCurrentStep(3);
@@ -546,9 +787,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Step 3: Submit Beneficiary Account
-  // ────────────────────────────────────────────────
   const handleStep3Submit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
@@ -576,7 +814,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
       setFormSuccess(true);
       setFormError('');
       
-      // Move to step 4 after short delay
       setTimeout(() => {
         setFormSuccess(false);
         setCurrentStep(4);
@@ -589,9 +826,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Step 4: Submit Employee Shift AND Workdays (Final Step)
-  // ────────────────────────────────────────────────
   const handleStep4Submit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
@@ -639,9 +873,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Navigation handlers
-  // ────────────────────────────────────────────────
   const handlePrevious = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
@@ -664,9 +895,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
 
   if (!isOpen) return null;
 
-  // ────────────────────────────────────────────────
-  // Render step content
-  // ────────────────────────────────────────────────
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -751,6 +979,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   value={formData.employeeCode}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.employeeCode && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.employeeCode}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -763,6 +997,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   value={formData.firstName}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.firstName && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.firstName}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -775,6 +1015,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   value={formData.lastName}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.lastName && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.lastName}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -796,7 +1042,14 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   name="birthDate"
                   value={formData.birthDate}
                   onChange={handleInputChange}
+                  max={getMaxBirthDate()}
                 />
+                
+                {validationMessages.birthDate && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.birthDate}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -838,6 +1091,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   value={formData.address}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.address && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.address}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -849,7 +1108,14 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   name="mobile"
                   value={formData.mobile}
                   onChange={handleInputChange}
+                  maxLength="10"
                 />
+                
+                {validationMessages.mobile && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.mobile}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -858,7 +1124,14 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   name="altMobile"
                   value={formData.altMobile}
                   onChange={handleInputChange}
+                  maxLength="10"
                 />
+                
+                {validationMessages.altMobile && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.altMobile}
+                  </span>
+                )}
               </div>
 
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -869,6 +1142,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   value={formData.email}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.email && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.email}
+                  </span>
+                )}
               </div>
 
               {/* Professional Information */}
@@ -919,6 +1198,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   value={formData.qualification}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.qualification && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.qualification}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -928,6 +1213,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   value={formData.specialization}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.specialization && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.specialization}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -937,6 +1228,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   value={formData.licenseNo}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.licenseNo && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.licenseNo}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -946,7 +1243,14 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   name="licenseExpiryDate"
                   value={formData.licenseExpiryDate}
                   onChange={handleInputChange}
+                  min={getTodayDate()}
                 />
+                
+                {validationMessages.licenseExpiryDate && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.licenseExpiryDate}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -958,6 +1262,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   onChange={handleInputChange}
                   min="0"
                 />
+                
+                {validationMessages.experienceYears && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.experienceYears}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -967,6 +1277,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   value={formData.universityName}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.universityName && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.universityName}
+                  </span>
+                )}
               </div>
 
               {/* Other Details */}
@@ -975,11 +1291,23 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
               <div className={styles.formGroup}>
                 <label>PF Number</label>
                 <input name="pfNo" value={formData.pfNo} onChange={handleInputChange} />
+                
+                {validationMessages.pfNo && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.pfNo}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
                 <label>ESI Number</label>
                 <input name="esiNo" value={formData.esiNo} onChange={handleInputChange} />
+                
+                {validationMessages.esiNo && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.esiNo}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -1099,13 +1427,51 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 <label>
                   ID Number <span className={styles.required}>*</span>
                 </label>
-                <input
-                  required
-                  name="idNumber"
-                  value={proofData.idNumber}
-                  onChange={handleProofInputChange}
-                  placeholder="Enter ID number"
-                />
+               <input
+  required
+  name="idNumber"
+  value={proofData.idNumber}
+  onChange={handleProofInputChange}
+  onKeyDown={(e) => {
+    const char = e.key;
+    
+    if (
+      char === 'Backspace' ||
+      char === 'Delete' ||
+      char === 'ArrowLeft' ||
+      char === 'ArrowRight' ||
+      char === 'Tab' ||
+      char === 'Enter' ||
+      e.ctrlKey || e.metaKey
+    ) {
+      return;
+    }
+
+    if (!/^[A-Za-z0-9]$/.test(char)) {
+      e.preventDefault(); 
+    }
+  }}
+  onPaste={(e) => {
+    e.preventDefault();
+    const pasted = (e.clipboardData || window.clipboardData).getData('text');
+    const clean = pasted.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const input = e.target;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const newValue =
+      proofData.idNumber.substring(0, start) +
+      clean +
+      proofData.idNumber.substring(end);
+    
+    handleProofInputChange({
+      target: {
+        name: 'idNumber',
+        value: newValue
+      }
+    });
+  }}
+  placeholder="Enter ID number"
+/>
               </div>
 
               <div className={styles.formGroup}>
@@ -1116,6 +1482,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   onChange={handleProofInputChange}
                   placeholder="Additional details (optional)"
                 />
+                
+                {proofValidationMessages.detail && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {proofValidationMessages.detail}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -1125,7 +1497,14 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   name="expiryDate"
                   value={proofData.expiryDate}
                   onChange={handleProofInputChange}
+                  min={getTodayDate()}
                 />
+                
+                {proofValidationMessages.expiryDate && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {proofValidationMessages.expiryDate}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -1163,6 +1542,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   onChange={handleBeneficiaryInputChange}
                   placeholder="Enter account holder name"
                 />
+                
+                {beneficiaryValidationMessages.AccountHolderName && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {beneficiaryValidationMessages.AccountHolderName}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -1176,6 +1561,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   onChange={handleBeneficiaryInputChange}
                   placeholder="Enter account number"
                 />
+                
+                {beneficiaryValidationMessages.AccountNo && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {beneficiaryValidationMessages.AccountNo}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -1187,8 +1578,15 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   name="IFSCCode"
                   value={beneficiaryData.IFSCCode}
                   onChange={handleBeneficiaryInputChange}
-                  placeholder="Enter IFSC code"
+                  placeholder="e.g., HDFC0000269"
+                  maxLength="11"
                 />
+                
+                {beneficiaryValidationMessages.IFSCCode && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {beneficiaryValidationMessages.IFSCCode}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -1199,6 +1597,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   onChange={handleBeneficiaryInputChange}
                   placeholder="Enter bank name"
                 />
+                
+                {beneficiaryValidationMessages.BankName && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {beneficiaryValidationMessages.BankName}
+                  </span>
+                )}
               </div>
 
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -1210,6 +1614,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   onChange={handleBeneficiaryInputChange}
                   placeholder="Enter bank address (optional)"
                 />
+                
+                {beneficiaryValidationMessages.BankAddress && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {beneficiaryValidationMessages.BankAddress}
+                  </span>
+                )}
               </div>
 
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>

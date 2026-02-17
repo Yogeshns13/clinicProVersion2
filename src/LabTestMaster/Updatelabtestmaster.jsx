@@ -7,9 +7,6 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './LabMaster.module.css';
 
-// ────────────────────────────────────────────────
-// CONSTANTS
-// ────────────────────────────────────────────────
 const TEST_TYPES = [
   { id: 1, label: 'Blood' },
   { id: 2, label: 'Urine' },
@@ -25,6 +22,85 @@ const STATUS_OPTIONS = [
   { id: 2, label: 'Inactive' },
   { id: 3, label: 'Deprecated' },
 ];
+
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'TestName':
+      if (!value || !value.trim()) return 'Test name is required';
+      if (value.trim().length < 3) return 'Test name must be at least 3 characters';
+      if (value.trim().length > 100) return 'Test name must not exceed 100 characters';
+      return '';
+
+    case 'ShortName':
+      if (!value || !value.trim()) return 'Short name is required';
+      if (value.trim().length < 2) return 'Short name must be at least 2 characters';
+      if (value.trim().length > 20) return 'Short name must not exceed 20 characters';
+      return '';
+
+    case 'Description':
+      if (value && value.length > 500) return 'Description must not exceed 500 characters';
+      return '';
+
+    case 'Fees':
+      if (value === '' || value === null || value === undefined) return '';
+      const fees = Number(value);
+      if (isNaN(fees)) return 'Must be a valid number';
+      if (fees < 0) return 'Fees cannot be negative';
+      if (fees > 999999) return 'Fees cannot exceed 999,999';
+      return '';
+
+ case 'NormalRange':
+  if (value && /[a-zA-Z]/.test(value)) return 'Normal range cannot contain letters';
+  if (value && value.length > 50) return 'Normal range must not exceed 50 characters';
+  return '';
+
+   // In getLiveValidationMessage function:
+case 'Units':
+  if (value && /[0-9]/.test(value)) return 'Units cannot contain numbers';
+  if (value && /[^a-zA-Z\s]/.test(value)) return 'Units cannot contain special characters';
+  if (value && value.length > 30) return 'Units must not exceed 30 characters';
+  return '';
+
+
+    case 'CGSTPercentage':
+    case 'SGSTPercentage':
+      if (value === '' || value === null || value === undefined) return '';
+      const percent = Number(value);
+      if (isNaN(percent)) return 'Must be a valid number';
+      if (percent < 0) return 'Cannot be negative';
+      if (percent > 100) return 'Cannot exceed 100%';
+      return '';
+
+    case 'Remarks':
+      if (value && value.length > 500) return 'Remarks must not exceed 500 characters';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+
+        case 'TestName':
+        case 'ShortName':
+      return value.replace(/[^a-zA-Z\s]/g, '');
+    case 'Fees':
+    case 'CGSTPercentage':
+    case 'SGSTPercentage':
+      return value.replace(/[^0-9.]/g, '');
+
+            case 'Units':
+  return value.replace(/[^a-zA-Z\s]/g, '');
+    
+      case 'NormalRange':
+  return value.replace(/[a-zA-Z]/g, '');
+    
+    default:
+      return value;
+  }
+};
 
 // ────────────────────────────────────────────────
 const UpdateLabTestMaster = () => {
@@ -54,6 +130,7 @@ const UpdateLabTestMaster = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
+  const [validationMessages, setValidationMessages] = useState({});
 
   // ────────────────────────────────────────────────
   useEffect(() => {
@@ -108,7 +185,14 @@ const UpdateLabTestMaster = () => {
   // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const filteredValue = filterInput(name, value);
+    
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
   };
 
   const handleBack = () => {
@@ -222,6 +306,12 @@ const UpdateLabTestMaster = () => {
                   onChange={handleInputChange}
                   placeholder="e.g., Complete Blood Count"
                 />
+                
+                {validationMessages.TestName && (
+                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
+                    {validationMessages.TestName}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -235,6 +325,12 @@ const UpdateLabTestMaster = () => {
                   onChange={handleInputChange}
                   placeholder="e.g., CBC"
                 />
+                
+                {validationMessages.ShortName && (
+                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
+                    {validationMessages.ShortName}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -265,6 +361,12 @@ const UpdateLabTestMaster = () => {
                   onChange={handleInputChange}
                   placeholder="0.00"
                 />
+                
+                {validationMessages.Fees && (
+                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
+                    {validationMessages.Fees}
+                  </span>
+                )}
               </div>
 
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -276,6 +378,12 @@ const UpdateLabTestMaster = () => {
                   onChange={handleInputChange}
                   placeholder="Brief description of the test"
                 />
+                
+                {validationMessages.Description && (
+                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
+                    {validationMessages.Description}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -286,6 +394,12 @@ const UpdateLabTestMaster = () => {
                   onChange={handleInputChange}
                   placeholder="e.g., 4.5-11.0"
                 />
+                
+                {validationMessages.NormalRange && (
+                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
+                    {validationMessages.NormalRange}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -296,6 +410,12 @@ const UpdateLabTestMaster = () => {
                   onChange={handleInputChange}
                   placeholder="e.g., cells/mcL"
                 />
+                
+                {validationMessages.Units && (
+                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
+                    {validationMessages.Units}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -307,6 +427,12 @@ const UpdateLabTestMaster = () => {
                   value={formData.CGSTPercentage}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.CGSTPercentage && (
+                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
+                    {validationMessages.CGSTPercentage}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -318,6 +444,12 @@ const UpdateLabTestMaster = () => {
                   value={formData.SGSTPercentage}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.SGSTPercentage && (
+                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
+                    {validationMessages.SGSTPercentage}
+                  </span>
+                )}
               </div>
 
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -329,6 +461,12 @@ const UpdateLabTestMaster = () => {
                   onChange={handleInputChange}
                   placeholder="Additional notes"
                 />
+                
+                {validationMessages.Remarks && (
+                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
+                    {validationMessages.Remarks}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>

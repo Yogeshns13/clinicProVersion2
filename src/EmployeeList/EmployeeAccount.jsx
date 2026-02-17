@@ -13,16 +13,100 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import './EmployeeAccount.css';
 
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'accountHolderName':
+      if (!value || !value.trim()) return 'Account holder name is required';
+      if (value.trim().length < 3) return 'Name must be at least 3 characters';
+      if (value.trim().length > 100) return 'Name must not exceed 100 characters';
+      return '';
+
+    case 'accountNo':
+      if (!value || !value.trim()) return 'Account number is required';
+      if (!/^\d+$/.test(value.trim())) return 'Account number must contain only digits';
+      if (value.trim().length < 9) return 'Account number must be at least 9 digits';
+      return '';
+
+    case 'ifscCode':
+      if (!value || !value.trim()) return 'IFSC code is required';
+      
+      const ifscValue = value.trim();
+      
+      // First 4 characters must be letters
+      if (ifscValue.length > 0 && ifscValue.length <= 4) {
+        if (!/^[A-Z]+$/.test(ifscValue)) {
+          return 'First 4 characters must be letters only';
+        }
+      }
+      
+      // 5th character must be 0
+      if (ifscValue.length === 5) {
+        if (!/^[A-Z]{4}0$/.test(ifscValue)) {
+          return '5th character must be 0';
+        }
+      }
+      
+      // After 5th position, check format
+      if (ifscValue.length > 5) {
+        if (!/^[A-Z]{4}0\d*$/.test(ifscValue)) {
+          return 'After 5th character, only numbers allowed (no letters or special characters)';
+        }
+      }
+      
+      // Length validation
+      if (ifscValue.length < 11) return 'IFSC code must be 11 characters';
+      if (ifscValue.length === 11) {
+        if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscValue)) {
+          return 'Invalid IFSC format (e.g., HDFC0000269)';
+        }
+      }
+      if (ifscValue.length > 11) return 'IFSC code must be exactly 11 characters';
+      
+      return '';
+
+    case 'bankName':
+      if (value && value.length > 100) return 'Bank name must not exceed 100 characters';
+      return '';
+
+    case 'bankAddress':
+      if (value && value.length > 500) return 'Bank address must not exceed 500 characters';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+    case 'accountHolderName':
+    case 'bankName':
+      // Only letters and spaces allowed
+      return value.replace(/[^a-zA-Z\s]/g, '');
+    
+    case 'accountNo':
+      // Only numbers allowed
+      return value.replace(/[^0-9]/g, '');
+    
+    case 'ifscCode':
+      // Only uppercase letters and numbers
+      return value.replace(/[^A-Z0-9]/g, '').toUpperCase();
+    
+    default:
+      return value;
+  }
+};
+
 // ────────────────────────────────────────────────
 const EmployeeAccount = () => {
-  const { id } = useParams(); // Employee ID from URL
+  const { id } = useParams();
   const navigate = useNavigate();
   const [employee, setEmployee] = useState(null);
   const [accountList, setAccountList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
+  const [modalMode, setModalMode] = useState('add');
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [formData, setFormData] = useState({
     accountHolderName: '',
@@ -33,19 +117,16 @@ const EmployeeAccount = () => {
     isDefault: false,
   });
 
-  // Form submission states
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
 
-  // Delete confirmation states
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [validationMessages, setValidationMessages] = useState({});
 
-  // ────────────────────────────────────────────────
-  // Fetch employee details and account list
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -55,7 +136,6 @@ const EmployeeAccount = () => {
         const clinicId = Number(localStorage.getItem('clinicID'));
         const branchId = Number(localStorage.getItem('branchID'));
 
-        // Fetch employee details
         const empData = await getEmployeeList(clinicId, {
           EmployeeID: Number(id),
           BranchID: branchId
@@ -68,7 +148,6 @@ const EmployeeAccount = () => {
           return;
         }
 
-        // Fetch employee beneficiary account list (pass -1 to get all)
         const accountData = await getEmployeeBeneficiaryAccountList(clinicId, {
           BranchID: branchId,
           EmployeeID: Number(id),
@@ -94,8 +173,6 @@ const EmployeeAccount = () => {
     }
   }, [id]);
 
-  // ────────────────────────────────────────────────
-  // Helper functions
   const formatDate = (dateString) => {
     if (!dateString) return '—';
     try {
@@ -125,9 +202,6 @@ const EmployeeAccount = () => {
     return `${masked}-${lastFour}`;
   };
 
-  // ────────────────────────────────────────────────
-  // Modal Handlers
-  // ────────────────────────────────────────────────
   const handleOpenAddModal = () => {
     setModalMode('add');
     setSelectedAccount(null);
@@ -141,6 +215,7 @@ const EmployeeAccount = () => {
     });
     setFormError('');
     setFormSuccess(false);
+    setValidationMessages({});
     setIsModalOpen(true);
   };
 
@@ -157,6 +232,7 @@ const EmployeeAccount = () => {
     });
     setFormError('');
     setFormSuccess(false);
+    setValidationMessages({});
     setIsModalOpen(true);
   };
 
@@ -173,17 +249,25 @@ const EmployeeAccount = () => {
     });
     setFormError('');
     setFormSuccess(false);
+    setValidationMessages({});
   };
 
-  // ────────────────────────────────────────────────
-  // Form Handlers
-  // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
-    }));
+    
+    if (type === 'checkbox') {
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+    } else {
+      const filteredValue = filterInput(name, value);
+      
+      setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+
+      const validationMessage = getLiveValidationMessage(name, filteredValue);
+      setValidationMessages((prev) => ({
+        ...prev,
+        [name]: validationMessage,
+      }));
+    }
   };
 
   const handleFormSubmit = async (e) => {
@@ -212,7 +296,6 @@ const EmployeeAccount = () => {
         await addEmployeeBeneficiaryAccount(payload);
         setFormSuccess(true);
         
-        // Refresh account list
         setTimeout(async () => {
           const accountData = await getEmployeeBeneficiaryAccountList(clinicId, {
             BranchID: branchId,
@@ -223,13 +306,11 @@ const EmployeeAccount = () => {
           handleCloseModal();
         }, 1500);
       } else {
-        // Update mode
         payload.BeneficiaryID = selectedAccount.beneficiaryId;
-        payload.Status = 1; // Keep active
+        payload.Status = 1;
         await updateEmployeeBeneficiaryAccount(payload);
         setFormSuccess(true);
         
-        // Refresh account list
         setTimeout(async () => {
           const accountData = await getEmployeeBeneficiaryAccountList(clinicId, {
             BranchID: branchId,
@@ -248,9 +329,6 @@ const EmployeeAccount = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Delete Handlers
-  // ────────────────────────────────────────────────
   const handleOpenDeleteModal = (account) => {
     setAccountToDelete(account);
     setDeleteError('');
@@ -275,7 +353,6 @@ const EmployeeAccount = () => {
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
 
-      // Refresh account list
       const accountData = await getEmployeeBeneficiaryAccountList(clinicId, {
         BranchID: branchId,
         EmployeeID: Number(id),
@@ -292,9 +369,6 @@ const EmployeeAccount = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Navigation Handlers
-  // ────────────────────────────────────────────────
   const handleBack = () => {
     navigate(`/view-employee/${id}`);
   };
@@ -305,8 +379,6 @@ const EmployeeAccount = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Early returns
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
@@ -317,23 +389,19 @@ const EmployeeAccount = () => {
 
   if (!employee) return <div className="clinic-error">Employee not found</div>;
 
-  // ────────────────────────────────────────────────
   return (
     <div className="clinic-list-wrapper">
       <ErrorHandler error={error} />
       <Header title="Employee Beneficiary Account" />
 
-      {/* Back Button */}
       <div className="clinic-toolbar">
         <button onClick={handleBack} className="clinic-back-btn">
           <FiArrowLeft size={20} /> Back to Employee Details
         </button>
       </div>
 
-      {/* Employee Details Card */}
       <div className="employee-details-card">
         
-        {/* Header Section with Tabs */}
         <div className="details-card-header">
           <div className="employee-header-info">
             <h2>
@@ -347,7 +415,6 @@ const EmployeeAccount = () => {
             </span>
           </div>
 
-          {/* Tab Navigation */}
           <div className="employee-tabs">
             <button
               className="tab-button"
@@ -376,7 +443,6 @@ const EmployeeAccount = () => {
           </div>
         </div>  
 
-        {/* Account List Body */}
         <div className="details-card-body">
           
           {accountList.length === 0 ? (
@@ -464,7 +530,6 @@ const EmployeeAccount = () => {
         </div>
       </div>
 
-      {/* Add/Edit Modal */}
       {isModalOpen && (
         <div className="clinic-modal-overlay" onClick={handleCloseModal}>
           <div className="clinic-modal form-modal" onClick={(e) => e.stopPropagation()}>
@@ -493,6 +558,11 @@ const EmployeeAccount = () => {
                     onChange={handleInputChange}
                     placeholder="Enter account holder name"
                   />
+                  {validationMessages.accountHolderName && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {validationMessages.accountHolderName}
+                    </span>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -506,6 +576,11 @@ const EmployeeAccount = () => {
                     onChange={handleInputChange}
                     placeholder="Enter account number"
                   />
+                  {validationMessages.accountNo && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {validationMessages.accountNo}
+                    </span>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -517,9 +592,14 @@ const EmployeeAccount = () => {
                     name="ifscCode"
                     value={formData.ifscCode}
                     onChange={handleInputChange}
-                    placeholder="Enter IFSC code"
-                    style={{ textTransform: 'uppercase' }}
+                    placeholder="e.g., HDFC0000269"
+                    maxLength="11"
                   />
+                  {validationMessages.ifscCode && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {validationMessages.ifscCode}
+                    </span>
+                  )}
                 </div>
 
                 <div className="form-group full-width">
@@ -530,6 +610,11 @@ const EmployeeAccount = () => {
                     onChange={handleInputChange}
                     placeholder="Enter bank name"
                   />
+                  {validationMessages.bankName && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {validationMessages.bankName}
+                    </span>
+                  )}
                 </div>
 
                 <div className="form-group full-width">
@@ -540,6 +625,11 @@ const EmployeeAccount = () => {
                     onChange={handleInputChange}
                     placeholder="Enter bank address (optional)"
                   />
+                  {validationMessages.bankAddress && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {validationMessages.bankAddress}
+                    </span>
+                  )}
                 </div>
 
                 <div className="form-group full-width">
@@ -568,7 +658,6 @@ const EmployeeAccount = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && accountToDelete && (
         <div className="clinic-modal-overlay" onClick={handleCloseDeleteModal}>
           <div className="clinic-modal delete-modal" onClick={(e) => e.stopPropagation()}>

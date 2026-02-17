@@ -16,8 +16,14 @@ import {
   FiCheckCircle,
   FiX,
   FiPercent,
+  FiEdit2,
 } from 'react-icons/fi';
-import { getSalesCartDetailList, generatePharmacyInvoice } from '../api/api-pharmacy.js';
+import {
+  getSalesCartDetailList,
+  generatePharmacyInvoice,
+  deleteSalesCartDetail,
+  addSalesCartDetail,
+} from '../api/api-pharmacy.js';
 import Header from '../Header/Header.jsx';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import styles from './SalesCartDetailList.module.css';
@@ -48,6 +54,17 @@ const SalesCartDetailList = () => {
     message:     '',
   });
 
+  // ── Update Quantity modal state ───────────────────────
+  const [updateQty, setUpdateQty] = useState({
+    isOpen:       false,
+    item:         null,      // the full cart detail item being edited
+    newQty:       '',
+    newDiscount:  '',        // discount % for this line item
+    submitting:   false,
+    error:        null,
+    success:      false,
+  });
+
   // ─────────────────────────────────────────────────────
   // FETCH
   // ─────────────────────────────────────────────────────
@@ -69,7 +86,12 @@ const SalesCartDetailList = () => {
         BranchID: branchId,
         PageSize: 100,
       });
-      setDetails(data);
+      // Auto-delete cancelled (status 3) items silently, then show the rest
+      const cancelled = data.filter((item) => item.status === 3);
+      if (cancelled.length > 0) {
+        await Promise.allSettled(cancelled.map((item) => deleteSalesCartDetail(item.id)));
+      }
+      setDetails(data.filter((item) => item.status !== 3));
     } catch (err) {
       setError(
         err?.status >= 400 || err?.code >= 400
@@ -214,6 +236,94 @@ const SalesCartDetailList = () => {
   };
 
   // ─────────────────────────────────────────────────────
+  // UPDATE QUANTITY MODAL HANDLERS
+  // ─────────────────────────────────────────────────────
+  const openUpdateQtyModal = (item) => {
+    setUpdateQty({
+      isOpen:       true,
+      item,
+      newQty:       String(item.quantity ?? ''),
+      newDiscount:  String(Number(item.discountPercentage) || 0),
+      submitting:   false,
+      error:        null,
+      success:      false,
+    });
+  };
+
+  const closeUpdateQtyModal = () => {
+    if (updateQty.submitting) return;
+    setUpdateQty((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const handleUpdateQty = async () => {
+    const newQtyVal = Number(updateQty.newQty);
+
+    if (!updateQty.newQty || isNaN(newQtyVal) || newQtyVal <= 0 || !Number.isInteger(newQtyVal)) {
+      setUpdateQty((prev) => ({
+        ...prev,
+        error: 'Please enter a valid whole number greater than 0.',
+      }));
+      return;
+    }
+
+    const newDiscountVal = Number(updateQty.newDiscount) || 0;
+    if (isNaN(newDiscountVal) || newDiscountVal < 0 || newDiscountVal > 100) {
+      setUpdateQty((prev) => ({
+        ...prev,
+        error: 'Discount must be a number between 0 and 100.',
+      }));
+      return;
+    }
+
+    setUpdateQty((prev) => ({ ...prev, submitting: true, error: null }));
+
+    const item     = updateQty.item;
+    const clinicId = Number(localStorage.getItem('clinicID'));
+    const branchId = Number(localStorage.getItem('branchID'));
+
+    // ── Phase 1: Delete existing cart detail ──────────────
+    try {
+      await deleteSalesCartDetail(item.id);
+    } catch (err) {
+      setUpdateQty((prev) => ({
+        ...prev,
+        submitting: false,
+        error: `Delete failed: ${err.message || 'Could not remove existing item. No changes made.'}`,
+      }));
+      return; // abort — nothing was changed yet
+    }
+
+    // ── Phase 2: Re-add with updated quantity & discount ──
+    try {
+      await addSalesCartDetail({
+        CartID:             item.cartId,
+        MedicineID:         item.medicineId,
+        Quantity:           newQtyVal,
+        UnitPrice:          Number(item.unitPrice) || 0,
+        DiscountPercentage: newDiscountVal,
+        BatchSelection:     'FEFO',   // selection strategy — NOT the batch number string
+        clinicId,
+        branchId,
+      });
+    } catch (err) {
+      // Delete already succeeded — keep modal open so the user sees the warning clearly
+      setUpdateQty((prev) => ({
+        ...prev,
+        submitting: false,
+        error: `⚠️ Item was deleted but could not be re-added: ${err.message || 'Please add it manually.'}`,
+      }));
+      return; // do NOT call fetchDetails here — let the user read the error first
+    }
+
+    // ── Done: close modal and refresh list ────────────────
+    setUpdateQty((prev) => ({ ...prev, submitting: false, success: true }));
+    setTimeout(() => {
+      setUpdateQty((prev) => ({ ...prev, isOpen: false }));
+      fetchDetails();
+    }, 900);
+  };
+
+  // ─────────────────────────────────────────────────────
   // EARLY RETURN
   // ─────────────────────────────────────────────────────
   if (error && (error?.status >= 400 || error?.code >= 400)) {
@@ -349,6 +459,7 @@ const SalesCartDetailList = () => {
                     <th>SGST</th>
                     <th>Net Amount</th>
                     <th>Status</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -386,6 +497,17 @@ const SalesCartDetailList = () => {
                           {item.statusDesc}
                         </span>
                       </td>
+                      {/* ── Update Qty action ── */}
+                      <td className={styles.actionCell}>
+                        <button
+                          className={styles.updateQtyBtn}
+                          onClick={() => openUpdateQtyModal(item)}
+                          title="Update Quantity"
+                        >
+                          <FiEdit2 size={13} />
+                          Qty
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -396,7 +518,7 @@ const SalesCartDetailList = () => {
                     <td className={styles.footerCell}>{fmt(totals.cgst)}</td>
                     <td className={styles.footerCell}>{fmt(totals.sgst)}</td>
                     <td className={styles.footerCell}>{fmt(totals.netAmount)}</td>
-                    <td />
+                    <td /><td />
                   </tr>
                 </tfoot>
               </table>
@@ -574,6 +696,198 @@ const SalesCartDetailList = () => {
               <div className={styles.modalFooter}>
                 <button className={styles.btnYes} onClick={closeInvoiceModal}>
                   Done
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ══ UPDATE QUANTITY MODAL ══ */}
+      {updateQty.isOpen && updateQty.item && (
+        <div
+          className={styles.modalOverlay}
+          onClick={!updateQty.submitting ? closeUpdateQtyModal : undefined}
+        >
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+
+            {/* ── Header ── */}
+            <div className={`${styles.modalHeader} ${styles.uqModalHeader}`}>
+              <div className={styles.modalHeaderContent}>
+                <div className={`${styles.modalHeaderIcon} ${styles.uqHeaderIcon}`}>
+                  <FiEdit2 size={19} />
+                </div>
+                <div>
+                  <h2 className={`${styles.modalTitle} ${styles.uqModalTitle}`}>
+                    Update Quantity & Discount
+                  </h2>
+                  <p className={styles.modalSubtitle}>
+                    {updateQty.item.medicineName}
+                  </p>
+                </div>
+              </div>
+              {!updateQty.submitting && !updateQty.success && (
+                <button className={styles.modalClose} onClick={closeUpdateQtyModal}>
+                  <FiX size={16} />
+                </button>
+              )}
+            </div>
+
+            {/* ── Body ── */}
+            <div className={styles.modalBody}>
+
+              {/* Success flash */}
+              {updateQty.success && (
+                <div className={styles.successState}>
+                  <div className={styles.successIconWrap}>
+                    <FiCheckCircle size={48} />
+                  </div>
+                  <h3>Updated Successfully!</h3>
+                  <p className={styles.successMsg}>
+                    <strong>{updateQty.item.medicineName}</strong> — qty set to{' '}
+                    <strong>{updateQty.newQty}</strong>{' '}
+                    {Number(updateQty.newDiscount) > 0 && (
+                      <>with <strong>{Number(updateQty.newDiscount).toFixed(2)}%</strong> discount</>
+                    )}.
+                  </p>
+                </div>
+              )}
+
+              {!updateQty.success && (
+                <>
+                  {/* Current info strip */}
+                  <div className={styles.uqInfoStrip}>
+                    <div className={styles.uqInfoBlock}>
+                      <span className={styles.uqInfoLabel}>Medicine</span>
+                      <span className={styles.uqInfoVal}>{updateQty.item.medicineName}</span>
+                    </div>
+                    {updateQty.item.batchNo && (
+                      <div className={styles.uqInfoBlock}>
+                        <span className={styles.uqInfoLabel}>Batch</span>
+                        <span className={styles.uqInfoVal}>{updateQty.item.batchNo}</span>
+                      </div>
+                    )}
+                    <div className={styles.uqInfoBlock}>
+                      <span className={styles.uqInfoLabel}>Current Qty</span>
+                      <span className={`${styles.uqInfoVal} ${styles.uqCurrQty}`}>
+                        {updateQty.item.quantity}
+                      </span>
+                    </div>
+                    <div className={styles.uqInfoBlock}>
+                      <span className={styles.uqInfoLabel}>Current Disc.</span>
+                      <span className={`${styles.uqInfoVal} ${styles.uqCurrDiscount}`}>
+                        {Number(updateQty.item.discountPercentage) > 0
+                          ? `${Number(updateQty.item.discountPercentage).toFixed(2)}%`
+                          : '—'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* ── Quantity input ── */}
+                  <div className={styles.inputGroup}>
+                    <label className={styles.inputLabel}>
+                      New Quantity
+                    </label>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        placeholder="Enter new quantity"
+                        value={updateQty.newQty}
+                        onChange={(e) =>
+                          setUpdateQty((prev) => ({
+                            ...prev,
+                            newQty: e.target.value,
+                            error: null,
+                          }))
+                        }
+                        className={`${styles.discountInput} ${styles.uqInput}`}
+                        disabled={updateQty.submitting}
+                        autoFocus
+                      />
+                    </div>
+                    <span className={styles.inputHint}>
+                      Enter whole numbers only (e.g. 5, 10, 25)
+                    </span>
+                  </div>
+
+                  {/* ── Discount input ── */}
+                  <div className={styles.inputGroup}>
+                    <label className={styles.inputLabel}>
+                      <FiPercent size={13} />
+                      Discount (%)
+                    </label>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        placeholder="Enter discount % (0 – 100)"
+                        value={updateQty.newDiscount}
+                        onChange={(e) =>
+                          setUpdateQty((prev) => ({
+                            ...prev,
+                            newDiscount: e.target.value,
+                            error: null,
+                          }))
+                        }
+                        className={`${styles.discountInput} ${styles.uqInput} ${styles.uqDiscountInput}`}
+                        disabled={updateQty.submitting}
+                      />
+                      <span className={`${styles.inputSuffix} ${styles.uqInputSuffix}`}>%</span>
+                    </div>
+                    <span className={styles.inputHint}>
+                      Leave 0 for no discount (0 – 100)
+                    </span>
+                  </div>
+
+                  {/* Error banner */}
+                  {updateQty.error && (
+                    <div className={styles.errorBanner}>
+                      <FiAlertCircle size={15} />
+                      <span>{updateQty.error}</span>
+                    </div>
+                  )}
+
+                  {/* Progress banner */}
+                  {updateQty.submitting && (
+                    <div className={`${styles.progressBanner} ${styles.uqProgressBanner}`}>
+                      <div className={`${styles.modalSpinner} ${styles.uqSpinner}`} />
+                      <span>Updating, please wait...</span>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* ── Footer ── */}
+            {!updateQty.success && (
+              <div className={styles.modalFooter}>
+                <button
+                  className={styles.btnNo}
+                  onClick={closeUpdateQtyModal}
+                  disabled={updateQty.submitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  className={`${styles.btnYes} ${styles.uqBtnYes}`}
+                  onClick={handleUpdateQty}
+                  disabled={updateQty.submitting}
+                >
+                  {updateQty.submitting ? (
+                    <>
+                      <div className={styles.btnSpinner} />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <FiCheckCircle size={15} />
+                      Update
+                    </>
+                  )}
                 </button>
               </div>
             )}

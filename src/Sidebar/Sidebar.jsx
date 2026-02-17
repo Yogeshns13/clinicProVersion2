@@ -41,7 +41,7 @@ const Sidebar = () => {
       id: "clinic",
       icon: FiLayers,
       label: "Clinic",
-      roles: ["admin", "spradmin","doctor","fronttdesk", "nurse", "pharmacy", "labtest", "accounts"],
+      roles: ["admin", "spradmin","fronttdesk", "nurse", "pharmacy", "labtest", "accounts"],
       hasDropdown: true,
       subItems: [
         {to: "/clinic-list", label: "Clinic", roles: ["admin", "spradmin", "doctor", "fronttdesk", "nurse", "pharmacy", "labtest", "accounts"],},
@@ -71,7 +71,7 @@ const Sidebar = () => {
         {to: "/slotconfig-list", label: "SlotConfig List", roles: ["admin", "spradmin", "fronttdesk"],},
         {to: "/slot-list", label: "Slot List", roles: ["admin", "spradmin", "nurse", "doctor", "fronttdesk"],},
         {to: "/appointment-list", label: "Appointment List", roles: ["admin", "spradmin", "fronttdesk","doctor", "nurse"],},
-        {to: "/patientvisit-list", label: "Patient Visit", roles: ["admin", "spradmin", "fronttdesk","doctor","nurse"],},
+        {to: "/patientvisit-list", label: "Patient Visit", roles: ["admin", "spradmin", "fronttdesk","nurse"],},
       ],
     },
     {

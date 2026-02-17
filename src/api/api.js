@@ -12,7 +12,7 @@ export const getUserId = () => {
 };
 
 const UPLOAD_API_URL = '/upload';
-const FILE_API_URL = 'http://192.168.0.3:5002/file';
+const FILE_API_URL = 'https://cp-api.techchasesoftwarehost.in/file';
 
 const baseURL = "/api";
 const API = axios.create({

@@ -17,13 +17,38 @@ import {
 import { addDepartment } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import styles from './DepartmentList.module.css'; // CSS Module import
+import styles from './DepartmentList.module.css'; 
+
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'departmentName':
+      if (!value || !value.trim()) return 'Department name is required';
+      if (value.trim().length < 3) return 'Department name must be at least 3 characters';
+      if (value.trim().length > 100) return 'Department name must not exceed 100 characters';
+      return '';
+
+    case 'profile':
+      if (value && value.length > 500) return 'Description must not exceed 500 characters';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+    case 'departmentName':
+      return value.replace(/[^a-zA-Z\s]/g, '');
+    
+    default:
+      return value;
+  }
+};
 
 // ────────────────────────────────────────────────
 const DepartmentList = () => {
   const navigate = useNavigate();
-
-  // Data & Filter
   const [departments, setDepartments] = useState([]);
   const [allDepartments, setAllDepartments] = useState([]);
   const [clinics, setClinics] = useState([]);
@@ -32,13 +57,9 @@ const DepartmentList = () => {
   const [selectedBranchId, setSelectedBranchId] = useState('all');
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Selected / Modal
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Add Form Modal
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [formData, setFormData] = useState({
     clinicId: '',
@@ -50,9 +71,8 @@ const DepartmentList = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
+  const [validationMessages, setValidationMessages] = useState({});
 
-  // ────────────────────────────────────────────────
-  // Data fetching with cache
   useEffect(() => {
     const fetchClinics = async () => {
       try {
@@ -162,6 +182,7 @@ const DepartmentList = () => {
     });
     setFormError('');
     setFormSuccess(false);
+    setValidationMessages({}); 
     setIsAddFormOpen(true);
   };
 
@@ -170,16 +191,25 @@ const DepartmentList = () => {
     setFormLoading(false);
     setFormError('');
     setFormSuccess(false);
+    setValidationMessages({}); 
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
+    const filteredValue = filterInput(name, value);
+    
     if (name === 'clinicId') {
-      setFormData((prev) => ({ ...prev, [name]: value, branchId: '' }));
+      setFormData((prev) => ({ ...prev, [name]: filteredValue, branchId: '' }));
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: filteredValue }));
     }
+
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -463,6 +493,12 @@ const DepartmentList = () => {
                     value={formData.departmentName}
                     onChange={handleInputChange}
                   />
+                  
+                  {validationMessages.departmentName && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {validationMessages.departmentName}
+                    </span>
+                  )}
                 </div>
 
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -473,6 +509,12 @@ const DepartmentList = () => {
                     value={formData.profile}
                     onChange={handleInputChange}
                   />
+                  
+                  {validationMessages.profile && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {validationMessages.profile}
+                    </span>
+                  )}
                 </div>
               </div>
 

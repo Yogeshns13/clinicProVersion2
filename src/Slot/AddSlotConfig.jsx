@@ -9,6 +9,61 @@ const DURATION_OPTIONS = [
   { id: 3, label: 'Specific Day', createDays: 1 },
 ];
 
+const getLiveValidationMessage = (fieldName, value, formData = {}) => {
+  switch (fieldName) {
+    case 'doctorId':
+      if (!value) return 'Please select a doctor';
+      return '';
+
+    case 'shiftId':
+      if (!value) return 'Please select a shift';
+      return '';
+
+    case 'duration':
+      if (!value) return 'Please select duration type';
+      return '';
+
+    case 'slotDate':
+      if (Number(formData.duration) === 3 && !value) {
+        return 'Please select a specific date';
+      }
+      if (value) {
+        const selected = new Date(value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        selected.setHours(0, 0, 0, 0);
+        if (selected < today) {
+          return 'Past dates are not allowed';
+        }
+      }
+      return '';
+
+    case 'slotInterval':
+      if (!value) return 'Slot interval is required';
+      const num = Number(value);
+      if (isNaN(num)) return 'Must be a number';
+      if (num < 5) return 'Minimum 5 minutes';
+      if (num > 120) return 'Maximum 120 minutes';
+      if (num % 5 !== 0) return 'Must be multiple of 5';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+    case 'slotInterval':
+      return value.replace(/[^0-9]/g, '');
+    case 'slotDate':
+      return value; 
+    default:
+      return value;
+  }
+};
+
+// ────────────────────────────────────────────────
 const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSuccess }) => {
   const [formData, setFormData] = useState({
     doctorId: '',
@@ -23,8 +78,8 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [validationMessages, setValidationMessages] = useState({});
 
-  // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
       setFormData({
@@ -37,6 +92,7 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
       setCreateSlotDays(0);
       setError('');
       setSuccess('');
+      setValidationMessages({});
     }
   }, [isOpen]);
 
@@ -63,7 +119,6 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
 
       setAvailableShifts(filtered);
 
-      // Reset shift if not valid anymore
       if (formData.shiftId && !doctorShiftIds.includes(Number(formData.shiftId))) {
         setFormData(prev => ({ ...prev, shiftId: '' }));
       }
@@ -77,12 +132,39 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    const filteredValue = filterInput(name, value);
+
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: filteredValue
     }));
+
+    // Live validation
+    const message = getLiveValidationMessage(name, filteredValue, formData);
+    setValidationMessages(prev => ({
+      ...prev,
+      [name]: message
+    }));
+
     setError('');
     setSuccess('');
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    ['doctorId', 'shiftId', 'duration', 'slotInterval'].forEach(field => {
+      const msg = getLiveValidationMessage(field, formData[field], formData);
+      if (msg) errors[field] = msg;
+    });
+
+    if (Number(formData.duration) === 3) {
+      const msg = getLiveValidationMessage('slotDate', formData.slotDate, formData);
+      if (msg) errors.slotDate = msg;
+    }
+
+    setValidationMessages(prev => ({ ...prev, ...errors }));
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
@@ -90,28 +172,8 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
     setError('');
     setSuccess('');
 
-    if (!formData.doctorId) {
-      setError('Please select a doctor');
-      return;
-    }
-
-    if (!formData.shiftId) {
-      setError('Please select a shift');
-      return;
-    }
-
-    if (!formData.duration) {
-      setError('Please select duration type');
-      return;
-    }
-
-    if (Number(formData.duration) === 3 && !formData.slotDate) {
-      setError('Please select a specific date');
-      return;
-    }
-
-    if (!formData.slotInterval || formData.slotInterval <= 0) {
-      setError('Please enter a valid slot interval');
+    if (!validateForm()) {
+      setError('Please correct the errors shown below');
       return;
     }
 
@@ -192,6 +254,11 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
                     </option>
                   ))}
                 </select>
+                {validationMessages.doctorId && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.doctorId}
+                  </span>
+                )}
               </div>
 
               {/* Shift Selection */}
@@ -219,6 +286,11 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
                     </option>
                   ))}
                 </select>
+                {validationMessages.shiftId && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.shiftId}
+                  </span>
+                )}
               </div>
 
               {/* Duration Type */}
@@ -240,6 +312,11 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
                     </option>
                   ))}
                 </select>
+                {validationMessages.duration && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.duration}
+                  </span>
+                )}
               </div>
 
               {/* Slot Interval */}
@@ -259,6 +336,11 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
                   disabled={loading}
                   placeholder="e.g., 15"
                 />
+                {validationMessages.slotInterval && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.slotInterval}
+                  </span>
+                )}
               </div>
 
               {/* Specific Date */}
@@ -276,6 +358,11 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
                     disabled={loading}
                     min={new Date().toISOString().split('T')[0]}
                   />
+                  {validationMessages.slotDate && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {validationMessages.slotDate}
+                    </span>
+                  )}
                 </div>
               )}
 

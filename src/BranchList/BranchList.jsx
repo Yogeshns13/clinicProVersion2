@@ -17,6 +17,55 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './BranchList.module.css';
 
+const getLiveValidationMessage = (fieldName, value) => {
+  // Returns validation message while typing (empty string = valid)
+  switch (fieldName) {
+    case 'branchName':
+      if (!value || !value.trim()) return 'Branch name is required';
+      if (value.trim().length < 3) return 'Branch name must be at least 3 characters';
+      if (value.trim().length > 100) return 'Branch name must not exceed 100 characters';
+      return '';
+
+    case 'address':
+      if (value && value.length > 500) return 'Address must not exceed 500 characters';
+      return '';
+
+     case 'latitude':
+      if (value === '') return '';
+      const lat = Number(value);
+      if (isNaN(lat)) return 'Please enter a valid number';
+      if (lat < -90 || lat > 90) return 'Latitude must be between -90 and 90';
+      return '';
+
+    case 'longitude':
+      if (value === '') return '';
+      const lng = Number(value);
+      if (isNaN(lng)) return 'Please enter a valid number';
+      if (lng < -180 || lng > 180) return 'Longitude must be between -180 and 180';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  // Returns filtered value based on field type
+  switch (fieldName) {
+    case 'branchName':
+       return value.replace(/[^a-zA-Z\s]/g, '');
+case 'latitude':
+case 'longitude':
+  return value
+    .replace(/[^0-9.-]/g, '')
+    .replace(/(\..*)\./g, '$1')
+    .replace(/(?!^)-/g, '');
+    
+    default:
+      return value;
+  }
+};
+
 // ────────────────────────────────────────────────
 // CONSTANTS
 // ────────────────────────────────────────────────
@@ -33,31 +82,30 @@ const BRANCH_TYPES = [
 const BranchList = () => {
   const navigate = useNavigate();
 
-  // Data & Filter
+  
   const [branches, setBranches] = useState([]);
   const [allBranches, setAllBranches] = useState([]);
   const [clinics, setClinics] = useState([]);
   const [selectedClinicId, setSelectedClinicId] = useState('all');
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Selected / Modal
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Add Form Modal
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    clinicId: '',
-    branchName: '',
-    address: '',
-    location: '',
-    branchType: 1,
-  });
+const [formData, setFormData] = useState({
+  clinicId: '',
+  branchName: '',
+  address: '',
+  location: '',
+  latitude: '',
+  longitude: '',
+  branchType: 1,
+});
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
+  const [validationMessages, setValidationMessages] = useState({});
 
   // ────────────────────────────────────────────────
   // Data fetching with cache
@@ -138,15 +186,18 @@ const BranchList = () => {
   const closeModal = () => setSelectedBranch(null);
 
   const openAddForm = () => {
-    setFormData({
-      clinicId: '',
-      branchName: '',
-      address: '',
-      location: '',
-      branchType: 1,
-    });
+setFormData({
+  clinicId: '',
+  branchName: '',
+  address: '',
+  location: '',
+  latitude: '',
+  longitude: '',
+  branchType: 1,
+});
     setFormError('');
     setFormSuccess(false);
+    setValidationMessages({}); 
     setIsAddFormOpen(true);
   };
 
@@ -155,13 +206,36 @@ const BranchList = () => {
     setFormLoading(false);
     setFormError('');
     setFormSuccess(false);
+    setValidationMessages({}); 
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  const filteredValue = filterInput(name, value);
 
+  if (name === 'latitude' || name === 'longitude') {
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: filteredValue };
+
+      const lat = name === 'latitude' ? filteredValue : (prev.latitude || '');
+      const lng = name === 'longitude' ? filteredValue : (prev.longitude || '');
+
+      updated.location = [lat.trim(), lng.trim()]
+        .filter(Boolean)
+        .join(',');
+
+      return updated;
+    });
+  } else {
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+  }
+
+  const validationMessage = getLiveValidationMessage(name, filteredValue);
+  setValidationMessages((prev) => ({
+    ...prev,
+    [name]: validationMessage,
+  }));
+};
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
@@ -424,6 +498,12 @@ const BranchList = () => {
                     value={formData.branchName}
                     onChange={handleInputChange}
                   />
+                  
+                  {validationMessages.branchName && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {validationMessages.branchName}
+                    </span>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
@@ -452,16 +532,78 @@ const BranchList = () => {
                     value={formData.address}
                     onChange={handleInputChange}
                   />
+                  
+                  {validationMessages.address && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {validationMessages.address}
+                    </span>
+                  )}
                 </div>
 
-                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                  <label>Location (Area/City)</label>
-                  <input
-                    name="location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                  />
-                </div>
+<div className={`${styles.formGroup} ${styles.fullWidth}`}>
+  <label>Location Coordinates (optional)</label>
+  <div style={{
+    display: 'flex',
+    gap: '12px',
+    marginTop: '6px',
+    flexWrap: 'wrap'
+  }}>
+    <div style={{ flex: '1', minWidth: '140px' }}>
+      <input
+        type="number"
+        step="any"
+        min="-90"
+        max="90"
+        name="latitude"
+        placeholder="Latitude e.g. 9.9252"
+        value={formData.latitude || ''}
+        onChange={handleInputChange}
+      />
+      {validationMessages.latitude && (
+        <span style={{
+          color: '#4c4f55',
+          fontSize: '12px',
+          marginTop: '4px',
+          display: 'block'
+        }}>
+          {validationMessages.latitude}
+        </span>
+      )}
+    </div>
+
+    <div style={{ flex: '1', minWidth: '140px' }}>
+      <input
+        type="number"
+        step="any"
+        min="-180"
+        max="180"
+        name="longitude"
+        placeholder="Longitude e.g. 78.1198"
+        value={formData.longitude || ''}
+        onChange={handleInputChange}
+      />
+      {validationMessages.longitude && (
+        <span style={{
+          color: '#4c4f55',
+          fontSize: '12px',
+          marginTop: '4px',
+          display: 'block'
+        }}>
+          {validationMessages.longitude}
+        </span>
+      )}
+    </div>
+  </div>
+
+  <small style={{
+    fontSize: '12px',
+    color: '#6b7280',
+    marginTop: '6px',
+    display: 'block'
+  }}>
+    Example: 9.9252,78.1198 (Madurai city center)
+  </small>
+</div>
               </div>
 
               <div className={styles.modalFooter}>

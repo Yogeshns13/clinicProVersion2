@@ -80,6 +80,8 @@ const ConsultationList = () => {
 
       const data = await getPatientVisitList(clinicId, options);
 
+      
+
       const unconsultedVisits = data.filter(visit => 
   visit.consultationId === 0 && 
   visit.status === 1

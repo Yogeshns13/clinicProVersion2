@@ -7,6 +7,232 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './ClinicList.module.css';
 
+const getLiveValidationMessage = (fieldName, value) => {
+  // Returns validation message while typing (empty string = valid)
+  switch (fieldName) {
+    case 'clinicName':
+      if (!value || !value.trim()) return 'Clinic name is required';
+      if (value.trim().length < 3) return 'Clinic name must be at least 3 characters';
+      if (value.trim().length > 100) return 'Clinic name must not exceed 100 characters';
+      return '';
+
+    case 'ownerName':
+      if (!value || !value.trim()) return 'Owner name is required';
+      if (value.trim().length < 3) return 'Owner name must be at least 3 characters';
+      if (value.trim().length > 100) return 'Owner name must not exceed 100 characters';
+      return '';
+
+    case 'mobile':
+      if (!value || !value.trim()) return 'Mobile number is required';
+      if (value.trim().length < 10) return 'Mobile number must be 10 digits';
+      if (value.trim().length === 10) {
+        if (!/^[6-9]\d{9}$/.test(value.trim())) {
+          return 'Mobile number must start with 6-9';
+        }
+      }
+      if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
+      return '';
+
+    case 'altMobile':
+      if (value && value.trim()) {
+        if (value.trim().length < 10) return 'Mobile number must be 10 digits';
+        if (value.trim().length === 10) {
+          if (!/^[6-9]\d{9}$/.test(value.trim())) {
+            return 'Mobile number must start with 6-9';
+          }
+        }
+        if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
+      }
+      return '';
+
+    case 'email':
+      if (value && value.trim()) {
+        if (!value.includes('@')) return 'Email must contain @';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
+          return 'Please enter a valid email address';
+        }
+      }
+      return '';
+
+    case 'gstNo':
+  if (!value || value === '') return ''; 
+  
+  const len = value.length;
+  
+  if (len >= 1) {
+    if (!/^[0-9]$/.test(value[0])) {
+      return 'Char 1: Must be digit (State Code)';
+    }
+  }
+  
+  if (len >= 2) {
+    if (!/^[0-9]$/.test(value[1])) {
+      return 'Char 2: Must be digit (State Code)';
+    }
+  }
+  
+  if (len >= 3) {
+    if (!/^[A-Z]$/.test(value[2])) {
+      return 'Char 3: Must be uppercase letter (PAN letter 1/5)';
+    }
+  }
+  
+  if (len >= 4) {
+    if (!/^[A-Z]$/.test(value[3])) {
+      return 'Char 4: Must be uppercase letter (PAN letter 2/5)';
+    }
+  }
+  
+  if (len >= 5) {
+    if (!/^[A-Z]$/.test(value[4])) {
+      return 'Char 5: Must be uppercase letter (PAN letter 3/5)';
+    }
+  }
+  
+  if (len >= 6) {
+    if (!/^[A-Z]$/.test(value[5])) {
+      return 'Char 6: Must be uppercase letter (PAN letter 4/5)';
+    }
+  }
+  
+  if (len >= 7) {
+    if (!/^[A-Z]$/.test(value[6])) {
+      return 'Char 7: Must be uppercase letter (PAN letter 5/5)';
+    }
+  }
+  
+  if (len >= 8) {
+    if (!/^[0-9]$/.test(value[7])) {
+      return 'Char 8: Must be digit (PAN number 1/4)';
+    }
+  }
+  
+  if (len >= 9) {
+    if (!/^[0-9]$/.test(value[8])) {
+      return 'Char 9: Must be digit (PAN number 2/4)';
+    }
+  }
+  
+  if (len >= 10) {
+    if (!/^[0-9]$/.test(value[9])) {
+      return 'Char 10: Must be digit (PAN number 3/4)';
+    }
+  }
+  
+  if (len >= 11) {
+    if (!/^[0-9]$/.test(value[10])) {
+      return 'Char 11: Must be digit (PAN number 4/4)';
+    }
+  }
+  
+  if (len >= 12) {
+    if (!/^[A-Z]$/.test(value[11])) {
+      return 'Char 12: Must be uppercase letter (PAN last letter)';
+    }
+  }
+  
+  if (len >= 13) {
+    if (!/^[1-9A-Z]$/.test(value[12])) {
+      return 'Char 13: Must be 1-9 or A-Z (Entity number, not 0)';
+    }
+  }
+  
+  if (len >= 14) {
+    if (value[13] !== 'Z') {
+      return 'Char 14: Must be Z (fixed)';
+    }
+  }
+  
+  if (len >= 15) {
+    if (!/^[0-9A-Z]$/.test(value[14])) {
+      return 'Char 15: Must be digit or uppercase letter (Checksum)';
+    }
+  }
+  
+  if (len < 15) {
+    return `${len}/15 characters entered`;
+  }
+  
+  if (len === 15) {
+    return 'Valid GST format (29ABCDE1234F1Z5)';
+  }
+  
+  return '';
+
+    case 'cgstPercentage':
+    case 'sgstPercentage':
+      if (value === '' || value === null || value === undefined) return '';
+      const num = Number(value);
+      if (isNaN(num)) return 'Must be a number';
+      if (num < 0) return 'Cannot be negative';
+      if (num > 100) return 'Cannot exceed 100';
+      return '';
+
+    case 'fileNoPrefix':
+    case 'invoicePrefix':
+      if (value && value.trim()) {
+        if (value.trim().length > 10) return 'Must not exceed 10 characters';
+        if (!/^[A-Za-z0-9-_]*$/.test(value.trim())) {
+          return 'Only letters, numbers, hyphens, and underscores allowed';
+        }
+      }
+      return '';
+
+    case 'lastFileSeq':
+      if (value === '' || value === null || value === undefined) return '';
+      const seq = Number(value);
+      if (isNaN(seq)) return 'Must be a number';
+      if (seq < 0) return 'Cannot be negative';
+      return '';
+
+    case 'address':
+      if (value && value.length > 500) return 'Address must not exceed 500 characters';
+      return '';
+
+    case 'location':
+      if (value && value.length > 100) return 'Location must not exceed 100 characters';
+      return '';
+
+    case 'clinicType':
+      if (value && value.length > 50) return 'Clinic type must not exceed 50 characters';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+
+  switch (fieldName) {
+    case 'clinicName':
+    case 'ownerName':
+    case 'location':
+    case 'clinicType':
+      return value.replace(/[^a-zA-Z\s]/g, '');
+    
+    case 'mobile':
+    case 'altMobile':
+      return value.replace(/[^0-9]/g, '');
+
+    case 'gstNo':
+      const filtered = value.replace(/[^A-Z0-9]/g, '');
+      return filtered.substring(0, 15),value.toUpperCase();
+    
+    case 'fileNoPrefix':
+    case 'invoicePrefix':
+      return value.replace(/[^A-Za-z0-9-_]/g, ''),value.toUpperCase();
+    
+    case 'cgstPercentage':
+    case 'sgstPercentage':
+    case 'lastFileSeq':
+      return value.replace(/[^0-9.]/g, '');
+    
+    default:
+      return value;
+  }
+};
+
 // ────────────────────────────────────────────────
 const STATUS_OPTIONS = [
   { id: 1, label: 'Active' },
@@ -44,6 +270,8 @@ const UpdateClinic = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
+
+  const [validationMessages, setValidationMessages] = useState({});
 
   // ────────────────────────────────────────────────
   useEffect(() => {
@@ -98,7 +326,16 @@ const UpdateClinic = () => {
   // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    const filteredValue = filterInput(name, value);
+    
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
   };
 
   const handleBack = () => {
@@ -209,6 +446,12 @@ const UpdateClinic = () => {
                   value={formData.clinicName}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.clinicName && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.clinicName}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -218,6 +461,12 @@ const UpdateClinic = () => {
                   value={formData.clinicType}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.clinicType && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.clinicType}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -230,6 +479,12 @@ const UpdateClinic = () => {
                   value={formData.ownerName}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.ownerName && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.ownerName}
+                  </span>
+                )}
               </div>
 
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -240,6 +495,12 @@ const UpdateClinic = () => {
                   value={formData.address}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.address && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.address}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -249,6 +510,12 @@ const UpdateClinic = () => {
                   value={formData.location}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.location && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.location}
+                  </span>
+                )}
               </div>
 
               <h3 className={styles.formSectionTitle}>Contact Information</h3>
@@ -262,7 +529,14 @@ const UpdateClinic = () => {
                   name="mobile"
                   value={formData.mobile}
                   onChange={handleInputChange}
+                  maxLength="10"
                 />
+                
+                {validationMessages.mobile && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.mobile}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -271,7 +545,14 @@ const UpdateClinic = () => {
                   name="altMobile"
                   value={formData.altMobile}
                   onChange={handleInputChange}
+                  maxLength="10"
                 />
+                
+                {validationMessages.altMobile && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.altMobile}
+                  </span>
+                )}
               </div>
 
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -282,6 +563,12 @@ const UpdateClinic = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.email && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.email}
+                  </span>
+                )}
               </div>
 
               <h3 className={styles.formSectionTitle}>Tax Information</h3>
@@ -293,6 +580,12 @@ const UpdateClinic = () => {
                   value={formData.gstNo}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.gstNo && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.gstNo}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -305,6 +598,12 @@ const UpdateClinic = () => {
                   min="0"
                   step="0.01"
                 />
+                
+                {validationMessages.cgstPercentage && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.cgstPercentage}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -317,27 +616,135 @@ const UpdateClinic = () => {
                   min="0"
                   step="0.01"
                 />
+                
+                {validationMessages.sgstPercentage && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.sgstPercentage}
+                  </span>
+                )}
               </div>
 
               <h3 className={styles.formSectionTitle}>Billing Configuration</h3>
 
               <div className={styles.formGroup}>
-                <label>File No Prefix</label>
-                <input
-                  name="fileNoPrefix"
-                  value={formData.fileNoPrefix}
-                  onChange={handleInputChange}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Invoice Prefix</label>
-                <input
-                  name="invoicePrefix"
-                  value={formData.invoicePrefix}
-                  onChange={handleInputChange}
-                />
-              </div>
+                               <label>File No Prefix</label>
+                               <input
+                                 name="fileNoPrefix"
+                                 value={formData.fileNoPrefix}
+                                 onChange={handleInputChange}
+                                  onKeyDown={(e) => {
+                 const char = e.key;
+             
+                 if (
+                   char === 'Backspace' ||
+                   char === 'Delete' ||
+                   char === 'ArrowLeft' ||
+                   char === 'ArrowRight' ||
+                   char === 'ArrowUp' ||
+                   char === 'ArrowDown' ||
+                   char === 'Tab' ||
+                   char === 'Enter' ||
+                   e.ctrlKey || e.metaKey   
+                 ) {
+                   return; 
+                 }
+             
+                 if (!/[A-Za-z0-9_-]/.test(char)) {
+                   e.preventDefault(); 
+                 }
+               }}
+               onPaste={(e) => {
+                 e.preventDefault();
+                 const pasted = (e.clipboardData || window.clipboardData).getData('text');
+                 const clean = pasted.replace(/[^A-Za-z0-9_-]/g, '');
+                 const input = e.target;
+                 const start = input.selectionStart;
+                 const end = input.selectionEnd;
+                 const newValue =
+                   input.value.substring(0, start) +
+                   clean +
+                   input.value.substring(end);
+                 setFormData((prev) => ({ ...prev, [input.name]: newValue }));
+               }}
+               placeholder="e.g. FILE-2026_DOC"
+               maxLength={20}
+                               />
+                               
+                               {validationMessages.fileNoPrefix && (
+                                 <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                                   {validationMessages.fileNoPrefix}
+                                 </span>
+                               )}
+                             </div>
+             
+                             <div className={styles.formGroup}>
+                               <label>Last File Sequence</label>
+                               <input
+                                 type="number"
+                                 name="lastFileSeq"
+                                 value={formData.lastFileSeq}
+                                 onChange={handleInputChange}
+                                 min="0"
+                               />
+                               
+                               {validationMessages.lastFileSeq && (
+                                 <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                                   {validationMessages.lastFileSeq}
+                                 </span>
+                               )}
+                             </div>
+             
+                             <div className={styles.formGroup}>
+                               <label>Invoice Prefix</label>
+                             <input
+               type="text"
+               name="invoicePrefix"
+               value={formData.invoicePrefix || ''}
+               onChange={handleInputChange}           
+               onKeyDown={(e) => {
+                 const char = e.key;
+            
+                 if (
+                   char === 'Backspace' ||
+                   char === 'Delete' ||
+                   char === 'ArrowLeft' ||
+                   char === 'ArrowRight' ||
+                   char === 'ArrowUp' ||
+                   char === 'ArrowDown' ||
+                   char === 'Tab' ||
+                   char === 'Enter' ||
+                   e.ctrlKey || e.metaKey  
+                 ) {
+                   return; 
+                 }
+             
+                 if (!/[A-Za-z0-9_-]/.test(char)) {
+                   e.preventDefault(); 
+                 }
+               }}
+               onPaste={(e) => {
+                 e.preventDefault();
+                 const pasted = (e.clipboardData || window.clipboardData).getData('text');
+                 const clean = pasted.replace(/[^A-Za-z0-9_-]/g, '');
+                 const input = e.target;
+                 const start = input.selectionStart;
+                 const end = input.selectionEnd;
+                 const newValue =
+                   input.value.substring(0, start) +
+                   clean +
+                   input.value.substring(end);
+                 setFormData((prev) => ({ ...prev, [input.name]: newValue }));
+               }}
+               placeholder="e.g. INV-2026_ABC"
+               maxLength={20}
+             />
+                               
+                               {validationMessages.invoicePrefix && (
+                                 <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                                   {validationMessages.invoicePrefix}
+                                 </span>
+                               )}
+                             </div>
 
               <div className={styles.formGroup}>
                 <label>

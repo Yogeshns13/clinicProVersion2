@@ -35,6 +35,74 @@ const PAYMENT_MODES = [
   { id: 8, label: 'Credit' }
 ];
 
+
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'paymentDate':
+      if (!value || value === '') return 'Payment date is required';
+      
+      const selectedDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      selectedDate.setHours(0, 0, 0, 0);
+      
+      if (selectedDate > today) {
+        return 'Payment date cannot be in the future';
+      }
+      
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      oneYearAgo.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < oneYearAgo) {
+        return 'Payment date cannot be more than 1 year old';
+      }
+      
+      return '';
+
+    case 'amount':
+      if (!value || value === '') return 'Amount is required';
+      const amount = Number(value);
+      if (isNaN(amount)) return 'Must be a valid number';
+      if (amount <= 0) return 'Amount must be greater than zero';
+      if (amount > 10000000) return 'Amount cannot exceed ₹1,00,00,000';
+      return '';
+
+    case 'referenceNo':
+      if (!value || value === '') return ''; 
+      if (value.trim().length < 3) return 'Reference number must be at least 3 characters';
+      if (value.trim().length > 50) return 'Reference number must not exceed 50 characters';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+    case 'amount':
+      
+      if (value === '') return value;
+      const numFiltered = value.replace(/[^0-9.]/g, '');
+
+      const parts = numFiltered.split('.');
+      if (parts.length > 2) {
+        return parts[0] + '.' + parts.slice(1).join('');
+      }
+      if (parts.length === 2 && parts[1].length > 2) {
+        return parts[0] + '.' + parts[1].substring(0, 2);
+      }
+      return numFiltered;
+    
+    case 'referenceNo':
+      return value.replace(/[^a-zA-Z0-9\-_\s]/g, '');
+    
+    default:
+      return value;
+  }
+};
+
 const InvoiceList = () => {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
@@ -65,6 +133,7 @@ const InvoiceList = () => {
     remarks: ''
   });
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [validationMessages, setValidationMessages] = useState({});
 
   const fetchInvoices = async () => {
     try {
@@ -182,6 +251,7 @@ const InvoiceList = () => {
     });
     setFormError(null);
     setFormSuccess(null);
+    setValidationMessages({}); 
     setIsPaymentModalOpen(true);
     setActiveDropdown(null);
   };
@@ -191,18 +261,56 @@ const InvoiceList = () => {
     setSelectedInvoice(null);
     setFormError(null);
     setFormSuccess(null);
+    setValidationMessages({}); 
+  };
+
+  const handlePaymentInputChange = (e) => {
+    const { name, value } = e.target;
+    
+    const filteredValue = filterInput(name, value);
+    
+    setPaymentData(prev => ({ ...prev, [name]: filteredValue }));
+
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
   };
 
   const handleAddPayment = async (e) => {
     e.preventDefault();
+    
+    const paymentDateValidation = getLiveValidationMessage('paymentDate', paymentData.paymentDate);
+    if (paymentDateValidation) {
+      setFormError(paymentDateValidation);
+      return;
+    }
+    
     if (!paymentData.paymentMode) {
       setFormError('Please select payment mode');
       return;
     }
+    
+    const amountValidation = getLiveValidationMessage('amount', paymentData.amount);
+    if (amountValidation) {
+      setFormError(amountValidation);
+      return;
+    }
+    
     if (!paymentData.amount || Number(paymentData.amount) <= 0) {
       setFormError('Please enter valid amount');
       return;
     }
+
+    if ([3, 4, 7].includes(Number(paymentData.paymentMode)) && paymentData.referenceNo) {
+      const refValidation = getLiveValidationMessage('referenceNo', paymentData.referenceNo);
+      if (refValidation) {
+        setFormError(refValidation);
+        return;
+      }
+    }
+    
     try {
       setFormLoading(true);
       setFormError(null);
@@ -240,11 +348,6 @@ const InvoiceList = () => {
     } catch (err) {
       setError({ message: err.message || 'Failed to cancel invoice' });
     }
-  };
-
-  const handlePaymentInputChange = (e) => {
-    const { name, value } = e.target;
-    setPaymentData(prev => ({ ...prev, [name]: value }));
   };
 
   const formatCurrency = (amount) => amount ? `₹${Number(amount).toFixed(2)}` : '₹0.00';
@@ -302,11 +405,23 @@ const InvoiceList = () => {
           <div className={styles.filterRow}>
             <div className={styles.filterGroup}>
               <label className={styles.filterLabel}>From Date</label>
-              <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className={styles.filterInput} />
+              <input 
+                type="date" 
+                value={fromDate} 
+                onChange={(e) => setFromDate(e.target.value)} 
+                max={today} 
+                className={styles.filterInput} 
+              />
             </div>
             <div className={styles.filterGroup}>
               <label className={styles.filterLabel}>To Date</label>
-              <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className={styles.filterInput} />
+              <input 
+                type="date" 
+                value={toDate} 
+                onChange={(e) => setToDate(e.target.value)} 
+                max={today} 
+                className={styles.filterInput} 
+              />
             </div>
             <div className={styles.filterGroup}>
               <label className={styles.filterLabel}>Patient Name</label>
@@ -467,21 +582,65 @@ const InvoiceList = () => {
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
                     <label>Payment Date <span className={styles.required}>*</span></label>
-                    <input type="date" name="paymentDate" value={paymentData.paymentDate} onChange={handlePaymentInputChange} disabled={formLoading} required />
+                    <input 
+                      type="date" 
+                      name="paymentDate" 
+                      value={paymentData.paymentDate} 
+                      onChange={handlePaymentInputChange}
+                      max={today}
+                      disabled={formLoading} 
+                      required 
+                    />
+                    {validationMessages.paymentDate && (
+                      <span style={{ 
+                        color: '#ef4444', 
+                        fontSize: '12px', 
+                        marginTop: '4px', 
+                        display: 'block' 
+                      }}>
+                        {validationMessages.paymentDate}
+                      </span>
+                    )}
                   </div>
+                  
                   <div className={styles.formGroup}>
                     <label>Payment Mode <span className={styles.required}>*</span></label>
-                    <select name="paymentMode" value={paymentData.paymentMode} onChange={handlePaymentInputChange} disabled={formLoading} required className={styles.formSelect}>
+                    <select 
+                      name="paymentMode" 
+                      value={paymentData.paymentMode} 
+                      onChange={handlePaymentInputChange} 
+                      disabled={formLoading} 
+                      required 
+                      className={styles.formSelect}
+                    >
                       <option value="">Select mode</option>
                       {PAYMENT_MODES.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
                     </select>
                   </div>
+                  
                   <div className={styles.formGroup}>
                     <label>Amount (₹) <span className={styles.required}>*</span></label>
-                    <input type="number" name="amount" value={paymentData.amount} onChange={handlePaymentInputChange} placeholder="0.00" step="0.01" min="0" disabled={formLoading} required />
+                    <input 
+                      type="text" 
+                      name="amount" 
+                      value={paymentData.amount} 
+                      onChange={handlePaymentInputChange} 
+                      placeholder="0.00" 
+                      disabled={formLoading} 
+                      required 
+                    />
+                    {validationMessages.amount && (
+                      <span style={{ 
+                        color: '#ef4444', 
+                        fontSize: '12px', 
+                        marginTop: '4px', 
+                        display: 'block' 
+                      }}>
+                        {validationMessages.amount}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Conditional Reference No field */}
                   {[3, 4, 7].includes(Number(paymentData.paymentMode)) && (
                     <div className={styles.formGroup}>
                       <label>Reference No</label>
@@ -492,13 +651,32 @@ const InvoiceList = () => {
                         onChange={handlePaymentInputChange}
                         placeholder="Transaction ID / Ref No"
                         disabled={formLoading}
+                        maxLength="50"
                       />
+                      {validationMessages.referenceNo && (
+                        <span style={{ 
+                          color: '#6b7280', 
+                          fontSize: '12px', 
+                          marginTop: '4px', 
+                          display: 'block' 
+                        }}>
+                          {validationMessages.referenceNo}
+                        </span>
+                      )}
                     </div>
                   )}
 
                   <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                     <label>Remarks</label>
-                    <textarea name="remarks" value={paymentData.remarks} onChange={handlePaymentInputChange} placeholder="Additional notes..." rows="3" disabled={formLoading} />
+                    <textarea 
+                      name="remarks" 
+                      value={paymentData.remarks} 
+                      onChange={handlePaymentInputChange} 
+                      placeholder="Additional notes..." 
+                      rows="3" 
+                      disabled={formLoading}
+                      maxLength="500"
+                    />
                   </div>
                 </div>
               </div>

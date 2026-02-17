@@ -12,6 +12,182 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import './ConsultationChargeConfig.css';
 
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'chargeCode':
+      if (!value || !value.trim()) return 'Charge code is required';
+      if (/[a-z]/.test(value)) return 'Charge code cannot contain lowercase letters';
+      if (/[^A-Z0-9]/.test(value)) return 'Charge code can only contain uppercase letters and numbers';
+      if (value.trim().length < 3) return 'Charge code must be at least 3 characters';
+      if (value.trim().length > 20) return 'Charge code must not exceed 20 characters';
+      return '';
+
+    case 'chargeName':
+      if (!value || !value.trim()) return 'Charge name is required';
+      if (/[0-9]/.test(value)) return 'Charge name cannot contain numbers';
+      if (/[^a-zA-Z\s]/.test(value)) return 'Charge name can only contain letters and spaces';
+      if (value.trim().length < 2) return 'Charge name must be at least 2 characters';
+      if (value.trim().length > 100) return 'Charge name must not exceed 100 characters';
+      return '';
+
+    case 'gstNo':
+  if (!value || value === '') return ''; 
+  
+  const len = value.length;
+  
+  if (len >= 1) {
+    if (!/^[0-9]$/.test(value[0])) {
+      return 'Char 1: Must be digit (State Code)';
+    }
+  }
+  
+  if (len >= 2) {
+    if (!/^[0-9]$/.test(value[1])) {
+      return 'Char 2: Must be digit (State Code)';
+    }
+  }
+  
+  if (len >= 3) {
+    if (!/^[A-Z]$/.test(value[2])) {
+      return 'Char 3: Must be uppercase letter (PAN letter 1/5)';
+    }
+  }
+  
+  if (len >= 4) {
+    if (!/^[A-Z]$/.test(value[3])) {
+      return 'Char 4: Must be uppercase letter (PAN letter 2/5)';
+    }
+  }
+  
+  if (len >= 5) {
+    if (!/^[A-Z]$/.test(value[4])) {
+      return 'Char 5: Must be uppercase letter (PAN letter 3/5)';
+    }
+  }
+  
+  if (len >= 6) {
+    if (!/^[A-Z]$/.test(value[5])) {
+      return 'Char 6: Must be uppercase letter (PAN letter 4/5)';
+    }
+  }
+  
+  if (len >= 7) {
+    if (!/^[A-Z]$/.test(value[6])) {
+      return 'Char 7: Must be uppercase letter (PAN letter 5/5)';
+    }
+  }
+  
+  if (len >= 8) {
+    if (!/^[0-9]$/.test(value[7])) {
+      return 'Char 8: Must be digit (PAN number 1/4)';
+    }
+  }
+  
+  if (len >= 9) {
+    if (!/^[0-9]$/.test(value[8])) {
+      return 'Char 9: Must be digit (PAN number 2/4)';
+    }
+  }
+  
+  if (len >= 10) {
+    if (!/^[0-9]$/.test(value[9])) {
+      return 'Char 10: Must be digit (PAN number 3/4)';
+    }
+  }
+  
+  if (len >= 11) {
+    if (!/^[0-9]$/.test(value[10])) {
+      return 'Char 11: Must be digit (PAN number 4/4)';
+    }
+  }
+  
+  if (len >= 12) {
+    if (!/^[A-Z]$/.test(value[11])) {
+      return 'Char 12: Must be uppercase letter (PAN last letter)';
+    }
+  }
+  
+  if (len >= 13) {
+    if (!/^[1-9A-Z]$/.test(value[12])) {
+      return 'Char 13: Must be 1-9 or A-Z (Entity number, not 0)';
+    }
+  }
+  
+  if (len >= 14) {
+    if (value[13] !== 'Z') {
+      return 'Char 14: Must be Z (fixed)';
+    }
+  }
+  
+  if (len >= 15) {
+    if (!/^[0-9A-Z]$/.test(value[14])) {
+      return 'Char 15: Must be digit or uppercase letter (Checksum)';
+    }
+  }
+  
+  if (len < 15) {
+    return `${len}/15 characters entered`;
+  }
+  
+  if (len === 15) {
+    return 'Valid GST format (29ABCDE1234F1Z5)';
+  }
+  
+  return '';
+
+
+    case 'defaultAmount':
+      if (!value || value === '') return 'Default amount is required';
+      const amount = Number(value);
+      if (isNaN(amount)) return 'Must be a valid number';
+      if (amount < 0) return 'Amount cannot be negative';
+      if (amount === 0) return 'Amount must be greater than zero';
+      if (amount > 1000000) return 'Amount cannot exceed ₹10,00,000';
+      return '';
+
+    case 'cgstPercentage':
+    case 'sgstPercentage':
+      if (value === '' || value === null || value === undefined) return ''; // Optional
+      const percentage = Number(value);
+      if (isNaN(percentage)) return 'Must be a valid number';
+      if (percentage < 0) return 'Percentage cannot be negative';
+      if (percentage > 100) return 'Percentage cannot exceed 100%';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+ case 'chargeCode':
+  return value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    
+    case 'chargeName':
+      return value.replace(/[^a-zA-Z\s]/g, '');
+    
+    case 'gstNo':
+      const filtered = value.replace(/[^A-Z0-9]/g, '');
+      return filtered.substring(0, 15),value.toUpperCase();
+    
+    case 'defaultAmount':
+    case 'cgstPercentage':
+    case 'sgstPercentage':
+      if (value === '') return value;
+      const numFiltered = value.replace(/[^0-9.]/g, '');
+      const parts = numFiltered.split('.');
+      if (parts.length > 2) {
+        return parts[0] + '.' + parts.slice(1).join('');
+      }
+      return numFiltered;
+    
+    default:
+      return value;
+  }
+};
+
 const ConsultationChargeConfig = () => {
   const [chargeConfigs, setChargeConfigs] = useState([]);
   const [allChargeConfigs, setAllChargeConfigs] = useState([]);
@@ -36,6 +212,8 @@ const ConsultationChargeConfig = () => {
     cgstPercentage: '',
     sgstPercentage: ''
   });
+
+  const [validationMessages, setValidationMessages] = useState({});
 
   const fetchChargeConfigs = async () => {
     try {
@@ -97,6 +275,7 @@ const ConsultationChargeConfig = () => {
     });
     setFormError(null);
     setFormSuccess(null);
+    setValidationMessages({}); 
     setIsFormOpen(true);
   };
 
@@ -114,6 +293,7 @@ const ConsultationChargeConfig = () => {
     });
     setFormError(null);
     setFormSuccess(null);
+    setValidationMessages({}); 
     setIsFormOpen(true);
   };
 
@@ -123,11 +303,19 @@ const ConsultationChargeConfig = () => {
     setSelectedConfig(null);
     setFormError(null);
     setFormSuccess(null);
+    setValidationMessages({}); 
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const filteredValue = filterInput(name, value);
+    
+    setFormData(prev => ({ ...prev, [name]: filteredValue }));
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
   };
 
   const validateForm = () => {
@@ -299,27 +487,114 @@ const ConsultationChargeConfig = () => {
                 <div className="form-grid">
                   <div className="form-group">
                     <label>Charge Code <span className="required">*</span></label>
-                    <input type="text" name="chargeCode" value={formData.chargeCode} onChange={handleInputChange} placeholder="CONS001" disabled={formLoading} required />
+                    <input 
+                      type="text" 
+                      name="chargeCode" 
+                      value={formData.chargeCode} 
+                      onChange={handleInputChange} 
+                      placeholder="CONS001" 
+                      disabled={formLoading} 
+                      maxLength="20"
+                      required 
+                    />
+                    
+                    {validationMessages.chargeCode && (
+                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                        {validationMessages.chargeCode}
+                      </span>
+                    )}
                   </div>
                   <div className="form-group">
                     <label>Charge Name <span className="required">*</span></label>
-                    <input type="text" name="chargeName" value={formData.chargeName} onChange={handleInputChange} placeholder="General Consultation" disabled={formLoading} required />
+                    <input 
+                      type="text" 
+                      name="chargeName" 
+                      value={formData.chargeName} 
+                      onChange={handleInputChange} 
+                      placeholder="General Consultation" 
+                      disabled={formLoading} 
+                      maxLength="100"
+                      required 
+                    />
+                    
+                    {validationMessages.chargeName && (
+                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                        {validationMessages.chargeName}
+                      </span>
+                    )}
                   </div>
                   <div className="form-group">
                     <label>Default Amount (₹) <span className="required">*</span></label>
-                    <input type="number" name="defaultAmount" value={formData.defaultAmount} onChange={handleInputChange} placeholder="500" step="0.01" min="0" disabled={formLoading} required />
+                    <input 
+                      type="text" 
+                      name="defaultAmount" 
+                      value={formData.defaultAmount} 
+                      onChange={handleInputChange} 
+                      placeholder="500.00" 
+                      disabled={formLoading} 
+                      required 
+                    />
+                    
+                    {validationMessages.defaultAmount && (
+                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                        {validationMessages.defaultAmount}
+                      </span>
+                    )}
                   </div>
                   <div className="form-group">
                     <label>GST Number</label>
-                    <input type="text" name="gstNo" value={formData.gstNo} onChange={handleInputChange} placeholder="Auto-filled" disabled={formLoading} />
+                    <input 
+                      type="text" 
+                      name="gstNo" 
+                      value={formData.gstNo} 
+                      onChange={handleInputChange} 
+                      placeholder="29ABCDE1234F1Z5" 
+                      disabled={formLoading}
+                      maxLength="15"
+                    />
+                    
+                    {validationMessages.gstNo && (
+                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                        {validationMessages.gstNo}
+                      </span>
+                    )}
+                    <span style={{ color: '#9ca3af', fontSize: '11px', marginTop: '2px', display: 'block' }}>
+                      Format: 29ABCDE1234F1Z5 (15 characters)
+                    </span>
                   </div>
                   <div className="form-group">
                     <label>CGST Percentage (%)</label>
-                    <input type="number" name="cgstPercentage" value={formData.cgstPercentage} onChange={handleInputChange} placeholder="9" step="0.01" min="0" max="100" disabled={formLoading} />
+                    <input 
+                      type="text" 
+                      name="cgstPercentage" 
+                      value={formData.cgstPercentage} 
+                      onChange={handleInputChange} 
+                      placeholder="9" 
+                      disabled={formLoading} 
+                    />
+                    
+                    {validationMessages.cgstPercentage && (
+                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                        {validationMessages.cgstPercentage}
+                      </span>
+                    )}
                   </div>
                   <div className="form-group">
                     <label>SGST Percentage (%)</label>
-                    <input type="number" name="sgstPercentage" value={formData.sgstPercentage} onChange={handleInputChange} placeholder="9" step="0.01" min="0" max="100" disabled={formLoading} />
+                    <input 
+                      type="text" 
+                      name="sgstPercentage" 
+                      value={formData.sgstPercentage} 
+                      onChange={handleInputChange} 
+                      placeholder="9" 
+                      disabled={formLoading} 
+                    />
+                    
+                    {validationMessages.sgstPercentage && (
+                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                        {validationMessages.sgstPercentage}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

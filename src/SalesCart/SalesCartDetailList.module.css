@@ -1,4 +1,4 @@
-/* src/components/SalesCartDetail.module.css */
+/* src/components/SalesCartDetailList.module.css */
 
 /* ==================== VARIABLES ==================== */
 :root {
@@ -12,6 +12,8 @@
   --sd-purple:        #7c3aed;
   --sd-white:         #ffffff;
   --sd-dark:          #1e293b;
+  --sd-teal:          #0d9488;
+  --sd-teal-end:      #14b8a6;
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -287,7 +289,7 @@
 /* ==================== TABLE ==================== */
 .table {
   width: 100%;
-  min-width: 980px;
+  min-width: 1060px;
   border-collapse: collapse;
   font-size: 0.8rem;
 }
@@ -449,6 +451,43 @@
   background: rgba(100, 116, 139, 0.1);
   color: #475569;
   border-color: rgba(100, 116, 139, 0.22);
+}
+
+/* ── Action cell ── */
+.actionCell {
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* ── Update Qty button ── */
+.updateQtyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  height: 30px;
+  background: linear-gradient(135deg, var(--sd-teal), var(--sd-teal-end));
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 3px 10px rgba(13, 148, 136, 0.28);
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+
+.updateQtyBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(13, 148, 136, 0.4);
+  filter: brightness(1.08);
+}
+
+.updateQtyBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3);
 }
 
 /* ── Subtotals footer ── */
@@ -616,7 +655,7 @@
   gap: 8px;
   height: 40px;
   padding: 0 20px;
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  background: linear-gradient(135deg, #016183, var(--sc-primary-end));
   color: #ffffff;
   font-weight: 700;
   font-size: 0.87rem;
@@ -635,7 +674,6 @@
 
 /* ==================== INVOICE MODAL ==================== */
 @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes spinBtn { to { transform: rotate(360deg); } }
 
 .modalOverlay {
@@ -1022,4 +1060,145 @@
   .modal { max-width: 100%; }
   .modalFooter { flex-direction: column; }
   .btnNo, .btnYes { width: 100%; justify-content: center; }
+}
+
+/* ==================== UPDATE QUANTITY MODAL ==================== */
+
+/* Teal-themed header for UQ modal */
+.uqModalHeader {
+  background: linear-gradient(135deg,
+    rgba(13, 148, 136, 0.07) 0%,
+    rgba(20, 184, 166, 0.04) 100%) !important;
+}
+
+.uqHeaderIcon {
+  background: linear-gradient(135deg, var(--sd-teal), var(--sd-teal-end)) !important;
+  box-shadow: 0 5px 16px rgba(13, 148, 136, 0.35) !important;
+}
+
+.uqModalTitle {
+  background: linear-gradient(135deg, var(--sd-teal), var(--sd-teal-end)) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* Info strip inside UQ modal */
+.uqInfoStrip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  background: linear-gradient(135deg,
+    rgba(13, 148, 136, 0.06),
+    rgba(20, 184, 166, 0.04));
+  border: 1px solid rgba(13, 148, 136, 0.18);
+  border-radius: 11px;
+  padding: 12px 16px;
+}
+
+.uqInfoBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 16px 0 0;
+  margin-right: 16px;
+  border-right: 1px solid rgba(13, 148, 136, 0.15);
+}
+
+.uqInfoBlock:last-child {
+  border-right: none;
+  padding-right: 0;
+  margin-right: 0;
+}
+
+.uqInfoLabel {
+  font-size: 0.61rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+}
+
+.uqInfoVal {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--sd-dark);
+}
+
+.uqCurrQty {
+  color: var(--sd-teal) !important;
+  font-size: 1rem !important;
+}
+
+/* Current discount chip in info strip */
+.uqCurrDiscount {
+  color: var(--sd-orange) !important;
+  font-size: 0.9rem !important;
+}
+
+/* Teal-tinted quantity input (no right padding — no suffix icon) */
+.uqInput {
+  border-color: rgba(13, 148, 136, 0.25) !important;
+  padding-right: 16px !important;
+}
+
+.uqInput:focus {
+  border-color: var(--sd-teal) !important;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12) !important;
+}
+
+/* Discount input inside UQ modal — restore right padding for the % suffix */
+.uqDiscountInput {
+  padding-right: 44px !important;
+}
+
+/* Teal % suffix for UQ discount input */
+.uqInputSuffix {
+  color: var(--sd-teal) !important;
+}
+
+/* Teal progress banner */
+.uqProgressBanner {
+  background: rgba(13, 148, 136, 0.07) !important;
+  border-color: rgba(13, 148, 136, 0.22) !important;
+  color: var(--sd-teal) !important;
+}
+
+.uqSpinner {
+  border-color: rgba(13, 148, 136, 0.2) !important;
+  border-top-color: var(--sd-teal) !important;
+}
+
+/* Teal confirm button for UQ modal */
+.uqBtnYes {
+  background: linear-gradient(135deg, var(--sd-teal), var(--sd-teal-end)) !important;
+  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.32) !important;
+}
+
+.uqBtnYes:hover:not(:disabled) {
+  box-shadow: 0 8px 22px rgba(13, 148, 136, 0.44) !important;
+}
+
+/* Dark mode for UQ modal */
+:global(.dark-mode) .uqInfoStrip {
+  background: rgba(13, 148, 136, 0.08);
+  border-color: rgba(13, 148, 136, 0.2);
+}
+
+:global(.dark-mode) .uqInfoBlock {
+  border-right-color: rgba(13, 148, 136, 0.15);
+}
+
+:global(.dark-mode) .uqInfoVal {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .uqInput {
+  background: #0f172a !important;
+  color: #e2e8f0 !important;
+}
+
+:global(.dark-mode) .uqInput:focus {
+  background: #1e293b !important;
 }

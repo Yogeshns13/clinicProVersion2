@@ -7,9 +7,6 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import './PatientList.css';
 
-// ────────────────────────────────────────────────
-// CONSTANTS
-// ────────────────────────────────────────────────
 const GENDER_OPTIONS = [
   { id: 1, label: 'Male' },
   { id: 2, label: 'Female' },
@@ -40,6 +37,140 @@ const STATUS_OPTIONS = [
   { id: 1, label: 'Active' },
   { id: 2, label: 'Inactive' },
 ];
+
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'firstName':
+      if (!value || !value.trim()) return 'First name is required';
+      if (value.trim().length < 2) return 'First name must be at least 2 characters';
+      if (value.trim().length > 50) return 'First name must not exceed 50 characters';
+      return '';
+
+    case 'lastName':
+      if (!value || !value.trim()) return 'Last name is required';
+      if (value.trim().length < 2) return 'Last name must be at least 2 characters';
+      if (value.trim().length > 50) return 'Last name must not exceed 50 characters';
+      return '';
+
+    case 'mobile':
+      if (!value || !value.trim()) return 'Mobile number is required';
+      if (value.trim().length < 10) return 'Mobile number must be 10 digits';
+      if (value.trim().length === 10) {
+        if (!/^[6-9]\d{9}$/.test(value.trim())) {
+          return 'Mobile number must start with 6-9';
+        }
+      }
+      if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
+      return '';
+
+    case 'altMobile':
+      if (value && value.trim()) {
+        if (value.trim().length < 10) return 'Mobile number must be 10 digits';
+        if (value.trim().length === 10) {
+          if (!/^[6-9]\d{9}$/.test(value.trim())) {
+            return 'Mobile number must start with 6-9';
+          }
+        }
+        if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
+      }
+      return '';
+
+    case 'emergencyContactNo':
+      if (value && value.trim()) {
+        if (value.trim().length < 10) return 'Contact number must be 10 digits';
+        if (value.trim().length === 10) {
+          if (!/^[6-9]\d{9}$/.test(value.trim())) {
+            return 'Contact number must start with 6-9';
+          }
+        }
+        if (value.trim().length > 10) return 'Contact number cannot exceed 10 digits';
+      }
+      return '';
+
+    case 'email':
+      if (value && value.trim()) {
+        if (!value.includes('@')) return 'Email must contain @';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
+          return 'Please enter a valid email address';
+        }
+        if (value.trim().length > 100) return 'Email must not exceed 100 characters';
+      }
+      return '';
+
+    case 'age':
+      if (value === '' || value === null || value === undefined) return 'Age is required';
+      const age = Number(value);
+      if (isNaN(age)) return 'Age must be a number';
+      if (age <= 0) return 'Age must be greater than 0';
+      if (age > 150) return 'Please enter a valid age';
+      return '';
+
+    case 'address':
+      if (value && value.length > 500) return 'Address must not exceed 500 characters';
+      return '';
+
+    case 'allergies':
+      if (value && value.length > 500) return 'Allergies must not exceed 500 characters';
+      return '';
+
+    case 'existingMedicalConditions':
+      if (value && value.length > 500) return 'Medical conditions must not exceed 500 characters';
+      return '';
+
+    case 'pastSurgeries':
+      if (value && value.length > 500) return 'Past surgeries must not exceed 500 characters';
+      return '';
+
+    case 'currentMedications':
+      if (value && value.length > 500) return 'Current medications must not exceed 500 characters';
+      return '';
+
+    case 'familyMedicalHistory':
+      if (value && value.length > 500) return 'Family history must not exceed 500 characters';
+      return '';
+
+    case 'immunizationRecords':
+      if (value && value.length > 500) return 'Immunization records must not exceed 500 characters';
+      return '';
+
+          case 'birthDate':
+  if (value) {
+    const birthDate = new Date(value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    birthDate.setHours(0, 0, 0, 0);
+    
+    if (birthDate > today) return 'Birth date cannot be in the future';
+  }
+  return '';  
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+    case 'firstName':
+    case 'lastName':
+      return value.replace(/[^a-zA-Z\s]/g, '');
+    
+    case 'mobile':
+    case 'altMobile':
+    case 'emergencyContactNo':
+      return value.replace(/[^0-9]/g, '');
+    
+    case 'age':
+      return value.replace(/[^0-9]/g, '');
+    
+    default:
+      return value;
+  }
+};
+const getTodayDate = () => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
 
 // ────────────────────────────────────────────────
 const UpdatePatient = () => {
@@ -78,8 +209,7 @@ const UpdatePatient = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
-
-  // Family Patient linking state
+  const [validationMessages, setValidationMessages] = useState({});
   const [hasFamilyPatient, setHasFamilyPatient] = useState(false);
   const [searchMobile, setSearchMobile] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -143,7 +273,6 @@ const UpdatePatient = () => {
           status: patient.status === 'active' ? 1 : 2,
         });
 
-        // If family patient exists, set the checkbox and load family patient data
         if (familyPatientId > 0) {
           setHasFamilyPatient(true);
           
@@ -180,15 +309,11 @@ const UpdatePatient = () => {
     }
   }, [patientId]);
 
-  // ────────────────────────────────────────────────
-  // Family Patient Search Handlers
-  // ────────────────────────────────────────────────
   const handleFamilyPatientToggle = (e) => {
     const checked = e.target.checked;
     setHasFamilyPatient(checked);
     
     if (!checked) {
-      // Reset family patient data when unchecked
       setSearchMobile('');
       setSearchResults([]);
       setSearchError('');
@@ -198,13 +323,25 @@ const UpdatePatient = () => {
   };
 
   const handleSearchMobileChange = (e) => {
-    setSearchMobile(e.target.value);
+    const value = e.target.value;
+    const filteredValue = filterInput('mobile', value);
+    setSearchMobile(filteredValue);
     setSearchError('');
   };
 
   const handleSearchPatients = async () => {
     if (!searchMobile.trim()) {
       setSearchError('Please enter a mobile number');
+      return;
+    }
+
+    if (searchMobile.trim().length !== 10) {
+      setSearchError('Mobile number must be exactly 10 digits');
+      return;
+    }
+
+    if (!/^[6-9]\d{9}$/.test(searchMobile.trim())) {
+      setSearchError('Please enter a valid mobile number starting with 6-9');
       return;
     }
 
@@ -257,7 +394,14 @@ const UpdatePatient = () => {
   // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const filteredValue = filterInput(name, value);
+    
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
   };
 
   const handleBack = () => {
@@ -367,11 +511,23 @@ const UpdatePatient = () => {
             <div className="form-group">
               <label>First Name <span className="required">*</span></label>
               <input required name="firstName" value={formData.firstName} onChange={handleInputChange} />
+              
+              {validationMessages.firstName && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.firstName}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
               <label>Last Name <span className="required">*</span></label>
               <input required name="lastName" value={formData.lastName} onChange={handleInputChange} />
+              
+              {validationMessages.lastName && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.lastName}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
@@ -384,14 +540,32 @@ const UpdatePatient = () => {
               </select>
             </div>
 
-            <div className="form-group">
-              <label>Birth Date</label>
-              <input type="date" name="birthDate" value={formData.birthDate} onChange={handleInputChange} />
-            </div>
+<div className={styles.formGroup}>
+  <label>Birth Date</label>
+  <input
+    type="date"
+    name="birthDate"
+    value={formData.birthDate}
+    onChange={handleInputChange}
+    max={getTodayDate()}
+  />
+  
+  {validationMessages.birthDate && (
+    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+      {validationMessages.birthDate}
+    </span>
+  )}
+</div>
 
             <div className="form-group">
               <label>Age <span className="required">*</span></label>
               <input required type="number" name="age" value={formData.age} onChange={handleInputChange} min="0" />
+              
+              {validationMessages.age && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.age}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
@@ -418,27 +592,57 @@ const UpdatePatient = () => {
 
             <div className="form-group">
               <label>Mobile <span className="required">*</span></label>
-              <input required name="mobile" value={formData.mobile} onChange={handleInputChange} />
+              <input required name="mobile" value={formData.mobile} onChange={handleInputChange} maxLength="10" />
+              
+              {validationMessages.mobile && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.mobile}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
               <label>Alternate Mobile</label>
-              <input name="altMobile" value={formData.altMobile} onChange={handleInputChange} />
+              <input name="altMobile" value={formData.altMobile} onChange={handleInputChange} maxLength="10" />
+              
+              {validationMessages.altMobile && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.altMobile}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
               <label>Email</label>
               <input type="email" name="email" value={formData.email} onChange={handleInputChange} />
+              
+              {validationMessages.email && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.email}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
               <label>Emergency Contact</label>
-              <input name="emergencyContactNo" value={formData.emergencyContactNo} onChange={handleInputChange} />
+              <input name="emergencyContactNo" value={formData.emergencyContactNo} onChange={handleInputChange} maxLength="10" />
+              
+              {validationMessages.emergencyContactNo && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.emergencyContactNo}
+                </span>
+              )}
             </div>
 
             <div className="form-group full-width">
               <label>Address</label>
               <textarea name="address" rows={3} value={formData.address} onChange={handleInputChange} />
+              
+              {validationMessages.address && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.address}
+                </span>
+              )}
             </div>
 
             {/* Family Patient Link Section */}
@@ -467,6 +671,7 @@ const UpdatePatient = () => {
                       onChange={handleSearchMobileChange}
                       placeholder="Enter mobile number"
                       style={{ flex: 1 }}
+                      maxLength="10"
                     />
                     <button
                       type="button"
@@ -570,31 +775,67 @@ const UpdatePatient = () => {
             <div className="form-group full-width">
               <label>Allergies</label>
               <textarea name="allergies" rows={2} value={formData.allergies} onChange={handleInputChange} />
+              
+              {validationMessages.allergies && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.allergies}
+                </span>
+              )}
             </div>
 
             <div className="form-group full-width">
               <label>Existing Medical Conditions</label>
               <textarea name="existingMedicalConditions" rows={2} value={formData.existingMedicalConditions} onChange={handleInputChange} />
+              
+              {validationMessages.existingMedicalConditions && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.existingMedicalConditions}
+                </span>
+              )}
             </div>
 
             <div className="form-group full-width">
               <label>Past Surgeries</label>
               <textarea name="pastSurgeries" rows={2} value={formData.pastSurgeries} onChange={handleInputChange} />
+              
+              {validationMessages.pastSurgeries && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.pastSurgeries}
+                </span>
+              )}
             </div>
 
             <div className="form-group full-width">
               <label>Current Medications</label>
               <textarea name="currentMedications" rows={2} value={formData.currentMedications} onChange={handleInputChange} />
+              
+              {validationMessages.currentMedications && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.currentMedications}
+                </span>
+              )}
             </div>
 
             <div className="form-group full-width">
               <label>Family Medical History</label>
               <textarea name="familyMedicalHistory" rows={2} value={formData.familyMedicalHistory} onChange={handleInputChange} />
+              
+              {validationMessages.familyMedicalHistory && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.familyMedicalHistory}
+                </span>
+              )}
             </div>
 
             <div className="form-group full-width">
               <label>Immunization Records</label>
               <textarea name="immunizationRecords" rows={2} value={formData.immunizationRecords} onChange={handleInputChange} />
+              
+              {validationMessages.immunizationRecords && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.immunizationRecords}
+                </span>
+              )}
             </div>
 
             <div className="form-group">

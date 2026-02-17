@@ -15,9 +15,6 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import './EmployeeProof.css';
 
-// ────────────────────────────────────────────────
-// CONSTANTS
-// ────────────────────────────────────────────────
 const ID_PROOF_OPTIONS = [
   { id: 1, label: 'Aadhar' },
   { id: 2, label: 'Passport' },
@@ -26,29 +23,65 @@ const ID_PROOF_OPTIONS = [
   { id: 5, label: 'PAN Card' },
 ];
 
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+  case 'idNumber':
+  return value.replace(/[^A-Z0-9]/g, '');   
+
+    case 'detail':
+      if (value && value.length > 100) return 'Field must not exceed 100 characters';
+      return '';
+
+    case 'expiryDate':
+      if (value) {
+        const expiryDate = new Date(value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (expiryDate < today) return 'Expiry date must be in the future';
+      }
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+    case 'idNumber':
+      return value.replace(/[^A-Za-z0-9]/g, ''),value.toUpperCase();
+    
+    default:
+      return value;
+  }
+};
+
+const getTodayDate = () => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
+
 // ────────────────────────────────────────────────
 const EmployeeProof = () => {
-  const { id } = useParams(); // Employee ID from URL
+  const { id } = useParams();
   const navigate = useNavigate();
 
-  // Employee & Proof data
   const [employee, setEmployee] = useState(null);
   const [proofList, setProofList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
+  const [modalMode, setModalMode] = useState('add');
   const [selectedProof, setSelectedProof] = useState(null);
+  const [validationMessages, setValidationMessages] = useState({});
 
-  // Delete confirmation modal
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [proofToDelete, setProofToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
-  // Form data
   const [formData, setFormData] = useState({
     proofType: 0,
     idNumber: '',
@@ -57,26 +90,21 @@ const EmployeeProof = () => {
     fileId: 0,
   });
 
-  // File upload states
   const [proofFile, setProofFile] = useState(null);
   const [proofFileUrl, setProofFileUrl] = useState(null);
   const [proofFileUploaded, setProofFileUploaded] = useState(false);
   const [proofUploadStatus, setProofUploadStatus] = useState('');
   const [isProofUploading, setIsProofUploading] = useState(false);
 
-  // Proof file viewing
   const [viewingProofUrl, setViewingProofUrl] = useState(null);
   const [viewingProofType, setViewingProofType] = useState(null);
   const [loadingProofFile, setLoadingProofFile] = useState(false);
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
 
-  // Form submission states
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
 
-  // ────────────────────────────────────────────────
-  // Fetch employee details and proof list
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -86,7 +114,6 @@ const EmployeeProof = () => {
         const clinicId = Number(localStorage.getItem('clinicID'));
         const branchId = Number(localStorage.getItem('branchID'));
 
-        // Fetch employee details
         const empData = await getEmployeeList(clinicId, {
           EmployeeID: Number(id),
           BranchID: branchId
@@ -99,7 +126,6 @@ const EmployeeProof = () => {
           return;
         }
 
-        // Fetch employee proof list
         const proofData = await getEmployeeProofList(clinicId, {
           BranchID: branchId,
           EmployeeID: Number(id),
@@ -124,7 +150,6 @@ const EmployeeProof = () => {
     }
   }, [id]);
 
-  // Cleanup file URLs
   useEffect(() => {
     return () => {
       if (proofFileUrl) {
@@ -136,8 +161,6 @@ const EmployeeProof = () => {
     };
   }, [proofFileUrl, viewingProofUrl]);
 
-  // ────────────────────────────────────────────────
-  // Helper functions
   const getProofTypeLabel = (proofTypeId) => {
     return ID_PROOF_OPTIONS.find((p) => p.id === proofTypeId)?.label || '—';
   };
@@ -171,12 +194,9 @@ const EmployeeProof = () => {
     return `${masked}-${lastFour}`;
   };
 
-  // ────────────────────────────────────────────────
-  // File Upload Handlers
-  // ────────────────────────────────────────────────
   const handleProofFileUpload = (e) => {
     const file = e.target.files[0];
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
 
     if (!file) {
       setProofUploadStatus('No file selected.');
@@ -210,7 +230,7 @@ const EmployeeProof = () => {
     if (file.type.startsWith('image/')) {
       setProofFileUrl(URL.createObjectURL(file));
     } else {
-      setProofFileUrl(null); // PDF - no preview
+      setProofFileUrl(null);
     }
     setProofUploadStatus('File selected. Click "Upload ID Proof" to submit.');
     setProofFileUploaded(false);
@@ -248,9 +268,6 @@ const EmployeeProof = () => {
     setFormData((prev) => ({ ...prev, fileId: 0 }));
   };
 
-  // ────────────────────────────────────────────────
-  // View Proof File
-  // ────────────────────────────────────────────────
   const handleViewProofFile = async (fileId) => {
     if (!fileId || fileId <= 0) return;
     
@@ -261,7 +278,6 @@ const EmployeeProof = () => {
       const fileData = await getFile(fileId);
       setViewingProofUrl(fileData.url);
       
-      // Determine file type from blob
       const fileType = fileData.blob.type;
       if (fileType === 'application/pdf') {
         setViewingProofType('pdf');
@@ -288,9 +304,6 @@ const EmployeeProof = () => {
     setViewingProofType(null);
   };
 
-  // ────────────────────────────────────────────────
-  // Delete Handlers
-  // ────────────────────────────────────────────────
   const handleOpenDeleteModal = (proof) => {
     setProofToDelete(proof);
     setDeleteError('');
@@ -315,14 +328,12 @@ const EmployeeProof = () => {
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
       
-      // Refresh proof list
       const proofData = await getEmployeeProofList(clinicId, {
         BranchID: branchId,
         EmployeeID: Number(id),
       });
       setProofList(proofData || []);
       
-      // Close modal
       handleCloseDeleteModal();
     } catch (err) {
       console.error('Delete proof failed:', err);
@@ -332,9 +343,6 @@ const EmployeeProof = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Modal Handlers
-  // ────────────────────────────────────────────────
   const handleOpenAddModal = () => {
     setModalMode('add');
     setSelectedProof(null);
@@ -351,6 +359,7 @@ const EmployeeProof = () => {
     setProofUploadStatus('');
     setFormError('');
     setFormSuccess(false);
+    setValidationMessages({});
     setIsModalOpen(true);
   };
 
@@ -370,6 +379,7 @@ const EmployeeProof = () => {
     setProofUploadStatus('');
     setFormError('');
     setFormSuccess(false);
+    setValidationMessages({});
     setIsModalOpen(true);
   };
 
@@ -389,14 +399,21 @@ const EmployeeProof = () => {
     setProofUploadStatus('');
     setFormError('');
     setFormSuccess(false);
+    setValidationMessages({});
   };
 
-  // ────────────────────────────────────────────────
-  // Form Handlers
-  // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    const filteredValue = filterInput(name, value);
+    
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
   };
 
   const handleFormSubmit = async (e) => {
@@ -424,7 +441,6 @@ const EmployeeProof = () => {
         await addEmployeeProof(payload);
         setFormSuccess(true);
         
-        // Refresh proof list
         setTimeout(async () => {
           const proofData = await getEmployeeProofList(clinicId, {
             BranchID: branchId,
@@ -434,12 +450,10 @@ const EmployeeProof = () => {
           handleCloseModal();
         }, 1500);
       } else {
-        // Update mode
         payload.proofId = selectedProof.proofId;
         await updateEmployeeProof(payload);
         setFormSuccess(true);
         
-        // Refresh proof list
         setTimeout(async () => {
           const proofData = await getEmployeeProofList(clinicId, {
             BranchID: branchId,
@@ -457,9 +471,6 @@ const EmployeeProof = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Navigation Handlers
-  // ────────────────────────────────────────────────
   const handleBack = () => {
     navigate(`/view-employee/${id}`);
   };
@@ -470,8 +481,6 @@ const EmployeeProof = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Early returns
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
@@ -482,23 +491,19 @@ const EmployeeProof = () => {
 
   if (!employee) return <div className="clinic-error">Employee not found</div>;
 
-  // ────────────────────────────────────────────────
   return (
     <div className="clinic-list-wrapper">
       <ErrorHandler error={error} />
       <Header title="Employee Proof" />
 
-      {/* Back Button */}
       <div className="clinic-toolbar">
         <button onClick={handleBack} className="clinic-back-btn">
           <FiArrowLeft size={20} /> Back to Employee Details
         </button>
       </div>
 
-      {/* Employee Details Card */}
       <div className="employee-details-card">
         
-        {/* Header Section with Tabs */}
         <div className="details-card-header">
           <div className="employee-header-info">
             <h2>
@@ -512,7 +517,6 @@ const EmployeeProof = () => {
             </span>
           </div>
 
-          {/* Tab Navigation */}
           <div className="employee-tabs1">
             <button
               className="tab-button"
@@ -541,7 +545,6 @@ const EmployeeProof = () => {
           </div>
         </div>  
 
-        {/* Proof List Body */}
         <div className="details-card-body">
           
           {proofList.length === 0 ? (
@@ -630,7 +633,6 @@ const EmployeeProof = () => {
         </div>
       </div>
 
-      {/* Add/Edit Modal */}
       {isModalOpen && (
         <div className="clinic-modal-overlay" onClick={handleCloseModal}>
           <div className="clinic-modal form-modal" onClick={(e) => e.stopPropagation()}>
@@ -648,7 +650,6 @@ const EmployeeProof = () => {
               </div>}
 
               <div className="form-grid">
-                {/* File Upload Section */}
                 <div className="form-group full-width">
                   <div className="photo-upload-container">
                     <div className="photo-preview-section">
@@ -748,13 +749,52 @@ const EmployeeProof = () => {
                   <label>
                     ID Number <span className="required">*</span>
                   </label>
-                  <input
-                    required
-                    name="idNumber"
-                    value={formData.idNumber}
-                    onChange={handleInputChange}
-                    placeholder="Enter ID number"
-                  />
+              <input
+  required
+  name="idNumber"
+  value={formData.idNumber}
+  onChange={handleInputChange}
+  onKeyDown={(e) => {
+    const char = e.key;
+  
+    if (
+      char === 'Backspace' ||
+      char === 'Delete' ||
+      char === 'ArrowLeft' ||
+      char === 'ArrowRight' ||
+      char === 'Tab' ||
+      char === 'Enter' ||
+      e.ctrlKey || e.metaKey
+    ) {
+      return;
+    }
+
+    if (!/^[A-Za-z0-9]$/.test(char)) {
+      e.preventDefault(); 
+    }
+  }}
+  onPaste={(e) => {
+    e.preventDefault();
+    const pasted = (e.clipboardData || window.clipboardData).getData('text');
+    const clean = pasted.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const input = e.target;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const newValue =
+      formData.idNumber.substring(0, start) +
+      clean +
+      formData.idNumber.substring(end);
+    
+    handleInputChange({
+      target: {
+        name: 'idNumber',
+        value: newValue
+      }
+    });
+  }}
+  placeholder="Enter ID number"
+/>
+            
                 </div>
 
                 <div className="form-group">
@@ -765,6 +805,11 @@ const EmployeeProof = () => {
                     onChange={handleInputChange}
                     placeholder="Additional details (optional)"
                   />
+                  {validationMessages.detail && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {validationMessages.detail}
+                    </span>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -774,7 +819,13 @@ const EmployeeProof = () => {
                     name="expiryDate"
                     value={formData.expiryDate}
                     onChange={handleInputChange}
+                    min={getTodayDate()}
                   />
+                  {validationMessages.expiryDate && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {validationMessages.expiryDate}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -791,7 +842,6 @@ const EmployeeProof = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && (
         <div className="clinic-modal-overlay" onClick={handleCloseDeleteModal}>
           <div className="clinic-modal delete-modal" onClick={(e) => e.stopPropagation()}>
@@ -839,7 +889,6 @@ const EmployeeProof = () => {
         </div>
       )}
 
-      {/* File Viewing Modal */}
       {isFileModalOpen && (
         <div className="clinic-modal-overlay" onClick={handleCloseFileModal}>
           <div className="clinic-modal file-viewer-modal" onClick={(e) => e.stopPropagation()}>

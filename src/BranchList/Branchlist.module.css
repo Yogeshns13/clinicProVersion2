@@ -746,19 +746,55 @@
 }
 
 .btnCancel {
-  padding: 10px 24px;
-  background: linear-gradient(135deg, var(--primary-start));
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
   color: var(--text-light);
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
   border: none;
+  border-radius: 14px;
+  height: 40px;
+  padding: 0 20px;
+  font-weight: 700;
+  font-size: 0.94rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  white-space: nowrap;
+  z-index: 0;
+}
+
+.btnCancel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+}
+
+.btnCancel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
+  background-size: 200% 100%;
+  background-position: -100% 0;
+  transition: background-position 0.5s ease;
+  z-index: -1;
 }
 
 .btnCancel:hover {
-  background: rgba(239, 68, 68);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
+}
+
+.btnCancel:hover::before {
+  opacity: 1;
+}
+
+.btnCancel:hover::after {
+  background-position: 200% 0;
 }
 
 .btnHold {

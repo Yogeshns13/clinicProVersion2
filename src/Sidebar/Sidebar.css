@@ -508,3 +508,146 @@ html.dark-mode .nav-item.logout .nav-icon {
 html.dark-mode .nav-item.logout:hover .nav-icon {
   color: var(--logout-hover);
 }
+
+
+/* =====================================================
+   CONSULTATION-OPEN MODE
+   Zone layout:
+     0   – 5vw : Sidebar icon strip  (this block)
+     5vw – 6vw : 1% visual gap
+     6vw – 100%: AddConsultation overlay panel
+   ===================================================== */
+
+/* ── Shrink sidebar to icon strip at 5vw ── */
+body.consultation-open .sidebar {
+  width: 5vw !important;
+  min-width: 64px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100000;
+  overflow: visible;
+  /* Elegant right edge — thin glowing border */
+  box-shadow:
+    3px 0 0 0 rgba(48, 178, 181, 0.45),
+    6px 0 18px -2px rgba(34, 43, 108, 0.25);
+}
+
+/* ── Hide text labels, footer copy, submenus, ALL arrows ── */
+body.consultation-open .sidebar .nav-label,
+body.consultation-open .sidebar .brand-name,
+body.consultation-open .sidebar .sidebar-footer small,
+body.consultation-open .sidebar .dropdown-label,
+body.consultation-open .sidebar .dropdown-menu {
+  display: none !important;
+}
+
+/* Hide every chevron / arrow svg inside the sidebar */
+body.consultation-open .sidebar .dropdown-toggle svg:last-child,
+body.consultation-open .sidebar .dropdown-arrow {
+  display: none !important;
+}
+
+/* ── Logo area ── */
+body.consultation-open .sidebar .sidebar-top {
+  padding: 16px 0;
+  justify-content: center;
+}
+
+body.consultation-open .sidebar .logo-wrap {
+  padding: 8px;
+  border-radius: 14px;
+  width: 46px;
+  height: 46px;
+  min-width: unset;
+  max-width: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+body.consultation-open .sidebar .logo-img {
+  width: 34px;
+  height: 34px;
+  min-width: unset;
+  min-height: unset;
+  max-width: unset;
+  max-height: unset;
+  padding: 0;
+}
+
+/* ── Nav list — centred column with generous spacing ── */
+body.consultation-open .sidebar .nav {
+  padding: 14px 0;
+  gap: 6px;
+  align-items: center;
+}
+
+/* ── Every nav item: centred, full-width, large touch target ── */
+body.consultation-open .sidebar .nav-item,
+body.consultation-open .sidebar .dropdown-toggle {
+  justify-content: center;
+  padding: 14px 0;
+  width: 100%;
+  gap: 0;
+  border-radius: 0;
+  transform: none !important;
+  border-left: 3px solid transparent;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+body.consultation-open .sidebar .nav-item:hover,
+body.consultation-open .sidebar .dropdown-toggle:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  transform: none !important;
+  border-left-color: rgba(48, 178, 181, 0.55);
+}
+
+body.consultation-open .sidebar .nav-item.active {
+  background: rgba(48, 178, 181, 0.22) !important;
+  border-left-color: #30b2b5;
+  box-shadow: inset 0 0 14px rgba(48, 178, 181, 0.1);
+  transform: none !important;
+}
+
+/* ── Icons — 26px, bigger than normal sidebar's 22px ── */
+body.consultation-open .sidebar .nav-item svg,
+body.consultation-open .sidebar .dropdown-toggle svg:first-child {
+  width: 24px !important;
+  height: 24px !important;
+  flex-shrink: 0;
+}
+
+/* Active icon gets a teal glow */
+body.consultation-open .sidebar .nav-item.active svg {
+  filter: drop-shadow(0 0 5px rgba(48, 178, 181, 0.8));
+}
+
+/* ── Dropdown wrapper full-width ── */
+body.consultation-open .sidebar .dropdown-wrapper {
+  width: 100%;
+}
+
+/* ── Footer ── */
+body.consultation-open .sidebar .sidebar-footer {
+  padding: 12px 0;
+}
+
+/* ── Logout item ── */
+body.consultation-open .sidebar .nav-item.logout {
+  margin-top: auto;
+  border-top: 1px solid rgba(239, 68, 68, 0.18);
+  border-left: 3px solid transparent;
+}
+
+body.consultation-open .sidebar .nav-item.logout:hover {
+  border-left-color: rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.15) !important;
+  transform: none !important;
+}
+
+/* ── Scrollbar stays visible in strip ── */
+body.consultation-open .sidebar .nav::-webkit-scrollbar {
+  width: 3px;
+}

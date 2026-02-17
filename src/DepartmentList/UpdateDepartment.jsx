@@ -5,11 +5,36 @@ import { FiX, FiArrowLeft, FiSave } from 'react-icons/fi';
 import { getDepartmentList, getClinicList, getBranchList, updateDepartment } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import styles from './DepartmentList.module.css'; // CSS Module import
+import styles from './DepartmentList.module.css'; 
 
-// ────────────────────────────────────────────────
-// CONSTANTS
-// ────────────────────────────────────────────────
+
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'departmentName':
+      if (!value || !value.trim()) return 'Department name is required';
+      if (value.trim().length < 3) return 'Department name must be at least 3 characters';
+      if (value.trim().length > 100) return 'Department name must not exceed 100 characters';
+      return '';
+
+    case 'profile':
+      if (value && value.length > 500) return 'Description must not exceed 500 characters';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+    case 'departmentName':
+      return value.replace(/[^a-zA-Z\s]/g, '');
+    
+    default:
+      return value;
+  }
+};
+
 const STATUS_OPTIONS = [
   { id: 1, label: 'Active' },
   { id: 2, label: 'Inactive' },
@@ -39,6 +64,7 @@ const UpdateDepartment = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
+  const [validationMessages, setValidationMessages] = useState({});
 
   // ────────────────────────────────────────────────
   useEffect(() => {
@@ -107,7 +133,16 @@ const UpdateDepartment = () => {
   // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    const filteredValue = filterInput(name, value);
+    
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
   };
 
   const handleBack = () => {
@@ -246,6 +281,12 @@ const UpdateDepartment = () => {
                   value={formData.departmentName}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.departmentName && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.departmentName}
+                  </span>
+                )}
               </div>
 
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -256,6 +297,12 @@ const UpdateDepartment = () => {
                   value={formData.profile}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.profile && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.profile}
+                  </span>
+                )}
               </div>
             </div>
 

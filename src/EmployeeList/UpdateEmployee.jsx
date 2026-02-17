@@ -7,6 +7,175 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import './UpdateEmployee.css';
 
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'employeeCode':
+      if (!value || !value.trim()) return 'Employee code is required';
+      if (value.trim().length < 3) return 'Employee code must be at least 3 characters';
+      if (value.trim().length > 20) return 'Employee code must not exceed 20 characters';
+      return '';
+
+    case 'firstName':
+    case 'lastName':
+      if (!value || !value.trim()) return `${fieldName === 'firstName' ? 'First' : 'Last'} name is required`;
+      if (value.trim().length < 2) return `${fieldName === 'firstName' ? 'First' : 'Last'} name must be at least 2 characters`;
+      if (value.trim().length > 50) return `${fieldName === 'firstName' ? 'First' : 'Last'} name must not exceed 50 characters`;
+      return '';
+
+    case 'mobile':
+      if (!value || !value.trim()) return 'Mobile number is required';
+      if (value.trim().length < 10) return 'Mobile number must be 10 digits';
+      if (value.trim().length === 10) {
+        if (!/^[6-9]\d{9}$/.test(value.trim())) {
+          return 'Mobile number must start with 6-9';
+        }
+      }
+      if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
+      return '';
+
+    case 'altMobile':
+      if (value && value.trim()) {
+        if (value.trim().length < 10) return 'Mobile number must be 10 digits';
+        if (value.trim().length === 10) {
+          if (!/^[6-9]\d{9}$/.test(value.trim())) {
+            return 'Mobile number must start with 6-9';
+          }
+        }
+        if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
+      }
+      return '';
+
+    case 'email':
+      if (value && value.trim()) {
+        if (!value.includes('@')) return 'Email must contain @';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
+          return 'Please enter a valid email address';
+        }
+      }
+      return '';
+
+    case 'birthDate':
+      if (value) {
+        const birthDate = new Date(value);
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) ? age - 1 : age;
+        
+        if (actualAge < 18) return 'Employee must be at least 18 years old';
+        if (actualAge > 100) return 'Please enter a valid birth date';
+      }
+      return '';
+
+         case 'universityName':
+      if (!value || !value.trim()) return 'University name is required';
+      if (value.trim().length < 3) return 'University name must be at least 3 characters';
+      if (value.trim().length > 100) return 'University name must not exceed 100 characters';
+      return '';
+
+    case 'licenseExpiryDate':
+      if (value) {
+        const expiryDate = new Date(value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (expiryDate < today) return 'License expiry date must be in the future';
+      }
+      return '';
+
+    case 'address':
+      if (value && value.length > 500) return 'Address must not exceed 500 characters';
+      return '';
+
+case 'qualification':
+case 'specialization':
+  if (value && value.length > 100) {
+    return 'Field must not exceed 100 characters';
+  }
+  // Safety check: if somehow invalid characters got through (e.g. paste)
+  if (value && /[^a-zA-Z\s.,()]/.test(value)) {
+    return 'Only letters, spaces, dot (.), comma (,), and parentheses ( ) allowed';
+  }
+  return '';
+
+      case 'universityName':
+  if (value && value.length > 100) {
+    return 'Field must not exceed 100 characters';
+  }
+  // Optional: extra safety check (in case of paste or direct set)
+  if (value && /[^a-zA-Z\s]/.test(value)) {
+    return 'Only letters and spaces are allowed (no numbers or special characters)';
+  }
+  return '';
+
+    case 'licenseNo':
+    case 'pfNo':
+    case 'esiNo':
+      if (value && value.length > 50) return 'Field must not exceed 50 characters';
+      return '';
+
+    case 'experienceYears':
+      if (value !== '' && value !== null && value !== undefined) {
+        const years = Number(value);
+        if (isNaN(years)) return 'Must be a number';
+        if (years < 0) return 'Cannot be negative';
+        if (years > 50) return 'Experience cannot exceed 50 years';
+      }
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+    case 'firstName':
+    case 'lastName':
+      return value.replace(/[^a-zA-Z\s]/g, '');
+    
+    case 'mobile':
+    case 'altMobile':
+      return value.replace(/[^0-9]/g, '');
+    
+      case 'employeeCode':
+  
+      return value
+        .replace(/[^A-Za-z0-9_-]/g, '') 
+        .toUpperCase();     
+
+    case 'qualification':
+    case 'specialization':
+
+      return value.replace(/[^a-zA-Z\s.,()]/g, '');
+          case 'universityName':
+      return value.replace(/[^a-zA-Z\s]/g, '');
+
+    case 'licenseNo':
+    case 'pfNo':
+    case 'esiNo':
+      return value.replace(/[^A-Za-z0-9-_]/g, '');
+    
+    case 'experienceYears':
+      return value.replace(/[^0-9]/g, '');
+    
+    default:
+      return value;
+  }
+};
+
+const getMaxBirthDate = () => {
+  const today = new Date();
+  const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+  return maxDate.toISOString().split('T')[0];
+};
+
+const getTodayDate = () => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
+
 // ────────────────────────────────────────────────
 // CONSTANTS
 // ────────────────────────────────────────────────
@@ -66,7 +235,6 @@ const STATUS_OPTIONS = [
   { id: 6, label: 'Deleted' },
 ];
 
-// ────────────────────────────────────────────────
 const UpdateEmployee = () => {
   const navigate = useNavigate();
   const params = useParams();
@@ -108,7 +276,6 @@ const UpdateEmployee = () => {
     photoFileId: 0,
   });
 
-  // Photo upload states
   const [photo, setPhoto] = useState(null);
   const [photoUrl, setPhotoUrl] = useState(null);
   const [photoUploaded, setPhotoUploaded] = useState(false);
@@ -118,6 +285,8 @@ const UpdateEmployee = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
+
+  const [validationMessages, setValidationMessages] = useState({});
 
   // ────────────────────────────────────────────────
   useEffect(() => {
@@ -182,7 +351,6 @@ const UpdateEmployee = () => {
           photoFileId: employee.photoFileId || 0,
         });
 
-        // If employee has existing photo, set the photoUploaded flag
         if (employee.photoFileId && employee.photoFileId > 0) {
           setPhotoUploaded(true);
           setPhotoUploadStatus('Existing photo will be retained unless you upload a new one.');
@@ -210,14 +378,13 @@ const UpdateEmployee = () => {
   // ────────────────────────────────────────────────
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
-    const maxSize = 4 * 1024 * 1024; // 4MB
+    const maxSize = 4 * 1024 * 1024; 
 
     if (!file) {
       setPhotoUploadStatus('No file selected.');
       setPhoto(null);
       setPhotoUploaded(false);
       setPhotoUrl(null);
-      // Don't reset photoFileId here - keep existing photo if any
       return;
     }
 
@@ -268,16 +435,21 @@ const UpdateEmployee = () => {
     setPhotoUrl(null);
     setPhotoUploaded(false);
     setPhotoUploadStatus('Photo removed. The existing photo will be retained unless you upload a new one.');
-    // Restore original photoFileId from employeeData
     if (employeeData && employeeData.photoFileId) {
       setFormData((prev) => ({ ...prev, photoFileId: employeeData.photoFileId }));
     }
   };
 
-  // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const filteredValue = filterInput(name, value);
+    
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
   };
 
   const handleBack = () => {
@@ -362,8 +534,6 @@ const UpdateEmployee = () => {
     <div className="clinic-list-wrapper">
       <ErrorHandler error={error} />
       <Header title="Update Employee" />
-
-      {/* Page Header with Back Button */}
       <div className="clinic-toolbar" style={{ justifyContent: 'flex-start', padding: '0 20px' }}>
         <button onClick={handleBack} className="clinic-add-btn">
           Back to List
@@ -453,16 +623,34 @@ const UpdateEmployee = () => {
             <div className="form-group">
               <label>Employee Code <span className="required">*</span></label>
               <input required name="employeeCode" value={formData.employeeCode} onChange={handleInputChange} />
+              
+              {validationMessages.employeeCode && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.employeeCode}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
               <label>First Name <span className="required">*</span></label>
               <input required name="firstName" value={formData.firstName} onChange={handleInputChange} />
+              
+              {validationMessages.firstName && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.firstName}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
               <label>Last Name <span className="required">*</span></label>
               <input required name="lastName" value={formData.lastName} onChange={handleInputChange} />
+              
+              {validationMessages.lastName && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.lastName}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
@@ -477,7 +665,19 @@ const UpdateEmployee = () => {
 
             <div className="form-group">
               <label>Birth Date</label>
-              <input type="date" name="birthDate" value={formData.birthDate} onChange={handleInputChange} />
+              <input 
+                type="date" 
+                name="birthDate" 
+                value={formData.birthDate} 
+                onChange={handleInputChange}
+                max={getMaxBirthDate()}
+              />
+              
+              {validationMessages.birthDate && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.birthDate}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
@@ -505,21 +705,56 @@ const UpdateEmployee = () => {
             <div className="form-group full-width">
               <label>Address</label>
               <textarea name="address" rows={3} value={formData.address} onChange={handleInputChange} />
+              
+              {validationMessages.address && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.address}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
               <label>Mobile <span className="required">*</span></label>
-              <input required name="mobile" value={formData.mobile} onChange={handleInputChange} />
+              <input 
+                required 
+                name="mobile" 
+                value={formData.mobile} 
+                onChange={handleInputChange}
+                maxLength="10"
+              />
+              
+              {validationMessages.mobile && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.mobile}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
               <label>Alternate Mobile</label>
-              <input name="altMobile" value={formData.altMobile} onChange={handleInputChange} />
+              <input 
+                name="altMobile" 
+                value={formData.altMobile} 
+                onChange={handleInputChange}
+                maxLength="10"
+              />
+              
+              {validationMessages.altMobile && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.altMobile}
+                </span>
+              )}
             </div>
 
             <div className="form-group full-width">
               <label>Email</label>
               <input type="email" name="email" value={formData.email} onChange={handleInputChange} />
+              
+              {validationMessages.email && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.email}
+                </span>
+              )}
             </div>
 
             <h3 className="form-section-title">Professional Information</h3>
@@ -547,31 +782,79 @@ const UpdateEmployee = () => {
             <div className="form-group">
               <label>Qualification</label>
               <input name="qualification" value={formData.qualification} onChange={handleInputChange} />
+              
+              {validationMessages.qualification && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.qualification}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
               <label>Specialization</label>
               <input name="specialization" value={formData.specialization} onChange={handleInputChange} />
+              
+              {validationMessages.specialization && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.specialization}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
               <label>License Number</label>
               <input name="licenseNo" value={formData.licenseNo} onChange={handleInputChange} />
+              
+              {validationMessages.licenseNo && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.licenseNo}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
               <label>License Expiry</label>
-              <input type="date" name="licenseExpiryDate" value={formData.licenseExpiryDate} onChange={handleInputChange} />
+              <input 
+                type="date" 
+                name="licenseExpiryDate" 
+                value={formData.licenseExpiryDate} 
+                onChange={handleInputChange}
+                min={getTodayDate()}
+              />
+              
+              {validationMessages.licenseExpiryDate && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.licenseExpiryDate}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
               <label>Experience (Years)</label>
-              <input type="number" name="experienceYears" value={formData.experienceYears} onChange={handleInputChange} min="0" />
+              <input 
+                type="number" 
+                name="experienceYears" 
+                value={formData.experienceYears} 
+                onChange={handleInputChange} 
+                min="0" 
+              />
+              
+              {validationMessages.experienceYears && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.experienceYears}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
               <label>University Name</label>
               <input name="universityName" value={formData.universityName} onChange={handleInputChange} />
+              
+              {validationMessages.universityName && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.universityName}
+                </span>
+              )}
             </div>
 
             <h3 className="form-section-title">Other Details</h3>
@@ -579,11 +862,23 @@ const UpdateEmployee = () => {
             <div className="form-group">
               <label>PF Number</label>
               <input name="pfNo" value={formData.pfNo} onChange={handleInputChange} />
+              
+              {validationMessages.pfNo && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.pfNo}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
               <label>ESI Number</label>
               <input name="esiNo" value={formData.esiNo} onChange={handleInputChange} />
+              
+              {validationMessages.esiNo && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.esiNo}
+                </span>
+              )}
             </div>
 
             <div className="form-group">

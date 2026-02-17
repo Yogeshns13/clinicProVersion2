@@ -7,9 +7,40 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './BranchList.module.css';
 
-// ────────────────────────────────────────────────
-// CONSTANTS
-// ────────────────────────────────────────────────
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'branchName':
+      if (!value || !value.trim()) return 'Branch name is required';
+      if (value.trim().length < 3) return 'Branch name must be at least 3 characters';
+      if (value.trim().length > 100) return 'Branch name must not exceed 100 characters';
+      return '';
+
+    case 'address':
+      if (value && value.length > 500) return 'Address must not exceed 500 characters';
+      return '';
+
+    case 'location':
+      if (value && value.length > 100) return 'Location must not exceed 100 characters';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  // Returns filtered value based on field type
+  switch (fieldName) {
+    case 'branchName':
+    case 'location':
+      // Only letters, spaces allowed
+      return value.replace(/[^a-zA-Z\s]/g, '');
+    
+    default:
+      return value;
+  }
+};
+
 const BRANCH_TYPES = [
   { id: 1, label: 'Main' },
   { id: 2, label: 'Satellite' },
@@ -48,6 +79,7 @@ const UpdateBranch = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
+  const [validationMessages, setValidationMessages] = useState({});
 
   // ────────────────────────────────────────────────
   useEffect(() => {
@@ -97,7 +129,16 @@ const UpdateBranch = () => {
   // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    const filteredValue = filterInput(name, value);
+    
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
   };
 
   const handleBack = () => {
@@ -219,6 +260,12 @@ const UpdateBranch = () => {
                   value={formData.branchName}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.branchName && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.branchName}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>
@@ -247,6 +294,12 @@ const UpdateBranch = () => {
                   value={formData.address}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.address && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.address}
+                  </span>
+                )}
               </div>
 
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -256,6 +309,12 @@ const UpdateBranch = () => {
                   value={formData.location}
                   onChange={handleInputChange}
                 />
+                
+                {validationMessages.location && (
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    {validationMessages.location}
+                  </span>
+                )}
               </div>
 
               <div className={styles.formGroup}>

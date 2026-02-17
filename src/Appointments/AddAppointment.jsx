@@ -4,6 +4,47 @@ import { FiX, FiCalendar, FiClock, FiUser, FiSearch } from 'react-icons/fi';
 import { addAppointment, getPatientsList, getEmployeeList, getSlotList } from '../api/api.js';
 import './AddAppointment.css';
 
+
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'patientId':
+      if (!value || value === '' || value === '0') return 'Please select a patient';
+      return '';
+
+    case 'doctorId':
+      if (!value || value === '' || value === '0') return 'Please select a doctor';
+      return '';
+
+case 'selectedDate':
+  if (!value) return 'Please select an appointment date';
+  
+  const selected = new Date(value);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  selected.setHours(0, 0, 0, 0);
+
+  if (selected < today) return 'Past dates are not allowed';
+
+  return '';
+
+    case 'slotId':
+      if (!value || value === '' || value === '0') return 'Please select a time slot';
+      return '';
+
+    case 'reason':
+      if (value && value.length > 500) return 'Reason must not exceed 500 characters';
+      return '';
+
+    default:
+      return '';
+  }
+};
+const getTodayDate = () => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
+
+
 const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     patientId: '',
@@ -21,8 +62,8 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [validationMessages, setValidationMessages] = useState({});
 
-  // Fetch initial data
   useEffect(() => {
     if (isOpen) {
       resetForm();
@@ -31,7 +72,6 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
     }
   }, [isOpen]);
 
-  // Fetch slots when doctor and date are selected
   useEffect(() => {
     if (formData.doctorId && selectedDate) {
       fetchAvailableSlots(formData.doctorId, selectedDate);
@@ -41,7 +81,6 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
     }
   }, [formData.doctorId, selectedDate]);
 
-  // Filter patients based on search query
   useEffect(() => {
     if (searchQuery.trim() === '') {
       setFilteredPatients(patients);
@@ -100,12 +139,11 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
         BranchID: branchId,
         DoctorID: doctorId,
         SlotDate: date,
-        IsBooked: 0, // Only available slots
+        IsBooked: 0, 
         Status: 1,
         PageSize: 100
       });
 
-      // Sort slots by time
       const sortedSlots = data.sort((a, b) => {
         return a.slotTime.localeCompare(b.slotTime);
       });
@@ -122,6 +160,13 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    const validationMessage = getLiveValidationMessage(name, value);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
+    
     setError(null);
   };
 
@@ -130,22 +175,49 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
     setFormData(prev => ({
       ...prev,
       doctorId: doctorId,
-      slotId: '' // Reset slot when doctor changes
+      slotId: '' 
     }));
+    
+
+    const validationMessage = getLiveValidationMessage('doctorId', doctorId);
+    setValidationMessages((prev) => ({
+      ...prev,
+      doctorId: validationMessage,
+      slotId: '' 
+    }));
+    
     setError(null);
   };
 
   const handleDateChange = (e) => {
-    setSelectedDate(e.target.value);
+    const dateValue = e.target.value;
+    const validationMessage = getLiveValidationMessage('selectedDate', dateValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      selectedDate: validationMessage,
+      slotId: '' 
+    }));
+    
+    setSelectedDate(dateValue);
     setFormData(prev => ({
       ...prev,
-      slotId: '' // Reset slot when date changes
+      slotId: '' 
     }));
     setError(null);
   };
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+  };
+
+  const handleSlotSelect = (slotId) => {
+    setFormData(prev => ({ ...prev, slotId: slotId.toString() }));
+    
+    const validationMessage = getLiveValidationMessage('slotId', slotId.toString());
+    setValidationMessages((prev) => ({
+      ...prev,
+      slotId: validationMessage,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -189,6 +261,7 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
     setSelectedDate('');
     setAvailableSlots([]);
     setSearchQuery('');
+    setValidationMessages({}); 
   };
 
   const handleClose = () => {
@@ -219,15 +292,6 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
     });
   };
 
-  const getMinDate = () => {
-    return new Date().toISOString().split('T')[0];
-  };
-
-  const getMaxDate = () => {
-    const maxDate = new Date();
-    maxDate.setDate(maxDate.getDate() + 90); // 90 days ahead
-    return maxDate.toISOString().split('T')[0];
-  };
 
   const selectedSlot = availableSlots.find(slot => slot.id === parseInt(formData.slotId));
   const selectedPatient = patients.find(p => p.id === parseInt(formData.patientId));
@@ -251,7 +315,7 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
         <div className="clinic-modal-content">
           {error && (
             <div style={{
-              padding: '0px 12px 16px',
+              padding: '12px 16px',
               marginBottom: '20px',
               backgroundColor: '#fee',
               border: '1px solid #fcc',
@@ -359,6 +423,12 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
                   </option>
                 ))}
               </select>
+              
+              {validationMessages.patientId && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.patientId}
+                </span>
+              )}
 
               {searchQuery && filteredPatients.length === 0 && (
                 <div style={{
@@ -473,6 +543,12 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
                       </option>
                     ))}
                   </select>
+                  
+                  {validationMessages.doctorId && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {validationMessages.doctorId}
+                    </span>
+                  )}
                 </div>
 
                 <div>
@@ -485,14 +561,13 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
                   }}>
                     Appointment Date <span style={{ color: '#dc2626' }}>*</span>
                   </label>
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={handleDateChange}
-                    min={getMinDate()}
-                    max={getMaxDate()}
-                    required
-                    disabled={!formData.doctorId}
+          <input
+  type="date"
+  value={selectedDate}
+  onChange={handleDateChange}
+  min={getTodayDate()}       
+  required
+  disabled={!formData.doctorId}
                     style={{
                       width: '100%',
                       padding: '10px 12px',
@@ -504,10 +579,16 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
                       opacity: formData.doctorId ? 1 : 0.6,
                       transition: 'all 0.2s'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#222B6C'}
+                    onFocus={(e) => formData.doctorId && (e.target.style.borderColor = '#222B6C')}
                     onBlur={(e) => e.target.style.borderColor = 'rgba(34, 43, 108, 0.2)'}
                   />
-                  {!formData.doctorId && (
+                  
+                  {validationMessages.selectedDate && (
+                    <span style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {validationMessages.selectedDate}
+                    </span>
+                  )}
+                  {!formData.doctorId && !validationMessages.selectedDate && (
                     <div style={{
                       marginTop: '6px',
                       fontSize: '0.75rem',
@@ -577,7 +658,7 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
                         <button
                           key={slot.id}
                           type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, slotId: slot.id.toString() }))}
+                          onClick={() => handleSlotSelect(slot.id)}
                           style={{
                             padding: '12px',
                             border: formData.slotId === slot.id.toString()
@@ -611,6 +692,12 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
                         </button>
                       ))}
                     </div>
+                  )}
+
+                  {validationMessages.slotId && !formData.slotId && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '5px', display: 'block' }}>
+                      {validationMessages.slotId}
+                    </span>
                   )}
 
                   {formData.slotId && selectedSlot && (
@@ -662,6 +749,12 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
                 onFocus={(e) => e.target.style.borderColor = '#222B6C'}
                 onBlur={(e) => e.target.style.borderColor = 'rgba(34, 43, 108, 0.2)'}
               />
+              
+              {validationMessages.reason && (
+                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                  {validationMessages.reason}
+                </span>
+              )}
             </div>
 
             {/* Summary */}

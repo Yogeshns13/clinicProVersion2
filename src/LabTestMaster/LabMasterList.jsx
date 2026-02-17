@@ -25,6 +25,105 @@ import ViewLabMaster from './ViewLabMaster.jsx';
 import ViewLabPackage from './ViewLabPackage.jsx';
 import styles from './LabMaster.module.css';
 
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'TestName':
+    case 'packName':
+      if (!value || !value.trim()) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name is required`;
+      if (/\d/.test(value)) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name cannot contain numbers`;
+      if (value.trim().length < 2) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name must be at least 2 characters`;
+      if (value.trim().length > 100) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name must not exceed 100 characters`;
+      return '';
+
+    case 'ShortName':
+    case 'packShortName':
+      if (!value || !value.trim()) return 'Short name is required';
+      if (/\d/.test(value)) return 'Short name cannot contain numbers';
+      if (value.trim().length < 2) return 'Short name must be at least 2 characters';
+      if (value.trim().length > 20) return 'Short name must not exceed 20 characters';
+      return '';
+
+    case 'Description':
+    case 'description':
+      if (value && value.length > 500) return 'Description must not exceed 500 characters';
+      return '';
+
+case 'NormalRange':
+  if (value && /[a-zA-Z]/.test(value)) return 'Normal range cannot contain letters';
+  if (value && value.length > 50) return 'Normal range must not exceed 50 characters';
+  return '';
+
+   // In getLiveValidationMessage function:
+case 'Units':
+  if (value && /[0-9]/.test(value)) return 'Units cannot contain numbers';
+  if (value && /[^a-zA-Z\s]/.test(value)) return 'Units cannot contain special characters';
+  if (value && value.length > 30) return 'Units must not exceed 30 characters';
+  return '';
+
+    case 'Remarks':
+      if (value && value.length > 500) return 'Remarks must not exceed 500 characters';
+      return '';
+
+    case 'Fees':
+    case 'fees':
+      if (value === '' || value === null || value === undefined) return ''; // Optional field
+      const fee = Number(value);
+      if (isNaN(fee)) return 'Must be a valid number';
+      if (fee < 0) return 'Fees cannot be negative';
+      if (fee > 1000000) return 'Fees cannot exceed ₹10,00,000';
+      return '';
+
+    case 'CGSTPercentage':
+    case 'SGSTPercentage':
+    case 'cgstPercentage':
+    case 'sgstPercentage':
+      if (value === '' || value === null || value === undefined) return '';
+      const percentage = Number(value);
+      if (isNaN(percentage)) return 'Must be a valid number';
+      if (percentage < 0) return 'Percentage cannot be negative';
+      if (percentage > 100) return 'Percentage cannot exceed 100';
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+    case 'TestName':
+    case 'packName':
+      return value.replace(/[^a-zA-Z\s\-().,&]/g, '');
+    
+    case 'ShortName':
+    case 'packShortName':
+      return value.replace(/[^A-Za-z-]/g, '');
+
+    case 'Fees':
+    case 'fees':
+    case 'CGSTPercentage':
+    case 'SGSTPercentage':
+    case 'cgstPercentage':
+    case 'sgstPercentage':
+      if (value === '') return value;
+      const filtered = value.replace(/[^0-9.]/g, '');
+      const parts = filtered.split('.');
+      if (parts.length > 2) {
+        return parts[0] + '.' + parts.slice(1).join('');
+      }
+      return filtered;
+
+      case 'Units':
+  return value.replace(/[^a-zA-Z\s]/g, '');
+    
+      case 'NormalRange':
+  return value.replace(/[a-zA-Z]/g, '');
+    
+    default:
+      return value;
+  }
+};
+
 // ────────────────────────────────────────────────
 // CONSTANTS
 // ────────────────────────────────────────────────
@@ -104,6 +203,8 @@ const LabMasterList = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
+  const [testValidationMessages, setTestValidationMessages] = useState({});
+  const [packageValidationMessages, setPackageValidationMessages] = useState({});
 
   // ────────────────────────────────────────────────
   // FETCH FUNCTIONS
@@ -275,6 +376,7 @@ const LabMasterList = () => {
     });
     setFormError('');
     setFormSuccess(false);
+    setTestValidationMessages({}); 
     setIsAddTestFormOpen(true);
   };
 
@@ -283,11 +385,20 @@ const LabMasterList = () => {
     setFormLoading(false);
     setFormError('');
     setFormSuccess(false);
+    setTestValidationMessages({}); 
   };
 
   const handleTestInputChange = (e) => {
     const { name, value } = e.target;
-    setTestFormData((prev) => ({ ...prev, [name]: value }));
+    const filteredValue = filterInput(name, value);
+    
+    setTestFormData((prev) => ({ ...prev, [name]: filteredValue }));
+
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setTestValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
   };
 
   const handleTestSubmit = async (e) => {
@@ -344,13 +455,10 @@ const LabMasterList = () => {
     try {
       await deleteLabTestMaster(test.id);
       
-      // Close the modal
       closeTestModal();
       
-      // Refresh the list
       await fetchTests();
       
-      // Show success message
       alert('Lab test deleted successfully!');
     } catch (err) {
       console.error('Delete lab test failed:', err);
@@ -373,8 +481,8 @@ const LabMasterList = () => {
   const openPackageDetails = async (pkg) => {
     setSelectedPackage(pkg);
     setFormError('');
-    setPackageItems([]); // Clear previous items
-    console.log('Opening package details for:', pkg.id); // Debug log
+    setPackageItems([]);
+    console.log('Opening package details for:', pkg.id); 
     await fetchPackageItems(pkg.id);
   };
   
@@ -395,6 +503,7 @@ const LabMasterList = () => {
     });
     setFormError('');
     setFormSuccess(false);
+    setPackageValidationMessages({}); 
     setIsAddPackageFormOpen(true);
   };
 
@@ -403,11 +512,20 @@ const LabMasterList = () => {
     setFormLoading(false);
     setFormError('');
     setFormSuccess(false);
+    setPackageValidationMessages({}); 
   };
 
   const handlePackageInputChange = (e) => {
     const { name, value } = e.target;
-    setPackageFormData((prev) => ({ ...prev, [name]: value }));
+    const filteredValue = filterInput(name, value);
+    
+    setPackageFormData((prev) => ({ ...prev, [name]: filteredValue }));
+
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setPackageValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
   };
 
   const handlePackageSubmit = async (e) => {
@@ -825,6 +943,12 @@ const LabMasterList = () => {
                     onChange={handleTestInputChange}
                     placeholder="e.g., Complete Blood Count"
                   />
+                  
+                  {testValidationMessages.TestName && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {testValidationMessages.TestName}
+                    </span>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
@@ -837,7 +961,14 @@ const LabMasterList = () => {
                     value={testFormData.ShortName}
                     onChange={handleTestInputChange}
                     placeholder="e.g., CBC"
+                    maxLength="20"
                   />
+                  
+                  {testValidationMessages.ShortName && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {testValidationMessages.ShortName}
+                    </span>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
@@ -861,13 +992,18 @@ const LabMasterList = () => {
                 <div className={styles.formGroup}>
                   <label>Fees (₹)</label>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
                     name="Fees"
                     value={testFormData.Fees}
                     onChange={handleTestInputChange}
                     placeholder="0.00"
                   />
+                  
+                  {testValidationMessages.Fees && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {testValidationMessages.Fees}
+                    </span>
+                  )}
                 </div>
 
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -879,6 +1015,12 @@ const LabMasterList = () => {
                     onChange={handleTestInputChange}
                     placeholder="Brief description of the test"
                   />
+                  
+                  {testValidationMessages.Description && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {testValidationMessages.Description}
+                    </span>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
@@ -888,7 +1030,14 @@ const LabMasterList = () => {
                     value={testFormData.NormalRange}
                     onChange={handleTestInputChange}
                     placeholder="e.g., 4.5-11.0"
+                    maxLength="50"
                   />
+                  
+                  {testValidationMessages.NormalRange && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {testValidationMessages.NormalRange}
+                    </span>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
@@ -898,29 +1047,46 @@ const LabMasterList = () => {
                     value={testFormData.Units}
                     onChange={handleTestInputChange}
                     placeholder="e.g., cells/mcL"
+                    maxLength="30"
                   />
+                  
+                  {testValidationMessages.Units && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {testValidationMessages.Units}
+                    </span>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>CGST %</label>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
                     name="CGSTPercentage"
                     value={testFormData.CGSTPercentage}
                     onChange={handleTestInputChange}
                   />
+                  
+                  {testValidationMessages.CGSTPercentage && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {testValidationMessages.CGSTPercentage}
+                    </span>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>SGST %</label>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
                     name="SGSTPercentage"
                     value={testFormData.SGSTPercentage}
                     onChange={handleTestInputChange}
                   />
+                  
+                  {testValidationMessages.SGSTPercentage && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {testValidationMessages.SGSTPercentage}
+                    </span>
+                  )}
                 </div>
 
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -932,6 +1098,12 @@ const LabMasterList = () => {
                     onChange={handleTestInputChange}
                     placeholder="Additional notes"
                   />
+                  
+                  {testValidationMessages.Remarks && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {testValidationMessages.Remarks}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -977,6 +1149,12 @@ const LabMasterList = () => {
                     onChange={handlePackageInputChange}
                     placeholder="e.g., Full Body Checkup"
                   />
+                  
+                  {packageValidationMessages.packName && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {packageValidationMessages.packName}
+                    </span>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
@@ -989,7 +1167,14 @@ const LabMasterList = () => {
                     value={packageFormData.packShortName}
                     onChange={handlePackageInputChange}
                     placeholder="e.g., FBC"
+                    maxLength="20"
                   />
+                  
+                  {packageValidationMessages.packShortName && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {packageValidationMessages.packShortName}
+                    </span>
+                  )}
                 </div>
 
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -1001,40 +1186,61 @@ const LabMasterList = () => {
                     onChange={handlePackageInputChange}
                     placeholder="Brief description of the package"
                   />
+                  
+                  {packageValidationMessages.description && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {packageValidationMessages.description}
+                    </span>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>Fees (₹)</label>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
                     name="fees"
                     value={packageFormData.fees}
                     onChange={handlePackageInputChange}
                     placeholder="0.00"
                   />
+                  
+                  {packageValidationMessages.fees && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {packageValidationMessages.fees}
+                    </span>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>CGST %</label>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
                     name="cgstPercentage"
                     value={packageFormData.cgstPercentage}
                     onChange={handlePackageInputChange}
                   />
+                  
+                  {packageValidationMessages.cgstPercentage && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {packageValidationMessages.cgstPercentage}
+                    </span>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>SGST %</label>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
                     name="sgstPercentage"
                     value={packageFormData.sgstPercentage}
                     onChange={handlePackageInputChange}
                   />
+                  
+                  {packageValidationMessages.sgstPercentage && (
+                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {packageValidationMessages.sgstPercentage}
+                    </span>
+                  )}
                 </div>
               </div>
 
