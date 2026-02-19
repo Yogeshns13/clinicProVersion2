@@ -24,6 +24,10 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.93); }
+  to   { opacity: 1; transform: scale(1);    }
+}
 
 /* ==================== WRAPPER ==================== */
 .wrapper {
@@ -672,15 +676,15 @@
   box-shadow: 0 9px 26px rgba(124, 58, 237, 0.45);
 }
 
-/* ==================== INVOICE MODAL ==================== */
+/* ==================== SHARED MODAL OVERLAY ==================== */
 @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes spinBtn { to { transform: rotate(360deg); } }
 
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 16, 35, 0.78);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -689,6 +693,7 @@
   animation: fadeIn 0.22s ease;
 }
 
+/* ==================== INVOICE MODAL (unchanged) ==================== */
 .modal {
   background: rgba(255, 255, 255, 0.97);
   border-radius: 20px;
@@ -703,7 +708,7 @@
   animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* ── Header ── */
+/* ── Invoice Modal Header ── */
 .modalHeader {
   display: flex;
   align-items: center;
@@ -773,7 +778,7 @@
   transform: rotate(90deg);
 }
 
-/* ── Body ── */
+/* ── Invoice Modal Body ── */
 .modalBody {
   padding: 20px 24px;
   display: flex;
@@ -806,7 +811,7 @@
   line-height: 1.5;
 }
 
-/* Discount input group */
+/* Input group */
 .inputGroup {
   display: flex;
   flex-direction: column;
@@ -944,7 +949,7 @@
   font-weight: 500 !important;
 }
 
-/* ── Footer ── */
+/* ── Invoice Modal Footer ── */
 .modalFooter {
   display: flex;
   justify-content: flex-end;
@@ -1011,49 +1016,36 @@
   animation: spinBtn 0.7s linear infinite;
 }
 
-/* ── Dark mode additions ── */
+/* ── Invoice modal dark mode ── */
 :global(.dark-mode) .modal {
   background: rgba(30, 41, 59, 0.97);
   border-color: #475569;
 }
-
-:global(.dark-mode) .modalHeader {
-  border-bottom-color: #334155;
-}
-
+:global(.dark-mode) .modalHeader { border-bottom-color: #334155; }
 :global(.dark-mode) .confirmPrompt {
   background: rgba(251, 191, 36, 0.06);
   border-color: rgba(251, 191, 36, 0.2);
 }
-
 :global(.dark-mode) .confirmPrompt p { color: #fde68a; }
-
 :global(.dark-mode) .discountInput {
   background: #0f172a;
   border-color: rgba(124, 58, 237, 0.3);
   color: #e2e8f0;
 }
-
-:global(.dark-mode) .discountInput:focus {
-  background: #1e293b;
-}
-
+:global(.dark-mode) .discountInput:focus { background: #1e293b; }
 :global(.dark-mode) .modalFooter {
   border-top-color: #334155;
   background: linear-gradient(to bottom, #1e293b, #1a2535);
 }
-
 :global(.dark-mode) .btnNo {
   background: rgba(255, 255, 255, 0.06);
   border-color: #475569;
   color: #94a3b8;
 }
-
 :global(.dark-mode) .successState p { color: #e2e8f0; }
+:global(.dark-mode) .modalSubtitle   { color: #94a3b8; }
 
-:global(.dark-mode) .modalSubtitle { color: #94a3b8; }
-
-/* ── Responsive additions ── */
+/* ── Invoice modal responsive ── */
 @media (max-width: 768px) {
   .headerActions { width: 100%; }
   .exportBtn, .invoiceBtn { flex: 1; justify-content: center; }
@@ -1064,56 +1056,112 @@
 
 /* ==================== UPDATE QUANTITY MODAL ==================== */
 
-/* Teal-themed header for UQ modal */
+/* Overlay — reuses .modalOverlay, nothing extra needed */
+
+/* UQ Modal container — LabWorkDetail style */
+.uqModal {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  animation: scaleIn 0.3s ease;
+}
+
+/* ── UQ Header — teal gradient matching LabWorkDetail ── */
 .uqModalHeader {
-  background: linear-gradient(135deg,
-    rgba(13, 148, 136, 0.07) 0%,
-    rgba(20, 184, 166, 0.04) 100%) !important;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, var(--sd-primary), var(--sd-accent-end));
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
 }
 
-.uqHeaderIcon {
-  background: linear-gradient(135deg, var(--sd-teal), var(--sd-teal-end)) !important;
-  box-shadow: 0 5px 16px rgba(13, 148, 136, 0.35) !important;
+.uqHeaderContent {
+  flex: 1;
 }
 
-.uqModalTitle {
-  background: linear-gradient(135deg, var(--sd-teal), var(--sd-teal-end)) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
+.uqHeaderContent h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: white;
 }
 
-/* Info strip inside UQ modal */
-.uqInfoStrip {
+.uqHeaderMeta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.uqMedBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  color: white;
+}
+
+.uqCloseBtn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.uqCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+/* ── UQ Body ── */
+.uqModalBody {
+  padding: 24px 28px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Info strip — shows current qty & discount */
+.uqInfoStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
   background: linear-gradient(135deg,
     rgba(13, 148, 136, 0.06),
     rgba(20, 184, 166, 0.04));
   border: 1px solid rgba(13, 148, 136, 0.18);
-  border-radius: 11px;
-  padding: 12px 16px;
+  border-radius: 12px;
+  padding: 14px 18px;
 }
 
 .uqInfoBlock {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 0 16px 0 0;
-  margin-right: 16px;
-  border-right: 1px solid rgba(13, 148, 136, 0.15);
-}
-
-.uqInfoBlock:last-child {
-  border-right: none;
-  padding-right: 0;
-  margin-right: 0;
+  gap: 4px;
 }
 
 .uqInfoLabel {
-  font-size: 0.61rem;
+  font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -1121,7 +1169,7 @@
 }
 
 .uqInfoVal {
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--sd-dark);
 }
@@ -1131,74 +1179,286 @@
   font-size: 1rem !important;
 }
 
-/* Current discount chip in info strip */
 .uqCurrDiscount {
   color: var(--sd-orange) !important;
-  font-size: 0.9rem !important;
+  font-size: 0.95rem !important;
 }
 
-/* Teal-tinted quantity input (no right padding — no suffix icon) */
+/* Form section inside UQ */
+.uqFormSection {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.uqFormGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+}
+
+.uqFormGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.uqFormGroup label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--sd-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Inputs inside UQ modal — LabWorkDetail formInput style */
 .uqInput {
-  border-color: rgba(13, 148, 136, 0.25) !important;
-  padding-right: 16px !important;
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(13, 148, 136, 0.2);
+  border-radius: 10px;
+  color: var(--sd-dark);
+  font-size: 0.94rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
 }
 
 .uqInput:focus {
-  border-color: var(--sd-teal) !important;
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12) !important;
+  border-color: var(--sd-teal-end);
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15);
+  background: white;
 }
 
-/* Discount input inside UQ modal — restore right padding for the % suffix */
-.uqDiscountInput {
-  padding-right: 44px !important;
+.uqInput:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: #f1f5f9;
 }
 
-/* Teal % suffix for UQ discount input */
+/* Wrapper for inputs that need a suffix icon */
+.uqInputWrapper {
+  position: relative;
+}
+
+.uqInputWrapper .uqInput {
+  padding-right: 44px;
+}
+
 .uqInputSuffix {
-  color: var(--sd-teal) !important;
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--sd-teal);
+  pointer-events: none;
 }
 
-/* Teal progress banner */
+.uqInputHint {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* Error banner inside UQ */
+.uqErrorBanner {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 14px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 10px;
+  color: #dc2626;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* Progress banner inside UQ */
 .uqProgressBanner {
-  background: rgba(13, 148, 136, 0.07) !important;
-  border-color: rgba(13, 148, 136, 0.22) !important;
-  color: var(--sd-teal) !important;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 14px;
+  background: rgba(13, 148, 136, 0.07);
+  border: 1px solid rgba(13, 148, 136, 0.22);
+  border-radius: 10px;
+  color: var(--sd-teal);
+  font-size: 0.82rem;
+  font-weight: 600;
 }
 
 .uqSpinner {
-  border-color: rgba(13, 148, 136, 0.2) !important;
-  border-top-color: var(--sd-teal) !important;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(13, 148, 136, 0.2);
+  border-top-color: var(--sd-teal);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
 }
 
-/* Teal confirm button for UQ modal */
-.uqBtnYes {
-  background: linear-gradient(135deg, var(--sd-teal), var(--sd-teal-end)) !important;
-  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.32) !important;
+/* ── UQ Footer ── */
+.uqModalFooter {
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
-.uqBtnYes:hover:not(:disabled) {
-  box-shadow: 0 8px 22px rgba(13, 148, 136, 0.44) !important;
+/* Cancel button inside UQ */
+.uqCancelBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 42px;
+  padding: 0 20px;
+  background: rgba(100, 116, 139, 0.1);
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.87rem;
+  border: 2px solid rgba(100, 116, 139, 0.3);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
 }
 
-/* Dark mode for UQ modal */
+.uqCancelBtn:hover:not(:disabled) {
+  background: rgba(100, 116, 139, 0.2);
+  transform: translateY(-1px);
+}
+
+.uqCancelBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Confirm / Update button — teal */
+.uqConfirmBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 24px;
+  background: linear-gradient(135deg, var(--sd-accent), var(--sd-accent-end));
+  color: white;
+  font-weight: 700;
+  font-size: 0.87rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 17px rgba(13, 148, 136, 0.35);
+}
+
+.uqConfirmBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.45);
+}
+
+.uqConfirmBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.uqBtnSpinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spinBtn 0.7s linear infinite;
+}
+
+/* ── UQ Success state ── */
+.uqSuccessState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 0 8px;
+  gap: 10px;
+}
+
+.uqSuccessIcon {
+  color: #16a34a;
+  margin-bottom: 4px;
+}
+
+.uqSuccessState h3 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #16a34a;
+  margin: 0;
+}
+
+.uqSuccessState p {
+  font-size: 0.88rem;
+  color: var(--sd-dark);
+  margin: 0;
+  font-weight: 600;
+}
+
+.uqSuccessMsg {
+  color: #64748b !important;
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+}
+
+/* ── UQ dark mode ── */
+:global(.dark-mode) .uqModal {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+:global(.dark-mode) .uqModalBody { background: #1e293b; }
+
 :global(.dark-mode) .uqInfoStrip {
   background: rgba(13, 148, 136, 0.08);
   border-color: rgba(13, 148, 136, 0.2);
 }
 
-:global(.dark-mode) .uqInfoBlock {
-  border-right-color: rgba(13, 148, 136, 0.15);
-}
+:global(.dark-mode) .uqInfoVal { color: #e2e8f0; }
 
-:global(.dark-mode) .uqInfoVal {
+:global(.dark-mode) .uqInput {
+  background: #0f172a;
+  border-color: rgba(13, 148, 136, 0.3);
   color: #e2e8f0;
 }
 
-:global(.dark-mode) .uqInput {
-  background: #0f172a !important;
-  color: #e2e8f0 !important;
+:global(.dark-mode) .uqInput:focus {
+  background: #1e293b;
 }
 
-:global(.dark-mode) .uqInput:focus {
-  background: #1e293b !important;
+:global(.dark-mode) .uqModalFooter {
+  background: #1a2535;
+  border-top-color: #334155;
+}
+
+:global(.dark-mode) .uqCancelBtn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .uqSuccessState p { color: #e2e8f0; }
+
+/* ── UQ responsive ── */
+@media (max-width: 768px) {
+  .uqModal { max-width: 100%; }
+  .uqModalHeader { padding: 20px; }
+  .uqHeaderContent h2 { font-size: 1.15rem; }
+  .uqModalBody { padding: 20px; }
+  .uqFormGrid { grid-template-columns: 1fr; }
+  .uqModalFooter { flex-direction: column; padding: 14px 20px; }
+  .uqCancelBtn, .uqConfirmBtn { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .uqModalHeader { padding: 16px; }
+  .uqHeaderMeta { flex-direction: column; gap: 6px; }
+  .uqInfoStrip { grid-template-columns: 1fr 1fr; }
+  .uqModalBody { padding: 16px; }
 }

@@ -3,11 +3,11 @@
 /* ==================== ROOT & VARIABLES ==================== */
 :root {
   --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
+  --primary-end:   #225ca0;
+  --accent-start:  #207d9c;
+  --accent-end:    #30b2b5;
+  --text-light:    #ffffff;
+  --text-dark:     #1e293b;
 }
 
 /* ==================== MAIN WRAPPER ==================== */
@@ -163,7 +163,7 @@
 .fullWidthDetail {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   margin-top: 18px;
   padding-top: 18px;
   border-top: 1px solid rgba(34, 43, 108, 0.08);
@@ -187,6 +187,41 @@
 
 .lowStockText {
   color: #d97706;
+}
+
+/* ==================== TIMING DISPLAY ==================== */
+.timingDisplay {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.timingPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(1, 97, 131, 0.1), rgba(34, 92, 160, 0.1));
+  border: 1.5px solid rgba(1, 97, 131, 0.25);
+  color: #016183;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.timingPillKey {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #016183, #225ca0);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 /* ==================== FOOTER ACTIONS ==================== */
@@ -245,9 +280,7 @@
   color: #64748b;
 }
 
-.error {
-  color: #ef4444;
-}
+.error { color: #ef4444; }
 
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .wrapper {
@@ -264,24 +297,19 @@
   border-bottom-color: #475569;
 }
 
-:global(.dark-mode) .subtitle {
-  color: #94a3b8;
-}
-
-:global(.dark-mode) .sectionTitle {
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .detailLabel {
-  color: #94a3b8;
-}
-
-:global(.dark-mode) .detailValue {
-  color: #e2e8f0;
-}
+:global(.dark-mode) .subtitle    { color: #94a3b8; }
+:global(.dark-mode) .sectionTitle { color: #e2e8f0; }
+:global(.dark-mode) .detailLabel  { color: #94a3b8; }
+:global(.dark-mode) .detailValue  { color: #e2e8f0; }
 
 :global(.dark-mode) .fullWidthDetail {
   border-top-color: #475569;
+}
+
+:global(.dark-mode) .timingPill {
+  background: rgba(1, 97, 131, 0.18);
+  border-color: rgba(48, 178, 181, 0.3);
+  color: #30b2b5;
 }
 
 :global(.dark-mode) .cardFooter {
@@ -316,12 +344,98 @@
     padding: 16px;
   }
 
-  .headerInfo h2 {
-    font-size: 1.3rem;
-  }
+  .headerInfo h2 { font-size: 1.3rem; }
 
   .backBtn {
     width: 100%;
     justify-content: center;
   }
+}
+
+/* ViewMedicineMasterModal.module.css */
+/* Modal Overlay & Container — add these to your existing ViewMedicineMaster.module.css
+   OR import this file separately in ViewMedicineMaster.jsx */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: overlayFadeIn 0.2s ease;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modalContainer {
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 24px 60px rgba(34, 43, 108, 0.22);
+  animation: modalSlideIn 0.25s ease;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 43, 108, 0.2) transparent;
+}
+
+.modalContainer::-webkit-scrollbar { width: 6px; }
+.modalContainer::-webkit-scrollbar-track { background: transparent; }
+.modalContainer::-webkit-scrollbar-thumb { background: rgba(34, 43, 108, 0.2); border-radius: 4px; }
+
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: translateY(-20px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* Close button row at the top of the modal */
+.modalTopBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 0 20px;
+}
+
+.modalCloseBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #016183, #225ca0);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.25);
+}
+
+.modalCloseBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(32, 125, 156, 0.35);
+}
+
+/* Dark mode */
+:global(.dark-mode) .modalContainer {
+  background: #1e293b;
+}
+:global(.dark-mode) .modalOverlay {
+  background: rgba(5, 10, 20, 0.7);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .modalOverlay { padding: 0; align-items: flex-end; }
+  .modalContainer { max-height: 95vh; border-radius: 16px 16px 0 0; }
 }

@@ -15,6 +15,7 @@ import Header from '../Header/Header.jsx';
 import styles from './ClinicList.module.css';
 
 const getLiveValidationMessage = (fieldName, value) => {
+  // Returns validation message while typing (empty string = valid)
   switch (fieldName) {
     case 'clinicName':
       if (!value || !value.trim()) return 'Clinic name is required';
@@ -227,26 +228,31 @@ const filterInput = (fieldName, value) => {
     
     case 'latitude':
     case 'longitude':
+      
       return value
         .replace(/[^0-9.-]/g, '')
-        .replace(/(\..*?)\./g, '$1')
-        .replace(/(?!^)-/g, '');
+        .replace(/(\..*?)\./g, '$1')   
+        .replace(/(?!^)-/g, '');       
 
     case 'mobile':
     case 'altMobile':
+      
       return value.replace(/[^0-9]/g, '');
     
     case 'gstNo':
+      
       const filtered = value.replace(/[^A-Z0-9]/g, '');
       return filtered.substring(0, 15),value.toUpperCase();
       
     case 'fileNoPrefix':
     case 'invoicePrefix':
+      
       return value.replace(/[^A-Za-z0-9_-]/g, ''),value.toUpperCase();
     
     case 'cgstPercentage':
     case 'sgstPercentage':
     case 'lastFileSeq':
+      
       return value.replace(/[^0-9.]/g, '');
     
     default:
@@ -261,18 +267,8 @@ const ClinicList = () => {
   // Data & Filter
   const [clinics, setClinics] = useState([]);
   const [allClinics, setAllClinics] = useState([]);
-
-  // Filter inputs (not applied until search)
-  const [filterInputs, setFilterInputs] = useState({
-    searchType: 'name',
-    searchValue: '',
-  });
-
-  // Applied filters (only set when Search is clicked)
-  const [appliedFilters, setAppliedFilters] = useState({
-    searchType: 'name',
-    searchValue: '',
-  });
+  const [searchInput, setSearchInput] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Selected / Modal
   const [selectedClinic, setSelectedClinic] = useState(null);
@@ -281,27 +277,29 @@ const ClinicList = () => {
 
   // Add Form Modal
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    clinicName: '',
-    address: '',
-    location: '',
-    latitude: '',
-    longitude: '',
-    clinicType: '',
-    gstNo: '',
-    cgstPercentage: 0,
-    sgstPercentage: 0,
-    ownerName: '',
-    mobile: '',
-    altMobile: '',
-    email: '',
-    fileNoPrefix: '',
-    lastFileSeq: 0,
-    invoicePrefix: '',
-  });
+const [formData, setFormData] = useState({
+  clinicName: '',
+  address: '',
+  location: '',
+  latitude: '',      
+  longitude: '',     
+  clinicType: '',
+  gstNo: '',
+  cgstPercentage: 0,
+  sgstPercentage: 0,
+  ownerName: '',
+  mobile: '',
+  altMobile: '',
+  email: '',
+  fileNoPrefix: '',
+  lastFileSeq: 0,
+  invoicePrefix: '',
+});
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
+
+  
   const [validationMessages, setValidationMessages] = useState({});
 
   // ────────────────────────────────────────────────
@@ -311,7 +309,9 @@ const ClinicList = () => {
       try {
         setLoading(true);
         setError(null);
+        
         const data = await getClinicList();
+        
         setClinics(data);
         setAllClinics(data);
       } catch (err) {
@@ -331,31 +331,18 @@ const ClinicList = () => {
   // ────────────────────────────────────────────────
   // Computed values
   const filteredClinics = useMemo(() => {
-    if (!appliedFilters.searchValue.trim()) return allClinics;
-    const term = appliedFilters.searchValue.toLowerCase();
-
-    switch (appliedFilters.searchType) {
-      case 'name':
-        return allClinics.filter(c => c.name?.toLowerCase().includes(term));
-      case 'ownerName':
-        return allClinics.filter(c => c.ownerName?.toLowerCase().includes(term));
-      case 'mobile':
-        return allClinics.filter(c => c.mobile?.toLowerCase().includes(term));
-      case 'email':
-        return allClinics.filter(c => c.email?.toLowerCase().includes(term));
-      case 'gstNo':
-        return allClinics.filter(c => c.gstNo?.toLowerCase().includes(term));
-      default:
-        return allClinics.filter(
-          c =>
-            c.name?.toLowerCase().includes(term) ||
-            c.ownerName?.toLowerCase().includes(term) ||
-            c.mobile?.toLowerCase().includes(term) ||
-            c.email?.toLowerCase().includes(term) ||
-            c.gstNo?.toLowerCase().includes(term)
-        );
-    }
-  }, [allClinics, appliedFilters]);
+    if (!searchTerm.trim()) return allClinics;
+    const term = searchTerm.toLowerCase();
+    return allClinics.filter(
+      (clinic) =>
+        clinic.name?.toLowerCase().includes(term) ||
+        clinic.ownerName?.toLowerCase().includes(term) ||
+        clinic.mobile?.toLowerCase().includes(term) ||
+        clinic.email?.toLowerCase().includes(term) ||
+        clinic.location?.toLowerCase().includes(term) ||
+        clinic.gstNo?.toLowerCase().includes(term)
+    );
+  }, [allClinics, searchTerm]);
 
   // ────────────────────────────────────────────────
   // Helper functions
@@ -367,50 +354,38 @@ const ClinicList = () => {
 
   // ────────────────────────────────────────────────
   // Handlers
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilterInputs(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSearch = () => {
-    setAppliedFilters({ ...filterInputs });
-  };
-
-  const handleClearFilters = () => {
-    const empty = { searchType: 'name', searchValue: '' };
-    setFilterInputs(empty);
-    setAppliedFilters(empty);
-  };
-
+  const handleSearch = () => setSearchTerm(searchInput.trim());
+  
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') handleSearch();
   };
 
   const openDetails = (clinic) => setSelectedClinic(clinic);
+  
   const closeModal = () => setSelectedClinic(null);
 
   const openAddForm = () => {
-    setFormData({
-      clinicName: '',
-      address: '',
-      location: '',
-      latitude: '',
-      longitude: '',
-      clinicType: '',
-      gstNo: '',
-      cgstPercentage: 0,
-      sgstPercentage: 0,
-      ownerName: '',
-      mobile: '',
-      altMobile: '',
-      email: '',
-      fileNoPrefix: '',
-      lastFileSeq: 0,
-      invoicePrefix: '',
-    });
+setFormData({
+  clinicName: '',
+  address: '',
+  location: '',
+  latitude: '',      
+  longitude: '',     
+  clinicType: '',
+  gstNo: '',
+  cgstPercentage: 0,
+  sgstPercentage: 0,
+  ownerName: '',
+  mobile: '',
+  altMobile: '',
+  email: '',
+  fileNoPrefix: '',
+  lastFileSeq: 0,
+  invoicePrefix: '',
+});
     setFormError('');
     setFormSuccess(false);
-    setValidationMessages({});
+    setValidationMessages({}); 
     setIsAddFormOpen(true);
   };
 
@@ -419,29 +394,36 @@ const ClinicList = () => {
     setFormLoading(false);
     setFormError('');
     setFormSuccess(false);
-    setValidationMessages({});
+    setValidationMessages({}); 
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    const filteredValue = filterInput(name, value);
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  const filteredValue = filterInput(name, value);
 
-    if (name === 'latitude' || name === 'longitude') {
-      setFormData((prev) => {
-        const updated = { ...prev, [name]: filteredValue };
-        const lat = name === 'latitude' ? filteredValue : prev.latitude || '';
-        const lng = name === 'longitude' ? filteredValue : prev.longitude || '';
-        updated.location = [lat, lng].filter(Boolean).join(',');
-        return updated;
-      });
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: filteredValue }));
-    }
+  if (name === 'latitude' || name === 'longitude') {
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: filteredValue };
 
-    const validationMessage = getLiveValidationMessage(name, filteredValue);
-    setValidationMessages((prev) => ({ ...prev, [name]: validationMessage }));
-  };
+      // Combine into location string
+      const lat = name === 'latitude' ? filteredValue : prev.latitude || '';
+      const lng = name === 'longitude' ? filteredValue : prev.longitude || '';
 
+      updated.location = [lat, lng].filter(Boolean).join(',');
+
+      return updated;
+    });
+  } else {
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+  }
+
+  // Live validation
+  const validationMessage = getLiveValidationMessage(name, filteredValue);
+  setValidationMessages((prev) => ({
+    ...prev,
+    [name]: validationMessage,
+  }));
+};
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
@@ -497,72 +479,32 @@ const ClinicList = () => {
 
   if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
-  // Has an active search applied
-  const hasActiveSearch = !!appliedFilters.searchValue.trim();
-
   // ────────────────────────────────────────────────
   return (
     <div className={styles.clinicListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Clinic Management" />
 
-      {/* ── Filters + Add Clinic bar ── */}
-      <div className={styles.filtersContainer}>
-        <div className={styles.filtersGrid}>
+      {/* Toolbar */}
+      <div className={styles.clinicToolbar}>
+        <div className={styles.clinicSearchContainer}>
+          <input
+            type="text"
+            placeholder="Search by name, owner, mobile, GST..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className={styles.clinicSearchInput}
+          />
+          <button onClick={handleSearch} className={styles.clinicSearchBtn}>
+            <FiSearch size={20} />
+          </button>
+        </div>
 
-          {/* Search group */}
-          <div className={styles.searchGroup}>
-            <select
-              name="searchType"
-              value={filterInputs.searchType}
-              onChange={handleFilterChange}
-              className={styles.searchTypeSelect}
-            >
-              <option value="name">Clinic Name</option>
-              <option value="ownerName">Owner Name</option>
-              <option value="mobile">Mobile</option>
-              <option value="email">Email</option>
-              <option value="gstNo">GST No</option>
-            </select>
-
-            <input
-              type="text"
-              name="searchValue"
-              placeholder={`Search by ${
-                filterInputs.searchType === 'name' ? 'Clinic Name' :
-                filterInputs.searchType === 'ownerName' ? 'Owner Name' :
-                filterInputs.searchType === 'mobile' ? 'Mobile' :
-                filterInputs.searchType === 'email' ? 'Email' :
-                'GST No'
-              }`}
-              value={filterInputs.searchValue}
-              onChange={handleFilterChange}
-              onKeyPress={handleKeyPress}
-              className={styles.searchInput}
-            />
-          </div>
-
-          {/* Action buttons */}
-          <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
-              <FiSearch size={18} />
-              Search
-            </button>
-
-            {/* Clear button — only shown when a search has been applied */}
-            {hasActiveSearch && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
-                <FiX size={18} />
-                Clear
-              </button>
-            )}
-
-            <button onClick={openAddForm} className={styles.addClinicBtn}>
-              <FiPlus size={18} />
-              Add Clinic
-            </button>
-          </div>
-
+        <div className={styles.clinicAddSection}>
+          <button onClick={openAddForm} className={styles.clinicAddBtn}>
+            <FiPlus size={22} /> Add Clinic
+          </button>
         </div>
       </div>
 
@@ -584,7 +526,7 @@ const ClinicList = () => {
             {filteredClinics.length === 0 ? (
               <tr>
                 <td colSpan={7} className={styles.clinicNoData}>
-                  {hasActiveSearch ? 'No clinics found.' : 'No clinics registered yet.'}
+                  {searchTerm ? 'No clinics found.' : 'No clinics registered yet.'}
                 </td>
               </tr>
             ) : (
@@ -722,11 +664,20 @@ const ClinicList = () => {
               {formSuccess && <div className={styles.formSuccess}>Clinic added successfully!</div>}
 
               <div className={styles.formGrid}>
+                {/* Basic Information */}
                 <h3 className={styles.formSectionTitle}>Basic Information</h3>
 
                 <div className={styles.formGroup}>
-                  <label>Clinic Name <span className={styles.required}>*</span></label>
-                  <input required name="clinicName" value={formData.clinicName} onChange={handleInputChange} />
+                  <label>
+                    Clinic Name <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    required
+                    name="clinicName"
+                    value={formData.clinicName}
+                    onChange={handleInputChange}
+                  />
+                  
                   {validationMessages.clinicName && (
                     <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                       {validationMessages.clinicName}
@@ -736,7 +687,12 @@ const ClinicList = () => {
 
                 <div className={styles.formGroup}>
                   <label>Clinic Type</label>
-                  <input name="clinicType" value={formData.clinicType} onChange={handleInputChange} />
+                  <input
+                    name="clinicType"
+                    value={formData.clinicType}
+                    onChange={handleInputChange}
+                  />
+                  
                   {validationMessages.clinicType && (
                     <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                       {validationMessages.clinicType}
@@ -745,8 +701,16 @@ const ClinicList = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Owner Name <span className={styles.required}>*</span></label>
-                  <input required name="ownerName" value={formData.ownerName} onChange={handleInputChange} />
+                  <label>
+                    Owner Name <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    required
+                    name="ownerName"
+                    value={formData.ownerName}
+                    onChange={handleInputChange}
+                  />
+                  
                   {validationMessages.ownerName && (
                     <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                       {validationMessages.ownerName}
@@ -756,7 +720,13 @@ const ClinicList = () => {
 
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>Address</label>
-                  <textarea name="address" rows={2} value={formData.address} onChange={handleInputChange} />
+                  <textarea
+                    name="address"
+                    rows={2}
+                    value={formData.address}
+                    onChange={handleInputChange}
+                  />
+                  
                   {validationMessages.address && (
                     <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                       {validationMessages.address}
@@ -764,36 +734,66 @@ const ClinicList = () => {
                   )}
                 </div>
 
-                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                  <label>Location Coordinates</label>
-                  <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
-                    <div style={{ flex: 1 }}>
-                      <input type="number" step="any" min="-90" max="90" name="latitude" placeholder="Latitude" value={formData.latitude || ''} onChange={handleInputChange} />
-                      {validationMessages.latitude && (
-                        <span style={{ color: '#55575c', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                          {validationMessages.latitude}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <input type="number" step="any" min="-180" max="180" name="longitude" placeholder="Longitude" value={formData.longitude || ''} onChange={handleInputChange} />
-                      {validationMessages.longitude && (
-                        <span style={{ color: '#4c4e53', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                          {validationMessages.longitude}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <small style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', display: 'block' }}>
-                    Example: 9.9252,78.1198 (Madurai city center)
-                  </small>
-                </div>
+   {/* New Location Coordinates */}
+<div className={`${styles.formGroup} ${styles.fullWidth}`}>
+  <label>Location Coordinates</label>
+  <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
+    <div style={{ flex: 1 }}>
+      <input
+        type="number"
+        step="any"
+        min="-90"
+        max="90"
+        name="latitude"
+        placeholder="Latitude"
+        value={formData.latitude || ''}
+        onChange={handleInputChange}
+      />
+      {validationMessages.latitude && (
+        <span style={{ color: '#55575c', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+          {validationMessages.latitude}
+        </span>
+      )}
+    </div>
 
+    <div style={{ flex: 1 }}>
+      <input
+        type="number"
+        step="any"
+        min="-180"
+        max="180"
+        name="longitude"
+        placeholder="Longitude"
+        value={formData.longitude || ''}
+        onChange={handleInputChange}
+      />
+      {validationMessages.longitude && (
+        <span style={{ color: '#4c4e53', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+          {validationMessages.longitude}
+        </span>
+      )}
+    </div>
+  </div>
+  <small style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', display: 'block' }}>
+    Example: 9.9252,78.1198 (Madurai city center)
+  </small>
+</div>
+
+                {/* Contact Information */}
                 <h3 className={styles.formSectionTitle}>Contact Information</h3>
 
                 <div className={styles.formGroup}>
-                  <label>Mobile <span className={styles.required}>*</span></label>
-                  <input required name="mobile" value={formData.mobile} onChange={handleInputChange} maxLength="10" />
+                  <label>
+                    Mobile <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    required
+                    name="mobile"
+                    value={formData.mobile}
+                    onChange={handleInputChange}
+                    maxLength="10"
+                  />
+                  
                   {validationMessages.mobile && (
                     <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                       {validationMessages.mobile}
@@ -803,7 +803,13 @@ const ClinicList = () => {
 
                 <div className={styles.formGroup}>
                   <label>Alternate Mobile</label>
-                  <input name="altMobile" value={formData.altMobile} onChange={handleInputChange} maxLength="10" />
+                  <input
+                    name="altMobile"
+                    value={formData.altMobile}
+                    onChange={handleInputChange}
+                    maxLength="10"
+                  />
+                  
                   {validationMessages.altMobile && (
                     <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                       {validationMessages.altMobile}
@@ -813,7 +819,13 @@ const ClinicList = () => {
 
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>Email</label>
-                  <input type="email" name="email" value={formData.email} onChange={handleInputChange} />
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                  />
+                  
                   {validationMessages.email && (
                     <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                       {validationMessages.email}
@@ -821,11 +833,17 @@ const ClinicList = () => {
                   )}
                 </div>
 
+                {/* Tax Information */}
                 <h3 className={styles.formSectionTitle}>Tax Information</h3>
 
                 <div className={styles.formGroup}>
                   <label>GST Number</label>
-                  <input name="gstNo" value={formData.gstNo} onChange={handleInputChange} />
+                  <input
+                    name="gstNo"
+                    value={formData.gstNo}
+                    onChange={handleInputChange}
+                  />
+                  
                   {validationMessages.gstNo && (
                     <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                       {validationMessages.gstNo}
@@ -835,7 +853,15 @@ const ClinicList = () => {
 
                 <div className={styles.formGroup}>
                   <label>CGST Percentage</label>
-                  <input type="number" name="cgstPercentage" value={formData.cgstPercentage} onChange={handleInputChange} min="0" step="0.01" />
+                  <input
+                    type="number"
+                    name="cgstPercentage"
+                    value={formData.cgstPercentage}
+                    onChange={handleInputChange}
+                    min="0"
+                    step="0.01"
+                  />
+                  
                   {validationMessages.cgstPercentage && (
                     <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                       {validationMessages.cgstPercentage}
@@ -845,7 +871,15 @@ const ClinicList = () => {
 
                 <div className={styles.formGroup}>
                   <label>SGST Percentage</label>
-                  <input type="number" name="sgstPercentage" value={formData.sgstPercentage} onChange={handleInputChange} min="0" step="0.01" />
+                  <input
+                    type="number"
+                    name="sgstPercentage"
+                    value={formData.sgstPercentage}
+                    onChange={handleInputChange}
+                    min="0"
+                    step="0.01"
+                  />
+                  
                   {validationMessages.sgstPercentage && (
                     <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                       {validationMessages.sgstPercentage}
@@ -853,6 +887,7 @@ const ClinicList = () => {
                   )}
                 </div>
 
+                {/* Billing Configuration */}
                 <h3 className={styles.formSectionTitle}>Billing Configuration</h3>
 
                 <div className={styles.formGroup}>
@@ -861,22 +896,45 @@ const ClinicList = () => {
                     name="fileNoPrefix"
                     value={formData.fileNoPrefix}
                     onChange={handleInputChange}
-                    onKeyDown={(e) => {
-                      const char = e.key;
-                      if (['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Enter'].includes(char) || e.ctrlKey || e.metaKey) return;
-                      if (!/[A-Za-z0-9_-]/.test(char)) e.preventDefault();
-                    }}
-                    onPaste={(e) => {
-                      e.preventDefault();
-                      const pasted = (e.clipboardData || window.clipboardData).getData('text');
-                      const clean = pasted.replace(/[^A-Za-z0-9_-]/g, '');
-                      const input = e.target;
-                      const newValue = input.value.substring(0, input.selectionStart) + clean + input.value.substring(input.selectionEnd);
-                      setFormData((prev) => ({ ...prev, [input.name]: newValue }));
-                    }}
-                    placeholder="e.g. FILE-2026_DOC"
-                    maxLength={20}
+                     onKeyDown={(e) => {
+    const char = e.key;
+
+    if (
+      char === 'Backspace' ||
+      char === 'Delete' ||
+      char === 'ArrowLeft' ||
+      char === 'ArrowRight' ||
+      char === 'ArrowUp' ||
+      char === 'ArrowDown' ||
+      char === 'Tab' ||
+      char === 'Enter' ||
+      e.ctrlKey || e.metaKey 
+    ) {
+      return; 
+    }
+
+
+    if (!/[A-Za-z0-9_-]/.test(char)) {
+      e.preventDefault(); 
+    }
+  }}
+  onPaste={(e) => {
+    e.preventDefault();
+    const pasted = (e.clipboardData || window.clipboardData).getData('text');
+    const clean = pasted.replace(/[^A-Za-z0-9_-]/g, '');
+    const input = e.target;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const newValue =
+      input.value.substring(0, start) +
+      clean +
+      input.value.substring(end);
+    setFormData((prev) => ({ ...prev, [input.name]: newValue }));
+  }}
+  placeholder="e.g. FILE-2026_DOC"
+  maxLength={20}
                   />
+                  
                   {validationMessages.fileNoPrefix && (
                     <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                       {validationMessages.fileNoPrefix}
@@ -886,7 +944,14 @@ const ClinicList = () => {
 
                 <div className={styles.formGroup}>
                   <label>Last File Sequence</label>
-                  <input type="number" name="lastFileSeq" value={formData.lastFileSeq} onChange={handleInputChange} min="0" />
+                  <input
+                    type="number"
+                    name="lastFileSeq"
+                    value={formData.lastFileSeq}
+                    onChange={handleInputChange}
+                    min="0"
+                  />
+  
                   {validationMessages.lastFileSeq && (
                     <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                       {validationMessages.lastFileSeq}
@@ -896,27 +961,48 @@ const ClinicList = () => {
 
                 <div className={styles.formGroup}>
                   <label>Invoice Prefix</label>
-                  <input
-                    type="text"
-                    name="invoicePrefix"
-                    value={formData.invoicePrefix || ''}
-                    onChange={handleInputChange}
-                    onKeyDown={(e) => {
-                      const char = e.key;
-                      if (['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Enter'].includes(char) || e.ctrlKey || e.metaKey) return;
-                      if (!/[A-Za-z0-9_-]/.test(char)) e.preventDefault();
-                    }}
-                    onPaste={(e) => {
-                      e.preventDefault();
-                      const pasted = (e.clipboardData || window.clipboardData).getData('text');
-                      const clean = pasted.replace(/[^A-Za-z0-9_-]/g, '');
-                      const input = e.target;
-                      const newValue = input.value.substring(0, input.selectionStart) + clean + input.value.substring(input.selectionEnd);
-                      setFormData((prev) => ({ ...prev, [input.name]: newValue }));
-                    }}
-                    placeholder="e.g. INV-2026_ABC"
-                    maxLength={20}
-                  />
+                <input
+  type="text"
+  name="invoicePrefix"
+  value={formData.invoicePrefix || ''}
+  onChange={handleInputChange}           
+  onKeyDown={(e) => {
+    const char = e.key;
+
+    if (
+      char === 'Backspace' ||
+      char === 'Delete' ||
+      char === 'ArrowLeft' ||
+      char === 'ArrowRight' ||
+      char === 'ArrowUp' ||
+      char === 'ArrowDown' ||
+      char === 'Tab' ||
+      char === 'Enter' ||
+      e.ctrlKey || e.metaKey   
+    ) {
+      return; 
+    }
+
+    if (!/[A-Za-z0-9_-]/.test(char)) {
+      e.preventDefault(); 
+    }
+  }}
+  onPaste={(e) => {
+    e.preventDefault();
+    const pasted = (e.clipboardData || window.clipboardData).getData('text');
+    const clean = pasted.replace(/[^A-Za-z0-9_-]/g, '');
+    const input = e.target;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const newValue =
+      input.value.substring(0, start) +
+      clean +
+      input.value.substring(end);
+    setFormData((prev) => ({ ...prev, [input.name]: newValue }));
+  }}
+  placeholder="e.g. INV-2026_ABC"
+  maxLength={20}
+/>
                   {validationMessages.invoicePrefix && (
                     <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                       {validationMessages.invoicePrefix}

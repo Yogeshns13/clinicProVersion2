@@ -1,4 +1,6 @@
 /* src/components/ClinicList.module.css */
+/* FULL CSS WITH ~15% SIZE REDUCTION APPLIED TO PADDINGS, FONTS, WIDTHS, HEIGHTS, RADII, ETC. */
+/* POPUP CONTAINERS REDUCED BY ADDITIONAL 15% */
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
@@ -38,152 +40,200 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* ==================== FILTERS CONTAINER (replaces old toolbar) ==================== */
-.filtersContainer {
-  background: white;
-  border-radius: 17px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
-  animation: slideUp 0.3s ease;
+/* ==================== PROFILE HEADER ==================== */
+.headerProfileContainer {
+  position: relative;
 }
 
-/* Single row: [search group ─ flex 1]  [actions] */
-.filtersGrid {
+.headerProfile {
   display: flex;
   align-items: center;
-  gap: 15px;
-}
-
-.searchGroup {
-  display: flex;
-  flex: 1;
-  align-items: stretch;
-  min-width: 0;
-}
-
-.searchTypeSelect {
-  min-width: 140px;
-  height: 40px;
-  padding: 0 12px;
-  background: white;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px 0 0 10px;
-  color: var(--text-dark);
-  font-size: 0.85rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
+  gap: 8px;
+  padding: 3px;
+  border-radius: 50px;
   cursor: pointer;
-  flex-shrink: 0;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background-color: var(--accent-start);
+  transition: all 0.2s ease;
 }
 
-.searchTypeSelect:focus {
-  outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+.headerProfile:hover {
+  background: var(--accent-end);
+  transform: translateY(-1px);
 }
 
-.searchInput {
-  flex: 1;
-  height: 40px;
-  padding: 0 15px;
+.userIconWrapper {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-start);
+}
+
+.userIconWrapper svg {
+  color: #ffffff;
+  stroke-width: 2;
+}
+
+/* ==================== PROFILE DROPDOWN ==================== */
+.profileDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
   background: white;
-  border: 1px solid #cbd5e1;
-  border-left: none;
-  border-radius: 0 10px 10px 0;
-  color: var(--text-dark);
-  font-size: 0.85rem;
-  transition: all 0.3s ease;
-  min-width: 0;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+  min-width: 180px;
+  z-index: 100;
+  overflow: hidden;
+  border: 1px solid rgba(34, 43, 108, 0.1);
 }
 
-.searchInput::placeholder {
-  color: #94a3b8;
-}
-
-.searchInput:focus {
-  outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
-  border-left: 1px solid var(--accent-end);
-}
-
-/* Action buttons row */
-.filterActions {
+.profileDropdownItem {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-shrink: 0;
+  padding: 10px 16px;
+  color: #1e293b;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.searchButton {
+.profileDropdownItem:hover {
+  background: #f1f5f9;
+}
+
+.profileDropdownItem svg {
+  color: #64748b;
+}
+
+.usernameItem {
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+}
+
+/* ==================== TOOLBAR ==================== */
+.clinicToolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.clinicToolbar .clinicSearchContainer {
+  flex: 1;
+  min-width: 255px;
+  position: relative;
+}
+
+.clinicSearchContainer {
+  flex: 1;
+  min-width: 255px;
+  position: relative;
+}
+
+.clinicSearchInput {
+  width: 80%;
   height: 40px;
-  padding: 0 20px;
+  padding: 15px 60px 15px 20px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  color: var(--text-dark);
+  font-size: 0.94rem;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  transition: all 0.3s ease;
+}
+
+.clinicSearchInput::placeholder {
+  color: #94a3b8;
+}
+
+.clinicSearchInput:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18), 0 8px 25px rgba(34, 43, 108, 0.12);
+}
+
+.clinicSearchBtn {
+  position: absolute;
+  right: 210px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
   background: linear-gradient(135deg, #016183, var(--primary-end));
   color: var(--text-light);
-  font-weight: 600;
-  font-size: 0.85rem;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
-}
-
-.searchButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
-}
-
-.clearButton {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 20px;
-  background: #e2e8f0;
-  color: #475569;
-  font-weight: 600;
-  font-size: 0.85rem;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
+  justify-content: center;
   transition: all 0.3s ease;
-  white-space: nowrap;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.35);
 }
 
-.clearButton:hover {
-  background: #cbd5e1;
-  transform: translateY(-2px);
+.clinicSearchBtn:hover {
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 8px 24px rgba(32, 125, 156, 0.45);
 }
 
-/* Add Clinic button — sits right in the same bar */
-.addClinicBtn {
+.clinicAddBtn {
   display: flex;
   align-items: center;
-  gap: 8px;
   height: 40px;
-  padding: 0 20px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  width: 150px;
+  gap: 10px;
+  padding: 10px 10px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
   color: var(--text-light);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.94rem;
   border: none;
-  border-radius: 10px;
+  border-radius: 14px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
+  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
   white-space: nowrap;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
 }
 
-.addClinicBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+.clinicAddBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(32, 125, 156, 0.45);
+}
+
+.clinicBackBtn {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  width: 150px;
+  gap: 10px;
+  padding: 10px 10px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  font-weight: 700;
+  font-size: 0.94rem;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  white-space: nowrap;
+}
+
+.clinicBackBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(32, 125, 156, 0.45);
 }
 
 /* ==================== TABLE ==================== */
@@ -285,7 +335,9 @@
   letter-spacing: 0.7px;
 }
 
-.statusBadge.active { color: #166534; }
+.statusBadge.active {
+  color: #166534;
+}
 
 .statusBadge.inactive {
   background: rgba(239, 68, 68, 0.15);
@@ -298,7 +350,9 @@
   font-size: 0.77rem;
 }
 
-.active  { color: #166534; }
+.active {
+  color: #166534;
+}
 
 .inactive {
   background: rgba(239, 68, 68, 0.15);
@@ -450,11 +504,17 @@
   box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
 }
 
-.btnCancel:hover::before { opacity: 1; }
+.btnCancel:hover::before {
+  opacity: 1;
+}
 
-.btnCancel:hover::after { background-position: 200% 0; }
+.btnCancel:hover::after {
+  background-position: 200% 0;
+}
 
-.btnIcon { margin-right: 5px; }
+.btnIcon {
+  margin-right: 5px;
+}
 
 /* ==================== MODAL OVERLAY ==================== */
 .clinicModalOverlay {
@@ -484,8 +544,13 @@
   animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.formModal       { max-width: 578px; }
-.employeeFormModal { max-width: 578px; }
+.formModal {
+  max-width: 578px;
+}
+
+.employeeFormModal {
+  max-width: 578px;
+}
 
 .updateEmployeeForm {
   max-width: none;
@@ -588,7 +653,7 @@
   font-size: 0.76rem;
   letter-spacing: -0.09px;
 }
-
+ 
 .clinicExtraInfo {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(159px, 1fr));
@@ -601,7 +666,10 @@
   box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
-.clinicExtraInfo strong { color: var(--accent-end); font-weight: 700; }
+.clinicExtraInfo strong {
+  color: var(--accent-end);
+  font-weight: 700;
+}
 
 /* ==================== FORMS ==================== */
 .formGrid {
@@ -635,7 +703,10 @@
   letter-spacing: 0.17px;
 }
 
-.formGroup .required { color: #dc2626; font-weight: 700; }
+.formGroup .required {
+  color: #dc2626;
+  font-weight: 700;
+}
 
 .formGroup input,
 .formGroup textarea,
@@ -652,10 +723,14 @@
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.fullWidth { grid-column: 1 / -1; }
+.fullWidth {
+  grid-column: 1 / -1;
+}
 
 .formGroup input::placeholder,
-.formGroup textarea::placeholder { color: rgba(30, 41, 59, 0.4); }
+.formGroup textarea::placeholder {
+  color: rgba(30, 41, 59, 0.4);
+}
 
 .formGroup input:focus,
 .formGroup textarea:focus,
@@ -689,7 +764,10 @@
   border-color: rgba(34, 197, 94, 0.3);
 }
 
-.required { color: #dc2626; font-weight: 700; }
+.required {
+  color: #dc2626;
+  font-weight: 700;
+}
 
 /* ==================== DETAILS MODAL ==================== */
 .detailsModal {
@@ -753,7 +831,9 @@
   font-weight: 500;
 }
 
-.statusBadgeLargeWrapper { margin-right: 23px; }
+.statusBadgeLargeWrapper {
+  margin-right: 23px;
+}
 
 .detailsModalBody {
   padding: 14px 20px;
@@ -773,9 +853,26 @@
   overflow: hidden;
 }
 
-.detailsTable td { padding: 8px 10px; border: none; }
+.detailsTable td {
+  padding: 8px 10px;
+  border: none;
+}
 
-.detailsTable td.label,
+.detailsTable td.label {
+  width: 35%;
+  font-weight: 1000;
+  color: #475569;
+  background: rgba(34, 43, 108, 0.05);
+  font-size: 0.8rem;
+}
+
+.detailsTable td.value {
+  font-weight: 1000;
+  color: var(--text-dark);
+  font-size: 0.8rem;
+  background: rgba(34, 43, 108, 0.05);
+}
+
 .label {
   width: 35%;
   font-weight: 1000;
@@ -784,7 +881,6 @@
   font-size: 0.8rem;
 }
 
-.detailsTable td.value,
 .value {
   font-weight: 1000;
   color: var(--text-dark);
@@ -792,76 +888,11 @@
   background: rgba(34, 43, 108, 0.05);
 }
 
-/* ==================== PROFILE HEADER ==================== */
-.headerProfileContainer { position: relative; }
-
-.headerProfile {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 3px;
-  border-radius: 50px;
-  cursor: pointer;
-  color: white;
-  font-size: 0.9rem;
-  font-weight: 500;
-  background-color: var(--accent-start);
-  transition: all 0.2s ease;
-}
-
-.headerProfile:hover {
-  background: var(--accent-end);
-  transform: translateY(-1px);
-}
-
-.userIconWrapper {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--accent-start);
-}
-
-.userIconWrapper svg { color: #ffffff; stroke-width: 2; }
-
-.profileDropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 8px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
-  min-width: 180px;
-  z-index: 100;
-  overflow: hidden;
-  border: 1px solid rgba(34, 43, 108, 0.1);
-}
-
-.profileDropdownItem {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  color: #1e293b;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.profileDropdownItem:hover { background: #f1f5f9; }
-.profileDropdownItem svg  { color: #64748b; }
-
-.usernameItem {
-  border-bottom: 1px solid #e2e8f0;
-  font-weight: 600;
-}
-
 /* ==================== PROFILE DETAILS MODAL ==================== */
-.profileDetailsModal  { max-width: 460px; text-align: center; }
+.profileDetailsModal {
+  max-width: 460px;
+  text-align: center;
+}
 
 .profileAvatarLarge {
   width: 80px;
@@ -878,8 +909,17 @@
   box-shadow: 0 6px 20px rgba(32, 125, 156, 0.3);
 }
 
-.profileDetailsBody h3 { margin: 0 0 6px; font-size: 1.4rem; color: var(--primary-start); }
-.profileRole           { color: #64748b; font-size: 0.95rem; margin-bottom: 24px; }
+.profileDetailsBody h3 {
+  margin: 0 0 6px;
+  font-size: 1.4rem;
+  color: var(--primary-start);
+}
+
+.profileRole {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+}
 
 .profileInfoGrid {
   display: grid;
@@ -896,7 +936,11 @@
   font-weight: 600;
 }
 
-.profileInfoItem p { margin: 0; font-weight: 500; color: #1e293b; }
+.profileInfoItem p {
+  margin: 0;
+  font-weight: 500;
+  color: #1e293b;
+}
 
 /* ==================== UTILITY STATES ==================== */
 .clinicNoData {
@@ -916,9 +960,13 @@
   color: #64748b;
 }
 
-.clinicError { color: #ef4444; }
+.clinicError {
+  color: #ef4444;
+}
 
-.clinicAddSection { /* keep for compatibility */ }
+.clinicAddSection {
+  /* Add section specific styles if needed */
+}
 
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .clinicListWrapper {
@@ -926,38 +974,17 @@
   --text-dark: #e2e8f0;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: #e2e8f0;
+  background-color: var(--text-dark);
 }
-
-:global(.dark-mode) .filtersContainer {
-  background: #1e293b;
-  border-color: #475569;
-}
-
-:global(.dark-mode) .searchTypeSelect {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .searchInput {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .searchInput:focus {
-  border-left: 1px solid var(--accent-end);
-}
-
-:global(.dark-mode) .clearButton {
-  background: #334155;
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .clearButton:hover { background: #475569; }
 
 :global(.dark-mode) .clinicModalFooter {
   background: linear-gradient(135deg, #1e293b, #334155);
+}
+
+:global(.dark-mode) .clinicSearchInput {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
 }
 
 :global(.dark-mode) .clinicTableContainer {
@@ -974,9 +1001,13 @@
   color: #e2e8f0;
 }
 
-:global(.dark-mode) .clinicTable tbody tr:nth-child(even) { background-color: #334155; }
+:global(.dark-mode) .clinicTable tbody tr:nth-child(even) {
+  background-color: #334155;
+}
 
-:global(.dark-mode) .formGroup label { color: var(--accent-end); }
+:global(.dark-mode) .formGroup label {
+  color: var(--accent-end);
+}
 
 :global(.dark-mode) .btnCancel,
 :global(.dark-mode) .btnHold {
@@ -998,7 +1029,9 @@
 }
 
 :global(.dark-mode) .detailsTable td.value,
-:global(.dark-mode) .value { background-color: #1e293b; }
+:global(.dark-mode) .value {
+  background-color: #1e293b;
+}
 
 :global(.dark-mode) .clinicModalHeader h2,
 :global(.dark-mode) .detailsModalHeader h2 {
@@ -1009,19 +1042,34 @@
 }
 
 :global(.dark-mode) .statusBadge.active,
-:global(.dark-mode) .active { color: #9cc14d; }
+:global(.dark-mode) .active {
+  color: #9cc14d;
+}
 
-:global(.dark-mode) .profileDetailsBody h3 { color: var(--accent-end); }
-:global(.dark-mode) .profileRole            { color: var(--text-light); }
-:global(.dark-mode) .profileInfoItem p      { color: var(--text-light); }
-:global(.dark-mode) .profileInfoItem label  { color: var(--accent-end); }
+:global(.dark-mode) .profileDetailsBody h3 {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .profileRole {
+  color: var(--text-light);
+}
+
+:global(.dark-mode) .profileInfoItem p {
+  color: var(--text-light);
+}
+
+:global(.dark-mode) .profileInfoItem label {
+  color: var(--accent-end);
+}
 
 :global(.dark-mode) .profileDropdown {
   background: rgba(30, 41, 59, 0.9);
   border: #ffffff 0.5px solid;
 }
 
-:global(.dark-mode) .profileDropdownItem { color: var(--text-light); }
+:global(.dark-mode) .profileDropdownItem {
+  color: var(--text-light);
+}
 
 :global(.dark-mode) .clinicModal {
   background: rgba(30, 41, 59, 0.94);
@@ -1029,8 +1077,13 @@
   color: #e2e8f0;
 }
 
-:global(.dark-mode) .profileDropdownItem:hover { background: #000000; }
-:global(.dark-mode) .profileDropdownItem svg   { color: var(--accent-end); }
+:global(.dark-mode) .profileDropdownItem:hover {
+  background: #000000;
+}
+
+:global(.dark-mode) .profileDropdownItem svg {
+  color: var(--accent-end);
+}
 
 :global(.dark-mode) .formGroup input,
 :global(.dark-mode) .formGroup textarea,
@@ -1042,48 +1095,33 @@
 
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {
-  .filtersGrid {
+  .clinicToolbar {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .searchGroup {
-    flex-direction: column;
+  .clinicSearchContainer {
+    min-width: 100%;
   }
 
-  .searchTypeSelect {
-    border-radius: 10px;
-    border-bottom: none;
-  }
-
-  .searchInput {
-    border-radius: 0 0 10px 10px;
-    border-left: 1px solid #cbd5e1;
-    border-top: none;
-  }
-
-  .searchInput:focus {
-    border-left: 1px solid var(--accent-end);
-    border-top: 1px solid var(--accent-end);
-  }
-
-  .filterActions {
-    flex-direction: column;
-  }
-
-  .searchButton,
-  .clearButton,
-  .addClinicBtn {
+  .clinicAddBtn {
     width: 100%;
     justify-content: center;
   }
 
   .clinicTable th,
-  .clinicTable td { padding: 12px 14px; }
+  .clinicTable td {
+    padding: 12px 14px;
+  }
 
-  .clinicDetailsBtn { padding: 7px 14px; font-size: 0.72rem; }
+  .clinicDetailsBtn {
+    padding: 7px 14px;
+    font-size: 0.72rem;
+  }
 
-  .clinicModal { max-width: 92%; }
+  .clinicModal {
+    max-width: 92%;
+  }
 
   .clinicModalHeader,
   .clinicModalBody,
@@ -1092,20 +1130,33 @@
     padding-right: 20px;
   }
 
+  .clinicInfoGrid {
+    grid-template-columns: 1fr;
+    gap: 17px;
+  }
+
   .clinicModalFooter {
     flex-direction: column;
     gap: 14px;
   }
 
   .btnHold,
-  .btnUpdate { width: 100%; }
+  .btnUpdate {
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
-  .clinicListWrapper { padding: 14px; }
+  .clinicListWrapper {
+    padding: 14px;
+  }
 
-  .clinicModalFooter { flex-direction: column; }
+  .clinicModalFooter {
+    flex-direction: column;
+  }
 
   .btnSubmit,
-  .btnCancel { width: 100%; justify-content: center; }
+  .btnCancel {
+    width: 100%;
+  }
 }

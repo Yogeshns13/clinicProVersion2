@@ -8,108 +8,126 @@ import Header from '../Header/Header.jsx';
 import styles from './UpdateMedicineMaster.module.css';
 
 const MEDICINE_TYPES = [
-  { value: 1, label: 'Tablet' },
-  { value: 2, label: 'Capsule' },
-  { value: 3, label: 'Syrup' },
-  { value: 4, label: 'Injection' },
-  { value: 5, label: 'Ointment' },
-  { value: 6, label: 'Drops' },
-  { value: 7, label: 'Powder' },
-  { value: 8, label: 'Gel' },
-  { value: 9, label: 'Cream' },
+  { value: 1,  label: 'Tablet' },
+  { value: 2,  label: 'Capsule' },
+  { value: 3,  label: 'Syrup' },
+  { value: 4,  label: 'Injection' },
+  { value: 5,  label: 'Ointment' },
+  { value: 6,  label: 'Drops' },
+  { value: 7,  label: 'Powder' },
+  { value: 8,  label: 'Gel' },
+  { value: 9,  label: 'Cream' },
   { value: 10, label: 'Inhaler' }
 ];
 
 const MEDICINE_UNITS = [
-  { value: 1, label: 'Strip' },
-  { value: 2, label: 'Bottle' },
-  { value: 3, label: 'Vial' },
-  { value: 4, label: 'Tube' },
-  { value: 5, label: 'Box' },
-  { value: 6, label: 'Ampoule' },
-  { value: 7, label: 'Sachet' },
-  { value: 8, label: 'Blister Pack' },
-  { value: 9, label: 'Jar' },
+  { value: 1,  label: 'Strip' },
+  { value: 2,  label: 'Bottle' },
+  { value: 3,  label: 'Vial' },
+  { value: 4,  label: 'Tube' },
+  { value: 5,  label: 'Box' },
+  { value: 6,  label: 'Ampoule' },
+  { value: 7,  label: 'Sachet' },
+  { value: 8,  label: 'Blister Pack' },
+  { value: 9,  label: 'Jar' },
   { value: 10, label: 'Roll' }
 ];
 
+// ── Timing constants
+const TIMING_OPTIONS = [
+  { key: 'M', label: 'Morning' },
+  { key: 'A', label: 'Afternoon' },
+  { key: 'E', label: 'Evening' },
+  { key: 'N', label: 'Night' },
+];
+
+// "M|E|N" → ['M','E','N']
+const parseTimingString = (str) =>
+  str ? str.split('|').filter(k => TIMING_OPTIONS.some(o => o.key === k)) : [];
+
+// ['M','E'] → "M|E"  (order preserved per TIMING_OPTIONS)
+const buildTimingString = (selected) =>
+  TIMING_OPTIONS.filter(o => selected.includes(o.key)).map(o => o.key).join('|');
+
+// ──────────────────────────────────────────────────
 const UpdateMedicineMaster = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
-  const [medicine, setMedicine] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+
+  const [medicine, setMedicine]           = useState(null);
+  const [loading, setLoading]             = useState(true);
+  const [error, setError]                 = useState(null);
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  // Form data
+  // Timing toggle state (array of selected keys)
+  const [selectedTiming, setSelectedTiming] = useState([]);
+
+  // Form data — doseCount defaults to 1
   const [formData, setFormData] = useState({
-    name: '',
-    genericName: '',
-    composition: '',
-    manufacturer: '',
-    type: 0,
-    dosageForm: '',
-    unit: 0,
-    hsnCode: '',
+    name:            '',
+    genericName:     '',
+    composition:     '',
+    manufacturer:    '',
+    type:            0,
+    dosageForm:      '',
+    doseCount:       1,   // ← default 1
+    unit:            0,
+    hsnCode:         '',
     reorderLevelQty: 0,
-    mrp: 0,
-    purchasePrice: 0,
-    sellPrice: 0,
-    stockQuantity: 0,
-    cgstPercentage: 0,
-    sgstPercentage: 0,
-    barcode: '',
-    status: 1
+    mrp:             0,
+    purchasePrice:   0,
+    sellPrice:       0,
+    stockQuantity:   0,
+    cgstPercentage:  0,
+    sgstPercentage:  0,
+    barcode:         '',
+    status:          1
   });
 
+  // UNCHANGED
   useEffect(() => {
-    if (id) {
-      fetchMedicineDetails();
-    }
+    if (id) fetchMedicineDetails();
   }, [id]);
 
   const fetchMedicineDetails = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
 
-      const options = {
-        Page: 1,
-        PageSize: 1,
-        BranchID: branchId,
-        MedicineID: Number(id)
-      };
-
+      const options = { Page: 1, PageSize: 1, BranchID: branchId, MedicineID: Number(id) };
       const data = await getMedicineMasterList(clinicId, options);
-      
+
       if (data && data.length > 0) {
         const med = data[0];
         setMedicine(med);
-        
-        // Populate form
+
+        // Populate form — UNCHANGED fields + new doseCount & timing
         setFormData({
-          name: med.name || '',
-          genericName: med.genericName || '',
-          composition: med.composition || '',
-          manufacturer: med.manufacturer || '',
-          type: med.type || 0,
-          dosageForm: med.dosageForm || '',
-          unit: med.unit || 0,
-          hsnCode: med.hsnCode || '',
+          name:            med.name            || '',
+          genericName:     med.genericName     || '',
+          composition:     med.composition     || '',
+          manufacturer:    med.manufacturer    || '',
+          type:            med.type            || 0,
+          dosageForm:      med.dosageForm      || '',
+          doseCount:       med.doseCount       ?? 1,   // ← from API, fallback 1
+          unit:            med.unit            || 0,
+          hsnCode:         med.hsnCode         || '',
           reorderLevelQty: med.reorderLevelQty || 0,
-          mrp: parseFloat(med.mrp) || 0,
-          purchasePrice: parseFloat(med.purchasePrice) || 0,
-          sellPrice: parseFloat(med.sellPrice) || 0,
-          stockQuantity: med.stockQuantity || 0,
-          cgstPercentage: parseFloat(med.cgstPercentage) || 0,
-          sgstPercentage: parseFloat(med.sgstPercentage) || 0,
-          barcode: med.barcode || '',
-          status: med.status === 'active' ? 1 : 0
+          mrp:             parseFloat(med.mrp)             || 0,
+          purchasePrice:   parseFloat(med.purchasePrice)   || 0,
+          sellPrice:       parseFloat(med.sellPrice)       || 0,
+          stockQuantity:   med.stockQuantity   || 0,
+          cgstPercentage:  parseFloat(med.cgstPercentage)  || 0,
+          sgstPercentage:  parseFloat(med.sgstPercentage)  || 0,
+          barcode:         med.barcode         || '',
+          status:          med.status === 'active' ? 1 : 0
         });
+
+        // Parse saved timing string into selected keys array
+        setSelectedTiming(parseTimingString(med.timing || ''));
       } else {
         setError({ message: 'Medicine not found' });
       }
@@ -121,42 +139,31 @@ const UpdateMedicineMaster = () => {
     }
   };
 
+  // UNCHANGED
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
-    
-    // Handle number inputs
     if (type === 'number') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value === '' ? 0 : Number(value)
-      }));
+      setFormData(prev => ({ ...prev, [name]: value === '' ? 0 : Number(value) }));
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
+  };
+
+  // Toggle a timing key on/off
+  const handleTimingToggle = (key) => {
+    setSelectedTiming(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate required fields
-    if (!formData.name.trim()) {
-      setError({ message: 'Medicine name is required' });
-      return;
-    }
 
-    if (formData.type === 0) {
-      setError({ message: 'Please select a medicine type' });
-      return;
-    }
+    // UNCHANGED validations
+    if (!formData.name.trim()) { setError({ message: 'Medicine name is required' }); return; }
+    if (formData.type === 0)   { setError({ message: 'Please select a medicine type' }); return; }
+    if (formData.unit === 0)   { setError({ message: 'Please select a unit' }); return; }
 
-    if (formData.unit === 0) {
-      setError({ message: 'Please select a unit' });
-      return;
-    }
-    
     try {
       setSubmitLoading(true);
       setError(null);
@@ -165,31 +172,31 @@ const UpdateMedicineMaster = () => {
       const branchId = Number(localStorage.getItem('branchID'));
 
       const updateData = {
-        medicineId: Number(id),
+        medicineId:      Number(id),
         clinicId,
         branchId,
-        name: formData.name.trim(),
-        genericName: formData.genericName.trim(),
-        composition: formData.composition.trim(),
-        manufacturer: formData.manufacturer.trim(),
-        type: formData.type,
-        dosageForm: formData.dosageForm.trim(),
-        unit: formData.unit,
-        hsnCode: formData.hsnCode.trim(),
+        name:            formData.name.trim(),
+        genericName:     formData.genericName.trim(),
+        composition:     formData.composition.trim(),
+        manufacturer:    formData.manufacturer.trim(),
+        type:            formData.type,
+        dosageForm:      formData.dosageForm.trim(),
+        doseCount:       formData.doseCount,                   // ← new
+        unit:            formData.unit,
+        hsnCode:         formData.hsnCode.trim(),
         reorderLevelQty: formData.reorderLevelQty,
-        mrp: formData.mrp,
-        purchasePrice: formData.purchasePrice,
-        sellPrice: formData.sellPrice,
-        stockQuantity: formData.stockQuantity,
-        cgstPercentage: formData.cgstPercentage,
-        sgstPercentage: formData.sgstPercentage,
-        barcode: formData.barcode.trim(),
-        status: formData.status
+        mrp:             formData.mrp,
+        purchasePrice:   formData.purchasePrice,
+        sellPrice:       formData.sellPrice,
+        stockQuantity:   formData.stockQuantity,
+        cgstPercentage:  formData.cgstPercentage,
+        sgstPercentage:  formData.sgstPercentage,
+        barcode:         formData.barcode.trim(),
+        status:          formData.status,
+        timing:          buildTimingString(selectedTiming),    // ← new  e.g. "M|E|N"
       };
 
       await updateMedicineMaster(updateData);
-      
-      // Navigate back to medicine list
       navigate('/medicinemaster-list');
     } catch (err) {
       console.error('handleSubmit error:', err);
@@ -199,53 +206,44 @@ const UpdateMedicineMaster = () => {
     }
   };
 
-  const handleCancel = () => {
-    navigate('/medicinemaster-list');
-  };
+  // UNCHANGED
+  const handleCancel = () => navigate('/medicinemaster-list');
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric'
-    });
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  // Early returns
-  if (error && (error?.status >= 400 || error?.code >= 400)) {
-    return <ErrorHandler error={error} />;
-  }
-
+  // Early returns — UNCHANGED
+  if (error && (error?.status >= 400 || error?.code >= 400)) return <ErrorHandler error={error} />;
   if (loading) return <div className={styles.loading}>Loading medicine details...</div>;
-
-  if (error) return <div className={styles.error}>Error: {error.message || error}</div>;
-
+  if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
   if (!medicine) return <div className={styles.error}>Medicine not found</div>;
 
+  // ──────────────────────────────────────────────────
   return (
     <div className={styles.wrapper}>
       <ErrorHandler error={error} />
       <Header title="Update Medicine Master" />
 
       <div className={styles.container}>
-        {/* Back Button */}
+        {/* Back Button — UNCHANGED */}
         <button onClick={handleCancel} className={styles.backBtn}>
           <FiArrowLeft size={20} />
           Back to Medicine List
         </button>
 
-
         {/* Update Form */}
         <form onSubmit={handleSubmit} className={styles.form}>
-          {/* Basic Information */}
+
+          {/* ── Basic Information — UNCHANGED ── */}
           <div className={styles.formSection}>
             <h3 className={styles.formSectionTitle}>
               <FiPackage size={18} />
               Basic Information
             </h3>
-            
+
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>
@@ -300,13 +298,13 @@ const UpdateMedicineMaster = () => {
             </div>
           </div>
 
-          {/* Medicine Details */}
+          {/* ── Medicine Details ── */}
           <div className={styles.formSection}>
             <h3 className={styles.formSectionTitle}>
               <FiPackage size={18} />
               Medicine Details
             </h3>
-            
+
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>
@@ -320,10 +318,8 @@ const UpdateMedicineMaster = () => {
                   required
                 >
                   <option value={0}>Select Type</option>
-                  {MEDICINE_TYPES.map(type => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
+                  {MEDICINE_TYPES.map(t => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
                   ))}
                 </select>
               </div>
@@ -340,15 +336,14 @@ const UpdateMedicineMaster = () => {
                   required
                 >
                   <option value={0}>Select Unit</option>
-                  {MEDICINE_UNITS.map(unit => (
-                    <option key={unit.value} value={unit.value}>
-                      {unit.label}
-                    </option>
+                  {MEDICINE_UNITS.map(u => (
+                    <option key={u.value} value={u.value}>{u.label}</option>
                   ))}
                 </select>
               </div>
             </div>
 
+            {/* Dosage Form + Dose Count — side by side */}
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Dosage Form</label>
@@ -362,6 +357,22 @@ const UpdateMedicineMaster = () => {
                 />
               </div>
 
+              {/* Dose Count — right after Dosage Form */}
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Dose Count</label>
+                <input
+                  type="number"
+                  name="doseCount"
+                  value={formData.doseCount}
+                  onChange={handleInputChange}
+                  placeholder="1"
+                  className={styles.formInput}
+                  min="0"
+                />
+              </div>
+            </div>
+
+            <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>HSN Code</label>
                 <input
@@ -373,28 +384,53 @@ const UpdateMedicineMaster = () => {
                   className={styles.formInput}
                 />
               </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Barcode</label>
+                <input
+                  type="text"
+                  name="barcode"
+                  value={formData.barcode}
+                  onChange={handleInputChange}
+                  placeholder="Enter barcode"
+                  className={styles.formInput}
+                />
+              </div>
             </div>
 
+            {/* Timing — selectable pill buttons */}
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Barcode</label>
-              <input
-                type="text"
-                name="barcode"
-                value={formData.barcode}
-                onChange={handleInputChange}
-                placeholder="Enter barcode"
-                className={styles.formInput}
-              />
+              <label className={styles.formLabel}>Timing</label>
+              <div className={styles.timingGroup}>
+                {TIMING_OPTIONS.map(opt => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => handleTimingToggle(opt.key)}
+                    className={`${styles.timingBtn} ${
+                      selectedTiming.includes(opt.key) ? styles.timingBtnActive : ''
+                    }`}
+                  >
+                    <span className={styles.timingKey}>{opt.key}</span>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {selectedTiming.length > 0 && (
+                <p className={styles.formHint}>
+                  Timing value: <strong>{buildTimingString(selectedTiming)}</strong>
+                </p>
+              )}
             </div>
           </div>
 
-          {/* Pricing Information */}
+          {/* ── Pricing Information — UNCHANGED ── */}
           <div className={styles.formSection}>
             <h3 className={styles.formSectionTitle}>
               <FiDollarSign size={18} />
               Pricing Information
             </h3>
-            
+
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>MRP (₹)</label>
@@ -455,13 +491,13 @@ const UpdateMedicineMaster = () => {
             </div>
           </div>
 
-          {/* Stock & Tax Information */}
+          {/* ── Stock & Tax Information — UNCHANGED ── */}
           <div className={styles.formSection}>
             <h3 className={styles.formSectionTitle}>
               <FiBarChart2 size={18} />
-              Stock & Tax Information
+              Stock &amp; Tax Information
             </h3>
-            
+
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Reorder Level Quantity</label>
@@ -474,9 +510,7 @@ const UpdateMedicineMaster = () => {
                   className={styles.formInput}
                   min="0"
                 />
-                <p className={styles.formHint}>
-                  Alert when stock falls below this quantity
-                </p>
+                <p className={styles.formHint}>Alert when stock falls below this quantity</p>
               </div>
 
               <div className={styles.formGroup}>
@@ -526,18 +560,18 @@ const UpdateMedicineMaster = () => {
             </div>
           </div>
 
-          {/* Form Actions */}
+          {/* ── Form Actions — UNCHANGED ── */}
           <div className={styles.actions}>
-            <button 
-              type="button" 
-              onClick={handleCancel} 
+            <button
+              type="button"
+              onClick={handleCancel}
               className={styles.btnCancel}
               disabled={submitLoading}
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className={styles.btnSave}
               disabled={submitLoading}
             >
@@ -545,6 +579,7 @@ const UpdateMedicineMaster = () => {
               {submitLoading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
+
         </form>
       </div>
     </div>

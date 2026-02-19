@@ -57,9 +57,9 @@ const SalesCartDetailList = () => {
   // ── Update Quantity modal state ───────────────────────
   const [updateQty, setUpdateQty] = useState({
     isOpen:       false,
-    item:         null,      // the full cart detail item being edited
+    item:         null,
     newQty:       '',
-    newDiscount:  '',        // discount % for this line item
+    newDiscount:  '',
     submitting:   false,
     error:        null,
     success:      false,
@@ -86,7 +86,6 @@ const SalesCartDetailList = () => {
         BranchID: branchId,
         PageSize: 100,
       });
-      // Auto-delete cancelled (status 3) items silently, then show the rest
       const cancelled = data.filter((item) => item.status === 3);
       if (cancelled.length > 0) {
         await Promise.allSettled(cancelled.map((item) => deleteSalesCartDetail(item.id)));
@@ -290,7 +289,7 @@ const SalesCartDetailList = () => {
         submitting: false,
         error: `Delete failed: ${err.message || 'Could not remove existing item. No changes made.'}`,
       }));
-      return; // abort — nothing was changed yet
+      return;
     }
 
     // ── Phase 2: Re-add with updated quantity & discount ──
@@ -301,21 +300,19 @@ const SalesCartDetailList = () => {
         Quantity:           newQtyVal,
         UnitPrice:          Number(item.unitPrice) || 0,
         DiscountPercentage: newDiscountVal,
-        BatchSelection:     'FEFO',   // selection strategy — NOT the batch number string
+        BatchSelection:     'FEFO',
         clinicId,
         branchId,
       });
     } catch (err) {
-      // Delete already succeeded — keep modal open so the user sees the warning clearly
       setUpdateQty((prev) => ({
         ...prev,
         submitting: false,
         error: `⚠️ Item was deleted but could not be re-added: ${err.message || 'Please add it manually.'}`,
       }));
-      return; // do NOT call fetchDetails here — let the user read the error first
+      return;
     }
 
-    // ── Done: close modal and refresh list ────────────────
     setUpdateQty((prev) => ({ ...prev, submitting: false, success: true }));
     setTimeout(() => {
       setUpdateQty((prev) => ({ ...prev, isOpen: false }));
@@ -497,7 +494,6 @@ const SalesCartDetailList = () => {
                           {item.statusDesc}
                         </span>
                       </td>
-                      {/* ── Update Qty action ── */}
                       <td className={styles.actionCell}>
                         <button
                           className={styles.updateQtyBtn}
@@ -559,7 +555,7 @@ const SalesCartDetailList = () => {
         </>
       )}
 
-      {/* ══ GENERATE INVOICE MODAL ══ */}
+      {/* ══ GENERATE INVOICE MODAL (unchanged) ══ */}
       {invoice.isOpen && (
         <div
           className={styles.modalOverlay}
@@ -567,7 +563,6 @@ const SalesCartDetailList = () => {
         >
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
 
-            {/* ── Modal Header ── */}
             <div className={styles.modalHeader}>
               <div className={styles.modalHeaderContent}>
                 <div className={styles.modalHeaderIcon}>
@@ -585,10 +580,7 @@ const SalesCartDetailList = () => {
               )}
             </div>
 
-            {/* ── Modal Body ── */}
             <div className={styles.modalBody}>
-
-              {/* Success */}
               {invoice.success && (
                 <div className={styles.successState}>
                   <div className={styles.successIconWrap}>
@@ -602,10 +594,8 @@ const SalesCartDetailList = () => {
                 </div>
               )}
 
-              {/* Form */}
               {!invoice.success && (
                 <>
-                  {/* Confirmation prompt */}
                   <div className={styles.confirmPrompt}>
                     <FiAlertCircle size={18} className={styles.confirmIcon} />
                     <p>
@@ -614,7 +604,6 @@ const SalesCartDetailList = () => {
                     </p>
                   </div>
 
-                  {/* Discount input */}
                   <div className={styles.inputGroup}>
                     <label className={styles.inputLabel}>
                       <FiPercent size={13} />
@@ -643,7 +632,6 @@ const SalesCartDetailList = () => {
                     <span className={styles.inputHint}>Leave 0 for no discount</span>
                   </div>
 
-                  {/* Error banner */}
                   {invoice.error && (
                     <div className={styles.errorBanner}>
                       <FiAlertCircle size={15} />
@@ -651,7 +639,6 @@ const SalesCartDetailList = () => {
                     </div>
                   )}
 
-                  {/* Submitting progress */}
                   {invoice.submitting && (
                     <div className={styles.progressBanner}>
                       <div className={styles.modalSpinner} />
@@ -662,7 +649,6 @@ const SalesCartDetailList = () => {
               )}
             </div>
 
-            {/* ── Modal Footer ── */}
             {!invoice.success && (
               <div className={styles.modalFooter}>
                 <button
@@ -703,51 +689,46 @@ const SalesCartDetailList = () => {
         </div>
       )}
 
-      {/* ══ UPDATE QUANTITY MODAL ══ */}
+      {/* ══ UPDATE QUANTITY MODAL — new LabWorkDetail style ══ */}
       {updateQty.isOpen && updateQty.item && (
         <div
           className={styles.modalOverlay}
           onClick={!updateQty.submitting ? closeUpdateQtyModal : undefined}
         >
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.uqModal} onClick={(e) => e.stopPropagation()}>
 
             {/* ── Header ── */}
-            <div className={`${styles.modalHeader} ${styles.uqModalHeader}`}>
-              <div className={styles.modalHeaderContent}>
-                <div className={`${styles.modalHeaderIcon} ${styles.uqHeaderIcon}`}>
-                  <FiEdit2 size={19} />
-                </div>
-                <div>
-                  <h2 className={`${styles.modalTitle} ${styles.uqModalTitle}`}>
-                    Update Quantity & Discount
-                  </h2>
-                  <p className={styles.modalSubtitle}>
+            <div className={styles.uqModalHeader}>
+              <div className={styles.uqHeaderContent}>
+                <h2>Update Quantity & Discount</h2>
+                <div className={styles.uqHeaderMeta}>
+                  <span className={styles.uqMedBadge}>
                     {updateQty.item.medicineName}
-                  </p>
+                  </span>
                 </div>
               </div>
               {!updateQty.submitting && !updateQty.success && (
-                <button className={styles.modalClose} onClick={closeUpdateQtyModal}>
-                  <FiX size={16} />
+                <button className={styles.uqCloseBtn} onClick={closeUpdateQtyModal}>
+                  <FiX size={22} />
                 </button>
               )}
             </div>
 
             {/* ── Body ── */}
-            <div className={styles.modalBody}>
+            <div className={styles.uqModalBody}>
 
               {/* Success flash */}
               {updateQty.success && (
-                <div className={styles.successState}>
-                  <div className={styles.successIconWrap}>
-                    <FiCheckCircle size={48} />
+                <div className={styles.uqSuccessState}>
+                  <div className={styles.uqSuccessIcon}>
+                    <FiCheckCircle size={52} />
                   </div>
                   <h3>Updated Successfully!</h3>
-                  <p className={styles.successMsg}>
+                  <p>
                     <strong>{updateQty.item.medicineName}</strong> — qty set to{' '}
-                    <strong>{updateQty.newQty}</strong>{' '}
+                    <strong>{updateQty.newQty}</strong>
                     {Number(updateQty.newDiscount) > 0 && (
-                      <>with <strong>{Number(updateQty.newDiscount).toFixed(2)}%</strong> discount</>
+                      <> with <strong>{Number(updateQty.newDiscount).toFixed(2)}%</strong> discount</>
                     )}.
                   </p>
                 </div>
@@ -783,69 +764,70 @@ const SalesCartDetailList = () => {
                     </div>
                   </div>
 
-                  {/* ── Quantity input ── */}
-                  <div className={styles.inputGroup}>
-                    <label className={styles.inputLabel}>
-                      New Quantity
-                    </label>
-                    <div className={styles.inputWrapper}>
-                      <input
-                        type="number"
-                        min="1"
-                        step="1"
-                        placeholder="Enter new quantity"
-                        value={updateQty.newQty}
-                        onChange={(e) =>
-                          setUpdateQty((prev) => ({
-                            ...prev,
-                            newQty: e.target.value,
-                            error: null,
-                          }))
-                        }
-                        className={`${styles.discountInput} ${styles.uqInput}`}
-                        disabled={updateQty.submitting}
-                        autoFocus
-                      />
-                    </div>
-                    <span className={styles.inputHint}>
-                      Enter whole numbers only (e.g. 5, 10, 25)
-                    </span>
-                  </div>
+                  {/* Form fields */}
+                  <div className={styles.uqFormSection}>
+                    <div className={styles.uqFormGrid}>
+                      {/* Quantity */}
+                      <div className={styles.uqFormGroup}>
+                        <label>New Quantity</label>
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          placeholder="Enter new quantity"
+                          value={updateQty.newQty}
+                          onChange={(e) =>
+                            setUpdateQty((prev) => ({
+                              ...prev,
+                              newQty: e.target.value,
+                              error: null,
+                            }))
+                          }
+                          className={styles.uqInput}
+                          disabled={updateQty.submitting}
+                          autoFocus
+                        />
+                        <span className={styles.uqInputHint}>
+                          Whole numbers only (e.g. 5, 10, 25)
+                        </span>
+                      </div>
 
-                  {/* ── Discount input ── */}
-                  <div className={styles.inputGroup}>
-                    <label className={styles.inputLabel}>
-                      <FiPercent size={13} />
-                      Discount (%)
-                    </label>
-                    <div className={styles.inputWrapper}>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        placeholder="Enter discount % (0 – 100)"
-                        value={updateQty.newDiscount}
-                        onChange={(e) =>
-                          setUpdateQty((prev) => ({
-                            ...prev,
-                            newDiscount: e.target.value,
-                            error: null,
-                          }))
-                        }
-                        className={`${styles.discountInput} ${styles.uqInput} ${styles.uqDiscountInput}`}
-                        disabled={updateQty.submitting}
-                      />
-                      <span className={`${styles.inputSuffix} ${styles.uqInputSuffix}`}>%</span>
+                      {/* Discount */}
+                      <div className={styles.uqFormGroup}>
+                        <label>
+                          <FiPercent size={13} />
+                          Discount (%)
+                        </label>
+                        <div className={styles.uqInputWrapper}>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            placeholder="0 – 100"
+                            value={updateQty.newDiscount}
+                            onChange={(e) =>
+                              setUpdateQty((prev) => ({
+                                ...prev,
+                                newDiscount: e.target.value,
+                                error: null,
+                              }))
+                            }
+                            className={styles.uqInput}
+                            disabled={updateQty.submitting}
+                          />
+                          <span className={styles.uqInputSuffix}>%</span>
+                        </div>
+                        <span className={styles.uqInputHint}>
+                          Leave 0 for no discount
+                        </span>
+                      </div>
                     </div>
-                    <span className={styles.inputHint}>
-                      Leave 0 for no discount (0 – 100)
-                    </span>
                   </div>
 
                   {/* Error banner */}
                   {updateQty.error && (
-                    <div className={styles.errorBanner}>
+                    <div className={styles.uqErrorBanner}>
                       <FiAlertCircle size={15} />
                       <span>{updateQty.error}</span>
                     </div>
@@ -853,8 +835,8 @@ const SalesCartDetailList = () => {
 
                   {/* Progress banner */}
                   {updateQty.submitting && (
-                    <div className={`${styles.progressBanner} ${styles.uqProgressBanner}`}>
-                      <div className={`${styles.modalSpinner} ${styles.uqSpinner}`} />
+                    <div className={styles.uqProgressBanner}>
+                      <div className={styles.uqSpinner} />
                       <span>Updating, please wait...</span>
                     </div>
                   )}
@@ -864,27 +846,27 @@ const SalesCartDetailList = () => {
 
             {/* ── Footer ── */}
             {!updateQty.success && (
-              <div className={styles.modalFooter}>
+              <div className={styles.uqModalFooter}>
                 <button
-                  className={styles.btnNo}
+                  className={styles.uqCancelBtn}
                   onClick={closeUpdateQtyModal}
                   disabled={updateQty.submitting}
                 >
                   Cancel
                 </button>
                 <button
-                  className={`${styles.btnYes} ${styles.uqBtnYes}`}
+                  className={styles.uqConfirmBtn}
                   onClick={handleUpdateQty}
                   disabled={updateQty.submitting}
                 >
                   {updateQty.submitting ? (
                     <>
-                      <div className={styles.btnSpinner} />
+                      <div className={styles.uqBtnSpinner} />
                       Updating...
                     </>
                   ) : (
                     <>
-                      <FiCheckCircle size={15} />
+                      <FiCheckCircle size={16} />
                       Update
                     </>
                   )}

@@ -402,11 +402,13 @@ export const getMedicineMasterList = async (clinicId = 0, options = {}) => {
       cgstPercentage: med.cgst_percentage || "0.00",
       sgstPercentage: med.sgst_percentage || "0.00",
       barcode: med.barcode || null,
+      doseCount: med.dose_count ?? 0,
+      timing: med.timing || "",
       status: med.status,
       statusDesc: med.status_desc || "Unknown",
       isLowStock: med.is_low_stock === "Yes",   // boolean-ified
       dateCreated: med.date_created || null,
-      dateModified: med.date_modified || null
+      dateModified: med.date_modified || null,
     }));
   } catch (error) {
     console.error("getMedicineMasterList failed:", error);
@@ -472,7 +474,9 @@ export const addMedicineMaster = async (medicineData) => {
     StockQuantity: medicineData.stockQuantity ?? 0,
     CGSTPercentage: medicineData.cgstPercentage ?? 0,
     SGSTPercentage: medicineData.sgstPercentage ?? 0,
-    Barcode: medicineData.barcode || ""
+    Barcode: medicineData.barcode || "",
+    DoseCount: medicineData.doseCount ?? 0,
+    Timing: medicineData.timing || "",
   };
 
   console.log("Add MedicineMaster payload:", payload);
@@ -579,7 +583,9 @@ export const updateMedicineMaster = async (medicineData) => {
     CGSTPercentage: medicineData.cgstPercentage ?? 0,
     SGSTPercentage: medicineData.sgstPercentage ?? 0,
     Barcode: medicineData.barcode?.trim() || "",
-    Status: medicineData.status ?? 1     // usually 1 = active
+    Status: medicineData.status ?? 1,     // usually 1 = active
+    DoseCount: medicineData.doseCount ?? 0,
+    Timing: medicineData.timing || "",
   };
 
   console.log("updateMedicineMaster payload:", payload);

@@ -1,9 +1,8 @@
 // src/components/ConsultationChargeList.jsx
-// Simplified single-view consultation list with invoice generation
 import React, { useState, useEffect } from 'react';
-import { FiSearch, FiFileText, FiCalendar, FiFilter, FiX } from 'react-icons/fi';
+import { FiSearch, FiFileText, FiX } from 'react-icons/fi';
 import {
-  getConsultationList,
+  getConsultationChargeList,
   getConsultingChargeConfigList,
   addConsultationCharge,
   generateConsultationInvoice
@@ -15,22 +14,36 @@ import styles from './ConsultationChargeList.module.css';
 const ConsultationChargeList = () => {
   const [consultations, setConsultations] = useState([]);
   const [chargeConfigs, setChargeConfigs] = useState([]);
-  const [searchInput, setSearchInput] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
 
-  // Date filter states - default to today
   const today = new Date().toISOString().split('T')[0];
-  const [fromDate, setFromDate] = useState();
-  const [toDate, setToDate] = useState();
-  const [showFilters, setShowFilters] = useState(false);
-  
+
+  // Filter inputs (not applied until Search is clicked)
+  const [filterInputs, setFilterInputs] = useState({
+    searchType: 'patientName', // patientName | patientMobile | chargeName
+    searchValue: '',
+    status: '',
+    invoicedOnly: '',
+    dateFrom: today,
+    dateTo: today
+  });
+
+  // Applied filters (drive actual API call)
+  const [appliedFilters, setAppliedFilters] = useState({
+    searchType: 'patientName',
+    searchValue: '',
+    status: '',
+    invoicedOnly: '',
+    dateFrom: '',
+    dateTo: ''
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isInvoiceFormOpen, setIsInvoiceFormOpen] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState(null);
   const [formSuccess, setFormSuccess] = useState(null);
-  
+
   // Invoice form data
   const [invoiceFormData, setInvoiceFormData] = useState({
     consultationId: null,
@@ -40,31 +53,42 @@ const ConsultationChargeList = () => {
     discount: '0'
   });
 
-  const fetchConsultations = async () => {
+  // ── Derived: are any filters currently applied? ──
+  const hasActiveFilters =
+    !!appliedFilters.searchValue ||
+    !!appliedFilters.status ||
+    appliedFilters.invoicedOnly !== '' ||
+    !!appliedFilters.dateFrom ||
+    !!appliedFilters.dateTo;
+
+  // ────────────────────────────────────────────────
+  // Data fetching
+  const fetchConsultations = async (filters = appliedFilters) => {
     try {
       setLoading(true);
       setError(null);
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-      
-      // Build options with date filters
-      const options = { 
-        BranchID: branchId, 
-        PageSize: 100 
-      };
-      
-      // Add date filters - FromDate always required, ToDate optional
-      if (fromDate) options.FromDate = fromDate;
-      if (toDate) options.ToDate = toDate;
-      
-      const data = await getConsultationList(clinicId, options);
-      
-      // Filter out consultations that already have invoices
-      const withoutInvoice = data.filter(c => !c.invoiceId);
-      
-      setConsultations(withoutInvoice);
+
+      const options = { BranchID: branchId, PageSize: 100 };
+
+      if (filters.searchType === 'patientName' && filters.searchValue)
+        options.PatientName = filters.searchValue;
+      if (filters.searchType === 'patientMobile' && filters.searchValue)
+        options.PatientMobile = filters.searchValue;
+      if (filters.searchType === 'chargeName' && filters.searchValue)
+        options.ChargeName = filters.searchValue;
+      if (filters.status !== '')
+        options.Status = Number(filters.status);
+      if (filters.invoicedOnly !== '')
+        options.InvoicedOnly = Number(filters.invoicedOnly);
+      if (filters.dateFrom) options.FromDate = filters.dateFrom;
+      if (filters.dateTo)   options.ToDate   = filters.dateTo;
+
+      const data = await getConsultationChargeList(clinicId, options);
+      setConsultations(data);
     } catch (err) {
-      setError(err?.status >= 400 ? err : { message: err.message || 'Failed to load consultations' });
+      setError(err?.status >= 400 ? err : { message: err.message || 'Failed to load consultation charges' });
     } finally {
       setLoading(false);
     }
@@ -82,88 +106,44 @@ const ConsultationChargeList = () => {
 
   useEffect(() => {
     fetchChargeConfigs();
+    fetchConsultations();
   }, []);
 
-  useEffect(() => {
-    fetchConsultations();
-  }, [fromDate, toDate]);
-
-  // Filter consultations based on search term
-  const getFilteredConsultations = () => {
-    if (!searchTerm.trim()) return consultations;
-    
-    const term = searchTerm.toLowerCase();
-    return consultations.filter(consult =>
-      consult.patientName?.toLowerCase().includes(term) ||
-      consult.doctorFullName?.toLowerCase().includes(term) ||
-      consult.patientFileNo?.toLowerCase().includes(term) ||
-      consult.reason?.toLowerCase().includes(term)
-    );
+  // ────────────────────────────────────────────────
+  // Filter handlers
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
-  const filteredConsultations = getFilteredConsultations();
-
-  // Calculate statistics
-  const getTotalCount = () => filteredConsultations.length;
-  
-  const getTodayCount = () => {
-    return filteredConsultations.filter(c => {
-      const consultDate = new Date(c.dateCreated).toISOString().split('T')[0];
-      return consultDate === today;
-    }).length;
+  const handleSearch = () => {
+    const newFilters = { ...filterInputs };
+    setAppliedFilters(newFilters);
+    fetchConsultations(newFilters);
   };
 
-  const handleSearch = () => setSearchTerm(searchInput.trim());
-  const handleKeyPress = (e) => { if (e.key === 'Enter') handleSearch(); };
-
-  const applyDateFilters = () => {
-    // Just ensure the state is set - useEffect will handle the fetch
-    setFromDate(fromDate);
-    setToDate(toDate);
+  const handleClearFilters = () => {
+    const empty = {
+      searchType: 'patientName',
+      searchValue: '',
+      status: '',
+      invoicedOnly: '',
+      dateFrom: '',
+      dateTo: ''
+    };
+    setFilterInputs({ ...empty, dateFrom: today, dateTo: today });
+    setAppliedFilters(empty);
+    fetchConsultations(empty);
   };
 
-  const clearDateFilters = () => {
-    const todayDate = new Date().toISOString().split('T')[0];
-    setFromDate();
-    setToDate();
-  };
-
-  const setTodayFilter = () => {
-    const todayDate = new Date().toISOString().split('T')[0];
-    setFromDate(todayDate);
-    setToDate(todayDate);
-  };
-
-  const setThisWeekFilter = () => {
-    const today = new Date();
-    const firstDay = new Date(today.setDate(today.getDate() - today.getDay()));
-    const lastDay = new Date(today.setDate(today.getDate() - today.getDay() + 6));
-    
-    const from = firstDay.toISOString().split('T')[0];
-    const to = lastDay.toISOString().split('T')[0];
-    
-    setFromDate(from);
-    setToDate(to);
-  };
-
-  const setThisMonthFilter = () => {
-    const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    
-    const from = firstDay.toISOString().split('T')[0];
-    const to = lastDay.toISOString().split('T')[0];
-    
-    setFromDate(from);
-    setToDate(to);
-  };
-
-  const openInvoiceForm = (consultation) => {
+  // ────────────────────────────────────────────────
+  // Invoice form handlers (logic unchanged)
+  const openInvoiceForm = (charge) => {
     setInvoiceFormData({
-      consultationId: consultation.id,
+      consultationId: charge.consultationId,
       chargeId: '',
       chargeAmount: '',
-      invoiceDate: consultation.dateCreated?.split('T')[0] || today,
+      invoiceDate: charge.dateCreated?.split('T')[0] || today,
       discount: '0'
     });
     setFormError(null);
@@ -180,14 +160,13 @@ const ConsultationChargeList = () => {
   const handleInvoiceInputChange = (e) => {
     const { name, value } = e.target;
     setInvoiceFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Auto-fill charge amount when charge is selected
+
     if (name === 'chargeId' && value) {
       const config = chargeConfigs.find(c => c.id === Number(value));
       if (config) {
-        setInvoiceFormData(prev => ({ 
-          ...prev, 
-          chargeAmount: config.defaultAmount?.toString() || '' 
+        setInvoiceFormData(prev => ({
+          ...prev,
+          chargeAmount: config.defaultAmount?.toString() || ''
         }));
       }
     }
@@ -218,14 +197,13 @@ const ConsultationChargeList = () => {
   const handleGenerateInvoice = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
+
     try {
       setFormLoading(true);
       setFormError(null);
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-      
-      // Step 1: Add consultation charge
+
       const chargeResult = await addConsultationCharge({
         clinicId,
         branchId,
@@ -233,12 +211,8 @@ const ConsultationChargeList = () => {
         chargeId: Number(invoiceFormData.chargeId),
         chargeAmount: Number(invoiceFormData.chargeAmount)
       });
-      
-      if (!chargeResult.success) {
-        throw new Error('Failed to add consultation charge');
-      }
-      
-      // Step 2: Generate invoice
+      if (!chargeResult.success) throw new Error('Failed to add consultation charge');
+
       const invoiceResult = await generateConsultationInvoice({
         clinicId,
         branchId,
@@ -246,11 +220,8 @@ const ConsultationChargeList = () => {
         invoiceDate: invoiceFormData.invoiceDate,
         discount: Number(invoiceFormData.discount)
       });
-      
-      if (!invoiceResult.success) {
-        throw new Error('Failed to generate invoice');
-      }
-      
+      if (!invoiceResult.success) throw new Error('Failed to generate invoice');
+
       setFormSuccess('Invoice generated successfully!');
       setTimeout(() => {
         closeForm();
@@ -263,174 +234,229 @@ const ConsultationChargeList = () => {
     }
   };
 
-  const formatCurrency = (amount) => amount ? `₹${Number(amount).toFixed(2)}` : '₹0.00';
+  // ────────────────────────────────────────────────
+  // Helpers
+  const formatCurrency = (amount) =>
+    amount != null ? `₹${Number(amount).toFixed(2)}` : '₹0.00';
+
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'short', day: 'numeric'
+    });
   };
 
-  const getDateRangeText = () => {
-    if (!toDate) {
-      return `Showing: ${formatDate(fromDate)}`;
-    }
-    if (fromDate === toDate) {
-      return `Showing: ${formatDate(fromDate)}`;
-    }
-    return `${formatDate(fromDate)} - ${formatDate(toDate)}`;
-  };
-
+  // ────────────────────────────────────────────────
+  // Early returns
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.chargeListLoading}>Loading consultations...</div>;
+  if (loading) return <div className={styles.chargeListLoading}>Loading consultation charges...</div>;
 
+  if (error) return <div className={styles.chargeListError}>Error: {error.message || error}</div>;
+
+  // ────────────────────────────────────────────────
   return (
     <div className={styles.chargeListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Consultation Charges" />
 
-      {formSuccess && !isInvoiceFormOpen && <div className={styles.formSuccess}>{formSuccess}</div>}
-
-      {/* Date Filter Section */}
-      <div className={styles.chargeFilterToolbar}>
-        <div className={styles.filterToolbarLeft}>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`${styles.filterToggleBtn} ${showFilters ? styles.active : ''}`}
-          >
-            <FiFilter size={18} />
-            {showFilters ? 'Hide' : 'Show'} Filters
-          </button>
-          {(fromDate == today || toDate == today) &&(
-          <button onClick={clearDateFilters} className={styles.filterClearBtn}>
-            <FiX size={16} /> Clear Filters
-          </button>)}
-
-        </div>
-        <div className={styles.filterToolbarRight}>
-          <span className={styles.filterInfo}>
-            <FiCalendar size={16} />
-            {getDateRangeText()}
-          </span>
-        </div>
-      </div>
-
-      {showFilters && (
-        <div className={styles.chargeDateFilters}>
-          <div className={styles.filterRow}>
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>From Date <span className={styles.required}>*</span></label>
-              <input 
-                type="date" 
-                value={fromDate} 
-                onChange={(e) => setFromDate(e.target.value)} 
-                className={styles.filterInput} 
-                max={today}
-                required
-              />
-            </div>
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>To Date</label>
-              <input 
-                type="date" 
-                value={toDate} 
-                onChange={(e) => setToDate(e.target.value)} 
-                className={styles.filterInput} 
-                max={today}
-              />
-            </div>
-            <div className={styles.filterGroup}>
-              <button onClick={applyDateFilters} className={styles.filterApplyBtn}>
-                <FiSearch size={16} /> Apply
-              </button>
-            </div>
-          </div>
-          <div className={styles.filterQuickActions}>
-            <button onClick={setTodayFilter} className={styles.quickFilterBtn}>Today</button>
-            <button onClick={setThisWeekFilter} className={styles.quickFilterBtn}>This Week</button>
-            <button onClick={setThisMonthFilter} className={styles.quickFilterBtn}>This Month</button>
-          </div>
-        </div>
+      {formSuccess && !isInvoiceFormOpen && (
+        <div className={styles.formSuccess}>{formSuccess}</div>
       )}
 
-      {/* Search */}
-      <div className={styles.chargeListToolbar}>
-        <div className={styles.chargeListSearchContainer}>
-          <input 
-            type="text" 
-            placeholder="Search by patient, doctor, file no, reason..." 
-            value={searchInput} 
-            onChange={(e) => setSearchInput(e.target.value)} 
-            onKeyPress={handleKeyPress} 
-            className={styles.chargeListSearchInput} 
-          />
-          <button onClick={handleSearch} className={styles.chargeListSearchBtn}>
-            <FiSearch size={20} />
-          </button>
+      {/* ── Single-line Filters ── */}
+      <div className={styles.filtersContainer}>
+        <div className={styles.filtersGrid}>
+
+          {/* Search type + value */}
+          <div className={styles.searchGroup}>
+            <select
+              name="searchType"
+              value={filterInputs.searchType}
+              onChange={handleFilterChange}
+              className={styles.searchTypeSelect}
+            >
+              <option value="patientName">Patient Name</option>
+              <option value="patientMobile">Mobile No.</option>
+              <option value="chargeName">Charge Name</option>
+            </select>
+            <input
+              type="text"
+              name="searchValue"
+              placeholder={
+                filterInputs.searchType === 'patientName'   ? 'Search by patient name...'  :
+                filterInputs.searchType === 'patientMobile' ? 'Search by mobile number...' :
+                                                              'Search by charge name...'
+              }
+              value={filterInputs.searchValue}
+              onChange={handleFilterChange}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className={styles.searchInput}
+            />
+          </div>
+
+          {/* Status */}
+          <div className={styles.filterGroup}>
+            <select
+              name="status"
+              value={filterInputs.status}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            >
+              <option value="">All Status</option>
+              <option value="1">Active</option>
+              <option value="0">Inactive</option>
+            </select>
+          </div>
+
+          {/* Invoiced Only */}
+          <div className={styles.filterGroup}>
+            <select
+              name="invoicedOnly"
+              value={filterInputs.invoicedOnly}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            >
+              <option value="">All Invoices</option>
+              <option value="1">Invoiced Only</option>
+              <option value="0">Not Invoiced</option>
+            </select>
+          </div>
+
+          {/* Date From */}
+          <div className={styles.filterGroup}>
+            <div className={styles.dateInputWrapper}>
+              <span className={styles.datePrefix}>From</span>
+              <input
+                type="date"
+                name="dateFrom"
+                value={filterInputs.dateFrom}
+                onChange={handleFilterChange}
+                className={`${styles.filterInput} ${styles.dateInput}`}
+                max={today}
+              />
+            </div>
+          </div>
+
+          {/* Date To */}
+          <div className={styles.filterGroup}>
+            <div className={styles.dateInputWrapper}>
+              <span className={styles.datePrefix}>To</span>
+              <input
+                type="date"
+                name="dateTo"
+                value={filterInputs.dateTo}
+                onChange={handleFilterChange}
+                className={`${styles.filterInput} ${styles.dateInput}`}
+                max={today}
+              />
+            </div>
+          </div>
+
+          {/* Actions — Clear only visible when filters are active */}
+          <div className={styles.filterActions}>
+            <button onClick={handleSearch} className={styles.searchButton}>
+              <FiSearch size={18} />
+              Search
+            </button>
+            {hasActiveFilters && (
+              <button onClick={handleClearFilters} className={styles.clearButton}>
+                <FiX size={18} />
+                Clear
+              </button>
+            )}
+          </div>
+
         </div>
       </div>
 
-      {/* Consultations Table */}
+      {/* ── Table ── */}
       <div className={styles.chargeListTableContainer}>
         <table className={styles.chargeListTable}>
           <thead>
             <tr>
               <th>Patient</th>
               <th>Doctor</th>
-              <th>Visit Date</th>
-              <th>Reason</th>
-              <th>Symptoms</th>
-              <th>Vitals</th>
+              <th>Charge</th>
+              <th>Amount</th>
+              <th>Invoice</th>
+              <th>Status</th>
+              <th>Date</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredConsultations.length === 0 ? (
+            {consultations.length === 0 ? (
               <tr>
-                <td colSpan={7} className={styles.chargeListNoData}>
-                  {searchTerm ? 'No consultations found.' : 'No consultations for the selected date range.'}
+                <td colSpan={8} className={styles.chargeListNoData}>
+                  {hasActiveFilters
+                    ? 'No consultation charges found for the applied filters.'
+                    : 'No consultation charges available yet.'}
                 </td>
               </tr>
             ) : (
-              filteredConsultations.map((consult) => (
-                <tr key={consult.id}>
+              consultations.map((charge) => (
+                <tr key={charge.id}>
                   <td>
                     <div className={styles.patientCell}>
-                      <div>
-                        <div className={styles.patientName}>{consult.patientName}</div>
-                        <div className={styles.patientInfo}>{consult.patientFileNo}</div>
-                        {consult.patientMobile && (
-                          <div className={styles.patientInfo}>{consult.patientMobile}</div>
-                        )}
-                      </div>
+                      <div className={styles.patientName}>{charge.patientName || '—'}</div>
+                      {charge.patientFileNo && (
+                        <div className={styles.patientInfo}>{charge.patientFileNo}</div>
+                      )}
+                      {charge.patientMobile && (
+                        <div className={styles.patientInfo}>{charge.patientMobile}</div>
+                      )}
                     </div>
                   </td>
                   <td>
-                    <span className={styles.doctorName}>{consult.doctorFullName}</span>
-                    {consult.doctorCode && (
-                      <div className={styles.chargeCode}>{consult.doctorCode}</div>
+                    <span className={styles.doctorName}>{charge.doctorFullName || '—'}</span>
+                  </td>
+                  <td>
+                    <div className={styles.doctorName}>{charge.chargeName || '—'}</div>
+                    {charge.chargeCode && (
+                      <div className={styles.chargeCode}>{charge.chargeCode}</div>
                     )}
                   </td>
-                  <td><span className={styles.dateText}>{formatDate(consult.dateCreated)}</span></td>
-                  <td><span className={styles.reasonText}>{consult.reason || '—'}</span></td>
-                  <td><span className={styles.symptomsText}>{consult.symptoms || '—'}</span></td>
                   <td>
-                    <div className={styles.vitalsCell}>
-                      {consult.bpReading && <span className={styles.vitalItem}>BP: {consult.bpReading}</span>}
-                      {consult.temperature && <span className={styles.vitalItem}>Temp: {consult.temperature}°</span>}
-                      {consult.weight && <span className={styles.vitalItem}>Wt: {consult.weight} kg</span>}
+                    <div className={styles.amountCell}>
+                      <span className={styles.amountMain}>{formatCurrency(charge.chargeAmount)}</span>
+                      {charge.netAmount != null && charge.netAmount !== charge.chargeAmount && (
+                        <span className={styles.amountNet}>Net: {formatCurrency(charge.netAmount)}</span>
+                      )}
                     </div>
+                  </td>
+                  <td>
+                    {charge.isInvoiced ? (
+                      <span className={`${styles.statusBadge} ${styles.invoiced}`}>
+                        {charge.invoiceNo || 'Invoiced'}
+                      </span>
+                    ) : (
+                      <span className={`${styles.statusBadge} ${styles.notInvoiced}`}>
+                        Not Invoiced
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    <span className={`${styles.statusBadge} ${charge.status === 'active' ? styles.statusActive : styles.statusInactive}`}>
+                      {charge.statusDesc?.toUpperCase() || 'UNKNOWN'}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={styles.dateText}>{formatDate(charge.dateCreated)}</span>
                   </td>
                   <td>
                     <div className={styles.chargeListActionsCell}>
-                      <button 
-                        onClick={() => openInvoiceForm(consult)} 
-                        className={styles.invoiceBtn} 
-                        title="Make Invoice"
-                      >
-                        <FiFileText size={16} /> Make Invoice
-                      </button>
+                      {!charge.isInvoiced && (
+                        <button
+                          onClick={() => openInvoiceForm(charge)}
+                          className={styles.invoiceBtn}
+                          title="Make Invoice"
+                        >
+                          <FiFileText size={16} /> Make Invoice
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -440,7 +466,7 @@ const ConsultationChargeList = () => {
         </table>
       </div>
 
-      {/* Generate Invoice Modal */}
+      {/* ── Generate Invoice Modal ── */}
       {isInvoiceFormOpen && (
         <div className={styles.chargeListModalOverlay}>
           <div className={styles.chargeListModal}>
@@ -455,11 +481,11 @@ const ConsultationChargeList = () => {
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
                     <label>Charge Type <span className={styles.required}>*</span></label>
-                    <select 
-                      name="chargeId" 
-                      value={invoiceFormData.chargeId} 
-                      onChange={handleInvoiceInputChange} 
-                      disabled={formLoading} 
+                    <select
+                      name="chargeId"
+                      value={invoiceFormData.chargeId}
+                      onChange={handleInvoiceInputChange}
+                      disabled={formLoading}
                       required
                     >
                       <option value="">Select charge type</option>
@@ -472,41 +498,41 @@ const ConsultationChargeList = () => {
                   </div>
                   <div className={styles.formGroup}>
                     <label>Charge Amount (₹) <span className={styles.required}>*</span></label>
-                    <input 
-                      type="number" 
-                      name="chargeAmount" 
-                      value={invoiceFormData.chargeAmount} 
-                      onChange={handleInvoiceInputChange} 
-                      placeholder="Amount" 
-                      step="0.01" 
-                      min="0" 
-                      disabled={formLoading} 
-                      required 
+                    <input
+                      type="number"
+                      name="chargeAmount"
+                      value={invoiceFormData.chargeAmount}
+                      onChange={handleInvoiceInputChange}
+                      placeholder="Amount"
+                      step="0.01"
+                      min="0"
+                      disabled={formLoading}
+                      required
                     />
                   </div>
                   <div className={styles.formGroup}>
                     <label>Invoice Date <span className={styles.required}>*</span></label>
-                    <input 
-                      type="date" 
-                      name="invoiceDate" 
-                      value={invoiceFormData.invoiceDate} 
-                      onChange={handleInvoiceInputChange} 
+                    <input
+                      type="date"
+                      name="invoiceDate"
+                      value={invoiceFormData.invoiceDate}
+                      onChange={handleInvoiceInputChange}
                       max={today}
-                      disabled={formLoading} 
-                      required 
+                      disabled={formLoading}
+                      required
                     />
                   </div>
                   <div className={styles.formGroup}>
                     <label>Discount (₹)</label>
-                    <input 
-                      type="number" 
-                      name="discount" 
-                      value={invoiceFormData.discount} 
-                      onChange={handleInvoiceInputChange} 
-                      placeholder="0" 
-                      step="0.01" 
-                      min="0" 
-                      disabled={formLoading} 
+                    <input
+                      type="number"
+                      name="discount"
+                      value={invoiceFormData.discount}
+                      onChange={handleInvoiceInputChange}
+                      placeholder="0"
+                      step="0.01"
+                      min="0"
+                      disabled={formLoading}
                     />
                   </div>
                 </div>

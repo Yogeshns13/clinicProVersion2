@@ -1,7 +1,5 @@
 AddUser
 {
-    
-
     "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
@@ -13,9 +11,7 @@ AddUser
     "Password":"admin@123",
     "Mobile":"8220485398",
     "EMail":"sivashankarandeveloper@gmail.com",
-    "ProfileName": "admin"  
-    
-   
+    "ProfileName": "admin"    
 }
 
 

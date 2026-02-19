@@ -6,86 +6,102 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import styles from './AddMedicineMaster.module.css';
 
 const MEDICINE_TYPES = [
-  { value: 1, label: 'Tablet' },
-  { value: 2, label: 'Capsule' },
-  { value: 3, label: 'Syrup' },
-  { value: 4, label: 'Injection' },
-  { value: 5, label: 'Ointment' },
-  { value: 6, label: 'Drops' },
-  { value: 7, label: 'Powder' },
-  { value: 8, label: 'Gel' },
-  { value: 9, label: 'Cream' },
+  { value: 1,  label: 'Tablet' },
+  { value: 2,  label: 'Capsule' },
+  { value: 3,  label: 'Syrup' },
+  { value: 4,  label: 'Injection' },
+  { value: 5,  label: 'Ointment' },
+  { value: 6,  label: 'Drops' },
+  { value: 7,  label: 'Powder' },
+  { value: 8,  label: 'Gel' },
+  { value: 9,  label: 'Cream' },
   { value: 10, label: 'Inhaler' }
 ];
 
 const MEDICINE_UNITS = [
-  { value: 1, label: 'Strip' },
-  { value: 2, label: 'Bottle' },
-  { value: 3, label: 'Vial' },
-  { value: 4, label: 'Tube' },
-  { value: 5, label: 'Box' },
-  { value: 6, label: 'Ampoule' },
-  { value: 7, label: 'Sachet' },
-  { value: 8, label: 'Blister Pack' },
-  { value: 9, label: 'Jar' },
+  { value: 1,  label: 'Strip' },
+  { value: 2,  label: 'Bottle' },
+  { value: 3,  label: 'Vial' },
+  { value: 4,  label: 'Tube' },
+  { value: 5,  label: 'Box' },
+  { value: 6,  label: 'Ampoule' },
+  { value: 7,  label: 'Sachet' },
+  { value: 8,  label: 'Blister Pack' },
+  { value: 9,  label: 'Jar' },
   { value: 10, label: 'Roll' }
 ];
 
+// Timing options: key = pipe segment, label = display
+const TIMING_OPTIONS = [
+  { key: 'M', label: 'Morning' },
+  { key: 'A', label: 'Afternoon' },
+  { key: 'E', label: 'Evening' },
+  { key: 'N', label: 'Night' },
+];
+
+// Build pipe-separated string from selected keys: ['M','E'] → "M|E"
+const buildTimingString = (selected) =>
+  TIMING_OPTIONS.filter(o => selected.includes(o.key)).map(o => o.key).join('|');
+
+// ──────────────────────────────────────────────────
 const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError]     = useState(null);
 
-  // Form data
+  // Timing is stored as an array of selected keys e.g. ['M', 'E']
+  const [selectedTiming, setSelectedTiming] = useState([]);
+
+  // Form data — doseCount defaults to 1
   const [formData, setFormData] = useState({
-    name: '',
-    genericName: '',
-    composition: '',
-    manufacturer: '',
-    type: 0,
-    dosageForm: '',
-    unit: 0,
-    hsnCode: '',
+    name:            '',
+    genericName:     '',
+    composition:     '',
+    manufacturer:    '',
+    type:            0,
+    dosageForm:      '',
+    doseCount:       1,   // ← default 1
+    unit:            0,
+    hsnCode:         '',
     reorderLevelQty: 0,
-    mrp:'',
-    purchasePrice:'',
-    sellPrice:'',
-    stockQuantity: 0,
-    cgstPercentage: 0,
-    sgstPercentage: 0,
-    barcode: ''
+    mrp:             '',
+    purchasePrice:   '',
+    sellPrice:       '',
+    stockQuantity:   0,
+    cgstPercentage:  0,
+    sgstPercentage:  0,
+    barcode:         ''
   });
 
+  // ── Handlers ──
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
-    
-    // Handle number inputs
     if (type === 'number') {
       setFormData(prev => ({
         ...prev,
         [name]: value === '' ? 0 : Number(value)
       }));
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleTimingToggle = (key) => {
+    setSelectedTiming(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate required fields
+
     if (!formData.name.trim()) {
       setError({ message: 'Medicine name is required' });
       return;
     }
-
     if (formData.type === 0) {
       setError({ message: 'Please select a medicine type' });
       return;
     }
-
     if (formData.unit === 0) {
       setError({ message: 'Please select a unit' });
       return;
@@ -102,19 +118,20 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
         clinicId,
         branchId,
         ...formData,
-        name: formData.name.trim(),
-        genericName: formData.genericName.trim(),
-        composition: formData.composition.trim(),
+        name:         formData.name.trim(),
+        genericName:  formData.genericName.trim(),
+        composition:  formData.composition.trim(),
         manufacturer: formData.manufacturer.trim(),
-        dosageForm: formData.dosageForm.trim(),
-        hsnCode: formData.hsnCode.trim(),
-        barcode: formData.barcode.trim()
+        dosageForm:   formData.dosageForm.trim(),
+        hsnCode:      formData.hsnCode.trim(),
+        barcode:      formData.barcode.trim(),
+        timing:       buildTimingString(selectedTiming),   // e.g. "M|E|N"
+        doseCount:    formData.doseCount,
       };
 
       const result = await addMedicineMaster(medicineData);
-      
+
       if (result.success) {
-        // Reset and close
         handleClose();
         if (onSuccess) onSuccess();
       }
@@ -128,23 +145,25 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
 
   const handleClose = () => {
     setFormData({
-      name: '',
-      genericName: '',
-      composition: '',
-      manufacturer: '',
-      type: 0,
-      dosageForm: '',
-      unit: 0,
-      hsnCode: '',
+      name:            '',
+      genericName:     '',
+      composition:     '',
+      manufacturer:    '',
+      type:            0,
+      dosageForm:      '',
+      doseCount:       1,
+      unit:            0,
+      hsnCode:         '',
       reorderLevelQty: 0,
-      mrp: 0,
-      purchasePrice: 0,
-      sellPrice: 0,
-      stockQuantity: 0,
-      cgstPercentage: 0,
-      sgstPercentage: 0,
-      barcode: ''
+      mrp:             0,
+      purchasePrice:   0,
+      sellPrice:       0,
+      stockQuantity:   0,
+      cgstPercentage:  0,
+      sgstPercentage:  0,
+      barcode:         ''
     });
+    setSelectedTiming([]);
     setError(null);
     onClose();
   };
@@ -154,13 +173,12 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
+
         {/* Header */}
         <div className={styles.header}>
           <div>
             <h2>Add New Medicine</h2>
-            <p className={styles.subtitle}>
-              Enter medicine details to add to inventory
-            </p>
+            <p className={styles.subtitle}>Enter medicine details to add to inventory</p>
           </div>
           <button onClick={handleClose} className={styles.closeBtn}>
             <FiX size={24} />
@@ -172,13 +190,14 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
         {/* Body */}
         <div className={styles.body}>
           <form onSubmit={handleSubmit} className={styles.form}>
-            {/* Basic Information Section */}
+
+            {/* ── Basic Information ── */}
             <div className={styles.formSection}>
               <h3 className={styles.formSectionTitle}>
                 <FiPackage size={18} />
                 Basic Information
               </h3>
-              
+
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Medicine Name *</label>
@@ -231,13 +250,13 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
               </div>
             </div>
 
-            {/* Medicine Details Section */}
+            {/* ── Medicine Details ── */}
             <div className={styles.formSection}>
               <h3 className={styles.formSectionTitle}>
                 <FiPackage size={18} />
                 Medicine Details
               </h3>
-              
+
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Type *</label>
@@ -249,10 +268,8 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                     required
                   >
                     <option value={0}>Select Type</option>
-                    {MEDICINE_TYPES.map(type => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
+                    {MEDICINE_TYPES.map(t => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
                     ))}
                   </select>
                 </div>
@@ -267,10 +284,8 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                     required
                   >
                     <option value={0}>Select Unit</option>
-                    {MEDICINE_UNITS.map(unit => (
-                      <option key={unit.value} value={unit.value}>
-                        {unit.label}
-                      </option>
+                    {MEDICINE_UNITS.map(u => (
+                      <option key={u.value} value={u.value}>{u.label}</option>
                     ))}
                   </select>
                 </div>
@@ -289,6 +304,22 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                   />
                 </div>
 
+                {/* Dose Count — shown right after Dosage Form */}
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Dose Count</label>
+                  <input
+                    type="number"
+                    name="doseCount"
+                    value={formData.doseCount}
+                    onChange={handleInputChange}
+                    placeholder="1"
+                    className={styles.formInput}
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>HSN Code</label>
                   <input
@@ -300,28 +331,49 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                     className={styles.formInput}
                   />
                 </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Barcode</label>
+                  <input
+                    type="text"
+                    name="barcode"
+                    value={formData.barcode}
+                    onChange={handleInputChange}
+                    placeholder="Enter barcode"
+                    className={styles.formInput}
+                  />
+                </div>
               </div>
 
+              {/* Timing — selectable pill buttons */}
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Barcode</label>
-                <input
-                  type="text"
-                  name="barcode"
-                  value={formData.barcode}
-                  onChange={handleInputChange}
-                  placeholder="Enter barcode"
-                  className={styles.formInput}
-                />
+                <label className={styles.formLabel}>Timing</label>
+                <div className={styles.timingGroup}>
+                  {TIMING_OPTIONS.map(opt => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => handleTimingToggle(opt.key)}
+                      className={`${styles.timingBtn} ${
+                        selectedTiming.includes(opt.key) ? styles.timingBtnActive : ''
+                      }`}
+                    >
+                      <span className={styles.timingKey}>{opt.key}</span>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+               
               </div>
             </div>
 
-            {/* Pricing Section */}
+            {/* ── Pricing ── */}
             <div className={styles.formSection}>
               <h3 className={styles.formSectionTitle}>
                 <FiDollarSign size={18} />
                 Pricing Information
               </h3>
-              
+
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>MRP (₹)</label>
@@ -382,13 +434,13 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
               </div>
             </div>
 
-            {/* Stock & Tax Section */}
+            {/* ── Stock & Tax ── */}
             <div className={styles.formSection}>
               <h3 className={styles.formSectionTitle}>
                 <FiBarChart2 size={18} />
-                Stock & Tax Information
+                Stock &amp; Tax Information
               </h3>
-              
+
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Reorder Level Quantity</label>
@@ -401,9 +453,7 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                     className={styles.formInput}
                     min="0"
                   />
-                  <p className={styles.formHint}>
-                    Alert when stock falls below this quantity
-                  </p>
+                  <p className={styles.formHint}>Alert when stock falls below this quantity</p>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -439,29 +489,30 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  {/* Empty space for alignment */}
+                  {/* Empty for alignment */}
                 </div>
               </div>
             </div>
 
-            {/* Form Actions */}
+            {/* ── Actions ── */}
             <div className={styles.actions}>
-              <button 
-                type="button" 
-                onClick={handleClose} 
+              <button
+                type="button"
+                onClick={handleClose}
                 className={styles.btnSecondary}
                 disabled={loading}
               >
                 Cancel
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className={styles.btnPrimary}
                 disabled={loading}
               >
                 {loading ? 'Saving...' : 'Save Medicine'}
               </button>
             </div>
+
           </form>
         </div>
       </div>

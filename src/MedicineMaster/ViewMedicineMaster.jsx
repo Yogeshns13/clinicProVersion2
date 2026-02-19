@@ -1,49 +1,68 @@
 // src/components/ViewMedicineMaster.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiPackage, FiArrowLeft, FiAlertTriangle } from 'react-icons/fi';
+import { FiPackage, FiArrowLeft, FiAlertTriangle, FiX } from 'react-icons/fi';
 import { getMedicineMasterList, deleteMedicineMaster } from '../api/api-pharmacy.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './ViewMedicineMaster.module.css';
+import modalStyles from './ViewMedicineMaster.module.css';
 
 // ────────────────────────────────────────────────
-// CONSTANTS
+// CONSTANTS — UNCHANGED
 // ────────────────────────────────────────────────
 const MEDICINE_TYPES = [
-  { id: 1, label: 'Tablet' },
-  { id: 2, label: 'Capsule' },
-  { id: 3, label: 'Syrup' },
-  { id: 4, label: 'Injection' },
-  { id: 5, label: 'Ointment' },
-  { id: 6, label: 'Drops' },
-  { id: 7, label: 'Powder' },
-  { id: 8, label: 'Gel' },
-  { id: 9, label: 'Cream' },
+  { id: 1,  label: 'Tablet' },
+  { id: 2,  label: 'Capsule' },
+  { id: 3,  label: 'Syrup' },
+  { id: 4,  label: 'Injection' },
+  { id: 5,  label: 'Ointment' },
+  { id: 6,  label: 'Drops' },
+  { id: 7,  label: 'Powder' },
+  { id: 8,  label: 'Gel' },
+  { id: 9,  label: 'Cream' },
   { id: 10, label: 'Inhaler' }
 ];
 
 const MEDICINE_UNITS = [
-  { id: 1, label: 'Strip' },
-  { id: 2, label: 'Bottle' },
-  { id: 3, label: 'Vial' },
-  { id: 4, label: 'Tube' },
-  { id: 5, label: 'Box' },
-  { id: 6, label: 'Ampoule' },
-  { id: 7, label: 'Sachet' },
-  { id: 8, label: 'Blister Pack' },
-  { id: 9, label: 'Jar' },
+  { id: 1,  label: 'Strip' },
+  { id: 2,  label: 'Bottle' },
+  { id: 3,  label: 'Vial' },
+  { id: 4,  label: 'Tube' },
+  { id: 5,  label: 'Box' },
+  { id: 6,  label: 'Ampoule' },
+  { id: 7,  label: 'Sachet' },
+  { id: 8,  label: 'Blister Pack' },
+  { id: 9,  label: 'Jar' },
   { id: 10, label: 'Roll' }
 ];
 
+// Timing display helpers
+const TIMING_LABELS = { M: 'Morning', A: 'Afternoon', E: 'Evening', N: 'Night' };
+
+// "M|E|N" → [{ key:'M', label:'Morning' }, ...]
+const parseTimingPills = (str) =>
+  str
+    ? str.split('|').filter(k => TIMING_LABELS[k]).map(k => ({ key: k, label: TIMING_LABELS[k] }))
+    : [];
+
 // ────────────────────────────────────────────────
-const ViewMedicineMaster = () => {
-  const { id } = useParams();
+// Props:
+//   isModal  (bool)   — when true renders as a popup
+//   onClose  (func)   — called to close the popup (required when isModal=true)
+//   medicineId (any)  — pass the id directly when used as a popup
+//                       (falls back to useParams when not provided)
+// ────────────────────────────────────────────────
+const ViewMedicineMaster = ({ isModal = false, onClose, medicineId }) => {
+  const params   = useParams();
   const navigate = useNavigate();
 
+  // Use prop id when in modal mode, otherwise fall back to route param
+  const id = isModal ? medicineId : params.id;
+
   const [medicine, setMedicine] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState(null);
 
   // ────────────────────────────────────────────────
   useEffect(() => {
@@ -56,7 +75,7 @@ const ViewMedicineMaster = () => {
         const branchId = Number(localStorage.getItem('branchID'));
 
         const data = await getMedicineMasterList(clinicId, {
-          BranchID: branchId,
+          BranchID:   branchId,
           MedicineID: Number(id),
         });
 
@@ -77,29 +96,23 @@ const ViewMedicineMaster = () => {
       }
     };
 
-    if (id) {
-      fetchMedicineDetails();
-    }
+    if (id) fetchMedicineDetails();
   }, [id]);
 
   // ────────────────────────────────────────────────
-  // Helper functions
-  const getTypeLabel = (typeId) => {
-    return MEDICINE_TYPES.find((t) => t.id === typeId)?.label || '—';
-  };
+  // Helper functions — UNCHANGED
+  const getTypeLabel = (typeId) =>
+    MEDICINE_TYPES.find((t) => t.id === typeId)?.label || '—';
 
-  const getUnitLabel = (unitId) => {
-    return MEDICINE_UNITS.find((u) => u.id === unitId)?.label || '—';
-  };
+  const getUnitLabel = (unitId) =>
+    MEDICINE_UNITS.find((u) => u.id === unitId)?.label || '—';
 
   const formatDate = (dateString) => {
     if (!dateString) return '—';
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-IN', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
+      return date.toLocaleDateString('en-IN', {
+        year: 'numeric', month: 'short', day: 'numeric',
       });
     } catch {
       return dateString;
@@ -112,26 +125,25 @@ const ViewMedicineMaster = () => {
   };
 
   const getStatusClass = (status) => {
-    if (status === 'active') return 'active';
+    if (status === 'active')   return 'active';
     if (status === 'inactive') return 'inactive';
     return 'inactive';
   };
 
   // ────────────────────────────────────────────────
-  // Handlers
-  const handleUpdateClick = () => {
-    navigate(`/update-medicinemaster/${medicine.id}`);
-  };
+  // Handlers — UNCHANGED (back/close is now modal-aware)
+  const handleUpdateClick = () => navigate(`/update-medicinemaster/${medicine.id}`);
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this medicine?')) {
-      return;
-    }
-
+    if (!window.confirm('Are you sure you want to delete this medicine?')) return;
     try {
       setError(null);
       await deleteMedicineMaster(medicine.id);
-      navigate('/medicinemaster-list');
+      if (isModal && onClose) {
+        onClose();
+      } else {
+        navigate('/medicinemaster-list');
+      }
     } catch (err) {
       console.error('Delete medicine failed:', err);
       setError({ message: err.message || 'Failed to delete medicine.' });
@@ -139,38 +151,34 @@ const ViewMedicineMaster = () => {
   };
 
   const handleBack = () => {
-    navigate('/medicinemaster-list');
+    if (isModal && onClose) {
+      onClose();
+    } else {
+      navigate('/medicinemaster-list');
+    }
   };
 
   // ────────────────────────────────────────────────
-  // Early returns
-  if (error && (error?.status >= 400 || error?.code >= 400)) {
-    return <ErrorHandler error={error} />;
-  }
-
-  if (loading) return <div className={styles.loading}>Loading medicine details...</div>;
-
-  if (error) return <div className={styles.error}>Error: {error.message || error}</div>;
-
-  if (!medicine) return <div className={styles.error}>Medicine not found</div>;
+  // Close modal on overlay click (only in modal mode)
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget && isModal && onClose) onClose();
+  };
 
   // ────────────────────────────────────────────────
-  return (
-    <div className={styles.wrapper}>
-      <ErrorHandler error={error} />
-      <Header title="Medicine Master Details" />
+  // Build the detail content (shared between page & modal)
+  const renderContent = () => {
+    // Early returns inside content
+    if (error && (error?.status >= 400 || error?.code >= 400)) return <ErrorHandler error={error} />;
+    if (loading)   return <div className={styles.loading}>Loading medicine details...</div>;
+    if (error)     return <div className={styles.error}>Error: {error.message || error}</div>;
+    if (!medicine) return <div className={styles.error}>Medicine not found</div>;
 
-      {/* Back Button */}
-      <div className={styles.toolbar}>
-        <button onClick={handleBack} className={styles.backBtn}>
-          <FiArrowLeft size={20} /> Back to List
-        </button>
-      </div>
+    const timingPills = parseTimingPills(medicine.timing || '');
 
-      {/* Medicine Details Card */}
+    return (
       <div className={styles.detailsCard}>
-        
-        {/* Header Section */}
+
+        {/* Header Section — UNCHANGED */}
         <div className={styles.cardHeader}>
           <div className={styles.headerInfo}>
             <h2>{medicine.name}</h2>
@@ -193,11 +201,10 @@ const ViewMedicineMaster = () => {
 
         {/* Details Body */}
         <div className={styles.cardBody}>
-          
+
           {/* Section 1: Basic Information */}
           <div className={styles.detailsSection}>
             <h3 className={styles.sectionTitle}>Basic Information</h3>
-            
             <div className={styles.detailsGrid}>
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Medicine Name</span>
@@ -220,9 +227,29 @@ const ViewMedicineMaster = () => {
                 <span className={styles.detailValue}>{medicine.dosageForm || '—'}</span>
               </div>
               <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Dose Count</span>
+                <span className={styles.detailValue}>{medicine.doseCount ?? '—'}</span>
+              </div>
+              <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Manufacturer</span>
                 <span className={styles.detailValue}>{medicine.manufacturer || '—'}</span>
               </div>
+            </div>
+
+            <div className={styles.fullWidthDetail}>
+              <span className={styles.detailLabel}>Timing</span>
+              {timingPills.length > 0 ? (
+                <div className={styles.timingDisplay}>
+                  {timingPills.map(p => (
+                    <span key={p.key} className={styles.timingPill}>
+                      <span className={styles.timingPillKey}>{p.key}</span>
+                      {p.label}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <span className={styles.detailValue}>—</span>
+              )}
             </div>
 
             {medicine.composition && (
@@ -233,7 +260,7 @@ const ViewMedicineMaster = () => {
             )}
           </div>
 
-          {/* Section 2: Pricing Information */}
+          {/* Section 2: Pricing Information — UNCHANGED */}
           <div className={styles.detailsSection}>
             <h3 className={styles.sectionTitle}>Pricing Information</h3>
             <div className={styles.detailsGrid}>
@@ -252,9 +279,9 @@ const ViewMedicineMaster = () => {
             </div>
           </div>
 
-          {/* Section 3: Stock & Inventory */}
+          {/* Section 3: Stock & Inventory — UNCHANGED */}
           <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Stock & Inventory</h3>
+            <h3 className={styles.sectionTitle}>Stock &amp; Inventory</h3>
             <div className={styles.detailsGrid}>
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Current Stock</span>
@@ -276,7 +303,7 @@ const ViewMedicineMaster = () => {
             </div>
           </div>
 
-          {/* Section 4: Tax Information */}
+          {/* Section 4: Tax Information — UNCHANGED */}
           <div className={styles.detailsSection}>
             <h3 className={styles.sectionTitle}>Tax Information</h3>
             <div className={styles.detailsGrid}>
@@ -297,7 +324,7 @@ const ViewMedicineMaster = () => {
             </div>
           </div>
 
-          {/* Section 5: Additional Details */}
+          {/* Section 5: Additional Details — UNCHANGED */}
           <div className={styles.detailsSection}>
             <h3 className={styles.sectionTitle}>Additional Details</h3>
             <div className={styles.detailsGrid}>
@@ -316,7 +343,7 @@ const ViewMedicineMaster = () => {
             </div>
           </div>
 
-          {/* Section 6: System Information */}
+          {/* Section 6: System Information — UNCHANGED */}
           <div className={styles.detailsSection}>
             <h3 className={styles.sectionTitle}>System Information</h3>
             <div className={styles.detailsGrid}>
@@ -337,7 +364,7 @@ const ViewMedicineMaster = () => {
 
         </div>
 
-        {/* Footer Actions */}
+        {/* Footer Actions — UNCHANGED */}
         <div className={styles.cardFooter}>
           <button onClick={handleDelete} className={`${styles.btnHold} ${styles.btnDelete}`}>
             Delete Medicine
@@ -346,7 +373,46 @@ const ViewMedicineMaster = () => {
             Update Medicine
           </button>
         </div>
+
       </div>
+    );
+  };
+
+  // ────────────────────────────────────────────────
+  // MODAL MODE
+  // ────────────────────────────────────────────────
+  if (isModal) {
+    return (
+      <div className={modalStyles.modalOverlay} onClick={handleOverlayClick}>
+        <div className={modalStyles.modalContainer}>
+          {/* Close button */}
+          <div className={modalStyles.modalTopBar}>
+            <button onClick={handleBack} className={modalStyles.modalCloseBtn}>
+              <FiX size={16} /> Close
+            </button>
+          </div>
+          <ErrorHandler error={error} />
+          {renderContent()}
+        </div>
+      </div>
+    );
+  }
+
+  // ────────────────────────────────────────────────
+  // PAGE MODE (original behaviour — UNCHANGED)
+  // ────────────────────────────────────────────────
+  return (
+    <div className={styles.wrapper}>
+      <ErrorHandler error={error} />
+      <Header title="Medicine Master Details" />
+
+      <div className={styles.toolbar}>
+        <button onClick={handleBack} className={styles.backBtn}>
+          <FiArrowLeft size={20} /> Back to List
+        </button>
+      </div>
+
+      {renderContent()}
     </div>
   );
 };

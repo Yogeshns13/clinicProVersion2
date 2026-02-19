@@ -14,15 +14,17 @@ AddMedicineMaster
     "DosageForm":"500 mg",
     "DefaultRoute":1,
     "Unit": 1,
-   "HSNCode":"2924.29.90",
+    "HSNCode":"2924.29.90",
     "ReorderLevelQty":100,
-   "MRP": 10.00,
-   "PurchasePrice":8.00,
-   "SellPrice":9.00,
-   "StockQuantity":1000,   
-   "CGSTPercentage":6.00,
-   "SGSTPercentage":6.00,
-   "Barcode":"WIll BE LATER"  
+    "MRP": 10.00,
+    "PurchasePrice":8.00,
+    "SellPrice":9.00,
+    "StockQuantity":1000,   
+    "CGSTPercentage":6.00,
+    "SGSTPercentage":6.00,
+    "Barcode":"WIll BE LATER",
+    "DoseCount":1,
+    "Timing": "M|N"   
 }
 
 Medicine Form
@@ -66,7 +68,7 @@ UpdateMedicineMaster
     "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
-    "USER_ID" : 2000000,
+    "USER_ID" : 2000000, 
     "ClinicID": 1,
     "BranchID":1,
     "MedicineID":1,
@@ -76,18 +78,20 @@ UpdateMedicineMaster
     "Manufacturer":"Apec Lab",   
     "Type": 1,  
     "DosageForm":"500 mg",
-    "DefaultRoute":1,
+     "DefaultRoute":1,
     "Unit": 1,
-    "HSNCode":"2924.29.90",
+   "HSNCode":"2924.29.90",
     "ReorderLevelQty":100,
-    "MRP": 11.00,
-    "PurchasePrice":8.00,
+   "MRP": 11.00,
+   "PurchasePrice":8.00,
    "SellPrice":9.00,
    "StockQuantity":1000,   
    "CGSTPercentage":6.00,
    "SGSTPercentage":6.00,
    "Barcode":"WIll BE LATER",
-   "Status":1
+   "Status":1,
+   "DoseCount":1,
+    "Timing": "M|N"
 }
 
 DeleteMedicineMaster
@@ -117,8 +121,10 @@ GetMedicineMasterList
     "HSNCode":"",
     "Barcode":"",
     "LowStockOnly":1,  
-   "Status":-1 
+   "Status":-1
+    
 }
+
 
 
 ___________________________________________________________________________
@@ -139,15 +145,17 @@ AddMedicineMaster
     "DosageForm":"500 mg",
     "DefaultRoute":1,
     "Unit": 1,
-   "HSNCode":"2924.29.90",
+    "HSNCode":"2924.29.90",
     "ReorderLevelQty":100,
-   "MRP": 10.00,
-   "PurchasePrice":8.00,
-   "SellPrice":9.00,
-   "StockQuantity":1000,   
-   "CGSTPercentage":6.00,
-   "SGSTPercentage":6.00,
-   "Barcode":"WIll BE LATER"
+    "MRP": 10.00,
+    "PurchasePrice":8.00,
+    "SellPrice":9.00,
+    "StockQuantity":1000,   
+    "CGSTPercentage":6.00,
+    "SGSTPercentage":6.00,
+    "Barcode":"WIll BE LATER",
+    "DoseCount":1,
+    "Timing": "M|N"   
 }
 
 {
@@ -177,12 +185,80 @@ GetMedicineMasterList
     "Unit": 0,
     "HSNCode":"",
     "Barcode":"",
-    "LowStockOnly":1,
-    "Status":-1 
+    "LowStockOnly":0,  
+   "Status":-1
 }
 
 {
     "result": [
+        {
+            "medicine_id": 13,
+            "unique_seq": 5,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "name": "SA 500",
+            "generic_name": "Saridon 500",
+            "composition": "Saridon 500 mg",
+            "manufacturer": "Apec Lab",
+            "type": 1,
+            "type_desc": "Tablet",
+            "dosage_form": "500 mg",
+            "unit": 1,
+            "default_route": 1,
+            "unit_desc": "Strip",
+            "hsn_code": "2924.29.90",
+            "reorder_level_qty": 100,
+            "mrp": "10.00",
+            "purchase_price": "8.00",
+            "sell_price": "9.00",
+            "stock_quantity": 1000,
+            "cgst_percentage": "6.00",
+            "sgst_percentage": "6.00",
+            "barcode": "WIll BE LATER",
+            "dose_count": 3,
+            "timing": "M|A|E|N",
+            "status": 1,
+            "status_desc": "Active",
+            "is_low_stock": "No",
+            "date_created": "2026-02-18T08:37:54.000Z",
+            "date_modified": "2026-02-18T08:37:54.000Z"
+        },
+        {
+            "medicine_id": 12,
+            "unique_seq": 4,
+            "clinic_id": 1,
+            "clinic_name": "ClinicPro Test",
+            "branch_id": 1,
+            "branch_name": "Test Main Branch",
+            "name": "S 500",
+            "generic_name": "Saridon 500",
+            "composition": "Saridon 500 mg",
+            "manufacturer": "Apec Lab",
+            "type": 1,
+            "type_desc": "Tablet",
+            "dosage_form": "500 mg",
+            "unit": 1,
+            "default_route": 1,
+            "unit_desc": "Strip",
+            "hsn_code": "2924.29.90",
+            "reorder_level_qty": 100,
+            "mrp": "10.00",
+            "purchase_price": "8.00",
+            "sell_price": "9.00",
+            "stock_quantity": 1000,
+            "cgst_percentage": "6.00",
+            "sgst_percentage": "6.00",
+            "barcode": "WIll BE LATER",
+            "dose_count": 1,
+            "timing": null,
+            "status": 1,
+            "status_desc": "Active",
+            "is_low_stock": "No",
+            "date_created": "2026-02-18T08:07:55.000Z",
+            "date_modified": "2026-02-18T08:07:55.000Z"
+        },
         {
             "medicine_id": 8,
             "unique_seq": 3,
@@ -205,15 +281,17 @@ GetMedicineMasterList
             "mrp": "10.00",
             "purchase_price": "8.50",
             "sell_price": "9.00",
-            "stock_quantity": 1535,
+            "stock_quantity": 1520,
             "cgst_percentage": "6.00",
             "sgst_percentage": "6.00",
             "barcode": "WIll BE LATER",
+            "dose_count": 1,
+            "timing": null,
             "status": 1,
             "status_desc": "Active",
             "is_low_stock": "No",
-            "date_created": "2026-01-27T06:02:58.000Z",
-            "date_modified": "2026-01-29T12:03:44.000Z"
+            "date_created": "2026-01-27T11:32:58.000Z",
+            "date_modified": "2026-02-14T12:45:49.000Z"
         },
         {
             "medicine_id": 7,
@@ -237,15 +315,17 @@ GetMedicineMasterList
             "mrp": "20.00",
             "purchase_price": "8.50",
             "sell_price": "9.00",
-            "stock_quantity": 1440,
+            "stock_quantity": 1437,
             "cgst_percentage": "6.00",
             "sgst_percentage": "6.00",
             "barcode": "WIll BE LATER",
+            "dose_count": 1,
+            "timing": null,
             "status": 1,
             "status_desc": "Active",
             "is_low_stock": "No",
-            "date_created": "2026-01-27T05:38:23.000Z",
-            "date_modified": "2026-01-29T12:01:41.000Z"
+            "date_created": "2026-01-27T11:08:23.000Z",
+            "date_modified": "2026-02-17T05:55:06.000Z"
         },
         {
             "medicine_id": 1,
@@ -273,11 +353,13 @@ GetMedicineMasterList
             "cgst_percentage": "6.00",
             "sgst_percentage": "6.00",
             "barcode": "WIll BE LATER",
+            "dose_count": 1,
+            "timing": null,
             "status": 2,
             "status_desc": "Inactive",
             "is_low_stock": "No",
-            "date_created": "2025-11-29T08:47:02.000Z",
-            "date_modified": "2026-01-26T11:03:17.000Z"
+            "date_created": "2025-11-29T14:17:02.000Z",
+            "date_modified": "2026-01-26T16:33:17.000Z"
         }
     ]
 }
@@ -292,14 +374,14 @@ UpdateMedicineMaster
     "USER_ID" : 2000000, 
     "ClinicID": 1,
     "BranchID":1,
-    "MedicineID":7,
-    "Name":"P 500",
-    "GenericName":"Parametamol 500",
-    "Composition":"Parametamol 500 mg",
+    "MedicineID":13,
+    "Name":"SA 1500",
+    "GenericName":"Saridon 1500",
+    "Composition":"Saridon 1500 mg",
     "Manufacturer":"Apec Lab",   
     "Type": 1,  
-    "DosageForm":"500 mg",
-    "DefaultRoute":1,
+    "DosageForm":"1500 mg",
+     "DefaultRoute":1,
     "Unit": 1,
    "HSNCode":"2924.29.90",
     "ReorderLevelQty":100,
@@ -310,12 +392,14 @@ UpdateMedicineMaster
    "CGSTPercentage":6.00,
    "SGSTPercentage":6.00,
    "Barcode":"WIll BE LATER",
-   "Status":1
+   "Status":1,
+   "DoseCount":7,
+    "Timing": "M|N"
 }
 
 {
     "result": {
-        "IN_MEDICINE_ID": 7,
+        "IN_MEDICINE_ID": 13,
         "OUT_OK": 1,
         "OUT_ERROR": "OK"
     }

@@ -164,7 +164,6 @@ function App() {
           <Route path="/pharmacy-invoice" element={<PharmacyInvoiceList/>} />
           <Route path="/salescart-list" element={<SalesCartList/>} />
           <Route path="/salescartdetail-list/:id" element={<SalesCartDetailList/>} />
-          
 
           {/* Default redirect inside protected area */}
           <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
