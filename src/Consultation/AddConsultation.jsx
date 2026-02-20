@@ -7,7 +7,7 @@ import {
   FiActivity, FiEye, FiEdit3, FiAlertCircle,
   FiZap, FiClock, FiRefreshCw, FiChevronUp, FiHeart,
   FiThermometer, FiTrendingUp, FiSend, FiTrash2,
-  FiClipboard, FiDroplet, FiCheckCircle, FiSave
+  FiClipboard, FiDroplet, FiCheckCircle, FiSave, FiUsers,
 } from 'react-icons/fi';
 import { getPatientVisitList, getPatientsList } from '../api/api.js';
 import { addConsultation, updateConsultation, getConsultationList } from '../api/api-consultation.js';
@@ -21,7 +21,6 @@ import {
   getLabTestPackageList, getLabTestOrderList, getLabTestOrderItemList,
   updateLabTestOrderItem, deleteLabTestOrder
 } from '../api/api-labtest.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
 import './AddConsultation.css';
 
 /* ─── Constants ─────────────────────────────────── */
@@ -80,7 +79,6 @@ const createContainer = (medicine = null) => {
     expanded: true,
     startDate: today(),
     endDate: thirtyDaysLater(),
-    // For saved items that came back from API
     prescriptionDetailId: null,
   };
 };
@@ -161,23 +159,38 @@ const MedicineContainer = ({ container, onUpdate, onRemove, readOnly = false }) 
             </div>
           </div>
 
-          <div className="med-nums-row">
-            <div className="mf mf--num">
+          <div className="med-inline-row">
+            <div className="mf mf--inline">
               <label className="mf__label">Dose <span className="req">*</span></label>
               <input type="text" className="mf__input" value={container.dosePerIntake}
                 onChange={e => onUpdate(container.tempId, { dosePerIntake: e.target.value })}
                 placeholder="1 Tablet" readOnly={readOnly} />
             </div>
-            <div className="mf mf--num">
+            <div className="mf mf--inline mf--sm">
               <label className="mf__label">Days</label>
               <input type="number" className="mf__input" value={container.days}
                 onChange={e => !readOnly && handleDays(e.target.value)} placeholder="7" min="1" readOnly={readOnly} />
             </div>
-            <div className="mf mf--num">
-              <label className="mf__label">Quantity</label>
+            <div className="mf mf--inline mf--sm">
+              <label className="mf__label">Qty</label>
               <input type="number" className="mf__input mf__input--qty" value={container.quantity}
                 onChange={e => !readOnly && onUpdate(container.tempId, { quantity: Number(e.target.value) })} min="0" step="0.5" readOnly={readOnly} />
             </div>
+            {!readOnly && (
+              <div className="mf mf--inline mf--refill-inline">
+                <label className="mf__label">Refill</label>
+                <div className="refill-inline-row">
+                  <label className="med-check-label">
+                    <input type="checkbox" checked={container.refillAllowed === 1}
+                      onChange={e => onUpdate(container.tempId, { refillAllowed: e.target.checked ? 1 : 0, refillCount: e.target.checked ? container.refillCount : 0 })} />
+                  </label>
+                  {container.refillAllowed === 1 && (
+                    <input type="number" className="mf__input" style={{ width: 48 }} value={container.refillCount}
+                      onChange={e => onUpdate(container.tempId, { refillCount: Number(e.target.value) })} min="1" max="12" placeholder="1" />
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mf">
@@ -186,23 +199,6 @@ const MedicineContainer = ({ container, onUpdate, onRemove, readOnly = false }) 
               onChange={e => !readOnly && onUpdate(container.tempId, { notes: e.target.value })}
               placeholder="e.g. Take with warm water…" readOnly={readOnly} />
           </div>
-
-          {!readOnly && (
-            <div className="med-refill-row">
-              <label className="med-check-label">
-                <input type="checkbox" checked={container.refillAllowed === 1}
-                  onChange={e => onUpdate(container.tempId, { refillAllowed: e.target.checked ? 1 : 0, refillCount: e.target.checked ? container.refillCount : 0 })} />
-                <span>Allow Refill</span>
-              </label>
-              {container.refillAllowed === 1 && (
-                <div className="med-refill-count">
-                  <label className="mf__label">Count</label>
-                  <input type="number" className="mf__input" style={{ width: 60 }} value={container.refillCount}
-                    onChange={e => onUpdate(container.tempId, { refillCount: Number(e.target.value) })} min="1" max="12" />
-                </div>
-              )}
-            </div>
-          )}
         </div>
       )}
     </div>
@@ -210,15 +206,16 @@ const MedicineContainer = ({ container, onUpdate, onRemove, readOnly = false }) 
 };
 
 /* ─── SavedMedicineCard ─────────────────────────── */
-// Editable card for already-submitted prescription items
 const SavedMedicineCard = ({ item, clinicId, branchId, onUpdated, onDeleted, onError }) => {
-  const [editing, setEditing]     = useState(false);
-  const [saving, setSaving]       = useState(false);
-  const [deleting, setDeleting]   = useState(false);
-  const [confirmDel, setConfirmDel] = useState(false);
+  const [expanded, setExpanded]       = useState(true);
+  const [editing, setEditing]         = useState(false);
+  const [saving, setSaving]           = useState(false);
+  const [deleting, setDeleting]       = useState(false);
+  const [confirmDel, setConfirmDel]   = useState(false);
+  const [local, setLocal]             = useState(null);
 
-  // Local editable copy
-  const [local, setLocal] = useState(null);
+  const foodLabel = FOOD_OPTIONS.find(f => f.id === (item.foodTiming || 2))?.label || '—';
+  const timings   = parseTimings(item.frequency);
 
   const startEdit = () => {
     setLocal({
@@ -242,10 +239,10 @@ const SavedMedicineCard = ({ item, clinicId, branchId, onUpdated, onDeleted, onE
       prescriptionDetailId: item.id,
     });
     setEditing(true);
+    setExpanded(true);
   };
 
   const cancelEdit = () => { setEditing(false); setLocal(null); };
-
   const handleUpdate = (tid, ch) => setLocal(prev => ({ ...prev, ...ch }));
 
   const handleSave = async () => {
@@ -267,8 +264,8 @@ const SavedMedicineCard = ({ item, clinicId, branchId, onUpdated, onDeleted, onE
         Quantity: local.quantity,
         RefillAllowed: local.refillAllowed,
         RefillCount: local.refillCount,
-        StartDate: local.startDate || today(),
-        EndDate: local.endDate || thirtyDaysLater(),
+        StartDate: today(),
+        EndDate: thirtyDaysLater(),
         Status: 1,
       });
       onUpdated(item.id, local);
@@ -294,23 +291,34 @@ const SavedMedicineCard = ({ item, clinicId, branchId, onUpdated, onDeleted, onE
     }
   };
 
-  // View mode
   if (!editing) {
     return (
       <div className="saved-item-card">
-        <div className="saved-item-card__strip">
-          <FiCheckCircle size={11} /> Saved to prescription
-        </div>
-        <div className="saved-item-card__body">
-          <div className="saved-item-card__info">
+        <div className="saved-item-card__head">
+          <button
+            type="button"
+            className="saved-item-card__toggle"
+            onClick={() => setExpanded(p => !p)}
+          >
+            {expanded ? <FiChevronUp size={11} /> : <FiChevronDown size={11} />}
+          </button>
+
+          <div className="saved-item-card__head-info">
             <span className="saved-item-card__name">{item.medicineName}</span>
-            <div className="saved-item-card__meta">
-              {item.dosage && <span className="tag">{item.dosage}</span>}
-              {item.frequency && <span className="tag">{item.frequency}</span>}
-              {item.duration && <span className="tag">{item.duration}</span>}
-              {item.quantity > 0 && <span className="tag tag--qty">Qty {item.quantity}</span>}
-            </div>
+            {!expanded && (
+              <span className="saved-item-card__collapsed-summary">
+                {item.dosage && <>{item.dosage}</>}
+                {timings.length > 0 && <> · {timings.join('-')}</>}
+                {item.quantity > 0 && <> · Qty {item.quantity}</>}
+                <> · {foodLabel} food</>
+              </span>
+            )}
           </div>
+
+          {item.quantity > 0 && expanded && (
+            <span className="saved-item-card__qty-badge">Qty {item.quantity}</span>
+          )}
+
           <div className="saved-item-card__actions">
             <button className="btn-item-edit" onClick={startEdit} title="Edit this medicine">
               <FiEdit3 size={12} /> Edit
@@ -320,23 +328,41 @@ const SavedMedicineCard = ({ item, clinicId, branchId, onUpdated, onDeleted, onE
                 <FiTrash2 size={12} /> Delete
               </button>
             ) : (
-              <div className="confirm-del-row">
-                <span className="confirm-del-row__label">Delete?</span>
-                <button className="btn-confirm-yes" onClick={handleDelete} disabled={deleting}>
-                  {deleting ? <span className="spin-sm" /> : <FiCheck size={11} />} Yes
-                </button>
-                <button className="btn-confirm-no" onClick={() => setConfirmDel(false)}>
-                  <FiX size={11} /> No
-                </button>
+              <div className="confirm-del-popup">
+                <div className="confirm-del-popup__inner">
+                  <p className="confirm-del-popup__msg"><FiAlertCircle size={14} /> Delete this medicine?</p>
+                  <div className="confirm-del-popup__btns">
+                    <button className="btn-confirm-yes" onClick={handleDelete} disabled={deleting}>
+                      {deleting ? <span className="spin-sm" /> : <FiCheck size={11} />} Yes, Delete
+                    </button>
+                    <button className="btn-confirm-no" onClick={() => setConfirmDel(false)}>
+                      <FiX size={11} /> Cancel
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
         </div>
+
+        {expanded && (
+          <div className="saved-item-card__body">
+            <div className="saved-item-card__strip">
+              <FiCheckCircle size={11} /> Saved to prescription
+            </div>
+            <div className="saved-item-card__meta-row">
+              {item.dosage    && <span className="tag">{item.dosage}</span>}
+              {item.frequency && <span className="tag">{item.frequency}</span>}
+              {item.duration  && <span className="tag">{item.duration}</span>}
+              {item.quantity > 0 && <span className="tag tag--qty">Qty {item.quantity}</span>}
+              {item.instructions && <span className="tag tag--note">{item.instructions}</span>}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
-  // Edit mode — reuse MedicineContainer UI
   return (
     <div className="saved-item-card saved-item-card--editing">
       <div className="saved-item-card__edit-head">
@@ -361,16 +387,15 @@ const SavedMedicineCard = ({ item, clinicId, branchId, onUpdated, onDeleted, onE
 };
 
 /* ─── SavedLabSection ────────────────────────────── */
-// Shows submitted lab items with per-item deactivate and whole-order delete
 const SavedLabSection = ({ labOrderId, labItems, labPriorityDesc, clinicId, branchId, onItemStatusChange, onOrderDeleted, onError }) => {
-  const [deletingOrder, setDeletingOrder]   = useState(false);
+  const [deletingOrder, setDeletingOrder]     = useState(false);
   const [confirmDelOrder, setConfirmDelOrder] = useState(false);
-  const [togglingId, setTogglingId]         = useState(null);
+  const [togglingId, setTogglingId]           = useState(null);
 
   const handleToggleItem = async (itemId, currentStatus) => {
     try {
       setTogglingId(itemId);
-      const newStatus = currentStatus === 1 ? 0 : 1;
+      const newStatus = currentStatus === 1 ? 2 : 1;
       await updateLabTestOrderItem({ itemId, clinicId, branchId, status: newStatus });
       onItemStatusChange(itemId, newStatus);
     } catch (err) {
@@ -410,14 +435,18 @@ const SavedLabSection = ({ labOrderId, labItems, labPriorityDesc, clinicId, bran
               <FiTrash2 size={12} /> Delete Order
             </button>
           ) : (
-            <div className="confirm-del-row">
-              <span className="confirm-del-row__label">Delete entire order?</span>
-              <button className="btn-confirm-yes" onClick={handleDeleteOrder} disabled={deletingOrder}>
-                {deletingOrder ? <span className="spin-sm" /> : <FiCheck size={11} />} Yes
-              </button>
-              <button className="btn-confirm-no" onClick={() => setConfirmDelOrder(false)}>
-                <FiX size={11} /> No
-              </button>
+            <div className="confirm-del-popup confirm-del-popup--inline">
+              <div className="confirm-del-popup__inner">
+                <p className="confirm-del-popup__msg"><FiAlertCircle size={14} /> Delete entire lab order?</p>
+                <div className="confirm-del-popup__btns">
+                  <button className="btn-confirm-yes" onClick={handleDeleteOrder} disabled={deletingOrder}>
+                    {deletingOrder ? <span className="spin-sm" /> : <FiCheck size={11} />} Yes
+                  </button>
+                  <button className="btn-confirm-no" onClick={() => setConfirmDelOrder(false)}>
+                    <FiX size={11} /> No
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -439,7 +468,6 @@ const SavedLabSection = ({ labOrderId, labItems, labPriorityDesc, clinicId, bran
                 className={`btn-toggle-lab ${item.status === 1 ? 'btn-toggle-lab--deactivate' : 'btn-toggle-lab--activate'}`}
                 onClick={() => handleToggleItem(item.itemId, item.status)}
                 disabled={togglingId === item.itemId}
-                title={item.status === 1 ? 'Deactivate this test' : 'Reactivate this test'}
               >
                 {togglingId === item.itemId
                   ? <span className="spin-sm" />
@@ -470,42 +498,65 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const [consultationId, setConsultationId]             = useState(null);
   const [prescriptionId, setPrescriptionId]             = useState(null);
   const [consultSaved, setConsultSaved]                 = useState(false);
-  const [updateSuccess, setUpdateSuccess]               = useState(false);
   const [confirmedSuccess, setConfirmedSuccess]         = useState(false);
   const [submitProgress, setSubmitProgress]             = useState(null);
 
-  const [containers, setContainers]                     = useState([]);
+  const [savedNotes, setSavedNotes]         = useState('');
+  const [savedPlan, setSavedPlan]           = useState('');
+  const [savedNextDate, setSavedNextDate]   = useState('');
+  const [updatingConsult, setUpdatingConsult] = useState(false);
+
+  const [containers, setContainers]                       = useState([]);
   const [submittedContainerIds, setSubmittedContainerIds] = useState(new Set());
-  const [savedPrescItems, setSavedPrescItems]           = useState([]);  // full API items for edit/delete
-  const [isDragOver, setIsDragOver]                     = useState(false);
-  const [allMedicines, setAllMedicines]                 = useState([]);
-  const [filteredMedicines, setFilteredMedicines]       = useState([]);
-  const [searchQuery, setSearchQuery]                   = useState('');
-  const [loadingMeds, setLoadingMeds]                   = useState(false);
-  const [selectedMedIds, setSelectedMedIds]             = useState([]);
+  const [savedPrescItems, setSavedPrescItems]             = useState([]);
+  const [isDragOver, setIsDragOver]                       = useState(false);
+  const [allMedicines, setAllMedicines]                   = useState([]);
+  const [filteredMedicines, setFilteredMedicines]         = useState([]);
+  const [searchQuery, setSearchQuery]                     = useState('');
+  const [loadingMeds, setLoadingMeds]                     = useState(false);
+  const [selectedMedIds, setSelectedMedIds]               = useState([]);
   const dragMedIdRef = useRef(null);
 
-  const [showPatientModal, setShowPatientModal] = useState(false);
-  const [patientDetails, setPatientDetails]     = useState(null);
-  const [loadingPatient, setLoadingPatient]     = useState(false);
+  const [showPatientModal, setShowPatientModal]     = useState(false);
+  const [patientDetails, setPatientDetails]         = useState(null);
+  const [loadingPatient, setLoadingPatient]         = useState(false);
+  // Family patient: fetched quietly when primary patient loads; shown inline as name+mobile
+  const [familyPatientData, setFamilyPatientData]   = useState(null);
+  const [loadingFamilyData, setLoadingFamilyData]   = useState(false);
+  // Second popup for full family patient details
+  const [showFamilyModal, setShowFamilyModal]       = useState(false);
+  const [familyPatientDetails, setFamilyPatientDetails] = useState(null);
+  const [loadingFamilyDetails, setLoadingFamilyDetails] = useState(false);
 
-  const [showLabModal, setShowLabModal]         = useState(false);
-  const [labPriority, setLabPriority]           = useState(1);
-  const [labOrderId, setLabOrderId]             = useState(null);
-  const [labMasterItems, setLabMasterItems]     = useState([]);
-  const [labPackages, setLabPackages]           = useState([]);
-  const [selectedTestIds, setSelectedTestIds]   = useState([]);
-  const [selectedPkgIds, setSelectedPkgIds]     = useState([]);
-  const [labItemsLoading, setLabItemsLoading]   = useState(false);
-  const [labTestSearch, setLabTestSearch]       = useState('');
-  const [labPkgSearch, setLabPkgSearch]         = useState('');
+  const [showLabModal, setShowLabModal]       = useState(false);
+  const [labPriority, setLabPriority]         = useState(1);
+  const [labOrderId, setLabOrderId]           = useState(null);
+  const [labMasterItems, setLabMasterItems]   = useState([]);
+  const [labPackages, setLabPackages]         = useState([]);
+  const [selectedTestIds, setSelectedTestIds] = useState([]);
+  const [selectedPkgIds, setSelectedPkgIds]   = useState([]);
+  const [labItemsLoading, setLabItemsLoading] = useState(false);
+  const [labTestSearch, setLabTestSearch]     = useState('');
+  const [labPkgSearch, setLabPkgSearch]       = useState('');
   const [stagedLabPriority, setStagedLabPriority] = useState(1);
   const [stagedLabTestIds, setStagedLabTestIds]   = useState([]);
   const [stagedLabPkgIds, setStagedLabPkgIds]     = useState([]);
   const [submittedLabTestIds, setSubmittedLabTestIds] = useState([]);
   const [submittedLabPkgIds, setSubmittedLabPkgIds]   = useState([]);
-  const [savedLabItems, setSavedLabItems]         = useState([]);    // full API items for toggle/delete
+  const [savedLabItems, setSavedLabItems]           = useState([]);
   const [savedLabPriorityDesc, setSavedLabPriorityDesc] = useState('');
+
+  // ── BUG 2 FIX: Track deactivated lab item IDs separately ──
+  // When an item is deactivated, keep its test/pkg ID in "deactivated" sets
+  // so the modal knows to show a re-activate popup instead of adding a duplicate.
+  const [deactivatedLabTestIds, setDeactivatedLabTestIds] = useState([]);
+  const [deactivatedLabPkgIds, setDeactivatedLabPkgIds]   = useState([]);
+  // Holds { itemId, name, testId?, pkgId? } for the re-activate confirm popup in modal
+  const [reactivateConfirm, setReactivateConfirm]         = useState(null);
+  const [reactivating, setReactivating]                   = useState(false);
+
+  const [removingLabItemId, setRemovingLabItemId]   = useState(null);
+  const [confirmRemoveLabId, setConfirmRemoveLabId] = useState(null);
 
   const [historyList, setHistoryList]           = useState([]);
   const [historyLoading, setHistoryLoading]     = useState(false);
@@ -545,20 +596,28 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     if (visitStep === 2 && selectedVisit?.patientId) fetchPatientHistory();
   }, [historyFrom, historyTo]);
 
+  const consultDataChanged = consultSaved && (
+    consultationNotes !== savedNotes ||
+    treatmentPlan !== savedPlan ||
+    nextConsultationDate !== savedNextDate
+  );
+
   const getIds = () => ({
     clinicId: Number(localStorage.getItem('clinicID')),
     branchId: Number(localStorage.getItem('branchID')),
   });
 
   const fetchTodayVisits = async () => {
-    try { setLoading(true); setError(null);
+    try {
+      setLoading(true); setError(null);
       const { clinicId, branchId } = getIds();
       setTodayVisits(await getPatientVisitList(clinicId, { Page: 1, PageSize: 50, BranchID: branchId, VisitDate: today() }));
     } catch (err) { setError(err); } finally { setLoading(false); }
   };
 
   const fetchMedicines = async () => {
-    try { setLoadingMeds(true);
+    try {
+      setLoadingMeds(true);
       const { clinicId, branchId } = getIds();
       const meds = await getMedicineMasterList(clinicId, { BranchID: branchId, PageSize: 200, Status: 1 });
       setAllMedicines(meds); setFilteredMedicines(meds);
@@ -566,16 +625,41 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   };
 
   const fetchPatientDetails = async (patientId) => {
-    try { setLoadingPatient(true); setError(null);
+    try {
+      setLoadingPatient(true); setError(null);
+      setFamilyPatientData(null);
       const { clinicId, branchId } = getIds();
       const pts = await getPatientsList(clinicId, { Page: 1, PageSize: 1, BranchID: branchId, PatientID: patientId, Status: 1 });
-      setPatientDetails(pts?.[0] || null);
+      const pt = pts?.[0] || null;
+      setPatientDetails(pt);
+      // Silently fetch family patient data (name + mobile) for the inline row
+      if (pt?.familyPatientId) {
+        fetchFamilyPatientData(pt.familyPatientId, clinicId, branchId);
+      }
     } catch (err) { setError(err); } finally { setLoadingPatient(false); }
+  };
+
+  // Fetch family patient data quietly in background — used for the inline name+mobile row
+  const fetchFamilyPatientData = async (familyPatientId, clinicId, branchId) => {
+    try {
+      setLoadingFamilyData(true);
+      const pts = await getPatientsList(clinicId, { Page: 1, PageSize: 1, BranchID: branchId, PatientID: familyPatientId, Status: 1 });
+      setFamilyPatientData(pts?.[0] || null);
+    } catch (err) { console.error('fetchFamilyPatientData failed:', err); }
+    finally { setLoadingFamilyData(false); }
+  };
+
+  // Open the second popup with full family patient details (data already fetched)
+  const handleViewFamilyPatient = () => {
+    if (!familyPatientData) return;
+    setFamilyPatientDetails(familyPatientData);
+    setShowFamilyModal(true);
   };
 
   const fetchPatientHistory = async () => {
     if (!selectedVisit?.patientId) return;
-    try { setHistoryLoading(true);
+    try {
+      setHistoryLoading(true);
       const { clinicId, branchId } = getIds();
       setHistoryList((await getConsultationList(clinicId, { Page: 1, PageSize: 50, BranchID: branchId, PatientID: selectedVisit.patientId, FromDate: historyFrom || '', ToDate: historyTo || '' })) || []);
     } catch (err) { console.error(err); } finally { setHistoryLoading(false); }
@@ -590,7 +674,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
         getPrescriptionList(clinicId, { ConsultationID: consultId, BranchID: branchId, Page: 1, PageSize: 5 }),
         getLabTestOrderList(clinicId, { ConsultationID: consultId, BranchID: branchId, Page: 1, PageSize: 10 }),
       ]);
-      const consult = consultList?.[0] || null;
+      const consult      = consultList?.[0] || null;
       const prescription = prescList?.[0] || null;
       const [prescItems, labItems] = await Promise.all([
         prescription?.id ? getPrescriptionDetailList(clinicId, { PrescriptionID: prescription.id, BranchID: branchId, Page: 1, PageSize: 50 }) : Promise.resolve([]),
@@ -602,7 +686,8 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   };
 
   const fetchLabItems = async () => {
-    try { setLabItemsLoading(true);
+    try {
+      setLabItemsLoading(true);
       const { clinicId, branchId } = getIds();
       const [masters, pkgs] = await Promise.all([
         getLabTestMasterList(clinicId, { BranchID: branchId, PageSize: 200, Status: 1 }),
@@ -612,100 +697,299 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     } catch (err) { console.error(err); } finally { setLabItemsLoading(false); }
   };
 
-  // ── Reload saved prescription items after an edit/delete ──
-  const refreshSavedPrescItems = async () => {
-    if (!prescriptionId) return;
-    try {
-      const { clinicId, branchId } = getIds();
-      const items = await getPrescriptionDetailList(clinicId, { PrescriptionID: prescriptionId, BranchID: branchId, Page: 1, PageSize: 50 });
-      setSavedPrescItems(items || []);
-    } catch (err) { console.error(err); }
-  };
-
-  // ── Reload saved lab items after a toggle ──
-  const refreshSavedLabItems = async () => {
-    if (!labOrderId) return;
-    try {
-      const { clinicId, branchId } = getIds();
-      const items = await getLabTestOrderItemList(clinicId, { OrderID: labOrderId, BranchID: branchId, Page: 1, PageSize: 50 });
-      setSavedLabItems(items || []);
-    } catch (err) { console.error(err); }
-  };
-
   const submitPrescriptionDetails = async (clinicId, branchId, prescId, items) => {
     for (const c of items) {
-      await addPrescriptionDetail({ clinicId, branchId, PrescriptionID: prescId, MedicineID: c.medicineId, MedicineName: c.medicineName, Form: c.form, Strength: c.strength, Dosage: c.dosePerIntake, Frequency: buildFrequency(c.timings), Duration: c.days ? `${c.days} Days` : '', Route: c.defaultRoute, FoodTiming: c.foodTiming, Instructions: c.notes, Quantity: c.quantity, RefillAllowed: c.refillAllowed, RefillCount: c.refillCount, StartDate: c.startDate || today(), EndDate: c.endDate || thirtyDaysLater() });
+      await addPrescriptionDetail({
+        clinicId, branchId,
+        PrescriptionID: prescId,
+        MedicineID: c.medicineId,
+        MedicineName: c.medicineName,
+        Form: c.form,
+        Strength: c.strength,
+        Dosage: c.dosePerIntake,
+        Frequency: buildFrequency(c.timings),
+        Duration: c.days ? `${c.days} Days` : '',
+        Route: c.defaultRoute,
+        FoodTiming: c.foodTiming,
+        Instructions: c.notes,
+        Quantity: c.quantity,
+        RefillAllowed: c.refillAllowed,
+        RefillCount: c.refillCount,
+        StartDate: c.startDate || today(),
+        EndDate: c.endDate || thirtyDaysLater(),
+      });
     }
     setSubmittedContainerIds(prev => new Set([...prev, ...items.map(c => c.tempId)]));
     setConfirmedSuccess(true);
-    // After saving, fetch the real items from API so we can Edit/Delete them
     try {
       const items2 = await getPrescriptionDetailList(clinicId, { PrescriptionID: prescId, BranchID: branchId, Page: 1, PageSize: 50 });
-      setSavedPrescItems(items2 || []);
-    } catch(e) { console.error(e); }
+      // Only show active (status 1) details — deleted (3) and inactive are excluded,
+      setSavedPrescItems((items2 || []).filter(i => i.status === 1));
+      // Clear submitted containers that are now reflected in savedPrescItems
+      setContainers(prev => prev.filter(c => !items.some(i => i.tempId === c.tempId)));
+      setSubmittedContainerIds(new Set());
+    } catch (e) { console.error(e); }
   };
 
   const submitLabItems = async (clinicId, branchId, orderId, testIds, pkgIds, labOrder) => {
-    for (const testId of testIds) await addLabTestOrderItem({ clinicId, branchId, OrderID: orderId, PatientID: selectedVisit.patientId, DoctorID: selectedVisit.doctorId, TestID: testId, PackageID: 0 });
-    for (const pkgId of pkgIds)  await addLabTestOrderItem({ clinicId, branchId, OrderID: orderId, PatientID: selectedVisit.patientId, DoctorID: selectedVisit.doctorId, TestID: 0, PackageID: pkgId });
-    setSubmittedLabTestIds(prev => [...prev, ...testIds]);
-    setSubmittedLabPkgIds(prev => [...prev, ...pkgIds]);
-    // Fetch real items for display
+    for (const testId of testIds) {
+      await addLabTestOrderItem({ clinicId, branchId, OrderID: orderId, PatientID: selectedVisit.patientId, DoctorID: selectedVisit.doctorId, TestID: testId, PackageID: 0 });
+    }
+    for (const pkgId of pkgIds) {
+      await addLabTestOrderItem({ clinicId, branchId, OrderID: orderId, PatientID: selectedVisit.patientId, DoctorID: selectedVisit.doctorId, TestID: 0, PackageID: pkgId });
+    }
+    setSubmittedLabTestIds(prev => [...new Set([...prev, ...testIds])]);
+    setSubmittedLabPkgIds(prev => [...new Set([...prev, ...pkgIds])]);
+    // Remove from deactivated sets since they are now active
+    setDeactivatedLabTestIds(prev => prev.filter(id => !testIds.includes(id)));
+    setDeactivatedLabPkgIds(prev => prev.filter(id => !pkgIds.includes(id)));
     try {
       const items = await getLabTestOrderItemList(clinicId, { OrderID: orderId, BranchID: branchId, Page: 1, PageSize: 50 });
       setSavedLabItems(items || []);
       if (labOrder?.priorityDesc) setSavedLabPriorityDesc(labOrder.priorityDesc);
-    } catch(e) { console.error(e); }
+    } catch (e) { console.error(e); }
+  };
+
+  /* ── Inline update consultation ── */
+  const handleInlineUpdateConsult = async () => {
+    if (!consultationNotes.trim()) { setError({ message: 'Consultation Notes are required.' }); return; }
+    try {
+      setUpdatingConsult(true); setError(null);
+      await updateConsultation({
+        consultationId,
+        clinicId: getIds().clinicId,
+        reason: selectedVisit?.reason || '',
+        symptoms: selectedVisit?.symptoms || '',
+        bpSystolic:  selectedVisit?.bpSystolic  ?? 0,
+        bpDiastolic: selectedVisit?.bpDiastolic ?? 0,
+        temperature: selectedVisit?.temperature ?? 0,
+        weight:      selectedVisit?.weight      ?? 0,
+        emrNotes: '',
+        ehrNotes: '',
+        instructions: '',
+        consultationNotes: consultationNotes.trim(),
+        nextConsultationDate: nextConsultationDate || '',
+        treatmentPlan: treatmentPlan.trim(),
+      });
+      setSavedNotes(consultationNotes);
+      setSavedPlan(treatmentPlan);
+      setSavedNextDate(nextConsultationDate);
+    } catch (err) {
+      setError(err?.message ? err : { message: err?.message || 'Update failed' });
+    } finally {
+      setUpdatingConsult(false);
+    }
+  };
+
+  /* ── Lab order submit from modal (Save Items button) ──
+     Always runs the full flow regardless of whether consultation exists yet:
+     1. addConsultation (if no consultationId yet)
+     2. addLabTestOrder (if no labOrderId yet)
+     3. addLabTestOrderItem for each new test / package
+  ── */
+  const handleStageAndSubmitLabOrder = async () => {
+    const newTestIds = selectedTestIds.filter(id => !submittedLabTestIds.includes(id) && !deactivatedLabTestIds.includes(id));
+    const newPkgIds  = selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id) && !deactivatedLabPkgIds.includes(id));
+
+    if (newTestIds.length === 0 && newPkgIds.length === 0) {
+      setShowLabModal(false);
+      return;
+    }
+
+    // Validate: consultation notes required to create a consultation
+    if (!consultationId && !consultationNotes.trim()) {
+      setError({ message: 'Please enter Consultation Notes before saving lab items.' });
+      return;
+    }
+
+    const { clinicId, branchId } = getIds();
+    setShowLabModal(false);
+    setError(null);
+
+    // Build progress steps
+    const steps = [];
+    if (!consultationId)                               steps.push({ label: 'Creating consultation' });
+    if (!labOrderId)                                   steps.push({ label: 'Creating lab order' });
+    steps.push({ label: `Adding ${newTestIds.length + newPkgIds.length} lab item(s)` });
+    setSubmitProgress({ steps, currentStep: 0, done: false });
+
+    try {
+      let s = 0;
+      let activeConsultationId = consultationId;
+      let activeLabOrderId     = labOrderId;
+
+      // ── Step 1: Create consultation if not yet saved ──
+      if (!activeConsultationId) {
+        setSubmitProgress(p => ({ ...p, currentStep: s }));
+        const cr = await addConsultation({
+          clinicId, branchId,
+          visitId:              selectedVisit.id,
+          patientId:            selectedVisit.patientId,
+          doctorId:             selectedVisit.doctorId,
+          reason:               selectedVisit.reason      || '',
+          symptoms:             selectedVisit.symptoms    || '',
+          bpSystolic:           selectedVisit.bpSystolic  ?? null,
+          bpDiastolic:          selectedVisit.bpDiastolic ?? null,
+          temperature:          selectedVisit.temperature ?? null,
+          weight:               selectedVisit.weight      ?? null,
+          emrNotes:             '',
+          ehrNotes:             '',
+          instructions:         '',
+          consultationNotes:    consultationNotes.trim(),
+          nextConsultationDate: nextConsultationDate || '',
+          treatmentPlan:        treatmentPlan.trim(),
+        });
+        if (!cr.success || !cr.consultationId) throw new Error('Failed to create consultation');
+        activeConsultationId = cr.consultationId;
+        setConsultationId(cr.consultationId);
+        setConsultSaved(true);
+        setSavedNotes(consultationNotes);
+        setSavedPlan(treatmentPlan);
+        setSavedNextDate(nextConsultationDate);
+        s++;
+      }
+
+      // ── Step 2: Create lab order if not yet created ──
+      if (!activeLabOrderId) {
+        setSubmitProgress(p => ({ ...p, currentStep: s }));
+        const lr = await addLabTestOrder({
+          clinicId, branchId,
+          ConsultationID: activeConsultationId,
+          VisitID:        selectedVisit.id,
+          PatientID:      selectedVisit.patientId,
+          doctorId:       selectedVisit.doctorId,
+          priority:       labPriority,
+          Notes:          consultationNotes,
+        });
+        if (!lr.success) throw new Error('Failed to create lab order');
+        activeLabOrderId = lr.orderId;
+        setLabOrderId(lr.orderId);
+        s++;
+      }
+
+      // ── Step 3: Add lab items ──
+      setSubmitProgress(p => ({ ...p, currentStep: s }));
+      await submitLabItems(
+        clinicId, branchId,
+        activeLabOrderId,
+        newTestIds, newPkgIds,
+        { priorityDesc: PRIORITY_OPTIONS.find(p => p.id === labPriority)?.label },
+      );
+
+      setStagedLabTestIds([]);
+      setStagedLabPkgIds([]);
+      setSubmitProgress(p => ({ ...p, done: true }));
+      fetchPatientHistory();
+      setTimeout(() => setSubmitProgress(null), 2500);
+    } catch (err) {
+      setError(err);
+      setSubmitProgress(null);
+    }
+  };
+
+  /* ── BUG 2 FIX: Re-activate a deactivated lab item from modal ── */
+  const handleReactivateLabItem = async () => {
+    if (!reactivateConfirm) return;
+    const { itemId, testId, pkgId } = reactivateConfirm;
+    try {
+      setReactivating(true);
+      const { clinicId, branchId } = getIds();
+      await updateLabTestOrderItem({ itemId, clinicId, branchId, status: 1 });
+      setSavedLabItems(prev => prev.map(i => i.itemId === itemId ? { ...i, status: 1 } : i));
+      if (testId) {
+        setSubmittedLabTestIds(prev => [...new Set([...prev, testId])]);
+        setSelectedTestIds(prev => [...new Set([...prev, testId])]);
+        setDeactivatedLabTestIds(prev => prev.filter(id => id !== testId));
+      }
+      if (pkgId) {
+        setSubmittedLabPkgIds(prev => [...new Set([...prev, pkgId])]);
+        setSelectedPkgIds(prev => [...new Set([...prev, pkgId])]);
+        setDeactivatedLabPkgIds(prev => prev.filter(id => id !== pkgId));
+      }
+    } catch (err) {
+      setError(err);
+    } finally {
+      setReactivating(false);
+      setReactivateConfirm(null);
+    }
+  };
+
+  /* ── Remove lab item from modal (deactivate) ── */
+  const handleRemoveLabItemFromModal = async (itemId) => {
+    try {
+      setRemovingLabItemId(itemId);
+      const { clinicId, branchId } = getIds();
+      await updateLabTestOrderItem({ itemId, clinicId, branchId, status: 2 });
+      const savedItem = savedLabItems.find(s => s.itemId === itemId);
+      setSavedLabItems(prev => prev.map(i => i.itemId === itemId ? { ...i, status: 2 } : i));
+      if (savedItem?.testId) {
+        setSubmittedLabTestIds(prev => prev.filter(id => id !== savedItem.testId));
+        setSelectedTestIds(prev => prev.filter(id => id !== savedItem.testId));
+        setDeactivatedLabTestIds(prev => [...new Set([...prev, savedItem.testId])]);
+      }
+      if (savedItem?.packageId) {
+        setSubmittedLabPkgIds(prev => prev.filter(id => id !== savedItem.packageId));
+        setSelectedPkgIds(prev => prev.filter(id => id !== savedItem.packageId));
+        setDeactivatedLabPkgIds(prev => [...new Set([...prev, savedItem.packageId])]);
+      }
+      setConfirmRemoveLabId(null);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setRemovingLabItemId(null);
+    }
   };
 
   const handleFinalSubmit = async () => {
     if (!consultationNotes.trim()) { setError({ message: 'Consultation Notes are required.' }); return; }
     if (!selectedVisit)            { setError({ message: 'No visit selected.' }); return; }
 
-    const containersToValidate = consultationId ? containers.filter(c => !submittedContainerIds.has(c.tempId)) : containers;
-    for (const c of containersToValidate) {
+    // Only validate unsaved (pending) containers
+    const pendingContainers = containers.filter(c => !submittedContainerIds.has(c.tempId));
+    for (const c of pendingContainers) {
       if (!c.medicineName.trim())  { setError({ message: 'All medicines need a name.' }); return; }
       if (!c.dosePerIntake.trim()) { setError({ message: `Dose required for "${c.medicineName}".` }); return; }
       if (c.quantity <= 0)         { setError({ message: `Quantity > 0 required for "${c.medicineName}".` }); return; }
     }
 
-    const hasMedicines = containers.length > 0;
+    const hasMedicines = pendingContainers.length > 0;
     const hasLabOrder  = stagedLabTestIds.length > 0 || stagedLabPkgIds.length > 0;
     const { clinicId, branchId } = getIds();
 
     if (consultationId) {
-      const newContainers = containers.filter(c => !submittedContainerIds.has(c.tempId));
-      const newTestIds    = stagedLabTestIds.filter(id => !submittedLabTestIds.includes(id));
-      const newPkgIds     = stagedLabPkgIds.filter(id => !submittedLabPkgIds.includes(id));
-      const hasNewMeds    = newContainers.length > 0;
-      const hasNewLab     = newTestIds.length > 0 || newPkgIds.length > 0;
+      const newTestIds      = stagedLabTestIds.filter(id => !submittedLabTestIds.includes(id));
+      const newPkgIds       = stagedLabPkgIds.filter(id => !submittedLabPkgIds.includes(id));
+      const hasNewMeds      = pendingContainers.length > 0;
+      const hasNewLab       = newTestIds.length > 0 || newPkgIds.length > 0;
       const needNewPresc    = hasNewMeds && prescriptionId === null;
       const needAddDetails  = hasNewMeds && prescriptionId !== null;
       const needNewLabOrder = hasNewLab  && labOrderId === null;
       const needAddLabItems = hasNewLab  && labOrderId !== null;
 
-      const steps = [{ label: 'Updating consultation' }];
-      if (needNewPresc)    { steps.push({ label: 'Creating prescription' }); steps.push({ label: `Adding ${newContainers.length} medicine(s)` }); }
-      if (needAddDetails)  { steps.push({ label: `Adding ${newContainers.length} medicine(s)` }); }
+      const steps = [];
+      if (needNewPresc)    { steps.push({ label: 'Creating prescription' }); steps.push({ label: `Adding ${pendingContainers.length} medicine(s)` }); }
+      if (needAddDetails)  { steps.push({ label: `Adding ${pendingContainers.length} medicine(s)` }); }
       if (needNewLabOrder) { steps.push({ label: 'Creating lab order' }); steps.push({ label: `Adding ${newTestIds.length + newPkgIds.length} lab item(s)` }); }
       if (needAddLabItems) { steps.push({ label: `Adding ${newTestIds.length + newPkgIds.length} more lab item(s)` }); }
+
+      if (steps.length === 0) { setError({ message: 'Nothing new to submit.' }); return; }
 
       setSubmitProgress({ steps, currentStep: 0, done: false }); setError(null);
       try {
         let s = 0;
-        setSubmitProgress(p => ({ ...p, currentStep: s }));
-        await updateConsultation({ consultationId, clinicId, reason: selectedVisit.reason || '', symptoms: selectedVisit.symptoms || '', bpSystolic: selectedVisit.bpSystolic ?? 0, bpDiastolic: selectedVisit.bpDiastolic ?? 0, temperature: selectedVisit.temperature ?? 0, weight: selectedVisit.weight ?? 0, emrNotes: '', ehrNotes: '', instructions: '', consultationNotes: consultationNotes.trim(), nextConsultationDate: nextConsultationDate || '', treatmentPlan: treatmentPlan.trim() });
-        s++;
         if (needNewPresc) {
           setSubmitProgress(p => ({ ...p, currentStep: s }));
-          const d = (await getConsultationList(clinicId, { Page:1,PageSize:1,BranchID:branchId,ConsultationID:consultationId }))?.[0];
+          const d = (await getConsultationList(clinicId, { Page: 1, PageSize: 1, BranchID: branchId, ConsultationID: consultationId }))?.[0];
           const pr = await addPrescription({ clinicId, branchId, ConsultationID: consultationId, VisitID: d?.visitId ?? selectedVisit.id, PatientID: d?.patientId ?? selectedVisit.patientId, DoctorID: d?.doctorId ?? selectedVisit.doctorId, DateIssued: today(), ValidUntil: thirtyDaysLater(), Diagnosis: null, Notes: d?.consultationNotes || null, IsRepeat: 0, RepeatCount: 0, CreatedBy: d?.doctorId ?? selectedVisit.doctorId });
           if (!pr.success || !pr.prescriptionId) throw new Error('Failed to create prescription');
           setPrescriptionId(pr.prescriptionId); s++;
           setSubmitProgress(p => ({ ...p, currentStep: s }));
-          await submitPrescriptionDetails(clinicId, branchId, pr.prescriptionId, newContainers); s++;
+          await submitPrescriptionDetails(clinicId, branchId, pr.prescriptionId, pendingContainers); s++;
         }
-        if (needAddDetails) { setSubmitProgress(p => ({ ...p, currentStep: s })); await submitPrescriptionDetails(clinicId, branchId, prescriptionId, newContainers); s++; }
+        if (needAddDetails) {
+          setSubmitProgress(p => ({ ...p, currentStep: s }));
+          await submitPrescriptionDetails(clinicId, branchId, prescriptionId, pendingContainers); s++;
+        }
         if (needNewLabOrder) {
           setSubmitProgress(p => ({ ...p, currentStep: s }));
           const lr = await addLabTestOrder({ clinicId, branchId, ConsultationID: consultationId, VisitID: selectedVisit.id, PatientID: selectedVisit.patientId, doctorId: selectedVisit.doctorId, priority: stagedLabPriority, Notes: consultationNotes });
@@ -714,17 +998,22 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
           setSubmitProgress(p => ({ ...p, currentStep: s }));
           await submitLabItems(clinicId, branchId, lr.orderId, newTestIds, newPkgIds, { priorityDesc: PRIORITY_OPTIONS.find(p => p.id === stagedLabPriority)?.label }); s++;
         }
-        if (needAddLabItems) { setSubmitProgress(p => ({ ...p, currentStep: s })); await submitLabItems(clinicId, branchId, labOrderId, newTestIds, newPkgIds); s++; }
-        setUpdateSuccess(true);
+        if (needAddLabItems) {
+          setSubmitProgress(p => ({ ...p, currentStep: s }));
+          await submitLabItems(clinicId, branchId, labOrderId, newTestIds, newPkgIds); s++;
+        }
+
+        setStagedLabTestIds([]);
+        setStagedLabPkgIds([]);
         setSubmitProgress(p => ({ ...p, done: true }));
         fetchPatientHistory();
-        setTimeout(() => { setSubmitProgress(null); setUpdateSuccess(false); }, 3500);
+        setTimeout(() => setSubmitProgress(null), 2500);
       } catch (err) { setError(err); setSubmitProgress(null); }
       return;
     }
 
     const steps = [{ label: 'Creating consultation' }];
-    if (hasMedicines) { steps.push({ label: 'Creating prescription' }); steps.push({ label: `Adding ${containers.length} medicine(s)` }); }
+    if (hasMedicines) { steps.push({ label: 'Creating prescription' }); steps.push({ label: `Adding ${pendingContainers.length} medicine(s)` }); }
     if (hasLabOrder)  { steps.push({ label: 'Creating lab order' }); steps.push({ label: `Adding ${stagedLabTestIds.length + stagedLabPkgIds.length} lab item(s)` }); }
 
     setSubmitProgress({ steps, currentStep: 0, done: false }); setError(null);
@@ -733,16 +1022,18 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
       setSubmitProgress(p => ({ ...p, currentStep: s }));
       const cr = await addConsultation({ clinicId, branchId, visitId: selectedVisit.id, patientId: selectedVisit.patientId, doctorId: selectedVisit.doctorId, reason: selectedVisit.reason || '', symptoms: selectedVisit.symptoms || '', bpSystolic: selectedVisit.bpSystolic ?? null, bpDiastolic: selectedVisit.bpDiastolic ?? null, temperature: selectedVisit.temperature ?? null, weight: selectedVisit.weight ?? null, emrNotes: '', ehrNotes: '', instructions: '', consultationNotes: consultationNotes.trim(), nextConsultationDate: nextConsultationDate || '', treatmentPlan: treatmentPlan.trim() });
       if (!cr.success || !cr.consultationId) throw new Error('Failed to create consultation');
-      setConsultationId(cr.consultationId); setConsultSaved(true); s++;
+      setConsultationId(cr.consultationId); setConsultSaved(true);
+      setSavedNotes(consultationNotes); setSavedPlan(treatmentPlan); setSavedNextDate(nextConsultationDate);
+      s++;
 
       if (hasMedicines) {
         setSubmitProgress(p => ({ ...p, currentStep: s }));
-        const d = (await getConsultationList(clinicId, { Page:1,PageSize:1,BranchID:branchId,ConsultationID:cr.consultationId }))?.[0];
+        const d = (await getConsultationList(clinicId, { Page: 1, PageSize: 1, BranchID: branchId, ConsultationID: cr.consultationId }))?.[0];
         const pr = await addPrescription({ clinicId, branchId, ConsultationID: cr.consultationId, VisitID: d?.visitId ?? selectedVisit.id, PatientID: d?.patientId ?? selectedVisit.patientId, DoctorID: d?.doctorId ?? selectedVisit.doctorId, DateIssued: today(), ValidUntil: thirtyDaysLater(), Diagnosis: null, Notes: d?.consultationNotes || null, IsRepeat: 0, RepeatCount: 0, CreatedBy: d?.doctorId ?? selectedVisit.doctorId });
         if (!pr.success || !pr.prescriptionId) throw new Error('Failed to create prescription');
         setPrescriptionId(pr.prescriptionId); s++;
         setSubmitProgress(p => ({ ...p, currentStep: s }));
-        await submitPrescriptionDetails(clinicId, branchId, pr.prescriptionId, containers); s++;
+        await submitPrescriptionDetails(clinicId, branchId, pr.prescriptionId, pendingContainers); s++;
       }
       if (hasLabOrder) {
         setSubmitProgress(p => ({ ...p, currentStep: s }));
@@ -752,9 +1043,11 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
         setSubmitProgress(p => ({ ...p, currentStep: s }));
         await submitLabItems(clinicId, branchId, lr.orderId, stagedLabTestIds, stagedLabPkgIds, { priorityDesc: PRIORITY_OPTIONS.find(p => p.id === stagedLabPriority)?.label }); s++;
       }
+      setStagedLabTestIds([]);
+      setStagedLabPkgIds([]);
       setSubmitProgress(p => ({ ...p, done: true }));
       fetchPatientHistory();
-      setTimeout(() => setSubmitProgress(null), 3500);
+      setTimeout(() => setSubmitProgress(null), 2500);
     } catch (err) { setError(err); setSubmitProgress(null); }
   };
 
@@ -767,7 +1060,10 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     const q = searchQuery.toLowerCase().trim();
     setFilteredMedicines(q ? allMedicines.filter(m => m.name.toLowerCase().includes(q) || (m.genericName && m.genericName.toLowerCase().includes(q))) : allMedicines);
   };
-  const toggleMedSelection   = (id) => setSelectedMedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+
+  const toggleMedSelection = (id) => setSelectedMedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  const clearMedSelection  = () => setSelectedMedIds([]);
+
   const handleAddSelectedMeds = () => {
     if (!selectedMedIds.length) return;
     setContainers(prev => [...prev, ...selectedMedIds.map(id => createContainer(allMedicines.find(m => m.id === id)))]);
@@ -787,84 +1083,137 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     setContainers(prev => [...prev, createContainer(med)]);
   };
 
+  const handleOpenHistory = () => { setShowHistoryModal(true); if (selectedVisit?.patientId) fetchPatientHistory(); };
+
   const handleOpenLabModal = () => {
     setLabPriority(stagedLabPriority);
     setSelectedTestIds([...new Set([...stagedLabTestIds, ...submittedLabTestIds])]);
     setSelectedPkgIds([...new Set([...stagedLabPkgIds, ...submittedLabPkgIds])]);
     setLabTestSearch(''); setLabPkgSearch('');
+    setReactivateConfirm(null);
     setShowLabModal(true);
     if (!labMasterItems.length && !labPackages.length) fetchLabItems();
   };
-  const handleStageLabOrder = () => {
-    setStagedLabPriority(labPriority);
-    setStagedLabTestIds(selectedTestIds.filter(id => !submittedLabTestIds.includes(id)));
-    setStagedLabPkgIds(selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id)));
-    setShowLabModal(false);
-  };
 
-  // ── SavedPrescItem callbacks ──
   const handlePrescItemUpdated = (detailId, updatedLocal) => {
     setSavedPrescItems(prev => prev.map(item =>
       item.id === detailId
-        ? {
-            ...item,
-            dosage: updatedLocal.dosePerIntake,
-            frequency: buildFrequency(updatedLocal.timings),
-            duration: updatedLocal.days ? `${updatedLocal.days} Days` : '',
-            quantity: updatedLocal.quantity,
-            instructions: updatedLocal.notes,
-            foodTiming: updatedLocal.foodTiming,
-          }
+        ? { ...item, dosage: updatedLocal.dosePerIntake, frequency: buildFrequency(updatedLocal.timings), duration: updatedLocal.days ? `${updatedLocal.days} Days` : '', quantity: updatedLocal.quantity, instructions: updatedLocal.notes, foodTiming: updatedLocal.foodTiming }
         : item
     ));
   };
+
+  /* ─────────────────────────────────────────────────────────────────
+   BUG 1 FIX:
+   After a prescription detail is saved, submitted containers are moved
+   into savedPrescItems and cleared from the containers array inside
+   submitPrescriptionDetails. So handlePrescItemDeleted only needs to
+   remove from savedPrescItems — no container cleanup needed (they
+   are already gone). This prevents the "3 shown instead of 2" issue
+   where containers.length + savedPrescItems.length double-counted
+   submitted medicines.
+  ───────────────────────────────────────────────────────────────── */
   const handlePrescItemDeleted = (detailId) => {
     setSavedPrescItems(prev => prev.filter(item => item.id !== detailId));
-    // Also remove from the containers display if it was there
-    setContainers(prev => prev.filter(c => c.prescriptionDetailId !== detailId));
   };
 
-  // ── SavedLabItem callbacks ──
+  /* ─────────────────────────────────────────────────────────────────
+   BUG 2 FIX:
+   handleLabItemStatusChange now syncs the deactivated ID sets so
+   the lab modal can distinguish "deactivated (re-activate?)" from
+   "never submitted (add fresh)".
+  ───────────────────────────────────────────────────────────────── */
   const handleLabItemStatusChange = (itemId, newStatus) => {
-    setSavedLabItems(prev => prev.map(item => item.itemId === itemId ? { ...item, status: newStatus } : item));
-  };
-  const handleLabOrderDeleted = () => {
-    setSavedLabItems([]);
-    setLabOrderId(null);
-    setSubmittedLabTestIds([]);
-    setSubmittedLabPkgIds([]);
-    setStagedLabTestIds([]);
-    setStagedLabPkgIds([]);
+    setSavedLabItems(prev =>
+      prev.map(item => item.itemId === itemId ? { ...item, status: newStatus } : item)
+    );
+
+    const changedItem = savedLabItems.find(item => item.itemId === itemId);
+    if (!changedItem) return;
+
+    const isActive = newStatus === 1;
+    const testId   = changedItem.testId   ?? changedItem.testID   ?? 0;
+    const pkgId    = changedItem.packageId ?? changedItem.packageID ?? 0;
+
+    if (testId) {
+      if (isActive) {
+        // Activated → move back to submitted, remove from deactivated
+        setSubmittedLabTestIds(prev => [...new Set([...prev, testId])]);
+        setSelectedTestIds(prev => [...new Set([...prev, testId])]);
+        setDeactivatedLabTestIds(prev => prev.filter(id => id !== testId));
+      } else {
+        // Deactivated → move to deactivated, remove from submitted
+        setSubmittedLabTestIds(prev => prev.filter(id => id !== testId));
+        setSelectedTestIds(prev => prev.filter(id => id !== testId));
+        setDeactivatedLabTestIds(prev => [...new Set([...prev, testId])]);
+      }
+    }
+    if (pkgId) {
+      if (isActive) {
+        setSubmittedLabPkgIds(prev => [...new Set([...prev, pkgId])]);
+        setSelectedPkgIds(prev => [...new Set([...prev, pkgId])]);
+        setDeactivatedLabPkgIds(prev => prev.filter(id => id !== pkgId));
+      } else {
+        setSubmittedLabPkgIds(prev => prev.filter(id => id !== pkgId));
+        setSelectedPkgIds(prev => prev.filter(id => id !== pkgId));
+        setDeactivatedLabPkgIds(prev => [...new Set([...prev, pkgId])]);
+      }
+    }
   };
 
-  const stagedLabCount = stagedLabTestIds.length + stagedLabPkgIds.length;
-  const handleOpenHistory = () => { setShowHistoryModal(true); if (selectedVisit?.patientId) fetchPatientHistory(); };
-  const handleComplete    = () => { handleClose(); if (onSuccess) onSuccess(); };
+  const handleLabOrderDeleted = () => {
+    setSavedLabItems([]); setLabOrderId(null);
+    setSubmittedLabTestIds([]); setSubmittedLabPkgIds([]);
+    setDeactivatedLabTestIds([]); setDeactivatedLabPkgIds([]);
+    setStagedLabTestIds([]); setStagedLabPkgIds([]);
+    setSelectedTestIds([]); setSelectedPkgIds([]);
+  };
+
   const handleClose = () => {
     setVisitStep(1); setSelectedVisit(null); setTodayVisits([]);
     setConsultationNotes(''); setTreatmentPlan(''); setNextConsultationDate('');
-    setConsultationId(null); setPrescriptionId(null); setConsultSaved(false); setUpdateSuccess(false); setConfirmedSuccess(false);
+    setSavedNotes(''); setSavedPlan(''); setSavedNextDate('');
+    setConsultationId(null); setPrescriptionId(null); setConsultSaved(false); setConfirmedSuccess(false);
     setContainers([]); setSubmittedContainerIds(new Set()); setAllMedicines([]); setFilteredMedicines([]); setSearchQuery(''); setSelectedMedIds([]);
     setSavedPrescItems([]);
-    setPatientDetails(null); setShowPatientModal(false);
+    setPatientDetails(null); setFamilyPatientData(null); setShowPatientModal(false); setShowFamilyModal(false); setFamilyPatientDetails(null);
     setShowLabModal(false); setLabOrderId(null);
     setStagedLabPriority(1); setStagedLabTestIds([]); setStagedLabPkgIds([]);
     setSubmittedLabTestIds([]); setSubmittedLabPkgIds([]);
+    setDeactivatedLabTestIds([]); setDeactivatedLabPkgIds([]);
     setSelectedTestIds([]); setSelectedPkgIds([]);
     setSavedLabItems([]); setSavedLabPriorityDesc('');
     setHistoryList([]); setHistoryFrom(''); setHistoryTo(''); setShowHistoryModal(false);
     setShowViewDetail(false); setViewDetail(null);
     setIsDragOver(false); setSubmitProgress(null); setError(null);
+    setUpdatingConsult(false); setConfirmRemoveLabId(null); setRemovingLabItemId(null);
+    setReactivateConfirm(null); setReactivating(false);
     onClose();
   };
 
   if (!isOpen) return null;
 
+  /* ── Derived helpers ── */
   const getLabName = (t) => t?.name || t?.testName || t?.test_name || t?.TestName || t?.test_title || t?.title || '';
   const getPkgName = (p) => p?.name || p?.packageName || p?.package_name || p?.PackageName || p?.packageTitle || p?.package_title || p?.title || p?.label || p?.description || p?.package_desc || p?.PackageDesc || Object.values(p).find(v => typeof v === 'string' && v.length > 1 && !/^[0-9]/.test(v)) || '';
+
   const filteredTests = labMasterItems.filter(t => !labTestSearch || getLabName(t).toLowerCase().includes(labTestSearch.toLowerCase()));
   const filteredPkgs  = labPackages.filter(p => !labPkgSearch || getPkgName(p).toLowerCase().includes(labPkgSearch.toLowerCase()));
-  const submitSummary = [containers.filter(c => !submittedContainerIds.has(c.tempId)).length > 0 ? `${containers.filter(c => !submittedContainerIds.has(c.tempId)).length} med${containers.filter(c => !submittedContainerIds.has(c.tempId)).length > 1 ? 's' : ''}` : null, stagedLabCount > 0 ? `${stagedLabCount} lab` : null].filter(Boolean).join(' · ');
+
+  // ── BUG 1 FIX: Panel 2 count = saved items + truly pending (unsaved) containers only ──
+  const pendingContainerCount = containers.filter(c => !submittedContainerIds.has(c.tempId)).length;
+  const totalPrescCount       = savedPrescItems.length + pendingContainerCount;
+
+  const stagedLabCount  = stagedLabTestIds.length + stagedLabPkgIds.length;
+  const hasAnythingNew  = pendingContainerCount > 0 || stagedLabCount > 0;
+
+  const submitBtnLabel = () => {
+    const parts = [];
+    if (pendingContainerCount > 0) parts.push(`${pendingContainerCount} med${pendingContainerCount > 1 ? 's' : ''}`);
+    if (stagedLabCount > 0) parts.push(`${stagedLabCount} lab`);
+    return parts.join(' · ');
+  };
+
   const { clinicId, branchId } = getIds();
 
   return ReactDOM.createPortal(
@@ -907,21 +1256,28 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                   </button>
                 </div>
                 <div className="header-submit-group">
-                  <button
-                    className={`btn-submit ${consultSaved ? 'btn-submit--update' : ''}`}
-                    onClick={handleFinalSubmit}
-                    disabled={!!submitProgress}
-                  >
-                    {submitProgress && !submitProgress.done
-                      ? <><span className="spin-sm" /> Processing…</>
-                      : consultSaved
-                        ? <><FiPlus size={14} /> Add{submitSummary && <span className="btn-submit__badge">{submitSummary}</span>}</>
-                        : <><FiSend size={14} /> Submit{submitSummary && <span className="btn-submit__badge">{submitSummary}</span>}</>
-                    }
-                  </button>
-                  {consultSaved && (
-                    <button className="btn-done" onClick={handleComplete}>
-                      <FiCheckCircle size={14} /> Done
+                  {!consultSaved && (
+                    <button
+                      className="btn-submit"
+                      onClick={handleFinalSubmit}
+                      disabled={!!submitProgress}
+                    >
+                      {submitProgress && !submitProgress.done
+                        ? <><span className="spin-sm" /> Processing…</>
+                        : <><FiSend size={14} /> Submit{submitBtnLabel() && <span className="btn-submit__badge">{submitBtnLabel()}</span>}</>
+                      }
+                    </button>
+                  )}
+                  {consultSaved && hasAnythingNew && (
+                    <button
+                      className="btn-submit btn-submit--add"
+                      onClick={handleFinalSubmit}
+                      disabled={!!submitProgress}
+                    >
+                      {submitProgress && !submitProgress.done
+                        ? <><span className="spin-sm" /> Processing…</>
+                        : <><FiPlus size={14} /> Add{submitBtnLabel() && <span className="btn-submit__badge">{submitBtnLabel()}</span>}</>
+                      }
                     </button>
                   )}
                 </div>
@@ -930,8 +1286,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
             <button className="btn-close" onClick={handleClose}><FiX size={18} /></button>
           </div>
         </header>
-
-        <ErrorHandler error={error} />
 
         {/* ── BODY ── */}
         <main className="ac-body">
@@ -988,7 +1342,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                         )}
                       </div>
                       <div className="visit-card__cta">
-                        Start Consultation <FiArrowLeft size={12} style={{ transform:'rotate(180deg)' }} />
+                        Start Consultation <FiArrowLeft size={12} style={{ transform: 'rotate(180deg)' }} />
                       </div>
                     </div>
                   ))}
@@ -1001,7 +1355,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
           {visitStep === 2 && (
             <div className="step2">
 
-              {/* Patient alert bar */}
               {patientDetails && (patientDetails.allergies || patientDetails.existingMedicalConditions || patientDetails.currentMedications) && (
                 <div className="patient-bar">
                   {patientDetails.allergies && (
@@ -1028,18 +1381,24 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                 </div>
               )}
 
-              {/* Saved banner */}
               {consultSaved && (
                 <div className="saved-banner">
                   <FiCheckCircle size={14} />
                   <span>Consultation saved{confirmedSuccess ? ' · Prescription added' : ''}{labOrderId ? ' · Lab order added' : ''}</span>
                   {!confirmedSuccess && !labOrderId && (
-                    <span className="saved-banner__hint">— Add medicines or lab items then click Add</span>
+                    <span className="saved-banner__hint">— Add medicines or lab items</span>
                   )}
                 </div>
               )}
 
-              {/* Panels */}
+              {error && (
+                <div className="error-banner">
+                  <FiAlertCircle size={13} />
+                  <span>{error?.message || String(error)}</span>
+                  <button onClick={() => setError(null)}><FiX size={12} /></button>
+                </div>
+              )}
+
               <div className={`panels ${isDragOver ? 'panels--dragover' : ''}`}>
 
                 {/* Panel 1 */}
@@ -1071,38 +1430,72 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                     <div className="form-stack">
                       <div className="form-group">
                         <label className="form-label">Notes <span className="req">*</span></label>
-                        <textarea className="form-textarea form-textarea--lg" rows={9} value={consultationNotes}
+                        <textarea
+                          className="form-textarea form-textarea--lg"
+                          rows={9}
+                          value={consultationNotes}
                           onChange={e => setConsultationNotes(e.target.value)}
-                          placeholder="Describe findings, diagnosis, and clinical observations…" />
+                          placeholder="Describe findings, diagnosis, and clinical observations…"
+                        />
                       </div>
                       <div className="form-group">
                         <label className="form-label form-label--opt">Treatment Plan <span className="opt">(optional)</span></label>
-                        <textarea className="form-textarea" rows={3} value={treatmentPlan}
-                          onChange={e => setTreatmentPlan(e.target.value)} placeholder="Outline recommended treatment…" />
+                        <textarea
+                          className="form-textarea"
+                          rows={3}
+                          value={treatmentPlan}
+                          onChange={e => setTreatmentPlan(e.target.value)}
+                          placeholder="Outline recommended treatment…"
+                        />
                       </div>
                       <div className="form-group">
                         <label className="form-label form-label--opt">Next Visit Date <span className="opt">(optional)</span></label>
-                        <input type="date" className="form-input" value={nextConsultationDate}
-                          onChange={e => setNextConsultationDate(e.target.value)} min={today()} />
+                        <input
+                          type="date"
+                          className="form-input"
+                          value={nextConsultationDate}
+                          onChange={e => setNextConsultationDate(e.target.value)}
+                          min={today()}
+                        />
                       </div>
+
+                      {consultDataChanged && (
+                        <div className="consult-update-bar">
+                          <span className="consult-update-bar__hint">
+                            <FiAlertCircle size={12} /> Unsaved changes
+                          </span>
+                          <button
+                            className="consult-update-bar__btn"
+                            onClick={handleInlineUpdateConsult}
+                            disabled={updatingConsult}
+                          >
+                            {updatingConsult
+                              ? <><span className="spin-sm spin-sm--teal" /> Updating…</>
+                              : <><FiSave size={13} /> Save Changes</>
+                            }
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </section>
 
                 {/* Panel 2 — Prescription */}
-                <section className={`panel panel--2 ${isDragOver ? 'panel--drop' : ''}`}
-                  onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+                <section
+                  className={`panel panel--2 ${isDragOver ? 'panel--drop' : ''}`}
+                  onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
+                >
                   <div className="panel__head">
                     <span className="panel__num panel__num--2">2</span>
                     <h3 className="panel__title">Prescription</h3>
-                    {(containers.length + savedPrescItems.length) > 0 && (
-                      <span className="panel__count">{containers.length + savedPrescItems.length}</span>
+                    {/* BUG 1 FIX: count only saved + truly pending — no double-counting */}
+                    {totalPrescCount > 0 && (
+                      <span className="panel__count">{totalPrescCount}</span>
                     )}
                     {confirmedSuccess && <span className="panel__saved"><FiCheck size={10} /> Saved</span>}
                   </div>
                   <div className="panel__body">
 
-                    {/* ── SAVED items (edit/delete enabled) ── */}
                     {savedPrescItems.length > 0 && (
                       <div className="saved-presc-list">
                         {savedPrescItems.map(item => (
@@ -1119,8 +1512,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                       </div>
                     )}
 
-                    {/* ── NEW (unsaved) containers ── */}
-                    {containers.filter(c => !submittedContainerIds.has(c.tempId)).length === 0 && savedPrescItems.length === 0 ? (
+                    {pendingContainerCount === 0 && savedPrescItems.length === 0 ? (
                       <div className="panel-empty">
                         <div className="panel-empty__icon"><FiPackage size={28} /></div>
                         <p>No medicines added</p>
@@ -1144,7 +1536,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                       <FiPlus size={13} /> Add Medicine Manually
                     </button>
 
-                    {/* ── SAVED LAB ORDER (toggle/delete) ── */}
                     {savedLabItems.length > 0 && (
                       <SavedLabSection
                         labOrderId={labOrderId}
@@ -1160,15 +1551,20 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                   </div>
                 </section>
 
-                {/* Panel 3 */}
+                {/* Panel 3 — Medicine List */}
                 <section className="panel panel--3">
                   <div className="panel__head">
                     <span className="panel__num panel__num--3">3</span>
                     <h3 className="panel__title">Medicine List</h3>
                     {selectedMedIds.length > 0 && (
-                      <button className="btn-add-sel" onClick={handleAddSelectedMeds}>
-                        <FiPlus size={11} /> Add {selectedMedIds.length}
-                      </button>
+                      <>
+                        <button className="btn-add-sel" onClick={handleAddSelectedMeds}>
+                          <FiPlus size={11} /> Add {selectedMedIds.length}
+                        </button>
+                        <button className="btn-clear-sel" onClick={clearMedSelection} title="Clear selection">
+                          <FiX size={11} /> Clear
+                        </button>
+                      </>
                     )}
                   </div>
                   <div className="panel__body">
@@ -1185,7 +1581,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                       )}
                     </div>
 
-                    <p className="med-drag-tip"><FiMenu size={10} /> Drag to Prescription or use checkboxes</p>
+                    <p className="med-drag-tip"><FiMenu size={10} /> Drag to Prescription or click to select</p>
 
                     <div className="med-list">
                       {loadingMeds ? (
@@ -1194,11 +1590,14 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                         <div className="state-empty state-empty--sm"><p>No medicines found</p></div>
                       ) : filteredMedicines.map(m => {
                         const isSelected   = selectedMedIds.includes(m.id);
-                        const alreadyAdded = containers.some(c => c.medicineId === m.id);
+                        // alreadyAdded: in pending containers OR in saved prescription items
+                        const alreadyAdded = containers.some(c => c.medicineId === m.id)
+                          || savedPrescItems.some(item => item.medicineId === m.id);
                         return (
                           <div key={m.id}
                             className={`med-item ${isSelected ? 'med-item--sel' : ''} ${alreadyAdded ? 'med-item--added' : ''}`}
                             draggable={!alreadyAdded}
+                            onClick={() => !alreadyAdded && toggleMedSelection(m.id)}
                             onDragStart={e => handleDragStart(e, m.id)} onDragEnd={handleDragEnd}>
                             <span className="med-item__drag"><FiMenu size={10} /></span>
                             <input type="checkbox" className="med-item__chk" checked={isSelected}
@@ -1221,7 +1620,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                   </div>
                 </section>
 
-              </div>{/* /panels */}
+              </div>
             </div>
           )}
         </main>
@@ -1252,7 +1651,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                     </div>
                   );
                 })}
-                {submitProgress.done && <div className="progress-done">Consultation saved successfully!</div>}
+                {submitProgress.done && <div className="progress-done">Saved successfully!</div>}
               </div>
             </div>
           </div>
@@ -1266,6 +1665,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                 <span><FiUser size={14} /> Patient Details</span>
                 <button className="modal__close" onClick={() => setShowPatientModal(false)}><FiX size={16} /></button>
               </div>
+
               {loadingPatient ? (
                 <div className="state-loading"><div className="spinner-lg" /></div>
               ) : patientDetails ? (
@@ -1275,24 +1675,128 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                     <div>
                       <h3 className="pt-hero__name">{patientDetails.patientName}</h3>
                       <div className="pt-hero__chips">
-                        {patientDetails.fileNo && <span className="chip">{patientDetails.fileNo}</span>}
-                        {patientDetails.genderDesc && <span className="chip">{patientDetails.genderDesc}</span>}
-                        {patientDetails.age && <span className="chip">{patientDetails.age} yrs</span>}
+                        {patientDetails.fileNo         && <span className="chip">{patientDetails.fileNo}</span>}
+                        {patientDetails.genderDesc     && <span className="chip">{patientDetails.genderDesc}</span>}
+                        {patientDetails.age            && <span className="chip">{patientDetails.age} yrs</span>}
                         {patientDetails.bloodGroupDesc && <span className="chip chip--blood"><FiDroplet size={9} /> {patientDetails.bloodGroupDesc}</span>}
                       </div>
                     </div>
                   </div>
+
                   <div className="pt-grid">
-                    {[['Mobile', patientDetails.mobile], ['Alt Mobile', patientDetails.altMobile], ['Email', patientDetails.email], ['Birth Date', patientDetails.birthDate ? formatDate(patientDetails.birthDate) : null], ['Marital Status', patientDetails.maritalStatusDesc], ['Emergency Contact', patientDetails.emergencyContactNo]].filter(([,v]) => v).map(([label, val]) => (
+                    {[
+                      ['Mobile',            patientDetails.mobile],
+                      ['Alt Mobile',        patientDetails.altMobile],
+                      ['Email',             patientDetails.email],
+                      ['Birth Date',        patientDetails.birthDate ? formatDate(patientDetails.birthDate) : null],
+                      ['Marital Status',    patientDetails.maritalStatusDesc],
+                      ['Emergency Contact', patientDetails.emergencyContactNo],
+                    ].filter(([, v]) => v).map(([label, val]) => (
                       <div key={label} className="pt-cell"><label>{label}</label><span>{val}</span></div>
                     ))}
-                    {patientDetails.address && <div className="pt-cell pt-cell--full"><label>Address</label><span>{patientDetails.address}</span></div>}
-                    {patientDetails.allergies && <div className="pt-cell pt-cell--full pt-cell--alert"><label><FiAlertCircle size={10} /> Allergies</label><span>{patientDetails.allergies}</span></div>}
-                    {patientDetails.existingMedicalConditions && <div className="pt-cell pt-cell--full"><label>Medical Conditions</label><span>{patientDetails.existingMedicalConditions}</span></div>}
-                    {patientDetails.currentMedications && <div className="pt-cell pt-cell--full"><label>Current Medications</label><span>{patientDetails.currentMedications}</span></div>}
+
+                    {patientDetails.address && (
+                      <div className="pt-cell pt-cell--full"><label>Address</label><span>{patientDetails.address}</span></div>
+                    )}
+
+                    {/* ── Family Patient row ── */}
+                    {patientDetails.familyPatientId && (
+                      <div className="pt-cell pt-cell--full pt-cell--family">
+                        <label><FiUsers size={10} /> Family Patient</label>
+                        {loadingFamilyData ? (
+                          <div className="pt-family-loading">
+                            <span className="spin-sm spin-sm--teal" /> Fetching family patient…
+                          </div>
+                        ) : familyPatientData ? (
+                          <div className="pt-family-row">
+                            <div className="pt-family-info">
+                              <span className="pt-family-name">{familyPatientData.patientName}</span>
+                              {familyPatientData.mobile && (
+                                <span className="pt-family-mobile">{familyPatientData.mobile}</span>
+                              )}
+                            </div>
+                            <button className="btn-pt-view-family" onClick={handleViewFamilyPatient}>
+                              <FiEye size={11} /> View Details
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="pt-family-id-fallback">ID #{patientDetails.familyPatientId}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {patientDetails.allergies && (
+                      <div className="pt-cell pt-cell--full pt-cell--alert">
+                        <label><FiAlertCircle size={10} /> Allergies</label>
+                        <span>{patientDetails.allergies}</span>
+                      </div>
+                    )}
+                    {patientDetails.existingMedicalConditions && (
+                      <div className="pt-cell pt-cell--full"><label>Medical Conditions</label><span>{patientDetails.existingMedicalConditions}</span></div>
+                    )}
+                    {patientDetails.currentMedications && (
+                      <div className="pt-cell pt-cell--full"><label>Current Medications</label><span>{patientDetails.currentMedications}</span></div>
+                    )}
                   </div>
                 </>
               ) : <div className="state-empty"><p>No details available</p></div>}
+            </div>
+          </div>
+        )}
+
+        {/* ═══ FAMILY PATIENT MODAL (second popup) ═══ */}
+        {showFamilyModal && familyPatientDetails && (
+          <div className="modal-overlay modal-overlay--family" onClick={() => setShowFamilyModal(false)}>
+            <div className="modal patient-modal family-patient-modal" onClick={e => e.stopPropagation()}>
+              <div className="modal__head modal__head--family">
+                <span><FiUsers size={14} /> Family Patient Details</span>
+                <button className="modal__close" onClick={() => setShowFamilyModal(false)}><FiX size={16} /></button>
+              </div>
+
+              <div className="pt-hero pt-hero--family">
+                <div className="pt-hero__avatar pt-hero__avatar--family">
+                  {familyPatientDetails.patientName?.charAt(0).toUpperCase() || 'F'}
+                </div>
+                <div>
+                  <h3 className="pt-hero__name">{familyPatientDetails.patientName}</h3>
+                  <div className="pt-hero__chips">
+                    {familyPatientDetails.fileNo         && <span className="chip">{familyPatientDetails.fileNo}</span>}
+                    {familyPatientDetails.genderDesc     && <span className="chip">{familyPatientDetails.genderDesc}</span>}
+                    {familyPatientDetails.age            && <span className="chip">{familyPatientDetails.age} yrs</span>}
+                    {familyPatientDetails.bloodGroupDesc && <span className="chip chip--blood"><FiDroplet size={9} /> {familyPatientDetails.bloodGroupDesc}</span>}
+                    <span className="chip chip--family"><FiUsers size={9} /> Family Member</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-grid">
+                {[
+                  ['Mobile',            familyPatientDetails.mobile],
+                  ['Alt Mobile',        familyPatientDetails.altMobile],
+                  ['Email',             familyPatientDetails.email],
+                  ['Birth Date',        familyPatientDetails.birthDate ? formatDate(familyPatientDetails.birthDate) : null],
+                  ['Marital Status',    familyPatientDetails.maritalStatusDesc],
+                  ['Emergency Contact', familyPatientDetails.emergencyContactNo],
+                ].filter(([, v]) => v).map(([label, val]) => (
+                  <div key={label} className="pt-cell"><label>{label}</label><span>{val}</span></div>
+                ))}
+
+                {familyPatientDetails.address && (
+                  <div className="pt-cell pt-cell--full"><label>Address</label><span>{familyPatientDetails.address}</span></div>
+                )}
+                {familyPatientDetails.allergies && (
+                  <div className="pt-cell pt-cell--full pt-cell--alert">
+                    <label><FiAlertCircle size={10} /> Allergies</label>
+                    <span>{familyPatientDetails.allergies}</span>
+                  </div>
+                )}
+                {familyPatientDetails.existingMedicalConditions && (
+                  <div className="pt-cell pt-cell--full"><label>Medical Conditions</label><span>{familyPatientDetails.existingMedicalConditions}</span></div>
+                )}
+                {familyPatientDetails.currentMedications && (
+                  <div className="pt-cell pt-cell--full"><label>Current Medications</label><span>{familyPatientDetails.currentMedications}</span></div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -1323,14 +1827,20 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
               </div>
 
               <div className="lab-cols">
+                {/* Lab Tests column */}
                 <div className="lab-col">
                   <div className="lab-col__head">
                     <FiActivity size={12} /> Lab Tests
-                    {selectedTestIds.filter(id => !submittedLabTestIds.includes(id)).length > 0 && (
-                      <span className="lab-col__cnt">{selectedTestIds.filter(id => !submittedLabTestIds.includes(id)).length} selected</span>
+                    {selectedTestIds.filter(id => !submittedLabTestIds.includes(id) && !deactivatedLabTestIds.includes(id)).length > 0 && (
+                      <span className="lab-col__cnt">
+                        {selectedTestIds.filter(id => !submittedLabTestIds.includes(id) && !deactivatedLabTestIds.includes(id)).length} selected
+                      </span>
                     )}
                     {submittedLabTestIds.length > 0 && (
                       <span className="lab-col__frozen-cnt">{submittedLabTestIds.length} saved</span>
+                    )}
+                    {deactivatedLabTestIds.length > 0 && (
+                      <span className="lab-col__deactivated-cnt">{deactivatedLabTestIds.length} inactive</span>
                     )}
                   </div>
                   <div className="lab-search-row">
@@ -1338,35 +1848,71 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                     <input type="text" placeholder="Search tests…" value={labTestSearch} onChange={e => setLabTestSearch(e.target.value)} />
                   </div>
                   <div className="lab-items-list">
-                    {labItemsLoading ? <div className="state-loading state-loading--sm"><div className="spin-sm" /></div>
-                      : filteredTests.length === 0 ? <div className="state-empty state-empty--sm"><p>No tests found</p></div>
-                      : filteredTests.map(t => {
-                        const id = t.id || t.testId;
-                        const sel    = selectedTestIds.includes(id);
-                        const frozen = submittedLabTestIds.includes(id);
-                        return (
-                          <label key={id} className={`lab-item ${frozen ? 'lab-item--frozen' : sel ? 'lab-item--sel' : ''}`}>
-                            <input type="checkbox" checked={frozen || sel} disabled={frozen}
-                              onChange={() => !frozen && setSelectedTestIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])} />
-                            <span className="lab-item__name">
-                              {getLabName(t) || 'Unknown'}
-                              {frozen && <span className="lab-item__saved-tag"><FiCheck size={8} /> Saved</span>}
-                            </span>
-                            {(t.fees || t.Fees) && <span className="lab-item__fee">₹{t.fees || t.Fees}</span>}
-                          </label>
-                        );
-                      })}
+                    {labItemsLoading
+                      ? <div className="state-loading state-loading--sm"><div className="spin-sm" /></div>
+                      : filteredTests.length === 0
+                        ? <div className="state-empty state-empty--sm"><p>No tests found</p></div>
+                        : filteredTests.map(t => {
+                          const id         = t.id || t.testId;
+                          const sel        = selectedTestIds.includes(id);
+                          const frozen     = submittedLabTestIds.includes(id);
+                          // BUG 2 FIX: detect deactivated items
+                          const deactivated = deactivatedLabTestIds.includes(id);
+                          const savedItem  = savedLabItems.find(s => (s.testId === id || s.testID === id));
+
+                          return (
+                            <label
+                              key={id}
+                              className={`lab-item ${frozen ? 'lab-item--frozen' : deactivated ? 'lab-item--deactivated' : sel ? 'lab-item--sel' : ''}`}
+                              onClick={e => {
+                                if (frozen && savedItem) {
+                                  e.preventDefault();
+                                  setConfirmRemoveLabId({ itemId: savedItem.itemId, name: getLabName(t) });
+                                } else if (deactivated && savedItem) {
+                                  // BUG 2 FIX: show re-activate popup instead of adding duplicate
+                                  e.preventDefault();
+                                  setReactivateConfirm({ itemId: savedItem.itemId, name: getLabName(t), testId: id, pkgId: 0 });
+                                }
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={frozen || sel}
+                                disabled={frozen || deactivated}
+                                onChange={() => {
+                                  if (!frozen && !deactivated) {
+                                    setSelectedTestIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+                                  }
+                                }}
+                              />
+                              <span className="lab-item__name">
+                                {getLabName(t) || 'Unknown'}
+                                {frozen && <span className="lab-item__saved-tag"><FiCheck size={8} /> Saved</span>}
+                                {deactivated && <span className="lab-item__deact-tag"><FiX size={8} /> Inactive</span>}
+                              </span>
+                              {(t.fees || t.Fees) && <span className="lab-item__fee">₹{t.fees || t.Fees}</span>}
+                              {frozen     && <span className="lab-item__remove-hint"><FiX size={9} /></span>}
+                              {deactivated && <span className="lab-item__reactivate-hint"><FiRefreshCw size={9} /></span>}
+                            </label>
+                          );
+                        })}
                   </div>
                 </div>
 
+                {/* Packages column */}
                 <div className="lab-col">
                   <div className="lab-col__head">
                     <FiPackage size={12} /> Packages
-                    {selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id)).length > 0 && (
-                      <span className="lab-col__cnt">{selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id)).length} selected</span>
+                    {selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id) && !deactivatedLabPkgIds.includes(id)).length > 0 && (
+                      <span className="lab-col__cnt">
+                        {selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id) && !deactivatedLabPkgIds.includes(id)).length} selected
+                      </span>
                     )}
                     {submittedLabPkgIds.length > 0 && (
                       <span className="lab-col__frozen-cnt">{submittedLabPkgIds.length} saved</span>
+                    )}
+                    {deactivatedLabPkgIds.length > 0 && (
+                      <span className="lab-col__deactivated-cnt">{deactivatedLabPkgIds.length} inactive</span>
                     )}
                   </div>
                   <div className="lab-search-row">
@@ -1374,37 +1920,119 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                     <input type="text" placeholder="Search packages…" value={labPkgSearch} onChange={e => setLabPkgSearch(e.target.value)} />
                   </div>
                   <div className="lab-items-list">
-                    {labItemsLoading ? <div className="state-loading state-loading--sm"><div className="spin-sm" /></div>
-                      : filteredPkgs.length === 0 ? <div className="state-empty state-empty--sm"><p>No packages found</p></div>
-                      : filteredPkgs.map(p => {
-                        const id = p.id || p.packageId;
-                        const sel    = selectedPkgIds.includes(id);
-                        const frozen = submittedLabPkgIds.includes(id);
-                        return (
-                          <label key={id} className={`lab-item ${frozen ? 'lab-item--frozen' : sel ? 'lab-item--sel' : ''}`}>
-                            <input type="checkbox" checked={frozen || sel} disabled={frozen}
-                              onChange={() => !frozen && setSelectedPkgIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])} />
-                            <span className="lab-item__name">
-                              {getPkgName(p) || 'Unknown'}
-                              {frozen && <span className="lab-item__saved-tag"><FiCheck size={8} /> Saved</span>}
-                            </span>
-                            {(p.fees || p.Fees) && <span className="lab-item__fee">₹{p.fees || p.Fees}</span>}
-                          </label>
-                        );
-                      })}
+                    {labItemsLoading
+                      ? <div className="state-loading state-loading--sm"><div className="spin-sm" /></div>
+                      : filteredPkgs.length === 0
+                        ? <div className="state-empty state-empty--sm"><p>No packages found</p></div>
+                        : filteredPkgs.map(p => {
+                          const id          = p.id || p.packageId;
+                          const sel         = selectedPkgIds.includes(id);
+                          const frozen      = submittedLabPkgIds.includes(id);
+                          // BUG 2 FIX: detect deactivated packages
+                          const deactivated = deactivatedLabPkgIds.includes(id);
+                          const savedItem   = savedLabItems.find(s => (s.packageId === id || s.packageID === id));
+
+                          return (
+                            <label
+                              key={id}
+                              className={`lab-item ${frozen ? 'lab-item--frozen' : deactivated ? 'lab-item--deactivated' : sel ? 'lab-item--sel' : ''}`}
+                              onClick={e => {
+                                if (frozen && savedItem) {
+                                  e.preventDefault();
+                                  setConfirmRemoveLabId({ itemId: savedItem.itemId, name: getPkgName(p) });
+                                } else if (deactivated && savedItem) {
+                                  // BUG 2 FIX: show re-activate popup instead of adding duplicate
+                                  e.preventDefault();
+                                  setReactivateConfirm({ itemId: savedItem.itemId, name: getPkgName(p), testId: 0, pkgId: id });
+                                }
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={frozen || sel}
+                                disabled={frozen || deactivated}
+                                onChange={() => {
+                                  if (!frozen && !deactivated) {
+                                    setSelectedPkgIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+                                  }
+                                }}
+                              />
+                              <span className="lab-item__name">
+                                {getPkgName(p) || 'Unknown'}
+                                {frozen && <span className="lab-item__saved-tag"><FiCheck size={8} /> Saved</span>}
+                                {deactivated && <span className="lab-item__deact-tag"><FiX size={8} /> Inactive</span>}
+                              </span>
+                              {(p.fees || p.Fees) && <span className="lab-item__fee">₹{p.fees || p.Fees}</span>}
+                              {frozen     && <span className="lab-item__remove-hint"><FiX size={9} /></span>}
+                              {deactivated && <span className="lab-item__reactivate-hint"><FiRefreshCw size={9} /></span>}
+                            </label>
+                          );
+                        })}
                   </div>
                 </div>
               </div>
 
               <div className="lab-footer">
                 <button className="lab-footer__cancel" onClick={() => setShowLabModal(false)}><FiX size={12} /> Cancel</button>
-                <button className="lab-footer__save" onClick={handleStageLabOrder}>
+                <button className="lab-footer__save" onClick={handleStageAndSubmitLabOrder}>
                   <FiCheck size={13} />
-                  {(selectedTestIds.filter(id => !submittedLabTestIds.includes(id)).length + selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id)).length) > 0
-                    ? `Save ${selectedTestIds.filter(id => !submittedLabTestIds.includes(id)).length + selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id)).length} Item${(selectedTestIds.filter(id => !submittedLabTestIds.includes(id)).length + selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id)).length) !== 1 ? 's' : ''}`
-                    : 'Save Order'}
+                  {(() => {
+                    const newTests = selectedTestIds.filter(id => !submittedLabTestIds.includes(id) && !deactivatedLabTestIds.includes(id)).length;
+                    const newPkgs  = selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id) && !deactivatedLabPkgIds.includes(id)).length;
+                    const total    = newTests + newPkgs;
+                    return total > 0
+                      ? `${consultationId ? 'Submit' : 'Save'} ${total} Item${total !== 1 ? 's' : ''}`
+                      : 'Done';
+                  })()}
                 </button>
               </div>
+
+              {/* BUG 2 FIX: Re-activate confirm popup */}
+              {reactivateConfirm && (
+                <div className="lab-remove-confirm-overlay" onClick={() => setReactivateConfirm(null)}>
+                  <div className="lab-remove-confirm lab-remove-confirm--reactivate" onClick={e => e.stopPropagation()}>
+                    <div className="lab-remove-confirm__icon lab-remove-confirm__icon--green"><FiRefreshCw size={22} /></div>
+                    <p className="lab-remove-confirm__title">Re-activate Lab Item?</p>
+                    <p className="lab-remove-confirm__name">{reactivateConfirm.name}</p>
+                    <p className="lab-remove-confirm__sub">This item is currently inactive. Re-activate it?</p>
+                    <div className="lab-remove-confirm__btns">
+                      <button
+                        className="btn-confirm-reactivate"
+                        onClick={handleReactivateLabItem}
+                        disabled={reactivating}
+                      >
+                        {reactivating ? <span className="spin-sm" /> : <FiCheck size={12} />} Yes, Re-activate
+                      </button>
+                      <button className="btn-confirm-no" onClick={() => setReactivateConfirm(null)}>
+                        <FiX size={11} /> Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Remove (deactivate) lab item confirm popup */}
+              {confirmRemoveLabId && (
+                <div className="lab-remove-confirm-overlay" onClick={() => setConfirmRemoveLabId(null)}>
+                  <div className="lab-remove-confirm" onClick={e => e.stopPropagation()}>
+                    <div className="lab-remove-confirm__icon"><FiAlertCircle size={22} /></div>
+                    <p className="lab-remove-confirm__title">Remove Lab Item?</p>
+                    <p className="lab-remove-confirm__name">{confirmRemoveLabId.name}</p>
+                    <div className="lab-remove-confirm__btns">
+                      <button
+                        className="btn-confirm-yes"
+                        onClick={() => handleRemoveLabItemFromModal(confirmRemoveLabId.itemId)}
+                        disabled={removingLabItemId === confirmRemoveLabId.itemId}
+                      >
+                        {removingLabItemId === confirmRemoveLabId.itemId ? <span className="spin-sm" /> : <FiTrash2 size={12} />} Yes, Remove
+                      </button>
+                      <button className="btn-confirm-no" onClick={() => setConfirmRemoveLabId(null)}>
+                        <FiX size={11} /> Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

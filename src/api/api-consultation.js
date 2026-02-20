@@ -177,6 +177,8 @@ export const updateConsultation = async (consultationData) => {
     TreatmentPlan: consultationData.treatmentPlan?.trim() || "",
   };
 
+  console.log("Update Consultation", payload)
+
   try {
     const response = await API.post("/UpdateConsultation", payload);
     const result = response.data?.result;
