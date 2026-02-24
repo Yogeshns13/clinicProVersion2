@@ -136,7 +136,7 @@
 .filtersContainer {
   background: white;
   border-radius: 17px;
-  padding: 20px;
+  padding: 16px 20px;
   margin-bottom: 20px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
@@ -145,22 +145,23 @@
 .filtersGrid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
-  gap: 15px;
-  align-items: end;
+  gap: 12px;
+  align-items: center;
 }
 
+/* ── Fused search type + value ── */
 .searchGroup {
   display: flex;
-  gap: 10px;
   align-items: stretch;
 }
 
 .searchTypeSelect {
   min-width: 140px;
   height: 40px;
-  padding: 10px 12px;
+  padding: 0 12px;
   background: white;
   border: 1px solid #cbd5e1;
+  border-right: none;
   border-radius: 10px 0 0 10px;
   color: var(--text-dark);
   font-size: 0.85rem;
@@ -178,11 +179,10 @@
 .searchInput {
   flex: 1;
   height: 40px;
-  padding: 10px 15px;
+  padding: 0 15px;
   background: white;
   border: 1px solid #cbd5e1;
   border-radius: 0 10px 10px 0;
-  border-left: none;
   color: var(--text-dark);
   font-size: 0.85rem;
   transition: all 0.3s ease;
@@ -207,13 +207,14 @@
 .filterInput {
   width: 100%;
   height: 40px;
-  padding: 10px 15px;
+  padding: 0 12px;
   background: white;
   border: 1px solid #cbd5e1;
   border-radius: 10px;
   color: var(--text-dark);
   font-size: 0.85rem;
   transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .filterInput::placeholder {
@@ -226,18 +227,50 @@
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
 }
 
+/* ── Date overlay placeholder (VendorList pattern) ── */
+.dateWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.dateWrapper .filterInput {
+  width: 100%;
+  color: var(--text-dark);
+}
+
+/* When no date selected — hide browser's date format hint */
+.dateEmpty::-webkit-datetime-edit-text,
+.dateEmpty::-webkit-datetime-edit-month-field,
+.dateEmpty::-webkit-datetime-edit-day-field,
+.dateEmpty::-webkit-datetime-edit-year-field {
+  color: transparent;
+}
+
+/* Custom placeholder shown over empty date input */
+.datePlaceholder {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  color: #94a3b8;
+  pointer-events: none;
+  z-index: 1;
+}
+
 .filterActions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  align-items: center;
 }
 
 .searchButton,
 .clearButton {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   height: 40px;
-  padding: 10px 20px;
+  padding: 0 18px;
   font-weight: 600;
   font-size: 0.85rem;
   border: none;
@@ -1178,8 +1211,6 @@
   box-shadow: 0 8px 24px rgba(32, 125, 156, 0.45);
 }
 
-
-
 .cancelBtn {
   background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
   color: var(--text-light);
@@ -1267,6 +1298,7 @@
 
   .searchTypeSelect {
     border-radius: 10px;
+    border-right: 1px solid #cbd5e1;
   }
 
   .searchInput {
@@ -1275,12 +1307,13 @@
   }
 
   .filterActions {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
   }
 
   .searchButton,
   .clearButton {
-    width: 100%;
+    flex: 1;
     justify-content: center;
   }
 
@@ -1373,4 +1406,3 @@
     font-size: 0.8rem;
   }
 }
-

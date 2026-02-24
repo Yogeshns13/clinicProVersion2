@@ -266,12 +266,14 @@ const ClinicList = () => {
   const [filterInputs, setFilterInputs] = useState({
     searchType: 'name',
     searchValue: '',
+    statusFilter: '',
   });
 
   // Applied filters (only set when Search is clicked)
   const [appliedFilters, setAppliedFilters] = useState({
     searchType: 'name',
     searchValue: '',
+    statusFilter: '',
   });
 
   // Selected / Modal
@@ -331,22 +333,29 @@ const ClinicList = () => {
   // ────────────────────────────────────────────────
   // Computed values
   const filteredClinics = useMemo(() => {
-    if (!appliedFilters.searchValue.trim()) return allClinics;
+    let result = allClinics;
+
+    if (appliedFilters.statusFilter) {
+      const targetStatus = appliedFilters.statusFilter === '1' ? 'active' : 'inactive';
+      result = result.filter(c => c.status?.toLowerCase() === targetStatus);
+    }
+
+    if (!appliedFilters.searchValue.trim()) return result;
     const term = appliedFilters.searchValue.toLowerCase();
 
     switch (appliedFilters.searchType) {
       case 'name':
-        return allClinics.filter(c => c.name?.toLowerCase().includes(term));
+        return result.filter(c => c.name?.toLowerCase().includes(term));
       case 'ownerName':
-        return allClinics.filter(c => c.ownerName?.toLowerCase().includes(term));
+        return result.filter(c => c.ownerName?.toLowerCase().includes(term));
       case 'mobile':
-        return allClinics.filter(c => c.mobile?.toLowerCase().includes(term));
+        return result.filter(c => c.mobile?.toLowerCase().includes(term));
       case 'email':
-        return allClinics.filter(c => c.email?.toLowerCase().includes(term));
+        return result.filter(c => c.email?.toLowerCase().includes(term));
       case 'gstNo':
-        return allClinics.filter(c => c.gstNo?.toLowerCase().includes(term));
+        return result.filter(c => c.gstNo?.toLowerCase().includes(term));
       default:
-        return allClinics.filter(
+        return result.filter(
           c =>
             c.name?.toLowerCase().includes(term) ||
             c.ownerName?.toLowerCase().includes(term) ||
@@ -377,7 +386,7 @@ const ClinicList = () => {
   };
 
   const handleClearFilters = () => {
-    const empty = { searchType: 'name', searchValue: '' };
+    const empty = { searchType: 'name', searchValue: '', statusFilter: '' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
   };
@@ -498,7 +507,7 @@ const ClinicList = () => {
   if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
   // Has an active search applied
-  const hasActiveSearch = !!appliedFilters.searchValue.trim();
+  const hasActiveSearch = !!appliedFilters.searchValue.trim() || !!appliedFilters.statusFilter;
 
   // ────────────────────────────────────────────────
   return (
@@ -542,8 +551,21 @@ const ClinicList = () => {
             />
           </div>
 
-          {/* Action buttons */}
+          <div className={styles.filterGroup}>
+            <select
+              name="statusFilter"
+              value={filterInputs.statusFilter}
+              onChange={handleFilterChange}
+              className={styles.statusFilterSelect}
+            >
+              <option value="">All Status</option>
+              <option value="1">Active</option>
+              <option value="2">Inactive</option>
+            </select>
+          </div>
+
           <div className={styles.filterActions}>
+
             <button onClick={handleSearch} className={styles.searchButton}>
               <FiSearch size={18} />
               Search
@@ -624,308 +646,332 @@ const ClinicList = () => {
 
       {/* ──────────────── Details Modal ──────────────── */}
       {selectedClinic && (
-        <div className={styles.clinicModalOverlay} onClick={closeModal}>
-          <div className={`${styles.clinicModal} ${styles.detailsModal}`} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.detailsModalHeader}>
-              <div className={styles.detailsHeaderContent}>
-                <div className={styles.clinicAvatarLarge}>
-                  {selectedClinic.name?.charAt(0).toUpperCase() || 'C'}
-                </div>
-                <div>
-                  <h2>{selectedClinic.name}</h2>
-                  <p className={styles.clinicSubtitle}>{selectedClinic.clinicType || 'Clinic'}</p>
+        <div className={styles.detailModalOverlay} onClick={closeModal}>
+          <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
+
+            {/* Gradient Header */}
+            <div className={styles.detailModalHeader}>
+              <div className={styles.detailHeaderContent}>
+                <h2>{selectedClinic.name}</h2>
+                <div className={styles.detailHeaderMeta}>
+                  <span className={styles.workIdBadge}>{selectedClinic.clinicType || 'Clinic'}</span>
+                  <span className={`${styles.workIdBadge} ${selectedClinic.status === 'active' ? styles.activeBadge : styles.inactiveBadge}`}>
+                    {selectedClinic.status?.toUpperCase()}
+                  </span>
                 </div>
               </div>
-              <div className={styles.statusBadgeLargeWrapper}>
-                <span className={`${styles.statusBadge} ${styles.large} ${getStatusClass(selectedClinic.status)}`}>
-                  {selectedClinic.status.toUpperCase()}
-                </span>
+              <button onClick={closeModal} className={styles.detailCloseBtn}>✕</button>
+            </div>
+
+            {/* Info Cards Grid */}
+            <div className={styles.detailModalBody}>
+              <div className={styles.infoSection}>
+
+                {/* Contact Information */}
+                <div className={styles.infoCard}>
+                  <div className={styles.infoHeader}>
+                    <h3>Contact Information</h3>
+                  </div>
+                  <div className={styles.infoContent}>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Owner Name</span>
+                      <span className={styles.infoValue}>{selectedClinic.ownerName || '—'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Mobile</span>
+                      <span className={styles.infoValue}>{selectedClinic.mobile || '—'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Alt Mobile</span>
+                      <span className={styles.infoValue}>{selectedClinic.altMobile || '—'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Email</span>
+                      <span className={styles.infoValue}>{selectedClinic.email || '—'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Address</span>
+                      <span className={styles.infoValue}>{selectedClinic.address || '—'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Location</span>
+                      <span className={styles.infoValue}>{selectedClinic.location || '—'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tax & Billing Information */}
+                <div className={styles.infoCard}>
+                  <div className={styles.infoHeader}>
+                    <h3>Tax & Billing Information</h3>
+                  </div>
+                  <div className={styles.infoContent}>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>GST No</span>
+                      <span className={styles.infoValue}>{selectedClinic.gstNo || '—'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>CGST %</span>
+                      <span className={styles.infoValue}>{selectedClinic.cgstPercentage || 0}%</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>SGST %</span>
+                      <span className={styles.infoValue}>{selectedClinic.sgstPercentage || 0}%</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>File No Prefix</span>
+                      <span className={styles.infoValue}>{selectedClinic.fileNoPrefix || '—'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Invoice Prefix</span>
+                      <span className={styles.infoValue}>{selectedClinic.invoicePrefix || '—'}</span>
+                    </div>
+                  </div>
+                </div>
+
               </div>
-              <button onClick={closeModal} className={styles.clinicModalClose}>
-                ×
-              </button>
+
+              {/* Footer Actions */}
+              <div className={styles.detailModalFooter}>
+                <button onClick={closeModal} className={styles.btnCancel}>
+                  Close
+                </button>
+                <button onClick={() => handleUpdateClick(selectedClinic)} className={styles.btnUpdate}>
+                  Update Clinic
+                </button>
+              </div>
             </div>
 
-            <div className={styles.detailsModalBody}>
-              <table className={styles.detailsTable}>
-                <tbody>
-                  <tr>
-                    <td className={styles.label}>Owner Name</td>
-                    <td className={styles.value}>{selectedClinic.ownerName || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Mobile</td>
-                    <td className={styles.value}>{selectedClinic.mobile || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Alt Mobile</td>
-                    <td className={styles.value}>{selectedClinic.altMobile || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Email</td>
-                    <td className={styles.value}>{selectedClinic.email || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Address</td>
-                    <td className={styles.value}>{selectedClinic.address || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Location</td>
-                    <td className={styles.value}>{selectedClinic.location || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>GST No</td>
-                    <td className={styles.value}>{selectedClinic.gstNo || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>CGST %</td>
-                    <td className={styles.value}>{selectedClinic.cgstPercentage || 0}%</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>SGST %</td>
-                    <td className={styles.value}>{selectedClinic.sgstPercentage || 0}%</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>File No Prefix</td>
-                    <td className={styles.value}>{selectedClinic.fileNoPrefix || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Invoice Prefix</td>
-                    <td className={styles.value}>{selectedClinic.invoicePrefix || '—'}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className={styles.clinicModalFooter}>
-              <button onClick={() => handleUpdateClick(selectedClinic)} className={styles.btnUpdate}>
-                Update Clinic
-              </button>
-            </div>
           </div>
         </div>
       )}
 
       {/* ──────────────── Add Form Modal ──────────────── */}
       {isAddFormOpen && (
-        <div className={styles.clinicModalOverlay} onClick={closeAddForm}>
-          <div className={`${styles.clinicModal} ${styles.formModal} ${styles.employeeFormModal}`} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.clinicModalHeader}>
-              <h2>Add New Clinic</h2>
-              <button onClick={closeAddForm} className={styles.clinicModalClose}>
-                <FiX />
-              </button>
+        <div className={styles.detailModalOverlay} onClick={closeAddForm}>
+          <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
+
+            {/* Gradient Header */}
+            <div className={styles.detailModalHeader}>
+              <div className={styles.detailHeaderContent}>
+                <h2>Add New Clinic</h2>
+                <div className={styles.detailHeaderMeta}>
+                  <span className={styles.workIdBadge}>Basic · Contact · Tax · Billing</span>
+                </div>
+              </div>
+              <button onClick={closeAddForm} className={styles.detailCloseBtn}>✕</button>
             </div>
 
-            <form onSubmit={handleSubmit} className={styles.clinicModalBody}>
+            <form onSubmit={handleSubmit} className={styles.addModalBody}>
               {formError && <div className={styles.formError}>{formError}</div>}
               {formSuccess && <div className={styles.formSuccess}>Clinic added successfully!</div>}
 
-              <div className={styles.formGrid}>
-                <h3 className={styles.formSectionTitle}>Basic Information</h3>
-
-                <div className={styles.formGroup}>
-                  <label>Clinic Name <span className={styles.required}>*</span></label>
-                  <input required name="clinicName" value={formData.clinicName} onChange={handleInputChange} />
-                  {validationMessages.clinicName && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.clinicName}
-                    </span>
-                  )}
+              {/* ── Section: Basic Information ── */}
+              <div className={styles.addSection}>
+                <div className={styles.addSectionHeader}>
+                  <h3>Basic Information</h3>
                 </div>
+                <div className={styles.addFormGrid}>
 
-                <div className={styles.formGroup}>
-                  <label>Clinic Type</label>
-                  <input name="clinicType" value={formData.clinicType} onChange={handleInputChange} />
-                  {validationMessages.clinicType && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.clinicType}
-                    </span>
-                  )}
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>Owner Name <span className={styles.required}>*</span></label>
-                  <input required name="ownerName" value={formData.ownerName} onChange={handleInputChange} />
-                  {validationMessages.ownerName && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.ownerName}
-                    </span>
-                  )}
-                </div>
-
-                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                  <label>Address</label>
-                  <textarea name="address" rows={2} value={formData.address} onChange={handleInputChange} />
-                  {validationMessages.address && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.address}
-                    </span>
-                  )}
-                </div>
-
-                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                  <label>Location Coordinates</label>
-                  <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
-                    <div style={{ flex: 1 }}>
-                      <input type="number" step="any" min="-90" max="90" name="latitude" placeholder="Latitude" value={formData.latitude || ''} onChange={handleInputChange} />
-                      {validationMessages.latitude && (
-                        <span style={{ color: '#55575c', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                          {validationMessages.latitude}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <input type="number" step="any" min="-180" max="180" name="longitude" placeholder="Longitude" value={formData.longitude || ''} onChange={handleInputChange} />
-                      {validationMessages.longitude && (
-                        <span style={{ color: '#4c4e53', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                          {validationMessages.longitude}
-                        </span>
-                      )}
-                    </div>
+                  <div className={styles.addFormGroup}>
+                    <label>Clinic Name <span className={styles.required}>*</span></label>
+                    <input required name="clinicName" value={formData.clinicName} onChange={handleInputChange} placeholder="Enter clinic name" />
+                    {validationMessages.clinicName && (
+                      <span className={styles.validationMsg}>{validationMessages.clinicName}</span>
+                    )}
                   </div>
-                  <small style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', display: 'block' }}>
-                    Example: 9.9252,78.1198 (Madurai city center)
-                  </small>
-                </div>
 
-                <h3 className={styles.formSectionTitle}>Contact Information</h3>
+                  <div className={styles.addFormGroup}>
+                    <label>Clinic Type</label>
+                    <input name="clinicType" value={formData.clinicType} onChange={handleInputChange} placeholder="e.g. Dental, General" />
+                    {validationMessages.clinicType && (
+                      <span className={styles.validationMsg}>{validationMessages.clinicType}</span>
+                    )}
+                  </div>
 
-                <div className={styles.formGroup}>
-                  <label>Mobile <span className={styles.required}>*</span></label>
-                  <input required name="mobile" value={formData.mobile} onChange={handleInputChange} maxLength="10" />
-                  {validationMessages.mobile && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.mobile}
-                    </span>
-                  )}
-                </div>
+                  <div className={styles.addFormGroup}>
+                    <label>Owner Name <span className={styles.required}>*</span></label>
+                    <input required name="ownerName" value={formData.ownerName} onChange={handleInputChange} placeholder="Enter owner name" />
+                    {validationMessages.ownerName && (
+                      <span className={styles.validationMsg}>{validationMessages.ownerName}</span>
+                    )}
+                  </div>
 
-                <div className={styles.formGroup}>
-                  <label>Alternate Mobile</label>
-                  <input name="altMobile" value={formData.altMobile} onChange={handleInputChange} maxLength="10" />
-                  {validationMessages.altMobile && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.altMobile}
-                    </span>
-                  )}
-                </div>
+                  <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                    <label>Address</label>
+                    <textarea name="address" rows={2} value={formData.address} onChange={handleInputChange} placeholder="Enter full address" />
+                    {validationMessages.address && (
+                      <span className={styles.validationMsg}>{validationMessages.address}</span>
+                    )}
+                  </div>
 
-                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                  <label>Email</label>
-                  <input type="email" name="email" value={formData.email} onChange={handleInputChange} />
-                  {validationMessages.email && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.email}
-                    </span>
-                  )}
-                </div>
+                  <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                    <label>Location Coordinates</label>
+                    <div className={styles.coordRow}>
+                      <div className={styles.coordField}>
+                        <input type="number" step="any" min="-90" max="90" name="latitude" placeholder="Latitude" value={formData.latitude || ''} onChange={handleInputChange} />
+                        {validationMessages.latitude && (
+                          <span className={styles.validationMsg}>{validationMessages.latitude}</span>
+                        )}
+                      </div>
+                      <div className={styles.coordField}>
+                        <input type="number" step="any" min="-180" max="180" name="longitude" placeholder="Longitude" value={formData.longitude || ''} onChange={handleInputChange} />
+                        {validationMessages.longitude && (
+                          <span className={styles.validationMsg}>{validationMessages.longitude}</span>
+                        )}
+                      </div>
+                    </div>
+                    <small className={styles.coordHint}>Example: 9.9252, 78.1198 (Madurai city center)</small>
+                  </div>
 
-                <h3 className={styles.formSectionTitle}>Tax Information</h3>
-
-                <div className={styles.formGroup}>
-                  <label>GST Number</label>
-                  <input name="gstNo" value={formData.gstNo} onChange={handleInputChange} />
-                  {validationMessages.gstNo && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.gstNo}
-                    </span>
-                  )}
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>CGST Percentage</label>
-                  <input type="number" name="cgstPercentage" value={formData.cgstPercentage} onChange={handleInputChange} min="0" step="0.01" />
-                  {validationMessages.cgstPercentage && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.cgstPercentage}
-                    </span>
-                  )}
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>SGST Percentage</label>
-                  <input type="number" name="sgstPercentage" value={formData.sgstPercentage} onChange={handleInputChange} min="0" step="0.01" />
-                  {validationMessages.sgstPercentage && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.sgstPercentage}
-                    </span>
-                  )}
-                </div>
-
-                <h3 className={styles.formSectionTitle}>Billing Configuration</h3>
-
-                <div className={styles.formGroup}>
-                  <label>File No Prefix</label>
-                  <input
-                    name="fileNoPrefix"
-                    value={formData.fileNoPrefix}
-                    onChange={handleInputChange}
-                    onKeyDown={(e) => {
-                      const char = e.key;
-                      if (['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Enter'].includes(char) || e.ctrlKey || e.metaKey) return;
-                      if (!/[A-Za-z0-9_-]/.test(char)) e.preventDefault();
-                    }}
-                    onPaste={(e) => {
-                      e.preventDefault();
-                      const pasted = (e.clipboardData || window.clipboardData).getData('text');
-                      const clean = pasted.replace(/[^A-Za-z0-9_-]/g, '');
-                      const input = e.target;
-                      const newValue = input.value.substring(0, input.selectionStart) + clean + input.value.substring(input.selectionEnd);
-                      setFormData((prev) => ({ ...prev, [input.name]: newValue }));
-                    }}
-                    placeholder="e.g. FILE-2026_DOC"
-                    maxLength={20}
-                  />
-                  {validationMessages.fileNoPrefix && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.fileNoPrefix}
-                    </span>
-                  )}
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>Last File Sequence</label>
-                  <input type="number" name="lastFileSeq" value={formData.lastFileSeq} onChange={handleInputChange} min="0" />
-                  {validationMessages.lastFileSeq && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.lastFileSeq}
-                    </span>
-                  )}
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>Invoice Prefix</label>
-                  <input
-                    type="text"
-                    name="invoicePrefix"
-                    value={formData.invoicePrefix || ''}
-                    onChange={handleInputChange}
-                    onKeyDown={(e) => {
-                      const char = e.key;
-                      if (['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Enter'].includes(char) || e.ctrlKey || e.metaKey) return;
-                      if (!/[A-Za-z0-9_-]/.test(char)) e.preventDefault();
-                    }}
-                    onPaste={(e) => {
-                      e.preventDefault();
-                      const pasted = (e.clipboardData || window.clipboardData).getData('text');
-                      const clean = pasted.replace(/[^A-Za-z0-9_-]/g, '');
-                      const input = e.target;
-                      const newValue = input.value.substring(0, input.selectionStart) + clean + input.value.substring(input.selectionEnd);
-                      setFormData((prev) => ({ ...prev, [input.name]: newValue }));
-                    }}
-                    placeholder="e.g. INV-2026_ABC"
-                    maxLength={20}
-                  />
-                  {validationMessages.invoicePrefix && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.invoicePrefix}
-                    </span>
-                  )}
                 </div>
               </div>
 
-              <div className={styles.clinicModalFooter}>
+              {/* ── Section: Contact Information — 3 columns (Mobile | Alt Mobile | Email) ── */}
+              <div className={styles.addSection}>
+                <div className={styles.addSectionHeader}>
+                  <h3>Contact Information</h3>
+                </div>
+                <div className={styles.addFormGridThreeCol}>
+
+                  <div className={styles.addFormGroup}>
+                    <label>Mobile <span className={styles.required}>*</span></label>
+                    <input required name="mobile" value={formData.mobile} onChange={handleInputChange} maxLength="10" placeholder="10-digit mobile" />
+                    {validationMessages.mobile && (
+                      <span className={styles.validationMsg}>{validationMessages.mobile}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.addFormGroup}>
+                    <label>Alternate Mobile</label>
+                    <input name="altMobile" value={formData.altMobile} onChange={handleInputChange} maxLength="10" placeholder="Optional alt number" />
+                    {validationMessages.altMobile && (
+                      <span className={styles.validationMsg}>{validationMessages.altMobile}</span>
+                    )}
+                  </div>
+
+                  {/* Email — no longer fullWidth, sits in the 3rd column */}
+                  <div className={styles.addFormGroup}>
+                    <label>Email</label>
+                    <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="clinic@example.com" />
+                    {validationMessages.email && (
+                      <span className={styles.validationMsg}>{validationMessages.email}</span>
+                    )}
+                  </div>
+
+                </div>
+              </div>
+
+              {/* ── Section: Tax Information — 3 columns (GST No | CGST % | SGST %) ── */}
+              <div className={styles.addSection}>
+                <div className={styles.addSectionHeader}>
+                  <h3>Tax Information</h3>
+                </div>
+                <div className={styles.addFormGridThreeCol}>
+
+                  {/* GST Number — no longer fullWidth, sits in the 1st column */}
+                  <div className={styles.addFormGroup}>
+                    <label>GST Number</label>
+                    <input name="gstNo" value={formData.gstNo} onChange={handleInputChange} placeholder="e.g. 29ABCDE1234F1Z5" />
+                    {validationMessages.gstNo && (
+                      <span className={styles.validationMsg}>{validationMessages.gstNo}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.addFormGroup}>
+                    <label>CGST Percentage</label>
+                    <input type="number" name="cgstPercentage" value={formData.cgstPercentage} onChange={handleInputChange} min="0" step="0.01" placeholder="0.00" />
+                    {validationMessages.cgstPercentage && (
+                      <span className={styles.validationMsg}>{validationMessages.cgstPercentage}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.addFormGroup}>
+                    <label>SGST Percentage</label>
+                    <input type="number" name="sgstPercentage" value={formData.sgstPercentage} onChange={handleInputChange} min="0" step="0.01" placeholder="0.00" />
+                    {validationMessages.sgstPercentage && (
+                      <span className={styles.validationMsg}>{validationMessages.sgstPercentage}</span>
+                    )}
+                  </div>
+
+                </div>
+              </div>
+
+              {/* ── Section: Billing Configuration ── */}
+              <div className={styles.addSection}>
+                <div className={styles.addSectionHeader}>
+                  <h3>Billing Configuration</h3>
+                </div>
+                <div className={styles.addFormGrid}>
+
+                  <div className={styles.addFormGroup}>
+                    <label>File No Prefix</label>
+                    <input
+                      name="fileNoPrefix"
+                      value={formData.fileNoPrefix}
+                      onChange={handleInputChange}
+                      onKeyDown={(e) => {
+                        const char = e.key;
+                        if (['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Enter'].includes(char) || e.ctrlKey || e.metaKey) return;
+                        if (!/[A-Za-z0-9_-]/.test(char)) e.preventDefault();
+                      }}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pasted = (e.clipboardData || window.clipboardData).getData('text');
+                        const clean = pasted.replace(/[^A-Za-z0-9_-]/g, '');
+                        const input = e.target;
+                        const newValue = input.value.substring(0, input.selectionStart) + clean + input.value.substring(input.selectionEnd);
+                        setFormData((prev) => ({ ...prev, [input.name]: newValue }));
+                      }}
+                      placeholder="e.g. FILE-2026_DOC"
+                      maxLength={20}
+                    />
+                    {validationMessages.fileNoPrefix && (
+                      <span className={styles.validationMsg}>{validationMessages.fileNoPrefix}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.addFormGroup}>
+                    <label>Last File Sequence</label>
+                    <input type="number" name="lastFileSeq" value={formData.lastFileSeq} onChange={handleInputChange} min="0" placeholder="0" />
+                    {validationMessages.lastFileSeq && (
+                      <span className={styles.validationMsg}>{validationMessages.lastFileSeq}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.addFormGroup}>
+                    <label>Invoice Prefix</label>
+                    <input
+                      type="text"
+                      name="invoicePrefix"
+                      value={formData.invoicePrefix || ''}
+                      onChange={handleInputChange}
+                      onKeyDown={(e) => {
+                        const char = e.key;
+                        if (['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Enter'].includes(char) || e.ctrlKey || e.metaKey) return;
+                        if (!/[A-Za-z0-9_-]/.test(char)) e.preventDefault();
+                      }}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pasted = (e.clipboardData || window.clipboardData).getData('text');
+                        const clean = pasted.replace(/[^A-Za-z0-9_-]/g, '');
+                        const input = e.target;
+                        const newValue = input.value.substring(0, input.selectionStart) + clean + input.value.substring(input.selectionEnd);
+                        setFormData((prev) => ({ ...prev, [input.name]: newValue }));
+                      }}
+                      placeholder="e.g. INV-2026_ABC"
+                      maxLength={20}
+                    />
+                    {validationMessages.invoicePrefix && (
+                      <span className={styles.validationMsg}>{validationMessages.invoicePrefix}</span>
+                    )}
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className={styles.detailModalFooter}>
                 <button type="button" onClick={closeAddForm} className={styles.btnCancel}>
                   Cancel
                 </button>
@@ -933,6 +979,7 @@ const ClinicList = () => {
                   {formLoading ? 'Adding...' : 'Add Clinic'}
                 </button>
               </div>
+
             </form>
           </div>
         </div>

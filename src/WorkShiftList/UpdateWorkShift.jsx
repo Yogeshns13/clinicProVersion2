@@ -1,25 +1,20 @@
 // src/components/UpdateWorkShift.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiX, FiArrowLeft, FiSave } from 'react-icons/fi';
+import { FiSave } from 'react-icons/fi';
 import { getShiftList, updateShift } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './WorkShift.module.css';
 
-// ────────────────────────────────────────────────
-// CONSTANTS
-// ────────────────────────────────────────────────
 const STATUS_OPTIONS = [
   { id: 1, label: 'Active' },
   { id: 2, label: 'Inactive' },
 ];
 
-// ────────────────────────────────────────────────
 const UpdateWorkShift = () => {
   const navigate = useNavigate();
   const params = useParams();
-  
   const shiftId = params.shiftId || params.id;
 
   const [loading, setLoading] = useState(true);
@@ -38,17 +33,13 @@ const UpdateWorkShift = () => {
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
 
-  // ────────────────────────────────────────────────
   const getStoredClinicId = () => {
     const clinicId = localStorage.getItem('clinicID');
     return clinicId ? parseInt(clinicId, 10) : null;
   };
 
-  // ────────────────────────────────────────────────
-  // Helper functions
   const formatTimeFor24Hr = (time) => {
     if (!time) return '';
-    // Ensure format is HH:MM:SS
     const parts = time.split(':');
     if (parts.length === 2) {
       return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:00`;
@@ -61,7 +52,6 @@ const UpdateWorkShift = () => {
 
   const formatTimeForInput = (time) => {
     if (!time) return '';
-    // Convert HH:MM:SS to HH:MM for input[type="time"]
     const parts = time.split(':');
     if (parts.length >= 2) {
       return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
@@ -71,26 +61,15 @@ const UpdateWorkShift = () => {
 
   const calculateWorkingHours = (start, end) => {
     if (!start || !end) return null;
-    
     const [startHour, startMin] = start.split(':').map(Number);
     const [endHour, endMin] = end.split(':').map(Number);
-    
     let hours = endHour - startHour;
     let minutes = endMin - startMin;
-    
-    if (minutes < 0) {
-      hours -= 1;
-      minutes += 60;
-    }
-    
-    if (hours < 0) {
-      hours += 24;
-    }
-    
+    if (minutes < 0) { hours -= 1; minutes += 60; }
+    if (hours < 0) { hours += 24; }
     return hours + (minutes / 60);
   };
 
-  // ────────────────────────────────────────────────
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -131,27 +110,21 @@ const UpdateWorkShift = () => {
     }
   }, [shiftId]);
 
-  // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-      
-      // Auto-calculate working hours when both times are set
       if (name === 'timeStart' || name === 'timeEnd') {
         if (updated.timeStart && updated.timeEnd) {
           const hours = calculateWorkingHours(updated.timeStart, updated.timeEnd);
           updated.workingHours = hours !== null ? hours.toFixed(2) : '';
         }
       }
-      
       return updated;
     });
   };
 
-  const handleBack = () => {
-    navigate('/work-shift');
-  };
+  const handleClose = () => navigate('/work-shift');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -190,140 +163,133 @@ const UpdateWorkShift = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  if (error && error?.status >= 400) {
-    return <ErrorHandler error={error} />;
-  }
-
-  if (loading) {
-    return <div className={styles.loading}>Loading work shift data...</div>;
-  }
+  if (error && error?.status >= 400) return <ErrorHandler error={error} />;
+  if (loading) return <div className={styles.clinicLoading}>Loading work shift data...</div>;
 
   if (error) {
     return (
-      <div className={styles.shiftWrapper}>
+      <div className={styles.clinicListWrapper}>
         <Header title="Update Work Shift" />
-        <div className={styles.error}>Error: {error.message || error}</div>
-        <button onClick={handleBack} className={styles.backBtn}>
-          <FiArrowLeft /> Back to List
-        </button>
+        <div className={styles.clinicError}>
+          {error.message || 'No shift ID provided'}
+        </div>
       </div>
     );
   }
 
-  if (!shiftData) {
-    return (
-      <div className={styles.shiftWrapper}>
-        <Header title="Update Work Shift" />
-        <div className={styles.error}>Work shift not found</div>
-        <button onClick={handleBack} className={styles.backBtn}>
-          <FiArrowLeft /> Back to List
-        </button>
-      </div>
-    );
-  }
-
-  // ────────────────────────────────────────────────
   return (
-    <div className={styles.shiftWrapper}>
+    <div className={styles.clinicListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Update Work Shift" />
 
-      <div className={styles.shiftToolbar}>
-        <button onClick={handleBack} className={styles.backBtn}>
-          <FiArrowLeft style={{ marginRight: '8px' }} />
-          Back to List
-        </button>
-      </div>
+      <div className={styles.detailModalOverlay} onClick={handleClose}>
+        <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
 
-      <div className={`${styles.tableContainer} ${styles.updateContainer}`} style={{ padding: '20px', borderRadius: '17px' }}>
-        <div className={`${styles.modal} ${styles.updateForm}`} style={{ maxWidth: 'none', width: '100%', maxHeight: 'none' }}>
-          <div className={`${styles.modalHeader} ${styles.updateHeader}`}>
-            <h2>Update Work Shift: {formData.shiftName}</h2>
+          <div className={styles.detailModalHeader}>
+            <div className={styles.detailHeaderContent}>
+              <h2>Update Work Shift</h2>
+              <div className={styles.detailHeaderMeta}>
+                <span className={styles.workIdBadge}>
+                  {formData.shiftName || 'Shift'}
+                </span>
+                <span
+                  className={`${styles.workIdBadge} ${
+                    formData.status === 1 ? styles.activeBadge : styles.inactiveBadge
+                  }`}
+                >
+                  {formData.status === 1 ? 'ACTIVE' : 'INACTIVE'}
+                </span>
+              </div>
+            </div>
+            <button onClick={handleClose} className={styles.detailCloseBtn}>✕</button>
           </div>
 
-          <form onSubmit={handleSubmit} className={styles.modalBody}>
+          <form onSubmit={handleSubmit} className={styles.addModalBody}>
             {formError && <div className={styles.formError}>{formError}</div>}
             {formSuccess && <div className={styles.formSuccess}>Work shift updated successfully!</div>}
 
-            <div className={styles.formGrid}>
-              <h3 className={styles.formSectionTitle}>Shift Information</h3>
-
-              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>
-                  Shift Name <span className="required">*</span>
-                </label>
-                <input
-                  required
-                  name="shiftName"
-                  value={formData.shiftName}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Morning Shift, Night Shift"
-                />
+            <div className={styles.addSection}>
+              <div className={styles.addSectionHeader}>
+                <h3>Shift Information</h3>
               </div>
 
-              <div className={styles.formGroup}>
-                <label>
-                  Start Time <span className="required">*</span>
-                </label>
-                <input
-                  required
-                  type="time"
-                  name="timeStart"
-                  value={formData.timeStart}
-                  onChange={handleInputChange}
-                />
-              </div>
+              <div className={styles.addFormGrid}>
 
-              <div className={styles.formGroup}>
-                <label>
-                  End Time <span className="required">*</span>
-                </label>
-                <input
-                  required
-                  type="time"
-                  name="timeEnd"
-                  value={formData.timeEnd}
-                  onChange={handleInputChange}
-                />
-              </div>
+                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                  <label>Shift Name <span className={styles.required}>*</span></label>
+                  <input
+                    required
+                    name="shiftName"
+                    value={formData.shiftName}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Morning Shift, Night Shift"
+                  />
+                </div>
 
-              <div className={styles.formGroup}>
-                <label>Working Hours</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  name="workingHours"
-                  value={formData.workingHours}
-                  onChange={handleInputChange}
-                  placeholder="Auto-calculated from times"
-                />
-              </div>
+                <div className={styles.addFormGroup}>
+                  <label>Start Time <span className={styles.required}>*</span></label>
+                  <input
+                    required
+                    type="time"
+                    name="timeStart"
+                    value={formData.timeStart}
+                    onChange={handleInputChange}
+                  />
+                </div>
 
-              <div className={styles.formGroup}>
-                <label>
-                  Status <span className="required">*</span>
-                </label>
-                <select required name="status" value={formData.status} onChange={handleInputChange}>
-                  {STATUS_OPTIONS.map((status) => (
-                    <option key={status.id} value={status.id}>
-                      {status.label}
-                    </option>
-                  ))}
-                </select>
+                <div className={styles.addFormGroup}>
+                  <label>End Time <span className={styles.required}>*</span></label>
+                  <input
+                    required
+                    type="time"
+                    name="timeEnd"
+                    value={formData.timeEnd}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className={styles.addFormGroup}>
+                  <label>Working Hours</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="workingHours"
+                    value={formData.workingHours}
+                    onChange={handleInputChange}
+                    placeholder="Auto-calculated from times"
+                  />
+                </div>
+
+                <div className={styles.addFormGroup}>
+                  <label>Status <span className={styles.required}>*</span></label>
+                  <select
+                    required
+                    name="status"
+                    value={formData.status}
+                    onChange={handleInputChange}
+                  >
+                    {STATUS_OPTIONS.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
               </div>
             </div>
 
-            <div className={`${styles.modalFooter} ${styles.updateFooter}`}>
-              <button type="button" onClick={handleBack} className={styles.btnCancel}>
+            <div className={styles.detailModalFooter}>
+              <button type="button" onClick={handleClose} className={styles.btnCancel}>
                 Cancel
               </button>
               <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
-                <FiSave className={styles.btnIcon} style={{ marginRight: '6px' }} />
+                <FiSave style={{ marginRight: '8px' }} />
                 {formLoading ? 'Updating...' : 'Update Shift'}
               </button>
             </div>
           </form>
+
         </div>
       </div>
     </div>

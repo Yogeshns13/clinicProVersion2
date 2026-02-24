@@ -245,7 +245,7 @@
   gap: 6px;
   height: 40px;
   padding: 0 18px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: var(--text-light);
   font-weight: 700;
   font-size: 0.85rem;

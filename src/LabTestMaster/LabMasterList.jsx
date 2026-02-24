@@ -1,4 +1,4 @@
-// src/components/LabMasterList.jsx
+// src/components/LabTestMasterList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -147,6 +147,15 @@ const PACKAGE_STATUS_OPTIONS = [
   { id: 2, label: 'Inactive' },
 ];
 
+// ── Search type options for each tab ──
+const MASTER_SEARCH_TYPE_OPTIONS = [
+  { value: 'testName', label: 'Test Name' },
+];
+
+const PACKAGE_SEARCH_TYPE_OPTIONS = [
+  { value: 'packName', label: 'Package Name' },
+];
+
 // ────────────────────────────────────────────────
 const LabMasterList = () => {
   const navigate = useNavigate();
@@ -176,20 +185,22 @@ const LabMasterList = () => {
 
   // ── Master filter inputs (not applied until Search) ──
   const [masterFilterInputs, setMasterFilterInputs] = useState({
-    searchValue: '',
-    testType: '',
-    status: '',
-    dateFrom: today,
-    dateTo: today
-  });
-
-  // ── Master applied filters (drive fetch + client filter) ──
-  const [masterAppliedFilters, setMasterAppliedFilters] = useState({
+    searchType: 'testName',
     searchValue: '',
     testType: '',
     status: '',
     dateFrom: '',
-    dateTo: ''
+    dateTo: '',
+  });
+
+  // ── Master applied filters (drive fetch + client filter) ──
+  const [masterAppliedFilters, setMasterAppliedFilters] = useState({
+    searchType: 'testName',
+    searchValue: '',
+    testType: '',
+    status: '',
+    dateFrom: '',
+    dateTo: '',
   });
 
   // ===== LAB TEST PACKAGE DATA =====
@@ -208,18 +219,20 @@ const LabMasterList = () => {
 
   // ── Package filter inputs ──
   const [packageFilterInputs, setPackageFilterInputs] = useState({
+    searchType: 'packName',
     searchValue: '',
     status: '',
-    dateFrom: today,
-    dateTo: today
+    dateFrom: '',
+    dateTo: '',
   });
 
   // ── Package applied filters ──
   const [packageAppliedFilters, setPackageAppliedFilters] = useState({
+    searchType: 'packName',
     searchValue: '',
     status: '',
     dateFrom: '',
-    dateTo: ''
+    dateTo: '',
   });
 
   // ===== PACKAGE ITEMS DATA =====
@@ -421,8 +434,8 @@ const LabMasterList = () => {
   };
 
   const handleMasterClear = () => {
-    const empty = { searchValue: '', testType: '', status: '', dateFrom: '', dateTo: '' };
-    setMasterFilterInputs({ ...empty, dateFrom: today, dateTo: today });
+    const empty = { searchType: 'testName', searchValue: '', testType: '', status: '', dateFrom: '', dateTo: '' };
+    setMasterFilterInputs(empty);
     setMasterAppliedFilters(empty);
     fetchTests(empty);
   };
@@ -442,8 +455,8 @@ const LabMasterList = () => {
   };
 
   const handlePackageClear = () => {
-    const empty = { searchValue: '', status: '', dateFrom: '', dateTo: '' };
-    setPackageFilterInputs({ ...empty, dateFrom: today, dateTo: today });
+    const empty = { searchType: 'packName', searchValue: '', status: '', dateFrom: '', dateTo: '' };
+    setPackageFilterInputs(empty);
     setPackageAppliedFilters(empty);
     fetchPackages(empty);
   };
@@ -825,16 +838,28 @@ const LabMasterList = () => {
           <div className={styles.filtersContainer}>
             <div className={styles.masterFiltersGrid}>
 
-              {/* Test Name search */}
-              <div className={styles.filterGroup}>
+              {/* Fused search type + value */}
+              <div className={styles.searchGroup}>
+                <select
+                  name="searchType"
+                  value={masterFilterInputs.searchType}
+                  onChange={handleMasterFilterChange}
+                  className={styles.searchTypeSelect}
+                >
+                  {MASTER_SEARCH_TYPE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
                 <input
                   type="text"
                   name="searchValue"
-                  placeholder="Search by test name..."
+                  placeholder={`Search by ${
+                    MASTER_SEARCH_TYPE_OPTIONS.find(o => o.value === masterFilterInputs.searchType)?.label || ''
+                  }`}
                   value={masterFilterInputs.searchValue}
                   onChange={handleMasterFilterChange}
                   onKeyDown={(e) => e.key === 'Enter' && handleMasterSearch()}
-                  className={styles.filterInput}
+                  className={styles.searchInput}
                 />
               </div>
 
@@ -868,32 +893,34 @@ const LabMasterList = () => {
                 </select>
               </div>
 
-              {/* Date From */}
+              {/* Date From — VendorList overlay-placeholder style */}
               <div className={styles.filterGroup}>
-                <div className={styles.dateInputWrapper}>
-                  <span className={styles.datePrefix}>From</span>
+                <div className={styles.dateWrapper}>
+                  {!masterFilterInputs.dateFrom && (
+                    <span className={styles.datePlaceholder}>From Date</span>
+                  )}
                   <input
                     type="date"
                     name="dateFrom"
                     value={masterFilterInputs.dateFrom}
                     onChange={handleMasterFilterChange}
-                    className={`${styles.filterInput} ${styles.dateInput}`}
-                    max={today}
+                    className={`${styles.filterInput} ${!masterFilterInputs.dateFrom ? styles.dateEmpty : ''}`}
                   />
                 </div>
               </div>
 
-              {/* Date To */}
+              {/* Date To — VendorList overlay-placeholder style */}
               <div className={styles.filterGroup}>
-                <div className={styles.dateInputWrapper}>
-                  <span className={styles.datePrefix}>To</span>
+                <div className={styles.dateWrapper}>
+                  {!masterFilterInputs.dateTo && (
+                    <span className={styles.datePlaceholder}>To Date</span>
+                  )}
                   <input
                     type="date"
                     name="dateTo"
                     value={masterFilterInputs.dateTo}
                     onChange={handleMasterFilterChange}
-                    className={`${styles.filterInput} ${styles.dateInput}`}
-                    max={today}
+                    className={`${styles.filterInput} ${!masterFilterInputs.dateTo ? styles.dateEmpty : ''}`}
                   />
                 </div>
               </div>
@@ -990,16 +1017,28 @@ const LabMasterList = () => {
           <div className={styles.filtersContainer}>
             <div className={styles.packageFiltersGrid}>
 
-              {/* Package Name search */}
-              <div className={styles.filterGroup}>
+              {/* Fused search type + value */}
+              <div className={styles.searchGroup}>
+                <select
+                  name="searchType"
+                  value={packageFilterInputs.searchType}
+                  onChange={handlePackageFilterChange}
+                  className={styles.searchTypeSelect}
+                >
+                  {PACKAGE_SEARCH_TYPE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
                 <input
                   type="text"
                   name="searchValue"
-                  placeholder="Search by package name..."
+                  placeholder={`Search by ${
+                    PACKAGE_SEARCH_TYPE_OPTIONS.find(o => o.value === packageFilterInputs.searchType)?.label || ''
+                  }`}
                   value={packageFilterInputs.searchValue}
                   onChange={handlePackageFilterChange}
                   onKeyDown={(e) => e.key === 'Enter' && handlePackageSearch()}
-                  className={styles.filterInput}
+                  className={styles.searchInput}
                 />
               </div>
 
@@ -1018,32 +1057,34 @@ const LabMasterList = () => {
                 </select>
               </div>
 
-              {/* Date From */}
+              {/* Date From — VendorList overlay-placeholder style */}
               <div className={styles.filterGroup}>
-                <div className={styles.dateInputWrapper}>
-                  <span className={styles.datePrefix}>From</span>
+                <div className={styles.dateWrapper}>
+                  {!packageFilterInputs.dateFrom && (
+                    <span className={styles.datePlaceholder}>From Date</span>
+                  )}
                   <input
                     type="date"
                     name="dateFrom"
                     value={packageFilterInputs.dateFrom}
                     onChange={handlePackageFilterChange}
-                    className={`${styles.filterInput} ${styles.dateInput}`}
-                    max={today}
+                    className={`${styles.filterInput} ${!packageFilterInputs.dateFrom ? styles.dateEmpty : ''}`}
                   />
                 </div>
               </div>
 
-              {/* Date To */}
+              {/* Date To — VendorList overlay-placeholder style */}
               <div className={styles.filterGroup}>
-                <div className={styles.dateInputWrapper}>
-                  <span className={styles.datePrefix}>To</span>
+                <div className={styles.dateWrapper}>
+                  {!packageFilterInputs.dateTo && (
+                    <span className={styles.datePlaceholder}>To Date</span>
+                  )}
                   <input
                     type="date"
                     name="dateTo"
                     value={packageFilterInputs.dateTo}
                     onChange={handlePackageFilterChange}
-                    className={`${styles.filterInput} ${styles.dateInput}`}
-                    max={today}
+                    className={`${styles.filterInput} ${!packageFilterInputs.dateTo ? styles.dateEmpty : ''}`}
                   />
                 </div>
               </div>

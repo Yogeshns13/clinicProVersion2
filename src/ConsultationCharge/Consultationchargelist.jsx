@@ -328,7 +328,6 @@ const ConsultationChargeList = () => {
           {/* Date From */}
           <div className={styles.filterGroup}>
             <div className={styles.dateInputWrapper}>
-              <span className={styles.datePrefix}>From</span>
               <input
                 type="date"
                 name="dateFrom"
@@ -343,7 +342,6 @@ const ConsultationChargeList = () => {
           {/* Date To */}
           <div className={styles.filterGroup}>
             <div className={styles.dateInputWrapper}>
-              <span className={styles.datePrefix}>To</span>
               <input
                 type="date"
                 name="dateTo"

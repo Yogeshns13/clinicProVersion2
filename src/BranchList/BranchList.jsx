@@ -1,11 +1,10 @@
 // src/components/BranchList.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FiSearch,
   FiPlus,
   FiX,
-  FiHome,
 } from 'react-icons/fi';
 import { 
   getBranchList, 
@@ -18,7 +17,6 @@ import Header from '../Header/Header.jsx';
 import styles from './BranchList.module.css';
 
 const getLiveValidationMessage = (fieldName, value) => {
-  // Returns validation message while typing (empty string = valid)
   switch (fieldName) {
     case 'branchName':
       if (!value || !value.trim()) return 'Branch name is required';
@@ -30,7 +28,7 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (value && value.length > 500) return 'Address must not exceed 500 characters';
       return '';
 
-     case 'latitude':
+    case 'latitude':
       if (value === '') return '';
       const lat = Number(value);
       if (isNaN(lat)) return 'Please enter a valid number';
@@ -50,17 +48,15 @@ const getLiveValidationMessage = (fieldName, value) => {
 };
 
 const filterInput = (fieldName, value) => {
-  // Returns filtered value based on field type
   switch (fieldName) {
     case 'branchName':
-       return value.replace(/[^a-zA-Z\s]/g, '');
-case 'latitude':
-case 'longitude':
-  return value
-    .replace(/[^0-9.-]/g, '')
-    .replace(/(\..*)\./g, '$1')
-    .replace(/(?!^)-/g, '');
-    
+      return value.replace(/[^a-zA-Z\s]/g, '');
+    case 'latitude':
+    case 'longitude':
+      return value
+        .replace(/[^0-9.-]/g, '')
+        .replace(/(\..*)\./g, '$1')
+        .replace(/(?!^)-/g, '');
     default:
       return value;
   }
@@ -78,37 +74,56 @@ const BRANCH_TYPES = [
   { id: 6, label: 'Research Center' },
 ];
 
+const SEARCH_TYPE_OPTIONS = [
+  { value: 'branchName', label: 'Branch Name' },
+  { value: 'location',   label: 'Location' },
+];
+
+const DEFAULT_FILTERS = {
+  searchType: 'branchName',
+  searchValue: '',
+  clinicId:   'all',
+  branchType: '0',
+  status:     '-1',
+};
+
 // ────────────────────────────────────────────────
 const BranchList = () => {
   const navigate = useNavigate();
 
-  
   const [branches, setBranches] = useState([]);
-  const [allBranches, setAllBranches] = useState([]);
-  const [clinics, setClinics] = useState([]);
-  const [selectedClinicId, setSelectedClinicId] = useState('all');
-  const [searchInput, setSearchInput] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [clinics, setClinics]   = useState([]);
+
+  const [filterInputs, setFilterInputs]   = useState({ ...DEFAULT_FILTERS });
+  const [appliedFilters, setAppliedFilters] = useState({ ...DEFAULT_FILTERS });
+
   const [selectedBranch, setSelectedBranch] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-const [formData, setFormData] = useState({
-  clinicId: '',
-  branchName: '',
-  address: '',
-  location: '',
-  latitude: '',
-  longitude: '',
-  branchType: 1,
-});
-  const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState('');
-  const [formSuccess, setFormSuccess] = useState(false);
+  const [loading, setLoading]               = useState(true);
+  const [error, setError]                   = useState(null);
+  const [isAddFormOpen, setIsAddFormOpen]   = useState(false);
+
+  const [formData, setFormData] = useState({
+    clinicId:   '',
+    branchName: '',
+    address:    '',
+    location:   '',
+    latitude:   '',
+    longitude:  '',
+    branchType: 1,
+  });
+
+  const [formLoading, setFormLoading]             = useState(false);
+  const [formError, setFormError]                 = useState('');
+  const [formSuccess, setFormSuccess]             = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
 
+  const hasActiveFilters =
+    appliedFilters.searchValue.trim() !== '' ||
+    appliedFilters.clinicId    !== 'all'     ||
+    appliedFilters.branchType  !== '0'       ||
+    appliedFilters.status      !== '-1';
+
   // ────────────────────────────────────────────────
-  // Data fetching with cache
   useEffect(() => {
     const fetchClinics = async () => {
       try {
@@ -122,47 +137,36 @@ const [formData, setFormData] = useState({
   }, []);
 
   useEffect(() => {
-    const fetchBranches = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const clinicId = selectedClinicId === 'all' ? 0 : Number(selectedClinicId) || 0;
-        const data = await getBranchList(clinicId);
-        
-        setBranches(data);
-        setAllBranches(data);
-      } catch (err) {
-        console.error('fetchBranches error:', err);
-        setError(
-          err?.status >= 400 || err?.code >= 400
-            ? err
-            : { message: err.message || 'Failed to load branches' }
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBranches();
-  }, [selectedClinicId]);
+    fetchBranches(appliedFilters);
+  }, [appliedFilters]);
 
-  // ────────────────────────────────────────────────
-  // Computed values
-  const filteredBranches = useMemo(() => {
-    if (!searchTerm.trim()) return allBranches;
-    const term = searchTerm.toLowerCase();
-    return allBranches.filter(
-      (branch) =>
-        branch.name?.toLowerCase().includes(term) ||
-        branch.clinicName?.toLowerCase().includes(term) ||
-        branch.location?.toLowerCase().includes(term) ||
-        branch.address?.toLowerCase().includes(term) ||
-        BRANCH_TYPES.find((t) => t.id === branch.branchType)?.label.toLowerCase().includes(term)
-    );
-  }, [allBranches, searchTerm]);
+  const fetchBranches = async (filters) => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  // ────────────────────────────────────────────────
-  // Helper functions
+      const clinicId = filters.clinicId === 'all' ? 0 : Number(filters.clinicId) || 0;
+      const options = {
+        BranchName: filters.searchType === 'branchName' ? filters.searchValue : '',
+        Location:   filters.searchType === 'location'   ? filters.searchValue : '',
+        BranchType: filters.branchType !== '0' ? Number(filters.branchType) : 0,
+        Status:     filters.status !== '' ? Number(filters.status) : -1,
+      };
+
+      const data = await getBranchList(clinicId, options);
+      setBranches(data);
+    } catch (err) {
+      console.error('fetchBranches error:', err);
+      setError(
+        err?.status >= 400 || err?.code >= 400
+          ? err
+          : { message: err.message || 'Failed to load branches' }
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getBranchTypeLabel = (branchTypeId) => {
     return BRANCH_TYPES.find((t) => t.id === branchTypeId)?.label || 'Main';
   };
@@ -173,31 +177,31 @@ const [formData, setFormData] = useState({
     return styles.inactive;
   };
 
-  // ────────────────────────────────────────────────
-  // Handlers
-  const handleSearch = () => setSearchTerm(searchInput.trim());
-  
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') handleSearch();
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
-  const openDetails = (branch) => setSelectedBranch(branch);
-  
-  const closeModal = () => setSelectedBranch(null);
+  const handleSearch = () => {
+    setAppliedFilters({ ...filterInputs });
+  };
+
+  const handleClearFilters = () => {
+    setFilterInputs({ ...DEFAULT_FILTERS });
+    setAppliedFilters({ ...DEFAULT_FILTERS });
+  };
+
+  const openDetails  = (branch) => setSelectedBranch(branch);
+  const closeModal   = () => setSelectedBranch(null);
 
   const openAddForm = () => {
-setFormData({
-  clinicId: '',
-  branchName: '',
-  address: '',
-  location: '',
-  latitude: '',
-  longitude: '',
-  branchType: 1,
-});
+    setFormData({
+      clinicId: '', branchName: '', address: '',
+      location: '', latitude: '', longitude: '', branchType: 1,
+    });
     setFormError('');
     setFormSuccess(false);
-    setValidationMessages({}); 
+    setValidationMessages({});
     setIsAddFormOpen(true);
   };
 
@@ -206,36 +210,29 @@ setFormData({
     setFormLoading(false);
     setFormError('');
     setFormSuccess(false);
-    setValidationMessages({}); 
+    setValidationMessages({});
   };
 
-const handleInputChange = (e) => {
-  const { name, value } = e.target;
-  const filteredValue = filterInput(name, value);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    const filteredValue = filterInput(name, value);
 
-  if (name === 'latitude' || name === 'longitude') {
-    setFormData((prev) => {
-      const updated = { ...prev, [name]: filteredValue };
+    if (name === 'latitude' || name === 'longitude') {
+      setFormData((prev) => {
+        const updated = { ...prev, [name]: filteredValue };
+        const lat = name === 'latitude'  ? filteredValue : (prev.latitude  || '');
+        const lng = name === 'longitude' ? filteredValue : (prev.longitude || '');
+        updated.location = [lat.trim(), lng.trim()].filter(Boolean).join(',');
+        return updated;
+      });
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+    }
 
-      const lat = name === 'latitude' ? filteredValue : (prev.latitude || '');
-      const lng = name === 'longitude' ? filteredValue : (prev.longitude || '');
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({ ...prev, [name]: validationMessage }));
+  };
 
-      updated.location = [lat.trim(), lng.trim()]
-        .filter(Boolean)
-        .join(',');
-
-      return updated;
-    });
-  } else {
-    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
-  }
-
-  const validationMessage = getLiveValidationMessage(name, filteredValue);
-  setValidationMessages((prev) => ({
-    ...prev,
-    [name]: validationMessage,
-  }));
-};
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
@@ -245,24 +242,18 @@ const handleInputChange = (e) => {
 
     try {
       await addBranch({
-        clinicId: Number(formData.clinicId),
+        clinicId:   Number(formData.clinicId),
         branchName: formData.branchName.trim(),
-        address: formData.address.trim(),
-        location: formData.location.trim(),
+        address:    formData.address.trim(),
+        location:   formData.location.trim(),
         branchType: Number(formData.branchType),
       });
 
-      // Clear cache after successful add
       clearCacheByType('GetBranchList');
-
       setFormSuccess(true);
-      setTimeout(async () => {
+      setTimeout(() => {
         closeAddForm();
-        const clinicId = selectedClinicId === 'all' ? 0 : Number(selectedClinicId) || 0;
-        // Force refresh to get updated data
-        const data = await getBranchList(clinicId, {}, true);
-        setBranches(data);
-        setAllBranches(data);
+        fetchBranches(appliedFilters);
       }, 1500);
     } catch (err) {
       console.error('Add branch failed:', err);
@@ -276,64 +267,112 @@ const handleInputChange = (e) => {
     navigate(`/update-branch/${branch.id}`);
   };
 
-  // ────────────────────────────────────────────────
-  // Early returns
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.loading}>Loading branches...</div>;
+  if (loading) return <div className={styles.clinicLoading}>Loading branches...</div>;
 
-  if (error) return <div className={styles.error}>Error: {error.message || error}</div>;
+  if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
-  // ────────────────────────────────────────────────
+  const hasActiveSearch = hasActiveFilters;
+
   return (
-    <div className={styles.wrapper}>
+    <div className={styles.clinicListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Branch Management" />
 
-      {/* Toolbar */}
-      <div className={styles.toolbar}>
-        <div className={styles.selectWrapper}>
-          <FiHome className={styles.selectIcon} size={20} />
-          <select
-            value={selectedClinicId}
-            onChange={(e) => setSelectedClinicId(e.target.value)}
-            className={styles.select}
-          >
-            <option value="all">All Clinics</option>
-            {clinics.map((clinic) => (
-              <option key={clinic.id} value={clinic.id}>
-                {clinic.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* Filters */}
+      <div className={styles.filtersContainer}>
+        <div className={styles.filtersGrid}>
 
-        <div className={styles.searchContainer}>
-          <input
-            type="text"
-            placeholder="Search by branch name, clinic, location..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className={styles.searchInput}
-          />
-          <button onClick={handleSearch} className={styles.searchBtn}>
-            <FiSearch size={20} />
-          </button>
-        </div>
+          <div className={styles.searchGroup}>
+            <select
+              name="searchType"
+              value={filterInputs.searchType}
+              onChange={handleFilterChange}
+              className={styles.searchTypeSelect}
+            >
+              {SEARCH_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
 
-        <div className={styles.addSection}>
-          <button onClick={openAddForm} className={styles.addBtn}>
-            <FiPlus size={22} />Add Branch
-          </button>
+            <input
+              type="text"
+              name="searchValue"
+              placeholder={`Search by ${SEARCH_TYPE_OPTIONS.find(o => o.value === filterInputs.searchType)?.label || ''}`}
+              value={filterInputs.searchValue}
+              onChange={handleFilterChange}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              className={styles.searchInput}
+            />
+          </div>
+
+          <div className={styles.filterGroup}>
+            <select
+              name="clinicId"
+              value={filterInputs.clinicId}
+              onChange={handleFilterChange}
+              className={styles.statusFilterSelect}
+            >
+              <option value="all">All Clinics</option>
+              {clinics.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <select
+              name="branchType"
+              value={filterInputs.branchType}
+              onChange={handleFilterChange}
+              className={styles.statusFilterSelect}
+            >
+              <option value="0">All Types</option>
+              {BRANCH_TYPES.map((t) => (
+                <option key={t.id} value={t.id}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <select
+              name="status"
+              value={filterInputs.status}
+              onChange={handleFilterChange}
+              className={styles.statusFilterSelect}
+            >
+              <option value="-1">All Status</option>
+              <option value="1">Active</option>
+              <option value="2">Inactive</option>
+            </select>
+          </div>
+
+          <div className={styles.filterActions}>
+            <button onClick={handleSearch} className={styles.searchButton}>
+              <FiSearch size={18} /> Search
+            </button>
+
+            {hasActiveFilters && (
+              <button onClick={handleClearFilters} className={styles.clearButton}>
+                <FiX size={18} /> Clear
+              </button>
+            )}
+
+            <button onClick={openAddForm} className={styles.addClinicBtn}>
+              <FiPlus size={18} /> Add Branch
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
+      <div className={styles.clinicTableContainer}>
+        <table className={styles.clinicTable}>
           <thead>
             <tr>
               <th>Branch Name</th>
@@ -345,23 +384,23 @@ const handleInputChange = (e) => {
             </tr>
           </thead>
           <tbody>
-            {filteredBranches.length === 0 ? (
+            {branches.length === 0 ? (
               <tr>
-                <td colSpan={6} className={styles.noData}>
-                  {searchTerm ? 'No branches found.' : 'No branches registered yet.'}
+                <td colSpan={6} className={styles.clinicNoData}>
+                  {hasActiveSearch ? 'No branches found.' : 'No branches registered yet.'}
                 </td>
               </tr>
             ) : (
-              filteredBranches.map((branch) => (
+              branches.map((branch) => (
                 <tr key={branch.id}>
                   <td>
-                    <div className={styles.nameCell}>
-                      <div className={styles.avatar}>
+                    <div className={styles.clinicNameCell}>
+                      <div className={styles.clinicAvatar}>
                         {branch.name?.charAt(0).toUpperCase() || 'B'}
                       </div>
                       <div>
-                        <div className={styles.name}>{branch.name}</div>
-                        <div className={styles.type}>
+                        <div className={styles.clinicName}>{branch.name}</div>
+                        <div className={styles.clinicType}>
                           {getBranchTypeLabel(branch.branchType)}
                         </div>
                       </div>
@@ -369,7 +408,7 @@ const handleInputChange = (e) => {
                   </td>
                   <td>{branch.clinicName || '—'}</td>
                   <td>
-                    <span className={styles.branchTypeBadge}>
+                    <span className={styles.statusBadge}>
                       {getBranchTypeLabel(branch.branchType)}
                     </span>
                   </td>
@@ -380,7 +419,7 @@ const handleInputChange = (e) => {
                     </span>
                   </td>
                   <td>
-                    <button onClick={() => openDetails(branch)} className={styles.detailsBtn}>
+                    <button onClick={() => openDetails(branch)} className={styles.clinicDetailsBtn}>
                       View Details
                     </button>
                   </td>
@@ -393,59 +432,61 @@ const handleInputChange = (e) => {
 
       {/* ──────────────── Details Modal ──────────────── */}
       {selectedBranch && (
-        <div className={styles.modalOverlay} onClick={closeModal}>
-          <div className={`${styles.modal} ${styles.detailsModal}`} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.detailsModalHeader}>
-              <div className={styles.detailsHeaderContent}>
-                <div className={styles.avatarLarge}>
-                  {selectedBranch.name?.charAt(0).toUpperCase() || 'B'}
-                </div>
-                <div>
-                  <h2>{selectedBranch.name}</h2>
-                  <p className={styles.subtitle}>
+        <div className={styles.detailModalOverlay} onClick={closeModal}>
+          <div className={styles.detailModalContent} onClick={e => e.stopPropagation()}>
+
+            <div className={styles.detailModalHeader}>
+              <div className={styles.detailHeaderContent}>
+                <h2>{selectedBranch.name}</h2>
+                <div className={styles.detailHeaderMeta}>
+                  <span className={styles.workIdBadge}>
                     {getBranchTypeLabel(selectedBranch.branchType)}
-                  </p>
+                  </span>
+                  <span className={`${styles.workIdBadge} ${selectedBranch.status === 'active' ? styles.activeBadge : styles.inactiveBadge}`}>
+                    {selectedBranch.status?.toUpperCase()}
+                  </span>
                 </div>
               </div>
-              <div className={styles.statusBadgeLargeWrapper}>
-                <span className={`${styles.statusBadge} ${styles.large} ${getStatusClass(selectedBranch.status)}`}>
-                  {selectedBranch.status.toUpperCase()}
-                </span>
+              <button onClick={closeModal} className={styles.detailCloseBtn}>✕</button>
+            </div>
+
+            <div className={styles.detailModalBody}>
+              <div className={styles.infoSection}>
+                <div className={styles.infoCard}>
+                  <div className={styles.infoHeader}>
+                    <h3>Branch Information</h3>
+                  </div>
+                  <div className={styles.infoContent}>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Clinic</span>
+                      <span className={styles.infoValue}>{selectedBranch.clinicName || '—'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Branch Type</span>
+                      <span className={styles.infoValue}>
+                        {getBranchTypeLabel(selectedBranch.branchType)}
+                      </span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Full Address</span>
+                      <span className={styles.infoValue}>{selectedBranch.address || '—'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Location</span>
+                      <span className={styles.infoValue}>{selectedBranch.location || '—'}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <button onClick={closeModal} className={styles.modalClose}>
-                ×
-              </button>
-            </div>
 
-            <div className={styles.detailsModalBody}>
-              <table className={styles.detailsTable}>
-                <tbody>
-                  <tr>
-                    <td className={styles.label}>Clinic</td>
-                    <td className={styles.value}>{selectedBranch.clinicName || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Branch Type</td>
-                    <td className={styles.value}>
-                      {getBranchTypeLabel(selectedBranch.branchType)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Full Address</td>
-                    <td className={styles.value}>{selectedBranch.address || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Location</td>
-                    <td className={styles.value}>{selectedBranch.location || '—'}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className={styles.modalFooter}>
-              <button onClick={() => handleUpdateClick(selectedBranch)} className={styles.btnUpdate}>
-                Update Branch
-              </button>
+              <div className={styles.detailModalFooter}>
+                <button onClick={closeModal} className={styles.btnCancel}>
+                  Close
+                </button>
+                <button onClick={() => handleUpdateClick(selectedBranch)} className={styles.btnUpdate}>
+                  Update Branch
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -453,160 +494,133 @@ const handleInputChange = (e) => {
 
       {/* ──────────────── Add Form Modal ──────────────── */}
       {isAddFormOpen && (
-        <div className={styles.modalOverlay} onClick={closeAddForm}>
-          <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2>Add New Branch</h2>
-              <button onClick={closeAddForm} className={styles.modalClose}>
-                <FiX />
-              </button>
+        <div className={styles.detailModalOverlay} onClick={closeAddForm}>
+          <div className={styles.addModalContent} onClick={e => e.stopPropagation()}>
+
+            <div className={styles.detailModalHeader}>
+              <div className={styles.detailHeaderContent}>
+                <h2>Add New Branch</h2>
+                <div className={styles.detailHeaderMeta}>
+                  <span className={styles.workIdBadge}>Basic Information</span>
+                </div>
+              </div>
+              <button onClick={closeAddForm} className={styles.detailCloseBtn}>✕</button>
             </div>
 
-            <form onSubmit={handleSubmit} className={styles.modalBody}>
+            <form onSubmit={handleSubmit} className={styles.addModalBody}>
               {formError && <div className={styles.formError}>{formError}</div>}
               {formSuccess && <div className={styles.formSuccess}>Branch added successfully!</div>}
 
-              <div className={styles.formGrid}>
-                <h3 className={styles.formSectionTitle}>Branch Information</h3>
-
-                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                  <label>
-                    Clinic <span className={styles.required}>*</span>
-                  </label>
-                  <select
-                    required
-                    name="clinicId"
-                    value={formData.clinicId}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select Clinic</option>
-                    {clinics.map((clinic) => (
-                      <option key={clinic.id} value={clinic.id}>
-                        {clinic.name}
-                      </option>
-                    ))}
-                  </select>
+              <div className={styles.addSection}>
+                <div className={styles.addSectionHeader}>
+                  <h3>Branch Information</h3>
                 </div>
+                <div className={styles.addFormGrid}>
 
-                <div className={styles.formGroup}>
-                  <label>
-                    Branch Name <span className={styles.required}>*</span>
-                  </label>
-                  <input
-                    required
-                    name="branchName"
-                    value={formData.branchName}
-                    onChange={handleInputChange}
-                  />
-                  
-                  {validationMessages.branchName && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.branchName}
-                    </span>
-                  )}
+                  <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                    <label>Clinic <span className={styles.required}>*</span></label>
+                    <select
+                      required
+                      name="clinicId"
+                      value={formData.clinicId}
+                      onChange={handleInputChange}
+                    >
+                      <option value="">Select Clinic</option>
+                      {clinics.map((clinic) => (
+                        <option key={clinic.id} value={clinic.id}>
+                          {clinic.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className={styles.addFormGroup}>
+                    <label>Branch Name <span className={styles.required}>*</span></label>
+                    <input
+                      required
+                      name="branchName"
+                      value={formData.branchName}
+                      onChange={handleInputChange}
+                      placeholder="Enter branch name"
+                    />
+                    {validationMessages.branchName && (
+                      <span className={styles.validationMsg}>{validationMessages.branchName}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.addFormGroup}>
+                    <label>Branch Type <span className={styles.required}>*</span></label>
+                    <select
+                      required
+                      name="branchType"
+                      value={formData.branchType}
+                      onChange={handleInputChange}
+                    >
+                      {BRANCH_TYPES.map((type) => (
+                        <option key={type.id} value={type.id}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                    <label>Full Address</label>
+                    <textarea
+                      name="address"
+                      rows={2}
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      placeholder="Enter full address"
+                    />
+                    {validationMessages.address && (
+                      <span className={styles.validationMsg}>{validationMessages.address}</span>
+                    )}
+                  </div>
+
+                  <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                    <label>Location Coordinates (optional)</label>
+                    <div className={styles.coordRow}>
+                      <div className={styles.coordField}>
+                        <input
+                          type="number"
+                          step="any"
+                          min="-90"
+                          max="90"
+                          name="latitude"
+                          placeholder="Latitude"
+                          value={formData.latitude || ''}
+                          onChange={handleInputChange}
+                        />
+                        {validationMessages.latitude && (
+                          <span className={styles.validationMsg}>{validationMessages.latitude}</span>
+                        )}
+                      </div>
+                      <div className={styles.coordField}>
+                        <input
+                          type="number"
+                          step="any"
+                          min="-180"
+                          max="180"
+                          name="longitude"
+                          placeholder="Longitude"
+                          value={formData.longitude || ''}
+                          onChange={handleInputChange}
+                        />
+                        {validationMessages.longitude && (
+                          <span className={styles.validationMsg}>{validationMessages.longitude}</span>
+                        )}
+                      </div>
+                    </div>
+                    <small className={styles.coordHint}>
+                      Example: 9.9252, 78.1198 (Madurai city center)
+                    </small>
+                  </div>
+
                 </div>
-
-                <div className={styles.formGroup}>
-                  <label>
-                    Branch Type <span className={styles.required}>*</span>
-                  </label>
-                  <select
-                    required
-                    name="branchType"
-                    value={formData.branchType}
-                    onChange={handleInputChange}
-                  >
-                    {BRANCH_TYPES.map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                  <label>Full Address</label>
-                  <textarea
-                    name="address"
-                    rows={2}
-                    value={formData.address}
-                    onChange={handleInputChange}
-                  />
-                  
-                  {validationMessages.address && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.address}
-                    </span>
-                  )}
-                </div>
-
-<div className={`${styles.formGroup} ${styles.fullWidth}`}>
-  <label>Location Coordinates (optional)</label>
-  <div style={{
-    display: 'flex',
-    gap: '12px',
-    marginTop: '6px',
-    flexWrap: 'wrap'
-  }}>
-    <div style={{ flex: '1', minWidth: '140px' }}>
-      <input
-        type="number"
-        step="any"
-        min="-90"
-        max="90"
-        name="latitude"
-        placeholder="Latitude e.g. 9.9252"
-        value={formData.latitude || ''}
-        onChange={handleInputChange}
-      />
-      {validationMessages.latitude && (
-        <span style={{
-          color: '#4c4f55',
-          fontSize: '12px',
-          marginTop: '4px',
-          display: 'block'
-        }}>
-          {validationMessages.latitude}
-        </span>
-      )}
-    </div>
-
-    <div style={{ flex: '1', minWidth: '140px' }}>
-      <input
-        type="number"
-        step="any"
-        min="-180"
-        max="180"
-        name="longitude"
-        placeholder="Longitude e.g. 78.1198"
-        value={formData.longitude || ''}
-        onChange={handleInputChange}
-      />
-      {validationMessages.longitude && (
-        <span style={{
-          color: '#4c4f55',
-          fontSize: '12px',
-          marginTop: '4px',
-          display: 'block'
-        }}>
-          {validationMessages.longitude}
-        </span>
-      )}
-    </div>
-  </div>
-
-  <small style={{
-    fontSize: '12px',
-    color: '#6b7280',
-    marginTop: '6px',
-    display: 'block'
-  }}>
-    Example: 9.9252,78.1198 (Madurai city center)
-  </small>
-</div>
               </div>
 
-              <div className={styles.modalFooter}>
+              <div className={styles.detailModalFooter}>
                 <button type="button" onClick={closeAddForm} className={styles.btnCancel}>
                   Cancel
                 </button>

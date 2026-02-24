@@ -22,9 +22,7 @@ import EmployeeShift from "./EmployeeList/EmployeeShift.jsx";
 import WorkShift from "./WorkShiftList/WorkShift.jsx";
 import UpdateWorkShift from "./WorkShiftList/UpdateWorkShift.jsx";
 import PatientList from "./Patients/PatientList.jsx";
-import ViewPatient from "./Patients/ViewPatinet.jsx";
 import AddPatient from "./Patients/AddPatient.jsx";
-import UpdatePatient from "./Patients/UpdatePatient.jsx";
 import AddSlotConfig from "./Slot/AddSlotConfig.jsx";
 import GenerateSlots from "./Slot/GenerateSlots.jsx";
 import SlotConfigList from "./Slot/SlotConfigList.jsx";
@@ -110,9 +108,7 @@ function App() {
           <Route path="/employee-account/:id" element={<EmployeeAccount />} />
           <Route path="/employee-shift/:id" element={<EmployeeShift />} />
           <Route path="/patient-list" element={<PatientList />} />
-          <Route path="/view-patient/:id" element={<ViewPatient />} />
           <Route path="/add-patient" element={<AddPatient />} />
-          <Route path="/update-patient/:id" element={<UpdatePatient />} />
           <Route path="/add-slotconfig" element={<AddSlotConfig/>}/>
           <Route path="/generate-slots" element={<GenerateSlots />} />
           <Route path="/slotconfig-list" element={<SlotConfigList/>}/>

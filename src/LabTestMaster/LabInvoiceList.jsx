@@ -38,6 +38,12 @@ const LabInvoiceList = () => {
   const [isInvoiceDetailsOpen, setIsInvoiceDetailsOpen] = useState(false);
   const [selectedInvoiceDetail, setSelectedInvoiceDetail] = useState(null);
 
+  // ── Derived: are any filters actually active?
+  const hasActiveFilters =
+    appliedFilters.searchValue.trim() !== '' ||
+    appliedFilters.dateFrom           !== '' ||
+    appliedFilters.dateTo             !== '';
+
   // Fetch Lab Invoice Details
   const fetchInvoiceDetails = async () => {
     try {
@@ -304,6 +310,8 @@ const LabInvoiceList = () => {
       {/* Filters Container */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
+
+          {/* Fused search type + value */}
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -331,38 +339,52 @@ const LabInvoiceList = () => {
             />
           </div>
 
+          {/* From Date — VendorList overlay-placeholder style */}
           <div className={styles.filterGroup}>
-            <input
-              type="date"
-              name="dateFrom"
-              placeholder="Date From"
-              value={filterInputs.dateFrom}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            />
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateFrom && (
+                <span className={styles.datePlaceholder}>From Date</span>
+              )}
+              <input
+                type="date"
+                name="dateFrom"
+                value={filterInputs.dateFrom}
+                onChange={handleFilterChange}
+                className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`}
+              />
+            </div>
           </div>
 
+          {/* To Date — VendorList overlay-placeholder style */}
           <div className={styles.filterGroup}>
-            <input
-              type="date"
-              name="dateTo"
-              placeholder="Date To"
-              value={filterInputs.dateTo}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            />
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateTo && (
+                <span className={styles.datePlaceholder}>To Date</span>
+              )}
+              <input
+                type="date"
+                name="dateTo"
+                value={filterInputs.dateTo}
+                onChange={handleFilterChange}
+                className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`}
+              />
+            </div>
           </div>
 
+          {/* Actions */}
           <div className={styles.filterActions}>
             <button onClick={handleSearch} className={styles.searchButton}>
               <FiSearch size={18} />
               Search
             </button>
-            <button onClick={handleClearFilters} className={styles.clearButton}>
-              <FiX size={18} />
-              Clear
-            </button>
+            {hasActiveFilters && (
+              <button onClick={handleClearFilters} className={styles.clearButton}>
+                <FiX size={18} />
+                Clear
+              </button>
+            )}
           </div>
+
         </div>
       </div>
 

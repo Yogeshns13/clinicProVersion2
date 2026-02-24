@@ -97,26 +97,26 @@
 .filtersContainer {
   background: white;
   border-radius: 17px;
-  padding: 18px 20px;
+  padding: 16px 20px;
   margin-bottom: 20px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
 }
 
-/* Master: [searchValue 2fr] [testType 1fr] [status 1fr] [dateFrom 1fr] [dateTo 1fr] [actions auto] */
+/* Master: [searchGroup 2fr] [testType 1fr] [status 1fr] [dateFrom 1fr] [dateTo 1fr] [actions auto] */
 .masterFiltersGrid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
   gap: 12px;
-  align-items: end;
+  align-items: center;
 }
 
-/* Packages: [searchValue 2fr] [status 1fr] [dateFrom 1fr] [dateTo 1fr] [actions auto] */
+/* Packages: [searchGroup 2fr] [status 1fr] [dateFrom 1fr] [dateTo 1fr] [actions auto] */
 .packageFiltersGrid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr auto;
   gap: 12px;
-  align-items: end;
+  align-items: center;
 }
 
 .filterGroup {
@@ -124,7 +124,58 @@
   flex-direction: column;
 }
 
-/* ── Inputs & selects — no arrow on selects ── */
+/* ── Fused search type + value (VendorList pattern) ── */
+.searchGroup {
+  display: flex;
+  align-items: stretch;
+}
+
+.searchTypeSelect {
+  min-width: 140px;
+  height: 40px;
+  padding: 0 12px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.searchTypeSelect:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+.searchInput {
+  flex: 1;
+  height: 40px;
+  padding: 0 15px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0 10px 10px 0;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.searchInput::placeholder { color: #94a3b8; }
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-left: 1px solid var(--accent-end);
+}
+
+/* ── Inputs & selects ── */
 .filterInput {
   width: 100%;
   height: 40px;
@@ -136,7 +187,6 @@
   font-size: 0.85rem;
   transition: border-color 0.25s, box-shadow 0.25s;
   box-sizing: border-box;
-  /* Remove dropdown arrow */
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -150,34 +200,39 @@
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
 }
 
-/* ── Date wrapper: "From" / "To" prefix inside the box ── */
-.dateInputWrapper {
+/* ── Date overlay placeholder (VendorList pattern) ── */
+.dateWrapper {
   position: relative;
-  display: flex;
-  align-items: center;
   width: 100%;
 }
 
-.datePrefix {
-  position: absolute;
-  left: 10px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #64748b;
-  pointer-events: none;
-  z-index: 1;
-  white-space: nowrap;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
-
-/* Restore calendar picker for date inputs */
-.dateInput {
-  padding-left: 44px !important;
+.dateWrapper .filterInput {
   width: 100%;
+  color: var(--text-dark);
+  /* Restore date picker appearance */
   appearance: auto;
   -webkit-appearance: auto;
   -moz-appearance: auto;
+}
+
+/* When no date selected — hide browser's date format hint */
+.dateEmpty::-webkit-datetime-edit-text,
+.dateEmpty::-webkit-datetime-edit-month-field,
+.dateEmpty::-webkit-datetime-edit-day-field,
+.dateEmpty::-webkit-datetime-edit-year-field {
+  color: transparent;
+}
+
+/* Custom placeholder shown on top of the empty date input */
+.datePlaceholder {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  color: #94a3b8;
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* ── Actions: Search + Clear + Add ── */
@@ -243,7 +298,7 @@
   gap: 6px;
   height: 40px;
   padding: 0 16px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: var(--text-light);
   font-weight: 700;
   font-size: 0.85rem;
@@ -776,18 +831,19 @@
   border-color: #334155;
 }
 
+:global(.dark-mode) .searchTypeSelect,
+:global(.dark-mode) .searchInput,
 :global(.dark-mode) .filterInput {
   background: #0f172a;
   border-color: #475569;
   color: #e2e8f0;
 }
 
-:global(.dark-mode) .filterInput:focus {
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.2);
+:global(.dark-mode) .searchInput:focus {
+  border-left: 1px solid var(--accent-end);
 }
 
-:global(.dark-mode) .datePrefix { color: #94a3b8; }
+:global(.dark-mode) .datePlaceholder { color: #64748b; }
 
 :global(.dark-mode) .clearButton {
   background: #334155;
@@ -867,17 +923,11 @@
 @media (max-width: 1280px) {
   .masterFiltersGrid {
     grid-template-columns: 2fr 1fr 1fr auto;
-    grid-template-rows: auto auto;
   }
-
-  .masterFiltersGrid > .filterGroup:nth-child(1) { grid-column: 1 / -1; }
 
   .packageFiltersGrid {
     grid-template-columns: 2fr 1fr auto;
-    grid-template-rows: auto auto;
   }
-
-  .packageFiltersGrid > .filterGroup:nth-child(1) { grid-column: 1 / -1; }
 }
 
 @media (max-width: 900px) {
@@ -886,20 +936,29 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .masterFiltersGrid > .filterGroup:nth-child(1),
-  .packageFiltersGrid > .filterGroup:nth-child(1),
+  .masterFiltersGrid > .searchGroup,
+  .packageFiltersGrid > .searchGroup,
   .filterActions {
     grid-column: 1 / -1;
   }
-
-  .searchButton,
-  .clearButton { flex: 1; justify-content: center; }
 }
 
 @media (max-width: 768px) {
   .masterFiltersGrid,
   .packageFiltersGrid {
     grid-template-columns: 1fr;
+  }
+
+  .searchGroup { flex-direction: column; }
+
+  .searchTypeSelect {
+    border-radius: 10px;
+    border-right: 1px solid #cbd5e1;
+  }
+
+  .searchInput {
+    border-radius: 10px;
+    border-left: 1px solid #cbd5e1;
   }
 
   .filterActions { flex-wrap: wrap; }

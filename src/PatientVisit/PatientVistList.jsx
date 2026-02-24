@@ -1,105 +1,126 @@
 // src/components/PatientVisitList.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiPlus, FiCalendar, FiFilter, FiCheckCircle, FiX } from 'react-icons/fi';
+import { FiSearch, FiPlus, FiCheckCircle, FiX } from 'react-icons/fi';
 import { getPatientVisitList, updatePatientVisit } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddPatientVisit from './AddPatientVisit.jsx';
 import PatientVisitDetails from './ViewPatientVisit.jsx';
-import './PatientVisitList.css';
+import styles from './PatientVisitList.module.css';
 
+// ──────────────────────────────────────────────────
+// CONSTANTS
+// ──────────────────────────────────────────────────
+const STATUS_OPTIONS = [
+  { id: 0, label: 'Initiated' },
+  { id: 1, label: 'Ready to Consult' },
+];
+
+const SEARCH_TYPE_OPTIONS = [
+  { value: 'PatientName', label: 'Patient Name' },
+  { value: 'DoctorName',  label: 'Doctor Name' },
+];
+
+const todayDate = new Date().toISOString().split('T')[0];
+
+// ──────────────────────────────────────────────────
 const PatientVisitList = () => {
   const navigate = useNavigate();
 
-  // Data States
-  const [visits, setVisits] = useState([]);
-  
-  // Filter States
-  const [searchInput, setSearchInput] = useState('');
-  const todayDate = new Date().toISOString().split('T')[0];
-  const [dateFilter, setDateFilter] = useState(todayDate);
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-
-  // UI States
+  // Data
+  const [visits, setVisits]   = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError]     = useState(null);
+
+  // Filter inputs (staged — not applied until Search is clicked)
+  const [filterInputs, setFilterInputs] = useState({
+    searchType:  'PatientName',
+    searchValue: '',
+    status:      '',
+    dateFrom:    '',
+    dateTo:      '',
+    visitDate:   todayDate,
+  });
+
+  // Applied filters (drive the API call)
+  const [appliedFilters, setAppliedFilters] = useState({
+    searchType:  'PatientName',
+    searchValue: '',
+    status:      '',
+    dateFrom:    '',
+    dateTo:      '',
+    visitDate:   todayDate,
+  });
+
+  // Add Form Modal
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+
+  // Details Modal
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [selectedVisit, setSelectedVisit] = useState(null);
-  
-  // Update Modal States
+  const [selectedVisit, setSelectedVisit]           = useState(null);
+
+  // Update Modal
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [visitToUpdate, setVisitToUpdate] = useState(null);
-  const [updating, setUpdating] = useState(false);
+  const [visitToUpdate, setVisitToUpdate]     = useState(null);
+  const [updating, setUpdating]               = useState(false);
   const [formData, setFormData] = useState({
-    symptoms: '',
-    bpSystolic: '',
+    symptoms:    '',
+    bpSystolic:  '',
     bpDiastolic: '',
     temperature: '',
-    weight: ''
+    weight:      '',
   });
 
-  // Statistics
-  const [statistics, setStatistics] = useState({
-    todayVisits: 0,
-    totalVisits: 0,
-    uniquePatients: 0,
-    uniqueDoctors: 0
-  });
+  // ──────────────────────────────────────────────────
+  // Derived: are any filters active beyond the default today date?
+  const hasActiveFilters =
+    appliedFilters.searchValue.trim() !== '' ||
+    appliedFilters.status             !== '' ||
+    appliedFilters.dateFrom           !== '' ||
+    appliedFilters.dateTo             !== '' ||
+    appliedFilters.visitDate          !== todayDate;
 
-  // Fetch visits with filters
-  const fetchVisits = async () => {
+  // ──────────────────────────────────────────────────
+  // Data fetching
+  const fetchVisits = async (filters = appliedFilters) => {
     try {
       setLoading(true);
       setError(null);
+
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
 
       const options = {
-        Page: 1,
+        Page:     1,
         PageSize: 100,
-        BranchID: branchId
+        BranchID: branchId,
+        Status:   filters.status !== '' ? Number(filters.status) : undefined,
+        PatientName: filters.searchType === 'PatientName' ? filters.searchValue : '',
+        DoctorName:  filters.searchType === 'DoctorName'  ? filters.searchValue : '',
       };
 
-      // Apply search filter
-      if (searchInput.trim()) {
-        options.PatientName = searchInput.trim();
-      }
-
-      // Date filtering logic
-      if (fromDate && toDate) {
-        options.FromVisitDate = fromDate;
-        options.ToVisitDate = toDate;
-      } else if (dateFilter) {
-        options.VisitDate = dateFilter;
+      // Date logic: if range provided use range, else use single visitDate
+      if (filters.dateFrom && filters.dateTo) {
+        options.FromVisitDate = filters.dateFrom;
+        options.ToVisitDate   = filters.dateTo;
+        options.VisitDate     = '';
+      } else {
+        options.VisitDate     = filters.visitDate || '';
+        options.FromVisitDate = '';
+        options.ToVisitDate   = '';
       }
 
       const data = await getPatientVisitList(clinicId, options);
 
-      // Sort by date and time (newest first)
-      const sortedData = data.sort((a, b) => {
-        const dateA = new Date(a.visitDate + ' ' + (a.visitTime || '00:00:00'));
-        const dateB = new Date(b.visitDate + ' ' + (b.visitTime || '00:00:00'));
-        return dateB - dateA;
+      // Sort newest first
+      const sorted = data.sort((a, b) => {
+        const da = new Date((a.visitDate || '') + ' ' + (a.visitTime || '00:00:00'));
+        const db = new Date((b.visitDate || '') + ' ' + (b.visitTime || '00:00:00'));
+        return db - da;
       });
 
-      setVisits(sortedData);
-
-      // Calculate statistics
-      const today = new Date().toISOString().split('T')[0];
-      const todayVisits = sortedData.filter(v => v.visitDate === today);
-      const uniquePatients = new Set(sortedData.map(v => v.patientId)).size;
-      const uniqueDoctors = new Set(sortedData.map(v => v.doctorId)).size;
-
-      setStatistics({
-        todayVisits: todayVisits.length,
-        totalVisits: sortedData.length,
-        uniquePatients,
-        uniqueDoctors
-      });
+      setVisits(sorted);
     } catch (err) {
       console.error('fetchVisits error:', err);
       setError(
@@ -112,80 +133,86 @@ const PatientVisitList = () => {
     }
   };
 
-  // Initial load - fetch data for today by default
   useEffect(() => {
-    fetchVisits();
-  }, []);
+    fetchVisits(appliedFilters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedFilters]);
+
+  // ──────────────────────────────────────────────────
+  // Helpers
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
+  const formatTime = (timeStr) => {
+    if (!timeStr) return '—';
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hour12 = hours % 12 || 12;
+    return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
+  };
 
   const formatDateForInput = (dateString) => {
-    if (!dateString) {
-      console.log('formatDateForInput: dateString is empty or null');
-      return '';
-    }
-    
+    if (!dateString) return '';
     try {
-      // Handle both ISO format and date-only format
       const date = new Date(dateString);
-      
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        console.error('formatDateForInput: Invalid date:', dateString);
-        return '';
-      }
-      
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const formatted = `${year}-${month}-${day}`;
-      
-      console.log('formatDateForInput: Input:', dateString, 'Output:', formatted);
-      return formatted;
-    } catch (error) {
-      console.error('formatDateForInput: Error formatting date:', error);
+      if (isNaN(date.getTime())) return '';
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    } catch {
       return '';
     }
   };
 
-  // Handle search button click
+  const getStatusLabel = (status) => {
+    if (status === 0) return 'Initiated';
+    if (status === 1) return 'Ready to Consult';
+    return 'Unknown';
+  };
+
+  const getStatusClass = (status) => {
+    if (status === 0) return styles.initiated;
+    if (status === 1) return styles.ready;
+    return styles.initiated;
+  };
+
+  // ──────────────────────────────────────────────────
+  // Handlers
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilterInputs((prev) => {
+      const updated = { ...prev, [name]: value };
+      // If single date changes, clear range and vice versa
+      if (name === 'visitDate') {
+        updated.dateFrom = '';
+        updated.dateTo   = '';
+      }
+      if (name === 'dateFrom' || name === 'dateTo') {
+        updated.visitDate = '';
+      }
+      return updated;
+    });
+  };
+
   const handleSearch = () => {
-    fetchVisits();
+    setAppliedFilters({ ...filterInputs });
   };
 
-  // Handle Enter key press in search input
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
-  // Handle date filter change
-  const handleDateFilterChange = (e) => {
-    setDateFilter(e.target.value);
-    setFromDate('');
-    setToDate('');
-  };
-
-  // Handle from date change
-  const handleFromDateChange = (e) => {
-    setFromDate(e.target.value);
-    setDateFilter('');
-  };
-
-  // Handle to date change
-  const handleToDateChange = (e) => {
-    setToDate(e.target.value);
-    setDateFilter('');
-  };
-
-  // Clear all filters
-  const clearAllFilters = () => {
-    setSearchInput('');
-    setDateFilter(todayDate);
-    setFromDate('');
-    setToDate('');
-    
-    // Re-fetch with default filters (today's data)
-    fetchVisits();
+  const handleClearFilters = () => {
+    const defaults = {
+      searchType:  'PatientName',
+      searchValue: '',
+      status:      '',
+      dateFrom:    '',
+      dateTo:      '',
+      visitDate:   todayDate,
+    };
+    setFilterInputs(defaults);
+    setAppliedFilters(defaults);
   };
 
   // Modal handlers
@@ -199,32 +226,22 @@ const PatientVisitList = () => {
     setIsDetailsModalOpen(false);
   };
 
-  const openAddForm = () => {
-    setIsAddFormOpen(true);
-  };
+  const openAddForm  = () => setIsAddFormOpen(true);
+  const closeAddForm = () => setIsAddFormOpen(false);
 
-  const closeAddForm = () => {
-    setIsAddFormOpen(false);
-  };
+  const handleAddSuccess = () => fetchVisits(appliedFilters);
 
-  const handleAddSuccess = () => {
-    fetchVisits();
-  };
-
-  const handleEditFromModal = (visitId) => {
-    navigate(`/update-patientvisit/${visitId}`);
-  };
+  const handleEditFromModal = (visitId) => navigate(`/update-patientvisit/${visitId}`);
 
   // Initialize Visit handlers
   const handleInitializeVisit = (visit) => {
     setVisitToUpdate(visit);
-    // Pre-fill existing vitals if available
     setFormData({
-      symptoms: visit.symptoms || '',
-      bpSystolic: visit.bpSystolic || '',
+      symptoms:    visit.symptoms    || '',
+      bpSystolic:  visit.bpSystolic  || '',
       bpDiastolic: visit.bpDiastolic || '',
       temperature: visit.temperature || '',
-      weight: visit.weight || ''
+      weight:      visit.weight      || '',
     });
     setShowUpdateModal(true);
   };
@@ -232,21 +249,12 @@ const PatientVisitList = () => {
   const closeUpdateModal = () => {
     setShowUpdateModal(false);
     setVisitToUpdate(null);
-    setFormData({
-      symptoms: '',
-      bpSystolic: '',
-      bpDiastolic: '',
-      temperature: '',
-      weight: ''
-    });
+    setFormData({ symptoms: '', bpSystolic: '', bpDiastolic: '', temperature: '', weight: '' });
   };
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleUpdateSubmit = async (e) => {
@@ -258,208 +266,186 @@ const PatientVisitList = () => {
       setError(null);
 
       let formattedDate = visitToUpdate.visitDate;
-      
       if (formattedDate && !formattedDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
         formattedDate = formatDateForInput(formattedDate);
       }
 
-      // Prepare the visit data with all required fields
       const visitData = {
-        visitId: visitToUpdate.id,
+        visitId:       visitToUpdate.id,
         appointmentId: visitToUpdate.appointmentId || 0,
-        doctorId: visitToUpdate.doctorId || 0,
-        visitDate: formattedDate,
-        visitTime: visitToUpdate.visitTime,
-        reason: visitToUpdate.reason || '',
-        symptoms: formData.symptoms.trim(),
-        bpSystolic: Number(formData.bpSystolic) || 0,
-        bpDiastolic: Number(formData.bpDiastolic) || 0,
-        temperature: Number(formData.temperature) || 0,
-        weight: Number(formData.weight) || 0,
-        status: 1  // Set status to 1 (Ready to Consult)
+        doctorId:      visitToUpdate.doctorId       || 0,
+        visitDate:     formattedDate,
+        visitTime:     visitToUpdate.visitTime,
+        reason:        visitToUpdate.reason         || '',
+        symptoms:      formData.symptoms.trim(),
+        bpSystolic:    Number(formData.bpSystolic)  || 0,
+        bpDiastolic:   Number(formData.bpDiastolic) || 0,
+        temperature:   Number(formData.temperature) || 0,
+        weight:        Number(formData.weight)       || 0,
+        status:        1,
       };
 
-      console.log('Updating visit with vitals data:', visitData);
-
       await updatePatientVisit(visitData);
-
-      // Close modal and refresh list
       closeUpdateModal();
-      await fetchVisits();
-      
-      // Show success message (optional)
-      console.log('Visit updated successfully - Status changed to Ready to Consult');
+      await fetchVisits(appliedFilters);
     } catch (err) {
       console.error('Failed to update visit:', err);
-      setError({
-        message: err.message || 'Failed to update visit'
-      });
+      setError({ message: err.message || 'Failed to update visit' });
     } finally {
       setUpdating(false);
     }
   };
 
-  // Formatting functions
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '—';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-  };
-
-  const formatTime = (timeStr) => {
-    if (!timeStr) return '—';
-    
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const hour12 = hours % 12 || 12;
-    
-    return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
-  };
-
-  // Get status badge
-  const getStatusBadge = (status) => {
-    if (status === 1) {
-      return <span className="status-badge ready">Ready to Consult</span>;
-    }
-    return <span className="status-badge initiated">Initiated</span>;
-  };
-
+  // ──────────────────────────────────────────────────
   // Early returns
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className="visit-loading">Loading...</div>;
+  if (loading) return <div className={styles.loading}>Loading visits...</div>;
+  if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
-  if (error) return <div className="visit-error">Error: {error.message || error}</div>;
-
+  // ──────────────────────────────────────────────────
   return (
-    <div className="visit-list-wrapper">
-      <ErrorHandler error={error} />
+    <div className={styles.listWrapper}>
       <Header title="Patient Visit Management" />
 
-      {/* Toolbar */}
-      <div className="visit-toolbar">
-        <div className="visit-toolbar-left">
-          <div className="visit-select-wrapper">
-            <FiCalendar className="visit-select-icon" size={20} />
+      {/* ── Filter Bar ── */}
+      <div className={styles.filtersContainer}>
+        <div className={styles.filtersGrid}>
+
+          {/* Search type + value */}
+          <div className={styles.searchGroup}>
+            <select
+              name="searchType"
+              value={filterInputs.searchType}
+              onChange={handleFilterChange}
+              className={styles.searchTypeSelect}
+            >
+              {SEARCH_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+
             <input
-              type="date"
-              value={dateFilter}
-              onChange={handleDateFilterChange}
-              className="visit-select"
+              type="text"
+              name="searchValue"
+              placeholder={`Search by ${
+                SEARCH_TYPE_OPTIONS.find((o) => o.value === filterInputs.searchType)?.label || ''
+              }`}
+              value={filterInputs.searchValue}
+              onChange={handleFilterChange}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className={styles.searchInput}
             />
           </div>
 
-          <button 
-            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)} 
-            className={`visit-filter-toggle-btn ${showAdvancedFilters ? 'active' : ''}`}
-          >
-            <FiFilter size={18} />
-            {showAdvancedFilters ? 'Hide' : 'Show'} Filters
-          </button>
-
-          {(dateFilter !== todayDate || fromDate || toDate || searchInput) && (
-            <button 
-              onClick={clearAllFilters} 
-              className="visit-clear-btn"
+          {/* Status */}
+          <div className={styles.filterGroup}>
+            <select
+              name="status"
+              value={filterInputs.status}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
             >
-              Clear All
-            </button>
-          )}
-        </div>
+              <option value="">All Status</option>
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="visit-toolbar-right">
-          <button onClick={openAddForm} className="visit-add-btn">
-            <FiPlus size={18} />
-            Add Visit
-          </button>
-        </div>
-      </div>
 
-      {/* Advanced Filters */}
-      {showAdvancedFilters && (
-        <div className="visit-advanced-filters">
-          <div className="filter-row">
-            <div className="filter-group">
-              <label className="filter-label">From Date</label>
+          {/* From Date */}
+          <div className={styles.filterGroup}>
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateFrom && (
+                <span className={styles.datePlaceholder}>From Date</span>
+              )}
               <input
                 type="date"
-                value={fromDate}
-                onChange={handleFromDateChange}
-                className="filter-input"
+                name="dateFrom"
+                value={filterInputs.dateFrom}
+                onChange={handleFilterChange}
+                className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`}
               />
-            </div>
-            <div className="filter-group">
-              <label className="filter-label">To Date</label>
-              <input
-                type="date"
-                value={toDate}
-                onChange={handleToDateChange}
-                className="filter-input"
-              />
-            </div>
-            <div className="filter-actions">
-              <button onClick={clearAllFilters} className="filter-clear-btn">
-                Clear All
-              </button>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Search Bar */}
-      <div className="visit-search-wrapper">
-        <div className="visit-search-container">
-          <input
-            type="text"
-            placeholder="Search visits by patient name..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="visit-search-input"
-          />
-          <button onClick={handleSearch} className="visit-search-btn">
-            <FiSearch size={20} />
-          </button>
+          {/* To Date */}
+          <div className={styles.filterGroup}>
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateTo && (
+                <span className={styles.datePlaceholder}>To Date</span>
+              )}
+              <input
+                type="date"
+                name="dateTo"
+                value={filterInputs.dateTo}
+                onChange={handleFilterChange}
+                className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`}
+              />
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className={styles.filterActions}>
+            <button onClick={handleSearch} className={styles.searchButton}>
+              <FiSearch size={16} />
+              Search
+            </button>
+
+            {hasActiveFilters && (
+              <button onClick={handleClearFilters} className={styles.clearButton}>
+                <FiX size={16} />
+                Clear
+              </button>
+            )}
+
+            <button onClick={openAddForm} className={styles.addBtn}>
+              <FiPlus size={18} />
+              Add Visit
+            </button>
+          </div>
+
         </div>
       </div>
 
-      {/* Patient Visits Table */}
-      <div className="visit-table-container">
-        <table className="visit-table">
+      {/* ── Table ── */}
+      <div className={styles.tableContainer}>
+        <table className={styles.table}>
           <thead>
             <tr>
               <th>Patient</th>
               <th>Doctor</th>
-              <th>Visit Date & Time</th>
-              <th>Reason</th>
+              <th>Visit Date &amp; Time</th>
               <th>Vitals</th>
+              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {visits.length === 0 ? (
               <tr>
-                <td colSpan={7} className="visit-no-data">
-                  {searchInput ? 'No visits found matching your search.' : 'No patient visits recorded yet.'}
+                <td colSpan="6" className={styles.noData}>
+                  {hasActiveFilters ? 'No visits found.' : 'No patient visits recorded yet.'}
                 </td>
               </tr>
             ) : (
               visits.map((visit) => (
                 <tr key={visit.id}>
                   <td>
-                    <div className="visit-name-cell">
-                      <div className="visit-avatar">
+                    <div className={styles.nameCell}>
+                      <div className={styles.avatar}>
                         {visit.patientName?.charAt(0).toUpperCase() || 'P'}
                       </div>
                       <div>
-                        <div className="visit-name">{visit.patientName}</div>
-                        <div className="visit-type">
+                        <div className={styles.name}>{visit.patientName}</div>
+                        <div className={styles.subInfo}>
                           {visit.patientFileNo} • {visit.patientMobile}
                         </div>
                       </div>
@@ -467,71 +453,63 @@ const PatientVisitList = () => {
                   </td>
                   <td>
                     <div>
-                      <div className="visit-name">{visit.doctorFullName}</div>
-                      <div className="visit-type">{visit.doctorCode || '—'}</div>
+                      <div className={styles.name}>{visit.doctorFullName}</div>
+                      <div className={styles.subInfo}>{visit.doctorCode || '—'}</div>
                     </div>
                   </td>
                   <td>
                     <div>
-                      <div className="visit-name">{formatDate(visit.visitDate)}</div>
-                      <div className="visit-type">
-                        <span className="visit-time-badge">
-                          {formatTime(visit.visitTime)}
-                        </span>
+                      <div className={styles.name}>{formatDate(visit.visitDate)}</div>
+                      <div className={styles.subInfo}>
+                        <span className={styles.timeBadge}>{formatTime(visit.visitTime)}</span>
                       </div>
                     </div>
                   </td>
                   <td>
-                    <div className="visit-reason-cell">
-                      {visit.reason || '—'}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="visit-vitals-cell">
+                    <div className={styles.vitalsCell}>
                       {visit.bpReading && (
-                        <span className="vital-badge bp">
-                          {visit.bpReading}
-                        </span>
+                        <span className={`${styles.vitalBadge} ${styles.bp}`}>{visit.bpReading}</span>
                       )}
                       {visit.temperature && (
-                        <span className="vital-badge temp">
-                          {visit.temperature}°F
-                        </span>
+                        <span className={`${styles.vitalBadge} ${styles.temp}`}>{visit.temperature}°F</span>
                       )}
                       {visit.weight && (
-                        <span className="vital-badge weight">
-                          {visit.weight}kg
-                        </span>
+                        <span className={`${styles.vitalBadge} ${styles.weight}`}>{visit.weight}kg</span>
                       )}
                       {!visit.bpReading && !visit.temperature && !visit.weight && '—'}
                     </div>
                   </td>
                   <td>
-                    <div className="visit-actions-cell">
+                    <span className={`${styles.statusBadge} ${getStatusClass(visit.status)}`}>
+                      {getStatusLabel(visit.status)}
+                    </span>
+                  </td>
+                  <td>
+                    <div className={styles.actionsCell}>
                       {visit.status === 0 ? (
-                        <button 
-                          onClick={() => handleInitializeVisit(visit)} 
-                          className="visit-initialize-btn"
+                        <button
+                          onClick={() => handleInitializeVisit(visit)}
+                          className={styles.initializeBtn}
                           title="Initialize Visit"
                         >
                           <FiCheckCircle size={16} />
-                          Initialized
+                          Initialize
                         </button>
                       ) : (
-                        <button 
-                          className="visit-ready-btn disabled"
+                        <button
+                          className={`${styles.readyBtn} ${styles.disabled}`}
                           disabled
                           title="Visit is Ready to Consult"
                         >
                           <FiCheckCircle size={16} />
-                          Ready to Consult
+                          Ready
                         </button>
                       )}
-                      <button 
-                        onClick={() => handleViewDetails(visit)} 
-                        className="visit-details-btn"
+                      <button
+                        onClick={() => handleViewDetails(visit)}
+                        className={styles.detailsBtn}
                       >
-                        View
+                        View Details
                       </button>
                     </div>
                   </td>
@@ -542,14 +520,14 @@ const PatientVisitList = () => {
         </table>
       </div>
 
-      {/* Add Visit Modal */}
+      {/* ── Add Visit Modal ── */}
       <AddPatientVisit
         isOpen={isAddFormOpen}
         onClose={closeAddForm}
         onSuccess={handleAddSuccess}
       />
 
-      {/* Visit Details Modal */}
+      {/* ── Visit Details Modal ── */}
       <PatientVisitDetails
         isOpen={isDetailsModalOpen}
         onClose={closeDetailsModal}
@@ -557,18 +535,18 @@ const PatientVisitList = () => {
         onEdit={handleEditFromModal}
       />
 
-      {/* Update Visit Modal */}
+      {/* ── Update Visit Modal ── */}
       {showUpdateModal && visitToUpdate && (
-        <div className="update-overlay">
-          <div className="update-modal">
-            <div className="update-header">
-              <div className="update-header-content">
-                <FiCheckCircle size={24} className="update-icon" />
+        <div className={styles.updateOverlay}>
+          <div className={styles.updateModal}>
+            <div className={styles.updateHeader}>
+              <div className={styles.updateHeaderContent}>
+                <FiCheckCircle size={24} className={styles.updateIcon} />
                 <h3>Initialize Visit - Add Vitals</h3>
               </div>
-              <button 
-                onClick={closeUpdateModal} 
-                className="update-close-btn"
+              <button
+                onClick={closeUpdateModal}
+                className={styles.updateCloseBtn}
                 disabled={updating}
               >
                 <FiX size={24} />
@@ -576,29 +554,29 @@ const PatientVisitList = () => {
             </div>
 
             <form onSubmit={handleUpdateSubmit}>
-              <div className="update-body">
+              <div className={styles.updateBody}>
                 {/* Visit Info Section */}
-                <div className="update-info-section">
+                <div className={styles.updateInfoSection}>
                   <h4>Visit Information</h4>
-                  <div className="update-info-grid">
-                    <div className="info-item">
+                  <div className={styles.updateInfoGrid}>
+                    <div className={styles.infoItem}>
                       <label>Patient:</label>
                       <span>{visitToUpdate.patientName}</span>
                     </div>
-                    <div className="info-item">
+                    <div className={styles.infoItem}>
                       <label>Doctor:</label>
                       <span>{visitToUpdate.doctorFullName}</span>
                     </div>
-                    <div className="info-item">
+                    <div className={styles.infoItem}>
                       <label>Date:</label>
                       <span>{formatDate(visitToUpdate.visitDate)}</span>
                     </div>
-                    <div className="info-item">
+                    <div className={styles.infoItem}>
                       <label>Time:</label>
                       <span>{formatTime(visitToUpdate.visitTime)}</span>
                     </div>
                     {visitToUpdate.reason && (
-                      <div className="info-item full-width">
+                      <div className={`${styles.infoItem} ${styles.fullWidth}`}>
                         <label>Reason:</label>
                         <span>{visitToUpdate.reason}</span>
                       </div>
@@ -607,10 +585,10 @@ const PatientVisitList = () => {
                 </div>
 
                 {/* Vitals Input Section */}
-                <div className="update-form-section">
+                <div className={styles.updateFormSection}>
                   <h4>Patient Vitals</h4>
-                  
-                  <div className="form-group">
+
+                  <div className={styles.formGroup}>
                     <label htmlFor="symptoms">Symptoms</label>
                     <textarea
                       id="symptoms"
@@ -619,14 +597,14 @@ const PatientVisitList = () => {
                       onChange={handleFormChange}
                       placeholder="Enter patient symptoms..."
                       rows="3"
-                      className="form-textarea"
+                      className={styles.formTextarea}
                     />
                   </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
+                  <div className={styles.formRow}>
+                    <div className={styles.formGroup}>
                       <label htmlFor="bpSystolic">
-                        BP Systolic <span className="unit-label">(mmHg)</span>
+                        BP Systolic <span className={styles.unitLabel}>(mmHg)</span>
                       </label>
                       <input
                         type="number"
@@ -637,13 +615,13 @@ const PatientVisitList = () => {
                         placeholder="120"
                         min="0"
                         max="300"
-                        className="form-input"
+                        className={styles.formInput}
                       />
                     </div>
 
-                    <div className="form-group">
+                    <div className={styles.formGroup}>
                       <label htmlFor="bpDiastolic">
-                        BP Diastolic <span className="unit-label">(mmHg)</span>
+                        BP Diastolic <span className={styles.unitLabel}>(mmHg)</span>
                       </label>
                       <input
                         type="number"
@@ -654,15 +632,15 @@ const PatientVisitList = () => {
                         placeholder="80"
                         min="0"
                         max="200"
-                        className="form-input"
+                        className={styles.formInput}
                       />
                     </div>
                   </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
+                  <div className={styles.formRow}>
+                    <div className={styles.formGroup}>
                       <label htmlFor="temperature">
-                        Temperature <span className="unit-label">(°F)</span>
+                        Temperature <span className={styles.unitLabel}>(°F)</span>
                       </label>
                       <input
                         type="number"
@@ -674,13 +652,13 @@ const PatientVisitList = () => {
                         min="0"
                         max="120"
                         step="0.1"
-                        className="form-input"
+                        className={styles.formInput}
                       />
                     </div>
 
-                    <div className="form-group">
+                    <div className={styles.formGroup}>
                       <label htmlFor="weight">
-                        Weight <span className="unit-label">(kg)</span>
+                        Weight <span className={styles.unitLabel}>(kg)</span>
                       </label>
                       <input
                         type="number"
@@ -692,25 +670,25 @@ const PatientVisitList = () => {
                         min="0"
                         max="500"
                         step="0.1"
-                        className="form-input"
+                        className={styles.formInput}
                       />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="update-footer">
-                <button 
+              <div className={styles.updateFooter}>
+                <button
                   type="button"
-                  onClick={closeUpdateModal} 
-                  className="update-btn-cancel"
+                  onClick={closeUpdateModal}
+                  className={styles.updateBtnCancel}
                   disabled={updating}
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
-                  className="update-btn-submit"
+                  className={styles.updateBtnSubmit}
                   disabled={updating}
                 >
                   {updating ? 'Updating...' : 'Submit & Mark Ready'}

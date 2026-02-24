@@ -7,6 +7,16 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './PharmacyInvoiceList.module.css';
 
+// ──────────────────────────────────────────────────
+// CONSTANTS
+// ──────────────────────────────────────────────────
+const SEARCH_TYPE_OPTIONS = [
+  { value: 'customerName', label: 'Customer Name' },
+  { value: 'invoiceNo',    label: 'Invoice No'    },
+  { value: 'medicineName', label: 'Medicine Name' },
+  { value: 'batchNo',      label: 'Batch No'      },
+];
+
 const PharmacyInvoiceList = () => {
   const navigate = useNavigate();
   
@@ -14,20 +24,20 @@ const PharmacyInvoiceList = () => {
   const [invoiceDetails, setInvoiceDetails] = useState([]);
   const [allInvoiceDetails, setAllInvoiceDetails] = useState([]);
   
-  // Filter inputs (not applied until search)
+  // Filter inputs (staged — not applied until Search is clicked)
   const [filterInputs, setFilterInputs] = useState({
-    searchType: 'customerName', // customerName, invoiceNo, medicineName, batchNo
+    searchType:  'customerName',
     searchValue: '',
-    dateFrom: '',
-    dateTo: ''
+    dateFrom:    '',
+    dateTo:      '',
   });
 
   // Applied filters
   const [appliedFilters, setAppliedFilters] = useState({
-    searchType: 'customerName',
+    searchType:  'customerName',
     searchValue: '',
-    dateFrom: '',
-    dateTo: ''
+    dateFrom:    '',
+    dateTo:      '',
   });
 
   // UI States
@@ -54,7 +64,6 @@ const PharmacyInvoiceList = () => {
 
       const data = await getPharmacyInvoiceDetailList(clinicId, options);
 
-      // Sort by date created
       const sortedData = data.sort((a, b) => {
         const dateA = new Date(a.dateCreated);
         const dateB = new Date(b.dateCreated);
@@ -83,7 +92,6 @@ const PharmacyInvoiceList = () => {
   const filteredInvoiceDetails = useMemo(() => {
     let filtered = allInvoiceDetails;
 
-    // Apply search filter based on search type
     if (appliedFilters.searchValue) {
       const term = appliedFilters.searchValue.toLowerCase();
       
@@ -105,7 +113,6 @@ const PharmacyInvoiceList = () => {
       }
     }
 
-    // Date from filter
     if (appliedFilters.dateFrom) {
       const fromDate = new Date(appliedFilters.dateFrom);
       filtered = filtered.filter(inv => {
@@ -115,7 +122,6 @@ const PharmacyInvoiceList = () => {
       });
     }
 
-    // Date to filter
     if (appliedFilters.dateTo) {
       const toDate = new Date(appliedFilters.dateTo);
       toDate.setHours(23, 59, 59, 999);
@@ -157,10 +163,10 @@ const PharmacyInvoiceList = () => {
       }
       
       groups[invoiceId].details.push(detail);
-      groups[invoiceId].totalQuantity += detail.quantity || 0;
-      groups[invoiceId].totalAmount += detail.amount || 0;
-      groups[invoiceId].totalCgst += detail.cgstAmount || 0;
-      groups[invoiceId].totalSgst += detail.sgstAmount || 0;
+      groups[invoiceId].totalQuantity  += detail.quantity       || 0;
+      groups[invoiceId].totalAmount    += detail.amount         || 0;
+      groups[invoiceId].totalCgst      += detail.cgstAmount     || 0;
+      groups[invoiceId].totalSgst      += detail.sgstAmount     || 0;
       groups[invoiceId].totalNetAmount += detail.totalLineAmount || 0;
     });
     
@@ -171,20 +177,20 @@ const PharmacyInvoiceList = () => {
     });
   }, [filteredInvoiceDetails]);
 
-  // Calculate summary statistics
+  // Summary statistics
   const summaryStats = useMemo(() => {
     const uniqueInvoices = new Set(allInvoiceDetails.map(d => d.invoiceId)).size;
-    const totalRevenue = allInvoiceDetails.reduce((sum, d) => sum + (d.totalLineAmount || 0), 0);
+    const totalRevenue   = allInvoiceDetails.reduce((sum, d) => sum + (d.totalLineAmount || 0), 0);
     const totalMedicines = allInvoiceDetails.reduce((sum, d) => sum + (d.quantity || 0), 0);
     const avgInvoiceValue = uniqueInvoices > 0 ? totalRevenue / uniqueInvoices : 0;
-
-    return {
-      uniqueInvoices,
-      totalRevenue,
-      totalMedicines,
-      avgInvoiceValue
-    };
+    return { uniqueInvoices, totalRevenue, totalMedicines, avgInvoiceValue };
   }, [allInvoiceDetails]);
+
+  // ── Derived: are any filters active?
+  const hasActiveFilters =
+    appliedFilters.searchValue.trim() !== '' ||
+    appliedFilters.dateFrom            !== '' ||
+    appliedFilters.dateTo              !== '';
 
   // Filter handlers
   const handleFilterChange = (e) => {
@@ -197,20 +203,9 @@ const PharmacyInvoiceList = () => {
   };
 
   const handleClearFilters = () => {
-    const emptyFilters = {
-      searchType: 'customerName',
-      searchValue: '',
-      dateFrom: '',
-      dateTo: ''
-    };
-    setFilterInputs(emptyFilters);
-    setAppliedFilters(emptyFilters);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
+    const empty = { searchType: 'customerName', searchValue: '', dateFrom: '', dateTo: '' };
+    setFilterInputs(empty);
+    setAppliedFilters(empty);
   };
 
   const handleViewInvoiceDetails = (invoice) => {
@@ -219,13 +214,11 @@ const PharmacyInvoiceList = () => {
   };
 
   const handlePrintInvoice = (invoice) => {
-    // Placeholder for print functionality
     console.log('Print invoice:', invoice.invoiceNo);
     alert(`Print functionality for Invoice ${invoice.invoiceNo} will be implemented.`);
   };
 
   const handleDownloadInvoice = (invoice) => {
-    // Placeholder for download functionality
     console.log('Download invoice:', invoice.invoiceNo);
     alert(`Download functionality for Invoice ${invoice.invoiceNo} will be implemented.`);
   };
@@ -233,11 +226,7 @@ const PharmacyInvoiceList = () => {
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   const formatCurrency = (amount) => {
@@ -306,9 +295,11 @@ const PharmacyInvoiceList = () => {
         </div>
       </div>
 
-      {/* Filters Container */}
+      {/* ── Filter Bar — VendorList style ── */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
+
+          {/* VendorList-style fused search type + value */}
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -316,59 +307,64 @@ const PharmacyInvoiceList = () => {
               onChange={handleFilterChange}
               className={styles.searchTypeSelect}
             >
-              <option value="customerName">Customer Name</option>
-              <option value="invoiceNo">Invoice No</option>
-              <option value="medicineName">Medicine Name</option>
-              <option value="batchNo">Batch No</option>
+              {SEARCH_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
             </select>
-            
             <input
               type="text"
               name="searchValue"
-              placeholder={`Search by ${
-                filterInputs.searchType === 'customerName' ? 'Customer Name' :
-                filterInputs.searchType === 'invoiceNo' ? 'Invoice No' :
-                filterInputs.searchType === 'medicineName' ? 'Medicine Name' :
-                'Batch No'
-              }`}
+              placeholder={`Search by ${SEARCH_TYPE_OPTIONS.find(o => o.value === filterInputs.searchType)?.label || ''}`}
               value={filterInputs.searchValue}
               onChange={handleFilterChange}
-              onKeyPress={handleKeyPress}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className={styles.searchInput}
             />
           </div>
 
+          {/* From Date */}
           <div className={styles.filterGroup}>
-            <input
-              type="date"
-              name="dateFrom"
-              placeholder="Date From"
-              value={filterInputs.dateFrom}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            />
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateFrom && (
+                <span className={styles.datePlaceholder}>From Date</span>
+              )}
+              <input
+                type="date"
+                name="dateFrom"
+                value={filterInputs.dateFrom}
+                onChange={handleFilterChange}
+                className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`}
+              />
+            </div>
           </div>
 
+          {/* To Date */}
           <div className={styles.filterGroup}>
-            <input
-              type="date"
-              name="dateTo"
-              placeholder="Date To"
-              value={filterInputs.dateTo}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            />
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateTo && (
+                <span className={styles.datePlaceholder}>To Date</span>
+              )}
+              <input
+                type="date"
+                name="dateTo"
+                value={filterInputs.dateTo}
+                onChange={handleFilterChange}
+                className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`}
+              />
+            </div>
           </div>
 
           <div className={styles.filterActions}>
             <button onClick={handleSearch} className={styles.searchButton}>
-              <FiSearch size={18} />
+              <FiSearch size={16} />
               Search
             </button>
-            <button onClick={handleClearFilters} className={styles.clearButton}>
-              <FiX size={18} />
-              Clear
-            </button>
+            {hasActiveFilters && (
+              <button onClick={handleClearFilters} className={styles.clearButton}>
+                <FiX size={16} />
+                Clear
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -393,7 +389,7 @@ const PharmacyInvoiceList = () => {
             {groupedInvoices.length === 0 ? (
               <tr>
                 <td colSpan={9} className={styles.noData}>
-                  {Object.values(appliedFilters).some(v => v && v !== 'customerName') 
+                  {hasActiveFilters
                     ? 'No invoices found matching your search.'
                     : 'No pharmacy invoices found.'}
                 </td>
@@ -463,9 +459,10 @@ const PharmacyInvoiceList = () => {
                   <td>
                     <div className={styles.actionsCell}>
                       <div className={styles.actionDropdownWrapper}>
-                        <button className={styles.actionBtn}
-                        onClick={() => handleViewInvoiceDetails(invoice)}
-                        title="View Details"
+                        <button
+                          className={styles.actionBtn}
+                          onClick={() => handleViewInvoiceDetails(invoice)}
+                          title="View Details"
                         >
                           View
                         </button>
@@ -495,7 +492,9 @@ const PharmacyInvoiceList = () => {
   );
 };
 
+// ──────────────────────────────────────────────────
 // Invoice Details Modal Component
+// ──────────────────────────────────────────────────
 const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) => {
   return (
     <div className={styles.modalOverlay} onClick={onClose}>

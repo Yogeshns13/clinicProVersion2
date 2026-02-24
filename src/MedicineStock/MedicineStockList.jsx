@@ -5,8 +5,6 @@ import {
   FiSearch,
   FiPlus,
   FiX,
-  FiHome,
-  FiFilter,
   FiChevronDown,
 } from 'react-icons/fi';
 import { 
@@ -19,30 +17,34 @@ import Header from '../Header/Header.jsx';
 import styles from './MedicineStockList.module.css';
 
 // ────────────────────────────────────────────────
-// CONSTANTS
+// HELPERS
 // ────────────────────────────────────────────────
-const STOCK_STATUS_FILTERS = [
-  { id: 'all', label: 'All Stock' },
-  { id: 'near-expiry', label: 'Near Expiry' },
-  { id: 'zero-stock', label: 'Zero Stock' },
-  { id: 'negative-stock', label: 'Negative Stock' },
-];
+const getTodayDate = () => new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
+
+const DEFAULT_FILTERS = {
+  searchType: 'medicineName', // medicineName | batchNo
+  searchValue: '',
+  expiryFrom: '',
+  expiryTo: '',
+};
 
 // ────────────────────────────────────────────────
 const MedicineStockList = () => {
   const navigate = useNavigate();
 
-  // Data & Filter
-  const [stockList, setStockList] = useState([]);
+  // Data
   const [allStockList, setAllStockList] = useState([]);
-  const [searchInput, setSearchInput] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Filter inputs (staged, not applied until Search)
+  const [filterInputs, setFilterInputs] = useState({ ...DEFAULT_FILTERS });
+
+  // Applied filters (last searched)
+  const [appliedFilters, setAppliedFilters] = useState({ ...DEFAULT_FILTERS });
 
   // Selected / Modal
   const [selectedStock, setSelectedStock] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   // Add Form Modal
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
@@ -78,57 +80,64 @@ const MedicineStockList = () => {
   }, []);
 
   // ────────────────────────────────────────────────
-  // Data fetching
-  useEffect(() => {
-    const fetchStockList = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  // Build API options from filters
+  const buildApiOptions = (filters) => {
+    const clinicId = Number(localStorage.getItem('clinicID'));
+    const branchId = Number(localStorage.getItem('branchID'));
 
-        const clinicId = Number(localStorage.getItem('clinicID'));
-        const branchId = Number(localStorage.getItem('branchID'));
-
-        const options = {
-          BranchID: branchId,
-        };
-
-        if (selectedFilter === 'near-expiry') {
-          options.NearExpiryDays = 1;
-          options.ZeroStock = -1;
-          options.NegativeStock = 0;
-        } else if (selectedFilter === 'zero-stock') {
-          options.NearExpiryDays = 0;
-          options.ZeroStock = 1;
-          options.NegativeStock = 0;
-        } else if (selectedFilter === 'negative-stock') {
-          options.NearExpiryDays = 0;
-          options.ZeroStock = -1;
-          options.NegativeStock = 1;
-        } else {
-          options.NearExpiryDays = 0;
-          options.ZeroStock = -1;
-          options.NegativeStock = 0;
-        }
-
-        const data = await getMedicineStockList(clinicId, options);
-        setStockList(data);
-        setAllStockList(data);
-      } catch (err) {
-        console.error('fetchStockList error:', err);
-        setError(
-          err?.status >= 400 || err?.code >= 400
-            ? err
-            : { message: err.message || 'Failed to load medicine stock' }
-        );
-      } finally {
-        setLoading(false);
-      }
+    const options = {
+      BranchID: branchId,
+      MedicineName: filters.searchType === 'medicineName' ? (filters.searchValue || '') : '',
+      BatchNo: filters.searchType === 'batchNo' ? (filters.searchValue || '') : '',
+      ExpiryFrom: filters.expiryFrom || '',
+      ExpiryTo: filters.expiryTo || '',
+      NearExpiryDays: 0,
+      ZeroStock: -1,
+      NegativeStock: 0,
     };
-    fetchStockList();
-  }, [selectedFilter]);
+
+    return { clinicId, options };
+  };
 
   // ────────────────────────────────────────────────
-  // Fetch medicine master list for dropdown
+  // Data fetching
+  const fetchStockList = async (filters) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const { clinicId, options } = buildApiOptions(filters);
+      const data = await getMedicineStockList(clinicId, options);
+      setAllStockList(data);
+    } catch (err) {
+      console.error('fetchStockList error:', err);
+      setError(
+        err?.status >= 400 || err?.code >= 400
+          ? err
+          : { message: err.message || 'Failed to load medicine stock' }
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchStockList(DEFAULT_FILTERS);
+  }, []);
+
+  // ────────────────────────────────────────────────
+  // Is any filter active (differs from default)?
+  const isFilterActive = useMemo(() => {
+    return (
+      appliedFilters.searchValue !== DEFAULT_FILTERS.searchValue ||
+      appliedFilters.searchType !== DEFAULT_FILTERS.searchType ||
+      appliedFilters.expiryFrom !== DEFAULT_FILTERS.expiryFrom ||
+      appliedFilters.expiryTo !== DEFAULT_FILTERS.expiryTo
+    );
+  }, [appliedFilters]);
+
+  // ────────────────────────────────────────────────
+  // Medicine master list for add form dropdown
   const fetchMedicineList = async () => {
     try {
       setMedicineListLoading(true);
@@ -148,23 +157,6 @@ const MedicineStockList = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Computed values
-  const filteredStockList = useMemo(() => {
-    if (!searchTerm.trim()) return allStockList;
-    const term = searchTerm.toLowerCase();
-    return allStockList.filter(
-      (stock) =>
-        stock.medicineName?.toLowerCase().includes(term) ||
-        stock.genericName?.toLowerCase().includes(term) ||
-        stock.batchNo?.toLowerCase().includes(term) ||
-        stock.manufacturer?.toLowerCase().includes(term) ||
-        stock.clinicName?.toLowerCase().includes(term) ||
-        stock.branchName?.toLowerCase().includes(term)
-    );
-  }, [allStockList, searchTerm]);
-
-  // Filtered medicine list for the dropdown search
   const filteredMedicineList = useMemo(() => {
     if (!medicineSearch.trim()) return medicineList;
     const term = medicineSearch.toLowerCase();
@@ -188,8 +180,7 @@ const MedicineStockList = () => {
   const formatDate = (dateString) => {
     if (!dateString) return '—';
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-GB');
+      return new Date(dateString).toLocaleDateString('en-GB');
     } catch {
       return dateString;
     }
@@ -202,24 +193,31 @@ const MedicineStockList = () => {
 
   // ────────────────────────────────────────────────
   // Handlers
-  const handleSearch = () => setSearchTerm(searchInput.trim());
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilterInputs(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSearch = () => {
+    setAppliedFilters({ ...filterInputs });
+    fetchStockList(filterInputs);
+  };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') handleSearch();
   };
 
-  const openDetails = (stock) => setSelectedStock(stock);
+  const handleClearFilters = () => {
+    setFilterInputs({ ...DEFAULT_FILTERS });
+    setAppliedFilters({ ...DEFAULT_FILTERS });
+    fetchStockList(DEFAULT_FILTERS);
+  };
 
+  const openDetails = (stock) => setSelectedStock(stock);
   const closeModal = () => setSelectedStock(null);
 
   const openAddForm = () => {
-    setFormData({
-      MedicineID: '',
-      BatchNo: '',
-      ExpiryDate: '',
-      QuantityIn: '',
-      PurchasePrice: '',
-    });
+    setFormData({ MedicineID: '', BatchNo: '', ExpiryDate: '', QuantityIn: '', PurchasePrice: '' });
     setSelectedMedicineName('');
     setMedicineSearch('');
     setShowMedicineDropdown(false);
@@ -244,7 +242,6 @@ const MedicineStockList = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle medicine selection from dropdown
   const handleMedicineSelect = (medicine) => {
     setFormData((prev) => ({ ...prev, MedicineID: medicine.id }));
     setSelectedMedicineName(medicine.name);
@@ -276,8 +273,8 @@ const MedicineStockList = () => {
       const branchId = Number(localStorage.getItem('branchID'));
 
       await addMedicineStock({
-        clinicId: clinicId,
-        branchId: branchId,
+        clinicId,
+        branchId,
         MedicineID: Number(formData.MedicineID),
         BatchNo: formData.BatchNo.trim(),
         ExpiryDate: formData.ExpiryDate.trim(),
@@ -286,17 +283,9 @@ const MedicineStockList = () => {
       });
 
       setFormSuccess(true);
-      setTimeout(async () => {
+      setTimeout(() => {
         closeAddForm();
-        const options = {
-          BranchID: branchId,
-          NearExpiryDays: 0,
-          ZeroStock: -1,
-          NegativeStock: 0,
-        };
-        const data = await getMedicineStockList(clinicId, options);
-        setStockList(data);
-        setAllStockList(data);
+        fetchStockList(appliedFilters);
       }, 1500);
     } catch (err) {
       console.error('Add medicine stock failed:', err);
@@ -326,40 +315,78 @@ const MedicineStockList = () => {
       <ErrorHandler error={error} />
       <Header title="Medicine Stock Management" />
 
-      {/* Toolbar */}
-      <div className={styles.toolbar}>
-        <div className={styles.selectWrapper}>
-          <FiFilter className={styles.selectIcon} size={20} />
-          <select
-            value={selectedFilter}
-            onChange={(e) => setSelectedFilter(e.target.value)}
-            className={styles.select}
-          >
-            {STOCK_STATUS_FILTERS.map((filter) => (
-              <option key={filter.id} value={filter.id}>
-                {filter.label}
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* ── Single-line Filters Bar ── */}
+      <div className={styles.filtersContainer}>
+        <div className={styles.filtersRow}>
 
-        <div className={styles.searchContainer}>
-          <input
-            type="text"
-            placeholder="Search by medicine name, batch, manufacturer..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className={styles.searchInput}
-          />
-          <button onClick={handleSearch} className={styles.searchBtn}>
-            <FiSearch size={20} />
-          </button>
-        </div>
+          {/* Combined Search: Medicine Name / Batch No */}
+          <div className={styles.searchGroup}>
+            <select
+              name="searchType"
+              value={filterInputs.searchType}
+              onChange={handleFilterChange}
+              className={styles.searchTypeSelect}
+            >
+              <option value="medicineName">Medicine</option>
+              <option value="batchNo">Batch No</option>
+            </select>
+            <input
+              type="text"
+              name="searchValue"
+              placeholder={filterInputs.searchType === 'medicineName' ? 'Search by medicine name' : 'Search by batch no.'}
+              value={filterInputs.searchValue}
+              onChange={handleFilterChange}
+              onKeyPress={handleKeyPress}
+              className={styles.searchValueInput}
+            />
+          </div>
 
-        <div className={styles.addSection}>
+          {/* Expiry From */}
+          <div className={styles.dateWrapper}>
+            {!filterInputs.expiryFrom && (
+              <span className={styles.datePlaceholder}>From Date</span>
+            )}
+            <input
+              type="date"
+              name="expiryFrom"
+              value={filterInputs.expiryFrom}
+              onChange={handleFilterChange}
+              className={`${styles.filterInput} ${!filterInputs.expiryFrom ? styles.dateEmpty : ''}`}
+            />
+          </div>
+
+          {/* Expiry To */}
+          <div className={styles.dateWrapper}>
+            {!filterInputs.expiryTo && (
+              <span className={styles.datePlaceholder}>To Date</span>
+            )}
+            <input
+              type="date"
+              name="expiryTo"
+              value={filterInputs.expiryTo}
+              onChange={handleFilterChange}
+              className={`${styles.filterInput} ${!filterInputs.expiryTo ? styles.dateEmpty : ''}`}
+            />
+          </div>
+
+          {/* Actions */}
+          <div className={styles.filterActions}>
+            <button onClick={handleSearch} className={styles.searchButton}>
+              <FiSearch size={15} />
+              Search
+            </button>
+            {isFilterActive && (
+              <button onClick={handleClearFilters} className={styles.clearButton}>
+                <FiX size={15} />
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* Add Stock — right-aligned */}
           <button onClick={openAddForm} className={styles.addBtn}>
-            <FiPlus size={22} />Add Stock
+            <FiPlus size={17} />
+            Add Stock
           </button>
         </div>
       </div>
@@ -381,14 +408,14 @@ const MedicineStockList = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredStockList.length === 0 ? (
+            {allStockList.length === 0 ? (
               <tr>
                 <td colSpan={9} className={styles.noData}>
-                  {searchTerm ? 'No stock found.' : 'No stock records yet.'}
+                  {isFilterActive ? 'No stock found.' : 'No stock records yet.'}
                 </td>
               </tr>
             ) : (
-              filteredStockList.map((stock) => (
+              allStockList.map((stock) => (
                 <tr key={stock.id}>
                   <td>
                     <div className={styles.nameCell}>
@@ -397,9 +424,7 @@ const MedicineStockList = () => {
                       </div>
                       <div>
                         <div className={styles.name}>{stock.medicineName}</div>
-                        <div className={styles.type}>
-                          {stock.genericName || '—'}
-                        </div>
+                        <div className={styles.type}>{stock.genericName || '—'}</div>
                       </div>
                     </div>
                   </td>
@@ -410,8 +435,7 @@ const MedicineStockList = () => {
                       <div className={styles.daysToExpiry}>
                         {stock.daysToExpiry >= 0
                           ? `${stock.daysToExpiry} days left`
-                          : `Expired ${Math.abs(stock.daysToExpiry)} days ago`
-                        }
+                          : `Expired ${Math.abs(stock.daysToExpiry)} days ago`}
                       </div>
                     )}
                   </td>
@@ -461,38 +485,18 @@ const MedicineStockList = () => {
                   {selectedStock.stockStatusDesc?.toUpperCase() || 'NORMAL'}
                 </span>
               </div>
-              <button onClick={closeModal} className={styles.modalClose}>
-                ×
-              </button>
+              <button onClick={closeModal} className={styles.modalClose}>×</button>
             </div>
 
             <div className={styles.detailsModalBody}>
               <table className={styles.detailsTable}>
                 <tbody>
-                  <tr>
-                    <td className={styles.label}>Clinic</td>
-                    <td className={styles.value}>{selectedStock.clinicName || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Branch</td>
-                    <td className={styles.value}>{selectedStock.branchName || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Manufacturer</td>
-                    <td className={styles.value}>{selectedStock.manufacturer || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>HSN Code</td>
-                    <td className={styles.value}>{selectedStock.hsnCode || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Batch No</td>
-                    <td className={styles.value}>{selectedStock.batchNo || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Expiry Date</td>
-                    <td className={styles.value}>{formatDate(selectedStock.expiryDate)}</td>
-                  </tr>
+                  <tr><td className={styles.label}>Clinic</td><td className={styles.value}>{selectedStock.clinicName || '—'}</td></tr>
+                  <tr><td className={styles.label}>Branch</td><td className={styles.value}>{selectedStock.branchName || '—'}</td></tr>
+                  <tr><td className={styles.label}>Manufacturer</td><td className={styles.value}>{selectedStock.manufacturer || '—'}</td></tr>
+                  <tr><td className={styles.label}>HSN Code</td><td className={styles.value}>{selectedStock.hsnCode || '—'}</td></tr>
+                  <tr><td className={styles.label}>Batch No</td><td className={styles.value}>{selectedStock.batchNo || '—'}</td></tr>
+                  <tr><td className={styles.label}>Expiry Date</td><td className={styles.value}>{formatDate(selectedStock.expiryDate)}</td></tr>
                   <tr>
                     <td className={styles.label}>Days to Expiry</td>
                     <td className={styles.value}>
@@ -503,26 +507,11 @@ const MedicineStockList = () => {
                         : '—'}
                     </td>
                   </tr>
-                  <tr>
-                    <td className={styles.label}>Quantity In</td>
-                    <td className={styles.value}>{selectedStock.quantityIn ?? 0}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Quantity Out</td>
-                    <td className={styles.value}>{selectedStock.quantityOut ?? 0}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Balance Quantity</td>
-                    <td className={styles.value}>{selectedStock.balanceQuantity ?? 0}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Purchase Price</td>
-                    <td className={styles.value}>{formatCurrency(selectedStock.purchasePrice)}</td>
-                  </tr>
-                  <tr>
-                    <td className={styles.label}>Average Price</td>
-                    <td className={styles.value}>{formatCurrency(selectedStock.averagePrice)}</td>
-                  </tr>
+                  <tr><td className={styles.label}>Quantity In</td><td className={styles.value}>{selectedStock.quantityIn ?? 0}</td></tr>
+                  <tr><td className={styles.label}>Quantity Out</td><td className={styles.value}>{selectedStock.quantityOut ?? 0}</td></tr>
+                  <tr><td className={styles.label}>Balance Quantity</td><td className={styles.value}>{selectedStock.balanceQuantity ?? 0}</td></tr>
+                  <tr><td className={styles.label}>Purchase Price</td><td className={styles.value}>{formatCurrency(selectedStock.purchasePrice)}</td></tr>
+                  <tr><td className={styles.label}>Average Price</td><td className={styles.value}>{formatCurrency(selectedStock.averagePrice)}</td></tr>
                 </tbody>
               </table>
             </div>
@@ -542,9 +531,7 @@ const MedicineStockList = () => {
           <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Add New Medicine Stock</h2>
-              <button onClick={closeAddForm} className={styles.modalClose}>
-                <FiX />
-              </button>
+              <button onClick={closeAddForm} className={styles.modalClose}><FiX /></button>
             </div>
 
             <form onSubmit={handleSubmit} className={styles.modalBody}>
@@ -554,38 +541,21 @@ const MedicineStockList = () => {
               <div className={styles.formGrid}>
                 <h3 className={styles.formSectionTitle}>Stock Information</h3>
 
-                {/* ── Medicine Name Searchable Dropdown ── */}
+                {/* Medicine Name Searchable Dropdown */}
                 <div className={`${styles.formGroup} ${styles.fullWidth}`} ref={medicineDropdownRef}>
-                  <label>
-                    Medicine Name <span className={styles.required}>*</span>
-                  </label>
-
-                  {/* Hidden required input to trigger native validation */}
-                  <input
-                    type="hidden"
-                    name="MedicineID"
-                    value={formData.MedicineID}
-                    required
-                  />
-
+                  <label>Medicine Name <span className={styles.required}>*</span></label>
+                  <input type="hidden" name="MedicineID" value={formData.MedicineID} required />
                   <div className={styles.medicineDropdownWrapper}>
-                    {/* Trigger / selected display */}
                     {!showMedicineDropdown && (
                       <div
                         className={`${styles.medicineSelectTrigger} ${!formData.MedicineID ? styles.placeholder : ''}`}
                         onClick={handleMedicineInputFocus}
                       >
-                        <span>
-                          {selectedMedicineName || (medicineListLoading ? 'Loading medicines...' : 'Select a medicine...')}
-                        </span>
+                        <span>{selectedMedicineName || (medicineListLoading ? 'Loading medicines...' : 'Select a medicine...')}</span>
                         <div className={styles.medicineTriggerActions}>
                           {formData.MedicineID && (
-                            <button
-                              type="button"
-                              className={styles.medicineClearBtn}
-                              onClick={(e) => { e.stopPropagation(); handleClearMedicine(); }}
-                              title="Clear selection"
-                            >
+                            <button type="button" className={styles.medicineClearBtn}
+                              onClick={(e) => { e.stopPropagation(); handleClearMedicine(); }} title="Clear selection">
                               <FiX size={14} />
                             </button>
                           )}
@@ -593,124 +563,57 @@ const MedicineStockList = () => {
                         </div>
                       </div>
                     )}
-
-                    {/* Search input (shown when open) */}
                     {showMedicineDropdown && (
-                      <input
-                        autoFocus
-                        type="text"
-                        className={styles.medicineSearchInput}
-                        placeholder="Type to search medicine..."
-                        value={medicineSearch}
+                      <input autoFocus type="text" className={styles.medicineSearchInput}
+                        placeholder="Type to search medicine..." value={medicineSearch}
                         onChange={(e) => setMedicineSearch(e.target.value)}
-                        onBlur={() => {
-                          // small delay so click on item registers
-                          setTimeout(() => setShowMedicineDropdown(false), 150);
-                        }}
-                      />
+                        onBlur={() => setTimeout(() => setShowMedicineDropdown(false), 150)} />
                     )}
-
-                    {/* Dropdown list */}
                     {showMedicineDropdown && (
                       <div className={styles.medicineDropdownList}>
                         {medicineListLoading ? (
-                          <div className={styles.medicineDropdownLoading}>
-                            Loading medicines...
-                          </div>
+                          <div className={styles.medicineDropdownLoading}>Loading medicines...</div>
                         ) : filteredMedicineList.length === 0 ? (
-                          <div className={styles.medicineDropdownEmpty}>
-                            No medicines found
-                          </div>
+                          <div className={styles.medicineDropdownEmpty}>No medicines found</div>
                         ) : (
                           filteredMedicineList.map((med) => (
-                            <div
-                              key={med.id}
+                            <div key={med.id}
                               className={`${styles.medicineDropdownItem} ${formData.MedicineID === med.id ? styles.medicineDropdownItemActive : ''}`}
-                              onMouseDown={() => handleMedicineSelect(med)}
-                            >
-                              <div className={styles.medicineDropdownItemName}>
-                                {med.name}
-                              </div>
-                              <div className={styles.medicineDropdownItemMeta}>
-                               
-                              </div>
+                              onMouseDown={() => handleMedicineSelect(med)}>
+                              <div className={styles.medicineDropdownItemName}>{med.name}</div>
+                              <div className={styles.medicineDropdownItemMeta}></div>
                             </div>
                           ))
                         )}
                       </div>
                     )}
                   </div>
-
-                  
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>
-                    Batch Number <span className={styles.required}>*</span>
-                  </label>
-                  <input
-                    required
-                    name="BatchNo"
-                    value={formData.BatchNo}
-                    onChange={handleInputChange}
-                    placeholder="e.g., BATCH001"
-                  />
+                  <label>Batch Number <span className={styles.required}>*</span></label>
+                  <input required name="BatchNo" value={formData.BatchNo} onChange={handleInputChange} placeholder="e.g., BATCH001" />
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>
-                    Expiry Date <span className={styles.required}>*</span>
-                  </label>
-                  <input
-                    required
-                    type="date"
-                    name="ExpiryDate"
-                    value={formData.ExpiryDate}
-                    onChange={handleInputChange}
-                  />
+                  <label>Expiry Date <span className={styles.required}>*</span></label>
+                  <input required type="date" name="ExpiryDate" value={formData.ExpiryDate} onChange={handleInputChange} />
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>
-                    Quantity In <span className={styles.required}>*</span>
-                  </label>
-                  <input
-                    required
-                    type="number"
-                    name="QuantityIn"
-                    value={formData.QuantityIn}
-                    onChange={handleInputChange}
-                    placeholder="0"
-                    min="1"
-                  />
+                  <label>Quantity In <span className={styles.required}>*</span></label>
+                  <input required type="number" name="QuantityIn" value={formData.QuantityIn} onChange={handleInputChange} placeholder="0" min="1" />
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>
-                    Purchase Price <span className={styles.required}>*</span>
-                  </label>
-                  <input
-                    required
-                    type="number"
-                    step="0.01"
-                    name="PurchasePrice"
-                    value={formData.PurchasePrice}
-                    onChange={handleInputChange}
-                    placeholder="0.00"
-                    min="0"
-                  />
+                  <label>Purchase Price <span className={styles.required}>*</span></label>
+                  <input required type="number" step="0.01" name="PurchasePrice" value={formData.PurchasePrice} onChange={handleInputChange} placeholder="0.00" min="0" />
                 </div>
               </div>
 
               <div className={styles.modalFooter}>
-                <button type="button" onClick={closeAddForm} className={styles.btnCancel}>
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={formLoading || !formData.MedicineID}
-                  className={styles.btnSubmit}
-                >
+                <button type="button" onClick={closeAddForm} className={styles.btnCancel}>Cancel</button>
+                <button type="submit" disabled={formLoading || !formData.MedicineID} className={styles.btnSubmit}>
                   {formLoading ? 'Adding...' : 'Add Stock'}
                 </button>
               </div>

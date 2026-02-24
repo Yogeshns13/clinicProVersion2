@@ -1,16 +1,25 @@
 // src/components/EmployeeList.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiPlus, FiHome } from 'react-icons/fi';
-import { getEmployeeList, getDepartmentList} from '../api/api.js';
+import { FiSearch, FiPlus, FiX } from 'react-icons/fi';
+import { getEmployeeList, getDepartmentList } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddEmployee from './AddEmployee.jsx';
-import './EmployeeList.css';
+import styles from './EmployeeList.module.css';
 
 // ────────────────────────────────────────────────
 // CONSTANTS
 // ────────────────────────────────────────────────
+const STATUS_OPTIONS = [
+  { id: 1, label: 'Active' },
+  { id: 2, label: 'Inactive' },
+  { id: 3, label: 'Probation' },
+  { id: 4, label: 'Suspended' },
+  { id: 5, label: 'Retired' },
+  { id: 6, label: 'Deleted' },
+];
+
 const DESIGNATION_OPTIONS = [
   { id: 1, label: 'Doctor' },
   { id: 2, label: 'Nurse' },
@@ -24,30 +33,57 @@ const DESIGNATION_OPTIONS = [
   { id: 10, label: 'Others' },
 ];
 
+const SEARCH_TYPE_OPTIONS = [
+  { value: 'Name',         label: 'Name' },
+  { value: 'Mobile',       label: 'Mobile' },
+  { value: 'EmployeeCode', label: 'Emp Code' },
+];
+
 // ────────────────────────────────────────────────
 const EmployeeList = () => {
   const navigate = useNavigate();
 
-  // Data & Filter
+  // Data
   const [employees, setEmployees] = useState([]);
-  const [allEmployees, setAllEmployees] = useState([]);
   const [departments, setDepartments] = useState([]);
-  const [selectedDepartmentId, setSelectedDepartmentId] = useState('all');
-  const [searchInput, setSearchInput] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Filter inputs (staged — not applied until Search is clicked)
+  const [filterInputs, setFilterInputs] = useState({
+    searchType:    'Name',
+    searchValue:   '',
+    status:        '',
+    departmentId:  '',
+    designation:   '',
+  });
+
+  // Applied filters (drive the API call)
+  const [appliedFilters, setAppliedFilters] = useState({
+    searchType:    'Name',
+    searchValue:   '',
+    status:        '',
+    departmentId:  '',
+    designation:   '',
+  });
 
   // Add Form Modal
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
 
   // ────────────────────────────────────────────────
-  // Data fetching
+  // Derived: are any filters actually active?
+  const hasActiveFilters =
+    appliedFilters.searchValue.trim() !== '' ||
+    appliedFilters.status             !== '' ||
+    appliedFilters.departmentId       !== '' ||
+    appliedFilters.designation        !== '';
+
+  // ────────────────────────────────────────────────
+  // Fetch departments (once)
   useEffect(() => {
     const fetchDepartments = async () => {
-        const clinicId = Number(localStorage.getItem('clinicID'));
-        const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
       try {
         const data = await getDepartmentList(clinicId, branchId, {});
         setDepartments(data);
@@ -58,22 +94,29 @@ const EmployeeList = () => {
     fetchDepartments();
   }, []);
 
-  const fetchEmployees = async () => {
+  // ────────────────────────────────────────────────
+  // Data fetching — driven by appliedFilters
+  const fetchEmployees = async (filters = appliedFilters) => {
     try {
       setLoading(true);
       setError(null);
+
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-      const departmentId = selectedDepartmentId === 'all' ? 0 : Number(selectedDepartmentId) || 0;
 
-      const data = await getEmployeeList(clinicId, {
-        BranchID: branchId,
-        EmployeeID: 0,
-        DepartmentID: departmentId,
-      });
+      const options = {
+        BranchID:      branchId,
+        EmployeeID:    0,
+        Name:          filters.searchType === 'Name'         ? filters.searchValue : '',
+        Mobile:        filters.searchType === 'Mobile'       ? filters.searchValue : '',
+        EmployeeCode:  filters.searchType === 'EmployeeCode' ? filters.searchValue : '',
+        DepartmentID:  filters.departmentId !== '' ? Number(filters.departmentId) : 0,
+        Designation:   filters.designation  !== '' ? Number(filters.designation)  : 0,
+        Status:        filters.status       !== '' ? Number(filters.status)        : -1,
+      };
 
+      const data = await getEmployeeList(clinicId, options);
       setEmployees(data);
-      setAllEmployees(data);
     } catch (err) {
       console.error('fetchEmployees error:', err);
       setError(
@@ -87,58 +130,44 @@ const EmployeeList = () => {
   };
 
   useEffect(() => {
-    fetchEmployees();
-  }, [selectedDepartmentId]);
-
-  // ────────────────────────────────────────────────
-  // Computed values
-  const filteredEmployees = useMemo(() => {
-    if (!searchTerm.trim()) return allEmployees;
-    const term = searchTerm.toLowerCase();
-    return allEmployees.filter(
-      (emp) =>
-        emp.name?.toLowerCase().includes(term) ||
-        emp.firstName?.toLowerCase().includes(term) ||
-        emp.lastName?.toLowerCase().includes(term) ||
-        emp.employeeCode?.toLowerCase().includes(term) ||
-        emp.mobile?.toLowerCase().includes(term) ||
-        emp.email?.toLowerCase().includes(term) ||
-        emp.departmentName?.toLowerCase().includes(term) ||
-        emp.designationDesc?.toLowerCase().includes(term)
-    );
-  }, [allEmployees, searchTerm]);
+    fetchEmployees(appliedFilters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedFilters]);
 
   // ────────────────────────────────────────────────
   // Helper functions
-  const getDesignationLabel = (designationId) => {
-    return DESIGNATION_OPTIONS.find((d) => d.id === designationId)?.label || '—';
-  };
+  const getDesignationLabel = (designationId) =>
+    DESIGNATION_OPTIONS.find((d) => d.id === designationId)?.label || '—';
 
   const getStatusClass = (status) => {
-    if (status === 'active') return 'active';
-    if (status === 'inactive') return 'inactive';
-    return 'inactive';
+    if (status === 'active')   return styles.active;
+    if (status === 'inactive') return styles.inactive;
+    return styles.inactive;
   };
 
   // ────────────────────────────────────────────────
   // Handlers
-  const handleSearch = () => setSearchTerm(searchInput.trim());
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') handleSearch();
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilterInputs((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleViewDetails = (employee) => {
-    navigate(`/view-employee/${employee.id}`);
+  const handleSearch = () => {
+    setAppliedFilters({ ...filterInputs });
   };
 
-  const openAddForm = () => setIsAddFormOpen(true);
+  const handleClearFilters = () => {
+    const empty = { searchType: 'Name', searchValue: '', status: '', departmentId: '', designation: '' };
+    setFilterInputs(empty);
+    setAppliedFilters(empty);
+  };
 
+  const handleViewDetails = (employee) => navigate(`/view-employee/${employee.id}`);
+
+  const openAddForm  = () => setIsAddFormOpen(true);
   const closeAddForm = () => setIsAddFormOpen(false);
 
-  const handleAddSuccess = () => {
-    fetchEmployees();
-  };
+  const handleAddSuccess = () => fetchEmployees(appliedFilters);
 
   // ────────────────────────────────────────────────
   // Early returns
@@ -146,58 +175,112 @@ const EmployeeList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className="clinic-loading">Loading employees...</div>;
-
-  if (error) return <div className="clinic-error">Error: {error.message || error}</div>;
+  if (loading) return <div className={styles.loading}>Loading employees...</div>;
+  if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
   return (
-    <div className="clinic-list-wrapper">
-      <ErrorHandler error={error} />
+    <div className={styles.listWrapper}>
       <Header title="Employee Management" />
 
-      {/* Toolbar */}
-      <div className="clinic-toolbar">
-        <div className="clinic-select-wrapper">
-          <FiHome className="clinic-select-icon" size={20} />
-          <select
-            value={selectedDepartmentId}
-            onChange={(e) => setSelectedDepartmentId(e.target.value)}
-            className="clinic-select"
-          >
-            <option value="all">All Departments</option>
-            {departments.map((dept) => (
-              <option key={dept.id} value={dept.id}>
-                {dept.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* ── Filter Bar ── */}
+      <div className={styles.filtersContainer}>
+        <div className={styles.filtersGrid}>
 
-        <div className="clinic-search-container">
-          <input
-            type="text"
-            placeholder="Search by name, code, mobile, email..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="clinic-search-input"
-          />
-          <button onClick={handleSearch} className="clinic-search-btn">
-            <FiSearch size={20} />
-          </button>
-        </div>
+          {/* Search type + value */}
+          <div className={styles.searchGroup}>
+            <select
+              name="searchType"
+              value={filterInputs.searchType}
+              onChange={handleFilterChange}
+              className={styles.searchTypeSelect}
+            >
+              {SEARCH_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              name="searchValue"
+              placeholder={`Search by ${SEARCH_TYPE_OPTIONS.find((o) => o.value === filterInputs.searchType)?.label || ''}...`}
+              value={filterInputs.searchValue}
+              onChange={handleFilterChange}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className={styles.searchInput}
+            />
+          </div>
 
-        <div className="clinic-add-section">
-          <button onClick={openAddForm} className="clinic-add-btn">
-            <FiPlus size={22} /> Add Emp
-          </button>
+          {/* Department */}
+          <div className={styles.filterGroup}>
+            <select
+              name="departmentId"
+              value={filterInputs.departmentId}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            >
+              <option value="">All Departments</option>
+              {departments.map((dept) => (
+                <option key={dept.id} value={dept.id}>{dept.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Designation */}
+          <div className={styles.filterGroup}>
+            <select
+              name="designation"
+              value={filterInputs.designation}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            >
+              <option value="">All Designations</option>
+              {DESIGNATION_OPTIONS.map((d) => (
+                <option key={d.id} value={d.id}>{d.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status */}
+          <div className={styles.filterGroup}>
+            <select
+              name="status"
+              value={filterInputs.status}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            >
+              <option value="">All Status</option>
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s.id} value={s.id}>{s.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Actions */}
+          <div className={styles.filterActions}>
+            <button onClick={handleSearch} className={styles.searchButton}>
+              <FiSearch size={16} />
+              Search
+            </button>
+
+            {hasActiveFilters && (
+              <button onClick={handleClearFilters} className={styles.clearButton}>
+                <FiX size={16} />
+                Clear
+              </button>
+            )}
+
+            <button onClick={openAddForm} className={styles.addBtn}>
+              <FiPlus size={18} />
+              Add Emp
+            </button>
+          </div>
+
         </div>
       </div>
 
-      {/* Table */}
-      <div className="clinic-table-container">
-        <table className="clinic-table">
+      {/* ── Table ── */}
+      <div className={styles.tableContainer}>
+        <table className={styles.table}>
           <thead>
             <tr>
               <th>Employee</th>
@@ -210,45 +293,45 @@ const EmployeeList = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredEmployees.length === 0 ? (
+            {employees.length === 0 ? (
               <tr>
-                <td colSpan={7} className="clinic-no-data">
-                  {searchTerm ? 'No employees found.' : 'No employees registered yet.'}
+                <td colSpan={7} className={styles.noData}>
+                  {hasActiveFilters ? 'No employees found.' : 'No employees registered yet.'}
                 </td>
               </tr>
             ) : (
-              filteredEmployees.map((employee) => (
+              employees.map((employee) => (
                 <tr key={employee.id}>
                   <td>
-                    <div className="clinic-name-cell">
-                      <div className="clinic-avatar">
+                    <div className={styles.nameCell}>
+                      <div className={styles.avatar}>
                         {employee.firstName?.charAt(0).toUpperCase() || 'E'}
                       </div>
                       <div>
-                        <div className="clinic-name">
+                        <div className={styles.name}>
                           {employee.firstName} {employee.lastName}
                         </div>
-                        <div className="clinic-type">{employee.email || '—'}</div>
+                        <div className={styles.subInfo}>{employee.email || '—'}</div>
                       </div>
                     </div>
                   </td>
                   <td>{employee.employeeCode || '—'}</td>
                   <td>{employee.departmentName || '—'}</td>
                   <td>
-                    <span className="branch-type-badge">
+                    <span className={styles.designationBadge}>
                       {getDesignationLabel(employee.designation)}
                     </span>
                   </td>
                   <td>{employee.mobile || '—'}</td>
                   <td>
-                    <span className={`status-badge ${getStatusClass(employee.status)}`}>
+                    <span className={`${styles.statusBadge} ${getStatusClass(employee.status)}`}>
                       {employee.status.toUpperCase()}
                     </span>
                   </td>
                   <td>
-                    <button 
-                      onClick={() => handleViewDetails(employee)} 
-                      className="clinic-details-btn"
+                    <button
+                      onClick={() => handleViewDetails(employee)}
+                      className={styles.detailsBtn}
                     >
                       View Details
                     </button>

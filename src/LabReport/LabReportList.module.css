@@ -61,18 +61,19 @@
   align-items: end;
 }
 
+/* ── Fused search: select joined to input (VendorList style) ── */
 .searchGroup {
   display: flex;
-  gap: 10px;
   align-items: stretch;
 }
 
 .searchTypeSelect {
   min-width: 140px;
   height: 40px;
-  padding: 10px 12px;
+  padding: 0 12px;
   background: white;
   border: 1px solid #cbd5e1;
+  border-right: none;
   border-radius: 10px 0 0 10px;
   color: var(--text-dark);
   font-size: 0.85rem;
@@ -90,11 +91,10 @@
 .searchInput {
   flex: 1;
   height: 40px;
-  padding: 10px 15px;
+  padding: 0 15px;
   background: white;
   border: 1px solid #cbd5e1;
   border-radius: 0 10px 10px 0;
-  border-left: none;
   color: var(--text-dark);
   font-size: 0.85rem;
   transition: all 0.3s ease;
@@ -136,6 +136,35 @@
   outline: none;
   border-color: var(--accent-end);
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+/* ── Date placeholder overlay (VendorList pattern) ── */
+.dateWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.dateWrapper .filterInput {
+  width: 100%;
+  color: var(--text-dark);
+}
+
+.dateEmpty::-webkit-datetime-edit-text,
+.dateEmpty::-webkit-datetime-edit-month-field,
+.dateEmpty::-webkit-datetime-edit-day-field,
+.dateEmpty::-webkit-datetime-edit-year-field {
+  color: transparent;
+}
+
+.datePlaceholder {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  color: #94a3b8;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .filterActions {
@@ -614,8 +643,6 @@
   background: rgba(239, 68, 68);
   transform: translateY(-2px);
 }
-
-
 
 .btnCancel {
   background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
@@ -1152,6 +1179,10 @@
   border-left: 1px solid var(--accent-end);
 }
 
+:global(.dark-mode) .datePlaceholder {
+  color: #64748b;
+}
+
 :global(.dark-mode) .clearButton {
   background: #334155;
   color: #e2e8f0;
@@ -1292,6 +1323,20 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .filtersGrid {
+    grid-template-columns: 1fr 1fr auto;
+  }
+
+  .searchGroup {
+    grid-column: 1 / -1;
+  }
+
+  .filterActions {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 768px) {
   .filtersGrid {
     grid-template-columns: 1fr;
@@ -1303,6 +1348,7 @@
 
   .searchTypeSelect {
     border-radius: 10px;
+    border-right: 1px solid #cbd5e1;
   }
 
   .searchInput {

@@ -1,0 +1,570 @@
+/* ==================== VARIABLES (local fallbacks) ==================== */
+.listWrapper {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+}
+
+/* ==================== WRAPPER ==================== */
+.listWrapper {
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ==================== TOOLBAR / FILTER BAR ==================== */
+.toolbar {
+  background: white;
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.filtersRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+/* Generic select */
+.selectInput {
+  height: 34px;
+  padding: 0 10px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: var(--text-dark);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  max-width: 160px;
+}
+
+.selectInput:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+/* Joined search-type + search-value */
+.searchGroup {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 180px;
+}
+
+.searchTypeSelect {
+  height: 34px;
+  padding: 0 8px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  color: var(--text-dark);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.searchTypeSelect:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+.searchInput {
+  flex: 1;
+  height: 34px;
+  padding: 0 12px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0 8px 8px 0;
+  color: var(--text-dark);
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+}
+
+.searchInput::placeholder {
+  color: #94a3b8;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-left: 1px solid var(--accent-end);
+}
+
+/* Actions */
+.filterActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.searchButton,
+.clearButton,
+.generateBtn,
+.addBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 14px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.searchButton {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+}
+
+.searchButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+}
+
+.clearButton {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.clearButton:hover {
+  background: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.generateBtn {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+}
+
+.generateBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+}
+
+.addBtn {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+}
+
+.addBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+}
+
+/* ==================== TABLE ==================== */
+.tableContainer {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.10);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  padding: 9px 12px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  border: none;
+}
+
+.table td {
+  padding: 5px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  color: var(--text-dark);
+  font-size: 0.74rem;
+  vertical-align: middle;
+}
+
+.table th:last-child,
+.table td:last-child {
+  text-align: right;
+  padding-right: 16px;
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #d5e6ec;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(48, 178, 181, 0.08) !important;
+  transition: background-color 0.25s ease;
+}
+
+/* ==================== TABLE CELLS ==================== */
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  width: 27px;
+  height: 27px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  font-weight: bold;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(32, 125, 156, 0.28);
+  flex-shrink: 0;
+}
+
+.name {
+  font-weight: 700;
+  color: var(--text-dark);
+  font-size: 0.78rem;
+}
+
+.subInfo {
+  font-size: 0.67rem;
+  color: #64748b;
+  margin-top: 1px;
+}
+
+/* Shift / branch badge */
+.shiftBadge {
+  padding: 3px 8px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.08), rgba(48, 178, 181, 0.08));
+  border: 1px solid rgba(48, 178, 181, 0.25);
+  color: var(--accent-start);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+/* ==================== STATUS BADGES ==================== */
+.statusBadge {
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 0.63rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ==================== DELETE BUTTON ==================== */
+.btnDelete {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 7px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btnDelete:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* ==================== STATES ==================== */
+.noData {
+  text-align: center;
+  padding: 68px 17px;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+.loading,
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  font-size: 1.3rem;
+  color: #64748b;
+}
+
+.error { color: #ef4444; }
+
+/* ==================== DELETE CONFIRM MODAL ==================== */
+.modalOverlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 460px;
+  width: 90%;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.modalHeader h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--primary-start);
+}
+
+.modalClose {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.modalClose:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.modalBody { padding: 24px; }
+
+.deleteConfirmation { text-align: center; }
+
+.deleteIcon {
+  color: #ef4444;
+  margin-bottom: 16px;
+}
+
+.deleteMessage {
+  font-size: 1rem;
+  color: var(--text-dark);
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.deleteDetails {
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: left;
+  margin-bottom: 12px;
+}
+
+.deleteDetails p {
+  margin: 6px 0;
+  font-size: 0.85rem;
+  color: var(--text-dark);
+}
+
+.deleteWarning {
+  font-size: 0.8rem;
+  color: #ef4444;
+  font-style: italic;
+}
+
+.modalFooter {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.btnCancelModal {
+  padding: 10px 20px;
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btnCancelModal:hover {
+  background: rgba(100, 116, 139, 0.2);
+}
+
+.btnDeleteConfirm {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+}
+
+.btnDeleteConfirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+/* ==================== DARK MODE ==================== */
+:global(.dark-mode) .listWrapper {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .toolbar {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .selectInput,
+:global(.dark-mode) .searchTypeSelect,
+:global(.dark-mode) .searchInput {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .clearButton {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .clearButton:hover {
+  background: #475569;
+}
+
+:global(.dark-mode) .tableContainer {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .table th {
+  background: linear-gradient(135deg, #334155, #475569);
+}
+
+:global(.dark-mode) .table td {
+  border-bottom-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .table tbody tr:nth-child(even) {
+  background-color: #334155;
+}
+
+:global(.dark-mode) .name  { color: #e2e8f0; }
+:global(.dark-mode) .subInfo { color: #94a3b8; }
+
+:global(.dark-mode) .active {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+:global(.dark-mode) .inactive {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+:global(.dark-mode) .modal {
+  background: #1e293b;
+}
+
+:global(.dark-mode) .modalHeader h2 { color: #e2e8f0; }
+
+:global(.dark-mode) .deleteDetails {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+:global(.dark-mode) .deleteDetails p { color: #e2e8f0; }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 1100px) {
+  .filtersRow { flex-wrap: wrap; }
+  .searchGroup { flex: 1 1 200px; }
+}
+
+@media (max-width: 768px) {
+  .filtersRow { flex-direction: column; align-items: stretch; }
+  .selectInput, .searchGroup { width: 100%; }
+  .filterActions { margin-left: 0; flex-wrap: wrap; }
+  .searchButton, .clearButton, .generateBtn, .addBtn {
+    flex: 1;
+    justify-content: center;
+  }
+  .tableContainer { overflow-x: auto; }
+  .table { min-width: 800px; }
+}
+
+@media (max-width: 480px) {
+  .listWrapper { padding: 14px; }
+  .table th, .table td { padding: 10px 12px; font-size: 0.7rem; }
+  .name { font-size: 0.8rem; }
+  .subInfo { font-size: 0.68rem; }
+  .avatar { width: 28px; height: 28px; font-size: 13px; }
+}

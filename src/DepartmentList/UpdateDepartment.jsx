@@ -1,12 +1,11 @@
 // src/components/UpdateDepartment.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiX, FiArrowLeft, FiSave } from 'react-icons/fi';
+import { FiSave } from 'react-icons/fi';
 import { getDepartmentList, getClinicList, getBranchList, updateDepartment } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
-import styles from './DepartmentList.module.css'; 
-
+import styles from './DepartmentList.module.css';
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
@@ -29,22 +28,14 @@ const filterInput = (fieldName, value) => {
   switch (fieldName) {
     case 'departmentName':
       return value.replace(/[^a-zA-Z\s]/g, '');
-    
     default:
       return value;
   }
 };
 
-const STATUS_OPTIONS = [
-  { id: 1, label: 'Active' },
-  { id: 2, label: 'Inactive' },
-];
-
-// ────────────────────────────────────────────────
 const UpdateDepartment = () => {
   const navigate = useNavigate();
   const params = useParams();
-  
   const departmentId = params.departmentId || params.id;
 
   const [loading, setLoading] = useState(true);
@@ -55,7 +46,6 @@ const UpdateDepartment = () => {
 
   const [formData, setFormData] = useState({
     clinicId: '',
-    branchId: '',
     departmentName: '',
     profile: '',
     status: 1,
@@ -66,7 +56,6 @@ const UpdateDepartment = () => {
   const [formSuccess, setFormSuccess] = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
 
-  // ────────────────────────────────────────────────
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -90,7 +79,6 @@ const UpdateDepartment = () => {
 
         setFormData({
           clinicId: department.clinicId || '',
-          branchId: department.branchId || '',
           departmentName: department.name || '',
           profile: department.profile || '',
           status: 1,
@@ -130,12 +118,9 @@ const UpdateDepartment = () => {
     fetchBranches();
   }, [formData.clinicId]);
 
-  // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
     const filteredValue = filterInput(name, value);
-    
     setFormData((prev) => ({ ...prev, [name]: filteredValue }));
 
     const validationMessage = getLiveValidationMessage(name, filteredValue);
@@ -145,9 +130,7 @@ const UpdateDepartment = () => {
     }));
   };
 
-  const handleBack = () => {
-    navigate('/dept-list');
-  };
+  const handleClose = () => navigate('/dept-list');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -174,148 +157,125 @@ const UpdateDepartment = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  if (error && error?.status >= 400) {
-    return <ErrorHandler error={error} />;
-  }
-
-  if (loading) {
-    return <div className={styles.clinicLoading}>Loading department data...</div>;
-  }
+  if (error && error?.status >= 400) return <ErrorHandler error={error} />;
+  if (loading) return <div className={styles.clinicLoading}>Loading department data...</div>;
 
   if (error) {
     return (
       <div className={styles.clinicListWrapper}>
         <Header title="Update Department" />
         <div className={styles.clinicError}>Error: {error.message || error}</div>
-        <button onClick={handleBack} className={`${styles.clinicAddBtn} ${styles.clinicBackBtn}`}>
-          <FiArrowLeft /> Back to List
-        </button>
       </div>
     );
   }
 
-  if (!departmentData) {
-    return (
-      <div className={styles.clinicListWrapper}>
-        <Header title="Update Department" />
-        <div className={styles.clinicError}>Department not found</div>
-        <button onClick={handleBack} className={`${styles.clinicAddBtn} ${styles.clinicBackBtn}`}>
-          <FiArrowLeft /> Back to List
-        </button>
-      </div>
-    );
-  }
-
-  // ────────────────────────────────────────────────
   return (
     <div className={styles.clinicListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Update Department" />
 
-      <div className={styles.clinicToolbar}>
-        <button onClick={handleBack} className={styles.clinicAddBtn}>
-          Back to List
-        </button>
-      </div>
+      <div className={styles.detailModalOverlay} onClick={handleClose}>
+        <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
 
-      <div className={`${styles.clinicTableContainer} ${styles.updateEmployeeContainer}`} style={{ padding: '20px', borderRadius: '17px' }}>
-        <div className={`${styles.clinicModal} ${styles.formModal} ${styles.updateEmployeeForm}`} style={{ maxWidth: 'none', width: '100%', maxHeight: 'none' }}>
-          <div className={`${styles.clinicModalHeader} ${styles.updateEmployeeHeader}`}>
-            <h2>Update Department: {formData.departmentName}</h2>
+          <div className={styles.detailModalHeader}>
+            <div className={styles.detailHeaderContent}>
+              <h2>Update Department</h2>
+              <div className={styles.detailHeaderMeta}>
+                <span className={styles.workIdBadge}>
+                  {formData.departmentName || 'Department'}
+                </span>
+                <span
+                  className={`${styles.workIdBadge} ${
+                    formData.status === 1 ? styles.activeBadge : styles.inactiveBadge
+                  }`}
+                >
+                  {formData.status === 1 ? 'ACTIVE' : 'INACTIVE'}
+                </span>
+              </div>
+            </div>
+            <button onClick={handleClose} className={styles.detailCloseBtn}>
+              ✕
+            </button>
           </div>
 
-          <form onSubmit={handleSubmit} className={styles.clinicModalBody}>
+          <form onSubmit={handleSubmit} className={styles.addModalBody}>
             {formError && <div className={styles.formError}>{formError}</div>}
             {formSuccess && <div className={styles.formSuccess}>Department updated successfully!</div>}
 
-            <div className={styles.formGrid}>
-              <h3 className={styles.formSectionTitle}>Department Information</h3>
-
-              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>
-                  Clinic <span className={styles.required}>*</span>
-                </label>
-                <select
-                  required
-                  name="clinicId"
-                  value={formData.clinicId}
-                  onChange={handleInputChange}
-                >
-                  <option value="">Select Clinic</option>
-                  {clinics.map((clinic) => (
-                    <option key={clinic.id} value={clinic.id}>
-                      {clinic.name}
-                    </option>
-                  ))}
-                </select>
+            <div className={styles.addSection}>
+              <div className={styles.addSectionHeader}>
+                <h3>Department Information</h3>
               </div>
 
-              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>
-                  Branch <span className={styles.required}>*</span>
-                </label>
-                <select
-                  required
-                  name="branchId"
-                  value={formData.branchId}
-                  onChange={handleInputChange}
-                  disabled={!formData.clinicId}
-                >
-                  <option value="">Select Branch</option>
-                  {branches.map((branch) => (
-                    <option key={branch.id} value={branch.id}>
-                      {branch.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <div className={styles.addFormGrid}>
 
-              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>
-                  Department Name <span className={styles.required}>*</span>
-                </label>
-                <input
-                  required
-                  name="departmentName"
-                  value={formData.departmentName}
-                  onChange={handleInputChange}
-                />
-                
-                {validationMessages.departmentName && (
-                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {validationMessages.departmentName}
-                  </span>
-                )}
-              </div>
+                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                  <label>
+                    Clinic <span className={styles.required}>*</span>
+                  </label>
+                  <select
+                    required
+                    name="clinicId"
+                    value={formData.clinicId}
+                    onChange={handleInputChange}
+                  >
+                    <option value="">Select Clinic</option>
+                    {clinics.map((clinic) => (
+                      <option key={clinic.id} value={clinic.id}>
+                        {clinic.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>Description / Profile</label>
-                <textarea
-                  name="profile"
-                  rows={3}
-                  value={formData.profile}
-                  onChange={handleInputChange}
-                />
-                
-                {validationMessages.profile && (
-                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {validationMessages.profile}
-                  </span>
-                )}
+                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                  <label>
+                    Department Name <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    required
+                    name="departmentName"
+                    value={formData.departmentName}
+                    onChange={handleInputChange}
+                    placeholder="Enter department name"
+                  />
+                  {validationMessages.departmentName && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.departmentName}
+                    </span>
+                  )}
+                </div>
+
+                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                  <label>Description / Profile</label>
+                  <textarea
+                    name="profile"
+                    rows={3}
+                    value={formData.profile}
+                    onChange={handleInputChange}
+                    placeholder="Enter department description (optional)"
+                  />
+                  {validationMessages.profile && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.profile}
+                    </span>
+                  )}
+                </div>
+
               </div>
             </div>
 
-            <div className={`${styles.clinicModalFooter} ${styles.updateEmployeeFooter}`}>
-              <button type="button" onClick={handleBack} className={styles.btnCancel}>
+            <div className={styles.detailModalFooter}>
+              <button type="button" onClick={handleClose} className={styles.btnCancel}>
                 Cancel
               </button>
               <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
-                <FiSave className={styles.btnIcon} />
+                <FiSave style={{ marginRight: '8px' }} />
                 {formLoading ? 'Updating...' : 'Update Department'}
               </button>
             </div>
           </form>
+
         </div>
       </div>
     </div>

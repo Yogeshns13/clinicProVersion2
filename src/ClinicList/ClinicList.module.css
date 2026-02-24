@@ -38,7 +38,7 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* ==================== FILTERS CONTAINER (replaces old toolbar) ==================== */
+/* ==================== FILTERS CONTAINER ==================== */
 .filtersContainer {
   background: white;
   border-radius: 17px;
@@ -49,11 +49,15 @@
   animation: slideUp 0.3s ease;
 }
 
-/* Single row: [search group ─ flex 1]  [actions] */
 .filtersGrid {
   display: flex;
   align-items: center;
   gap: 15px;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
 }
 
 .searchGroup {
@@ -109,12 +113,31 @@
   border-left: 1px solid var(--accent-end);
 }
 
-/* Action buttons row */
 .filterActions {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+}
+
+/* ==================== STATUS FILTER SELECT ==================== */
+.statusFilterSelect {
+  width: 200px;
+  height: 40px;
+  padding: 0 12px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.statusFilterSelect:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
 }
 
 .searchButton {
@@ -162,7 +185,6 @@
   transform: translateY(-2px);
 }
 
-/* Add Clinic button — sits right in the same bar */
 .addClinicBtn {
   display: flex;
   align-items: center;
@@ -317,7 +339,7 @@
 .btnSubmit {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: var(--text-light);
   border: none;
   font-weight: 600;
@@ -328,6 +350,7 @@
 }
 
 .clinicDetailsBtn {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
   padding: 7px 15px;
   font-size: 0.75rem;
   border-radius: 9px;
@@ -407,7 +430,7 @@
 }
 
 .btnCancel {
-  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+  background: linear-gradient(135deg, #016183, var(--primary-end));
   color: var(--text-light);
   border: none;
   border-radius: 14px;
@@ -692,104 +715,333 @@
 .required { color: #dc2626; font-weight: 700; }
 
 /* ==================== DETAILS MODAL ==================== */
-.detailsModal {
-  background: var(--glass-bg);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+.detailModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+  backdrop-filter: blur(4px);
+  padding: 20px;
+}
+
+.detailModalContent {
+  background: white;
+  border-radius: 20px;
   width: 100%;
-  max-width: 544px;
+  max-width: 860px;
+  max-height: 90vh;
   overflow: hidden;
-  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease;
+}
+
+.detailModalHeader {
+  padding: 24px 28px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.detailHeaderContent { flex: 1; }
+
+.detailHeaderContent h2 {
+  margin: 0 0 10px 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.detailHeaderMeta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.workIdBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  color: var(--text-light);
+}
+
+.activeBadge {
+  background: rgba(22, 163, 74, 0.35) !important;
+  border: 1px solid rgba(22, 163, 74, 0.5);
+}
+
+.inactiveBadge {
+  background: rgba(220, 38, 38, 0.35) !important;
+  border: 1px solid rgba(220, 38, 38, 0.5);
+}
+
+.detailCloseBtn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: var(--text-light);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.detailCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.08);
+}
+
+.detailModalBody {
+  overflow-y: auto;
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-.detailsModalHeader {
-  padding: 14px 20px 12px;
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
-  border-bottom: 1px solid rgba(34, 43, 108, 0.1);
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 60px;
-}
-
-.detailsHeaderContent {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.clinicAvatarLarge {
-  width: 37px;
-  height: 37px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
-  font-size: 16px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 14px rgba(32, 125, 156, 0.35);
-}
-
-.detailsModalHeader h2 {
-  font-size: 1.02rem;
-  font-weight: 800;
-  margin: 0;
-  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.clinicSubtitle {
-  margin: 3px 0 0;
-  color: var(--primary-end);
-  font-size: 0.6rem;
-  font-weight: 500;
-}
-
-.statusBadgeLargeWrapper { margin-right: 23px; }
-
-.detailsModalBody {
-  padding: 14px 20px;
+.infoSection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, rgba(240, 247, 255, 0.5), rgba(230, 242, 255, 0.5));
   flex: 1;
-  overflow-y: auto;
 }
 
-.detailsTable {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 6px;
+.infoCard {
+  background: white;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
 }
 
-.detailsTable tr {
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 8px;
-  overflow: hidden;
+.infoHeader {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
 }
 
-.detailsTable td { padding: 8px 10px; border: none; }
+.infoHeader h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-start);
+}
 
-.detailsTable td.label,
-.label {
-  width: 35%;
-  font-weight: 1000;
-  color: #475569;
-  background: rgba(34, 43, 108, 0.05);
+.infoContent { display: flex; flex-direction: column; gap: 2px; }
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(34, 43, 108, 0.06);
+}
+
+.infoRow:last-child { border-bottom: none; }
+
+.infoLabel {
   font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-right: 12px;
 }
 
-.detailsTable td.value,
-.value {
-  font-weight: 1000;
+.infoValue {
+  font-size: 0.85rem;
   color: var(--text-dark);
-  font-size: 0.8rem;
-  background: rgba(34, 43, 108, 0.05);
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+.detailModalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 18px 28px;
+  border-top: 2px solid rgba(34, 43, 108, 0.1);
+  background: #f8fafc;
+}
+
+/* ==================== ADD CLINIC MODAL ==================== */
+.addModalContent {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease;
+}
+
+.addModalBody {
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.addSection {
+  padding: 20px 28px;
+  border-bottom: 1px solid rgba(34, 43, 108, 0.08);
+}
+
+.addSection:last-of-type {
+  border-bottom: none;
+}
+
+.addSectionHeader {
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(48, 178, 181, 0.25);
+}
+
+.addSectionHeader h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-start);
+}
+
+/* Default auto-fit grid (Basic Info & Billing sections) */
+.addFormGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+/* ── Force exactly 3 equal columns ──
+   Used for: Contact Info (Mobile | Alt Mobile | Email)
+             Tax Info (GST No | CGST % | SGST %)           */
+.addFormGridThreeCol {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.addFormGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.addFormGroup.fullWidth,
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.addFormGroup label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary-start);
+}
+
+.addFormGroup input,
+.addFormGroup textarea,
+.addFormGroup select {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(34, 43, 108, 0.15);
+  border-radius: 10px;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.addFormGroup textarea {
+  resize: vertical;
+  min-height: 70px;
+  line-height: 1.5;
+}
+
+.addFormGroup input::placeholder,
+.addFormGroup textarea::placeholder {
+  color: rgba(30, 41, 59, 0.35);
+}
+
+.addFormGroup input:focus,
+.addFormGroup textarea:focus,
+.addFormGroup select:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
+  background: white;
+}
+
+.validationMsg {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.coordRow {
+  display: flex;
+  gap: 12px;
+}
+
+.coordField {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.coordField input {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(34, 43, 108, 0.15);
+  border-radius: 10px;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.coordField input:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
+  background: white;
+}
+
+.coordField input::placeholder {
+  color: rgba(30, 41, 59, 0.35);
+}
+
+.coordHint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 6px;
+  display: block;
 }
 
 /* ==================== PROFILE HEADER ==================== */
@@ -949,6 +1201,12 @@
   border-left: 1px solid var(--accent-end);
 }
 
+:global(.dark-mode) .statusFilterSelect {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
 :global(.dark-mode) .clearButton {
   background: #334155;
   color: #e2e8f0;
@@ -1073,7 +1331,8 @@
 
   .searchButton,
   .clearButton,
-  .addClinicBtn {
+  .addClinicBtn,
+  .statusFilterSelect {
     width: 100%;
     justify-content: center;
   }
@@ -1099,6 +1358,11 @@
 
   .btnHold,
   .btnUpdate { width: 100%; }
+
+  /* Stack 3-col layout on small screens */
+  .addFormGridThreeCol {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {

@@ -100,6 +100,14 @@ const LabOrderList = () => {
     { id: 3, label: 'STAT' }
   ];
 
+  // ── Derived: are any filters active? ──
+  const hasActiveFilters =
+    appliedFilters.searchValue.trim() !== '' ||
+    appliedFilters.status !== -1 ||
+    appliedFilters.priority !== 0 ||
+    appliedFilters.dateFrom !== '' ||
+    appliedFilters.dateTo !== '';
+
   // Fetch Doctors List
   const fetchDoctors = async () => {
     try {
@@ -688,6 +696,8 @@ const LabOrderList = () => {
       {/* Filters Container */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
+
+          {/* Search type + value (already fused — unchanged) */}
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -741,26 +751,36 @@ const LabOrderList = () => {
             </select>
           </div>
 
+          {/* Date From — VendorList overlay-placeholder style */}
           <div className={styles.filterGroup}>
-            <input
-              type="date"
-              name="dateFrom"
-              placeholder="Date From"
-              value={filterInputs.dateFrom}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            />
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateFrom && (
+                <span className={styles.datePlaceholder}>From Date</span>
+              )}
+              <input
+                type="date"
+                name="dateFrom"
+                value={filterInputs.dateFrom}
+                onChange={handleFilterChange}
+                className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`}
+              />
+            </div>
           </div>
 
+          {/* Date To — VendorList overlay-placeholder style */}
           <div className={styles.filterGroup}>
-            <input
-              type="date"
-              name="dateTo"
-              placeholder="Date To"
-              value={filterInputs.dateTo}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            />
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateTo && (
+                <span className={styles.datePlaceholder}>To Date</span>
+              )}
+              <input
+                type="date"
+                name="dateTo"
+                value={filterInputs.dateTo}
+                onChange={handleFilterChange}
+                className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`}
+              />
+            </div>
           </div>
 
           <div className={styles.filterActions}>
@@ -768,10 +788,12 @@ const LabOrderList = () => {
               <FiSearch size={18} />
               Search
             </button>
-            <button onClick={handleClearFilters} className={styles.clearButton}>
-              <FiX size={18} />
-              Clear
-            </button>
+            {hasActiveFilters && (
+              <button onClick={handleClearFilters} className={styles.clearButton}>
+                <FiX size={18} />
+                Clear
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -793,7 +815,7 @@ const LabOrderList = () => {
             {filteredOrders.length === 0 ? (
               <tr>
                 <td colSpan={6} className={styles.noData}>
-                  {Object.values(appliedFilters).some(v => v && v !== -1 && v !== 0 && v !== 'patientName') 
+                  {hasActiveFilters 
                     ? 'No orders found matching your search.'
                     : 'No lab test orders found.'}
                 </td>

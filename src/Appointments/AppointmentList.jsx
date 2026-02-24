@@ -1,7 +1,7 @@
 // src/components/AppointmentList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiPlus, FiCalendar, FiX, FiCheck, FiFilter, FiActivity} from 'react-icons/fi';
+import { FiSearch, FiPlus, FiCalendar, FiX, FiActivity } from 'react-icons/fi';
 import { getAppointmentList } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
@@ -10,99 +10,104 @@ import AppointmentDetails from './ViewAppointment.jsx';
 import AddAppointmentVisit from './Addappointmentvisit.jsx';
 import styles from './AppointmentList.module.css';
 
+// ──────────────────────────────────────────────────
+// CONSTANTS
+// ──────────────────────────────────────────────────
+const STATUS_OPTIONS = [
+  { id: 1, label: 'Scheduled' },
+  { id: 2, label: 'Confirmed' },
+  { id: 3, label: 'InProgress' },
+  { id: 4, label: 'Completed' },
+  { id: 5, label: 'Cancelled' },
+  { id: 6, label: 'NoShow' },
+];
+
+const SEARCH_TYPE_OPTIONS = [
+  { value: 'PatientName', label: 'Patient Name' },
+  { value: 'DoctorName',  label: 'Doctor Name'  },
+];
+
+const todayDate = new Date().toISOString().split('T')[0];
+
+// ──────────────────────────────────────────────────
 const AppointmentList = () => {
   const navigate = useNavigate();
 
-  // Data & Filter
+  // Data
   const [appointments, setAppointments] = useState([]);
-  const [allAppointments, setAllAppointments] = useState([]);
-  const [searchInput, setSearchInput] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  // Advanced Filters
-  const todayDate = new Date().toISOString().split('T')[0];
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [appointmentDate, setAppointmentDate] = useState(todayDate);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [patientNameFilter, setPatientNameFilter] = useState('');
-  const [doctorNameFilter, setDoctorNameFilter] = useState('');
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState(null);
+
+  // Filter inputs (staged — not applied until Search is clicked)
+  const [filterInputs, setFilterInputs] = useState({
+    searchType:      'PatientName',
+    searchValue:     '',
+    status:          '',
+    appointmentDate: todayDate,
+    dateFrom:        '',
+    dateTo:          '',
+  });
+
+  // Applied filters (drive the API call)
+  const [appliedFilters, setAppliedFilters] = useState({
+    searchType:      'PatientName',
+    searchValue:     '',
+    status:          '',
+    appointmentDate: todayDate,
+    dateFrom:        '',
+    dateTo:          '',
+  });
+
+  // Modals
+  const [isAddFormOpen,      setIsAddFormOpen]      = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [isAddVisitModalOpen, setIsAddVisitModalOpen] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [isAddVisitModalOpen,setIsAddVisitModalOpen]= useState(false);
+  const [selectedAppointment,setSelectedAppointment]= useState(null);
 
-  // Helper function to get status string from status code
-  const getStatusString = (status) => {
-    switch (status) {
-      case 1:
-        return 'scheduled';
-      case 2:
-        return 'confirmed';
-      case 3:
-        return 'inprogress';
-      case 4:
-        return 'completed';
-      case 5:
-        return 'cancelled';
-      default:
-        return 'cancelled';
-    }
-  };
+  // ──────────────────────────────────────────────────
+  // Derived: are any filters actually active?
+  const hasActiveFilters =
+    appliedFilters.searchValue.trim()           !== '' ||
+    appliedFilters.status                        !== '' ||
+    appliedFilters.appointmentDate               !== todayDate ||
+    appliedFilters.dateFrom                      !== '' ||
+    appliedFilters.dateTo                        !== '';
 
-  // Fetch appointments
-  const fetchAppointments = async () => {
+  // ──────────────────────────────────────────────────
+  // Data fetching — driven by appliedFilters
+  const fetchAppointments = async (filters = appliedFilters) => {
     try {
       setLoading(true);
       setError(null);
+
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
 
       const options = {
-        BranchID: branchId,
-        Page: 1,
-        PageSize: 100
+        BranchID:  branchId,
+        Page:      1,
+        PageSize:  100,
+        Status:    filters.status !== '' ? Number(filters.status) : -1,
       };
 
-      // If user has set date range filters, use FromDate/ToDate
-      // Otherwise, use AppointmentDate for today's appointments
-      if (fromDate && toDate) {
-        options.FromDate = fromDate;
-        options.ToDate = toDate;
-      } else if (appointmentDate) {
-        options.AppointmentDate = appointmentDate;
+      // Date range takes priority over single appointment date
+      if (filters.dateFrom && filters.dateTo) {
+        options.FromDate = filters.dateFrom;
+        options.ToDate   = filters.dateTo;
+      } else if (filters.appointmentDate) {
+        options.AppointmentDate = filters.appointmentDate;
       }
 
-      // Status Filter
-      if (statusFilter === 'scheduled') {
-        options.Status = 1;
-      } else if (statusFilter === 'confirmed') {
-        options.Status = 2;
-      } else if (statusFilter === 'inprogress') {
-        options.Status = 3;
-      } else if (statusFilter === 'completed') {
-        options.Status = 4;
-      } else if (statusFilter === 'cancelled') {
-        options.Status = 5;
+      // Search fields
+      if (filters.searchType === 'PatientName' && filters.searchValue.trim()) {
+        options.PatientName = filters.searchValue.trim();
       }
-
-      // Patient Name Filter
-      if (patientNameFilter.trim()) {
-        options.PatientName = patientNameFilter.trim();
-      }
-
-      // Doctor Name Filter
-      if (doctorNameFilter.trim()) {
-        options.DoctorName = doctorNameFilter.trim();
+      if (filters.searchType === 'DoctorName' && filters.searchValue.trim()) {
+        options.DoctorName = filters.searchValue.trim();
       }
 
       const data = await getAppointmentList(clinicId, options);
       setAppointments(data);
-      setAllAppointments(data);
     } catch (err) {
       console.error('fetchAppointments error:', err);
       setError(
@@ -116,88 +121,33 @@ const AppointmentList = () => {
   };
 
   useEffect(() => {
-    fetchAppointments();
-  }, []);
+    fetchAppointments(appliedFilters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedFilters]);
 
-  // Filtered and sorted appointments
-  const filteredAppointments = useMemo(() => {
-    let filtered = allAppointments;
-
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      filtered = allAppointments.filter(
-        (appt) =>
-          appt.patientName?.toLowerCase().includes(term) ||
-          appt.doctorFullName?.toLowerCase().includes(term) ||
-          appt.patientFileNo?.toLowerCase().includes(term) ||
-          appt.patientMobile?.toLowerCase().includes(term) ||
-          appt.reason?.toLowerCase().includes(term)
-      );
-    }
-
-    // Sort by date and time in ascending order
-    return filtered.sort((a, b) => {
-      const dateA = new Date(a.appointmentDate + ' ' + a.appointmentTime);
-      const dateB = new Date(b.appointmentDate + ' ' + b.appointmentTime);
-      return dateA - dateB;
-    });
-  }, [allAppointments, searchTerm]);
-
-  // Handlers
-  const handleApplyFilters = () => {
-    fetchAppointments();
-  };
-
-  const handleSearch = () => setSearchTerm(searchInput.trim());
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') handleSearch();
-  };
-
-  const handleViewDetails = (appointment) => {
-    setSelectedAppointment(appointment);
-    setIsDetailsModalOpen(true);
-  };
-
-  const closeDetailsModal = () => {
-    setSelectedAppointment(null);
-    setIsDetailsModalOpen(false);
-  };
-
-  const openAddForm = () => setIsAddFormOpen(true);
-  const closeAddForm = () => setIsAddFormOpen(false);
-
-  const handleAddSuccess = () => {
-    fetchAppointments();
-  };
-
-  const handleAddVisitClick = (appointment) => {
-    setSelectedAppointment(appointment);
-    setIsAddVisitModalOpen(true);
-  };
-
-  const closeAddVisitModal = () => {
-    setSelectedAppointment(null);
-    setIsAddVisitModalOpen(false);
-  };
-
-  const handleAddVisitSuccess = () => {
-    fetchAppointments();
+  // ──────────────────────────────────────────────────
+  // Helper functions
+  const getStatusLabel = (status) => {
+    const found = STATUS_OPTIONS.find((s) => s.id === status);
+    return found ? found.label : 'Unknown';
   };
 
   const getStatusClass = (status) => {
-    const statusStr = getStatusString(status);
-    return statusStr;
+    switch (status) {
+      case 1: return styles.scheduled;
+      case 2: return styles.confirmed;
+      case 3: return styles.inprogress;
+      case 4: return styles.completed;
+      case 5: return styles.cancelled;
+      case 6: return styles.noshow;
+      default: return styles.cancelled;
+    }
   };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   const formatTime = (timeStr) => {
@@ -208,223 +158,222 @@ const AppointmentList = () => {
     return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
-  const clearAllFilters = () => {
-    setFromDate('');
-    setToDate('');
-    setAppointmentDate(todayDate);
-    setStatusFilter('all');
-    setPatientNameFilter('');
-    setDoctorNameFilter('');
-    setSearchInput('');
-    setSearchTerm('');
+  // ──────────────────────────────────────────────────
+  // Handlers
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilterInputs((prev) => {
+      const updated = { ...prev, [name]: value };
+      // If dateFrom or dateTo is set, clear appointmentDate; if appointmentDate is set, clear date range
+      if (name === 'dateFrom' || name === 'dateTo') {
+        updated.appointmentDate = '';
+      }
+      if (name === 'appointmentDate' && value) {
+        updated.dateFrom = '';
+        updated.dateTo   = '';
+      }
+      return updated;
+    });
   };
 
-  const hasActiveFilters = () => {
-    return fromDate || toDate || appointmentDate !== todayDate || statusFilter !== 'all' || patientNameFilter || doctorNameFilter || searchTerm;
+  const handleSearch = () => {
+    setAppliedFilters({ ...filterInputs });
   };
 
+  const handleClearFilters = () => {
+    const reset = {
+      searchType:      'PatientName',
+      searchValue:     '',
+      status:          '',
+      appointmentDate: todayDate,
+      dateFrom:        '',
+      dateTo:          '',
+    };
+    setFilterInputs(reset);
+    setAppliedFilters(reset);
+  };
+
+  const handleViewDetails = (appt) => {
+    setSelectedAppointment(appt);
+    setIsDetailsModalOpen(true);
+  };
+
+  const closeDetailsModal = () => {
+    setSelectedAppointment(null);
+    setIsDetailsModalOpen(false);
+  };
+
+  const openAddForm  = () => setIsAddFormOpen(true);
+  const closeAddForm = () => setIsAddFormOpen(false);
+
+  const handleAddSuccess = () => fetchAppointments(appliedFilters);
+
+  const handleAddVisitClick = (appt) => {
+    setSelectedAppointment(appt);
+    setIsAddVisitModalOpen(true);
+  };
+
+  const closeAddVisitModal = () => {
+    setSelectedAppointment(null);
+    setIsAddVisitModalOpen(false);
+  };
+
+  const handleAddVisitSuccess = () => fetchAppointments(appliedFilters);
+
+  // ──────────────────────────────────────────────────
+  // Sorted appointments
+  const sortedAppointments = useMemo(() => {
+    return [...appointments].sort((a, b) => {
+      const dateA = new Date(a.appointmentDate + ' ' + a.appointmentTime);
+      const dateB = new Date(b.appointmentDate + ' ' + b.appointmentTime);
+      return dateA - dateB;
+    });
+  }, [appointments]);
+
+  // ──────────────────────────────────────────────────
   // Early returns
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
   if (loading) return <div className={styles.clinicLoading}>Loading appointments...</div>;
-  if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
+  if (error)   return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
+  // ──────────────────────────────────────────────────
   return (
     <div className={styles.clinicContainer}>
-      <Header title="Appointment Management"/>
+      <Header title="Appointment Management" />
 
-      {/* Main Toolbar */}
-      <div className={styles.clinicToolbar}>
-        <div className={styles.clinicToolbarLeft}>
-          <button 
-            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)} 
-            className={`${styles.filterToggleBtn} ${showAdvancedFilters ? styles.active : ''}`}
-          >
-            <FiFilter /> {showAdvancedFilters ? 'Hide Filters' : 'Show Filters'}
-          </button>
+      {/* ── Filter Bar ── */}
+      <div className={styles.filtersContainer}>
+        <div className={styles.filtersGrid}>
 
-          {hasActiveFilters() && (
-            <button onClick={clearAllFilters} className={styles.clearAllFiltersBtn}>
-              <FiX /> Clear All Filters
-            </button>
-          )}
-        </div>
+          {/* Search type + value */}
+          <div className={styles.searchGroup}>
+            <select
+              name="searchType"
+              value={filterInputs.searchType}
+              onChange={handleFilterChange}
+              className={styles.searchTypeSelect}
+            >
+              {SEARCH_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
 
-        <div className={styles.clinicToolbarRight}>
-          <div className={styles.clinicSearchContainer}>
             <input
               type="text"
-              placeholder="Quick search..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className={styles.clinicSearchInput}
+              name="searchValue"
+              placeholder={`Search by ${
+                SEARCH_TYPE_OPTIONS.find((o) => o.value === filterInputs.searchType)?.label || ''
+              }`}
+              value={filterInputs.searchValue}
+              onChange={handleFilterChange}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className={styles.searchInput}
             />
-            <button onClick={handleSearch} className={styles.clinicSearchBtn}>
-              <FiSearch />
+          </div>
+
+          {/* Status */}
+          <div className={styles.filterGroup}>
+            <select
+              name="status"
+              value={filterInputs.status}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            >
+              <option value="">All Status</option>
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+        
+
+          {/* From Date */}
+          <div className={styles.filterGroup}>
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateFrom && (
+                <span className={styles.datePlaceholder}>From Date</span>
+              )}
+              <input
+                type="date"
+                name="dateFrom"
+                value={filterInputs.dateFrom}
+                onChange={handleFilterChange}
+                className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`}
+              />
+            </div>
+          </div>
+
+          {/* To Date */}
+          <div className={styles.filterGroup}>
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateTo && (
+                <span className={styles.datePlaceholder}>To Date</span>
+              )}
+              <input
+                type="date"
+                name="dateTo"
+                value={filterInputs.dateTo}
+                onChange={handleFilterChange}
+                className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`}
+              />
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className={styles.filterActions}>
+            <button onClick={handleSearch} className={styles.searchButton}>
+              <FiSearch size={16} />
+              Search
+            </button>
+
+            {hasActiveFilters && (
+              <button onClick={handleClearFilters} className={styles.clearButton}>
+                <FiX size={16} />
+                Clear
+              </button>
+            )}
+
+            <button onClick={openAddForm} className={styles.addBtn}>
+              <FiPlus size={18} />
+              New Appointment
             </button>
           </div>
 
-          <button onClick={openAddForm} className={styles.clinicAddBtn}>
-            <FiPlus /> New Appointment
-          </button>
         </div>
       </div>
 
-      {/* Advanced Filters Section */}
-      {showAdvancedFilters && (
-        <div className={styles.advancedFiltersSection}>
-          <div className={styles.filtersGrid}>
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>Appointment Date</label>
-              <input
-                type="date"
-                value={appointmentDate}
-                onChange={(e) => {
-                  setAppointmentDate(e.target.value);
-                  setFromDate('');
-                  setToDate('');
-                }}
-                className={styles.filterInput}
-              />
-            </div>
-
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>From Date</label>
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => {
-                  setFromDate(e.target.value);
-                  setAppointmentDate('');
-                }}
-                className={styles.filterInput}
-              />
-            </div>
-
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>To Date</label>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => {
-                  setToDate(e.target.value);
-                  setAppointmentDate('');
-                }}
-                className={styles.filterInput}
-              />
-            </div>
-
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>Status</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className={styles.filterSelect}
-              >
-                <option value="all">All Status</option>
-                <option value="scheduled">Scheduled</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="inprogress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>Patient Name</label>
-              <input
-                type="text"
-                placeholder="Enter patient name"
-                value={patientNameFilter}
-                onChange={(e) => setPatientNameFilter(e.target.value)}
-                className={styles.filterInput}
-              />
-            </div>
-
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>Doctor Name</label>
-              <input
-                type="text"
-                placeholder="Enter doctor name"
-                value={doctorNameFilter}
-                onChange={(e) => setDoctorNameFilter(e.target.value)}
-                className={styles.filterInput}
-              />
-            </div>
-
-            <div className={`${styles.filterGroup} ${styles.filterSearchBtnGroup}`}>
-              <label className={styles.filterLabel}>&nbsp;</label>
-              <button onClick={handleApplyFilters} className={styles.filterSearchBtn}>
-                <FiSearch /> Apply Filters
-              </button>
-            </div>
-          </div>
-
-          <div className={styles.activeFilters}>
-            {appointmentDate && appointmentDate !== todayDate && (
-              <span className={styles.filterTag}>
-                Date: {formatDate(appointmentDate)}
-                <button onClick={() => setAppointmentDate(todayDate)}><FiX /></button>
-              </span>
-            )}
-            {fromDate && (
-              <span className={styles.filterTag}>
-                From: {formatDate(fromDate)}
-                <button onClick={() => setFromDate('')}><FiX /></button>
-              </span>
-            )}
-            {toDate && (
-              <span className={styles.filterTag}>
-                To: {formatDate(toDate)}
-                <button onClick={() => setToDate('')}><FiX /></button>
-              </span>
-            )}
-            {statusFilter !== 'all' && (
-              <span className={styles.filterTag}>
-                Status: {statusFilter}
-                <button onClick={() => setStatusFilter('all')}><FiX /></button>
-              </span>
-            )}
-            {patientNameFilter && (
-              <span className={styles.filterTag}>
-                Patient: {patientNameFilter}
-                <button onClick={() => setPatientNameFilter('')}><FiX /></button>
-              </span>
-            )}
-            {doctorNameFilter && (
-              <span className={styles.filterTag}>
-                Doctor: {doctorNameFilter}
-                <button onClick={() => setDoctorNameFilter('')}><FiX /></button>
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-
+      {/* ── Table ── */}
       <div className={styles.clinicTableContainer}>
         <table className={styles.clinicTable}>
           <thead>
             <tr>
               <th>Patient</th>
               <th>Doctor</th>
-              <th>Date & Time</th>
+              <th>Date &amp; Time</th>
               <th>Reason</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredAppointments.length === 0 ? (
+            {sortedAppointments.length === 0 ? (
               <tr>
                 <td colSpan="6" className={styles.clinicEmptyMessage}>
-                  {searchTerm ? 'No appointments found matching your search.' : 'No appointments found.'}
+                  {hasActiveFilters
+                    ? 'No appointments found matching your filters.'
+                    : 'No appointments found for today.'}
                 </td>
               </tr>
             ) : (
-              filteredAppointments.map((appt) => (
+              sortedAppointments.map((appt) => (
                 <tr key={appt.id}>
                   <td>
                     <div className={styles.clinicPatientInfo}>
@@ -453,8 +402,8 @@ const AppointmentList = () => {
                     <div className={styles.clinicReason}>{appt.reason || '—'}</div>
                   </td>
                   <td>
-                    <span className={`${styles.clinicStatusBadge} ${styles[getStatusClass(appt.status)]}`}>
-                      {getStatusString(appt.status).toUpperCase()}
+                    <span className={`${styles.clinicStatusBadge} ${getStatusClass(appt.status)}`}>
+                      {getStatusLabel(appt.status).toUpperCase()}
                     </span>
                   </td>
                   <td>
@@ -481,22 +430,22 @@ const AppointmentList = () => {
         </table>
       </div>
 
-      {/* Add Appointment Modal */}
+      {/* ── Add Appointment Modal ── */}
       <AddAppointment
         isOpen={isAddFormOpen}
         onClose={closeAddForm}
         onSuccess={handleAddSuccess}
       />
 
-      {/* Appointment Details Modal */}
+      {/* ── Appointment Details Modal ── */}
       <AppointmentDetails
         isOpen={isDetailsModalOpen}
         onClose={closeDetailsModal}
         appointment={selectedAppointment}
-        onRefresh={fetchAppointments}
+        onRefresh={() => fetchAppointments(appliedFilters)}
       />
 
-      {/* Add Patient Visit Modal */}
+      {/* ── Add Patient Visit Modal ── */}
       <AddAppointmentVisit
         isOpen={isAddVisitModalOpen}
         onClose={closeAddVisitModal}

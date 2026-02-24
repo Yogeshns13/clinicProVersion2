@@ -12,7 +12,7 @@ export const getUserId = () => {
 };
 
 const UPLOAD_API_URL = '/upload';
-const FILE_API_URL = 'https://cp-api.techchasesoftwarehost.in/file';
+const FILE_API_URL = '/file';
 
 const baseURL = "/api";
 const API = axios.create({
@@ -135,7 +135,7 @@ export const uploadPhoto = async (file) => {
     formData.append('file', file);
     formData.append('fileType', fileType); 
     formData.append('ClinicID', getClinicId());
-
+    formData.append('FileAccessToken',getFileAccessToken());
     const response = await axios.post(UPLOAD_API_URL, formData, {
       headers: { 'Content-Type': 'multipart/form-data',
         ...(PRODUCTION_MODE === 1 ? { "API-Key": API_KEY } : {})
@@ -166,6 +166,7 @@ export const uploadIDProof = async (file) => {
     formData.append('file', file);
     formData.append('fileType', fileType);
     formData.append('ClinicID',getClinicId());
+    formData.append('FileAccessToken',getFileAccessToken());
     const response = await axios.post(UPLOAD_API_URL, formData, {
       headers: { 'Content-Type': 'multipart/form-data' ,
         ...(PRODUCTION_MODE === 1 ? { "API-Key": API_KEY } : {})
@@ -789,7 +790,6 @@ export const addDepartment = async (departmentData) => {
     USER_ID: parseInt(userId),
     ClinicID: finalClinicId,
     BranchID: finalBranchId,
-    // Department fields from input
     DepartmentName: departmentData.departmentName || "",
     Profile: departmentData.profile || "" // Description / full name
   };

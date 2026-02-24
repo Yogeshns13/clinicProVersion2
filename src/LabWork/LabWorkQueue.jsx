@@ -19,7 +19,6 @@ import { getEmployeeList } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './LabWorkQueue.module.css';
-import detailStyles from './LabWorkDetail.module.css';
 
 const LabWorkQueue = () => {
   const navigate = useNavigate();
@@ -76,6 +75,14 @@ const LabWorkQueue = () => {
     { id: 4, label: 'Rejected', color: 'danger' }
   ];
 
+  // ── Derived: are any filters active?
+  const hasActiveFilters =
+    String(appliedFilters.searchValue).trim() !== '' ||
+    Number(appliedFilters.status) !== -1 ||
+    Number(appliedFilters.doctorId) !== 0 ||
+    appliedFilters.dateFrom !== '' ||
+    appliedFilters.dateTo !== '';
+
   // Fetch Doctors List
   const fetchDoctors = async () => {
     try {
@@ -105,7 +112,6 @@ const LabWorkQueue = () => {
       
       const statusesMap = {};
       
-      // Fetch status for each unique order ID
       for (const orderId of orderIds) {
         try {
           const orderDetails = await getLabTestOrderList(clinicId, {
@@ -128,7 +134,7 @@ const LabWorkQueue = () => {
   };
 
   // Fetch Lab Work Items
-  const fetchWorkItems = async () => {
+  const fetchWorkItems = async (filters = appliedFilters) => {
     try {
       setLoading(true);
       setError(null);
@@ -139,14 +145,13 @@ const LabWorkQueue = () => {
         Page: 1,
         PageSize: 100,
         BranchID: branchId,
-        Status: appliedFilters.status
+        Status: filters.status
       };
 
-      // Apply search based on search type
-      if (appliedFilters.searchValue.trim()) {
-        const searchTerm = appliedFilters.searchValue.trim();
+      if (filters.searchValue.trim()) {
+        const searchTerm = filters.searchValue.trim();
         
-        switch (appliedFilters.searchType) {
+        switch (filters.searchType) {
           case 'orderId':
             options.OrderID = Number(searchTerm) || 0;
             break;
@@ -156,24 +161,23 @@ const LabWorkQueue = () => {
         }
       }
 
-      if (appliedFilters.doctorId > 0) {
-        options.DoctorID = appliedFilters.doctorId;
+      if (filters.doctorId > 0) {
+        options.DoctorID = filters.doctorId;
       }
 
-      if (appliedFilters.dateFrom && appliedFilters.dateTo) {
-        options.FromDate = appliedFilters.dateFrom;
-        options.ToDate = appliedFilters.dateTo;
+      if (filters.dateFrom && filters.dateTo) {
+        options.FromDate = filters.dateFrom;
+        options.ToDate = filters.dateTo;
       }
 
       const data = await getLabWorkItemsList(clinicId, options);
 
-      // Additional client-side filtering for non-API supported searches
       let filteredData = data;
       
-      if (appliedFilters.searchValue.trim() && appliedFilters.searchType !== 'orderId') {
-        const term = appliedFilters.searchValue.toLowerCase();
+      if (filters.searchValue.trim() && filters.searchType !== 'orderId') {
+        const term = filters.searchValue.toLowerCase();
         
-        switch (appliedFilters.searchType) {
+        switch (filters.searchType) {
           case 'patientName':
             filteredData = filteredData.filter(item => 
               item.patientName?.toLowerCase().includes(term)
@@ -207,7 +211,6 @@ const LabWorkQueue = () => {
 
       setWorkItems(sortedData);
       
-      // Group by OrderID
       const grouped = sortedData.reduce((acc, item) => {
         const orderId = item.orderId;
         if (!acc[orderId]) {
@@ -227,7 +230,6 @@ const LabWorkQueue = () => {
 
       setGroupedWorkItems(grouped);
       
-      // NEW: Fetch order statuses for all orders
       const uniqueOrderIds = Object.keys(grouped).map(Number);
       if (uniqueOrderIds.length > 0) {
         await fetchOrderStatuses(uniqueOrderIds);
@@ -245,7 +247,7 @@ const LabWorkQueue = () => {
   };
 
   useEffect(() => {
-    fetchWorkItems();
+    fetchWorkItems(appliedFilters);
     fetchDoctors();
   }, []);
 
@@ -255,8 +257,9 @@ const LabWorkQueue = () => {
   };
 
   const handleSearch = () => {
-    setAppliedFilters({ ...filterInputs });
-    fetchWorkItems();
+    const newFilters = { ...filterInputs };
+    setAppliedFilters(newFilters);
+    fetchWorkItems(newFilters);
   };
 
   const handleClearFilters = () => {
@@ -270,7 +273,7 @@ const LabWorkQueue = () => {
     };
     setFilterInputs(emptyFilters);
     setAppliedFilters(emptyFilters);
-    setTimeout(() => fetchWorkItems(), 100);
+    fetchWorkItems(emptyFilters);
   };
 
   const handleKeyPress = (e) => {
@@ -287,15 +290,6 @@ const LabWorkQueue = () => {
       newExpanded.add(orderId);
     }
     setExpandedOrders(newExpanded);
-  };
-
-  const expandAll = () => {
-    const allOrderIds = Object.keys(groupedWorkItems).map(Number);
-    setExpandedOrders(new Set(allOrderIds));
-  };
-
-  const collapseAll = () => {
-    setExpandedOrders(new Set());
   };
 
   const getOrderStatus = (items) => {
@@ -356,57 +350,38 @@ const LabWorkQueue = () => {
     }
   };
 
-  const isOrderFullyCompleted = (items) => {
-    return items.every(item => item.status === 3);
-  };
-
-  // NEW: Check if order should show as completed
-  // Shows "Completed" badge when:
-  // 1. All work items are status 3 (completed) AND
-  // 2. Order status is 2 (marked as complete)
   const isOrderMarkedComplete = (orderId, items) => {
     const allWorkItemsCompleted = items.every(item => item.status === 3);
     const orderStatus = orderStatuses[orderId];
     return allWorkItemsCompleted && orderStatus === 2;
   };
 
-  // NEW: Check if order should show "Mark as Complete" button
-  // Shows button when:
-  // 1. All work items are status 3 (completed) AND
-  // 2. Order status is NOT 2 (not yet marked as complete)
   const shouldShowMarkCompleteButton = (orderId, items) => {
     const allWorkItemsCompleted = items.every(item => item.status === 3);
     const orderStatus = orderStatuses[orderId];
     return allWorkItemsCompleted && orderStatus !== 2;
   };
 
-  // Handle Process Button Click
   const handleProcessWorkItem = (item, orderData) => {
     setSelectedWorkItem(item);
     setSelectedOrderData(orderData);
     setShowWorkDetailModal(true);
   };
 
-  // Handle Work Detail Modal Close
   const handleCloseWorkDetail = () => {
     setShowWorkDetailModal(false);
     setSelectedWorkItem(null);
     setSelectedOrderData(null);
-    fetchWorkItems();
+    fetchWorkItems(appliedFilters);
   };
 
-  // Handle Work Detail Save
-  const handleSaveWorkDetail = () => {
-    // This will be called from child to notify parent
-  };
+  const handleSaveWorkDetail = () => {};
 
-  // Handle Mark as Complete Click
   const handleMarkCompleteClick = (orderId, orderData) => {
     setOrderToComplete({ orderId, orderData });
     setShowCompleteConfirm(true);
   };
 
-  // Handle Confirm Mark as Complete
   const handleConfirmMarkComplete = async () => {
     if (!orderToComplete) return;
 
@@ -417,7 +392,6 @@ const LabWorkQueue = () => {
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
 
-      // Fetch order details to get fileId, priority, notes, and doctorId
       const orderDetails = await getLabTestOrderList(clinicId, {
         OrderID: orderToComplete.orderId,
         BranchID: branchId
@@ -429,33 +403,28 @@ const LabWorkQueue = () => {
 
       const orderDetail = orderDetails[0];
 
-      // Prepare update data
       const updateData = {
         orderId: orderToComplete.orderId,
         clinicId: clinicId,
         branchId: branchId,
-        status: 2, // Status 2 as requested
+        status: 2,
         fileId: orderDetail.fileId || 0,
         priority: orderDetail.priority || 1,
         notes: orderDetail.notes || '',
         testApprovedBy: orderDetail.doctorId || 0
       };
 
-      // Call update API
       await updateLabTestOrder(updateData);
 
-      // NEW: Update local order status state immediately
       setOrderStatuses(prev => ({
         ...prev,
         [orderToComplete.orderId]: 2
       }));
 
-      // Close confirmation modal
       setShowCompleteConfirm(false);
       setOrderToComplete(null);
 
-      // Refresh work items (this will also refresh order statuses)
-      await fetchWorkItems();
+      await fetchWorkItems(appliedFilters);
 
     } catch (err) {
       console.error('Error marking order as complete:', err);
@@ -468,7 +437,6 @@ const LabWorkQueue = () => {
     }
   };
 
-  // Handle Cancel Mark Complete
   const handleCancelMarkComplete = () => {
     setShowCompleteConfirm(false);
     setOrderToComplete(null);
@@ -537,9 +505,11 @@ const LabWorkQueue = () => {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* ── Filters ── */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
+
+          {/* Fused search type + value */}
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -571,6 +541,7 @@ const LabWorkQueue = () => {
             />
           </div>
 
+          {/* Status */}
           <div className={styles.filterGroup}>
             <select
               name="status"
@@ -584,6 +555,7 @@ const LabWorkQueue = () => {
             </select>
           </div>
 
+          {/* Doctor */}
           <div className={styles.filterGroup}>
             <select
               name="doctorId"
@@ -600,61 +572,52 @@ const LabWorkQueue = () => {
             </select>
           </div>
 
+          {/* From Date — VendorList overlay-placeholder style */}
           <div className={styles.filterGroup}>
-            <input
-              type="date"
-              name="dateFrom"
-              value={filterInputs.dateFrom}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            />
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateFrom && (
+                <span className={styles.datePlaceholder}>From Date</span>
+              )}
+              <input
+                type="date"
+                name="dateFrom"
+                value={filterInputs.dateFrom}
+                onChange={handleFilterChange}
+                className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`}
+              />
+            </div>
           </div>
 
+          {/* To Date — VendorList overlay-placeholder style */}
           <div className={styles.filterGroup}>
-            <input
-              type="date"
-              name="dateTo"
-              value={filterInputs.dateTo}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            />
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateTo && (
+                <span className={styles.datePlaceholder}>To Date</span>
+              )}
+              <input
+                type="date"
+                name="dateTo"
+                value={filterInputs.dateTo}
+                onChange={handleFilterChange}
+                className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`}
+              />
+            </div>
           </div>
 
+          {/* Actions */}
           <div className={styles.filterActions}>
             <button onClick={handleSearch} className={styles.searchButton}>
-              <FiSearch size={18} />
+              <FiSearch size={16} />
               Search
             </button>
-            <button onClick={handleClearFilters} className={styles.clearButton}>
-              <FiX size={18} />
-              Clear
-            </button>
+            {hasActiveFilters && (
+              <button onClick={handleClearFilters} className={styles.clearButton}>
+                <FiX size={16} />
+                Clear
+              </button>
+            )}
           </div>
-        </div>
-      </div>
 
-      {/* Toolbar */}
-      <div className={styles.toolbar}>
-        <div className={styles.toolbarLeft}>
-          <button onClick={expandAll} className={styles.expandBtn}>
-            <FiChevronDown size={18} />
-            Expand All
-          </button>
-
-          <button onClick={collapseAll} className={styles.collapseBtn}>
-            <FiChevronRight size={18} />
-            Collapse All
-          </button>
-        </div>
-
-        <div className={styles.toolbarRight}>
-          <button 
-            onClick={() => navigate('/laborder-list')}
-            className={styles.workQueueBtn}
-          >
-            <FiAlertCircle size={18} />
-            Go to Orders
-          </button>
         </div>
       </div>
 
@@ -662,7 +625,7 @@ const LabWorkQueue = () => {
       <div className={styles.workQueueContainer}>
         {Object.keys(groupedWorkItems).length === 0 ? (
           <div className={styles.noData}>
-            {Object.values(appliedFilters).some(v => v && v !== 'patientName' && v !== -1 && v !== 0)
+            {hasActiveFilters
               ? 'No work items found matching your filters.'
               : 'No work items found.'}
           </div>
@@ -675,7 +638,6 @@ const LabWorkQueue = () => {
             const progressPercentage = Math.round((completedCount / totalCount) * 100);
             const progressColors = getProgressColors(progressPercentage);
             
-            // NEW: Use new helper functions to determine button/badge display
             const showMarkCompleteBtn = shouldShowMarkCompleteButton(Number(orderId), orderData.items);
             const showCompletedBadge = isOrderMarkedComplete(Number(orderId), orderData.items);
 
@@ -741,7 +703,6 @@ const LabWorkQueue = () => {
                       </div>
                     </div>
 
-                    {/* Mark as Complete Button - Shows when all work items are complete but order not marked */}
                     {showMarkCompleteBtn && (
                       <button
                         onClick={(e) => {
@@ -755,7 +716,6 @@ const LabWorkQueue = () => {
                       </button>
                     )}
 
-                    {/* Completed Badge - Shows when all work items are complete AND order is marked */}
                     {showCompletedBadge && (
                       <div className={styles.completedBadge}>
                         <FiCheckCircle size={18} />
@@ -891,7 +851,7 @@ const LabWorkQueue = () => {
   );
 };
 
-// Lab Work Detail Modal Component - Keeping the same as before
+// ── Lab Work Detail Modal Component ──
 const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees }) => {
   const [sampleData, setSampleData] = useState({
     sampleCollectedTime: workItem.sampleCollectedTime 
@@ -1106,145 +1066,145 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
   };
 
   return (
-    <div className={detailStyles.modalOverlay} onClick={onClose}>
-      <div className={detailStyles.modalContent} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.detailModalOverlay} onClick={onClose}>
+      <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
         <ErrorHandler error={error} />
         
-        <div className={detailStyles.modalHeader}>
-          <div className={detailStyles.headerContent}>
+        <div className={styles.detailModalHeader}>
+          <div className={styles.detailHeaderContent}>
             <h2>Process Lab Work Item</h2>
-            <div className={detailStyles.headerMeta}>
-              <span className={detailStyles.workIdBadge}>Work ID: #{workItem.workId}</span>
-              <span className={detailStyles.orderIdBadge}>Order ID: #{workItem.orderId}</span>
+            <div className={styles.detailHeaderMeta}>
+              <span className={styles.workIdBadge}>Work ID: #{workItem.workId}</span>
+              <span className={styles.orderIdBadge}>Order ID: #{workItem.orderId}</span>
             </div>
           </div>
-          <button onClick={onClose} className={detailStyles.closeBtn}>
+          <button onClick={onClose} className={styles.detailCloseBtn}>
             <FiX size={24} />
           </button>
         </div>
 
         {statusMessage.text && (
-          <div className={`${detailStyles.statusMessage} ${detailStyles[statusMessage.type]}`}>
+          <div className={`${styles.statusMessage} ${styles[statusMessage.type]}`}>
             {statusMessage.text}
           </div>
         )}
 
-        <div className={detailStyles.infoSection}>
-          <div className={detailStyles.infoCard}>
-            <div className={detailStyles.infoHeader}>
+        <div className={styles.infoSection}>
+          <div className={styles.infoCard}>
+            <div className={styles.infoHeader}>
               <FiUser size={18} />
               <h3>Patient Information</h3>
             </div>
-            <div className={detailStyles.infoContent}>
-              <div className={detailStyles.infoRow}>
-                <span className={detailStyles.infoLabel}>Name:</span>
-                <span className={detailStyles.infoValue}>{orderData.patientName}</span>
+            <div className={styles.infoContent}>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Name:</span>
+                <span className={styles.infoValue}>{orderData.patientName}</span>
               </div>
-              <div className={detailStyles.infoRow}>
-                <span className={detailStyles.infoLabel}>File No:</span>
-                <span className={detailStyles.infoValue}>{orderData.fileNo}</span>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>File No:</span>
+                <span className={styles.infoValue}>{orderData.fileNo}</span>
               </div>
-              <div className={detailStyles.infoRow}>
-                <span className={detailStyles.infoLabel}>Mobile:</span>
-                <span className={detailStyles.infoValue}>{orderData.mobile}</span>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Mobile:</span>
+                <span className={styles.infoValue}>{orderData.mobile}</span>
               </div>
             </div>
           </div>
 
-          <div className={detailStyles.infoCard}>
-            <div className={detailStyles.infoHeader}>
+          <div className={styles.infoCard}>
+            <div className={styles.infoHeader}>
               <FiActivity size={18} />
               <h3>Test Information</h3>
             </div>
-            <div className={detailStyles.infoContent}>
-              <div className={detailStyles.infoRow}>
-                <span className={detailStyles.infoLabel}>Test Name:</span>
-                <span className={detailStyles.infoValue}>{workItem.testName}</span>
+            <div className={styles.infoContent}>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Test Name:</span>
+                <span className={styles.infoValue}>{workItem.testName}</span>
               </div>
-              <div className={detailStyles.infoRow}>
-                <span className={detailStyles.infoLabel}>Test ID:</span>
-                <span className={detailStyles.infoValue}>{workItem.testId}</span>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Test ID:</span>
+                <span className={styles.infoValue}>{workItem.testId}</span>
               </div>
-              <div className={detailStyles.infoRow}>
-                <span className={detailStyles.infoLabel}>Doctor:</span>
-                <span className={detailStyles.infoValue}>{orderData.doctorName || 'N/A'}</span>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Doctor:</span>
+                <span className={styles.infoValue}>{orderData.doctorName || 'N/A'}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className={detailStyles.stepsContainer}>
-          <div className={`${detailStyles.step} ${detailStyles[getStepStatus(1)]}`}>
-            <div className={detailStyles.stepIcon}>
+        <div className={styles.stepsContainer}>
+          <div className={`${styles.step} ${styles[getStepStatus(1)]}`}>
+            <div className={styles.stepIcon}>
               {getStepStatus(1) === 'completed' ? <FiCheckCircle size={20} /> : <FiClock size={20} />}
             </div>
-            <div className={detailStyles.stepContent}>
-              <div className={detailStyles.stepTitle}>Sample Collection</div>
-              <div className={detailStyles.stepDesc}>Record collection details</div>
+            <div className={styles.stepContent}>
+              <div className={styles.stepTitle}>Sample Collection</div>
+              <div className={styles.stepDesc}>Record collection details</div>
             </div>
           </div>
 
-          <div className={detailStyles.stepConnector}></div>
+          <div className={styles.stepConnector}></div>
 
-          <div className={`${detailStyles.step} ${detailStyles[getStepStatus(2)]}`}>
-            <div className={detailStyles.stepIcon}>
+          <div className={`${styles.step} ${styles[getStepStatus(2)]}`}>
+            <div className={styles.stepIcon}>
               {getStepStatus(2) === 'completed' ? <FiCheckCircle size={20} /> : <FiFileText size={20} />}
             </div>
-            <div className={detailStyles.stepContent}>
-              <div className={detailStyles.stepTitle}>Enter Results</div>
-              <div className={detailStyles.stepDesc}>Record test results</div>
+            <div className={styles.stepContent}>
+              <div className={styles.stepTitle}>Enter Results</div>
+              <div className={styles.stepDesc}>Record test results</div>
             </div>
           </div>
 
-          <div className={detailStyles.stepConnector}></div>
+          <div className={styles.stepConnector}></div>
 
-          <div className={`${detailStyles.step} ${detailStyles[getStepStatus(3)]}`}>
-            <div className={detailStyles.stepIcon}>
+          <div className={`${styles.step} ${styles[getStepStatus(3)]}`}>
+            <div className={styles.stepIcon}>
               {getStepStatus(3) === 'completed' ? <FiCheckCircle size={20} /> : <FiCheckCircle size={20} />}
             </div>
-            <div className={detailStyles.stepContent}>
-              <div className={detailStyles.stepTitle}>Approval</div>
-              <div className={detailStyles.stepDesc}>Review and approve</div>
+            <div className={styles.stepContent}>
+              <div className={styles.stepTitle}>Approval</div>
+              <div className={styles.stepDesc}>Review and approve</div>
             </div>
           </div>
         </div>
 
-        <div className={detailStyles.modalBody}>
+        <div className={styles.detailModalBody}>
           {activeStep === 1 && (
-            <div className={detailStyles.formSection}>
-              <div className={detailStyles.sectionHeader}>
+            <div className={styles.formSection}>
+              <div className={styles.sectionHeader}>
                 <FiClock size={20} />
                 <h3>Sample Collection Details</h3>
               </div>
 
-              <div className={detailStyles.formGrid}>
-                <div className={detailStyles.formGroup}>
+              <div className={styles.detailFormGrid}>
+                <div className={styles.detailFormGroup}>
                   <label>Collection Date & Time *</label>
                   <input
                     type="datetime-local"
                     value={sampleData.sampleCollectedTime}
                     onChange={(e) => setSampleData({...sampleData, sampleCollectedTime: e.target.value})}
-                    className={detailStyles.formInput}
+                    className={styles.detailFormInput}
                     required
                   />
                 </div>
 
-                <div className={detailStyles.formGroup}>
+                <div className={styles.detailFormGroup}>
                   <label>Collection Place</label>
                   <input
                     type="text"
                     value={sampleData.sampleCollectedPlace}
                     onChange={(e) => setSampleData({...sampleData, sampleCollectedPlace: e.target.value})}
-                    className={detailStyles.formInput}
+                    className={styles.detailFormInput}
                     placeholder="e.g., Lab Room 1, Patient Room"
                   />
                 </div>
               </div>
 
-              <div className={detailStyles.formActions}>
+              <div className={styles.formActions}>
                 <button 
                   onClick={handleSampleSave} 
-                  className={detailStyles.saveBtn}
+                  className={styles.saveBtn}
                   disabled={loading}
                 >
                   <FiSave size={18} />
@@ -1255,53 +1215,53 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
           )}
 
           {activeStep === 2 && (
-            <div className={detailStyles.formSection}>
-              <div className={detailStyles.sectionHeader}>
+            <div className={styles.formSection}>
+              <div className={styles.sectionHeader}>
                 <FiFileText size={20} />
                 <h3>Test Results Entry</h3>
               </div>
 
-              <div className={detailStyles.formGrid}>
-                <div className={detailStyles.formGroup}>
+              <div className={styles.detailFormGrid}>
+                <div className={styles.detailFormGroup}>
                   <label>Result Value *</label>
                   <input
                     type="text"
                     value={resultData.resultValue}
                     onChange={(e) => setResultData({...resultData, resultValue: e.target.value})}
-                    className={detailStyles.formInput}
+                    className={styles.detailFormInput}
                     placeholder="e.g., 120"
                     required
                   />
                 </div>
 
-                <div className={detailStyles.formGroup}>
+                <div className={styles.detailFormGroup}>
                   <label>Result Units</label>
                   <input
                     type="text"
                     value={resultData.resultUnits}
                     onChange={(e) => setResultData({...resultData, resultUnits: e.target.value})}
-                    className={detailStyles.formInput}
+                    className={styles.detailFormInput}
                     placeholder="e.g., mg/dL, mmol/L"
                   />
                 </div>
 
-                <div className={detailStyles.formGroup}>
+                <div className={styles.detailFormGroup}>
                   <label>Normal Range</label>
                   <input
                     type="text"
                     value={resultData.normalRange}
                     onChange={(e) => setResultData({...resultData, normalRange: e.target.value})}
-                    className={detailStyles.formInput}
+                    className={styles.detailFormInput}
                     placeholder="e.g., 70-100"
                   />
                 </div>
 
-                <div className={detailStyles.formGroup}>
+                <div className={styles.detailFormGroup}>
                   <label>Interpretation</label>
                   <select
                     value={resultData.interpretation || ''}
                     onChange={(e) => setResultData({...resultData, interpretation: e.target.value ? Number(e.target.value) : null})}
-                    className={detailStyles.formInput}
+                    className={styles.detailFormInput}
                   >
                     {interpretationOptions.map(opt => (
                       <option key={opt.value} value={opt.value || ''}>{opt.label}</option>
@@ -1309,12 +1269,12 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
                   </select>
                 </div>
 
-                <div className={detailStyles.formGroup}>
+                <div className={styles.detailFormGroup}>
                   <label>Test Done By</label>
                   <select
                     value={resultData.testDoneBy}
                     onChange={(e) => setResultData({...resultData, testDoneBy: Number(e.target.value)})}
-                    className={detailStyles.formInput}
+                    className={styles.detailFormInput}
                   >
                     <option value={0}>Select Technician</option>
                     {employees.map(emp => (
@@ -1325,28 +1285,28 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
                   </select>
                 </div>
 
-                <div className={detailStyles.formGroupFull}>
+                <div className={styles.detailFormGroupFull}>
                   <label>Remarks</label>
                   <textarea
                     value={resultData.remarks}
                     onChange={(e) => setResultData({...resultData, remarks: e.target.value})}
-                    className={detailStyles.formTextarea}
+                    className={styles.detailFormTextarea}
                     rows={3}
                     placeholder="Any additional notes or observations..."
                   />
                 </div>
               </div>
 
-              <div className={detailStyles.formActions}>
+              <div className={styles.formActions}>
                 <button 
                   onClick={() => setActiveStep(1)} 
-                  className={detailStyles.backBtn}
+                  className={styles.backBtn}
                 >
                   ← Back
                 </button>
                 <button 
                   onClick={handleResultSave} 
-                  className={detailStyles.saveBtn}
+                  className={styles.saveBtn}
                   disabled={loading || !resultData.resultValue}
                 >
                   <FiSave size={18} />
@@ -1357,16 +1317,16 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
           )}
 
           {activeStep === 3 && (
-            <div className={detailStyles.formSection}>
-              <div className={detailStyles.sectionHeader}>
+            <div className={styles.formSection}>
+              <div className={styles.sectionHeader}>
                 <FiCheckCircle size={20} />
                 <h3>Review & Approval</h3>
               </div>
 
-              <div className={detailStyles.reviewSection}>
-                <div className={detailStyles.reviewCard}>
+              <div className={styles.reviewSection}>
+                <div className={styles.reviewCard}>
                   <h4>Sample Collection</h4>
-                  <div className={detailStyles.reviewRow}>
+                  <div className={styles.reviewRow}>
                     <span>Date & Time:</span>
                     <strong>
                       {workItem.sampleCollectedTime 
@@ -1376,23 +1336,23 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
                         : 'Not recorded'}
                     </strong>
                   </div>
-                  <div className={detailStyles.reviewRow}>
+                  <div className={styles.reviewRow}>
                     <span>Place:</span>
                     <strong>{workItem.sampleCollectedPlace || sampleData.sampleCollectedPlace || 'Not specified'}</strong>
                   </div>
                 </div>
 
-                <div className={detailStyles.reviewCard}>
+                <div className={styles.reviewCard}>
                   <h4>Test Results</h4>
-                  <div className={detailStyles.reviewRow}>
+                  <div className={styles.reviewRow}>
                     <span>Value:</span>
                     <strong>{workItem.resultValue || resultData.resultValue || 'Not entered'} {workItem.resultUnits || resultData.resultUnits}</strong>
                   </div>
-                  <div className={detailStyles.reviewRow}>
+                  <div className={styles.reviewRow}>
                     <span>Normal Range:</span>
                     <strong>{workItem.normalRange || resultData.normalRange || 'Not specified'}</strong>
                   </div>
-                  <div className={detailStyles.reviewRow}>
+                  <div className={styles.reviewRow}>
                     <span>Interpretation:</span>
                     <strong>
                       {interpretationOptions.find(opt => opt.value === (workItem.interpretation || resultData.interpretation))?.label || 'Not specified'}
@@ -1401,23 +1361,23 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
                 </div>
               </div>
 
-              <div className={detailStyles.formActions}>
+              <div className={styles.formActions}>
                 <button 
                   onClick={() => setActiveStep(2)} 
-                  className={detailStyles.backBtn}
+                  className={styles.backBtn}
                 >
                   ← Back
                 </button>
                 <button 
                   onClick={() => setShowRejectionModal(true)} 
-                  className={detailStyles.rejectBtn}
+                  className={styles.rejectBtn}
                 >
                   <FiXCircle size={18} />
                   Reject
                 </button>
                 <button 
                   onClick={() => setShowApprovalModal(true)} 
-                  className={detailStyles.approveBtn}
+                  className={styles.approveBtn}
                 >
                   <FiCheckCircle size={18} />
                   Approve
@@ -1428,26 +1388,26 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
         </div>
 
         {showApprovalModal && (
-          <div className={detailStyles.confirmOverlay} onClick={() => !loading && setShowApprovalModal(false)}>
-            <div className={detailStyles.confirmModal} onClick={(e) => e.stopPropagation()}>
-              <div className={detailStyles.confirmHeader}>
+          <div className={styles.confirmOverlay} onClick={() => !loading && setShowApprovalModal(false)}>
+            <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.confirmModalHeader}>
                 <h3>Approve Work Item</h3>
-                <button onClick={() => !loading && setShowApprovalModal(false)} className={detailStyles.confirmCloseBtn} disabled={loading}>
+                <button onClick={() => !loading && setShowApprovalModal(false)} className={styles.confirmCloseBtn} disabled={loading}>
                   <FiX size={20} />
                 </button>
               </div>
-              <div className={detailStyles.confirmBody}>
+              <div className={styles.confirmModalBody}>
                 {statusMessage.text && (
-                  <div className={`${detailStyles.statusMessage} ${detailStyles[statusMessage.type]}`}>
+                  <div className={`${styles.statusMessage} ${styles[statusMessage.type]}`}>
                     {statusMessage.text}
                   </div>
                 )}
-                <div className={detailStyles.formGroup}>
+                <div className={styles.detailFormGroup}>
                   <label>Approved By *</label>
                   <select
                     value={approvalData.testApprovedBy}
                     onChange={(e) => setApprovalData({...approvalData, testApprovedBy: Number(e.target.value)})}
-                    className={detailStyles.formInput}
+                    className={styles.detailFormInput}
                     required
                     disabled={loading}
                   >
@@ -1459,23 +1419,23 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
                     ))}
                   </select>
                 </div>
-                <div className={detailStyles.formGroup}>
+                <div className={styles.detailFormGroup}>
                   <label>Approval Remarks</label>
                   <textarea
                     value={approvalData.approvalRemarks}
                     onChange={(e) => setApprovalData({...approvalData, approvalRemarks: e.target.value})}
-                    className={detailStyles.formTextarea}
+                    className={styles.detailFormTextarea}
                     rows={3}
                     placeholder="Optional remarks..."
                     disabled={loading}
                   />
                 </div>
               </div>
-              <div className={detailStyles.confirmFooter}>
-                <button onClick={() => !loading && setShowApprovalModal(false)} className={detailStyles.cancelBtn} disabled={loading}>
+              <div className={styles.confirmModalFooter}>
+                <button onClick={() => !loading && setShowApprovalModal(false)} className={styles.cancelBtn} disabled={loading}>
                   Cancel
                 </button>
-                <button onClick={handleApprove} className={detailStyles.confirmApproveBtn} disabled={loading}>
+                <button onClick={handleApprove} className={styles.confirmApproveBtn} disabled={loading}>
                   <FiCheckCircle size={18} />
                   {loading ? 'Approving...' : 'Approve'}
                 </button>
@@ -1485,26 +1445,26 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
         )}
 
         {showRejectionModal && (
-          <div className={detailStyles.confirmOverlay} onClick={() => !loading && setShowRejectionModal(false)}>
-            <div className={detailStyles.confirmModal} onClick={(e) => e.stopPropagation()}>
-              <div className={detailStyles.confirmHeader}>
+          <div className={styles.confirmOverlay} onClick={() => !loading && setShowRejectionModal(false)}>
+            <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.confirmModalHeader}>
                 <h3>Reject Work Item</h3>
-                <button onClick={() => !loading && setShowRejectionModal(false)} className={detailStyles.confirmCloseBtn} disabled={loading}>
+                <button onClick={() => !loading && setShowRejectionModal(false)} className={styles.confirmCloseBtn} disabled={loading}>
                   <FiX size={20} />
                 </button>
               </div>
-              <div className={detailStyles.confirmBody}>
+              <div className={styles.confirmModalBody}>
                 {statusMessage.text && (
-                  <div className={`${detailStyles.statusMessage} ${detailStyles[statusMessage.type]}`}>
+                  <div className={`${styles.statusMessage} ${styles[statusMessage.type]}`}>
                     {statusMessage.text}
                   </div>
                 )}
-                <div className={detailStyles.formGroup}>
+                <div className={styles.detailFormGroup}>
                   <label>Rejected By *</label>
                   <select
                     value={rejectionData.testApprovedBy}
                     onChange={(e) => setRejectionData({...rejectionData, testApprovedBy: Number(e.target.value)})}
-                    className={detailStyles.formInput}
+                    className={styles.detailFormInput}
                     required
                     disabled={loading}
                   >
@@ -1516,12 +1476,12 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
                     ))}
                   </select>
                 </div>
-                <div className={detailStyles.formGroup}>
+                <div className={styles.detailFormGroup}>
                   <label>Rejection Reason *</label>
                   <textarea
                     value={rejectionData.rejectReason}
                     onChange={(e) => setRejectionData({...rejectionData, rejectReason: e.target.value})}
-                    className={detailStyles.formTextarea}
+                    className={styles.detailFormTextarea}
                     rows={4}
                     placeholder="Please provide a detailed reason for rejection..."
                     required
@@ -1529,11 +1489,11 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
                   />
                 </div>
               </div>
-              <div className={detailStyles.confirmFooter}>
-                <button onClick={() => !loading && setShowRejectionModal(false)} className={detailStyles.cancelBtn} disabled={loading}>
+              <div className={styles.confirmModalFooter}>
+                <button onClick={() => !loading && setShowRejectionModal(false)} className={styles.cancelBtn} disabled={loading}>
                   Cancel
                 </button>
-                <button onClick={handleReject} className={detailStyles.confirmRejectBtn} disabled={loading}>
+                <button onClick={handleReject} className={styles.confirmRejectBtn} disabled={loading}>
                   <FiXCircle size={18} />
                   {loading ? 'Rejecting...' : 'Reject'}
                 </button>

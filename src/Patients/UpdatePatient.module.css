@@ -1,6 +1,5 @@
-/* AddPatient.module.css - Exact match to Clinic Add/Update Popup Style */
+/* UpdatePatient.module.css - Exact match to Clinic Update Popup Style */
 
-/* ==================== ROOT VARIABLES ==================== */
 :root {
   --primary-start: #222b6c;
   --primary-end:   #225ca0;
@@ -12,18 +11,18 @@
   --glass-border:  rgba(255, 255, 255, 0.4);
 }
 
-/* ==================== ANIMATIONS ==================== */
+/* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
-  to   { opacity: 1; }
+  to { opacity: 1; }
 }
 
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(22px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* ==================== MODAL OVERLAY & CONTAINER ==================== */
+/* Overlay & Modal */
 .detailModalOverlay {
   position: fixed;
   inset: 0;
@@ -41,15 +40,20 @@
   background: var(--glass-bg);
   border-radius: 20px;
   width: 100%;
-  max-width: 920px;               /* Slightly wider than Clinic to fit more fields */
+  max-width: 920px;
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.4s ease;
 }
 
-/* ==================== HEADER ==================== */
+/* Static Header */
 .detailModalHeader {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   padding: 24px 28px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
@@ -57,6 +61,8 @@
   justify-content: space-between;
   align-items: center;
   gap: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
 }
 
 .detailHeaderContent {
@@ -72,8 +78,8 @@
 .detailHeaderMeta {
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
   margin-top: 6px;
+  flex-wrap: wrap;
 }
 
 .workIdBadge {
@@ -82,20 +88,29 @@
   border-radius: 6px;
   font-size: 0.85rem;
   font-weight: 600;
-  backdrop-filter: blur(10px);
   color: var(--text-light);
+}
+
+.activeBadge {
+  background: rgba(34, 197, 94, 0.3);
+  color: #fff;
+}
+
+.inactiveBadge {
+  background: rgba(239, 68, 68, 0.3);
+  color: #fff;
 }
 
 .detailCloseBtn {
   background: rgba(255, 255, 255, 0.2);
   border: none;
-  color: var(--text-light);
+  color: white;
   width: 44px;
   height: 44px;
   border-radius: 12px;
   font-size: 1.4rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s;
 }
 
 .detailCloseBtn:hover {
@@ -103,12 +118,20 @@
   transform: scale(1.1);
 }
 
-/* ==================== FORM BODY ==================== */
-.addModalBody {
-  padding: 0 28px 24px;
+/* Scrollable Body */
+.addModalBodyScrollable {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* ==================== SECTIONS ==================== */
+.addModalBodyScrollable form {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+/* Sections */
 .addSection {
   padding: 20px 24px;
   border-bottom: 1px solid rgba(34, 43, 108, 0.08);
@@ -126,14 +149,12 @@
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--primary-start);
   background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
-/* ==================== FORM GRID & INPUTS ==================== */
+/* Form Grid */
 .addFormGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -169,15 +190,13 @@
   background: rgba(255, 255, 255, 0.9);
   border: 2px solid rgba(34, 43, 108, 0.15);
   border-radius: 10px;
-  color: var(--text-dark);
   font-size: 0.9rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s;
 }
 
 .addFormGroup input:focus,
 .addFormGroup textarea:focus,
 .addFormGroup select:focus {
-  outline: none;
   border-color: var(--accent-end);
   box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
   background: white;
@@ -194,7 +213,7 @@
   margin-top: 4px;
 }
 
-/* ==================== MESSAGES ==================== */
+/* Messages */
 .formError,
 .formSuccess {
   padding: 10px 14px;
@@ -217,21 +236,24 @@
   border-color: rgba(34, 197, 94, 0.3);
 }
 
-/* ==================== FOOTER ==================== */
+/* Footer */
 .detailModalFooter {
+  margin-top: auto;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   padding: 20px 28px;
   border-top: 2px solid rgba(34, 43, 108, 0.1);
   background: #f8fafc;
+  flex-shrink: 0;
 }
+
 
 .btnCancel {
   background: linear-gradient(135deg, #016183, var(--primary-end));
   color: var(--text-light);
   border: none;
-  border-radius: 14px;
+  border-radius: 10px;
   height: 40px;
   padding: 0 20px;
   font-weight: 700;
@@ -275,11 +297,15 @@
 
 .btnCancel:hover::after { background-position: 200% 0; }
 
+.btnCancel:hover {
+  transform: translateY(-2px);
+}
+
 .btnSubmit {
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: var(--text-light);
   border: none;
-  border-radius: 14px;
+  border-radius: 10px;
   height: 40px;
   padding: 0 20px;
   font-weight: 700;
@@ -293,37 +319,16 @@
   z-index: 0;
 }
 
-.btnSubmit:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(1, 97, 131, 0.4);
-}
-
 .btnSubmit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
 }
 
-/* ==================== FAMILY SEARCH ==================== */
-.flexRow {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.searchInput {
-  flex: 1;
-  height: 44px;
-  padding: 0 16px;
-  border: 2px solid rgba(34, 43, 108, 0.15);
-  border-radius: 10px;
-  font-size: 0.9rem;
-}
-
-/* ==================== RESPONSIVE ==================== */
+/* Responsive */
 @media (max-width: 768px) {
   .addModalContent {
     max-width: 95%;
+    max-height: 95vh;
   }
 
   .addFormGrid {
@@ -339,72 +344,4 @@
   .btnSubmit {
     width: 100%;
   }
-
-  .flexRow {
-    flex-direction: column;
-    gap: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .detailModalHeader {
-    padding: 20px 24px;
-  }
-
-  .detailHeaderContent h2 {
-    font-size: 1.3rem;
-  }
-
-  .addSectionHeader h3 {
-    font-size: 1rem;
-  }
-
-  .addFormGroup label {
-    font-size: 0.85rem;
-  }
-
-  .addFormGroup input,
-  .addFormGroup textarea,
-  .addFormGroup select {
-    font-size: 0.88rem;
-    padding: 9px 12px;
-  }
-}
-
-.addModalContent {
-  display: flex;
-  flex-direction: column;
-  height: 90vh;                    /* or max-height: 90vh */
-  overflow: hidden;                /* Prevent whole modal from scrolling */
-}
-
-.detailModalHeader {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  flex-shrink: 0;                  /* Header won't shrink */
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  padding: 24px 28px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.addModalBodyScrollable {
-  flex: 1 1 auto;                  /* Grow to fill space */
-  overflow-y: auto;                /* Only body scrolls */
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Make sure footer stays at bottom even if content is short */
-.addModalBodyScrollable form {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
-}
-
-.detailModalFooter {
-  margin-top: auto;                /* Pushes footer to bottom */
-  padding: 20px 28px;
-  background: #f8fafc;
-  border-top: 2px solid rgba(34, 43, 108, 0.1);
-  flex-shrink: 0;
 }

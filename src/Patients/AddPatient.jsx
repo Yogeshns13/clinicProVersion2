@@ -126,21 +126,20 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
 
     case 'birthDate':
-  if (value) {
-    const birthDate = new Date(value);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    birthDate.setHours(0, 0, 0, 0);
-    
-    if (birthDate > today) return 'Birth date cannot be in the future';
-  }
-  return '';  
+      if (value) {
+        const birthDate = new Date(value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        birthDate.setHours(0, 0, 0, 0);
+        
+        if (birthDate > today) return 'Birth date cannot be in the future';
+      }
+      return '';  
 
     default:
       return '';
   }
 };
-
 
 const filterInput = (fieldName, value) => {
   switch (fieldName) {
@@ -201,7 +200,6 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
   const [searchError, setSearchError] = useState('');
   const [selectedFamilyPatient, setSelectedFamilyPatient] = useState(null);
 
-  // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
       resetForm();
@@ -377,484 +375,466 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
   if (!isOpen) return null;
 
   return (
-    <div className={styles.clinicModalOverlay} onClick={onClose}>
-      <div 
-        className={`${styles.clinicModal} ${styles.formModal} ${styles.employeeFormModal}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className={styles.clinicModalHeader}>
-          <h2>Add New Patient</h2>
-          <button onClick={onClose} className={styles.clinicModalClose}>
-            <FiX />
+    <div className={styles.detailModalOverlay} onClick={onClose}>
+      <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
+
+        {/* ── Static Header (does not scroll) ── */}
+        <div className={styles.detailModalHeader}>
+          <div className={styles.detailHeaderContent}>
+            <h2>Add New Patient</h2>
+            <div className={styles.detailHeaderMeta}>
+              <span className={styles.workIdBadge}>Patient Registration</span>
+            </div>
+          </div>
+          <button onClick={onClose} className={styles.detailCloseBtn}>
+            ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.clinicModalBody}>
-          {formError && <div className={styles.formError}>{formError}</div>}
-          {formSuccess && <div className={styles.formSuccess}>Patient added successfully!</div>}
+        {/* ── Scrollable Form Content ── */}
+        <div className={styles.addModalBodyScrollable}>
+          <form onSubmit={handleSubmit}>
+            {formError && <div className={styles.formError}>{formError}</div>}
+            {formSuccess && <div className={styles.formSuccess}>Patient added successfully!</div>}
 
-          <div className={styles.formGrid}>
             {/* Basic Information */}
-            <h3 className={styles.formSectionTitle}>Basic Information</h3>
+            <div className={styles.addSection}>
+              <div className={styles.addSectionHeader}>
+                <h3>Basic Information</h3>
+              </div>
 
-            <div className={styles.formGroup}>
-              <label>
-                First Name <span className={styles.required}>*</span>
-              </label>
-              <input
-                required
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleInputChange}
-                placeholder="Enter first name"
-              />
-              
-              {validationMessages.firstName && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.firstName}
-                </span>
-              )}
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>
-                Last Name <span className={styles.required}>*</span>
-              </label>
-              <input
-                required
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleInputChange}
-                placeholder="Enter last name"
-              />
-              
-              {validationMessages.lastName && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.lastName}
-                </span>
-              )}
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>
-                Gender <span className={styles.required}>*</span>
-              </label>
-              <select 
-                required
-                name="gender" 
-                value={formData.gender} 
-                onChange={handleInputChange}
-              >
-                <option value="0">Select Gender</option>
-                {GENDER_OPTIONS.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-<div className={styles.formGroup}>
-  <label>Birth Date</label>
-  <input
-    type="date"
-    name="birthDate"
-    value={formData.birthDate}
-    onChange={handleInputChange}
-    max={getTodayDate()}
-  />
-  
-  {validationMessages.birthDate && (
-    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-      {validationMessages.birthDate}
-    </span>
-  )}
-</div>
-
-            <div className={styles.formGroup}>
-              <label>
-                Age <span className={styles.required}>*</span>
-              </label>
-              <input
-                required
-                type="number"
-                name="age"
-                value={formData.age}
-                onChange={handleInputChange}
-                min="0"
-                placeholder="Enter age"
-              />
-              
-              {validationMessages.age && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.age}
-                </span>
-              )}
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>
-                Blood Group <span className={styles.required}>*</span>
-              </label>
-              <select 
-                required
-                name="bloodGroup" 
-                value={formData.bloodGroup} 
-                onChange={handleInputChange}
-              >
-                <option value="0">Select Blood Group</option>
-                {BLOOD_GROUP_OPTIONS.map((bg) => (
-                  <option key={bg.id} value={bg.id}>
-                    {bg.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>Marital Status</label>
-              <select
-                name="maritalStatus"
-                value={formData.maritalStatus}
-                onChange={handleInputChange}
-              >
-                <option value="0">Select Status</option>
-                {MARITAL_STATUS_OPTIONS.map((ms) => (
-                  <option key={ms.id} value={ms.id}>
-                    {ms.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Contact Information */}
-            <h3 className={styles.formSectionTitle}>Contact Information</h3>
-
-            <div className={styles.formGroup}>
-              <label>
-                Mobile <span className={styles.required}>*</span>
-              </label>
-              <input
-                required
-                name="mobile"
-                value={formData.mobile}
-                onChange={handleInputChange}
-                placeholder="Enter mobile number"
-                maxLength="10"
-              />
-              
-              {validationMessages.mobile && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.mobile}
-                </span>
-              )}
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>Alternate Mobile</label>
-              <input
-                name="altMobile"
-                value={formData.altMobile}
-                onChange={handleInputChange}
-                placeholder="Enter alternate mobile"
-                maxLength="10"
-              />
-              
-              {validationMessages.altMobile && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.altMobile}
-                </span>
-              )}
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="Enter email address"
-              />
-              
-              {validationMessages.email && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.email}
-                </span>
-              )}
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>Emergency Contact</label>
-              <input
-                name="emergencyContactNo"
-                value={formData.emergencyContactNo}
-                onChange={handleInputChange}
-                placeholder="Enter emergency contact"
-                maxLength="10"
-              />
-              
-              {validationMessages.emergencyContactNo && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.emergencyContactNo}
-                </span>
-              )}
-            </div>
-
-            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-              <label>Address</label>
-              <textarea
-                name="address"
-                rows={2}
-                value={formData.address}
-                onChange={handleInputChange}
-                placeholder="Enter address"
-              />
-              
-              {validationMessages.address && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.address}
-                </span>
-              )}
-            </div>
-
-            {/* Family Patient Link Section */}
-            <h3 className={styles.formSectionTitle}>Family Patient Link</h3>
-
-            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={hasFamilyPatient}
-                  onChange={handleFamilyPatientToggle}
-                  style={{ width: 'auto', cursor: 'pointer' }}
-                />
-                <span>Link to existing family patient?</span>
-              </label>
-            </div>
-
-            {hasFamilyPatient && (
-              <>
-                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                  <label>Search Patient by Mobile Number</label>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <input
-                      type="text"
-                      value={searchMobile}
-                      onChange={handleSearchMobileChange}
-                      placeholder="Enter mobile number"
-                      style={{ flex: 1 }}
-                      maxLength="10"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleSearchPatients}
-                      disabled={searchLoading}
-                      className={styles.btnSubmit}
-                      style={{ 
-                        width: 'auto', 
-                        padding: '0 20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '5px'
-                      }}
-                    >
-                      <FiSearch />
-                      {searchLoading ? 'Searching...' : 'Search'}
-                    </button>
-                  </div>
-                  {searchError && (
-                    <div style={{ color: '#e74c3c', fontSize: '0.9rem', marginTop: '5px' }}>
-                      {searchError}
-                    </div>
+              <div className={styles.addFormGrid}>
+                <div className={styles.addFormGroup}>
+                  <label>First Name <span className={styles.required}>*</span></label>
+                  <input
+                    required
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    placeholder="Enter first name"
+                  />
+                  {validationMessages.firstName && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.firstName}
+                    </span>
                   )}
                 </div>
 
-                {searchResults.length > 0 && (
-                  <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                    <label>Select Family Patient</label>
-                    <div style={{ 
-                      maxHeight: '200px', 
-                      overflowY: 'auto', 
-                      border: '1px solid #ddd', 
-                      borderRadius: '8px',
-                      padding: '10px'
-                    }}>
-                      {searchResults.map((patient) => {
-                        const patientId = patient.patientId || patient.patientID || patient.id;
-                        const isSelected = selectedFamilyPatient?.patientId === patientId || 
-                                          selectedFamilyPatient?.patientID === patientId ||
-                                          selectedFamilyPatient?.id === patientId;
-                        
-                        return (
-                          <label
-                            key={patientId}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '10px',
-                              padding: '10px',
-                              marginBottom: '5px',
-                              backgroundColor: isSelected ? '#e8f5e9' : '#f9f9f9',
-                              border: isSelected ? '2px solid #4caf50' : '1px solid #e0e0e0',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease'
-                            }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => handleSelectFamilyPatient(patient)}
-                              style={{ width: 'auto', cursor: 'pointer' }}
-                            />
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontWeight: '600', color: '#333' }}>
+                <div className={styles.addFormGroup}>
+                  <label>Last Name <span className={styles.required}>*</span></label>
+                  <input
+                    required
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    placeholder="Enter last name"
+                  />
+                  {validationMessages.lastName && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.lastName}
+                    </span>
+                  )}
+                </div>
+
+                <div className={styles.addFormGroup}>
+                  <label>Gender <span className={styles.required}>*</span></label>
+                  <select
+                    required
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                  >
+                    <option value="0">Select Gender</option>
+                    {GENDER_OPTIONS.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className={styles.addFormGroup}>
+                  <label>Birth Date</label>
+                  <input
+                    type="date"
+                    name="birthDate"
+                    value={formData.birthDate}
+                    onChange={handleInputChange}
+                    max={getTodayDate()}
+                  />
+                  {validationMessages.birthDate && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.birthDate}
+                    </span>
+                  )}
+                </div>
+
+                <div className={styles.addFormGroup}>
+                  <label>Age <span className={styles.required}>*</span></label>
+                  <input
+                    required
+                    type="number"
+                    name="age"
+                    value={formData.age}
+                    onChange={handleInputChange}
+                    min="0"
+                    placeholder="Enter age"
+                  />
+                  {validationMessages.age && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.age}
+                    </span>
+                  )}
+                </div>
+
+                <div className={styles.addFormGroup}>
+                  <label>Blood Group <span className={styles.required}>*</span></label>
+                  <select
+                    required
+                    name="bloodGroup"
+                    value={formData.bloodGroup}
+                    onChange={handleInputChange}
+                  >
+                    <option value="0">Select Blood Group</option>
+                    {BLOOD_GROUP_OPTIONS.map((bg) => (
+                      <option key={bg.id} value={bg.id}>
+                        {bg.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className={styles.addFormGroup}>
+                  <label>Marital Status</label>
+                  <select
+                    name="maritalStatus"
+                    value={formData.maritalStatus}
+                    onChange={handleInputChange}
+                  >
+                    <option value="0">Select Status</option>
+                    {MARITAL_STATUS_OPTIONS.map((ms) => (
+                      <option key={ms.id} value={ms.id}>
+                        {ms.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Contact Information */}
+            <div className={styles.addSection}>
+              <div className={styles.addSectionHeader}>
+                <h3>Contact Information</h3>
+              </div>
+
+              <div className={styles.addFormGrid}>
+                <div className={styles.addFormGroup}>
+                  <label>Mobile <span className={styles.required}>*</span></label>
+                  <input
+                    required
+                    name="mobile"
+                    value={formData.mobile}
+                    onChange={handleInputChange}
+                    placeholder="Enter mobile number"
+                    maxLength="10"
+                  />
+                  {validationMessages.mobile && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.mobile}
+                    </span>
+                  )}
+                </div>
+
+                <div className={styles.addFormGroup}>
+                  <label>Alternate Mobile</label>
+                  <input
+                    name="altMobile"
+                    value={formData.altMobile}
+                    onChange={handleInputChange}
+                    placeholder="Enter alternate mobile"
+                    maxLength="10"
+                  />
+                  {validationMessages.altMobile && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.altMobile}
+                    </span>
+                  )}
+                </div>
+
+                <div className={styles.addFormGroup}>
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="Enter email address"
+                  />
+                  {validationMessages.email && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.email}
+                    </span>
+                  )}
+                </div>
+
+                <div className={styles.addFormGroup}>
+                  <label>Emergency Contact</label>
+                  <input
+                    name="emergencyContactNo"
+                    value={formData.emergencyContactNo}
+                    onChange={handleInputChange}
+                    placeholder="Enter emergency contact"
+                    maxLength="10"
+                  />
+                  {validationMessages.emergencyContactNo && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.emergencyContactNo}
+                    </span>
+                  )}
+                </div>
+
+                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                  <label>Address</label>
+                  <textarea
+                    name="address"
+                    rows={3}
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    placeholder="Enter full address"
+                  />
+                  {validationMessages.address && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.address}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Family Patient Link */}
+            <div className={styles.addSection}>
+              <div className={styles.addSectionHeader}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: 0 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={hasFamilyPatient}
+                      onChange={handleFamilyPatientToggle}
+                      style={{ width: 'auto', margin: 0 }}
+                    />
+                    Family Patient Link
+                  </label>
+                </h3>
+              </div>
+
+              {hasFamilyPatient && (
+                <div className={styles.addFormGrid}>
+                  <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                    <label>Search by Mobile Number</label>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <input
+                        type="text"
+                        value={searchMobile}
+                        onChange={handleSearchMobileChange}
+                        placeholder="Enter 10-digit mobile"
+                        maxLength="10"
+                        style={{ flex: 1 }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSearchPatients}
+                        disabled={searchLoading}
+                        className={styles.btnSubmit}
+                        style={{ padding: '0 20px' }}
+                      >
+                        <FiSearch />
+                        {searchLoading ? 'Searching...' : 'Search'}
+                      </button>
+                    </div>
+                    {searchError && (
+                      <span className={styles.validationMsg} style={{ color: '#dc2626' }}>
+                        {searchError}
+                      </span>
+                    )}
+                  </div>
+
+                  {searchResults.length > 0 && (
+                    <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                      <label>Select Family Patient</label>
+                      <div style={{ 
+                        maxHeight: '200px', 
+                        overflowY: 'auto', 
+                        border: '1px solid #e2e8f0', 
+                        borderRadius: '10px',
+                        padding: '12px',
+                        background: '#f8fafc'
+                      }}>
+                        {searchResults.map((patient) => {
+                          const patientId = patient.patientId || patient.patientID || patient.id;
+                          const isSelected = selectedFamilyPatient?.patientId === patientId || 
+                                            selectedFamilyPatient?.patientID === patientId ||
+                                            selectedFamilyPatient?.id === patientId;
+
+                          return (
+                            <div
+                              key={patientId}
+                              onClick={() => handleSelectFamilyPatient(patient)}
+                              style={{
+                                padding: '10px',
+                                marginBottom: '8px',
+                                background: isSelected ? '#e8f5e9' : 'white',
+                                border: isSelected ? '2px solid #4caf50' : '1px solid #e0e0e0',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                              }}
+                            >
+                              <div style={{ fontWeight: '600' }}>
                                 {patient.firstName} {patient.lastName}
                               </div>
-                              <div style={{ fontSize: '0.85rem', color: '#666' }}>
+                              <div style={{ fontSize: '0.9rem', color: '#555' }}>
                                 Mobile: {patient.mobile}
                               </div>
                             </div>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {selectedFamilyPatient && (
-                  <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                    <div style={{
-                      padding: '15px',
-                      backgroundColor: '#e8f5e9',
-                      border: '1px solid #4caf50',
-                      borderRadius: '8px'
-                    }}>
-                      <strong style={{ color: '#2e7d32' }}>Selected Family Patient:</strong>
-                      <div style={{ marginTop: '5px', color: '#333' }}>
-                        {selectedFamilyPatient.firstName} {selectedFamilyPatient.lastName} - {selectedFamilyPatient.mobile}
+                          );
+                        })}
                       </div>
                     </div>
-                  </div>
-                )}
-              </>
-            )}
+                  )}
+
+                  {selectedFamilyPatient && (
+                    <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                      <div style={{
+                        padding: '12px',
+                        background: '#e8f5e9',
+                        border: '1px solid #4caf50',
+                        borderRadius: '10px'
+                      }}>
+                        <strong>Selected:</strong> {selectedFamilyPatient.firstName} {selectedFamilyPatient.lastName} - {selectedFamilyPatient.mobile}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Medical Information */}
-            <h3 className={styles.formSectionTitle}>Medical Information</h3>
+            <div className={styles.addSection}>
+              <div className={styles.addSectionHeader}>
+                <h3>Medical Information</h3>
+              </div>
 
-            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-              <label>Allergies</label>
-              <textarea
-                name="allergies"
-                rows={2}
-                value={formData.allergies}
-                onChange={handleInputChange}
-                placeholder="Enter any known allergies"
-              />
-              
-              {validationMessages.allergies && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.allergies}
-                </span>
-              )}
+              <div className={styles.addFormGrid}>
+                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                  <label>Allergies</label>
+                  <textarea
+                    name="allergies"
+                    rows={2}
+                    value={formData.allergies}
+                    onChange={handleInputChange}
+                    placeholder="Enter any known allergies"
+                  />
+                  {validationMessages.allergies && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.allergies}
+                    </span>
+                  )}
+                </div>
+
+                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                  <label>Existing Medical Conditions</label>
+                  <textarea
+                    name="existingMedicalConditions"
+                    rows={2}
+                    value={formData.existingMedicalConditions}
+                    onChange={handleInputChange}
+                    placeholder="Enter existing medical conditions"
+                  />
+                  {validationMessages.existingMedicalConditions && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.existingMedicalConditions}
+                    </span>
+                  )}
+                </div>
+
+                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                  <label>Past Surgeries</label>
+                  <textarea
+                    name="pastSurgeries"
+                    rows={2}
+                    value={formData.pastSurgeries}
+                    onChange={handleInputChange}
+                    placeholder="Enter past surgeries"
+                  />
+                  {validationMessages.pastSurgeries && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.pastSurgeries}
+                    </span>
+                  )}
+                </div>
+
+                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                  <label>Current Medications</label>
+                  <textarea
+                    name="currentMedications"
+                    rows={2}
+                    value={formData.currentMedications}
+                    onChange={handleInputChange}
+                    placeholder="Enter current medications"
+                  />
+                  {validationMessages.currentMedications && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.currentMedications}
+                    </span>
+                  )}
+                </div>
+
+                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                  <label>Family Medical History</label>
+                  <textarea
+                    name="familyMedicalHistory"
+                    rows={2}
+                    value={formData.familyMedicalHistory}
+                    onChange={handleInputChange}
+                    placeholder="Enter family medical history"
+                  />
+                  {validationMessages.familyMedicalHistory && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.familyMedicalHistory}
+                    </span>
+                  )}
+                </div>
+
+                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                  <label>Immunization Records</label>
+                  <textarea
+                    name="immunizationRecords"
+                    rows={2}
+                    value={formData.immunizationRecords}
+                    onChange={handleInputChange}
+                    placeholder="Enter immunization records"
+                  />
+                  {validationMessages.immunizationRecords && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.immunizationRecords}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-              <label>Existing Medical Conditions</label>
-              <textarea
-                name="existingMedicalConditions"
-                rows={2}
-                value={formData.existingMedicalConditions}
-                onChange={handleInputChange}
-                placeholder="Enter existing medical conditions"
-              />
-              
-              {validationMessages.existingMedicalConditions && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.existingMedicalConditions}
-                </span>
-              )}
+            {/* Footer (inside scrollable area) */}
+            <div className={styles.detailModalFooter}>
+              <button type="button" onClick={onClose} className={styles.btnCancel}>
+                Cancel
+              </button>
+              <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
+                {formLoading ? 'Saving...' : 'Save Patient'}
+              </button>
             </div>
-
-            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-              <label>Past Surgeries</label>
-              <textarea
-                name="pastSurgeries"
-                rows={2}
-                value={formData.pastSurgeries}
-                onChange={handleInputChange}
-                placeholder="Enter past surgeries"
-              />
-              
-              {validationMessages.pastSurgeries && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.pastSurgeries}
-                </span>
-              )}
-            </div>
-
-            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-              <label>Current Medications</label>
-              <textarea
-                name="currentMedications"
-                rows={2}
-                value={formData.currentMedications}
-                onChange={handleInputChange}
-                placeholder="Enter current medications"
-              />
-              
-              {validationMessages.currentMedications && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.currentMedications}
-                </span>
-              )}
-            </div>
-
-            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-              <label>Family Medical History</label>
-              <textarea
-                name="familyMedicalHistory"
-                rows={2}
-                value={formData.familyMedicalHistory}
-                onChange={handleInputChange}
-                placeholder="Enter family medical history"
-              />
-              
-              {validationMessages.familyMedicalHistory && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.familyMedicalHistory}
-                </span>
-              )}
-            </div>
-
-            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-              <label>Immunization Records</label>
-              <textarea
-                name="immunizationRecords"
-                rows={2}
-                value={formData.immunizationRecords}
-                onChange={handleInputChange}
-                placeholder="Enter immunization records"
-              />
-              
-              {validationMessages.immunizationRecords && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.immunizationRecords}
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className={styles.clinicModalFooter}>
-            <button type="button" onClick={onClose} className={styles.btnCancel}>
-              Cancel
-            </button>
-            <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
-              {formLoading ? 'Saving...' : 'Save Patient'}
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

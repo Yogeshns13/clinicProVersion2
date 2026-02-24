@@ -24,6 +24,18 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './SalesCartList.module.css';
 
+// ──────────────────────────────────────────────────
+// CONSTANTS
+// ──────────────────────────────────────────────────
+const PRES_SEARCH_TYPE_OPTIONS = [
+  { value: 'patientName', label: 'Patient Name' },
+  { value: 'doctorName',  label: 'Doctor Name'  },
+];
+
+const CART_SEARCH_TYPE_OPTIONS = [
+  { value: 'patientName', label: 'Patient Name' },
+];
+
 const SalesCartList = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('prescriptions');
@@ -38,15 +50,16 @@ const SalesCartList = () => {
   const today = new Date().toISOString().split('T')[0];
 
   const [presFilterInputs, setPresFilterInputs] = useState({
-    patientName: '',
-    doctorName:  '',
+    searchType:  'patientName',
+    searchValue: '',
     fromDate:    today,
     toDate:      today,
     status:      '',
   });
 
   const [cartFilterInputs, setCartFilterInputs] = useState({
-    patientName: '',
+    searchType:  'patientName',
+    searchValue: '',
     status:      '',
   });
 
@@ -65,8 +78,8 @@ const SalesCartList = () => {
       const f = { ...presFilterInputs, ...overrides };
       const options = {
         Page: 1, PageSize: 100, BranchID: branchId,
-        PatientName: f.patientName.trim(),
-        DoctorName:  f.doctorName.trim(),
+        PatientName: f.searchType === 'patientName' ? f.searchValue.trim() : '',
+        DoctorName:  f.searchType === 'doctorName'  ? f.searchValue.trim() : '',
         FromDate:    f.fromDate || '',
         ToDate:      f.toDate   || '',
         IsRepeat:    -1,
@@ -93,7 +106,7 @@ const SalesCartList = () => {
       const f = { ...cartFilterInputs, ...overrides };
       const options = {
         Page: 1, PageSize: 100, BranchID: branchId,
-        PatientName: f.patientName.trim(),
+        PatientName: f.searchValue.trim(),
         Status: f.status !== '' ? Number(f.status) : -1,
       };
       const data = await getSalesCartList(clinicId, options);
@@ -113,24 +126,29 @@ const SalesCartList = () => {
     else fetchSalesCarts();
   }, [activeTab]);
 
-  const handlePresFilterChange  = (e) => { const { name, value } = e.target; setPresFilterInputs(prev => ({ ...prev, [name]: value })); };
-  const handleCartFilterChange  = (e) => { const { name, value } = e.target; setCartFilterInputs(prev => ({ ...prev, [name]: value })); };
-  const handlePresSearch        = () => fetchPrescriptions();
-  const handleCartSearch        = () => fetchSalesCarts();
+  const handlePresFilterChange = (e) => { const { name, value } = e.target; setPresFilterInputs(prev => ({ ...prev, [name]: value })); };
+  const handleCartFilterChange = (e) => { const { name, value } = e.target; setCartFilterInputs(prev => ({ ...prev, [name]: value })); };
+  const handlePresSearch       = () => fetchPrescriptions();
+  const handleCartSearch       = () => fetchSalesCarts();
 
   const clearPresFilters = () => {
-    const empty = { patientName: '', doctorName: '', fromDate: today, toDate: today, status: '' };
+    const empty = { searchType: 'patientName', searchValue: '', fromDate: today, toDate: today, status: '' };
     setPresFilterInputs(empty);
     fetchPrescriptions(empty);
   };
   const clearCartFilters = () => {
-    const empty = { patientName: '', status: '' };
+    const empty = { searchType: 'patientName', searchValue: '', status: '' };
     setCartFilterInputs(empty);
     fetchSalesCarts(empty);
   };
 
-  const hasPresFilters = !!(presFilterInputs.patientName || presFilterInputs.doctorName || presFilterInputs.fromDate !== today || presFilterInputs.toDate !== today || presFilterInputs.status);
-  const hasCartFilters = !!(cartFilterInputs.patientName || cartFilterInputs.status);
+  const hasPresFilters = !!(
+    presFilterInputs.searchValue ||
+    presFilterInputs.fromDate !== today ||
+    presFilterInputs.toDate   !== today ||
+    presFilterInputs.status
+  );
+  const hasCartFilters = !!(cartFilterInputs.searchValue || cartFilterInputs.status);
 
   const handleAddToCartClick = async (prescription) => {
     setConfirm({ isOpen: true, prescription, details: [], medicineMap: {}, loadingDetails: true, submitting: false, submitProgress: '', error: null, success: false, cartId: null });
@@ -222,21 +240,66 @@ const SalesCartList = () => {
       {activeTab === 'prescriptions' && (
         <div className={styles.inlineFiltersContainer}>
           <div className={styles.presFiltersGrid}>
-            <input type="text" name="patientName" placeholder=" Search by Patient Name" value={presFilterInputs.patientName} onChange={handlePresFilterChange} onKeyPress={(e) => { if (e.key === 'Enter') handlePresSearch(); }} className={styles.inlineFilterInput} />
-            <input type="text" name="doctorName"  placeholder="Search by Doctor Name"  value={presFilterInputs.doctorName}  onChange={handlePresFilterChange} onKeyPress={(e) => { if (e.key === 'Enter') handlePresSearch(); }} className={styles.inlineFilterInput} />
-            <div className={styles.dateWrapper}>
-              <span className={styles.dateLabel}>From Date</span>
-              <input type="date" name="fromDate" value={presFilterInputs.fromDate} onChange={handlePresFilterChange} className={`${styles.inlineFilterInput} ${styles.dateInput}`} />
+
+            {/* VendorList-style joined search type + value */}
+            <div className={styles.searchGroup}>
+              <select
+                name="searchType"
+                value={presFilterInputs.searchType}
+                onChange={handlePresFilterChange}
+                className={styles.searchTypeSelect}
+              >
+                {PRES_SEARCH_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                name="searchValue"
+                placeholder={`Search by ${PRES_SEARCH_TYPE_OPTIONS.find(o => o.value === presFilterInputs.searchType)?.label || ''}`}
+                value={presFilterInputs.searchValue}
+                onChange={handlePresFilterChange}
+                onKeyDown={(e) => e.key === 'Enter' && handlePresSearch()}
+                className={styles.searchInput}
+              />
             </div>
+
+            {/* From Date */}
             <div className={styles.dateWrapper}>
-              <span className={styles.dateLabel}>To Date</span>
-              <input type="date" name="toDate" value={presFilterInputs.toDate} onChange={handlePresFilterChange} className={`${styles.inlineFilterInput} ${styles.dateInput}`} />
+              {!presFilterInputs.fromDate && (
+                <span className={styles.datePlaceholder}>From Date</span>
+              )}
+              <input
+                type="date"
+                name="fromDate"
+                value={presFilterInputs.fromDate}
+                onChange={handlePresFilterChange}
+                className={`${styles.inlineFilterInput} ${!presFilterInputs.fromDate ? styles.dateEmpty : ''}`}
+              />
             </div>
+
+            {/* To Date */}
+            <div className={styles.dateWrapper}>
+              {!presFilterInputs.toDate && (
+                <span className={styles.datePlaceholder}>To Date</span>
+              )}
+              <input
+                type="date"
+                name="toDate"
+                value={presFilterInputs.toDate}
+                onChange={handlePresFilterChange}
+                className={`${styles.inlineFilterInput} ${!presFilterInputs.toDate ? styles.dateEmpty : ''}`}
+              />
+            </div>
+
+            {/* Status */}
             <select name="status" value={presFilterInputs.status} onChange={handlePresFilterChange} className={styles.inlineFilterSelect}>
               <option value="">All Status</option>
               <option value="1">Active</option>
               <option value="2">Cancelled</option>
             </select>
+
+            {/* Actions */}
             <div className={styles.inlineFilterActions}>
               <button onClick={handlePresSearch} className={styles.searchButton}><FiSearch size={15} /> Search</button>
               {hasPresFilters && <button onClick={clearPresFilters} className={styles.clearButton}><FiX size={15} /> Clear</button>}
@@ -249,13 +312,39 @@ const SalesCartList = () => {
       {activeTab === 'salesCarts' && (
         <div className={styles.inlineFiltersContainer}>
           <div className={styles.cartFiltersGrid}>
-            <input type="text" name="patientName" placeholder="Search by Patient Name" value={cartFilterInputs.patientName} onChange={handleCartFilterChange} onKeyPress={(e) => { if (e.key === 'Enter') handleCartSearch(); }} className={styles.inlineFilterInput} />
+
+            {/* VendorList-style joined search type + value */}
+            <div className={styles.searchGroup}>
+              <select
+                name="searchType"
+                value={cartFilterInputs.searchType}
+                onChange={handleCartFilterChange}
+                className={styles.searchTypeSelect}
+              >
+                {CART_SEARCH_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                name="searchValue"
+                placeholder={`Search by ${CART_SEARCH_TYPE_OPTIONS.find(o => o.value === cartFilterInputs.searchType)?.label || ''}`}
+                value={cartFilterInputs.searchValue}
+                onChange={handleCartFilterChange}
+                onKeyDown={(e) => e.key === 'Enter' && handleCartSearch()}
+                className={styles.searchInput}
+              />
+            </div>
+
+            {/* Status */}
             <select name="status" value={cartFilterInputs.status} onChange={handleCartFilterChange} className={styles.inlineFilterSelect}>
               <option value="">All Status</option>
               <option value="1">Active</option>
               <option value="2">Cancelled</option>
               <option value="3">Completed</option>
             </select>
+
+            {/* Actions */}
             <div className={styles.inlineFilterActions}>
               <button onClick={handleCartSearch} className={styles.searchButton}><FiSearch size={15} /> Search</button>
               {hasCartFilters && <button onClick={clearCartFilters} className={styles.clearButton}><FiX size={15} /> Clear</button>}
@@ -292,7 +381,6 @@ const SalesCartList = () => {
                           <div className={styles.avatar}>{pres.patientName?.charAt(0).toUpperCase() || 'P'}</div>
                           <div>
                             <div className={styles.name}>{pres.patientName}</div>
-                            
                           </div>
                         </div>
                       </td>

@@ -303,7 +303,6 @@ const ConsultationList = () => {
 
             {/* ── From Date — SalesCartList style ── */}
             <div className={styles.dateWrapper}>
-              <span className={styles.dateLabel}>From Date</span>
               <input
                 type="date"
                 name="fromDate"
@@ -315,7 +314,6 @@ const ConsultationList = () => {
 
             {/* ── To Date — SalesCartList style ── */}
             <div className={styles.dateWrapper}>
-              <span className={styles.dateLabel}>To Date</span>
               <input
                 type="date"
                 name="toDate"
@@ -371,7 +369,6 @@ const ConsultationList = () => {
 
             {/* ── From Date — SalesCartList style ── */}
             <div className={styles.dateWrapper}>
-              <span className={styles.dateLabel}>From Date</span>
               <input
                 type="date"
                 name="fromDate"
@@ -383,7 +380,6 @@ const ConsultationList = () => {
 
             {/* ── To Date — SalesCartList style ── */}
             <div className={styles.dateWrapper}>
-              <span className={styles.dateLabel}>To Date</span>
               <input
                 type="date"
                 name="toDate"

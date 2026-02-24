@@ -29,22 +29,71 @@
 /* ==================== INLINE FILTERS ==================== */
 .inlineFiltersContainer { background: white; border-radius: 17px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 5px 17px rgba(34,43,108,0.08); border: 1px solid rgba(34,43,108,0.1); animation: slideUp 0.25s ease; }
 
-/* Prescription: Patient | Doctor | From | To | Status | Actions */
+/* Prescription: SearchGroup | FromDate | ToDate | Status | Actions */
 .presFiltersGrid {
   display: grid;
-  grid-template-columns: 1.4fr 1.4fr 1fr 1fr 1fr auto;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
   gap: 10px;
   align-items: center;
 }
 
-/* Sales cart: Patient | Status | Actions */
+/* Sales cart: SearchGroup | Status | Actions */
 .cartFiltersGrid {
   display: grid;
-  grid-template-columns: 2fr 1.2fr auto;
+  grid-template-columns: 2fr 1fr auto;
   gap: 10px;
   align-items: center;
 }
 
+/* ── VendorList-style fused search type + value ── */
+.searchGroup {
+  display: flex;
+  align-items: stretch;
+}
+
+.searchTypeSelect {
+  min-width: 140px;
+  height: 40px;
+  padding: 0 12px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  color: var(--sc-text-dark);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.searchTypeSelect:focus {
+  outline: none;
+  border-color: var(--sc-accent-end);
+  box-shadow: 0 0 0 3px rgba(48,178,181,0.18);
+}
+
+.searchInput {
+  flex: 1;
+  height: 40px;
+  padding: 0 15px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0 10px 10px 0;
+  color: var(--sc-text-dark);
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.searchInput::placeholder { color: #94a3b8; }
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--sc-accent-end);
+  box-shadow: 0 0 0 3px rgba(48,178,181,0.18);
+  border-left: 1px solid var(--sc-accent-end);
+}
+
+/* ── Shared filter input (status selects, etc.) ── */
 .inlineFilterInput {
   height: 40px;
   padding: 0 12px;
@@ -61,34 +110,31 @@
 .inlineFilterInput::placeholder { color: #94a3b8; }
 .inlineFilterInput:focus { outline: none; border-color: var(--sc-accent-end); box-shadow: 0 0 0 3px rgba(48,178,181,0.15); }
 
-/* date inputs with floating label */
+/* ── Date wrapper — VendorList-style overlay placeholder ── */
 .dateWrapper {
   position: relative;
+  width: 100%;
 }
 
-.dateLabel {
+.datePlaceholder {
   position: absolute;
-  top: 50%;
   left: 12px;
+  top: 50%;
   transform: translateY(-50%);
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: 0.85rem;
   color: #94a3b8;
   pointer-events: none;
   z-index: 1;
-  white-space: nowrap;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
 }
 
-.dateInput {
-  font-size: 0.80rem;
-  color: var(--sc-text-dark);
-  padding-left: 80px; /* make room for the label */
+.dateEmpty::-webkit-datetime-edit-text,
+.dateEmpty::-webkit-datetime-edit-month-field,
+.dateEmpty::-webkit-datetime-edit-day-field,
+.dateEmpty::-webkit-datetime-edit-year-field {
+  color: transparent;
 }
-.dateInput::-webkit-calendar-picker-indicator { opacity: 0.5; cursor: pointer; }
 
-:global(.dark-mode) .dateLabel { color: #475569; }
+:global(.dark-mode) .datePlaceholder { color: #64748b; }
 
 .inlineFilterSelect { height: 40px; padding: 0 12px; background: white; border: 1px solid #cbd5e1; border-radius: 10px; color: var(--sc-text-dark); font-size: 0.84rem; font-weight: 500; cursor: pointer; transition: all 0.25s ease; box-sizing: border-box; width: 100%; }
 .inlineFilterSelect:focus { outline: none; border-color: var(--sc-accent-end); box-shadow: 0 0 0 3px rgba(48,178,181,0.15); }
@@ -200,8 +246,12 @@
 :global(.dark-mode) .tabs { background: #1e293b; }
 :global(.dark-mode) .tab { color: #94a3b8; }
 :global(.dark-mode) .inlineFiltersContainer { background: #1e293b; border-color: #475569; }
+:global(.dark-mode) .searchTypeSelect { background: #0f172a; border-color: #475569; color: #e2e8f0; }
+:global(.dark-mode) .searchInput { background: #0f172a; border-color: #475569; color: #e2e8f0; }
+:global(.dark-mode) .searchInput:focus { border-left: 1px solid var(--sc-accent-end); }
 :global(.dark-mode) .inlineFilterInput { background: #0f172a; border-color: #475569; color: #e2e8f0; }
 :global(.dark-mode) .inlineFilterSelect { background: #0f172a; border-color: #475569; color: #e2e8f0; }
+:global(.dark-mode) .datePlaceholder { color: #64748b; }
 :global(.dark-mode) .tableContainer { background: #1e293b; border-color: #475569; }
 :global(.dark-mode) .table th { background: linear-gradient(135deg, #334155, #475569); }
 :global(.dark-mode) .table td { border-bottom-color: #334155; color: #e2e8f0; }
@@ -216,13 +266,24 @@
 :global(.dark-mode) .btnCancel { background: rgba(255,255,255,0.07); border-color: #475569; color: #94a3b8; }
 
 /* ==================== RESPONSIVE ==================== */
-@media (max-width: 1000px) {
-  .presFiltersGrid { grid-template-columns: 1fr 1fr 1fr 1fr 1fr; }
-  .presFiltersGrid .inlineFilterActions { grid-column: 1 / -1; justify-content: flex-start; }
+@media (max-width: 1100px) {
+  .presFiltersGrid { grid-template-columns: 2fr 1fr 1fr; }
+  .presFiltersGrid .inlineFilterSelect,
+  .presFiltersGrid .inlineFilterActions { grid-column: span 1; }
+}
+@media (max-width: 900px) {
+  .presFiltersGrid { grid-template-columns: 1fr 1fr; }
+  .presFiltersGrid .searchGroup { grid-column: 1 / -1; }
+  .presFiltersGrid .inlineFilterActions { grid-column: 1 / -1; }
+  .cartFiltersGrid { grid-template-columns: 1fr; }
+  .cartFiltersGrid .searchGroup { grid-column: 1 / -1; }
 }
 @media (max-width: 768px) {
-  .presFiltersGrid  { grid-template-columns: 1fr 1fr; }
-  .cartFiltersGrid  { grid-template-columns: 1fr; }
+  .presFiltersGrid { grid-template-columns: 1fr; }
+  .presFiltersGrid .searchGroup { grid-column: 1 / -1; }
+  .searchGroup { flex-direction: column; }
+  .searchTypeSelect { border-radius: 10px; border-right: 1px solid #cbd5e1; min-width: unset; }
+  .searchInput { border-radius: 10px; border-left: 1px solid #cbd5e1; }
   .inlineFilterActions { grid-column: 1 / -1; flex-wrap: wrap; }
   .searchButton, .clearButton { flex: 1; justify-content: center; }
   .table th, .table td { padding: 8px 12px; font-size: 0.78rem; }
@@ -238,6 +299,5 @@
   .wrapper { padding: 14px; }
   .tabs { flex-direction: column; }
   .tab { width: 100%; }
-  .presFiltersGrid { grid-template-columns: 1fr; }
   .nameCell { flex-direction: column; align-items: flex-start; }
 }
