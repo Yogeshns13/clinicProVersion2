@@ -500,9 +500,6 @@ const BranchList = () => {
             <div className={styles.detailModalHeader}>
               <div className={styles.detailHeaderContent}>
                 <h2>Add New Branch</h2>
-                <div className={styles.detailHeaderMeta}>
-                  <span className={styles.workIdBadge}>Basic Information</span>
-                </div>
               </div>
               <button onClick={closeAddForm} className={styles.detailCloseBtn}>✕</button>
             </div>

@@ -382,9 +382,6 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
         <div className={styles.detailModalHeader}>
           <div className={styles.detailHeaderContent}>
             <h2>Add New Patient</h2>
-            <div className={styles.detailHeaderMeta}>
-              <span className={styles.workIdBadge}>Patient Registration</span>
-            </div>
           </div>
           <button onClick={onClose} className={styles.detailCloseBtn}>
             ✕

@@ -753,7 +753,6 @@
 .detailHeaderContent { flex: 1; }
 
 .detailHeaderContent h2 {
-  margin: 0 0 10px 0;
   font-size: 1.4rem;
   font-weight: 700;
 }

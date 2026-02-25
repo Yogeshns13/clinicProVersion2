@@ -576,7 +576,7 @@ const PatientVisitList = () => {
                       <span>{formatTime(visitToUpdate.visitTime)}</span>
                     </div>
                     {visitToUpdate.reason && (
-                      <div className={`${styles.infoItem} ${styles.fullWidth}`}>
+                      <div className={styles.infoItem}>
                         <label>Reason:</label>
                         <span>{visitToUpdate.reason}</span>
                       </div>

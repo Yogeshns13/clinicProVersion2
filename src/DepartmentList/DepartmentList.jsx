@@ -425,9 +425,6 @@ const DepartmentList = () => {
             <div className={styles.detailModalHeader}>
               <div className={styles.detailHeaderContent}>
                 <h2>Add New Department</h2>
-                <div className={styles.detailHeaderMeta}>
-                  <span className={styles.workIdBadge}>Department Details</span>
-                </div>
               </div>
               <button onClick={closeAddForm} className={styles.detailCloseBtn}>✕</button>
             </div>

@@ -434,9 +434,6 @@ const WorkShift = () => {
             <div className={styles.detailModalHeader}>
               <div className={styles.detailHeaderContent}>
                 <h2>Add New Work Shift</h2>
-                <div className={styles.detailHeaderMeta}>
-                  <span className={styles.workIdBadge}>Shift Details</span>
-                </div>
               </div>
               <button onClick={closeAddForm} className={styles.detailCloseBtn}>✕</button>
             </div>

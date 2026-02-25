@@ -36,9 +36,10 @@
 /* Search | PatientName | Type | Status | FromDate | ToDate | Actions */
 .filtersGrid {
   display: grid;
-  grid-template-columns: 2fr 1.2fr 1fr 1fr 1fr 1fr auto;
+  grid-template-columns: 2.5fr 1fr 1fr 1fr 1fr auto;
   gap: 10px;
   align-items: center;
+  width: 100%;
 }
 
 .searchGroup {
@@ -52,7 +53,7 @@
   padding: 0 15px;
   background: white;
   border: 1px solid #cbd5e1;
-  border-radius: 10px;
+  border-radius: 0 10px 10px 0;
   color: var(--text-dark);
   font-size: 0.85rem;
   transition: all 0.3s ease;
@@ -892,13 +893,13 @@
 ───────────────────────────────────────────────── */
 @media (max-width: 1280px) {
   .filtersGrid {
-    grid-template-columns: 2fr 1.2fr 1fr 1fr 1fr 1fr auto;
+     grid-template-columns: 2.5fr 1fr 1fr 1fr 1fr auto;
   }
 }
 
 @media (max-width: 1100px) {
   .filtersGrid {
-    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    grid-template-columns: 2fr 1fr 1fr auto;
   }
 }
 
