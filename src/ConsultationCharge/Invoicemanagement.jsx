@@ -35,29 +35,19 @@ const PAYMENT_MODES = [
   { id: 8, label: 'Credit' }
 ];
 
-
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
     case 'paymentDate':
       if (!value || value === '') return 'Payment date is required';
-      
       const selectedDate = new Date(value);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       selectedDate.setHours(0, 0, 0, 0);
-      
-      if (selectedDate > today) {
-        return 'Payment date cannot be in the future';
-      }
-      
+      if (selectedDate > today) return 'Payment date cannot be in the future';
       const oneYearAgo = new Date();
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
       oneYearAgo.setHours(0, 0, 0, 0);
-      
-      if (selectedDate < oneYearAgo) {
-        return 'Payment date cannot be more than 1 year old';
-      }
-      
+      if (selectedDate < oneYearAgo) return 'Payment date cannot be more than 1 year old';
       return '';
 
     case 'amount':
@@ -69,7 +59,7 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
 
     case 'referenceNo':
-      if (!value || value === '') return ''; 
+      if (!value || value === '') return '';
       if (value.trim().length < 3) return 'Reference number must be at least 3 characters';
       if (value.trim().length > 50) return 'Reference number must not exceed 50 characters';
       return '';
@@ -82,41 +72,50 @@ const getLiveValidationMessage = (fieldName, value) => {
 const filterInput = (fieldName, value) => {
   switch (fieldName) {
     case 'amount':
-      
       if (value === '') return value;
       const numFiltered = value.replace(/[^0-9.]/g, '');
-
       const parts = numFiltered.split('.');
-      if (parts.length > 2) {
-        return parts[0] + '.' + parts.slice(1).join('');
-      }
-      if (parts.length === 2 && parts[1].length > 2) {
-        return parts[0] + '.' + parts[1].substring(0, 2);
-      }
+      if (parts.length > 2) return parts[0] + '.' + parts.slice(1).join('');
+      if (parts.length === 2 && parts[1].length > 2) return parts[0] + '.' + parts[1].substring(0, 2);
       return numFiltered;
-    
+
     case 'referenceNo':
       return value.replace(/[^a-zA-Z0-9\-_\s]/g, '');
-    
+
     default:
       return value;
   }
 };
 
+const getTodayStr = () => new Date().toISOString().split('T')[0];
+
 const InvoiceList = () => {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [allInvoices, setAllInvoices] = useState([]);
-  const [searchInput, setSearchInput] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const today = new Date().toISOString().split('T')[0];
-  const [fromDate, setFromDate] = useState();
-  const [toDate, setToDate] = useState();
-  const [patientNameFilter, setPatientNameFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState(-1);
-  const [invoiceTypeFilter, setInvoiceTypeFilter] = useState(0);
-  const [appliedFilters, setAppliedFilters] = useState({ patientName: '', status: -1, invoiceType: 0 });
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  const today = getTodayStr();
+
+  const [filterInputs, setFilterInputs] = useState({
+    searchType: 'InvoiceNo',
+    searchValue: '',
+    patientName: '',
+    status: -1,
+    invoiceType: 0,
+    dateFrom: today,
+    dateTo: today,
+  });
+
+  const [appliedFilters, setAppliedFilters] = useState({
+    searchType: 'InvoiceNo',
+    searchValue: '',
+    patientName: '',
+    status: -1,
+    invoiceType: 0,
+    dateFrom: today,
+    dateTo: today,
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -126,7 +125,7 @@ const InvoiceList = () => {
   const [formError, setFormError] = useState(null);
   const [formSuccess, setFormSuccess] = useState(null);
   const [paymentData, setPaymentData] = useState({
-    paymentDate: new Date().toISOString().split('T')[0],
+    paymentDate: today,
     paymentMode: '',
     amount: '',
     referenceNo: '',
@@ -135,18 +134,32 @@ const InvoiceList = () => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [validationMessages, setValidationMessages] = useState({});
 
-  const fetchInvoices = async () => {
+  const hasActiveFilters =
+    appliedFilters.searchValue.trim() !== '' ||
+    appliedFilters.patientName.trim() !== '' ||
+    appliedFilters.status !== -1 ||
+    appliedFilters.invoiceType !== 0 ||
+    appliedFilters.dateFrom !== today ||
+    appliedFilters.dateTo !== today;
+
+  const fetchInvoices = async (filters = appliedFilters) => {
     try {
       setLoading(true);
       setError(null);
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-      const options = { Page: 1, PageSize: 100, BranchID: branchId };
-      if (appliedFilters.fromDate) options.FromDate = appliedFilters.fromDate;
-      if (appliedFilters.toDate) options.ToDate = appliedFilters.toDate;
-      if (appliedFilters.patientName.trim()) options.PatientName = appliedFilters.patientName.trim();
-      if (appliedFilters.status !== -1) options.Status = appliedFilters.status;
-      if (appliedFilters.invoiceType !== 0) options.InvoiceType = appliedFilters.invoiceType;
+
+      const options = {
+        Page: 1,
+        PageSize: 100,
+        BranchID: branchId,
+        FromDate: filters.dateFrom || today,
+        ToDate: filters.dateTo || today,
+      };
+      if (filters.patientName.trim()) options.PatientName = filters.patientName.trim();
+      if (filters.status !== -1) options.Status = filters.status;
+      if (filters.invoiceType !== 0) options.InvoiceType = filters.invoiceType;
+
       const data = await getInvoiceList(clinicId, options);
       setInvoices(data);
       setAllInvoices(data);
@@ -158,7 +171,8 @@ const InvoiceList = () => {
   };
 
   useEffect(() => {
-    fetchInvoices();
+    fetchInvoices(appliedFilters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedFilters]);
 
   useEffect(() => {
@@ -167,24 +181,24 @@ const InvoiceList = () => {
         setActiveDropdown(null);
       }
     };
-
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   const filteredInvoices = useMemo(() => {
     let filtered = allInvoices;
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      filtered = allInvoices.filter(inv =>
-        inv.invoiceNo?.toLowerCase().includes(term) ||
-        inv.patientName?.toLowerCase().includes(term) ||
-        inv.patientFileNo?.toLowerCase().includes(term) ||
-        inv.patientMobile?.toLowerCase().includes(term)
-      );
+    if (appliedFilters.searchValue.trim()) {
+      const term = appliedFilters.searchValue.toLowerCase();
+      filtered = allInvoices.filter(inv => {
+        if (appliedFilters.searchType === 'InvoiceNo') return inv.invoiceNo?.toLowerCase().includes(term);
+        if (appliedFilters.searchType === 'Patient')   return inv.patientName?.toLowerCase().includes(term);
+        if (appliedFilters.searchType === 'Mobile')    return inv.patientMobile?.toLowerCase().includes(term);
+        if (appliedFilters.searchType === 'FileNo')    return inv.patientFileNo?.toLowerCase().includes(term);
+        return false;
+      });
     }
     return filtered.sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated));
-  }, [allInvoices, searchTerm]);
+  }, [allInvoices, appliedFilters.searchValue, appliedFilters.searchType]);
 
   const statistics = useMemo(() => {
     const total = filteredInvoices.reduce((sum, inv) => sum + (inv.netAmount || 0), 0);
@@ -200,27 +214,27 @@ const InvoiceList = () => {
     return net - paid;
   };
 
-  const handleSearch = () => setSearchTerm(searchInput.trim());
-  const handleKeyPress = (e) => { if (e.key === 'Enter') handleSearch(); };
-
-  const applyFilters = () => {
-    setAppliedFilters({
-      fromDate, toDate,
-      patientName: patientNameFilter,
-      status: statusFilter,
-      invoiceType: invoiceTypeFilter
-    });
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
-  const clearAllFilters = () => {
-    setSearchInput('');
-    setSearchTerm('');
-    setFromDate(today);
-    setToDate(today);
-    setPatientNameFilter('');
-    setStatusFilter(-1);
-    setInvoiceTypeFilter(0);
-    setAppliedFilters({ fromDate: today, toDate: today, patientName: '', status: -1, invoiceType: 0 });
+  const handleSearch = () => {
+    setAppliedFilters({ ...filterInputs });
+  };
+
+  const handleClearFilters = () => {
+    const defaults = {
+      searchType: 'InvoiceNo',
+      searchValue: '',
+      patientName: '',
+      status: -1,
+      invoiceType: 0,
+      dateFrom: today,
+      dateTo: today,
+    };
+    setFilterInputs(defaults);
+    setAppliedFilters(defaults);
   };
 
   const toggleDropdown = (invoiceId, e) => {
@@ -243,7 +257,7 @@ const InvoiceList = () => {
     const balanceAmount = calculateBalanceAmount(invoice.netAmount, invoice.paidAmount);
     setSelectedInvoice(invoice);
     setPaymentData({
-      paymentDate: new Date().toISOString().split('T')[0],
+      paymentDate: today,
       paymentMode: '',
       amount: balanceAmount > 0 ? balanceAmount.toString() : invoice.netAmount?.toString() || '',
       referenceNo: '',
@@ -251,7 +265,7 @@ const InvoiceList = () => {
     });
     setFormError(null);
     setFormSuccess(null);
-    setValidationMessages({}); 
+    setValidationMessages({});
     setIsPaymentModalOpen(true);
     setActiveDropdown(null);
   };
@@ -261,56 +275,29 @@ const InvoiceList = () => {
     setSelectedInvoice(null);
     setFormError(null);
     setFormSuccess(null);
-    setValidationMessages({}); 
+    setValidationMessages({});
   };
 
   const handlePaymentInputChange = (e) => {
     const { name, value } = e.target;
-    
     const filteredValue = filterInput(name, value);
-    
     setPaymentData(prev => ({ ...prev, [name]: filteredValue }));
-
     const validationMessage = getLiveValidationMessage(name, filteredValue);
-    setValidationMessages((prev) => ({
-      ...prev,
-      [name]: validationMessage,
-    }));
+    setValidationMessages(prev => ({ ...prev, [name]: validationMessage }));
   };
 
   const handleAddPayment = async (e) => {
     e.preventDefault();
-    
     const paymentDateValidation = getLiveValidationMessage('paymentDate', paymentData.paymentDate);
-    if (paymentDateValidation) {
-      setFormError(paymentDateValidation);
-      return;
-    }
-    
-    if (!paymentData.paymentMode) {
-      setFormError('Please select payment mode');
-      return;
-    }
-    
+    if (paymentDateValidation) { setFormError(paymentDateValidation); return; }
+    if (!paymentData.paymentMode) { setFormError('Please select payment mode'); return; }
     const amountValidation = getLiveValidationMessage('amount', paymentData.amount);
-    if (amountValidation) {
-      setFormError(amountValidation);
-      return;
-    }
-    
-    if (!paymentData.amount || Number(paymentData.amount) <= 0) {
-      setFormError('Please enter valid amount');
-      return;
-    }
-
+    if (amountValidation) { setFormError(amountValidation); return; }
+    if (!paymentData.amount || Number(paymentData.amount) <= 0) { setFormError('Please enter valid amount'); return; }
     if ([3, 4, 7].includes(Number(paymentData.paymentMode)) && paymentData.referenceNo) {
       const refValidation = getLiveValidationMessage('referenceNo', paymentData.referenceNo);
-      if (refValidation) {
-        setFormError(refValidation);
-        return;
-      }
+      if (refValidation) { setFormError(refValidation); return; }
     }
-    
     try {
       setFormLoading(true);
       setFormError(null);
@@ -326,10 +313,7 @@ const InvoiceList = () => {
         remarks: paymentData.remarks
       });
       setFormSuccess('Payment recorded successfully!');
-      setTimeout(() => {
-        closeModals();
-        fetchInvoices();
-      }, 1500);
+      setTimeout(() => { closeModals(); fetchInvoices(); }, 1500);
     } catch (err) {
       setFormError(err.message || 'Failed to record payment');
     } finally {
@@ -357,9 +341,7 @@ const InvoiceList = () => {
   };
 
   const getStatusBadgeClass = (status) => {
-    const statusMap = {
-      1: 'draft', 2: 'issued', 3: 'paid', 4: 'partial', 5: 'cancelled', 6: 'refunded', 7: 'credit'
-    };
+    const statusMap = { 1: 'draft', 2: 'issued', 3: 'paid', 4: 'partial', 5: 'cancelled', 6: 'refunded', 7: 'credit' };
     return `${styles.statusBadge} ${styles[statusMap[status]] || styles.draft}`;
   };
 
@@ -383,78 +365,126 @@ const InvoiceList = () => {
         <div className={styles.formSuccess}>{formSuccess}</div>
       )}
 
-      {/* Toolbar */}
-      <div className={styles.invoiceToolbar}>
-        <div className={styles.invoiceToolbarLeft}>
-          <button
-            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className={`${styles.invoiceFilterToggleBtn} ${showAdvancedFilters ? styles.active : ''}`}
-          >
-            <FiFilter size={18} />
-            {showAdvancedFilters ? 'Hide' : 'Show'} Filters
-          </button>
-          {(appliedFilters.patientName || appliedFilters.status !== -1 || appliedFilters.invoiceType !== 0 || searchTerm) && (
-            <button onClick={clearAllFilters} className={styles.invoiceClearBtn}>Clear All</button>
-          )}
+      {/* ── Filter Bar ── same style as VendorList ── */}
+      <div className={styles.filtersContainer}>
+        <div className={styles.filtersGrid}>
+
+          {/* Search type + value (like VendorList) */}
+          <div className={styles.searchGroup}>
+            <select
+              name="searchType"
+              value={filterInputs.searchType}
+              onChange={handleFilterChange}
+              className={styles.searchTypeSelect}
+            >
+              <option value="InvoiceNo">Invoice No</option>
+              <option value="Patient">Patient</option>
+              <option value="Mobile">Mobile</option>
+              <option value="FileNo">File No</option>
+            </select>
+
+            <input
+              type="text"
+              name="searchValue"
+              placeholder={`Search by ${filterInputs.searchType === 'InvoiceNo' ? 'Invoice No' :
+                filterInputs.searchType === 'Patient' ? 'Patient Name' :
+                  filterInputs.searchType === 'Mobile' ? 'Mobile' : 'File No'}`}
+              value={filterInputs.searchValue}
+              onChange={handleFilterChange}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className={styles.searchInput}
+            />
+          </div>
+
+          {/* Invoice Type */}
+          <div className={styles.filterGroup}>
+            <select
+              name="invoiceType"
+              value={filterInputs.invoiceType}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            >
+              <option value={0}>All Types</option>
+              {INVOICE_TYPES.map(t => (
+                <option key={t.id} value={t.id}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status */}
+          <div className={styles.filterGroup}>
+            <select
+              name="status"
+              value={filterInputs.status}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            >
+              <option value={-1}>All Status</option>
+              {INVOICE_STATUSES.map(s => (
+                <option key={s.id} value={s.id}>{s.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* From Date */}
+          <div className={styles.filterGroup}>
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateFrom && (
+                <span className={styles.datePlaceholder}>From Date</span>
+              )}
+              <input
+                type="date"
+                name="dateFrom"
+                value={filterInputs.dateFrom}
+                onChange={handleFilterChange}
+                max={today}
+                className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`}
+              />
+            </div>
+          </div>
+
+          {/* To Date */}
+          <div className={styles.filterGroup}>
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateTo && (
+                <span className={styles.datePlaceholder}>To Date</span>
+              )}
+              <input
+                type="date"
+                name="dateTo"
+                value={filterInputs.dateTo}
+                onChange={handleFilterChange}
+                max={today}
+                className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`}
+              />
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className={styles.filterActions}>
+            <button onClick={handleSearch} className={styles.searchButton}>
+              <FiSearch size={16} />
+              Search
+            </button>
+
+            {hasActiveFilters && (
+              <button onClick={handleClearFilters} className={styles.clearButton}>
+                <FiX size={16} />
+                Clear
+              </button>
+            )}
+          </div>
+
         </div>
       </div>
 
-      {/* Advanced Filters */}
-      {showAdvancedFilters && (
-        <div className={styles.invoiceAdvancedFilters}>
-          <div className={styles.filterRow}>
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>From Date</label>
-              <input 
-                type="date" 
-                value={fromDate} 
-                onChange={(e) => setFromDate(e.target.value)} 
-                max={today} 
-                className={styles.filterInput} 
-              />
-            </div>
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>To Date</label>
-              <input 
-                type="date" 
-                value={toDate} 
-                onChange={(e) => setToDate(e.target.value)} 
-                max={today} 
-                className={styles.filterInput} 
-              />
-            </div>
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>Patient Name</label>
-              <input type="text" placeholder="Filter by patient..." value={patientNameFilter} onChange={(e) => setPatientNameFilter(e.target.value)} className={styles.filterInput} />
-            </div>
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>Invoice Type</label>
-              <select value={invoiceTypeFilter} onChange={(e) => setInvoiceTypeFilter(Number(e.target.value))} className={styles.filterInput}>
-                <option value={0}>All Types</option>
-                {INVOICE_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-              </select>
-            </div>
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>Status</label>
-              <select value={statusFilter} onChange={(e) => setStatusFilter(Number(e.target.value))} className={styles.filterInput}>
-                <option value={-1}>All Statuses</option>
-                {INVOICE_STATUSES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-              </select>
-            </div>
-            <div className={`${styles.filterGroup} ${styles.applyFilterBtnGroup}`}>
-              <button onClick={applyFilters} className={styles.invoiceAddBtn}><FiSearch size={18} /> Search</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Statistics */}
+      {/* Statistics - smaller total amount card */}
       <div className={styles.invoiceStatsGrid}>
-        <div className={`${styles.invoiceStatCard} ${styles.statTotal}`}>
-          <div className={styles.statIconWrapper}><FiDollarSign size={24} /></div>
+        <div className={`${styles.invoiceStatCard} ${styles.statTotal} ${styles.smallStat}`}>
+          <div className={styles.statIconWrapper}><FiDollarSign size={20} /></div>
           <div className={styles.statContent}>
             <div className={styles.statLabel}>Total Amount</div>
-            <div className={styles.statValue}>{formatCurrency(statistics.total)}</div>
+            <div className={styles.statValueSmall}>{formatCurrency(statistics.total)}</div>
           </div>
         </div>
       </div>
@@ -478,7 +508,7 @@ const InvoiceList = () => {
             {filteredInvoices.length === 0 ? (
               <tr>
                 <td colSpan={8} className={styles.invoiceNoData}>
-                  {searchTerm || appliedFilters.patientName ? 'No invoices found.' : 'No invoices yet.'}
+                  {hasActiveFilters ? 'No invoices found.' : 'No invoices for today.'}
                 </td>
               </tr>
             ) : (
@@ -503,8 +533,8 @@ const InvoiceList = () => {
                     <td><span className={getStatusBadgeClass(invoice.status)}>{getStatusLabel(invoice.status)}</span></td>
                     <td>
                       <div className={styles.invoiceActionsCell}>
-                        <button 
-                          onClick={() => openViewModal(invoice)} 
+                        <button
+                          onClick={() => openViewModal(invoice)}
                           className={styles.invoiceViewBtn}
                           title="View Details"
                         >
@@ -513,19 +543,19 @@ const InvoiceList = () => {
                         </button>
                         <div className={styles.invoiceActionsDropdown}>
                           {invoice.status !== 5 && (
-                          <button 
-                            onClick={(e) => toggleDropdown(invoice.id, e)} 
-                            className={styles.invoiceActionsBtn}
-                            title="Actions"
-                          >
-                            <FiMoreVertical size={18} />
-                          </button>
+                            <button
+                              onClick={(e) => toggleDropdown(invoice.id, e)}
+                              className={styles.invoiceActionsBtn}
+                              title="Actions"
+                            >
+                              <FiMoreVertical size={18} />
+                            </button>
                           )}
                           {activeDropdown === invoice.id && (
                             <div className={styles.invoiceDropdownMenu}>
                               {invoice.status !== 3 && invoice.status !== 5 && (
-                                <button 
-                                  onClick={() => openPaymentModal(invoice)} 
+                                <button
+                                  onClick={() => openPaymentModal(invoice)}
                                   className={`${styles.invoiceDropdownItem} ${styles.payment}`}
                                 >
                                   <FiDollarSign size={16} />
@@ -533,8 +563,8 @@ const InvoiceList = () => {
                                 </button>
                               )}
                               {invoice.status !== 5 && (
-                                <button 
-                                  onClick={() => handleCancelInvoice(invoice)} 
+                                <button
+                                  onClick={() => handleCancelInvoice(invoice)}
                                   className={`${styles.invoiceDropdownItem} ${styles.cancel}`}
                                 >
                                   <FiX size={16} />
@@ -576,66 +606,56 @@ const InvoiceList = () => {
                 <div className={styles.invoiceInfoDisplay}>
                   <p><strong>Invoice:</strong> {selectedInvoice?.invoiceNo}</p>
                   <p><strong>Patient:</strong> {selectedInvoice?.patientName}</p>
-                  <p><strong>Total:</strong> {formatCurrency(selectedInvoice?.netAmount)}</p>
+                  <p><strong>Total:</strong>   {formatCurrency(selectedInvoice?.netAmount)}</p>
                   <p><strong>Balance:</strong> {formatCurrency(calculateBalanceAmount(selectedInvoice?.netAmount, selectedInvoice?.paidAmount))}</p>
                 </div>
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
                     <label>Payment Date <span className={styles.required}>*</span></label>
-                    <input 
-                      type="date" 
-                      name="paymentDate" 
-                      value={paymentData.paymentDate} 
+                    <input
+                      type="date"
+                      name="paymentDate"
+                      value={paymentData.paymentDate}
                       onChange={handlePaymentInputChange}
                       max={today}
-                      disabled={formLoading} 
-                      required 
+                      disabled={formLoading}
+                      required
                     />
                     {validationMessages.paymentDate && (
-                      <span style={{ 
-                        color: '#ef4444', 
-                        fontSize: '12px', 
-                        marginTop: '4px', 
-                        display: 'block' 
-                      }}>
+                      <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                         {validationMessages.paymentDate}
                       </span>
                     )}
                   </div>
-                  
+
                   <div className={styles.formGroup}>
                     <label>Payment Mode <span className={styles.required}>*</span></label>
-                    <select 
-                      name="paymentMode" 
-                      value={paymentData.paymentMode} 
-                      onChange={handlePaymentInputChange} 
-                      disabled={formLoading} 
-                      required 
+                    <select
+                      name="paymentMode"
+                      value={paymentData.paymentMode}
+                      onChange={handlePaymentInputChange}
+                      disabled={formLoading}
+                      required
                       className={styles.formSelect}
                     >
                       <option value="">Select mode</option>
                       {PAYMENT_MODES.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
                     </select>
                   </div>
-                  
+
                   <div className={styles.formGroup}>
                     <label>Amount (₹) <span className={styles.required}>*</span></label>
-                    <input 
-                      type="text" 
-                      name="amount" 
-                      value={paymentData.amount} 
-                      onChange={handlePaymentInputChange} 
-                      placeholder="0.00" 
-                      disabled={formLoading} 
-                      required 
+                    <input
+                      type="text"
+                      name="amount"
+                      value={paymentData.amount}
+                      onChange={handlePaymentInputChange}
+                      placeholder="0.00"
+                      disabled={formLoading}
+                      required
                     />
                     {validationMessages.amount && (
-                      <span style={{ 
-                        color: '#ef4444', 
-                        fontSize: '12px', 
-                        marginTop: '4px', 
-                        display: 'block' 
-                      }}>
+                      <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                         {validationMessages.amount}
                       </span>
                     )}
@@ -654,12 +674,7 @@ const InvoiceList = () => {
                         maxLength="50"
                       />
                       {validationMessages.referenceNo && (
-                        <span style={{ 
-                          color: '#6b7280', 
-                          fontSize: '12px', 
-                          marginTop: '4px', 
-                          display: 'block' 
-                        }}>
+                        <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
                           {validationMessages.referenceNo}
                         </span>
                       )}
@@ -668,12 +683,12 @@ const InvoiceList = () => {
 
                   <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                     <label>Remarks</label>
-                    <textarea 
-                      name="remarks" 
-                      value={paymentData.remarks} 
-                      onChange={handlePaymentInputChange} 
-                      placeholder="Additional notes..." 
-                      rows="3" 
+                    <textarea
+                      name="remarks"
+                      value={paymentData.remarks}
+                      onChange={handlePaymentInputChange}
+                      placeholder="Additional notes..."
+                      rows="3"
                       disabled={formLoading}
                       maxLength="500"
                     />
@@ -682,7 +697,9 @@ const InvoiceList = () => {
               </div>
               <div className={styles.invoiceModalFooter}>
                 <button type="button" onClick={closeModals} className={styles.btnCancel} disabled={formLoading}>Cancel</button>
-                <button type="submit" className={styles.btnSubmit} disabled={formLoading}>{formLoading ? 'Recording...' : 'Record Payment'}</button>
+                <button type="submit" className={styles.btnSubmit} disabled={formLoading}>
+                  {formLoading ? 'Recording...' : 'Record Payment'}
+                </button>
               </div>
             </form>
           </div>

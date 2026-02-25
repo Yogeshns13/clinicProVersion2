@@ -1,52 +1,78 @@
-/* ==================== VARIABLES (local fallbacks) ==================== */
-.listWrapper {
+/* SlotConfigList.module.css — aligned with PatientList.module.css style system */
+
+/* ==================== ROOT VARIABLES ==================== */
+:root {
   --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
+  --primary-end:   #225ca0;
+  --accent-start:  #207d9c;
+  --accent-end:    #30b2b5;
+  --text-light:    #ffffff;
+  --text-dark:     #1e293b;
+  --glass-bg:      rgba(255, 255, 255, 0.92);
+  --glass-border:  rgba(255, 255, 255, 0.4);
+  --danger-color:  #ef4444;
 }
 
-/* ==================== WRAPPER ==================== */
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== MAIN WRAPPER ==================== */
 .listWrapper {
-  padding: 14px 16px;
+  padding: 20px;
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
   min-height: 100vh;
   color: var(--text-dark);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* ==================== TOOLBAR / FILTER BAR ==================== */
+/* ==================== LOADING / ERROR STATES ==================== */
+.loading,
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  font-size: 1.3rem;
+  color: #64748b;
+}
+.error { color: var(--danger-color); }
+
+/* ==================== TOOLBAR / FILTERS ==================== */
 .toolbar {
   background: white;
-  border-radius: 12px;
-  padding: 10px 16px;
-  margin-bottom: 16px;
+  border-radius: 17px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
 }
 
 .filtersRow {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr auto;
+  gap: 12px;
   align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
 }
 
-/* Generic select */
+/* Selects (doctor, duration, status) */
 .selectInput {
-  height: 34px;
-  padding: 0 10px;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
   background: white;
   border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border-radius: 10px;
   color: var(--text-dark);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 120px;
-  max-width: 160px;
 }
 
 .selectInput:focus {
@@ -55,27 +81,24 @@
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
 }
 
-/* Joined search-type + search-value */
+/* Search group — same as PatientList */
 .searchGroup {
   display: flex;
   align-items: stretch;
-  flex: 1;
-  min-width: 180px;
 }
 
 .searchTypeSelect {
-  height: 34px;
-  padding: 0 8px;
+  min-width: 120px;
+  height: 40px;
+  padding: 0 12px;
   background: white;
   border: 1px solid #cbd5e1;
   border-right: none;
-  border-radius: 8px 0 0 8px;
+  border-radius: 10px 0 0 10px;
   color: var(--text-dark);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
 }
 
 .searchTypeSelect:focus {
@@ -86,34 +109,26 @@
 
 .searchInput {
   flex: 1;
-  height: 34px;
-  padding: 0 12px;
+  height: 40px;
+  padding: 0 15px;
   background: white;
   border: 1px solid #cbd5e1;
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 10px 10px 0;
   color: var(--text-dark);
-  font-size: 0.8rem;
-  transition: all 0.3s ease;
-}
-
-.searchInput::placeholder {
-  color: #94a3b8;
+  font-size: 0.85rem;
 }
 
 .searchInput:focus {
   outline: none;
   border-color: var(--accent-end);
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
-  border-left: 1px solid var(--accent-end);
 }
 
-/* Actions */
+/* Action buttons — same sizing & style as PatientList */
 .filterActions {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  margin-left: auto;
+  gap: 8px;
 }
 
 .searchButton,
@@ -122,16 +137,15 @@
 .addBtn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  height: 34px;
-  padding: 0 14px;
+  gap: 6px;
+  height: 40px;
+  padding: 0 18px;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
-  white-space: nowrap;
 }
 
 .searchButton {
@@ -155,23 +169,14 @@
   transform: translateY(-2px);
 }
 
-.generateBtn {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
-}
-
-.generateBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
-}
-
+.generateBtn,
 .addBtn {
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: var(--text-light);
   box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
 }
 
+.generateBtn:hover,
 .addBtn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
@@ -180,42 +185,40 @@
 /* ==================== TABLE ==================== */
 .tableContainer {
   background: white;
-  border-radius: 12px;
+  border-radius: 17px;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.10);
+  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
   border: 1px solid rgba(34, 43, 108, 0.1);
 }
 
 .table {
   width: 100%;
-  table-layout: auto;
   border-collapse: collapse;
 }
 
 .table th {
   text-align: left;
-  padding: 9px 12px;
+  padding: 12px 17px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
   font-weight: 600;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.7px;
-  border: none;
+  letter-spacing: 1px;
 }
 
 .table td {
-  padding: 5px 12px;
+  padding: 6px 17px;
   border-bottom: 1px solid #e2e8f0;
   color: var(--text-dark);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   vertical-align: middle;
 }
 
 .table th:last-child,
 .table td:last-child {
   text-align: right;
-  padding-right: 16px;
+  padding-right: 24px;
 }
 
 .table tbody tr:nth-child(even) {
@@ -224,62 +227,56 @@
 
 .table tbody tr:hover {
   background-color: rgba(48, 178, 181, 0.08) !important;
-  transition: background-color 0.25s ease;
 }
 
-/* ==================== TABLE CELLS ==================== */
+/* Table Cells */
 .nameCell {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .avatar {
-  width: 27px;
-  height: 27px;
-  border-radius: 7px;
+  width: 33px;
+  height: 33px;
+  border-radius: 10px;
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: var(--text-light);
   font-weight: bold;
-  font-size: 12px;
+  font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(32, 125, 156, 0.28);
-  flex-shrink: 0;
+  box-shadow: 0 3px 12px rgba(32, 125, 156, 0.35);
 }
 
 .name {
   font-weight: 700;
   color: var(--text-dark);
-  font-size: 0.78rem;
+  font-size: 0.87rem;
 }
 
 .subInfo {
-  font-size: 0.67rem;
+  font-size: 0.72rem;
   color: #64748b;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
-/* Shift / branch badge */
 .shiftBadge {
-  padding: 3px 8px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.08), rgba(48, 178, 181, 0.08));
-  border: 1px solid rgba(48, 178, 181, 0.25);
-  color: var(--accent-start);
+  padding: 5px 12px;
+  border-radius: 26px;
+  background: rgba(34, 43, 108, 0.08);
+  color: var(--accent-end);
   font-size: 0.68rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
-/* ==================== STATUS BADGES ==================== */
 .statusBadge {
-  padding: 3px 9px;
-  border-radius: 20px;
-  font-size: 0.63rem;
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .active {
@@ -294,29 +291,24 @@
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-/* ==================== DELETE BUTTON ==================== */
+/* Delete action button */
 .btnDelete {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 7px;
-  width: 30px;
-  height: 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  padding: 7px 15px;
+  font-size: 0.75rem;
+  border-radius: 9px;
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger-color);
+  border: 1px solid rgba(239, 68, 68, 0.25);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .btnDelete:hover {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.5);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.22);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(239, 68, 68, 0.35);
 }
 
-/* ==================== STATES ==================== */
 .noData {
   text-align: center;
   padding: 68px 17px;
@@ -324,247 +316,178 @@
   font-size: 1.1rem;
 }
 
-.loading,
-.error {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 70vh;
-  font-size: 1.3rem;
-  color: #64748b;
-}
-
-.error { color: #ef4444; }
-
-/* ==================== DELETE CONFIRM MODAL ==================== */
+/* ==================== DELETE CONFIRMATION MODAL ==================== */
 .modalOverlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  inset: 0;
+  background: rgba(15, 22, 41, 0.85);
+  backdrop-filter: blur(9px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
 }
 
 .modal {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  max-width: 460px;
-  width: 90%;
+  background: var(--glass-bg);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 520px;
+  overflow: hidden;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease;
 }
 
 .modalHeader {
+  padding: 24px 28px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(34, 43, 108, 0.1);
+  align-items: center;
 }
 
 .modalHeader h2 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: var(--primary-start);
 }
 
 .modalClose {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(100, 116, 139, 0.1);
-  color: #64748b;
+  background: rgba(255, 255, 255, 0.2);
   border: none;
-  font-size: 1.5rem;
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  font-size: 1.6rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition: all 0.3s ease;
 }
 
 .modalClose:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.1);
 }
 
-.modalBody { padding: 24px; }
+.modalBody {
+  padding: 28px;
+}
 
-.deleteConfirmation { text-align: center; }
+.deleteConfirmation {
+  text-align: center;
+}
 
 .deleteIcon {
-  color: #ef4444;
-  margin-bottom: 16px;
+  color: var(--danger-color);
+  margin-bottom: 20px;
 }
 
 .deleteMessage {
-  font-size: 1rem;
-  color: var(--text-dark);
+  font-size: 1.1rem;
   font-weight: 600;
-  margin-bottom: 16px;
+  color: var(--text-dark);
+  margin-bottom: 20px;
 }
 
 .deleteDetails {
-  background: rgba(239, 68, 68, 0.05);
-  border: 1px solid rgba(239, 68, 68, 0.15);
-  border-radius: 10px;
-  padding: 14px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 20px;
   text-align: left;
-  margin-bottom: 12px;
 }
 
 .deleteDetails p {
-  margin: 6px 0;
-  font-size: 0.85rem;
-  color: var(--text-dark);
+  margin: 8px 0;
+  font-size: 0.92rem;
 }
 
 .deleteWarning {
-  font-size: 0.8rem;
-  color: #ef4444;
+  color: var(--danger-color);
+  font-size: 0.9rem;
   font-style: italic;
 }
 
 .modalFooter {
   display: flex;
-  gap: 12px;
   justify-content: flex-end;
-  padding: 16px 24px;
-  border-top: 1px solid rgba(34, 43, 108, 0.1);
+  gap: 12px;
+  padding: 18px 28px;
+  border-top: 2px solid rgba(34, 43, 108, 0.1);
+  background: #f8fafc;
+}
+
+.btnCancelModal,
+.btnDeleteConfirm {
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.94rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .btnCancelModal {
-  padding: 10px 20px;
-  background: rgba(100, 116, 139, 0.1);
-  color: #64748b;
-  border: 1px solid rgba(100, 116, 139, 0.3);
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  background: #e2e8f0;
+  color: #475569;
+  border: 1px solid #cbd5e1;
 }
 
 .btnCancelModal:hover {
-  background: rgba(100, 116, 139, 0.2);
+  background: #cbd5e1;
+  transform: translateY(-2px);
 }
 
 .btnDeleteConfirm {
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #dc2626, #ef4444);
+  background: linear-gradient(135deg, #c0392b, #e74c3c);
   color: white;
   border: none;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 7px 24px rgba(231, 76, 60, 0.35);
 }
 
 .btnDeleteConfirm:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(231, 76, 60, 0.5);
 }
-
-/* ==================== DARK MODE ==================== */
-:global(.dark-mode) .listWrapper {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .toolbar {
-  background: #1e293b;
-  border-color: #475569;
-}
-
-:global(.dark-mode) .selectInput,
-:global(.dark-mode) .searchTypeSelect,
-:global(.dark-mode) .searchInput {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .clearButton {
-  background: #334155;
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .clearButton:hover {
-  background: #475569;
-}
-
-:global(.dark-mode) .tableContainer {
-  background: #1e293b;
-  border-color: #475569;
-}
-
-:global(.dark-mode) .table th {
-  background: linear-gradient(135deg, #334155, #475569);
-}
-
-:global(.dark-mode) .table td {
-  border-bottom-color: #475569;
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .table tbody tr:nth-child(even) {
-  background-color: #334155;
-}
-
-:global(.dark-mode) .name  { color: #e2e8f0; }
-:global(.dark-mode) .subInfo { color: #94a3b8; }
-
-:global(.dark-mode) .active {
-  background: rgba(34, 197, 94, 0.2);
-  color: #86efac;
-  border-color: rgba(34, 197, 94, 0.4);
-}
-
-:global(.dark-mode) .inactive {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.4);
-}
-
-:global(.dark-mode) .modal {
-  background: #1e293b;
-}
-
-:global(.dark-mode) .modalHeader h2 { color: #e2e8f0; }
-
-:global(.dark-mode) .deleteDetails {
-  background: rgba(239, 68, 68, 0.08);
-}
-
-:global(.dark-mode) .deleteDetails p { color: #e2e8f0; }
 
 /* ==================== RESPONSIVE ==================== */
-@media (max-width: 1100px) {
-  .filtersRow { flex-wrap: wrap; }
-  .searchGroup { flex: 1 1 200px; }
-}
-
 @media (max-width: 768px) {
-  .filtersRow { flex-direction: column; align-items: stretch; }
-  .selectInput, .searchGroup { width: 100%; }
-  .filterActions { margin-left: 0; flex-wrap: wrap; }
-  .searchButton, .clearButton, .generateBtn, .addBtn {
-    flex: 1;
-    justify-content: center;
+  .filtersRow {
+    grid-template-columns: 1fr 1fr auto;
   }
-  .tableContainer { overflow-x: auto; }
-  .table { min-width: 800px; }
+
+  .searchGroup {
+    grid-column: 1 / -1;
+  }
+
+  .filterActions {
+    grid-column: 1 / -1;
+  }
+
+  .searchButton,
+  .clearButton,
+  .generateBtn,
+  .addBtn {
+    flex: 1;
+  }
+
+  .modal {
+    max-width: 95%;
+  }
 }
 
 @media (max-width: 480px) {
-  .listWrapper { padding: 14px; }
-  .table th, .table td { padding: 10px 12px; font-size: 0.7rem; }
-  .name { font-size: 0.8rem; }
-  .subInfo { font-size: 0.68rem; }
-  .avatar { width: 28px; height: 28px; font-size: 13px; }
+  .listWrapper {
+    padding: 14px;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 12px;
+    font-size: 0.7rem;
+  }
 }

@@ -1,119 +1,123 @@
-/* src/components/AddAppointmentVisit.module.css */
-/* ADD APPOINTMENT VISIT MODAL STYLES */
-/* FULL CSS WITH ~15% SIZE REDUCTION APPLIED */
+/* AddAppointmentVisit.module.css */
+/* Exact match to AddAppointment popup style: glass + gradient header + consistent form */
 
-/* ==================== MODAL OVERLAY ==================== */
+:root {
+  --primary-start: #222b6c;
+  --primary-end:   #225ca0;
+  --accent-start:  #207d9c;
+  --accent-end:    #30b2b5;
+  --text-light:    #ffffff;
+  --text-dark:     #1e293b;
+  --glass-bg:      rgba(255, 255, 255, 0.92);
+  --glass-border:  rgba(255, 255, 255, 0.4);
+  --danger-color:  #ef4444;
+  --success-color: #10b981;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ────────────────────────────────────────────────
+   OVERLAY & MODAL CONTAINER
+   ──────────────────────────────────────────────── */
+
 .addVisitModalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 22, 41, 0.85);
-  backdrop-filter: blur(9px);
+  background: rgba(15, 22, 41, 0.82);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 12px;
-  animation: fadeIn 0.3s ease;
+  padding: 20px;
+  animation: fadeIn 0.25s ease;
 }
 
-/* ==================== MODAL ==================== */
 .addVisitModal {
-  background: var(--glass-bg, rgba(255, 255, 255, 0.92));
-  border-radius: 15px;
-  border: 2px solid var(--glass-border, rgba(255, 255, 255, 0.4));
+  background: var(--glass-bg);
+  border-radius: 20px;
   width: 100%;
-  max-width: 680px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(14px);
-  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 720px;                    /* Slightly narrower than AddAppointment for form focus */
+  max-height: 92vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 68px rgba(0, 0, 0, 0.28);
+  animation: slideUp 0.35s ease;
+  border: 1px solid var(--glass-border);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+/* ────────────────────────────────────────────────
+   HEADER (exact match to AddAppointment)
+   ──────────────────────────────────────────────── */
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(22px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* ==================== MODAL HEADER ==================== */
 .addVisitModalHeader {
+  padding: 22px 28px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 25px;
-  border-bottom: 2px solid rgba(34, 43, 108, 0.1);
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
+  border-bottom: 1px solid rgba(255,255,255,0.18);
 }
 
 .addVisitHeaderContent {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .addVisitHeaderIcon {
-  color: var(--primary-start, #222b6c);
+  opacity: 0.9;
 }
 
 .addVisitModalHeader h2 {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--text-dark, #1e293b);
   margin: 0;
-  background: linear-gradient(135deg, var(--primary-start, #222b6c), var(--accent-end, #30b2b5));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 1.48rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .addVisitModalClose {
-  background: rgba(100, 116, 139, 0.15);
-  border: 2px solid rgba(100, 116, 139, 0.2);
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  color: #64748b;
+  background: rgba(255, 255, 255, 0.22);
+  border: none;
+  color: white;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  font-size: 1.5rem;
+  font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
-.addVisitModalClose:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #dc2626;
-  transform: rotate(90deg);
+.addVisitModalClose:hover {
+  background: rgba(255, 255, 255, 0.38);
+  transform: scale(1.08);
 }
 
-.addVisitModalClose:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* ────────────────────────────────────────────────
+   BODY & FORM
+   ──────────────────────────────────────────────── */
 
-/* ==================== MODAL BODY ==================== */
 .addVisitModalBody {
-  padding: 25px;
+  padding: 24px 28px;
+  overflow-y: auto;
+  flex: 1;
 }
 
-/* ==================== APPOINTMENT INFO ==================== */
 .addVisitAppointmentInfo {
   background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
   border: 2px solid rgba(34, 43, 108, 0.1);
@@ -133,43 +137,39 @@
 
 .addVisitInfoGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px 20px;
 }
 
 .addVisitInfoItem {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .infoLabel {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.78rem;
   color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 .infoValue {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--text-dark, #1e293b);
+  color: var(--text-dark);
 }
 
-/* ==================== ERROR MESSAGE ==================== */
 .addVisitErrorMessage {
   padding: 12px 16px;
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.15));
-  border: 2px solid rgba(239, 68, 68, 0.3);
-  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.14);
   color: #991b1b;
-  font-size: 0.9rem;
-  font-weight: 600;
+  border-radius: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.32);
   margin-bottom: 20px;
+  font-size: 0.92rem;
+  text-align: center;
 }
 
-/* ==================== FORM ==================== */
 .addVisitForm {
   display: flex;
   flex-direction: column;
@@ -179,343 +179,137 @@
 .addVisitFormGroup {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .addVisitLabel {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--primary-start);
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--primary-start, #222b6c);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  gap: 6px;
 }
 
-.addVisitLabel.required::after {
+.required::after {
   content: '*';
-  color: #ef4444;
+  color: var(--danger-color);
   margin-left: 4px;
+  font-weight: 700;
 }
 
-.addVisitInput,
 .addVisitTextarea {
   width: 100%;
-  padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 2px solid rgba(34, 43, 108, 0.2);
+  padding: 11px 14px;
+  border: 1px solid #cbd5e1;
   border-radius: 10px;
-  color: var(--text-dark, #1e293b);
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-  font-family: inherit;
+  font-size: 0.92rem;
+  background: white;
+  resize: vertical;
+  min-height: 86px;
+  transition: all 0.2s ease;
 }
 
-.addVisitInput::placeholder,
-.addVisitTextarea::placeholder {
-  color: #94a3b8;
-}
-
-.addVisitInput:focus,
 .addVisitTextarea:focus {
   outline: none;
-  border-color: var(--accent-end, #30b2b5);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15), inset 0 1px 3px rgba(0, 0, 0, 0.05);
-  background: rgba(255, 255, 255, 0.9);
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
 }
 
-.addVisitTextarea {
-  resize: vertical;
-  min-height: 80px;
-}
+/* ────────────────────────────────────────────────
+   FOOTER
+   ──────────────────────────────────────────────── */
 
-/* ==================== VITALS SECTION ==================== */
-.addVisitVitalsSection {
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.03), rgba(48, 178, 181, 0.03));
-  border: 1px solid rgba(34, 43, 108, 0.1);
-  border-radius: 12px;
-  padding: 20px;
-}
-
-.addVisitVitalsSection h3 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--primary-start, #222b6c);
-  margin: 0 0 16px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.addVisitVitalsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
-/* ==================== MODAL FOOTER ==================== */
 .addVisitModalFooter {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 20px 25px;
-  border-top: 2px solid rgba(34, 43, 108, 0.1);
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+  padding: 18px 28px;
+  border-top: 1px solid rgba(34, 43, 108, 0.1);
+  background: #f8fafc;
 }
 
-
-
-.addVisitCancelBtn {
-  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
-  color: var(--text-light);
-  border: none;
-  border-radius: 14px;
-  height: 40px;
-  padding: 0 20px;
-  font-weight: 700;
+.addVisitCancelBtn,
+.addVisitSubmitBtn {
+  padding: 11px 26px;
+  border-radius: 10px;
+  font-weight: 600;
   font-size: 0.94rem;
   cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.4s ease;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
-  white-space: nowrap;
-  z-index: 0;
-}
-
-.addVisitCancelBtn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #c0392b, #e74c3c);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  z-index: -1;
-}
-
-.addVisitCancelBtn::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
-  background-size: 200% 100%;
-  background-position: -100% 0;
-  transition: background-position 0.5s ease;
-  z-index: -1;
-}
-
-.addVisitCancelBtn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
-}
-
-.addVisitCancelBtn:hover::before {
-  opacity: 1;
-}
-
-.addVisitCancelBtn:hover::after {
-  background-position: 200% 0;
-}
-
-.addVisitCancelBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.addVisitSubmitBtn {
+  transition: all 0.3s ease;
+  border: none;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 24px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--success-color, #22c55e), #16a34a);
-  color: white;
-  border: none;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
 }
 
-.addVisitSubmitBtn:hover:not(:disabled) {
+.addVisitCancelBtn {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.addVisitCancelBtn:hover {
+  background: #cbd5e1;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.45);
+}
+
+.addVisitSubmitBtn {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: white;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.28);
+}
+
+.addVisitSubmitBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 22px rgba(32, 125, 156, 0.42);
 }
 
 .addVisitSubmitBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none !important;
+  transform: none;
+  box-shadow: none;
 }
 
 .addVisitSpinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255,255,255,0.3);
   border-top-color: white;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 1s linear infinite;
 }
 
-/* ==================== DARK MODE ==================== */
-:global(.dark-mode) .addVisitModal {
-  background: rgba(30, 41, 59, 0.94);
-  border-color: #475569;
-  color: #e2e8f0;
-}
+/* ────────────────────────────────────────────────
+   RESPONSIVE
+   ──────────────────────────────────────────────── */
 
-:global(.dark-mode) .addVisitModalHeader {
-  background: linear-gradient(135deg, rgba(48, 178, 181, 0.1), rgba(48, 178, 181, 0.15));
-  border-bottom-color: #475569;
-}
-
-:global(.dark-mode) .addVisitModalHeader h2 {
-  background: linear-gradient(135deg, var(--text-light, #ffffff), var(--accent-end, #30b2b5));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-:global(.dark-mode) .addVisitHeaderIcon {
-  color: var(--accent-end, #30b2b5);
-}
-
-:global(.dark-mode) .addVisitAppointmentInfo,
-:global(.dark-mode) .addVisitVitalsSection {
-  background: linear-gradient(135deg, rgba(48, 178, 181, 0.08), rgba(48, 178, 181, 0.12));
-  border-color: rgba(48, 178, 181, 0.15);
-}
-
-:global(.dark-mode) .addVisitAppointmentInfo h3,
-:global(.dark-mode) .addVisitVitalsSection h3,
-:global(.dark-mode) .addVisitLabel {
-  color: var(--accent-end, #30b2b5);
-}
-
-:global(.dark-mode) .infoLabel {
-  color: #94a3b8;
-}
-
-:global(.dark-mode) .infoValue {
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .addVisitInput,
-:global(.dark-mode) .addVisitTextarea {
-  background: #334155;
-  border-color: #475569;
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .addVisitInput:focus,
-:global(.dark-mode) .addVisitTextarea:focus {
-  background: #1e293b;
-}
-
-:global(.dark-mode) .addVisitModalFooter {
-  background: linear-gradient(135deg, #1e293b, #334155);
-  border-top-color: #475569;
-}
-
-:global(.dark-mode) .addVisitCancelBtn {
-  background: #334155;
-  color: #e2e8f0;
-  border-color: #475569;
-}
-
-:global(.dark-mode) .addVisitCancelBtn:hover:not(:disabled) {
-  background: #475569;
-}
-
-:global(.dark-mode) .addVisitErrorMessage {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
-  border-color: rgba(239, 68, 68, 0.35);
-  color: #fca5a5;
-}
-
-/* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {
   .addVisitModal {
-    max-width: 92%;
-  }
-
-  .addVisitModalHeader {
-    padding: 18px 20px;
-  }
-
-  .addVisitModalHeader h2 {
-    font-size: 1.15rem;
+    max-width: 96%;
   }
 
   .addVisitModalBody {
-    padding: 20px;
-  }
-
-  .addVisitInfoGrid,
-  .addVisitVitalsGrid {
-    grid-template-columns: 1fr;
+    padding: 20px 24px;
   }
 
   .addVisitModalFooter {
-    padding: 18px 20px;
     flex-direction: column;
+    gap: 10px;
   }
 
   .addVisitCancelBtn,
   .addVisitSubmitBtn {
     width: 100%;
-    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
   .addVisitModalHeader {
-    padding: 15px;
-  }
-
-  .addVisitModalHeader h2 {
-    font-size: 1.05rem;
-  }
-
-  .addVisitModalBody {
-    padding: 15px;
-  }
-
-  .addVisitVitalsSection,
-  .addVisitAppointmentInfo {
-    padding: 12px;
+    padding: 18px 22px;
   }
 
   .addVisitModalFooter {
-    padding: 15px;
+    padding: 16px 22px;
   }
-}
-
-/* ==================== CUSTOM SCROLLBAR ==================== */
-.addVisitModal::-webkit-scrollbar {
-  width: 8px;
-}
-
-.addVisitModal::-webkit-scrollbar-track {
-  background: rgba(226, 232, 240, 0.3);
-  border-radius: 10px;
-}
-
-.addVisitModal::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, var(--accent-start, #207d9c), var(--accent-end, #30b2b5));
-  border-radius: 10px;
-}
-
-.addVisitModal::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, var(--primary-start, #222b6c), var(--primary-end, #225ca0));
-}
-
-:global(.dark-mode) .addVisitModal::-webkit-scrollbar-track {
-  background: rgba(51, 65, 85, 0.3);
 }

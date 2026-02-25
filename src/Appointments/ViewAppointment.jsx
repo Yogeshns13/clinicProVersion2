@@ -186,140 +186,104 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRe
           {!loading && !error && appointment && (
             <>
               {/* Patient Information */}
-              <div className="appointment-details-section">
-                <h3 className="appointment-section-title">
-                  <FiUser size={18} />
-                  Patient Information
-                </h3>
-                <div className="appointment-details-grid">
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Patient Name</span>
-                    <span className="appointment-detail-value">{appointment.patientName || '—'}</span>
-                  </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">File Number</span>
-                    <span className="appointment-detail-value">{appointment.patientFileNo || '—'}</span>
-                  </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Mobile</span>
-                    <span className="appointment-detail-value">{appointment.patientMobile || '—'}</span>
-                  </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Email</span>
-                    <span className="appointment-detail-value">{appointment.patientEmail || '—'}</span>
-                  </div>
-                </div>
-              </div>
+              {/* Patient & Doctor Information */}
+<div className="appointment-details-section">
+  <h3 className="appointment-section-title">
+    <FiUser size={18} />
+    Patient & Doctor Information
+  </h3>
+  <div className="appointment-details-grid">
+    <div className="appointment-detail-item">
+      <span className="appointment-detail-label">Patient Name</span>
+      <span className="appointment-detail-value">{appointment.patientName || '—'}</span>
+    </div>
 
-              {/* Doctor Information */}
-              <div className="appointment-details-section">
-                <h3 className="appointment-section-title">
-                  <FiUser size={18} />
-                  Doctor Information
-                </h3>
-                <div className="appointment-details-grid">
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Doctor Name</span>
-                    <span className="appointment-detail-value">{appointment.doctorFullName || '—'}</span>
-                  </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Doctor Code</span>
-                    <span className="appointment-detail-value">{appointment.doctorCode || '—'}</span>
-                  </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Specialization</span>
-                    <span className="appointment-detail-value">{appointment.doctorSpecialization || '—'}</span>
-                  </div>
-                </div>
-              </div>
+    <div className="appointment-detail-item">
+      <span className="appointment-detail-label">File Number</span>
+      <span className="appointment-detail-value">{appointment.patientFileNo || '—'}</span>
+    </div>
 
-              {/* Appointment Information */}
-              <div className="appointment-details-section">
-                <h3 className="appointment-section-title">
-                  <FiCalendar size={18} />
-                  Appointment Information
-                </h3>
-                <div className="appointment-details-grid">
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Date</span>
-                    <span className="appointment-detail-value">{formatDate(appointment.appointmentDate)}</span>
-                  </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Time</span>
-                    <span className="appointment-detail-value">{formatTime(appointment.appointmentTime)}</span>
-                  </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Duration</span>
-                    <span className="appointment-detail-value">{appointment.duration ? `${appointment.duration} minutes` : '—'}</span>
-                  </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Appointment Type</span>
-                    <span className="appointment-detail-value">{appointment.appointmentType || '—'}</span>
-                  </div>
-                </div>
-              </div>
+    <div className="appointment-detail-item">
+      <span className="appointment-detail-label">Mobile</span>
+      <span className="appointment-detail-value">{appointment.patientMobile || '—'}</span>
+    </div>
 
-              {/* Reason & Notes */}
-              <div className="appointment-details-section">
-                <h3 className="appointment-section-title">
-                  <FiFileText size={18} />
-                  Reason & Notes
-                </h3>
-                <div className="appointment-details-grid">
-                  <div className="appointment-detail-item appointment-full-width">
-                    <span className="appointment-detail-label">Reason for Visit</span>
-                    <span className="appointment-detail-value">{appointment.reason || '—'}</span>
-                  </div>
-                  <div className="appointment-detail-item appointment-full-width">
-                    <span className="appointment-detail-label">Additional Notes</span>
-                    <span className="appointment-detail-value">{appointment.notes || '—'}</span>
-                  </div>
-                </div>
-              </div>
+    <div className="appointment-detail-item">
+      <span className="appointment-detail-label">Doctor Name</span>
+      <span className="appointment-detail-value">{appointment.doctorFullName || '—'}</span>
+    </div>
 
-              {/* Clinic Information */}
-              <div className="appointment-details-section">
-                <h3 className="appointment-section-title">
-                  <FiFileText size={18} />
-                  Clinic Information
-                </h3>
-                <div className="appointment-details-grid">
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Clinic Name</span>
-                    <span className="appointment-detail-value">{appointment.clinicName || '—'}</span>
-                  </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Branch Name</span>
-                    <span className="appointment-detail-value">{appointment.branchName || '—'}</span>
-                  </div>
-                </div>
-              </div>
+    <div className="appointment-detail-item">
+      <span className="appointment-detail-label">Doctor Code</span>
+      <span className="appointment-detail-value">{appointment.doctorCode || '—'}</span>
+    </div>
+  </div>
+</div>
 
-              {/* Record Information */}
-              <div className="appointment-details-section">
-                <h3 className="appointment-section-title">
-                  <FiClock size={18} />
-                  Record Information
-                </h3>
-                <div className="appointment-details-grid">
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Date Created</span>
-                    <span className="appointment-detail-value">{formatDate(appointment.dateCreated)}</span>
-                  </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Last Modified</span>
-                    <span className="appointment-detail-value">{formatDate(appointment.dateModified)}</span>
-                  </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Created By</span>
-                    <span className="appointment-detail-value">{appointment.createdBy || '—'}</span>
-                  </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Modified By</span>
-                    <span className="appointment-detail-value">{appointment.modifiedBy || '—'}</span>
-                  </div>
-                </div>
-              </div>
+
+{/* Appointment Details */}
+<div className="appointment-details-section">
+  <h3 className="appointment-section-title">
+    <FiCalendar size={18} />
+    Appointment Details
+  </h3>
+  <div className="appointment-details-grid">
+    <div className="appointment-detail-item">
+      <span className="appointment-detail-label">Date</span>
+      <span className="appointment-detail-value">
+        {formatDate(appointment.appointmentDate)}
+      </span>
+    </div>
+
+    <div className="appointment-detail-item">
+      <span className="appointment-detail-label">Time</span>
+      <span className="appointment-detail-value">
+        {formatTime(appointment.appointmentTime)}
+      </span>
+    </div>
+
+    <div className="appointment-detail-item appointment-full-width">
+      <span className="appointment-detail-label">Reason for Visit</span>
+      <span className="appointment-detail-value">
+        {appointment.reason || '—'}
+      </span>
+    </div>
+  </div>
+</div>
+
+
+{/* Clinic & Record Information */}
+<div className="appointment-details-section">
+  <h3 className="appointment-section-title">
+    <FiFileText size={18} />
+    Clinic & Record Information
+  </h3>
+  <div className="appointment-details-grid">
+    <div className="appointment-detail-item">
+      <span className="appointment-detail-label">Clinic Name</span>
+      <span className="appointment-detail-value">{appointment.clinicName || '—'}</span>
+    </div>
+
+    <div className="appointment-detail-item">
+      <span className="appointment-detail-label">Branch Name</span>
+      <span className="appointment-detail-value">{appointment.branchName || '—'}</span>
+    </div>
+
+    <div className="appointment-detail-item">
+      <span className="appointment-detail-label">Date Created</span>
+      <span className="appointment-detail-value">
+        {formatDate(appointment.dateCreated)}
+      </span>
+    </div>
+
+    <div className="appointment-detail-item">
+      <span className="appointment-detail-label">Last Modified</span>
+      <span className="appointment-detail-value">
+        {formatDate(appointment.dateModified)}
+      </span>
+    </div>
+  </div>
+</div>
 
               {/* Cancel Confirmation */}
               {showCancelConfirm && (

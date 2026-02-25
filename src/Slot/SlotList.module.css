@@ -1,3 +1,5 @@
+/* SlotList.module.css - Updated modal styles to match patient add/detail popup style */
+
 /* ==================== WRAPPER ==================== */
 .listWrapper {
   padding: 20px;
@@ -6,11 +8,11 @@
   color: #1e293b;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
+  --primary-end:   #225ca0;
+  --accent-start:  #207d9c;
+  --accent-end:    #30b2b5;
+  --text-light:    #ffffff;
+  --text-dark:     #1e293b;
 }
 
 /* ==================== TOOLBAR / FILTER BAR ==================== */
@@ -42,7 +44,6 @@
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.3s ease;
- 
 }
 
 .selectInput:focus {
@@ -63,7 +64,6 @@
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  
 }
 
 .dateInput:focus {
@@ -383,158 +383,179 @@
 
 .error { color: #ef4444; }
 
-/* ==================== MODALS ==================== */
+/* ─────────────────────────────────────────────── */
+/*        MODAL ── Add & Update Slot               */
+/* ─────────────────────────────────────────────── */
+
 .modalOverlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(4px);
+  inset: 0;
+  background: rgba(15, 22, 41, 0.85);
+  backdrop-filter: blur(9px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
 }
 
 .modalContainer {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  max-width: 500px;
-  width: 90%;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 540px;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease;
 }
 
 .modalHeader {
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(34,43,108,0.1);
+  align-items: center;
+  gap: 20px;
 }
 
 .modalHeader h2 {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: var(--primary-start);
 }
 
 .modalCloseBtn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(100,116,139,0.1);
-  color: #64748b;
+  background: rgba(255, 255, 255, 0.2);
   border: none;
-  font-size: 1.5rem;
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  font-size: 1.4rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition: all 0.3s ease;
 }
 
 .modalCloseBtn:hover {
-  background: rgba(239,68,68,0.1);
-  color: #ef4444;
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.1);
 }
 
-.modalForm { padding: 24px; }
+.modalForm {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+  padding: 0px 20px 0 20px;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--primary-start);
+}
+
+.formInput,
+select.formInput {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.formInput:focus,
+select.formInput:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+.validationMsg {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: #ef4444;
+  font-weight: 500;
+}
 
 .slotDetailsInfo {
-  background: linear-gradient(135deg, rgba(34,43,108,0.04), rgba(48,178,181,0.04));
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 20px;
-  border: 1px solid rgba(34,43,108,0.1);
+  background: rgba(34, 197, 94, 0.08);
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(34, 197, 94, 0.2);
 }
 
 .slotDetailsInfo p {
   margin: 8px 0;
   font-size: 0.9rem;
-  color: var(--text-dark);
+  color: #1e293b;
 }
 
 .slotDetailsInfo strong {
-  color: var(--primary-start);
-  font-weight: 700;
-}
-
-.formGroup { margin-bottom: 16px; }
-
-.formGroup label {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-dark);
-  margin-bottom: 6px;
-}
-
-.formInput {
-  width: 100%;
-  height: 44px;
-  padding: 10px 14px;
-  background: white;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  color: var(--text-dark);
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-}
-
-.formInput:focus {
-  outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48,178,181,0.18);
-}
-
-.validationMsg {
-  color: #666;
-  font-size: 0.8rem;
-  margin-top: 4px;
-  display: block;
+  color: #166534;
 }
 
 .modalActions {
   display: flex;
-  gap: 12px;
   justify-content: flex-end;
-  padding-top: 20px;
-  border-top: 1px solid rgba(34,43,108,0.1);
+  gap: 12px;
+  padding: 18px 28px;
+  border-top: 2px solid rgba(34, 43, 108, 0.1);
+  background: #f8fafc;
+}
+
+.btnCancel,
+.btnSubmit {
+  padding: 11px 26px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.94rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
 }
 
 .btnCancel {
-  padding: 10px 24px;
-  background: rgba(100,116,139,0.1);
-  color: #64748b;
-  border: 1px solid rgba(100,116,139,0.3);
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  background: #e2e8f0;
+  color: #475569;
 }
 
-.btnCancel:hover { background: rgba(100,116,139,0.2); }
+.btnCancel:hover {
+  background: #cbd5e1;
+  transform: translateY(-2px);
+}
 
 .btnSubmit {
-  padding: 10px 24px;
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 5px 17px rgba(32,125,156,0.3);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
 }
 
 .btnSubmit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(32,125,156,0.4);
+  box-shadow: 0 9px 22px rgba(32, 125, 156, 0.42);
+}
+
+.btnCancel:disabled,
+.btnSubmit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* ==================== DARK MODE ==================== */
@@ -597,29 +618,6 @@
 :global(.dark-mode) .slotTime,
 :global(.dark-mode) .doctorName { color: #e2e8f0; }
 
-:global(.dark-mode) .modalContainer { background: #1e293b; }
-
-:global(.dark-mode) .modalHeader h2 { color: #e2e8f0; }
-
-:global(.dark-mode) .modalHeader,
-:global(.dark-mode) .modalActions { border-color: #475569; }
-
-:global(.dark-mode) .slotDetailsInfo {
-  background: linear-gradient(135deg, rgba(51,65,85,0.5), rgba(48,178,181,0.08));
-  border-color: #475569;
-}
-
-:global(.dark-mode) .slotDetailsInfo p { color: #e2e8f0; }
-:global(.dark-mode) .slotDetailsInfo strong { color: var(--accent-end); }
-
-:global(.dark-mode) .formGroup label { color: #e2e8f0; }
-
-:global(.dark-mode) .formInput {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
-}
-
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 1100px) {
   .filtersRow { flex-wrap: wrap; }
@@ -646,7 +644,6 @@
   .listWrapper { padding: 14px; }
   .slotsGrid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); padding: 12px; }
   .slotCard { padding: 8px 10px; }
-  .modalHeader, .modalForm { padding: 16px; }
 }
 
 @media (min-width: 1200px) {

@@ -1,8 +1,8 @@
 // src/components/AddPatientVisit.jsx
-import React, { useState, useEffect } from 'react';
-import { FiX, FiUser, FiCalendar, FiActivity, FiCheckCircle } from 'react-icons/fi';
+import React, { useState, useEffect, useRef } from 'react';
+import { FiX, FiUser, FiCalendar, FiActivity, FiCheckCircle, FiSearch, FiChevronDown } from 'react-icons/fi';
 import { addPatientVisit, getPatientsList, getEmployeeList, getAppointmentList } from '../api/api.js';
-import './AddPatientVisit.css';
+import styles from './AddPatientVisit.module.css';
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
@@ -12,7 +12,6 @@ const getLiveValidationMessage = (fieldName, value) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       visitDate.setHours(0, 0, 0, 0);
-      
       if (visitDate < today) return 'Visit date cannot be in the past';
       return '';
 
@@ -74,7 +73,6 @@ const filterInput = (fieldName, value) => {
     case 'bpSystolic':
     case 'bpDiastolic':
       return value.replace(/[^0-9]/g, '');
-    
     case 'temperature':
     case 'weight':
       if (value === '') return value;
@@ -84,7 +82,6 @@ const filterInput = (fieldName, value) => {
         return parts[0] + '.' + parts.slice(1).join('');
       }
       return filtered;
-    
     default:
       return value;
   }
@@ -94,9 +91,120 @@ const getTodayDate = () => {
   return new Date().toISOString().split('T')[0];
 };
 
+const SearchableDropdown = ({ label, required, placeholder, items, selectedId, onSelect, getItemLabel, getItemSubLabel }) => {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef(null);
+
+  const selectedItem = items.find(i => String(i.id) === String(selectedId));
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filtered = items.filter(item => {
+    const lbl = getItemLabel(item).toLowerCase();
+    const sub = getItemSubLabel ? getItemSubLabel(item).toLowerCase() : '';
+    const q = query.toLowerCase();
+    return lbl.includes(q) || sub.includes(q);
+  });
+
+  const handleSelect = (item) => {
+    onSelect(item);
+    setQuery('');
+    setOpen(false);
+  };
+
+  const handleClear = (e) => {
+    e.stopPropagation();
+    onSelect(null);
+    setQuery('');
+    setOpen(false);
+  };
+
+  return (
+    <div className={styles.formGroup} ref={wrapperRef}>
+      <label className={styles.formLabel}>
+        {label} {required && <span className={styles.required}>*</span>}
+      </label>
+
+      <div className={styles.searchableWrapper}>
+        <div
+          className={`${styles.searchableInput} ${open ? styles.searchableInputOpen : ''}`}
+          onClick={() => setOpen(true)}
+        >
+          <FiSearch className={styles.searchIcon} size={15} />
+
+          {open ? (
+            <input
+              autoFocus
+              className={styles.searchableInnerInput}
+              placeholder={selectedItem ? getItemLabel(selectedItem) : placeholder}
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onClick={e => e.stopPropagation()}
+            />
+          ) : (
+            <span className={selectedItem ? styles.searchableSelected : styles.searchablePlaceholder}>
+              {selectedItem ? getItemLabel(selectedItem) : placeholder}
+            </span>
+          )}
+
+          <div className={styles.searchableActions}>
+            {selectedItem && !open && (
+              <button type="button" className={styles.clearBtn} onClick={handleClear}>
+                <FiX size={13} />
+              </button>
+            )}
+            <FiChevronDown
+              size={15}
+              className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`}
+            />
+          </div>
+        </div>
+
+        {open && (
+          <div className={styles.searchableDropdown}>
+            {filtered.length === 0 ? (
+              <div className={styles.searchableNoResults}>No results found</div>
+            ) : (
+              filtered.map(item => (
+                <div
+                  key={item.id}
+                  className={`${styles.searchableOption} ${String(item.id) === String(selectedId) ? styles.searchableOptionSelected : ''}`}
+                  onMouseDown={() => handleSelect(item)}
+                >
+                  <div className={styles.optionAvatar}>
+                    {getItemLabel(item).charAt(0).toUpperCase()}
+                  </div>
+                  <div className={styles.optionInfo}>
+                    <span className={styles.optionLabel}>{getItemLabel(item)}</span>
+                    {getItemSubLabel && (
+                      <span className={styles.optionSub}>{getItemSubLabel(item)}</span>
+                    )}
+                  </div>
+                  {String(item.id) === String(selectedId) && (
+                    <FiCheckCircle className={styles.optionCheck} size={15} />
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId = null }) => {
-  const [visitMode, setVisitMode] = useState('without'); // 'with' or 'without'
-  
+  const [visitMode, setVisitMode] = useState('without');
+
   const [formData, setFormData] = useState({
     appointmentId: 0,
     PatientID: '',
@@ -115,13 +223,11 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
   const [doctors, setDoctors] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
-  
-  const [searchPatient, setSearchPatient] = useState('');
-  const [searchDoctor, setSearchDoctor] = useState('');
+
   const [validationMessages, setValidationMessages] = useState({});
 
   const formatDateForInput = (dateString) => {
@@ -138,7 +244,6 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
       if (preSelectedAppointmentId) {
         fetchSingleAppointment(preSelectedAppointmentId);
       } else {
-    
         setVisitMode('without');
         fetchPatients();
         fetchDoctors();
@@ -151,18 +256,15 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
       setLoadingAppointments(true);
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-
       const data = await getAppointmentList(clinicId, {
         BranchID: branchId,
         AppointmentID: appointmentId,
         PageSize: 1
       });
-
       if (data && data.length > 0) {
         const appointment = data[0];
         setSelectedAppointment(appointment);
         setVisitMode('with');
-        
         setFormData({
           appointmentId: appointment.id,
           PatientID: appointment.patientId,
@@ -189,7 +291,6 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
     try {
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-
       const data = await getPatientsList(clinicId, { BranchID: branchId, Status: 1, PageSize: 100 });
       setPatients(data);
     } catch (err) {
@@ -201,8 +302,7 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
     try {
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-
-      const data = await getEmployeeList(clinicId, { 
+      const data = await getEmployeeList(clinicId, {
         BranchID: branchId,
         Designation: 1,
         Status: 1,
@@ -214,35 +314,11 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
     }
   };
 
-  const fetchTodayAppointments = async () => {
-    try {
-      setLoadingAppointments(true);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
-
-      const today = new Date().toISOString().split('T')[0];
-      
-      const data = await getAppointmentList(clinicId, {
-        BranchID: branchId,
-        AppointmentDate: today,
-        Status: 1,
-        PageSize: 100
-      });
-      
-      setAppointments(data);
-    } catch (err) {
-      console.error('Failed to fetch appointments:', err);
-      setError('Failed to load appointments');
-    } finally {
-      setLoadingAppointments(false);
-    }
-  };
-
   const handleModeChange = (mode) => {
     setVisitMode(mode);
     setSelectedAppointment(null);
     setError(null);
-    setValidationMessages({}); 
+    setValidationMessages({});
     setFormData({
       appointmentId: 0,
       PatientID: '',
@@ -277,32 +353,28 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
     const filteredValue = filterInput(name, value);
-    
-    setFormData(prev => ({
-      ...prev,
-      [name]: filteredValue
-    }));
-
+    setFormData(prev => ({ ...prev, [name]: filteredValue }));
     const validationMessage = getLiveValidationMessage(name, filteredValue);
-    setValidationMessages((prev) => ({
-      ...prev,
-      [name]: validationMessage,
-    }));
+    setValidationMessages(prev => ({ ...prev, [name]: validationMessage }));
+  };
+
+  const handlePatientSelect = (patient) => {
+    setFormData(prev => ({ ...prev, PatientID: patient ? patient.id : '' }));
+  };
+
+  const handleDoctorSelect = (doctor) => {
+    setFormData(prev => ({ ...prev, DoctorID: doctor ? doctor.id : '' }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     try {
       const clinicId = localStorage.getItem('clinicID');
       const branchId = localStorage.getItem('branchID');
-
       const formattedDate = formatDateForInput(formData.VisitDate);
-
       const visitData = {
         ...formData,
         VisitDate: formattedDate,
@@ -313,12 +385,7 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
         temperature: formData.temperature ? parseFloat(formData.temperature) : 0,
         weight: formData.weight ? parseFloat(formData.weight) : 0
       };
-
-      console.log('Submitting visit data:', visitData);
-
       await addPatientVisit(visitData);
-      
-      // Reset form
       setFormData({
         appointmentId: 0,
         PatientID: '',
@@ -334,8 +401,7 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
       });
       setVisitMode('without');
       setSelectedAppointment(null);
-      setValidationMessages({}); 
-
+      setValidationMessages({});
       onSuccess();
       onClose();
     } catch (err) {
@@ -354,128 +420,75 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
     return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
-  const filteredPatients = patients.filter(p =>
-    p.firstName?.toLowerCase().includes(searchPatient.toLowerCase()) ||
-    p.lastName?.toLowerCase().includes(searchPatient.toLowerCase()) ||
-    p.fileNo?.toLowerCase().includes(searchPatient.toLowerCase())
-  );
-
-  const filteredDoctors = doctors.filter(d =>
-    d.firstName?.toLowerCase().includes(searchDoctor.toLowerCase()) ||
-    d.lastName?.toLowerCase().includes(searchDoctor.toLowerCase()) ||
-    d.employeeCode?.toLowerCase().includes(searchDoctor.toLowerCase())
-  );
-
   if (!isOpen) return null;
 
   return (
-    <div className="add-visit-overlay">
-      <div className="add-visit-modal">
-        <div className="add-visit-header">
-          <div className="add-visit-header-content">
-            <FiActivity className="add-visit-header-icon" size={24} />
+    <div className={styles.addVisitOverlay}>
+      <div className={styles.addVisitModal}>
+        <div className={styles.addVisitHeader}>
+          <div className={styles.addVisitHeaderContent}>
+            <FiActivity className={styles.addVisitHeaderIcon} size={24} />
             <h2>
               {preSelectedAppointmentId ? 'Complete Visit from Appointment' : 'Add New Patient Visit'}
             </h2>
           </div>
-          <button onClick={onClose} className="add-visit-close">
+          <button onClick={onClose} className={styles.addVisitClose}>
             <FiX size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="add-visit-form">
-          <div className="add-visit-body">
-            {error && (
-              <div className="add-visit-error">
-                {error}
-              </div>
-            )}
+        <form onSubmit={handleSubmit} className={styles.addVisitForm}>
+          <div className={styles.addVisitBody}>
+            {error && <div className={styles.addVisitError}>{error}</div>}
 
             {loadingAppointments && (
-              <div className="appointments-loading">
-                <div className="spinner"></div>
+              <div className={styles.appointmentsLoading}>
+                <div className={styles.spinner}></div>
                 <p>Loading appointment details...</p>
               </div>
             )}
 
-            {/* Visit Mode Selection - Only show when coming from pending appointments */}
-            {!preSelectedAppointmentId && !loadingAppointments && false && (
-              <div className="visit-mode-section">
-                <h3 className="mode-title">Select Visit Type</h3>
-                <div className="mode-options">
-                  <label className={`mode-option ${visitMode === 'with' ? 'active' : ''}`}>
-                    <input
-                      type="radio"
-                      name="visitMode"
-                      value="with"
-                      checked={visitMode === 'with'}
-                      onChange={() => handleModeChange('with')}
-                    />
-                    <div className="mode-content">
-                      <FiCheckCircle size={20} />
-                      <span>With Appointment</span>
-                    </div>
-                  </label>
-                  <label className={`mode-option ${visitMode === 'without' ? 'active' : ''}`}>
-                    <input
-                      type="radio"
-                      name="visitMode"
-                      value="without"
-                      checked={visitMode === 'without'}
-                      onChange={() => handleModeChange('without')}
-                    />
-                    <div className="mode-content">
-                      <FiUser size={20} />
-                      <span>Without Appointment</span>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            )}
-
-            {/* With Appointment - Show Today's Appointments */}
             {visitMode === 'with' && !preSelectedAppointmentId && !loadingAppointments && (
-              <div className="appointments-section">
-                <h3 className="section-title">
+              <div className={styles.appointmentsSection}>
+                <h3 className={styles.sectionTitle}>
                   <FiCalendar size={18} />
                   Today's Appointments
                 </h3>
-                
                 {appointments.length === 0 ? (
-                  <div className="no-appointments">
+                  <div className={styles.noAppointments}>
                     <p>No scheduled appointments found for today.</p>
                   </div>
                 ) : (
-                  <div className="appointments-list">
+                  <div className={styles.appointmentsList}>
                     {appointments.map((appt) => (
                       <div
                         key={appt.id}
-                        className={`appointment-card ${selectedAppointment?.id === appt.id ? 'selected' : ''}`}
+                        className={`${styles.appointmentCard} ${selectedAppointment?.id === appt.id ? styles.selected : ''}`}
                         onClick={() => handleAppointmentSelect(appt)}
                       >
-                        <div className="appointment-header">
-                          <div className="appointment-patient">
-                            <div className="patient-avatar">
+                        <div className={styles.appointmentHeader}>
+                          <div className={styles.appointmentPatient}>
+                            <div className={styles.patientAvatar}>
                               {appt.patientName?.charAt(0).toUpperCase() || 'P'}
                             </div>
                             <div>
-                              <div className="patient-name">{appt.patientName}</div>
-                              <div className="patient-info">{appt.patientMobile}</div>
+                              <div className={styles.patientName}>{appt.patientName}</div>
+                              <div className={styles.patientInfo}>{appt.patientMobile}</div>
                             </div>
                           </div>
                           {selectedAppointment?.id === appt.id && (
-                            <FiCheckCircle className="selected-icon" size={24} />
+                            <FiCheckCircle className={styles.selectedIcon} size={24} />
                           )}
                         </div>
-                        <div className="appointment-details">
-                          <div className="appointment-detail">
+                        <div className={styles.appointmentDetails}>
+                          <div className={styles.appointmentDetail}>
                             <strong>Doctor:</strong> {appt.doctorFullName}
                           </div>
-                          <div className="appointment-detail">
+                          <div className={styles.appointmentDetail}>
                             <strong>Time:</strong> {formatTime(appt.appointmentTime)}
                           </div>
                           {appt.reason && (
-                            <div className="appointment-detail">
+                            <div className={styles.appointmentDetail}>
                               <strong>Reason:</strong> {appt.reason}
                             </div>
                           )}
@@ -487,128 +500,89 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
               </div>
             )}
 
-            {/* Show selected appointment summary if pre-selected */}
             {preSelectedAppointmentId && selectedAppointment && !loadingAppointments && (
-              <div className="selected-appointment-summary">
-                <div className="summary-header">
+              <div className={styles.selectedAppointmentSummary}>
+                <div className={styles.summaryHeader}>
                   <FiCalendar size={20} />
                   <span>Appointment Details</span>
                 </div>
-                <div className="summary-content">
-                  <div className="summary-row">
-                    <span className="summary-label">Patient:</span>
-                    <span className="summary-value">{selectedAppointment.patientName}</span>
+                <div className={styles.summaryContent}>
+                  <div className={styles.summaryRow}>
+                    <span className={styles.summaryLabel}>Patient:</span>
+                    <span className={styles.summaryValue}>{selectedAppointment.patientName}</span>
                   </div>
-                  <div className="summary-row">
-                    <span className="summary-label">Mobile:</span>
-                    <span className="summary-value">{selectedAppointment.patientMobile}</span>
+                  <div className={styles.summaryRow}>
+                    <span className={styles.summaryLabel}>Mobile:</span>
+                    <span className={styles.summaryValue}>{selectedAppointment.patientMobile}</span>
                   </div>
-                  <div className="summary-row">
-                    <span className="summary-label">Doctor:</span>
-                    <span className="summary-value">{selectedAppointment.doctorFullName}</span>
+                  <div className={styles.summaryRow}>
+                    <span className={styles.summaryLabel}>Doctor:</span>
+                    <span className={styles.summaryValue}>{selectedAppointment.doctorFullName}</span>
                   </div>
-                  <div className="summary-row">
-                    <span className="summary-label">Scheduled Time:</span>
-                    <span className="summary-value">
-                      {formatTime(selectedAppointment.appointmentTime)}
-                    </span>
+                  <div className={styles.summaryRow}>
+                    <span className={styles.summaryLabel}>Scheduled Time:</span>
+                    <span className={styles.summaryValue}>{formatTime(selectedAppointment.appointmentTime)}</span>
                   </div>
                   {selectedAppointment.reason && (
-                    <div className="summary-row">
-                      <span className="summary-label">Reason:</span>
-                      <span className="summary-value">{selectedAppointment.reason}</span>
+                    <div className={styles.summaryRow}>
+                      <span className={styles.summaryLabel}>Reason:</span>
+                      <span className={styles.summaryValue}>{selectedAppointment.reason}</span>
                     </div>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Without Appointment - Show Patient/Doctor Selection */}
             {!preSelectedAppointmentId && !loadingAppointments && (
-              <>
-                <div className="form-section">
-                  <h3 className="section-title">
+              <div className={styles.formRow}>
+                <div className={styles.formSection}>
+                  <h3 className={styles.sectionTitle}>
                     <FiUser size={18} />
                     Patient Information
                   </h3>
-                  
-                  <div className="form-group">
-                    <label className="form-label">
-                      Patient <span className="required">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Search patient..."
-                      value={searchPatient}
-                      onChange={(e) => setSearchPatient(e.target.value)}
-                      className="form-input"
-                    />
-                    <select
-                      name="PatientID"
-                      value={formData.PatientID}
-                      onChange={handleChange}
-                      required
-                      className="form-select"
-                    >
-                      <option value="">Select Patient</option>
-                      {filteredPatients.map(patient => (
-                        <option key={patient.id} value={patient.id}>
-                          {patient.firstName} {patient.lastName} - {patient.fileNo}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <SearchableDropdown
+                    label="Patient"
+                    required
+                    placeholder="Search by name or file no..."
+                    items={patients}
+                    selectedId={formData.PatientID}
+                    onSelect={handlePatientSelect}
+                    getItemLabel={p => `${p.firstName} ${p.lastName}`}
+                    getItemSubLabel={p => p.fileNo || ''}
+                  />
                 </div>
 
-                <div className="form-section">
-                  <h3 className="section-title">
+                <div className={styles.formSection}>
+                  <h3 className={styles.sectionTitle}>
                     <FiUser size={18} />
                     Doctor Information
                   </h3>
-                  
-                  <div className="form-group">
-                    <label className="form-label">
-                      Doctor <span className="required">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Search doctor..."
-                      value={searchDoctor}
-                      onChange={(e) => setSearchDoctor(e.target.value)}
-                      className="form-input"
-                    />
-                    <select
-                      name="DoctorID"
-                      value={formData.DoctorID}
-                      onChange={handleChange}
-                      required
-                      className="form-select"
-                    >
-                      <option value="">Select Doctor</option>
-                      {filteredDoctors.map(doctor => (
-                        <option key={doctor.id} value={doctor.id}>
-                          {doctor.firstName} {doctor.lastName} - {doctor.employeeCode}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <SearchableDropdown
+                    label="Doctor"
+                    required
+                    placeholder="Search by name or code..."
+                    items={doctors}
+                    selectedId={formData.DoctorID}
+                    onSelect={handleDoctorSelect}
+                    getItemLabel={d => `${d.firstName} ${d.lastName}`}
+                    getItemSubLabel={d => d.employeeCode || ''}
+                  />
                 </div>
-              </>
+              </div>
             )}
 
-            {/* Visit Details - Show for all cases */}
             {!loadingAppointments && (
               <>
-                <div className="form-section">
-                  <h3 className="section-title">
+                <div className={styles.formSection}>
+                  <h3 className={styles.sectionTitle}>
                     <FiCalendar size={18} />
                     Visit Details
                   </h3>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">
-                        Visit Date <span className="required">*</span>
+
+                  <div className={styles.formRow}>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>
+                        Visit Date <span className={styles.required}>*</span>
                       </label>
                       <input
                         type="date"
@@ -617,19 +591,16 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
                         onChange={handleChange}
                         min={getTodayDate()}
                         required
-                        className="form-input"
+                        className={styles.formInput}
                       />
-                      
                       {validationMessages.VisitDate && (
-                        <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                          {validationMessages.VisitDate}
-                        </span>
+                        <span className={styles.validationMsg}>{validationMessages.VisitDate}</span>
                       )}
                     </div>
 
-                    <div className="form-group">
-                      <label className="form-label">
-                        Visit Time <span className="required">*</span>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>
+                        Visit Time <span className={styles.required}>*</span>
                       </label>
                       <input
                         type="time"
@@ -637,134 +608,113 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
                         value={formData.VisitTime}
                         onChange={handleChange}
                         required
-                        className="form-input"
+                        className={styles.formInput}
                       />
-                      
                       {validationMessages.VisitTime && (
-                        <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                          {validationMessages.VisitTime}
-                        </span>
+                        <span className={styles.validationMsg}>{validationMessages.VisitTime}</span>
                       )}
                     </div>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Reason for Visit</label>
-                    <input
-                      type="text"
-                      name="reason"
-                      value={formData.reason}
-                      onChange={handleChange}
-                      placeholder="e.g., Regular checkup, Follow-up..."
-                      className="form-input"
-                      maxLength="200"
-                    />
-                    
-                    {validationMessages.reason && (
-                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                        {validationMessages.reason}
-                      </span>
-                    )}
-                  </div>
+                  <div className={`${styles.formRow} ${styles.reasonSymptomsRow}`}>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Reason for Visit</label>
+                      <textarea
+                        name="reason"
+                        value={formData.reason}
+                        onChange={handleChange}
+                        placeholder="e.g., Regular checkup, Follow-up..."
+                        className={`${styles.formTextarea} ${styles.tallTextarea}`}
+                        maxLength="200"
+                        rows={5}
+                      />
+                      {validationMessages.reason && (
+                        <span className={styles.validationMsg}>{validationMessages.reason}</span>
+                      )}
+                    </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Symptoms</label>
-                    <textarea
-                      name="symptoms"
-                      value={formData.symptoms}
-                      onChange={handleChange}
-                      rows="3"
-                      placeholder="Describe patient symptoms..."
-                      className="form-textarea"
-                      maxLength="500"
-                    />
-                    
-                    {validationMessages.symptoms && (
-                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                        {validationMessages.symptoms}
-                      </span>
-                    )}
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Symptoms</label>
+                      <textarea
+                        name="symptoms"
+                        value={formData.symptoms}
+                        onChange={handleChange}
+                        placeholder="Describe patient symptoms..."
+                        className={`${styles.formTextarea} ${styles.tallTextarea}`}
+                        maxLength="500"
+                        rows={5}
+                      />
+                      {validationMessages.symptoms && (
+                        <span className={styles.validationMsg}>{validationMessages.symptoms}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                <div className="form-section">
-                  <h3 className="section-title">
+                <div className={styles.formSection}>
+                  <h3 className={styles.sectionTitle}>
                     <FiActivity size={18} />
                     Vital Signs
                   </h3>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">Systolic BP (mmHg)</label>
+
+                  <div className={`${styles.formRow} ${styles.vitalsRow}`}>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Systolic BP (mmHg)</label>
                       <input
                         type="text"
                         name="bpSystolic"
                         value={formData.bpSystolic}
                         onChange={handleChange}
                         placeholder="120"
-                        className="form-input"
+                        className={styles.formInput}
                       />
-                      
                       {validationMessages.bpSystolic && (
-                        <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                          {validationMessages.bpSystolic}
-                        </span>
+                        <span className={styles.validationMsg}>{validationMessages.bpSystolic}</span>
                       )}
                     </div>
 
-                    <div className="form-group">
-                      <label className="form-label">Diastolic BP (mmHg)</label>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Diastolic BP (mmHg)</label>
                       <input
                         type="text"
                         name="bpDiastolic"
                         value={formData.bpDiastolic}
                         onChange={handleChange}
                         placeholder="80"
-                        className="form-input"
+                        className={styles.formInput}
                       />
-                      
                       {validationMessages.bpDiastolic && (
-                        <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                          {validationMessages.bpDiastolic}
-                        </span>
+                        <span className={styles.validationMsg}>{validationMessages.bpDiastolic}</span>
                       )}
                     </div>
-                  </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">Temperature (°F)</label>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Temperature (°F)</label>
                       <input
                         type="text"
                         name="temperature"
                         value={formData.temperature}
                         onChange={handleChange}
                         placeholder="98.6"
-                        className="form-input"
+                        className={styles.formInput}
                       />
-                      
                       {validationMessages.temperature && (
-                        <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                          {validationMessages.temperature}
-                        </span>
+                        <span className={styles.validationMsg}>{validationMessages.temperature}</span>
                       )}
                     </div>
 
-                    <div className="form-group">
-                      <label className="form-label">Weight (kg)</label>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Weight (kg)</label>
                       <input
                         type="text"
                         name="weight"
                         value={formData.weight}
                         onChange={handleChange}
                         placeholder="70"
-                        className="form-input"
+                        className={styles.formInput}
                       />
-                      
                       {validationMessages.weight && (
-                        <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                          {validationMessages.weight}
-                        </span>
+                        <span className={styles.validationMsg}>{validationMessages.weight}</span>
                       )}
                     </div>
                   </div>
@@ -773,18 +723,18 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
             )}
           </div>
 
-          <div className="add-visit-footer">
-            <button 
-              type="button" 
-              onClick={onClose} 
-              className="btn-cancel"
+          <div className={styles.addVisitFooter}>
+            <button
+              type="button"
+              onClick={onClose}
+              className={styles.btnCancel}
               disabled={loading}
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
-              className="btn-submit"
+            <button
+              type="submit"
+              className={styles.btnSubmit}
               disabled={loading || loadingAppointments}
             >
               {loading ? 'Booking Visit...' : 'Book Visit'}
