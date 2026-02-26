@@ -45,11 +45,6 @@ const ViewLabPackage = ({
               </p>
             </div>
           </div>
-          <div className={styles.statusBadgeLargeWrapper}>
-            <span className={`${styles.statusBadge} ${styles.large} ${getStatusClass(pkg.status)}`}>
-              {getPackageStatusLabel(pkg.status)}
-            </span>
-          </div>
           <button onClick={onClose} className={styles.modalClose}>
             ×
           </button>
@@ -58,34 +53,32 @@ const ViewLabPackage = ({
         <div className={styles.detailsModalBody}>
           {/* Package Info */}
           <h3 className={styles.sectionTitle}>Package Information</h3>
-          <table className={styles.detailsTable}>
-            <tbody>
-              <tr>
-                <td className={styles.label}>Package Name</td>
-                <td className={styles.value}>{pkg.packName || '—'}</td>
-              </tr>
-              <tr>
-                <td className={styles.label}>Short Name</td>
-                <td className={styles.value}>{pkg.packShortName || '—'}</td>
-              </tr>
-              <tr>
-                <td className={styles.label}>Description</td>
-                <td className={styles.value}>{pkg.description || '—'}</td>
-              </tr>
-              <tr>
-                <td className={styles.label}>Fees</td>
-                <td className={styles.value}>₹{parseFloat(pkg.fees || 0).toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td className={styles.label}>CGST %</td>
-                <td className={styles.value}>{pkg.cgstPercentage || '0'}%</td>
-              </tr>
-              <tr>
-                <td className={styles.label}>SGST %</td>
-                <td className={styles.value}>{pkg.sgstPercentage || '0'}%</td>
-              </tr>
-            </tbody>
-          </table>
+          <div className={styles.infoGrid}>
+            <div className={styles.infoCell}>
+              <span className={styles.infoLabel}>Package Name</span>
+              <span className={styles.infoValue}>{pkg.packName || '—'}</span>
+            </div>
+            <div className={styles.infoCell}>
+              <span className={styles.infoLabel}>Short Name</span>
+              <span className={styles.infoValue}>{pkg.packShortName || '—'}</span>
+            </div>
+            <div className={styles.infoCell}>
+              <span className={styles.infoLabel}>Fees</span>
+              <span className={styles.infoValue}>₹{parseFloat(pkg.fees || 0).toFixed(2)}</span>
+            </div>
+            <div className={styles.infoCell}>
+              <span className={styles.infoLabel}>CGST %</span>
+              <span className={styles.infoValue}>{pkg.cgstPercentage || '0'}%</span>
+            </div>
+            <div className={styles.infoCell}>
+              <span className={styles.infoLabel}>SGST %</span>
+              <span className={styles.infoValue}>{pkg.sgstPercentage || '0'}%</span>
+            </div>
+            <div className={`${styles.infoCell} ${styles.infoCellFull}`}>
+              <span className={styles.infoLabel}>Description</span>
+              <span className={styles.infoValue}>{pkg.description || '—'}</span>
+            </div>
+          </div>
 
           {/* Package Items */}
           <div className={styles.packageItemsSection}>

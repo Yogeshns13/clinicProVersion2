@@ -6,11 +6,9 @@ import { getVendorList } from '../api/api-pharmacy.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddVendor from './AddVendor.jsx';
+import ViewVendor from './ViewVendor.jsx';
 import styles from './VendorList.module.css';
 
-// ──────────────────────────────────────────────────
-// CONSTANTS
-// ──────────────────────────────────────────────────
 const STATUS_OPTIONS = [
   { id: 1, label: 'Active' },
   { id: 2, label: 'Inactive' },
@@ -54,6 +52,9 @@ const VendorList = () => {
 
   // Add Form Modal
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+
+  // View Details Modal
+  const [selectedVendor, setSelectedVendor] = useState(null);
 
   // ──────────────────────────────────────────────────
   // Derived: are any filters actually active?
@@ -137,7 +138,17 @@ const VendorList = () => {
   };
 
   const handleViewDetails = (vendor) => {
-    navigate(`/view-vendor/${vendor.id}`);
+    setSelectedVendor(vendor);
+    console.log("Hi", vendor)
+  };
+
+  const handleViewClose = () => {
+    setSelectedVendor(null);
+  };
+
+  const handleDeleteSuccess = () => {
+    setSelectedVendor(null);
+    fetchVendors(appliedFilters);
   };
 
   const openAddForm  = () => setIsAddFormOpen(true);
@@ -329,6 +340,15 @@ const VendorList = () => {
           </tbody>
         </table>
       </div>
+
+      {/* ── View Vendor Modal ── */}
+      {selectedVendor && (
+        <ViewVendor
+          vendor={selectedVendor}
+          onClose={handleViewClose}
+          onDeleteSuccess={handleDeleteSuccess}
+        />
+      )}
 
       {/* ── Add Vendor Modal ── */}
       <AddVendor

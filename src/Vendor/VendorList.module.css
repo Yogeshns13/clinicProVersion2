@@ -1,3 +1,6 @@
+/* src/components/VendorList.module.css */
+
+/* ==================== CSS VARIABLES ==================== */
 :root {
   --primary-start: #222b6c;
   --primary-end: #225ca0;
@@ -6,13 +9,12 @@
   --text-light: #ffffff;
   --text-dark: #1e293b;
   --glass-bg: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(255, 255, 255, 0.4);
 }
 
 /* ==================== ANIMATIONS ==================== */
 @keyframes fadeIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
 @keyframes slideUp {
@@ -29,43 +31,45 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* ==================== FILTERS ==================== */
+/* ==================== FILTERS CONTAINER ==================== */
 .filtersContainer {
   background: white;
   border-radius: 17px;
-  padding: 16px 20px;
+  padding: 20px;
   margin-bottom: 20px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
+  animation: slideUp 0.3s ease;
 }
 
-/* Search(type+value) | Status | FromDate | ToDate | Actions */
 .filtersGrid {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr auto;
-  gap: 12px;
+  display: flex;
   align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-/* Search type + value joined input */
+/* Search group */
 .searchGroup {
   display: flex;
+  flex: 1;
   align-items: stretch;
+  min-width: 0;
 }
 
 .searchTypeSelect {
-  min-width: 148px;
+  min-width: 140px;
   height: 40px;
   padding: 0 12px;
   background: white;
   border: 1px solid #cbd5e1;
-  border-right: none;
   border-radius: 10px 0 0 10px;
   color: var(--text-dark);
   font-size: 0.85rem;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.3s ease;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .searchTypeSelect:focus {
@@ -80,10 +84,12 @@
   padding: 0 15px;
   background: white;
   border: 1px solid #cbd5e1;
+  border-left: none;
   border-radius: 0 10px 10px 0;
   color: var(--text-dark);
   font-size: 0.85rem;
   transition: all 0.3s ease;
+  min-width: 0;
 }
 
 .searchInput::placeholder { color: #94a3b8; }
@@ -95,14 +101,13 @@
   border-left: 1px solid var(--accent-end);
 }
 
-/* Status select */
+/* Filter group (status / date) */
 .filterGroup {
   display: flex;
-  flex-direction: column;
+  align-items: center;
 }
 
 .filterInput {
-  width: 100%;
   height: 40px;
   padding: 0 12px;
   background: white;
@@ -110,8 +115,9 @@
   border-radius: 10px;
   color: var(--text-dark);
   font-size: 0.85rem;
-  cursor: pointer;
   transition: all 0.3s ease;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 .filterInput:focus {
@@ -120,52 +126,46 @@
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
 }
 
-/* ── Date placeholder overlay ── */
+/* Date wrapper with placeholder trick */
 .dateWrapper {
   position: relative;
-  width: 100%;
+  display: flex;
+  align-items: center;
 }
 
-.dateWrapper .filterInput {
-  width: 100%;
-  color: var(--text-dark);
-}
-
-/* When no date is selected, hide the browser's own date format hint */
-.dateEmpty::-webkit-datetime-edit-text,
-.dateEmpty::-webkit-datetime-edit-month-field,
-.dateEmpty::-webkit-datetime-edit-day-field,
-.dateEmpty::-webkit-datetime-edit-year-field {
-  color: transparent;
-}
-
-/* Custom placeholder text shown on top of the empty date input */
 .datePlaceholder {
   position: absolute;
   left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
   font-size: 0.85rem;
   color: #94a3b8;
   pointer-events: none;
   z-index: 1;
 }
 
-/* Action buttons row */
+.dateEmpty {
+  color: transparent;
+}
+
+.dateEmpty::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+}
+
+/* Action buttons */
 .filterActions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
-.searchButton,
-.clearButton,
-.addBtn {
+.searchButton {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   height: 40px;
-  padding: 0 18px;
+  padding: 0 20px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
   font-weight: 600;
   font-size: 0.85rem;
   border: none;
@@ -173,11 +173,6 @@
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-}
-
-.searchButton {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
   box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
 }
 
@@ -187,8 +182,20 @@
 }
 
 .clearButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 20px;
   background: #e2e8f0;
   color: #475569;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .clearButton:hover {
@@ -197,8 +204,20 @@
 }
 
 .addBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 20px;
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: var(--text-light);
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
   box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
 }
 
@@ -235,10 +254,10 @@
 }
 
 .table td {
-  padding: 6px 17px;
+  padding: 8px 17px;
   border-bottom: 1px solid #e2e8f0;
   color: var(--text-dark);
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   vertical-align: middle;
 }
 
@@ -257,7 +276,7 @@
   transition: background-color 0.25s ease;
 }
 
-/* ==================== TABLE CELLS ==================== */
+/* ── Name cell ── */
 .nameCell {
   display: flex;
   align-items: center;
@@ -291,20 +310,20 @@
   margin-top: 2px;
 }
 
-/* GST Badge */
+/* ── GST badge ── */
 .gstBadge {
-  padding: 5px 12px;
-  border-radius: 26px;
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.1), rgba(48, 178, 181, 0.1));
-  border: 1px solid rgba(48, 178, 181, 0.3);
-  color: var(--accent-end);
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.7px;
+  display: inline-block;
+  padding: 3px 10px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.08), rgba(48, 178, 181, 0.08));
+  border: 1px solid rgba(34, 43, 108, 0.15);
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.72rem;
+  color: var(--primary-start);
+  letter-spacing: 0.4px;
 }
 
-/* ==================== STATUS BADGES ==================== */
+/* ── Status badges ── */
 .statusBadge {
   padding: 5px 12px;
   border-radius: 26px;
@@ -314,53 +333,55 @@
   letter-spacing: 0.7px;
 }
 
-.statusBadge.active {
+.active {
   background: rgba(34, 197, 94, 0.15);
   color: #166534;
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
-.statusBadge.inactive {
+.inactive {
   background: rgba(239, 68, 68, 0.15);
   color: #991b1b;
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-.statusBadge.blacklisted {
-  background: rgba(15, 23, 42, 0.12);
-  color: #0f172a;
-  border: 1px solid rgba(15, 23, 42, 0.25);
+.blacklisted {
+  background: rgba(30, 30, 30, 0.12);
+  color: #1e1e1e;
+  border: 1px solid rgba(30, 30, 30, 0.25);
 }
 
-.statusBadge.suspended {
-  background: rgba(245, 158, 11, 0.15);
-  color: #92400e;
-  border: 1px solid rgba(245, 158, 11, 0.35);
+.suspended {
+  background: rgba(234, 179, 8, 0.15);
+  color: #854d0e;
+  border: 1px solid rgba(234, 179, 8, 0.3);
 }
 
-/* ==================== BUTTONS ==================== */
+/* ── View Details button ── */
 .detailsBtn {
-  position: relative;
-  overflow: hidden;
-  padding: 7px 15px;
-  font-size: 0.75rem;
-  border-radius: 9px;
   background: linear-gradient(135deg, #016183, var(--primary-end));
   color: var(--text-light);
   border: none;
+  padding: 7px 15px;
+  font-size: 0.75rem;
   font-weight: 600;
+  border-radius: 9px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
   white-space: nowrap;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  position: relative;
+  overflow: hidden;
   z-index: 1;
 }
 
 .detailsBtn::before {
   content: '';
   position: absolute;
-  top: 50%; left: 50%;
-  width: 0; height: 0;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
   background: rgba(48, 178, 181, 0.35);
   border-radius: 50%;
   transform: translate(-50%, -50%);
@@ -369,21 +390,26 @@
   pointer-events: none;
 }
 
-.detailsBtn:hover::before { width: 170px; height: 170px; }
+.detailsBtn:hover::before {
+  width: 170px;
+  height: 170px;
+}
 
 .detailsBtn:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
 }
 
-.detailsBtn:active { transform: translateY(-1px); }
+.detailsBtn:active {
+  transform: translateY(-1px);
+}
 
 /* ==================== UTILITY STATES ==================== */
 .noData {
   text-align: center;
-  padding: 68px 17px;
+  padding: 60px 17px;
   color: #64748b;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .loading,
@@ -392,7 +418,7 @@
   align-items: center;
   justify-content: center;
   min-height: 70vh;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   color: #64748b;
 }
 
@@ -409,9 +435,13 @@
   border-color: #475569;
 }
 
-:global(.dark-mode) .searchTypeSelect,
-:global(.dark-mode) .searchInput,
-:global(.dark-mode) .filterInput {
+:global(.dark-mode) .searchTypeSelect {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .searchInput {
   background: #0f172a;
   border-color: #475569;
   color: #e2e8f0;
@@ -421,8 +451,10 @@
   border-left: 1px solid var(--accent-end);
 }
 
-:global(.dark-mode) .datePlaceholder {
-  color: #64748b;
+:global(.dark-mode) .filterInput {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
 }
 
 :global(.dark-mode) .clearButton {
@@ -430,9 +462,7 @@
   color: #e2e8f0;
 }
 
-:global(.dark-mode) .clearButton:hover {
-  background: #475569;
-}
+:global(.dark-mode) .clearButton:hover { background: #475569; }
 
 :global(.dark-mode) .tableContainer {
   background: #1e293b;
@@ -452,152 +482,51 @@
   background-color: #334155;
 }
 
-:global(.dark-mode) .table tbody tr:hover {
-  background-color: rgba(48, 178, 181, 0.12) !important;
-}
+:global(.dark-mode) .name { color: #e2e8f0; }
 
-:global(.dark-mode) .name  { color: #e2e8f0; }
-:global(.dark-mode) .subInfo { color: #94a3b8; }
+:global(.dark-mode) .active { color: #9cc14d; }
 
-:global(.dark-mode) .gstBadge {
-  background: linear-gradient(135deg, rgba(48, 178, 181, 0.15), rgba(48, 178, 181, 0.2));
-  border-color: rgba(48, 178, 181, 0.4);
-  color: var(--accent-end);
-}
-
-:global(.dark-mode) .statusBadge.active {
-  background: rgba(34, 197, 94, 0.2);
-  color: #86efac;
-  border-color: rgba(34, 197, 94, 0.4);
-}
-
-:global(.dark-mode) .statusBadge.inactive {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.4);
-}
-
-:global(.dark-mode) .statusBadge.blacklisted {
-  background: rgba(148, 163, 184, 0.15);
-  color: #cbd5e1;
-  border-color: rgba(148, 163, 184, 0.3);
-}
-
-:global(.dark-mode) .statusBadge.suspended {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fcd34d;
-  border-color: rgba(245, 158, 11, 0.4);
-}
-
-/* ==================== RESPONSIVE DESIGN ==================== */
-@media (max-width: 1280px) {
-  .filtersGrid {
-    grid-template-columns: 2fr 1fr 1fr 1fr auto;
-  }
-}
-
-@media (max-width: 1024px) {
-  .filtersGrid {
-    grid-template-columns: 1fr 1fr auto;
-  }
-
-  .filtersGrid .filterGroup:nth-child(3),
-  .filtersGrid .filterGroup:nth-child(4) {
-    grid-column: span 1;
-  }
-}
-
-@media (max-width: 900px) {
-  .filtersGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .searchGroup {
-    grid-column: 1 / -1;
-  }
-
-  .filterActions {
-    grid-column: 1 / -1;
-  }
-}
-
+/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
   .filtersGrid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .searchGroup {
-    flex-direction: column;
-  }
+  .searchGroup { flex-direction: column; }
 
   .searchTypeSelect {
     border-radius: 10px;
-    border-right: 1px solid #cbd5e1;
+    border-bottom: none;
   }
 
   .searchInput {
-    border-radius: 10px;
+    border-radius: 0 0 10px 10px;
     border-left: 1px solid #cbd5e1;
+    border-top: none;
   }
 
-  .filterActions {
-    flex-wrap: wrap;
+  .searchInput:focus {
+    border-left: 1px solid var(--accent-end);
+    border-top: 1px solid var(--accent-end);
   }
+
+  .filterGroup { width: 100%; }
+
+  .filterInput { width: 100%; }
+
+  .filterActions { flex-direction: column; }
 
   .searchButton,
   .clearButton,
-  .addBtn {
-    flex: 1;
-    justify-content: center;
-  }
+  .addBtn { width: 100%; justify-content: center; }
 
   .table th,
-  .table td {
-    padding: 12px 14px;
-  }
+  .table td { padding: 10px 12px; }
 
-  .detailsBtn {
-    padding: 7px 14px;
-    font-size: 0.72rem;
-  }
-
-  .tableContainer {
-    overflow-x: auto;
-  }
-
-  .table {
-    min-width: 900px;
-  }
+  .detailsBtn { padding: 6px 12px; font-size: 0.72rem; }
 }
 
 @media (max-width: 480px) {
-  .listWrapper {
-    padding: 14px;
-  }
-
-  .table th,
-  .table td {
-    padding: 10px 12px;
-    font-size: 0.7rem;
-  }
-
-  .name    { font-size: 0.8rem; }
-  .subInfo { font-size: 0.68rem; }
-
-  .avatar {
-    width: 28px;
-    height: 28px;
-    font-size: 13px;
-  }
-
-  .detailsBtn {
-    padding: 6px 12px;
-    font-size: 0.7rem;
-  }
-
-  .gstBadge,
-  .statusBadge {
-    padding: 4px 10px;
-    font-size: 0.65rem;
-  }
+  .listWrapper { padding: 14px; }
 }

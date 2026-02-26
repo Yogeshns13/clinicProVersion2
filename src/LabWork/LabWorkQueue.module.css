@@ -820,7 +820,7 @@
 
 /* ── Detail Modal Header ── */
 .detailModalHeader {
-  padding: 24px 28px;
+  padding: 14px 18px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
   display: flex;
@@ -832,7 +832,6 @@
 .detailHeaderContent { flex: 1; }
 
 .detailHeaderContent h2 {
-  margin: 0 0 8px 0;
   font-size: 1.5rem;
   font-weight: 700;
 }
@@ -960,7 +959,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 28px;
+  padding: 18px;
   background: white;
   border-bottom: 2px solid rgba(34, 43, 108, 0.08);
 }

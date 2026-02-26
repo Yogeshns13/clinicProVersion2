@@ -45,8 +45,6 @@ const ROUTE_PERMISSIONS = {
   "/consultation-charge": ["admin", "spradmin","fronttdesk","accounts"],
 
   "/labtestmaster": ["admin", "spradmin","labtest","accounts"],
-  "/update-labmaster/:id": ["admin", "spradmin","labtest","accounts"],
-  "/update-labpackage/:id": ["admin", "spradmin","labtest", "accounts"],
 
   "/laborder-list": ["admin", "spradmin","labtest"],
   "/view-laborder/:id": ["admin", "spradmin", "labtest"],
@@ -56,7 +54,6 @@ const ROUTE_PERMISSIONS = {
   "/lab-invoice": ["admin", "spradmin","labtest"],
 
   "/vendor-list": ["admin", "spradmin","pharmacy"],
-  "/view-vendor/:id": ["admin", "spradmin","pharmacy"],
   "/add-vendor": ["admin", "spradmin","pharmacy"],
   "/update-vendor/:id": ["admin", "spradmin","pharmacy"],
 

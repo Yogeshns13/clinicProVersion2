@@ -1,10 +1,8 @@
 // src/components/UpdateLabTestMaster.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiSave } from 'react-icons/fi';
+import { FiArrowLeft, FiSave, FiX } from 'react-icons/fi';
 import { getLabTestMasterList, updateLabTestMaster } from '../api/api-labtest.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
-import Header from '../Header/Header.jsx';
 import styles from './LabMaster.module.css';
 
 const TEST_TYPES = [
@@ -49,18 +47,16 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (fees > 999999) return 'Fees cannot exceed 999,999';
       return '';
 
- case 'NormalRange':
-  if (value && /[a-zA-Z]/.test(value)) return 'Normal range cannot contain letters';
-  if (value && value.length > 50) return 'Normal range must not exceed 50 characters';
-  return '';
+    case 'NormalRange':
+      if (value && /[a-zA-Z]/.test(value)) return 'Normal range cannot contain letters';
+      if (value && value.length > 50) return 'Normal range must not exceed 50 characters';
+      return '';
 
-   // In getLiveValidationMessage function:
-case 'Units':
-  if (value && /[0-9]/.test(value)) return 'Units cannot contain numbers';
-  if (value && /[^a-zA-Z\s]/.test(value)) return 'Units cannot contain special characters';
-  if (value && value.length > 30) return 'Units must not exceed 30 characters';
-  return '';
-
+    case 'Units':
+      if (value && /[0-9]/.test(value)) return 'Units cannot contain numbers';
+      if (value && /[^a-zA-Z\s]/.test(value)) return 'Units cannot contain special characters';
+      if (value && value.length > 30) return 'Units must not exceed 30 characters';
+      return '';
 
     case 'CGSTPercentage':
     case 'SGSTPercentage':
@@ -82,36 +78,30 @@ case 'Units':
 
 const filterInput = (fieldName, value) => {
   switch (fieldName) {
-
-        case 'TestName':
-        case 'ShortName':
+    case 'TestName':
+    case 'ShortName':
       return value.replace(/[^a-zA-Z\s]/g, '');
     case 'Fees':
     case 'CGSTPercentage':
     case 'SGSTPercentage':
       return value.replace(/[^0-9.]/g, '');
-
-            case 'Units':
-  return value.replace(/[^a-zA-Z\s]/g, '');
-    
-      case 'NormalRange':
-  return value.replace(/[a-zA-Z]/g, '');
-    
+    case 'Units':
+      return value.replace(/[^a-zA-Z\s]/g, '');
+    case 'NormalRange':
+      return value.replace(/[a-zA-Z]/g, '');
     default:
       return value;
   }
 };
 
 // ────────────────────────────────────────────────
-const UpdateLabTestMaster = () => {
-  const navigate = useNavigate();
-  const params = useParams();
-  
-  const testId = params.testId || params.id;
+const UpdateLabTestMaster = ({ test, onClose, onUpdateSuccess }) => {
+  if (!test) return null;
+
+  const testId = test.id;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [testData, setTestData] = useState(null);
 
   const [formData, setFormData] = useState({
     TestName: '',
@@ -143,26 +133,24 @@ const UpdateLabTestMaster = () => {
         const branchId = Number(localStorage.getItem('branchID'));
 
         const testList = await getLabTestMasterList(clinicId, { BranchID: branchId });
-        const test = testList.find((t) => t.id === Number(testId));
+        const fetchedTest = testList.find((t) => t.id === Number(testId));
 
-        if (!test) {
+        if (!fetchedTest) {
           throw new Error(`Lab test not found with ID: ${testId}`);
         }
 
-        setTestData(test);
-
         setFormData({
-          TestName: test.testName || '',
-          ShortName: test.shortName || '',
-          Description: test.description || '',
-          TestType: test.testType || 1,
-          NormalRange: test.normalRange || '',
-          Units: test.units || '',
-          Remarks: test.remarks || '',
-          Fees: test.fees || '',
-          CGSTPercentage: test.cgstPercentage || '9',
-          SGSTPercentage: test.sgstPercentage || '9',
-          Status: test.status || 1,
+          TestName: fetchedTest.testName || '',
+          ShortName: fetchedTest.shortName || '',
+          Description: fetchedTest.description || '',
+          TestType: fetchedTest.testType || 1,
+          NormalRange: fetchedTest.normalRange || '',
+          Units: fetchedTest.units || '',
+          Remarks: fetchedTest.remarks || '',
+          Fees: fetchedTest.fees || '',
+          CGSTPercentage: fetchedTest.cgstPercentage || '9',
+          SGSTPercentage: fetchedTest.sgstPercentage || '9',
+          Status: fetchedTest.status || 1,
         });
       } catch (err) {
         setError({
@@ -174,29 +162,20 @@ const UpdateLabTestMaster = () => {
       }
     };
 
-    if (testId) {
-      fetchData();
-    } else {
-      setLoading(false);
-      setError({ message: 'No test ID provided', status: 400 });
-    }
+    fetchData();
   }, [testId]);
 
   // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     const filteredValue = filterInput(name, value);
-    
+
     setFormData((prev) => ({ ...prev, [name]: filteredValue }));
     const validationMessage = getLiveValidationMessage(name, filteredValue);
     setValidationMessages((prev) => ({
       ...prev,
       [name]: validationMessage,
     }));
-  };
-
-  const handleBack = () => {
-    navigate('/labtestmaster');
   };
 
   const handleSubmit = async (e) => {
@@ -228,7 +207,8 @@ const UpdateLabTestMaster = () => {
 
       setFormSuccess(true);
       setTimeout(() => {
-        navigate('/labtestmaster');
+        if (onUpdateSuccess) onUpdateSuccess();
+        onClose();
       }, 1500);
     } catch (err) {
       setFormError(err.message || 'Failed to update lab test.');
@@ -238,56 +218,25 @@ const UpdateLabTestMaster = () => {
   };
 
   // ────────────────────────────────────────────────
-  if (error && error?.status >= 400) {
-    return <ErrorHandler error={error} />;
-  }
-
-  if (loading) {
-    return <div className={styles.loading}>Loading lab test data...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className={styles.wrapper}>
-        <Header title="Update Lab Test" />
-        <div className={styles.error}>Error: {error.message || error}</div>
-        <button onClick={handleBack} className={`${styles.addBtn} ${styles.backBtn}`}>
-          <FiArrowLeft /> Back to List
-        </button>
-      </div>
-    );
-  }
-
-  if (!testData) {
-    return (
-      <div className={styles.wrapper}>
-        <Header title="Update Lab Test" />
-        <div className={styles.error}>Lab test not found</div>
-        <button onClick={handleBack} className={`${styles.addBtn} ${styles.backBtn}`}>
-          <FiArrowLeft /> Back to List
-        </button>
-      </div>
-    );
-  }
-
-  // ────────────────────────────────────────────────
   return (
-    <div className={styles.wrapper}>
-      <ErrorHandler error={error} />
-      <Header title="Update Lab Test" />
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h2>Update Lab Test</h2>
+          <button onClick={onClose} className={styles.modalClose}>
+            <FiX />
+          </button>
+        </div>
 
-      <div className={styles.toolbar}>
-        <button onClick={handleBack} className={styles.addBtn}>
-          <FiArrowLeft /> Back to List
-        </button>
-      </div>
-
-      <div className={`${styles.tableContainer} ${styles.updateContainer}`} style={{ padding: '20px', borderRadius: '17px' }}>
-        <div className={`${styles.modal} ${styles.formModal} ${styles.updateForm}`} style={{ maxWidth: 'none', width: '100%', maxHeight: 'none' }}>
-          <div className={`${styles.modalHeader} ${styles.updateHeader}`}>
-            <h2>Update Lab Test: {formData.TestName}</h2>
+        {loading ? (
+          <div className={styles.modalBody}>
+            <div className={styles.loading}>Loading lab test data...</div>
           </div>
-
+        ) : error ? (
+          <div className={styles.modalBody}>
+            <div className={styles.error}>Error: {error.message}</div>
+          </div>
+        ) : (
           <form onSubmit={handleSubmit} className={styles.modalBody}>
             {formError && <div className={styles.formError}>{formError}</div>}
             {formSuccess && <div className={styles.formSuccess}>Lab test updated successfully!</div>}
@@ -296,9 +245,7 @@ const UpdateLabTestMaster = () => {
               <h3 className={styles.formSectionTitle}>Test Information</h3>
 
               <div className={styles.formGroup}>
-                <label>
-                  Test Name <span className={styles.required}>*</span>
-                </label>
+                <label>Test Name <span className={styles.required}>*</span></label>
                 <input
                   required
                   name="TestName"
@@ -306,47 +253,31 @@ const UpdateLabTestMaster = () => {
                   onChange={handleInputChange}
                   placeholder="e.g., Complete Blood Count"
                 />
-                
                 {validationMessages.TestName && (
-                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
-                    {validationMessages.TestName}
-                  </span>
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{validationMessages.TestName}</span>
                 )}
               </div>
 
               <div className={styles.formGroup}>
-                <label>
-                  Short Name <span className={styles.required}>*</span>
-                </label>
+                <label>Short Name <span className={styles.required}>*</span></label>
                 <input
                   required
                   name="ShortName"
                   value={formData.ShortName}
                   onChange={handleInputChange}
                   placeholder="e.g., CBC"
+                  maxLength="20"
                 />
-                
                 {validationMessages.ShortName && (
-                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
-                    {validationMessages.ShortName}
-                  </span>
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{validationMessages.ShortName}</span>
                 )}
               </div>
 
               <div className={styles.formGroup}>
-                <label>
-                  Test Type <span className={styles.required}>*</span>
-                </label>
-                <select
-                  required
-                  name="TestType"
-                  value={formData.TestType}
-                  onChange={handleInputChange}
-                >
+                <label>Test Type <span className={styles.required}>*</span></label>
+                <select required name="TestType" value={formData.TestType} onChange={handleInputChange}>
                   {TEST_TYPES.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.label}
-                    </option>
+                    <option key={type.id} value={type.id}>{type.label}</option>
                   ))}
                 </select>
               </div>
@@ -354,18 +285,14 @@ const UpdateLabTestMaster = () => {
               <div className={styles.formGroup}>
                 <label>Fees (₹)</label>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
                   name="Fees"
                   value={formData.Fees}
                   onChange={handleInputChange}
                   placeholder="0.00"
                 />
-                
                 {validationMessages.Fees && (
-                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
-                    {validationMessages.Fees}
-                  </span>
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{validationMessages.Fees}</span>
                 )}
               </div>
 
@@ -378,11 +305,8 @@ const UpdateLabTestMaster = () => {
                   onChange={handleInputChange}
                   placeholder="Brief description of the test"
                 />
-                
                 {validationMessages.Description && (
-                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
-                    {validationMessages.Description}
-                  </span>
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{validationMessages.Description}</span>
                 )}
               </div>
 
@@ -393,12 +317,10 @@ const UpdateLabTestMaster = () => {
                   value={formData.NormalRange}
                   onChange={handleInputChange}
                   placeholder="e.g., 4.5-11.0"
+                  maxLength="50"
                 />
-                
                 {validationMessages.NormalRange && (
-                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
-                    {validationMessages.NormalRange}
-                  </span>
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{validationMessages.NormalRange}</span>
                 )}
               </div>
 
@@ -409,46 +331,36 @@ const UpdateLabTestMaster = () => {
                   value={formData.Units}
                   onChange={handleInputChange}
                   placeholder="e.g., cells/mcL"
+                  maxLength="30"
                 />
-                
                 {validationMessages.Units && (
-                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
-                    {validationMessages.Units}
-                  </span>
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{validationMessages.Units}</span>
                 )}
               </div>
 
               <div className={styles.formGroup}>
                 <label>CGST %</label>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
                   name="CGSTPercentage"
                   value={formData.CGSTPercentage}
                   onChange={handleInputChange}
                 />
-                
                 {validationMessages.CGSTPercentage && (
-                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
-                    {validationMessages.CGSTPercentage}
-                  </span>
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{validationMessages.CGSTPercentage}</span>
                 )}
               </div>
 
               <div className={styles.formGroup}>
                 <label>SGST %</label>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
                   name="SGSTPercentage"
                   value={formData.SGSTPercentage}
                   onChange={handleInputChange}
                 />
-                
                 {validationMessages.SGSTPercentage && (
-                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
-                    {validationMessages.SGSTPercentage}
-                  </span>
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{validationMessages.SGSTPercentage}</span>
                 )}
               </div>
 
@@ -461,39 +373,30 @@ const UpdateLabTestMaster = () => {
                   onChange={handleInputChange}
                   placeholder="Additional notes"
                 />
-                
                 {validationMessages.Remarks && (
-                  <span style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
-                    {validationMessages.Remarks}
-                  </span>
+                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{validationMessages.Remarks}</span>
                 )}
               </div>
 
               <div className={styles.formGroup}>
-                <label>
-                  Status <span className={styles.required}>*</span>
-                </label>
+                <label>Status <span className={styles.required}>*</span></label>
                 <select required name="Status" value={formData.Status} onChange={handleInputChange}>
                   {STATUS_OPTIONS.map((status) => (
-                    <option key={status.id} value={status.id}>
-                      {status.label}
-                    </option>
+                    <option key={status.id} value={status.id}>{status.label}</option>
                   ))}
                 </select>
               </div>
             </div>
 
-            <div className={`${styles.modalFooter} ${styles.updateFooter}`}>
-              <button type="button" onClick={handleBack} className={styles.btnCancel}>
-                Cancel
-              </button>
+            <div className={styles.modalFooter}>
+              <button type="button" onClick={onClose} className={styles.btnCancel}>Cancel</button>
               <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
-                <FiSave className={styles.btnIcon} />
+                <FiSave size={16} />
                 {formLoading ? 'Updating...' : 'Update Lab Test'}
               </button>
             </div>
           </form>
-        </div>
+        )}
       </div>
     </div>
   );

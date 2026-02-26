@@ -1,7 +1,7 @@
 // src/components/LabReportList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiX, FiTrash2 } from 'react-icons/fi';
+import { FiSearch, FiX, FiTrash2, FiEdit } from 'react-icons/fi';
 import { getLabTestReportList, deleteLabTestReport } from '../api/api-labtest.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
@@ -18,7 +18,7 @@ const LabReportList = () => {
   
   // Filter inputs (not applied until search)
   const [filterInputs, setFilterInputs] = useState({
-    searchType: 'patientName', // patientName, patientMobile, patientFileNo, doctorName
+    searchType: 'patientName',
     searchValue: '',
     status: '',
     dateFrom: '',
@@ -53,7 +53,6 @@ const LabReportList = () => {
     appliedFilters.dateTo             !== '';
 
   // ────────────────────────────────────────────────
-  // Data fetching
   useEffect(() => {
     fetchReports();
   }, []);
@@ -62,14 +61,10 @@ const LabReportList = () => {
     try {
       setLoading(true);
       setError(null);
-
       const clinicId = Number(localStorage.getItem('clinicID')) || 0;
       const branchId = Number(localStorage.getItem('branchID'));
-      const options = {
-        BranchID: branchId,
-      }
+      const options = { BranchID: branchId };
       const data = await getLabTestReportList(clinicId, options);
-
       setReports(data);
       setAllReports(data);
     } catch (err) {
@@ -85,14 +80,11 @@ const LabReportList = () => {
   };
 
   // ────────────────────────────────────────────────
-  // Computed values
   const filteredReports = useMemo(() => {
     let filtered = allReports;
 
-    // Apply search filter based on search type
     if (appliedFilters.searchValue) {
       const term = appliedFilters.searchValue.toLowerCase();
-      
       switch (appliedFilters.searchType) {
         case 'patientName':
           filtered = filtered.filter(r => r.patientName?.toLowerCase().includes(term));
@@ -119,8 +111,7 @@ const LabReportList = () => {
       const fromDate = new Date(appliedFilters.dateFrom);
       filtered = filtered.filter(r => {
         if (!r.dateCreated) return false;
-        const reportDate = new Date(r.dateCreated);
-        return reportDate >= fromDate;
+        return new Date(r.dateCreated) >= fromDate;
       });
     }
 
@@ -129,8 +120,7 @@ const LabReportList = () => {
       toDate.setHours(23, 59, 59, 999);
       filtered = filtered.filter(r => {
         if (!r.dateCreated) return false;
-        const reportDate = new Date(r.dateCreated);
-        return reportDate <= toDate;
+        return new Date(r.dateCreated) <= toDate;
       });
     }
 
@@ -138,7 +128,6 @@ const LabReportList = () => {
   }, [allReports, appliedFilters]);
 
   // ────────────────────────────────────────────────
-  // Helper functions
   const getStatusClass = (status) => {
     if (status === 1) return styles.created;
     if (status === 2) return styles.cancelled;
@@ -146,16 +135,20 @@ const LabReportList = () => {
     return styles.created;
   };
 
+  // Returns the header badge colour variant class
+  const getStatusBadgeVariant = (status) => {
+    if (status === 1) return styles.detailBadgeInfo;
+    if (status === 2) return styles.detailBadgeDanger;
+    if (status === 3) return styles.detailBadgeSuccess;
+    return '';
+  };
+
   const formatDateTime = (dateTime) => {
     if (!dateTime) return '—';
     try {
-      const date = new Date(dateTime);
-      return date.toLocaleString('en-IN', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
+      return new Date(dateTime).toLocaleString('en-IN', {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit',
       });
     } catch {
       return dateTime;
@@ -163,30 +156,21 @@ const LabReportList = () => {
   };
 
   // ────────────────────────────────────────────────
-  // Handlers
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = () => {
-    setAppliedFilters({ ...filterInputs });
-  };
+  const handleSearch = () => setAppliedFilters({ ...filterInputs });
 
   const handleClearFilters = () => {
-    const emptyFilters = {
-      searchType: 'patientName',
-      searchValue: '',
-      status: '',
-      dateFrom: '',
-      dateTo: ''
-    };
+    const emptyFilters = { searchType: 'patientName', searchValue: '', status: '', dateFrom: '', dateTo: '' };
     setFilterInputs(emptyFilters);
     setAppliedFilters(emptyFilters);
   };
 
-  const openDetails = (report) => setSelectedReport(report);
-  const closeModal = () => setSelectedReport(null);
+  const openDetails  = (report) => setSelectedReport(report);
+  const closeModal   = ()       => setSelectedReport(null);
 
   const handleUpdateClick = (report) => {
     setReportToUpdate(report);
@@ -194,58 +178,39 @@ const LabReportList = () => {
     setSelectedReport(null);
   };
 
-  const handleCloseUpdateModal = () => {
-    setShowUpdateModal(false);
-    setReportToUpdate(null);
-  };
+  const handleCloseUpdateModal = () => { setShowUpdateModal(false); setReportToUpdate(null); };
 
   const handleUpdateSuccess = () => {
     setShowUpdateModal(false);
     setReportToUpdate(null);
-    fetchReports(); // Refresh the list
+    fetchReports();
   };
 
-  const handleDeleteClick = (report) => {
-    setDeleteConfirm(report);
-  };
+  const handleDeleteClick = (report) => setDeleteConfirm(report);
 
   const confirmDelete = async () => {
     if (!deleteConfirm) return;
-
     try {
       setDeleting(true);
       await deleteLabTestReport(deleteConfirm.id);
-      
-      // Remove from local state
       setAllReports(prev => prev.filter(r => r.id !== deleteConfirm.id));
       setReports(prev => prev.filter(r => r.id !== deleteConfirm.id));
-      
       setDeleteConfirm(null);
       setSelectedReport(null);
     } catch (err) {
       console.error('Delete error:', err);
-      setError({
-        message: err.message || 'Failed to delete report',
-        status: err.status || 500
-      });
+      setError({ message: err.message || 'Failed to delete report', status: err.status || 500 });
     } finally {
       setDeleting(false);
     }
   };
 
-  const cancelDelete = () => {
-    setDeleteConfirm(null);
-  };
+  const cancelDelete = () => setDeleteConfirm(null);
 
   // ────────────────────────────────────────────────
-  // Early returns
-  if (error && (error?.status >= 400 || error?.code >= 400)) {
-    return <ErrorHandler error={error} />;
-  }
-
+  if (error && (error?.status >= 400 || error?.code >= 400)) return <ErrorHandler error={error} />;
   if (loading) return <div className={styles.clinicLoading}>Loading lab reports...</div>;
-
-  if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
+  if (error)   return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
   return (
@@ -253,11 +218,10 @@ const LabReportList = () => {
       <ErrorHandler error={error} />
       <Header title="Lab Report Management" />
 
-      {/* Filters */}
+      {/* ── Filters ── */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
 
-          {/* Fused search type + value */}
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -270,14 +234,13 @@ const LabReportList = () => {
               <option value="patientFileNo">File Code</option>
               <option value="doctorName">Doctor Name</option>
             </select>
-            
             <input
               type="text"
               name="searchValue"
               placeholder={`Search by ${
-                filterInputs.searchType === 'patientName' ? 'Name' :
-                filterInputs.searchType === 'patientMobile' ? 'Mobile' :
-                filterInputs.searchType === 'patientFileNo' ? 'File Code' :
+                filterInputs.searchType === 'patientName'   ? 'Name'        :
+                filterInputs.searchType === 'patientMobile' ? 'Mobile'      :
+                filterInputs.searchType === 'patientFileNo' ? 'File Code'   :
                 'Doctor Name'
               }`}
               value={filterInputs.searchValue}
@@ -287,14 +250,8 @@ const LabReportList = () => {
             />
           </div>
 
-          {/* Status */}
           <div className={styles.filterGroup}>
-            <select
-              name="status"
-              value={filterInputs.status}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            >
+            <select name="status" value={filterInputs.status} onChange={handleFilterChange} className={styles.filterInput}>
               <option value="">All Status</option>
               <option value="1">Created</option>
               <option value="2">Cancelled</option>
@@ -302,56 +259,40 @@ const LabReportList = () => {
             </select>
           </div>
 
-          {/* From Date — VendorList overlay-placeholder style */}
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
-              {!filterInputs.dateFrom && (
-                <span className={styles.datePlaceholder}>From Date</span>
-              )}
+              {!filterInputs.dateFrom && <span className={styles.datePlaceholder}>From Date</span>}
               <input
-                type="date"
-                name="dateFrom"
-                value={filterInputs.dateFrom}
-                onChange={handleFilterChange}
+                type="date" name="dateFrom" value={filterInputs.dateFrom} onChange={handleFilterChange}
                 className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`}
               />
             </div>
           </div>
 
-          {/* To Date — VendorList overlay-placeholder style */}
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
-              {!filterInputs.dateTo && (
-                <span className={styles.datePlaceholder}>To Date</span>
-              )}
+              {!filterInputs.dateTo && <span className={styles.datePlaceholder}>To Date</span>}
               <input
-                type="date"
-                name="dateTo"
-                value={filterInputs.dateTo}
-                onChange={handleFilterChange}
+                type="date" name="dateTo" value={filterInputs.dateTo} onChange={handleFilterChange}
                 className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`}
               />
             </div>
           </div>
 
-          {/* Actions */}
           <div className={styles.filterActions}>
             <button onClick={handleSearch} className={styles.searchButton}>
-              <FiSearch size={18} />
-              Search
+              <FiSearch size={18} /> Search
             </button>
             {hasActiveFilters && (
               <button onClick={handleClearFilters} className={styles.clearButton}>
-                <FiX size={18} />
-                Clear
+                <FiX size={18} /> Clear
               </button>
             )}
           </div>
-
         </div>
       </div>
 
-      {/* Table */}
+      {/* ── Table ── */}
       <div className={styles.clinicTableContainer}>
         <table className={styles.clinicTable}>
           <thead>
@@ -369,7 +310,9 @@ const LabReportList = () => {
             {filteredReports.length === 0 ? (
               <tr>
                 <td colSpan={7} className={styles.clinicNoData}>
-                  {Object.values(appliedFilters).some(v => v) ? 'No lab reports found.' : 'No lab reports available yet.'}
+                  {Object.values(appliedFilters).some(v => v)
+                    ? 'No lab reports found.'
+                    : 'No lab reports available yet.'}
                 </td>
               </tr>
             ) : (
@@ -411,123 +354,138 @@ const LabReportList = () => {
         </table>
       </div>
 
-      {/* ──────────────── Details Modal ──────────────── */}
+      {/* ══════════════ CLINIC-STYLE DETAILS MODAL ══════════════ */}
       {selectedReport && (
-        <div className={styles.clinicModalOverlay} onClick={closeModal}>
-          <div className={`${styles.clinicModal} ${styles.detailsModal} ${styles.wideModal}`} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.detailsModalHeader}>
-              <div className={styles.detailsHeaderContent}>
-                <div className={styles.clinicAvatarLarge}>
-                  {selectedReport.patientFileNo ? String(selectedReport.patientFileNo).charAt(0).toUpperCase() : 'F'}
-                </div>
-                <div>
-                  <h2>File: {selectedReport.patientFileNo || '—'}</h2>
-                  <p className={styles.clinicSubtitle}>{selectedReport.patientName}</p>
+        <div className={styles.detailModalOverlay} onClick={closeModal}>
+          <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
+
+            {/* ── Gradient Header ── */}
+            <div className={styles.detailModalHeader}>
+              <div className={styles.detailHeaderContent}>
+                <div className={styles.detailHeaderTop}>
+                  <div className={styles.detailHeaderAvatar}>
+                    {selectedReport.patientFileNo
+                      ? String(selectedReport.patientFileNo).charAt(0).toUpperCase()
+                      : 'F'}
+                  </div>
+                  <div>
+                    <h2 className={styles.detailHeaderTitle}>{selectedReport.patientName || '—'}</h2>
+                  </div>
                 </div>
               </div>
-              <div className={styles.statusBadgeLargeWrapper}>
-                <span className={`${styles.statusBadge} ${styles.large} ${getStatusClass(selectedReport.status)}`}>
-                  {selectedReport.statusDesc?.toUpperCase() || 'UNKNOWN'}
-                </span>
-              </div>
-              <button onClick={closeModal} className={styles.clinicModalClose}>
-                ×
-              </button>
+              <button onClick={closeModal} className={styles.detailCloseBtn}>✕</button>
             </div>
 
-            <div className={styles.detailsModalBody}>
-              <div className={styles.detailsGrid}>
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Patient Name</span>
-                  <span className={styles.detailValue}>{selectedReport.patientName || '—'}</span>
+            {/* ── Scrollable Body ── */}
+            <div className={styles.detailModalBody}>
+              <div className={styles.detailInfoSection}>
+
+                {/* Card 1 — Patient Information (left) */}
+                <div className={styles.detailInfoCard}>
+                  <div className={styles.detailInfoHeader}>
+                    <h3>Patient Information</h3>
+                  </div>
+                  <div className={styles.detailInfoContent}>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>Full Name</span>
+                      <span className={styles.detailInfoValue}>{selectedReport.patientName || '—'}</span>
+                    </div>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>Mobile</span>
+                      <span className={styles.detailInfoValue}>{selectedReport.patientMobile || '—'}</span>
+                    </div>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>File Code</span>
+                      <span className={styles.detailInfoValue}>{selectedReport.patientFileNo || '—'}</span>
+                    </div>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>Consultation ID</span>
+                      <span className={styles.detailInfoValue}>{selectedReport.consultationId || '—'}</span>
+                    </div>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>Visit ID</span>
+                      <span className={styles.detailInfoValue}>{selectedReport.visitId || '—'}</span>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Patient Mobile</span>
-                  <span className={styles.detailValue}>{selectedReport.patientMobile || '—'}</span>
+
+                {/* Card 2 — Report Details (right) */}
+                <div className={styles.detailInfoCard}>
+                  <div className={styles.detailInfoHeader}>
+                    <h3>Report Details</h3>
+                  </div>
+                  <div className={styles.detailInfoContent}>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>File ID</span>
+                      <span className={styles.detailInfoValue}>{selectedReport.fileId || '—'}</span>
+                    </div>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>Verified By</span>
+                      <span className={styles.detailInfoValue}>{selectedReport.verifiedByName || '—'}</span>
+                    </div>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>Verified Date/Time</span>
+                      <span className={styles.detailInfoValue}>{formatDateTime(selectedReport.verifiedDateTime)}</span>
+                    </div>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>Status</span>
+                      <span className={`${styles.detailInlineBadge} ${getStatusBadgeVariant(selectedReport.status)}`}>
+                        {selectedReport.statusDesc?.toUpperCase() || '—'}
+                      </span>
+                    </div>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>Remarks</span>
+                      <span className={styles.detailInfoValue}>{selectedReport.remarks || '—'}</span>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Patient File Code</span>
-                  <span className={styles.detailValue}>{selectedReport.patientFileNo || '—'}</span>
+
+                {/* Card 3 — Clinic & Timeline (full width bottom) */}
+                <div className={styles.detailInfoCard}>
+                  <div className={styles.detailInfoHeader}>
+                    <h3>Clinic &amp; Timeline</h3>
+                  </div>
+                  <div className={styles.detailInfoContent}>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>Doctor</span>
+                      <span className={styles.detailInfoValue}>{selectedReport.doctorFullName || '—'}</span>
+                    </div>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>Doctor Code</span>
+                      <span className={styles.detailInfoValue}>{selectedReport.doctorCode || '—'}</span>
+                    </div>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>Clinic</span>
+                      <span className={styles.detailInfoValue}>{selectedReport.clinicName || '—'}</span>
+                    </div>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>Branch</span>
+                      <span className={styles.detailInfoValue}>{selectedReport.branchName || '—'}</span>
+                    </div>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>Date Created</span>
+                      <span className={styles.detailInfoValue}>{formatDateTime(selectedReport.dateCreated)}</span>
+                    </div>
+                    <div className={styles.detailInfoRow}>
+                      <span className={styles.detailInfoLabel}>Date Modified</span>
+                      <span className={styles.detailInfoValue}>{formatDateTime(selectedReport.dateModified)}</span>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Doctor</span>
-                  <span className={styles.detailValue}>{selectedReport.doctorFullName || '—'}</span>
-                </div>
-                
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Doctor Code</span>
-                  <span className={styles.detailValue}>{selectedReport.doctorCode || '—'}</span>
-                </div>
-                
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Clinic</span>
-                  <span className={styles.detailValue}>{selectedReport.clinicName || '—'}</span>
-                </div>
-                
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Branch</span>
-                  <span className={styles.detailValue}>{selectedReport.branchName || '—'}</span>
-                </div>
-                
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Order ID</span>
-                  <span className={styles.detailValue}>{selectedReport.orderId || '—'}</span>
-                </div>
-                
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Consultation ID</span>
-                  <span className={styles.detailValue}>{selectedReport.consultationId || '—'}</span>
-                </div>
-                
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Visit ID</span>
-                  <span className={styles.detailValue}>{selectedReport.visitId || '—'}</span>
-                </div>
-                
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>File ID</span>
-                  <span className={styles.detailValue}>{selectedReport.fileId || '—'}</span>
-                </div>
-                
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Verified By</span>
-                  <span className={styles.detailValue}>{selectedReport.verifiedByName || '—'}</span>
-                </div>
-                
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Verified Date/Time</span>
-                  <span className={styles.detailValue}>{formatDateTime(selectedReport.verifiedDateTime)}</span>
-                </div>
-                
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Date Created</span>
-                  <span className={styles.detailValue}>{formatDateTime(selectedReport.dateCreated)}</span>
-                </div>
-                
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Date Modified</span>
-                  <span className={styles.detailValue}>{formatDateTime(selectedReport.dateModified)}</span>
-                </div>
-                
-                <div className={`${styles.detailItem} ${styles.fullWidth}`}>
-                  <span className={styles.detailLabel}>Remarks</span>
-                  <span className={styles.detailValue}>{selectedReport.remarks || '—'}</span>
-                </div>
+
               </div>
             </div>
 
-            <div className={styles.clinicModalFooter}>
+            {/* ── Footer ── */}
+            <div className={styles.detailModalFooter}>
               <button onClick={() => handleDeleteClick(selectedReport)} className={styles.btnDelete}>
-                <FiTrash2 className={styles.btnIcon} />
-                Delete Report
+                <FiTrash2 size={15} /> Delete Report
               </button>
               <button onClick={() => handleUpdateClick(selectedReport)} className={styles.btnUpdate}>
-                Update Report
+                <FiEdit size={15} /> Update Report
               </button>
             </div>
+
           </div>
         </div>
       )}
@@ -538,9 +496,7 @@ const LabReportList = () => {
           <div className={styles.clinicModal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.clinicModalHeader}>
               <h2>Confirm Delete</h2>
-              <button onClick={cancelDelete} className={styles.clinicModalClose}>
-                ×
-              </button>
+              <button onClick={cancelDelete} className={styles.clinicModalClose}>×</button>
             </div>
             <div className={styles.clinicModalBody}>
               <p>Are you sure you want to delete this lab report?</p>

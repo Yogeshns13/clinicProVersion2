@@ -1,6 +1,5 @@
 // src/components/LabTestMasterList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   FiSearch,
   FiPlus,
@@ -24,6 +23,8 @@ import Header from '../Header/Header.jsx';
 import ViewLabMaster from './ViewLabMaster.jsx';
 import ViewLabPackage from './ViewLabPackage.jsx';
 import styles from './LabMaster.module.css';
+import UpdateLabTestMaster from './Updatelabtestmaster.jsx';
+import UpdateLabTestPackage from './Updatelabtestpackage.jsx';
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
@@ -158,8 +159,6 @@ const PACKAGE_SEARCH_TYPE_OPTIONS = [
 
 // ────────────────────────────────────────────────
 const LabMasterList = () => {
-  const navigate = useNavigate();
-
   const today = new Date().toISOString().split('T')[0];
 
   // Tab State
@@ -170,6 +169,7 @@ const LabMasterList = () => {
   const [allTests, setAllTests] = useState([]);
   const [selectedTest, setSelectedTest] = useState(null);
   const [isAddTestFormOpen, setIsAddTestFormOpen] = useState(false);
+  const [updateTest, setUpdateTest] = useState(null); // for update modal
   const [testFormData, setTestFormData] = useState({
     TestName: '',
     ShortName: '',
@@ -208,6 +208,7 @@ const LabMasterList = () => {
   const [allPackages, setAllPackages] = useState([]);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [isAddPackageFormOpen, setIsAddPackageFormOpen] = useState(false);
+  const [updatePackage, setUpdatePackage] = useState(null); // for update modal
   const [packageFormData, setPackageFormData] = useState({
     packName: '',
     packShortName: '',
@@ -569,8 +570,10 @@ const LabMasterList = () => {
     }
   };
 
+  // Opens the update modal inline (no routing)
   const handleTestUpdateClick = (test) => {
-    navigate(`/update-labmaster/${test.id}`);
+    setSelectedTest(null); // close view modal
+    setUpdateTest(test);   // open update modal
   };
 
   const handleTestDelete = async (test) => {
@@ -683,8 +686,10 @@ const LabMasterList = () => {
     }
   };
 
+  // Opens the update modal inline (no routing)
   const handlePackageUpdateClick = (pkg) => {
-    navigate(`/update-labpackage/${pkg.id}`);
+    setSelectedPackage(null); // close view modal
+    setUpdatePackage(pkg);    // open update modal
   };
 
   // ────────────────────────────────────────────────
@@ -893,7 +898,7 @@ const LabMasterList = () => {
                 </select>
               </div>
 
-              {/* Date From — VendorList overlay-placeholder style */}
+              {/* Date From */}
               <div className={styles.filterGroup}>
                 <div className={styles.dateWrapper}>
                   {!masterFilterInputs.dateFrom && (
@@ -909,7 +914,7 @@ const LabMasterList = () => {
                 </div>
               </div>
 
-              {/* Date To — VendorList overlay-placeholder style */}
+              {/* Date To */}
               <div className={styles.filterGroup}>
                 <div className={styles.dateWrapper}>
                   {!masterFilterInputs.dateTo && (
@@ -1057,7 +1062,7 @@ const LabMasterList = () => {
                 </select>
               </div>
 
-              {/* Date From — VendorList overlay-placeholder style */}
+              {/* Date From */}
               <div className={styles.filterGroup}>
                 <div className={styles.dateWrapper}>
                   {!packageFilterInputs.dateFrom && (
@@ -1073,7 +1078,7 @@ const LabMasterList = () => {
                 </div>
               </div>
 
-              {/* Date To — VendorList overlay-placeholder style */}
+              {/* Date To */}
               <div className={styles.filterGroup}>
                 <div className={styles.dateWrapper}>
                   {!packageFilterInputs.dateTo && (
@@ -1192,6 +1197,24 @@ const LabMasterList = () => {
           onDeleteItem={handleDeletePackageItem}
           formError={formError}
           formLoading={formLoading}
+        />
+      )}
+
+      {/* ──────────────── UPDATE LAB TEST MODAL ──────────────── */}
+      {updateTest && (
+        <UpdateLabTestMaster
+          test={updateTest}
+          onClose={() => setUpdateTest(null)}
+          onUpdateSuccess={() => fetchTests()}
+        />
+      )}
+
+      {/* ──────────────── UPDATE LAB PACKAGE MODAL ──────────────── */}
+      {updatePackage && (
+        <UpdateLabTestPackage
+          pkg={updatePackage}
+          onClose={() => setUpdatePackage(null)}
+          onUpdateSuccess={() => fetchPackages()}
         />
       )}
 
@@ -1400,10 +1423,6 @@ const LabMasterList = () => {
               {formSuccess && <div className={styles.formSuccess}>Tests added successfully!</div>}
 
               <div className={styles.testSelectionContainer}>
-                <p className={styles.selectionInfo}>
-                  Select tests to add to this package. Selected: {selectedTestIds.length}
-                </p>
-
                 <div className={styles.testSelectionList}>
                   {availableTests.map((test) => (
                     <div

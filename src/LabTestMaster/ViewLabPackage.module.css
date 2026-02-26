@@ -45,9 +45,8 @@
 .modal {
   background: var(--glass-bg);
   border-radius: 15px;
-  border: 2px solid var(--glass-border);
   width: 100%;
-  max-width: 650px;
+  max-width: 850px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.5);
@@ -56,20 +55,19 @@
 }
 
 .packageDetailsModal {
-  max-width: 750px;
-  max-height: 85vh;
+  max-width: 980px;
+  max-height: 88vh;
 }
 
 /* ==================== MODAL HEADER ==================== */
 .detailsModalHeader {
-  padding: 14px 20px 12px;
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
-  border-bottom: 1px solid rgba(34, 43, 108, 0.1);
-  position: relative;
+  padding: 22px 28px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 60px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.18);
 }
 
 .detailsHeaderContent {
@@ -93,18 +91,15 @@
 }
 
 .detailsModalHeader h2 {
-  font-size: 1.02rem;
-  font-weight: 800;
   margin: 0;
-  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 1.48rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .subtitle {
   margin: 3px 0 0;
-  color: var(--primary-end);
+  color: var(--text-light);
   font-size: 0.6rem;
   font-weight: 500;
 }
@@ -114,30 +109,25 @@
 }
 
 .modalClose {
-  background: rgba(100, 116, 139, 0.15);
-  border: 2px solid rgba(100, 116, 139, 0.2);
-  width: 29px;
-  height: 29px;
-  border-radius: 50%;
-  color: #64748b;
-  font-size: 17px;
+  background: rgba(255, 255, 255, 0.25);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 1.3rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
 .modalClose:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #dc2626;
-  transform: rotate(90deg);
+  background: rgba(255, 255, 255, 0.45);
+  transform: scale(1.08);
 }
 
 /* ==================== MODAL BODY ==================== */
 .detailsModalBody {
-  padding: 14px 20px;
+  padding: 0px 24px 14px 24px;
   flex: 1;
   overflow-y: auto;
 }
@@ -146,12 +136,45 @@
   font-size: 1rem;
   font-weight: 700;
   color: var(--primary-start);
-  margin: 20px 0 10px;
+  margin: 20px 0 12px;
   padding-bottom: 8px;
   border-bottom: 2px solid var(--accent-end);
 }
 
-/* ==================== DETAILS TABLE ==================== */
+/* ==================== INFO GRID (2-column layout) ==================== */
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  background: var(--card-bg);
+  padding: 14px 18px;
+  border-radius: 10px;
+}
+
+.infoCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.infoCellFull {
+  grid-column: 1 / -1;
+}
+
+.infoLabel {
+  font-size: 0.78rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.infoValue {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  line-height: 1.35;
+}
+
+/* ==================== DETAILS TABLE (kept for backward compat) ==================== */
 .detailsTable {
   width: 100%;
   border-collapse: separate;
@@ -313,9 +336,10 @@
   font-style: italic;
 }
 
+/* 2-column items grid */
 .itemsList {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
@@ -397,7 +421,7 @@
 .btnUpdate {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: var(--text-light);
   border: none;
   font-weight: 600;
@@ -449,6 +473,18 @@
   color: #e2e8f0;
 }
 
+:global(.dark-mode) .infoCell {
+  background: #1e293b;
+}
+
+:global(.dark-mode) .infoLabel {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .infoValue {
+  color: #e2e8f0;
+}
+
 :global(.dark-mode) .detailsTable td.label,
 :global(.dark-mode) .label {
   color: var(--accent-end);
@@ -483,16 +519,34 @@
 }
 
 /* ==================== RESPONSIVE ==================== */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+  .infoGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .itemsList {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
   .modal {
-    max-width: 92%;
+    max-width: 98%;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .infoCellFull {
+    grid-column: 1;
   }
 
   .detailsModalHeader,
   .detailsModalBody,
   .modalFooter {
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: 16px;
+    padding-right: 16px;
   }
 
   .modalFooter {

@@ -44,10 +44,7 @@ GetConsultationChargeList
     "ChargeName":"", 
     "InvoiceID":0,
     "InvoicedOnly":0,
-    "Status":-1
-    
-    
-   
+    "Status":-1 
 }
 
 

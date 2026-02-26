@@ -501,7 +501,6 @@
 .modal {
   background: var(--glass-bg);
   border-radius: 15px;
-  border: 2px solid var(--glass-border);
   width: 100%;
   max-width: 650px;
   max-height: 90vh;
@@ -514,49 +513,44 @@
 .testSelectionModal { max-width: 700px; }
 
 .modalHeader {
+  padding: 22px 28px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  padding: 17px 23px 0;
-  margin-bottom: 14px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.18);
 }
 
 .modalHeader h2 {
-  font-size: 1.23rem;
-  font-weight: 800;
-  color: var(--text-dark);
   margin: 0;
-  letter-spacing: -0.3px;
-  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 1.48rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .modalClose {
-  background: rgba(100, 116, 139, 0.15);
-  border: 2px solid rgba(100, 116, 139, 0.2);
-  width: 29px;
-  height: 29px;
-  border-radius: 50%;
-  color: #64748b;
-  font-size: 17px;
+ background: rgba(255, 255, 255, 0.22);
+  border: none;
+  color: white;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  font-size: 1.5rem;
+  font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
 .modalClose:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #dc2626;
-  transform: rotate(90deg);
+  background: rgba(255, 255, 255, 0.38);
+  transform: scale(1.08);
 }
 
 .modalBody {
-  padding: 0 29px 23px;
   color: var(--text-dark);
 }
 
@@ -586,9 +580,10 @@
 }
 
 .testSelectionList {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin: 24px;
 }
 
 .testSelectionItem {
@@ -640,7 +635,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(202px, 1fr));
   gap: 12px;
-  margin-bottom: 14px;
+  margin: 24px;
 }
 
 .formSectionTitle {
@@ -729,7 +724,7 @@
 .btnSubmit {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: var(--text-light);
   border: none;
   font-weight: 600;

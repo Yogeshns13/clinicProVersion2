@@ -51,11 +51,6 @@ const ViewLabMaster = ({ test, onClose, onUpdate, onDelete }) => {
               </p>
             </div>
           </div>
-          <div className={styles.statusBadgeLargeWrapper}>
-            <span className={`${styles.statusBadge} ${styles.large} ${getStatusClass(test.status)}`}>
-              {getTestStatusLabel(test.status)}
-            </span>
-          </div>
           <button onClick={onClose} className={styles.modalClose}>
             ×
           </button>

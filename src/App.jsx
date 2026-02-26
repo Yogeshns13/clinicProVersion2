@@ -42,7 +42,6 @@ import ConsultationChargeConfig from "./ConsultationCharge/Consultationchargecon
 import ConsultationChargeList from "./ConsultationCharge/Consultationchargelist.jsx";
 import InvoiceManagement from "./ConsultationCharge/Invoicemanagement.jsx";
 import InvoicePaymentManagement from "./ConsultationCharge/Invoicepaymentmanagement.jsx";
-import ViewVendor from "./Vendor/ViewVendor.jsx";
 import VendorList from "./Vendor/VendorList.jsx";
 import AddVendor from "./Vendor/AddVendor.jsx";
 import UpdateVendor from "./Vendor/UpdateVendor.jsx";
@@ -52,8 +51,6 @@ import AddMedicineMaster from "./MedicineMaster/Addmedicinemaster.jsx";
 import UpdateMedicineMaster from "./MedicineMaster/UpdateMedicineMaster.jsx";
 import ViewPrescription from "./Consultation/ViewPrescription.jsx";
 import ViewLabOrder from "./Consultation/ViewLabOrder.jsx";
-import UpdateLabTestMaster from "./LabTestMaster/Updatelabtestmaster.jsx";
-import UpdateLabTestPackage from "./LabTestMaster/Updatelabtestpackage.jsx";
 import ViewLabPackage from "./LabTestMaster/ViewLabPackage.jsx";
 import ViewLabMaster from "./LabTestMaster/ViewLabMaster.jsx";
 import LabMasterList from "./LabTestMaster/Labmasterlist.jsx";
@@ -129,7 +126,6 @@ function App() {
           <Route path="/invoice-management" element={<InvoiceManagement/>} />
           <Route path="/invoice-payment" element={<InvoicePaymentManagement/>} />
           <Route path="/vendor-list" element={<VendorList/>} />
-          <Route path="/view-vendor/:id" element={<ViewVendor/>} />
           <Route path="/add-vendor" element={<AddVendor/>} />
           <Route path="/update-vendor/:id" element={<UpdateVendor/>} />
           <Route path="/medicinemaster-list" element={<MedicineMasterList/>} />
@@ -140,8 +136,6 @@ function App() {
           <Route path="/view-prescription/:id" element={<ViewPrescription/>} />
           <Route path="/view-laborder/:id" element={<ViewLabOrder/>} />
           <Route path="/labtestmaster" element={<LabMasterList/>} />
-          <Route path="/update-labmaster/:id" element={<UpdateLabTestMaster/>} />
-          <Route path="/update-labpackage/:id" element={<UpdateLabTestPackage/>} />
           <Route path="/view-labpackage/:id" element={<ViewLabPackage/>} />
           <Route path="/view-labmaster/:id" element={<ViewLabMaster/>} />
           <Route path="/labwork-list" element={<LabWorkQueue/>} />

@@ -202,21 +202,6 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
                 placeholder="Enter license details"
               />
             </div>
-
-            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-              <div style={{ 
-                padding: '12px', 
-                backgroundColor: 'rgba(48, 178, 181, 0.08)',
-                borderRadius: '8px',
-                border: '1px solid rgba(48, 178, 181, 0.2)',
-                fontSize: '0.85rem',
-                color: '#475569'
-              }}>
-                <strong style={{ color: 'var(--accent-end)' }}>Note:</strong> Fields marked with 
-                <span style={{ color: '#dc2626', fontWeight: 'bold' }}> * </span> 
-                are required. Please ensure all mandatory information is provided.
-              </div>
-            </div>
           </div>
 
           <div className={styles.modalFooter}>

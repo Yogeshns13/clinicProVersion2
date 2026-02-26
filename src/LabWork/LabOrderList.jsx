@@ -113,7 +113,6 @@ const LabOrderList = () => {
     try {
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-      
       const options = {
         Page: 1,
         PageSize: 100,
@@ -121,7 +120,6 @@ const LabOrderList = () => {
         Designation: 1,
         Status: 1
       };
-      
       const employeeList = await getEmployeeList(clinicId, options);
       setDoctors(employeeList);
     } catch (err) {
@@ -134,23 +132,12 @@ const LabOrderList = () => {
     try {
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-      
-      const options = {
-        Page: 1,
-        PageSize: 100,
-        BranchID: branchId
-      };
-      
+      const options = { Page: 1, PageSize: 100, BranchID: branchId };
       const reports = await getLabTestReportList(clinicId, options);
-      
-      // Create a map of orderId -> reportId
       const reportsMap = {};
       reports.forEach(report => {
-        if (report.orderId) {
-          reportsMap[report.orderId] = report.id;
-        }
+        if (report.orderId) reportsMap[report.orderId] = report.id;
       });
-      
       setOrderReports(reportsMap);
     } catch (err) {
       console.error('Failed to fetch lab test reports:', err);
@@ -164,25 +151,11 @@ const LabOrderList = () => {
       setError(null);
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-
-      const options = {
-        Page: 1,
-        PageSize: 100,
-        BranchID: branchId
-      };
-
+      const options = { Page: 1, PageSize: 100, BranchID: branchId };
       const data = await getLabTestOrderList(clinicId, options);
-
-      const sortedData = data.sort((a, b) => {
-        const dateA = new Date(a.dateCreated);
-        const dateB = new Date(b.dateCreated);
-        return dateB - dateA;
-      });
-
+      const sortedData = data.sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated));
       setOrders(sortedData);
       setAllOrders(sortedData);
-      
-      // Fetch reports after orders are loaded
       await fetchLabTestReports();
     } catch (err) {
       console.error('fetchOrders error:', err);
@@ -204,11 +177,8 @@ const LabOrderList = () => {
   // Computed filtered orders based on applied filters
   const filteredOrders = useMemo(() => {
     let filtered = allOrders;
-
-    // Apply search filter based on search type
     if (appliedFilters.searchValue) {
       const term = appliedFilters.searchValue.toLowerCase();
-      
       switch (appliedFilters.searchType) {
         case 'patientName':
           filtered = filtered.filter(o => o.patientName?.toLowerCase().includes(term));
@@ -217,111 +187,62 @@ const LabOrderList = () => {
           filtered = filtered.filter(o => o.doctorFullName?.toLowerCase().includes(term));
           break;
         case 'testName':
-          // Note: testName is not in the current order object, but keeping for API compatibility
           filtered = filtered.filter(o => o.notes?.toLowerCase().includes(term));
           break;
         default:
           break;
       }
     }
-
-    // Status filter
     if (appliedFilters.status !== -1) {
       filtered = filtered.filter(o => o.status === Number(appliedFilters.status));
     }
-
-    // Priority filter
     if (appliedFilters.priority !== 0) {
       filtered = filtered.filter(o => o.priority === Number(appliedFilters.priority));
     }
-
-    // Date from filter
     if (appliedFilters.dateFrom) {
       const fromDate = new Date(appliedFilters.dateFrom);
-      filtered = filtered.filter(o => {
-        if (!o.dateCreated) return false;
-        const orderDate = new Date(o.dateCreated);
-        return orderDate >= fromDate;
-      });
+      filtered = filtered.filter(o => o.dateCreated && new Date(o.dateCreated) >= fromDate);
     }
-
-    // Date to filter
     if (appliedFilters.dateTo) {
       const toDate = new Date(appliedFilters.dateTo);
       toDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(o => {
-        if (!o.dateCreated) return false;
-        const orderDate = new Date(o.dateCreated);
-        return orderDate <= toDate;
-      });
+      filtered = filtered.filter(o => o.dateCreated && new Date(o.dateCreated) <= toDate);
     }
-
     return filtered;
   }, [allOrders, appliedFilters]);
 
-  // Filter handlers
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = () => {
-    setAppliedFilters({ ...filterInputs });
-  };
+  const handleSearch = () => setAppliedFilters({ ...filterInputs });
 
   const handleClearFilters = () => {
     const emptyFilters = {
-      searchType: 'patientName',
-      searchValue: '',
-      status: -1,
-      priority: 0,
-      dateFrom: '',
-      dateTo: ''
+      searchType: 'patientName', searchValue: '',
+      status: -1, priority: 0, dateFrom: '', dateTo: ''
     };
     setFilterInputs(emptyFilters);
     setAppliedFilters(emptyFilters);
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
+  const handleKeyPress = (e) => { if (e.key === 'Enter') handleSearch(); };
 
-  const handleViewOrderDetails = (order) => {
-    setSelectedOrder(order);
-    setIsOrderDetailsOpen(true);
-  };
-
-  const handleUpdateOrder = (order) => {
-    setSelectedOrder(order);
-    setIsUpdateOrderOpen(true);
-  };
-
-  const handleMakeWorkClick = (order) => {
-    setSelectedOrder(order);
-    setIsConfirmWorkOpen(true);
-  };
-
-  const handleMakeInvoiceClick = (order) => {
-    setSelectedOrder(order);
-    setIsMakeInvoiceOpen(true);
-  };
+  const handleViewOrderDetails = (order) => { setSelectedOrder(order); setIsOrderDetailsOpen(true); };
+  const handleUpdateOrder      = (order) => { setSelectedOrder(order); setIsUpdateOrderOpen(true); };
+  const handleMakeWorkClick    = (order) => { setSelectedOrder(order); setIsConfirmWorkOpen(true); };
+  const handleMakeInvoiceClick = (order) => { setSelectedOrder(order); setIsMakeInvoiceOpen(true); };
 
   const handleConfirmMakeWork = async () => {
     if (!selectedOrder) return;
-
     try {
       setLoading(true);
       const clinicId = Number(localStorage.getItem('clinicID'));
-      
       await createWorkItemsForOrder(selectedOrder.id, clinicId);
-      
       setIsConfirmWorkOpen(false);
       setSelectedOrder(null);
-      
       await fetchOrders();
-      
       alert('Work items created successfully! Navigate to Work Queue to process them.');
     } catch (err) {
       console.error('Error creating work items:', err);
@@ -334,14 +255,10 @@ const LabOrderList = () => {
   const handleGenerateInvoice = async (invoiceData) => {
     try {
       setLoading(true);
-      
       await generateLabInvoice(invoiceData);
-      
       setIsMakeInvoiceOpen(false);
       setSelectedOrder(null);
-      
       await fetchOrders();
-      
       alert('Invoice generated successfully!');
     } catch (err) {
       console.error('Error generating invoice:', err);
@@ -354,14 +271,10 @@ const LabOrderList = () => {
   const handleUpdateOrderSubmit = async (orderData) => {
     try {
       setLoading(true);
-      
       await updateLabTestOrder(orderData);
-      
       setIsUpdateOrderOpen(false);
       setSelectedOrder(null);
-      
       await fetchOrders();
-      
       alert('Order updated successfully!');
     } catch (err) {
       console.error('Error updating order:', err);
@@ -376,42 +289,15 @@ const LabOrderList = () => {
       setSubmittingReport(true);
       setIsUpdateMode(false);
       setCurrentReportId(null);
-      
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-      
-      // Fetch order details
-      const orderListOptions = {
-        OrderID: order.id,
-        BranchID: branchId,
-        Page: 1,
-        PageSize: 1
-      };
-      
-      const orderList = await getLabTestOrderList(clinicId, orderListOptions);
-      
-      if (!orderList || orderList.length === 0) {
-        throw new Error('Order details not found');
-      }
-      
-      const orderDetail = orderList[0];
-      setOrderDetails(orderDetail);
+      const orderList = await getLabTestOrderList(clinicId, { OrderID: order.id, BranchID: branchId, Page: 1, PageSize: 1 });
+      if (!orderList || orderList.length === 0) throw new Error('Order details not found');
+      setOrderDetails(orderList[0]);
       setSelectedOrderForReport(order);
-      
-      // Set default form values
       const now = new Date();
-      const formattedDateTime = now.toISOString().slice(0, 16);
-      
-      setReportForm({
-        verifiedBy: 0,
-        verifiedDateTime: formattedDateTime,
-        remarks: '',
-        status: 1 // Default to "Created" status
-      });
-      
-      // Show the report modal directly
+      setReportForm({ verifiedBy: 0, verifiedDateTime: now.toISOString().slice(0, 16), remarks: '', status: 1 });
       setShowReportModal(true);
-      
     } catch (err) {
       console.error('Error processing add report:', err);
       setError(err);
@@ -421,65 +307,30 @@ const LabOrderList = () => {
     }
   };
 
-  // Handle Update Report Button Click
   const handleUpdateReportClick = async (order) => {
     try {
       setSubmittingReport(true);
-      
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
-      
-      // Fetch the existing report for this order
-      const reportOptions = {
-        OrderID: order.id,
-        BranchID: branchId,
-        Page: 1,
-        PageSize: 1
-      };
-      
-      const reports = await getLabTestReportList(clinicId, reportOptions);
-      
-      if (!reports || reports.length === 0) {
-        throw new Error('Report not found for this order');
-      }
-      
+      const reports = await getLabTestReportList(clinicId, { OrderID: order.id, BranchID: branchId, Page: 1, PageSize: 1 });
+      if (!reports || reports.length === 0) throw new Error('Report not found for this order');
       const existingReport = reports[0];
-      
-      // Fetch order details
-      const orderListOptions = {
-        OrderID: order.id,
-        BranchID: branchId,
-        Page: 1,
-        PageSize: 1
-      };
-      
-      const orderList = await getLabTestOrderList(clinicId, orderListOptions);
-      
-      if (!orderList || orderList.length === 0) {
-        throw new Error('Order details not found');
-      }
-      
-      const orderDetail = orderList[0];
-      setOrderDetails(orderDetail);
-      
-      // Set form with existing report data
+      const orderList = await getLabTestOrderList(clinicId, { OrderID: order.id, BranchID: branchId, Page: 1, PageSize: 1 });
+      if (!orderList || orderList.length === 0) throw new Error('Order details not found');
+      setOrderDetails(orderList[0]);
       setIsUpdateMode(true);
       setCurrentReportId(existingReport.id);
       setSelectedOrderForReport(order);
-      
-      const formattedDateTime = existingReport.verifiedDateTime 
+      const formattedDateTime = existingReport.verifiedDateTime
         ? new Date(existingReport.verifiedDateTime).toISOString().slice(0, 16)
         : new Date().toISOString().slice(0, 16);
-      
       setReportForm({
         verifiedBy: existingReport.verifiedBy || 0,
         verifiedDateTime: formattedDateTime,
         remarks: existingReport.remarks || '',
-        status: existingReport.status ?? 1 // Use existing status or default to "Created"
+        status: existingReport.status ?? 1
       });
-      
       setShowReportModal(true);
-      
     } catch (err) {
       console.error('Error loading report for update:', err);
       setError(err);
@@ -489,27 +340,31 @@ const LabOrderList = () => {
     }
   };
 
-  // Handle Report Form Submission
   const handleSubmitReport = async (e) => {
     e.preventDefault();
-    
     if (!reportForm.verifiedBy || reportForm.verifiedBy === 0) {
       setReportMessage({ type: 'error', text: 'Please select a verified by doctor' });
       return;
     }
-    
     if (!reportForm.verifiedDateTime) {
       setReportMessage({ type: 'error', text: 'Please select verified date and time' });
       return;
     }
-    
     try {
       setSubmittingReport(true);
       setReportMessage({ type: '', text: '' });
-      
+      const resetForm = () => {
+        setShowReportModal(false);
+        setSelectedOrderForReport(null);
+        setOrderDetails(null);
+        setIsUpdateMode(false);
+        setCurrentReportId(null);
+        setReportForm({ verifiedBy: 0, verifiedDateTime: '', remarks: '', status: 1 });
+        setReportMessage({ type: '', text: '' });
+        fetchOrders();
+      };
       if (isUpdateMode) {
-        // Update existing report
-        const updateReportData = {
+        const result = await updateLabTestReport({
           reportId: currentReportId,
           clinicId: orderDetails.clinicId,
           branchId: orderDetails.branchId,
@@ -518,31 +373,13 @@ const LabOrderList = () => {
           verifiedDateTime: reportForm.verifiedDateTime,
           remarks: reportForm.remarks,
           status: reportForm.status
-        };
-        
-        const result = await updateLabTestReport(updateReportData);
-        
+        });
         if (result.success) {
           setReportMessage({ type: 'success', text: 'Lab test report updated successfully!' });
-          setTimeout(() => {
-            setShowReportModal(false);
-            setSelectedOrderForReport(null);
-            setOrderDetails(null);
-            setIsUpdateMode(false);
-            setCurrentReportId(null);
-            setReportForm({
-              verifiedBy: 0,
-              verifiedDateTime: '',
-              remarks: '',
-              status: 1 // Default to "Created" status
-            });
-            setReportMessage({ type: '', text: '' });
-            fetchOrders();
-          }, 1500);
+          setTimeout(resetForm, 1500);
         }
       } else {
-        // Add new report
-        const reportData = {
+        const result = await addLabTestReport({
           orderId: orderDetails.id,
           consultationId: orderDetails.consultationId,
           visitId: orderDetails.visitId,
@@ -554,28 +391,12 @@ const LabOrderList = () => {
           verifiedBy: reportForm.verifiedBy,
           verifiedDateTime: reportForm.verifiedDateTime,
           remarks: reportForm.remarks
-        };
-        
-        const result = await addLabTestReport(reportData);
-        
+        });
         if (result.success) {
           setReportMessage({ type: 'success', text: 'Lab test report added successfully!' });
-          setTimeout(() => {
-            setShowReportModal(false);
-            setSelectedOrderForReport(null);
-            setOrderDetails(null);
-            setReportForm({
-              verifiedBy: 0,
-              verifiedDateTime: '',
-              remarks: '',
-              status: 1 // Default to "Created" status
-            });
-            setReportMessage({ type: '', text: '' });
-            fetchOrders();
-          }, 1500);
+          setTimeout(resetForm, 1500);
         }
       }
-      
     } catch (err) {
       console.error('Error submitting report:', err);
       setReportMessage({ type: 'error', text: err.message || `Failed to ${isUpdateMode ? 'update' : 'add'} lab test report` });
@@ -591,22 +412,12 @@ const LabOrderList = () => {
     setIsUpdateMode(false);
     setCurrentReportId(null);
     setReportMessage({ type: '', text: '' });
-    setReportForm({
-      verifiedBy: 0,
-      verifiedDateTime: '',
-      remarks: '',
-      status: 1 // Default to "Created" status
-    });
+    setReportForm({ verifiedBy: 0, verifiedDateTime: '', remarks: '', status: 1 });
   };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
+    return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   const getStatusBadgeClass = (status) => {
@@ -620,15 +431,6 @@ const LabOrderList = () => {
       case 2: return styles.priorityUrgent;
       case 3: return styles.priorityStat;
       default: return styles.priorityNormal;
-    }
-  };
-
-  const getOrderStatusIcon = (status) => {
-    switch(status) {
-      case 1: return <FiClock className={styles.statusIcon} />;
-      case 2: return <FiCheckCircle className={styles.statusIcon} />;
-      case 5: return <FiAlertCircle className={styles.statusIcon} />;
-      default: return null;
     }
   };
 
@@ -661,7 +463,6 @@ const LabOrderList = () => {
             <div className={styles.statLabel}>Pending Orders</div>
           </div>
         </div>
-
         <div className={styles.statCard}>
           <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)' }}>
             <FiAlertCircle size={24} />
@@ -671,7 +472,6 @@ const LabOrderList = () => {
             <div className={styles.statLabel}>In Progress</div>
           </div>
         </div>
-
         <div className={styles.statCard}>
           <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)' }}>
             <FiCheckCircle size={24} />
@@ -681,7 +481,6 @@ const LabOrderList = () => {
             <div className={styles.statLabel}>Completed</div>
           </div>
         </div>
-
         <div className={styles.statCard}>
           <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #207d9c, #30b2b5)' }}>
             <FiEye size={24} />
@@ -696,28 +495,16 @@ const LabOrderList = () => {
       {/* Filters Container */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
-
-          {/* Search type + value (already fused — unchanged) */}
           <div className={styles.searchGroup}>
-            <select
-              name="searchType"
-              value={filterInputs.searchType}
-              onChange={handleFilterChange}
-              className={styles.searchTypeSelect}
-            >
+            <select name="searchType" value={filterInputs.searchType} onChange={handleFilterChange} className={styles.searchTypeSelect}>
               <option value="patientName">Patient Name</option>
               <option value="doctorName">Doctor Name</option>
               <option value="testName">Test/Notes</option>
             </select>
-            
             <input
               type="text"
               name="searchValue"
-              placeholder={`Search by ${
-                filterInputs.searchType === 'patientName' ? 'Patient Name' :
-                filterInputs.searchType === 'doctorName' ? 'Doctor Name' :
-                'Test/Notes'
-              }`}
+              placeholder={`Search by ${filterInputs.searchType === 'patientName' ? 'Patient Name' : filterInputs.searchType === 'doctorName' ? 'Doctor Name' : 'Test/Notes'}`}
               value={filterInputs.searchValue}
               onChange={handleFilterChange}
               onKeyPress={handleKeyPress}
@@ -726,72 +513,40 @@ const LabOrderList = () => {
           </div>
 
           <div className={styles.filterGroup}>
-            <select
-              name="status"
-              value={filterInputs.status}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            >
-              {statusOptions.map(opt => (
-                <option key={opt.id} value={opt.id}>{opt.label}</option>
-              ))}
+            <select name="status" value={filterInputs.status} onChange={handleFilterChange} className={styles.filterInput}>
+              {statusOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
             </select>
           </div>
 
           <div className={styles.filterGroup}>
-            <select
-              name="priority"
-              value={filterInputs.priority}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            >
-              {priorityOptions.map(opt => (
-                <option key={opt.id} value={opt.id}>{opt.label}</option>
-              ))}
+            <select name="priority" value={filterInputs.priority} onChange={handleFilterChange} className={styles.filterInput}>
+              {priorityOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
             </select>
           </div>
 
-          {/* Date From — VendorList overlay-placeholder style */}
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
-              {!filterInputs.dateFrom && (
-                <span className={styles.datePlaceholder}>From Date</span>
-              )}
-              <input
-                type="date"
-                name="dateFrom"
-                value={filterInputs.dateFrom}
-                onChange={handleFilterChange}
-                className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`}
-              />
+              {!filterInputs.dateFrom && <span className={styles.datePlaceholder}>From Date</span>}
+              <input type="date" name="dateFrom" value={filterInputs.dateFrom} onChange={handleFilterChange}
+                className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`} />
             </div>
           </div>
 
-          {/* Date To — VendorList overlay-placeholder style */}
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
-              {!filterInputs.dateTo && (
-                <span className={styles.datePlaceholder}>To Date</span>
-              )}
-              <input
-                type="date"
-                name="dateTo"
-                value={filterInputs.dateTo}
-                onChange={handleFilterChange}
-                className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`}
-              />
+              {!filterInputs.dateTo && <span className={styles.datePlaceholder}>To Date</span>}
+              <input type="date" name="dateTo" value={filterInputs.dateTo} onChange={handleFilterChange}
+                className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`} />
             </div>
           </div>
 
           <div className={styles.filterActions}>
             <button onClick={handleSearch} className={styles.searchButton}>
-              <FiSearch size={18} />
-              Search
+              <FiSearch size={18} /> Search
             </button>
             {hasActiveFilters && (
               <button onClick={handleClearFilters} className={styles.clearButton}>
-                <FiX size={18} />
-                Clear
+                <FiX size={18} /> Clear
               </button>
             )}
           </div>
@@ -815,117 +570,71 @@ const LabOrderList = () => {
             {filteredOrders.length === 0 ? (
               <tr>
                 <td colSpan={6} className={styles.noData}>
-                  {hasActiveFilters 
-                    ? 'No orders found matching your search.'
-                    : 'No lab test orders found.'}
+                  {hasActiveFilters ? 'No orders found matching your search.' : 'No lab test orders found.'}
                 </td>
               </tr>
             ) : (
               filteredOrders.map((order) => {
                 const hasReport = orderReports[order.id];
-                
                 return (
                   <tr key={order.id} className={styles.tableRow}>
                     <td>
                       <div className={styles.nameCell}>
-                        <div className={styles.avatar}>
-                          {order.patientName?.charAt(0).toUpperCase() || 'P'}
-                        </div>
+                        <div className={styles.avatar}>{order.patientName?.charAt(0).toUpperCase() || 'P'}</div>
                         <div>
                           <div className={styles.name}>{order.patientName}</div>
-                          <div className={styles.subText}>
-                            {order.patientFileNo} • {order.patientMobile}
-                          </div>
+                          <div className={styles.subText}>{order.patientFileNo} • {order.patientMobile}</div>
                         </div>
                       </div>
                     </td>
                     <td>
-                      <div>
-                        <div className={styles.name}>{order.doctorFullName}</div>
-                        <div className={styles.subText}>{order.doctorCode || '—'}</div>
-                      </div>
+                      <div className={styles.name}>{order.doctorFullName}</div>
+                      <div className={styles.subText}>{order.doctorCode || '—'}</div>
                     </td>
                     <td>
-                      <span className={`${styles.badge} ${getStatusBadgeClass(order.status)}`}>
-                        {order.statusDesc}
-                      </span>
+                      <span className={`${styles.badge} ${getStatusBadgeClass(order.status)}`}>{order.statusDesc}</span>
                     </td>
                     <td>
-                      <span className={`${styles.badge} ${getPriorityBadgeClass(order.priority)}`}>
-                        {order.priorityDesc}
-                      </span>
+                      <span className={`${styles.badge} ${getPriorityBadgeClass(order.priority)}`}>{order.priorityDesc}</span>
                     </td>
                     <td>
                       <div className={styles.dateCell}>
                         <div className={styles.name}>{formatDate(order.dateCreated)}</div>
                         <div className={styles.subText}>
-                          {new Date(order.dateCreated).toLocaleTimeString('en-US', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
+                          {new Date(order.dateCreated).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>
                     </td>
                     <td>
                       <div className={styles.actionsCell}>
-                        <button
-                          onClick={() => handleViewOrderDetails(order)}
-                          className={styles.viewBtn}
-                          title="View Details"
-                        >
+                        <button onClick={() => handleViewOrderDetails(order)} className={styles.viewBtn} title="View Details">
                           <FiEye size={16} />
                         </button>
-                        
                         <div className={styles.actionDropdownWrapper}>
-                          <button className={styles.actionBtn}>
-                            Actions
-                          </button>
+                          <button className={styles.actionBtn}>Actions</button>
                           <div className={styles.actionDropdown}>
-                            <button
-                              onClick={() => handleMakeWorkClick(order)}
-                              className={styles.dropdownItem}
-                              disabled={order.status === 5 || order.status === 2 || order.status === 3 || order.status === 6}
-                            >
+                            <button onClick={() => handleMakeWorkClick(order)} className={styles.dropdownItem}
+                              disabled={order.status === 5 || order.status === 2 || order.status === 3 || order.status === 6}>
                               {order.status === 5 ? 'In Progress' : 'Make Work'}
                             </button>
-                            
-                            {(order.status === 2) && !hasReport && (
-                              <button
-                                onClick={() => handleAddReportClick(order)}
-                                className={styles.dropdownItem}
-                              >
-                                <FiFileText size={14} />
-                                Add Report
+                            {order.status === 2 && !hasReport && (
+                              <button onClick={() => handleAddReportClick(order)} className={styles.dropdownItem}>
+                                <FiFileText size={14} /> Add Report
                               </button>
                             )}
-                            
-                            {(order.status === 2) && hasReport && (
-                              <button
-                                onClick={() => handleUpdateReportClick(order)}
-                                className={styles.dropdownItem}
-                              >
-                                <FiEdit size={14} />
-                                Update Report
+                            {order.status === 2 && hasReport && (
+                              <button onClick={() => handleUpdateReportClick(order)} className={styles.dropdownItem}>
+                                <FiEdit size={14} /> Update Report
                               </button>
                             )}
-                            
                             {(order.status === 1 || order.status === 5) && (
-                              <button
-                                onClick={() => handleMakeInvoiceClick(order)}
-                                className={styles.dropdownItem}
-                              >
-                                <FiFileText size={14} />
-                                Make Invoice
+                              <button onClick={() => handleMakeInvoiceClick(order)} className={styles.dropdownItem}>
+                                <FiFileText size={14} /> Make Invoice
                               </button>
                             )}
-                            
                             {order.status === 4 && (
-                              <button
-                                className={`${styles.dropdownItem} ${styles.invoicedItem}`}
-                                disabled
-                              >
-                                <FiCheckCircle size={14} />
-                                Invoiced!
+                              <button className={`${styles.dropdownItem} ${styles.invoicedItem}`} disabled>
+                                <FiCheckCircle size={14} /> Invoiced!
                               </button>
                             )}
                           </div>
@@ -944,14 +653,9 @@ const LabOrderList = () => {
       {isOrderDetailsOpen && selectedOrder && (
         <OrderDetailsModal
           order={selectedOrder}
-          onClose={() => {
-            setIsOrderDetailsOpen(false);
-            setSelectedOrder(null);
-          }}
-          onUpdate={() => {
-            setIsOrderDetailsOpen(false);
-            handleUpdateOrder(selectedOrder);
-          }}
+          statusOptions={statusOptions}
+          onClose={() => { setIsOrderDetailsOpen(false); setSelectedOrder(null); }}
+          onUpdate={() => { setIsOrderDetailsOpen(false); handleUpdateOrder(selectedOrder); }}
         />
       )}
 
@@ -960,10 +664,7 @@ const LabOrderList = () => {
           order={selectedOrder}
           statusOptions={statusOptions}
           priorityOptions={priorityOptions.filter(p => p.id !== 0)}
-          onClose={() => {
-            setIsUpdateOrderOpen(false);
-            setSelectedOrder(null);
-          }}
+          onClose={() => { setIsUpdateOrderOpen(false); setSelectedOrder(null); }}
           onSubmit={handleUpdateOrderSubmit}
         />
       )}
@@ -971,10 +672,7 @@ const LabOrderList = () => {
       {isConfirmWorkOpen && selectedOrder && (
         <ConfirmMakeWorkModal
           order={selectedOrder}
-          onClose={() => {
-            setIsConfirmWorkOpen(false);
-            setSelectedOrder(null);
-          }}
+          onClose={() => { setIsConfirmWorkOpen(false); setSelectedOrder(null); }}
           onConfirm={handleConfirmMakeWork}
         />
       )}
@@ -982,10 +680,7 @@ const LabOrderList = () => {
       {isMakeInvoiceOpen && selectedOrder && (
         <MakeInvoiceModal
           order={selectedOrder}
-          onClose={() => {
-            setIsMakeInvoiceOpen(false);
-            setSelectedOrder(null);
-          }}
+          onClose={() => { setIsMakeInvoiceOpen(false); setSelectedOrder(null); }}
           onSubmit={handleGenerateInvoice}
         />
       )}
@@ -996,23 +691,15 @@ const LabOrderList = () => {
           <div className={styles.reportModal}>
             <div className={styles.reportModalHeader}>
               <h3>{isUpdateMode ? 'Update Lab Test Report' : 'Add Lab Test Report'}</h3>
-              <button 
-                onClick={handleCloseReportModal} 
-                className={styles.reportCloseBtn}
-                disabled={submittingReport}
-              >
+              <button onClick={handleCloseReportModal} className={styles.reportCloseBtn} disabled={submittingReport}>
                 <FiX size={24} />
               </button>
             </div>
-            
             <form onSubmit={handleSubmitReport} className={styles.reportForm}>
               <div className={styles.reportModalBody}>
                 {reportMessage.text && (
-                  <div className={`${styles.reportMessage} ${styles[reportMessage.type]}`}>
-                    {reportMessage.text}
-                  </div>
+                  <div className={`${styles.reportMessage} ${styles[reportMessage.type]}`}>{reportMessage.text}</div>
                 )}
-
                 <div className={styles.orderInfoSection}>
                   <h4>Order Information</h4>
                   <div className={styles.infoGrid}>
@@ -1030,84 +717,44 @@ const LabOrderList = () => {
                     </div>
                   </div>
                 </div>
-
                 <div className={styles.reportFormGroup}>
-                  <label className={styles.reportFormLabel}>
-                    Verified By <span className={styles.reportRequired}>*</span>
-                  </label>
-                  <select
-                    value={reportForm.verifiedBy}
+                  <label className={styles.reportFormLabel}>Verified By <span className={styles.reportRequired}>*</span></label>
+                  <select value={reportForm.verifiedBy}
                     onChange={(e) => setReportForm({ ...reportForm, verifiedBy: Number(e.target.value) })}
-                    className={styles.reportFormSelect}
-                    required
-                    disabled={submittingReport}
-                  >
+                    className={styles.reportFormSelect} required disabled={submittingReport}>
                     <option value={0}>Select Doctor</option>
                     {doctors.map(doctor => (
-                      <option key={doctor.id} value={doctor.id}>
-                        {doctor.name} ({doctor.employeeCode})
-                      </option>
+                      <option key={doctor.id} value={doctor.id}>{doctor.name} ({doctor.employeeCode})</option>
                     ))}
                   </select>
                 </div>
-
                 <div className={styles.reportFormGroup}>
-                  <label className={styles.reportFormLabel}>
-                    Verified Date & Time <span className={styles.reportRequired}>*</span>
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={reportForm.verifiedDateTime}
+                  <label className={styles.reportFormLabel}>Verified Date & Time <span className={styles.reportRequired}>*</span></label>
+                  <input type="datetime-local" value={reportForm.verifiedDateTime}
                     onChange={(e) => setReportForm({ ...reportForm, verifiedDateTime: e.target.value })}
-                    className={styles.reportFormInput}
-                    required
-                    disabled={submittingReport}
-                  />
+                    className={styles.reportFormInput} required disabled={submittingReport} />
                 </div>
-
                 {isUpdateMode && (
                   <div className={styles.reportFormGroup}>
                     <label className={styles.reportFormLabel}>Status</label>
-                    <select
-                      value={reportForm.status}
+                    <select value={reportForm.status}
                       onChange={(e) => setReportForm({ ...reportForm, status: Number(e.target.value) })}
-                      className={styles.reportFormSelect}
-                      disabled={submittingReport}
-                    >
-                      {reportStatusOptions.map(opt => (
-                        <option key={opt.id} value={opt.id}>{opt.label}</option>
-                      ))}
+                      className={styles.reportFormSelect} disabled={submittingReport}>
+                      {reportStatusOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
                     </select>
                   </div>
                 )}
-
                 <div className={styles.reportFormGroup}>
                   <label className={styles.reportFormLabel}>Remarks</label>
-                  <textarea
-                    value={reportForm.remarks}
+                  <textarea value={reportForm.remarks}
                     onChange={(e) => setReportForm({ ...reportForm, remarks: e.target.value })}
-                    className={styles.reportFormTextarea}
-                    rows={4}
-                    placeholder="Enter any additional remarks..."
-                    disabled={submittingReport}
-                  />
+                    className={styles.reportFormTextarea} rows={4}
+                    placeholder="Enter any additional remarks..." disabled={submittingReport} />
                 </div>
               </div>
-
               <div className={styles.reportModalFooter}>
-                <button 
-                  type="button"
-                  onClick={handleCloseReportModal} 
-                  className={styles.reportCancelBtn}
-                  disabled={submittingReport}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className={styles.reportSubmitBtn}
-                  disabled={submittingReport}
-                >
+                <button type="button" onClick={handleCloseReportModal} className={styles.reportCancelBtn} disabled={submittingReport}>Cancel</button>
+                <button type="submit" className={styles.reportSubmitBtn} disabled={submittingReport}>
                   {submittingReport ? (isUpdateMode ? 'Updating...' : 'Submitting...') : (isUpdateMode ? 'Update Report' : 'Submit Report')}
                 </button>
               </div>
@@ -1119,87 +766,137 @@ const LabOrderList = () => {
   );
 };
 
-// Order Details Modal Component
-const OrderDetailsModal = ({ order, onClose, onUpdate }) => {
+// ─────────────────────────────────────────────────────────────────────────────
+// Order Details Modal — Clinic-style layout with 3 info-card sections
+// ─────────────────────────────────────────────────────────────────────────────
+const OrderDetailsModal = ({ order, statusOptions, onClose, onUpdate }) => {
+  const isCompleted = order.status === 2;
+  const isCancelled = order.status === 3;
+
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <h2>Order Details</h2>
-          <button onClick={onClose} className={styles.closeBtn}>×</button>
-        </div>
-        <div className={styles.modalBody}>
-          <div className={styles.detailsGrid}>
-            <div className={styles.detailItem}>
-              <label>Order ID:</label>
-              <span>#{order.id}</span>
-            </div>
-            <div className={styles.detailItem}>
-              <label>Unique Seq:</label>
-              <span>{order.uniqueSeq}</span>
-            </div>
-            <div className={styles.detailItem}>
-              <label>Patient Name:</label>
-              <span>{order.patientName}</span>
-            </div>
-            <div className={styles.detailItem}>
-              <label>Patient File No:</label>
-              <span>{order.patientFileNo}</span>
-            </div>
-            <div className={styles.detailItem}>
-              <label>Patient Mobile:</label>
-              <span>{order.patientMobile}</span>
-            </div>
-            <div className={styles.detailItem}>
-              <label>Doctor:</label>
-              <span>{order.doctorFullName} ({order.doctorCode})</span>
-            </div>
-            <div className={styles.detailItem}>
-              <label>Clinic:</label>
-              <span>{order.clinicName}</span>
-            </div>
-            <div className={styles.detailItem}>
-              <label>Branch:</label>
-              <span>{order.branchName}</span>
-            </div>
-            <div className={styles.detailItem}>
-              <label>Status:</label>
-              <span>{order.statusDesc}</span>
-            </div>
-            <div className={styles.detailItem}>
-              <label>Priority:</label>
-              <span>{order.priorityDesc}</span>
-            </div>
-            <div className={styles.detailItem}>
-              <label>Consultation ID:</label>
-              <span>{order.consultationId || '—'}</span>
-            </div>
-            <div className={styles.detailItem}>
-              <label>Visit ID:</label>
-              <span>{order.visitId || '—'}</span>
-            </div>
-            <div className={styles.detailItem}>
-              <label>Date Created:</label>
-              <span>{new Date(order.dateCreated).toLocaleString()}</span>
-            </div>
-            <div className={styles.detailItem}>
-              <label>Date Modified:</label>
-              <span>{new Date(order.dateModified).toLocaleString()}</span>
-            </div>
-            <div className={styles.detailItemFull}>
-              <label>Notes:</label>
-              <span>{order.notes || 'No notes'}</span>
+    <div className={styles.detailModalOverlay} onClick={onClose}>
+      <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
+
+        {/* ── Gradient Header ── */}
+        <div className={styles.detailModalHeader}>
+          <div className={styles.detailHeaderContent}>
+            <div className={styles.detailHeaderTop}>
+              <div className={styles.detailHeaderAvatar}>
+                {order.patientName?.charAt(0).toUpperCase() || 'P'}
+              </div>
+              <div>
+                <h2 className={styles.detailHeaderTitle}>{order.patientName}</h2>
+              </div>
             </div>
           </div>
+          <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
         </div>
-        <div className={styles.modalFooter}>
-          <button onClick={onUpdate} className={styles.updateBtn}>
-            Update Order
-          </button>
+
+        {/* ── Scrollable Body with 3 Info Cards ── */}
+        <div className={styles.detailModalBody}>
+          <div className={styles.detailInfoSection}>
+
+            {/* Card 1 — Patient Information */}
+            <div className={styles.detailInfoCard}>
+              <div className={styles.detailInfoHeader}>
+                <h3>Patient Information</h3>
+              </div>
+              <div className={styles.detailInfoContent}>
+                <div className={styles.detailInfoRow}>
+                  <span className={styles.detailInfoLabel}>Full Name</span>
+                  <span className={styles.detailInfoValue}>{order.patientName || '—'}</span>
+                </div>
+                <div className={styles.detailInfoRow}>
+                  <span className={styles.detailInfoLabel}>File No.</span>
+                  <span className={styles.detailInfoValue}>{order.patientFileNo || '—'}</span>
+                </div>
+                <div className={styles.detailInfoRow}>
+                  <span className={styles.detailInfoLabel}>Mobile</span>
+                  <span className={styles.detailInfoValue}>{order.patientMobile || '—'}</span>
+                </div>
+                <div className={styles.detailInfoRow}>
+                  <span className={styles.detailInfoLabel}>Consultation ID</span>
+                  <span className={styles.detailInfoValue}>{order.consultationId || '—'}</span>
+                </div>
+                <div className={styles.detailInfoRow}>
+                  <span className={styles.detailInfoLabel}>Visit ID</span>
+                  <span className={styles.detailInfoValue}>{order.visitId || '—'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2 — Order Information */}
+            <div className={styles.detailInfoCard}>
+              <div className={styles.detailInfoHeader}>
+                <h3>Order Information</h3>
+              </div>
+              <div className={styles.detailInfoContent}>
+                <div className={styles.detailInfoRow}>
+                  <span className={styles.detailInfoLabel}>Unique Seq.</span>
+                  <span className={styles.detailInfoValue}>{order.uniqueSeq || '—'}</span>
+                </div>
+                <div className={styles.detailInfoRow}>
+                  <span className={styles.detailInfoLabel}>Status</span>
+                  <span className={styles.detailInfoValue}>{order.statusDesc}</span>
+                </div>
+                <div className={styles.detailInfoRow}>
+                  <span className={styles.detailInfoLabel}>Priority</span>
+                  <span className={styles.detailInfoValue}>{order.priorityDesc}</span>
+                </div>
+                <div className={styles.detailInfoRow}>
+                  <span className={styles.detailInfoLabel}>Date Created</span>
+                  <span className={styles.detailInfoValue}>{new Date(order.dateCreated).toLocaleString()}</span>
+                </div>
+                <div className={styles.detailInfoRow}>
+                  <span className={styles.detailInfoLabel}>Last Modified</span>
+                  <span className={styles.detailInfoValue}>{new Date(order.dateModified).toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3 — Clinical Details */}
+            <div className={styles.detailInfoCard}>
+              <div className={styles.detailInfoHeader}>
+                <h3>Clinical Details</h3>
+              </div>
+              <div className={styles.detailInfoContent}>
+                <div className={styles.detailInfoRow}>
+                  <span className={styles.detailInfoLabel}>Doctor</span>
+                  <span className={styles.detailInfoValue}>{order.doctorFullName || '—'}</span>
+                </div>
+                <div className={styles.detailInfoRow}>
+                  <span className={styles.detailInfoLabel}>Doctor Code</span>
+                  <span className={styles.detailInfoValue}>{order.doctorCode || '—'}</span>
+                </div>
+                <div className={styles.detailInfoRow}>
+                  <span className={styles.detailInfoLabel}>Clinic</span>
+                  <span className={styles.detailInfoValue}>{order.clinicName || '—'}</span>
+                </div>
+                <div className={styles.detailInfoRow}>
+                  <span className={styles.detailInfoLabel}>Branch</span>
+                  <span className={styles.detailInfoValue}>{order.branchName || '—'}</span>
+                </div>
+                <div className={styles.detailInfoRow}>
+                  <span className={styles.detailInfoLabel}>Notes</span>
+                  <span className={styles.detailInfoValue}>{order.notes || 'No notes'}</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* ── Footer ── */}
+        <div className={styles.detailModalFooter}>
           <button onClick={onClose} className={styles.cancelBtn}>
             Close
           </button>
+          <button onClick={onUpdate} className={styles.updateBtn}>
+            <FiEdit size={16} style={{ marginRight: 6 }} />
+            Update Order
+          </button>
         </div>
+
       </div>
     </div>
   );
@@ -1217,29 +914,21 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
     const clinicId = Number(localStorage.getItem('clinicID'));
     const branchId = Number(localStorage.getItem('branchID'));
-    
-    const orderData = {
-      orderId: order.id,
-      clinicId: clinicId,
-      branchId: branchId,
-      status: formData.status,
-      priority: formData.priority,
-      notes: formData.notes,
-      fileId: formData.fileId,
+    onSubmit({
+      orderId: order.id, clinicId, branchId,
+      status: formData.status, priority: formData.priority,
+      notes: formData.notes, fileId: formData.fileId,
       testApprovedBy: formData.testApprovedBy
-    };
-    
-    onSubmit(orderData);
+    });
   };
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2>Update Order #{order.id}</h2>
+          <h2>Update Order</h2>
           <button onClick={onClose} className={styles.closeBtn}>×</button>
         </div>
         <form onSubmit={handleSubmit}>
@@ -1247,51 +936,35 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
             <div className={styles.formGrid}>
               <div className={styles.formGroup}>
                 <label>Status *</label>
-                <select
-                  value={formData.status}
+                <select value={formData.status}
                   onChange={(e) => setFormData({...formData, status: Number(e.target.value)})}
-                  className={styles.formInput}
-                  required
-                >
+                  className={styles.formInput} required>
                   {statusOptions.filter(s => s.id !== -1).map(opt => (
                     <option key={opt.id} value={opt.id}>{opt.label}</option>
                   ))}
                 </select>
               </div>
-
               <div className={styles.formGroup}>
                 <label>Priority *</label>
-                <select
-                  value={formData.priority}
+                <select value={formData.priority}
                   onChange={(e) => setFormData({...formData, priority: Number(e.target.value)})}
-                  className={styles.formInput}
-                  required
-                >
+                  className={styles.formInput} required>
                   {priorityOptions.map(opt => (
                     <option key={opt.id} value={opt.id}>{opt.label}</option>
                   ))}
                 </select>
               </div>
-
               <div className={styles.formGroupFull}>
                 <label>Notes</label>
-                <textarea
-                  value={formData.notes}
+                <textarea value={formData.notes}
                   onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  className={styles.formTextarea}
-                  rows={4}
-                  placeholder="Enter any notes..."
-                />
+                  className={styles.formTextarea} rows={4} placeholder="Enter any notes..." />
               </div>
             </div>
           </div>
           <div className={styles.modalFooter}>
-            <button type="submit" className={styles.updateBtn}>
-              Update Order
-            </button>
-            <button type="button" onClick={onClose} className={styles.cancelBtn}>
-              Cancel
-            </button>
+            <button type="submit" className={styles.updateBtn}>Update Order</button>
+            <button type="button" onClick={onClose} className={styles.cancelBtn}>Cancel</button>
           </div>
         </form>
       </div>
@@ -1299,81 +972,54 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
   );
 };
 
-// Confirm Make Work Modal Component
-const ConfirmMakeWorkModal = ({ order, onClose, onConfirm }) => {
-  return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <h2>Confirm Create Work Items</h2>
-          <button onClick={onClose} className={styles.closeBtn}>×</button>
-        </div>
-        <div className={styles.modalBody}>
-          <div className={styles.confirmIcon}>
-            <FiAlertCircle size={48} />
+const ConfirmMakeWorkModal = ({ order, onClose, onConfirm }) => (
+  <div className={styles.modalOverlay} onClick={onClose}>
+    <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+      <div className={styles.modalHeader}>
+        <h2>Confirm Create Work Items</h2>
+        <button onClick={onClose} className={styles.closeBtn}>×</button>
+      </div>
+      <div className={styles.modalBody}>
+        <div className={styles.confirmIcon}><FiAlertCircle size={48} /></div>
+        <p className={styles.confirmText}>Are you sure you want to create work items for this order?</p>
+        <div className={styles.confirmDetails}>
+          <div className={styles.confirmDetailRow}>
+            <span className={styles.confirmLabel}>Order ID:</span>
+            <span className={styles.confirmValue}>#{order.id}</span>
           </div>
-          <p className={styles.confirmText}>
-            Are you sure you want to create work items for this order?
-          </p>
-          <div className={styles.confirmDetails}>
-            <div className={styles.confirmDetailRow}>
-              <span className={styles.confirmLabel}>Order ID:</span>
-              <span className={styles.confirmValue}>#{order.id}</span>
-            </div>
-            <div className={styles.confirmDetailRow}>
-              <span className={styles.confirmLabel}>Patient:</span>
-              <span className={styles.confirmValue}>{order.patientName}</span>
-            </div>
-            <div className={styles.confirmDetailRow}>
-              <span className={styles.confirmLabel}>Doctor:</span>
-              <span className={styles.confirmValue}>{order.doctorFullName}</span>
-            </div>
+          <div className={styles.confirmDetailRow}>
+            <span className={styles.confirmLabel}>Patient:</span>
+            <span className={styles.confirmValue}>{order.patientName}</span>
           </div>
-        </div>
-        <div className={styles.modalFooter}>
-          <button onClick={onConfirm} className={styles.confirmBtn}>
-            <FiCheckCircle size={18} />
-            Yes, Create Work Items
-          </button>
-          <button onClick={onClose} className={styles.cancelBtn}>
-            Cancel
-          </button>
+          <div className={styles.confirmDetailRow}>
+            <span className={styles.confirmLabel}>Doctor:</span>
+            <span className={styles.confirmValue}>{order.doctorFullName}</span>
+          </div>
         </div>
       </div>
+      <div className={styles.modalFooter}>
+        <button onClick={onConfirm} className={styles.confirmBtn}>
+          <FiCheckCircle size={18} /> Yes, Create Work Items
+        </button>
+        <button onClick={onClose} className={styles.cancelBtn}>Cancel</button>
+      </div>
     </div>
-  );
-};
+  </div>
+);
 
 // Make Invoice Modal Component
 const MakeInvoiceModal = ({ order, onClose, onSubmit }) => {
   const getTodayDate = () => {
     const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   };
-
-  const [formData, setFormData] = useState({
-    invoiceDate: getTodayDate(),
-    discount: 0
-  });
+  const [formData, setFormData] = useState({ invoiceDate: getTodayDate(), discount: 0 });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
     const clinicId = Number(localStorage.getItem('clinicID'));
     const branchId = Number(localStorage.getItem('branchID'));
-    
-    const invoiceData = {
-      orderId: order.id,
-      clinicId: clinicId,
-      branchId: branchId,
-      invoiceDate: formData.invoiceDate,
-      discount: Number(formData.discount)
-    };
-    
-    onSubmit(invoiceData);
+    onSubmit({ orderId: order.id, clinicId, branchId, invoiceDate: formData.invoiceDate, discount: Number(formData.discount) });
   };
 
   return (
@@ -1385,12 +1031,7 @@ const MakeInvoiceModal = ({ order, onClose, onSubmit }) => {
         </div>
         <form onSubmit={handleSubmit}>
           <div className={styles.modalBody}>
-            <div className={styles.confirmIcon}>
-              <FiFileText size={48} />
-            </div>
-            <p className={styles.confirmText}>
-              Generate invoice for Order #{order.id}
-            </p>
+            <div className={styles.confirmIcon}><FiFileText size={48} /></div>
             <div className={styles.confirmDetails}>
               <div className={styles.confirmDetailRow}>
                 <span className={styles.confirmLabel}>Patient:</span>
@@ -1401,40 +1042,25 @@ const MakeInvoiceModal = ({ order, onClose, onSubmit }) => {
                 <span className={styles.confirmValue}>{order.doctorFullName}</span>
               </div>
             </div>
-
             <div className={styles.invoiceFormGrid}>
               <div className={styles.formGroup}>
                 <label>Invoice Date *</label>
-                <input
-                  type="date"
-                  value={formData.invoiceDate}
+                <input type="date" value={formData.invoiceDate}
                   onChange={(e) => setFormData({...formData, invoiceDate: e.target.value})}
-                  className={styles.formInput}
-                  required
-                />
+                  className={styles.formInput} required />
               </div>
-
               <div className={styles.formGroup}>
                 <label>Discount</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.discount}
+                <input type="number" min="0" step="0.01" value={formData.discount}
                   onChange={(e) => setFormData({...formData, discount: e.target.value})}
-                  className={styles.formInput}
-                  placeholder="Enter discount amount"
-                />
+                  className={styles.formInput} placeholder="Enter discount amount" />
               </div>
             </div>
           </div>
           <div className={styles.modalFooter}>
+            <button type="button" onClick={onClose} className={styles.cancelBtn}>Cancel</button>
             <button type="submit" className={styles.confirmBtn}>
-              <FiFileText size={18} />
-              Generate Invoice
-            </button>
-            <button type="button" onClick={onClose} className={styles.cancelBtn}>
-              Cancel
+              <FiFileText size={18} /> Generate Invoice
             </button>
           </div>
         </form>

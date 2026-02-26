@@ -1,6 +1,6 @@
 // src/components/ConsultationChargeConfig.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiDollarSign, FiX } from 'react-icons/fi';
+import { FiSearch, FiPlus, FiX, FiDollarSign } from 'react-icons/fi';
 import {
   getConsultingChargeConfigList,
   addConsultationChargeConfig,
@@ -118,9 +118,14 @@ const ConsultationChargeConfig = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // View Details Modal
+  const [selectedConfig, setSelectedConfig] = useState(null);
+
+  // Add / Edit Form Modal
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [selectedConfig, setSelectedConfig] = useState(null);
+  const [editingConfig, setEditingConfig] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState(null);
   const [formSuccess, setFormSuccess] = useState(null);
@@ -137,6 +142,7 @@ const ConsultationChargeConfig = () => {
 
   const [validationMessages, setValidationMessages] = useState({});
 
+  // ── Data fetching ──
   const fetchChargeConfigs = async () => {
     try {
       setLoading(true);
@@ -169,6 +175,7 @@ const ConsultationChargeConfig = () => {
     fetchClinics();
   }, []);
 
+  // ── Filtered list ──
   const filteredConfigs = useMemo(() => {
     if (!appliedFilters.searchValue.trim()) return allChargeConfigs;
     const term = appliedFilters.searchValue.toLowerCase();
@@ -177,11 +184,10 @@ const ConsultationChargeConfig = () => {
         return allChargeConfigs.filter(c => c.chargeName?.toLowerCase().includes(term));
       case 'chargeCode':
         return allChargeConfigs.filter(c => c.chargeCode?.toLowerCase().includes(term));
-      
       default:
         return allChargeConfigs.filter(c =>
           c.chargeName?.toLowerCase().includes(term) ||
-          c.chargeCode?.toLowerCase().includes(term) 
+          c.chargeCode?.toLowerCase().includes(term)
         );
     }
   }, [allChargeConfigs, appliedFilters]);
@@ -192,9 +198,7 @@ const ConsultationChargeConfig = () => {
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = () => {
-    setAppliedFilters({ ...filterInputs });
-  };
+  const handleSearch = () => setAppliedFilters({ ...filterInputs });
 
   const handleClearFilters = () => {
     const empty = { searchType: 'chargeName', searchValue: '' };
@@ -206,10 +210,14 @@ const ConsultationChargeConfig = () => {
     if (e.key === 'Enter') handleSearch();
   };
 
-  // ── Form handlers (unchanged) ──
+  // ── View Details Modal handlers ──
+  const openDetails = (config) => setSelectedConfig(config);
+  const closeDetails = () => setSelectedConfig(null);
+
+  // ── Add Form ──
   const openAddForm = () => {
     setIsEditMode(false);
-    setSelectedConfig(null);
+    setEditingConfig(null);
     const clinicId = Number(localStorage.getItem('clinicID'));
     const clinic = clinics.find(c => c.id === clinicId);
     setFormData({
@@ -227,9 +235,12 @@ const ConsultationChargeConfig = () => {
     setIsFormOpen(true);
   };
 
+  // ── Edit Form — opened from View Details popup ──
   const openEditForm = (config) => {
+    // Close the view details modal first
+    setSelectedConfig(null);
     setIsEditMode(true);
-    setSelectedConfig(config);
+    setEditingConfig(config);
     setFormData({
       clinicId: config.clinicId,
       chargeCode: config.chargeCode,
@@ -248,7 +259,7 @@ const ConsultationChargeConfig = () => {
   const closeForm = () => {
     setIsFormOpen(false);
     setIsEditMode(false);
-    setSelectedConfig(null);
+    setEditingConfig(null);
     setFormError(null);
     setFormSuccess(null);
     setValidationMessages({});
@@ -289,7 +300,7 @@ const ConsultationChargeConfig = () => {
       };
 
       if (isEditMode) {
-        submitData.chargeId = selectedConfig.id;
+        submitData.chargeId = editingConfig.id;
         await updateConsultationChargeConfig(submitData);
         setFormSuccess('Charge configuration updated successfully!');
       } else {
@@ -308,9 +319,12 @@ const ConsultationChargeConfig = () => {
     }
   };
 
+  // ── Delete — called from View Details popup ──
   const handleDelete = async (config) => {
     if (!window.confirm(`Are you sure you want to delete "${config.chargeName}"?`)) return;
     try {
+      // Close details modal before deleting
+      setSelectedConfig(null);
       await deleteConsultationChargeConfig(config.id);
       fetchChargeConfigs();
     } catch (err) {
@@ -323,6 +337,7 @@ const ConsultationChargeConfig = () => {
     return `₹${Number(amount).toFixed(2)}`;
   };
 
+  // ── Early returns ──
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
@@ -336,7 +351,9 @@ const ConsultationChargeConfig = () => {
       <ErrorHandler error={error} />
       <Header title="Consultation Charge Configuration" />
 
-      {formSuccess && !isFormOpen && <div className={styles.formSuccess}>{formSuccess}</div>}
+      {formSuccess && !isFormOpen && (
+        <div className={styles.formSuccess}>{formSuccess}</div>
+      )}
 
       {/* ── Filters + Add button bar ── */}
       <div className={styles.filtersContainer}>
@@ -386,7 +403,7 @@ const ConsultationChargeConfig = () => {
         </div>
       </div>
 
-      {/* Table */}
+      {/* ── Table ── */}
       <div className={styles.chargeConfigTableContainer}>
         <table className={styles.chargeConfigTable}>
           <thead>
@@ -411,27 +428,46 @@ const ConsultationChargeConfig = () => {
             ) : (
               filteredConfigs.map((config) => (
                 <tr key={config.id}>
-                  <td><div className={styles.chargeCodeBadge}>{config.chargeCode}</div></td>
+                  <td>
+                    <div className={styles.chargeCodeBadge}>{config.chargeCode}</div>
+                  </td>
                   <td>
                     <div className={styles.chargeNameCell}>
                       <FiDollarSign size={16} className={styles.chargeIcon} />
                       <span className={styles.chargeName}>{config.chargeName}</span>
                     </div>
                   </td>
-                  <td><span className={styles.amountText}>{formatCurrency(config.defaultAmount)}</span></td>
-                  <td><span className={`${styles.taxBadge} ${styles.cgst}`}>{config.cgstPercentage ? `${config.cgstPercentage}%` : '—'}</span></td>
-                  <td><span className={`${styles.taxBadge} ${styles.sgst}`}>{config.sgstPercentage ? `${config.sgstPercentage}%` : '—'}</span></td>
-                  <td><span className={`${styles.amountText} ${styles.total}`}>{formatCurrency(config.amountInclusiveTax || config.defaultAmount)}</span></td>
-                  <td><span className={`${styles.statusBadge} ${styles[config.status]}`}>{config.status}</span></td>
                   <td>
-                    <div className={styles.chargeConfigActionsCell}>
-                      <button onClick={() => openEditForm(config)} className={styles.chargeConfigEditBtn} title="Edit">
-                        <FiEdit2 size={16} />
-                      </button>
-                      <button onClick={() => handleDelete(config)} className={styles.chargeConfigDeleteBtn} title="Delete">
-                        <FiTrash2 size={16} />
-                      </button>
-                    </div>
+                    <span className={styles.amountText}>{formatCurrency(config.defaultAmount)}</span>
+                  </td>
+                  <td>
+                    <span className={`${styles.taxBadge} ${styles.cgst}`}>
+                      {config.cgstPercentage ? `${config.cgstPercentage}%` : '—'}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`${styles.taxBadge} ${styles.sgst}`}>
+                      {config.sgstPercentage ? `${config.sgstPercentage}%` : '—'}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`${styles.amountText} ${styles.total}`}>
+                      {formatCurrency(config.amountInclusiveTax || config.defaultAmount)}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`${styles.statusBadge} ${styles[config.status]}`}>
+                      {config.status}
+                    </span>
+                  </td>
+                  <td>
+                    {/* Single "View Details" button — replaces Edit + Delete icons */}
+                    <button
+                      onClick={() => openDetails(config)}
+                      className={styles.chargeConfigDetailsBtn}
+                    >
+                      View Details
+                    </button>
                   </td>
                 </tr>
               ))
@@ -440,7 +476,125 @@ const ConsultationChargeConfig = () => {
         </table>
       </div>
 
-      {/* Form Modal */}
+      {/* ──────────────── View Details Modal ──────────────── */}
+      {selectedConfig && (
+        <div className={styles.detailModalOverlay} onClick={closeDetails}>
+          <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
+
+            {/* Gradient Header */}
+            <div className={styles.detailModalHeader}>
+              <div className={styles.detailHeaderContent}>
+                <h2>{selectedConfig.chargeName}</h2>
+              </div>
+              <button onClick={closeDetails} className={styles.detailCloseBtn}>✕</button>
+            </div>
+
+            {/* Info Cards Grid */}
+            <div className={styles.detailModalBody}>
+              <div className={styles.infoSection}>
+
+                {/* Charge Information */}
+                <div className={styles.infoCard}>
+                  <div className={styles.infoHeader}>
+                    <h3>Charge Information</h3>
+                  </div>
+                  <div className={styles.infoContent}>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Charge Code</span>
+                      <span className={styles.infoValue}>{selectedConfig.chargeCode || '—'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Charge Name</span>
+                      <span className={styles.infoValue}>{selectedConfig.chargeName || '—'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Clinic</span>
+                      <span className={styles.infoValue}>{selectedConfig.clinicName || '—'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Status</span>
+                      <span className={styles.infoValue}>
+                        <span className={`${styles.statusBadge} ${styles[selectedConfig.status]}`}>
+                          {selectedConfig.status?.toUpperCase()}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tax & Amount Information */}
+                <div className={styles.infoCard}>
+                  <div className={styles.infoHeader}>
+                    <h3>Tax & Amount Information</h3>
+                  </div>
+                  <div className={styles.infoContent}>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Default Amount</span>
+                      <span className={`${styles.infoValue} ${styles.infoAmountGreen}`}>
+                        {formatCurrency(selectedConfig.defaultAmount)}
+                      </span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>CGST %</span>
+                      <span className={styles.infoValue}>
+                        {selectedConfig.cgstPercentage ? `${selectedConfig.cgstPercentage}%` : '—'}
+                      </span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>SGST %</span>
+                      <span className={styles.infoValue}>
+                        {selectedConfig.sgstPercentage ? `${selectedConfig.sgstPercentage}%` : '—'}
+                      </span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Total with Tax</span>
+                      <span className={`${styles.infoValue} ${styles.infoAmountTotal}`}>
+                        {formatCurrency(selectedConfig.amountInclusiveTax || selectedConfig.defaultAmount)}
+                      </span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Date Created</span>
+                      <span className={styles.infoValue}>
+                        {selectedConfig.dateCreated
+                          ? new Date(selectedConfig.dateCreated).toLocaleDateString()
+                          : '—'}
+                      </span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Last Modified</span>
+                      <span className={styles.infoValue}>
+                        {selectedConfig.dateModified
+                          ? new Date(selectedConfig.dateModified).toLocaleDateString()
+                          : '—'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Footer Actions — Close | Delete | Update */}
+              <div className={styles.detailModalFooter}>
+                <button
+                  onClick={() => handleDelete(selectedConfig)}
+                  className={styles.btnDelete}
+                >
+                  Delete
+                </button>
+                <button
+                  onClick={() => openEditForm(selectedConfig)}
+                  className={styles.btnUpdate}
+                >
+                  Update
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ──────────────── Add / Edit Form Modal ──────────────── */}
       {isFormOpen && (
         <div className={styles.chargeConfigModalOverlay}>
           <div className={styles.chargeConfigModal}>
@@ -455,52 +609,113 @@ const ConsultationChargeConfig = () => {
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
                     <label>Charge Code <span className={styles.required}>*</span></label>
-                    <input type="text" name="chargeCode" value={formData.chargeCode} onChange={handleInputChange} placeholder="CONS001" disabled={formLoading} maxLength="20" required />
+                    <input
+                      type="text"
+                      name="chargeCode"
+                      value={formData.chargeCode}
+                      onChange={handleInputChange}
+                      placeholder="CONS001"
+                      disabled={formLoading}
+                      maxLength="20"
+                      required
+                    />
                     {validationMessages.chargeCode && (
-                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{validationMessages.chargeCode}</span>
+                      <span className={styles.validationMsg}>{validationMessages.chargeCode}</span>
                     )}
                   </div>
                   <div className={styles.formGroup}>
                     <label>Charge Name <span className={styles.required}>*</span></label>
-                    <input type="text" name="chargeName" value={formData.chargeName} onChange={handleInputChange} placeholder="General Consultation" disabled={formLoading} maxLength="100" required />
+                    <input
+                      type="text"
+                      name="chargeName"
+                      value={formData.chargeName}
+                      onChange={handleInputChange}
+                      placeholder="General Consultation"
+                      disabled={formLoading}
+                      maxLength="100"
+                      required
+                    />
                     {validationMessages.chargeName && (
-                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{validationMessages.chargeName}</span>
+                      <span className={styles.validationMsg}>{validationMessages.chargeName}</span>
                     )}
                   </div>
                   <div className={styles.formGroup}>
                     <label>Default Amount (₹) <span className={styles.required}>*</span></label>
-                    <input type="text" name="defaultAmount" value={formData.defaultAmount} onChange={handleInputChange} placeholder="500.00" disabled={formLoading} required />
+                    <input
+                      type="text"
+                      name="defaultAmount"
+                      value={formData.defaultAmount}
+                      onChange={handleInputChange}
+                      placeholder="500.00"
+                      disabled={formLoading}
+                      required
+                    />
                     {validationMessages.defaultAmount && (
-                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{validationMessages.defaultAmount}</span>
+                      <span className={styles.validationMsg}>{validationMessages.defaultAmount}</span>
                     )}
                   </div>
                   <div className={styles.formGroup}>
                     <label>GST Number</label>
-                    <input type="text" name="gstNo" value={formData.gstNo} onChange={handleInputChange} placeholder="29ABCDE1234F1Z5" disabled={formLoading} maxLength="15" />
+                    <input
+                      type="text"
+                      name="gstNo"
+                      value={formData.gstNo}
+                      onChange={handleInputChange}
+                      placeholder="29ABCDE1234F1Z5"
+                      disabled={formLoading}
+                      maxLength="15"
+                    />
                     {validationMessages.gstNo && (
-                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{validationMessages.gstNo}</span>
+                      <span className={styles.validationMsg}>{validationMessages.gstNo}</span>
                     )}
-                    <span style={{ color: '#9ca3af', fontSize: '11px', marginTop: '2px', display: 'block' }}>Format: 29ABCDE1234F1Z5 (15 characters)</span>
+                    <span className={styles.inputHint}>Format: 29ABCDE1234F1Z5 (15 characters)</span>
                   </div>
                   <div className={styles.formGroup}>
                     <label>CGST Percentage (%)</label>
-                    <input type="text" name="cgstPercentage" value={formData.cgstPercentage} onChange={handleInputChange} placeholder="9" disabled={formLoading} />
+                    <input
+                      type="text"
+                      name="cgstPercentage"
+                      value={formData.cgstPercentage}
+                      onChange={handleInputChange}
+                      placeholder="9"
+                      disabled={formLoading}
+                    />
                     {validationMessages.cgstPercentage && (
-                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{validationMessages.cgstPercentage}</span>
+                      <span className={styles.validationMsg}>{validationMessages.cgstPercentage}</span>
                     )}
                   </div>
                   <div className={styles.formGroup}>
                     <label>SGST Percentage (%)</label>
-                    <input type="text" name="sgstPercentage" value={formData.sgstPercentage} onChange={handleInputChange} placeholder="9" disabled={formLoading} />
+                    <input
+                      type="text"
+                      name="sgstPercentage"
+                      value={formData.sgstPercentage}
+                      onChange={handleInputChange}
+                      placeholder="9"
+                      disabled={formLoading}
+                    />
                     {validationMessages.sgstPercentage && (
-                      <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{validationMessages.sgstPercentage}</span>
+                      <span className={styles.validationMsg}>{validationMessages.sgstPercentage}</span>
                     )}
                   </div>
                 </div>
               </div>
               <div className={styles.chargeConfigModalFooter}>
-                <button type="button" onClick={closeForm} className={styles.btnCancel} disabled={formLoading}>Cancel</button>
-                <button type="submit" className={styles.btnSubmit} disabled={formLoading}>{formLoading ? 'Saving...' : isEditMode ? 'Update' : 'Add'}</button>
+                <button
+                  type="button"
+                  onClick={closeForm}
+                  className={styles.btnCancel}
+                  disabled={formLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={styles.btnSubmit}
+                  disabled={formLoading}
+                >
+                  {formLoading ? 'Saving...' : isEditMode ? 'Update' : 'Add'}
+                </button>
               </div>
             </form>
           </div>

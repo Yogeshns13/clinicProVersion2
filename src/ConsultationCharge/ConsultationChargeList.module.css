@@ -489,7 +489,6 @@
 .chargeListModal {
   background: var(--glass-bg);
   border-radius: 16px;
-  border: 2px solid var(--glass-border);
   width: 100%;
   max-width: 580px;
   max-height: 90vh;
@@ -501,46 +500,42 @@
 }
 
 .chargeListModalHeader {
+  padding: 22px 28px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 24px 0;
-  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.18);
+  margin-bottom: 28px;
 }
 
 .chargeListModalHeader h2 {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 800;
-  letter-spacing: -0.3px;
-  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+ margin: 0;
+  font-size: 1.48rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .chargeListModalClose {
+  background: rgba(255, 255, 255, 0.22);
+  border: none;
+  color: white;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  font-size: 1.5rem;
+  font-weight: 500;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  background: rgba(100, 116, 139, 0.14);
-  border: 2px solid rgba(100, 116, 139, 0.2);
-  border-radius: 50%;
-  color: #64748b;
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.25s, border-color 0.25s, color 0.25s, transform 0.3s;
+  transition: all 0.25s ease;
 }
 
 .chargeListModalClose:hover {
-  background: rgba(239, 68, 68, 0.14);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #dc2626;
-  transform: rotate(90deg);
+  background: rgba(255, 255, 255, 0.38);
+  transform: scale(1.08);
 }
 
 .chargeListModalBody {
@@ -681,7 +676,7 @@
   gap: 8px;
   height: 40px;
   padding: 0 24px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: var(--text-light);
   border: none;
   border-radius: 10px;

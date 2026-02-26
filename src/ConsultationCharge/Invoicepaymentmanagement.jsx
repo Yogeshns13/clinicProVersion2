@@ -391,12 +391,29 @@ const InvoicePaymentList = () => {
               <div className={styles.paymentModalBody}>
                 {formError   && <div className={styles.formError}>{formError}</div>}
                 {formSuccess && <div className={styles.formSuccess}>{formSuccess}</div>}
-                <div className={styles.invoiceInfoDisplay}>
-                  <p><strong>Invoice:</strong> {selectedPayment?.invoiceNo}</p>
-                  <p><strong>Patient:</strong> {selectedPayment?.patientName}</p>
-                  <p><strong>Amount:</strong>  {formatCurrency(selectedPayment?.amount)}</p>
-                  <p><strong>Mode:</strong>    {getPaymentModeLabel(selectedPayment?.paymentMode)}</p>
-                  <p><strong>Date:</strong>    {formatDate(selectedPayment?.paymentDate)}</p>
+                <div className={styles.invoiceHeader}>
+                  <div className={styles.detailsGrid}>
+                    <div className={styles.detailItem}>
+                                                        <label>Invoice:</label>
+                                                        <span>{selectedPayment?.invoiceNo}</span>
+                                                      </div>
+                    <div className={styles.detailItem}>
+                                                        <label>Patient:</label>
+                                                        <span>{selectedPayment?.patientName}</span>
+                                                      </div>
+                    <div className={styles.detailItem}>
+                                                        <label>Amount:</label>
+                                                        <span>{formatCurrency(selectedPayment?.amount)}</span>
+                                                      </div>
+                    <div className={styles.detailItem}>
+                                                        <label>Mode:</label>
+                                                        <span>{getPaymentModeLabel(selectedPayment?.paymentMode)}</span>
+                                                      </div>
+                    <div className={styles.detailItem}>
+                                                        <label>Date:</label>
+                                                        <span>{formatDate(selectedPayment?.paymentDate)}</span>
+                                                      </div>
+                </div>
                 </div>
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>

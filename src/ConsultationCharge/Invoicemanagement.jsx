@@ -538,7 +538,6 @@ const InvoiceList = () => {
                           className={styles.invoiceViewBtn}
                           title="View Details"
                         >
-                          <FiEye size={16} />
                           Details
                         </button>
                         <div className={styles.invoiceActionsDropdown}>
@@ -603,11 +602,25 @@ const InvoiceList = () => {
               <div className={styles.invoiceModalBody}>
                 {formError && <div className={styles.formError}>{formError}</div>}
                 {formSuccess && <div className={styles.formSuccess}>{formSuccess}</div>}
-                <div className={styles.invoiceInfoDisplay}>
-                  <p><strong>Invoice:</strong> {selectedInvoice?.invoiceNo}</p>
-                  <p><strong>Patient:</strong> {selectedInvoice?.patientName}</p>
-                  <p><strong>Total:</strong>   {formatCurrency(selectedInvoice?.netAmount)}</p>
-                  <p><strong>Balance:</strong> {formatCurrency(calculateBalanceAmount(selectedInvoice?.netAmount, selectedInvoice?.paidAmount))}</p>
+                <div className={styles.invoiceHeader}>
+                  <div className={styles.detailsGrid}>
+                    <div className={styles.detailItem}>
+                                    <label>Invoice:</label>
+                                    <span>{selectedInvoice?.invoiceNo}</span>
+                                  </div>
+                    <div className={styles.detailItem}>
+                                    <label>Patinet:</label>
+                                    <span>{selectedInvoice?.patientName}</span>
+                                  </div>
+                    <div className={styles.detailItem}>
+                                    <label>Total:</label>
+                                    <span>{formatCurrency(selectedInvoice?.netAmount)}</span>
+                                  </div>
+                    <div className={styles.detailItem}>
+                                    <label>Balance:</label>
+                                    <span>{formatCurrency(calculateBalanceAmount(selectedInvoice?.netAmount, selectedInvoice?.paidAmount))}</span>
+                                  </div>
+                  </div>
                 </div>
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>

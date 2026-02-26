@@ -150,10 +150,6 @@ const ViewInvoice = ({ isOpen, onClose, invoiceId }) => {
                     <span className="invoice-detail-label">Invoice Type</span>
                     <span className="invoice-detail-value">{invoice.invoiceTypeDesc || '—'}</span>
                   </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Visit ID</span>
-                    <span className="invoice-detail-value">{invoice.visitId || '—'}</span>
-                  </div>
                 </div>
               </div>
 
@@ -161,7 +157,7 @@ const ViewInvoice = ({ isOpen, onClose, invoiceId }) => {
               <div className="invoice-details-section">
                 <h3 className="invoice-section-title">
                   <FiUser size={18} />
-                  Patient Information
+                  Patient & Clinic Information
                 </h3>
                 <div className="invoice-details-grid">
                   <div className="invoice-detail-item">
@@ -177,8 +173,12 @@ const ViewInvoice = ({ isOpen, onClose, invoiceId }) => {
                     <span className="invoice-detail-value">{invoice.patientMobile || '—'}</span>
                   </div>
                   <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Patient ID</span>
-                    <span className="invoice-detail-value">{invoice.patientId || '—'}</span>
+                    <span className="invoice-detail-label">Clinic Name</span>
+                    <span className="invoice-detail-value">{invoice.clinicName || '—'}</span>
+                  </div>
+                  <div className="invoice-detail-item">
+                    <span className="invoice-detail-label">Branch Name</span>
+                    <span className="invoice-detail-value">{invoice.branchName || '—'}</span>
                   </div>
                 </div>
               </div>
@@ -187,7 +187,7 @@ const ViewInvoice = ({ isOpen, onClose, invoiceId }) => {
               <div className="invoice-details-section">
                 <h3 className="invoice-section-title">
                   <FiDollarSign size={18} />
-                  Amount Details
+                  Amount & Record Information
                 </h3>
                 <div className="invoice-details-grid">
                   <div className="invoice-detail-item">
@@ -232,34 +232,6 @@ const ViewInvoice = ({ isOpen, onClose, invoiceId }) => {
                       {formatCurrency(calculateBalance(invoice.netAmount, invoice.paidAmount))}
                     </span>
                   </div>
-                </div>
-              </div>
-
-              {/* Clinic Information */}
-              <div className="invoice-details-section">
-                <h3 className="invoice-section-title">
-                  <FiInfo size={18} />
-                  Clinic Information
-                </h3>
-                <div className="invoice-details-grid">
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Clinic Name</span>
-                    <span className="invoice-detail-value">{invoice.clinicName || '—'}</span>
-                  </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Branch Name</span>
-                    <span className="invoice-detail-value">{invoice.branchName || '—'}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Record Information */}
-              <div className="invoice-details-section">
-                <h3 className="invoice-section-title">
-                  <FiClock size={18} />
-                  Record Information
-                </h3>
-                <div className="invoice-details-grid">
                   <div className="invoice-detail-item">
                     <span className="invoice-detail-label">Date Created</span>
                     <span className="invoice-detail-value">{formatDate(invoice.dateCreated)}</span>

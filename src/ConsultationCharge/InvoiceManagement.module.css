@@ -1,5 +1,6 @@
-/* src/components/InvoiceManagement.module.css */
+/* src/components/InvoiceManagement.module.css - Updated ONLY Add Payment popup to match Add Clinic style */
 
+/* ==================== CSS VARIABLES ==================== */
 :root {
   --primary-start: #222b6c;
   --primary-end: #225ca0;
@@ -8,11 +9,21 @@
   --text-light: #ffffff;
   --text-dark: #1e293b;
   --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.4);
 }
 
-/* ────────────────────────────────────────────────
-   WRAPPER & LAYOUT
-───────────────────────────────────────────────── */
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== MAIN WRAPPER ==================== */
 .invoiceListWrapper {
   padding: 20px;
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
@@ -21,9 +32,7 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* ────────────────────────────────────────────────
-   SINGLE-LINE FILTER BAR
-───────────────────────────────────────────────── */
+/* ==================== FILTERS ==================== */
 .filtersContainer {
   background: white;
   border-radius: 17px;
@@ -33,7 +42,6 @@
   border: 1px solid rgba(34, 43, 108, 0.1);
 }
 
-/* Search | PatientName | Type | Status | FromDate | ToDate | Actions */
 .filtersGrid {
   display: grid;
   grid-template-columns: 2.5fr 1fr 1fr 1fr 1fr auto;
@@ -120,7 +128,6 @@
   z-index: 1;
 }
 
-/* Action buttons */
 .filterActions {
   display: flex;
   align-items: center;
@@ -164,9 +171,7 @@
   transform: translateY(-2px);
 }
 
-/* ────────────────────────────────────────────────
-   STATISTICS
-───────────────────────────────────────────────── */
+/* ==================== STATISTICS ==================== */
 .invoiceStatsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -219,12 +224,31 @@
   font-size: 1.8rem;
   font-weight: 800;
   color: var(--text-dark);
+}
+
+/* Smaller total amount card */
+.smallStat {
+  padding: 14px 18px;
+}
+
+.statValueSmall {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-dark);
   line-height: 1;
 }
 
-/* ────────────────────────────────────────────────
-   TABLE
-───────────────────────────────────────────────── */
+.smallStat .statIconWrapper {
+  width: 42px;
+  height: 42px;
+}
+
+.smallStat .statIconWrapper svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ==================== TABLE ==================== */
 .invoiceTableContainer {
   background: white;
   border-radius: 17px;
@@ -275,9 +299,7 @@
   transition: background-color 0.25s ease;
 }
 
-/* ────────────────────────────────────────────────
-   CELL STYLES
-───────────────────────────────────────────────── */
+/* ==================== CELL STYLES ==================== */
 .invoiceNoBadge {
   background: rgba(34, 43, 108, 0.1);
   padding: 4px 10px;
@@ -320,9 +342,41 @@
   color: #dc2626;
 }
 
-/* ────────────────────────────────────────────────
-   STATUS BADGES
-───────────────────────────────────────────────── */
+.invoiceHeader {
+  background: linear-gradient(135deg, rgba(240, 247, 255, 0.5), rgba(230, 242, 255, 0.5));
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detailItem label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detailItem span {
+  font-size: 0.94rem;
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+/* ==================== STATUS BADGES ==================== */
 .statusBadge {
   padding: 5px 12px;
   border-radius: 26px;
@@ -375,9 +429,7 @@
   border: 1px solid rgba(20, 184, 166, 0.3);
 }
 
-/* ────────────────────────────────────────────────
-   ACTIONS + DROPDOWN
-───────────────────────────────────────────────── */
+/* ==================== ACTIONS + DROPDOWN ==================== */
 .invoiceActionsCell {
   display: flex;
   align-items: center;
@@ -386,23 +438,43 @@
 }
 
 .invoiceViewBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: rgba(168, 85, 247, 0.15);
-  color: #6b21a8;
+  position: relative;
+  overflow: hidden;
+  padding: 7px 15px;
+  font-size: 0.75rem;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
   border: none;
-  border-radius: 8px;
-  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  white-space: nowrap;
+  z-index: 1;
 }
 
-.invoiceViewBtn:hover {
-  background: rgba(168, 85, 247, 0.3);
-  transform: translateY(-1px);
+.invoiceViewBtn::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
 }
+
+.invoiceViewBtn:hover::before { width: 170px; height: 170px; }
+
+.invoiceViewBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+.invoiceViewBtn:active { transform: translateY(-1px); }
 
 .invoiceActionsDropdown {
   position: relative;
@@ -474,158 +546,83 @@
   background: #fef2f2;
 }
 
-/* ────────────────────────────────────────────────
-   MODAL
-───────────────────────────────────────────────── */
+/* ==================== ADD PAYMENT MODAL – Exact match to Add Clinic popup ==================== */
 .invoiceModalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 22, 41, 0.85);
-  backdrop-filter: blur(9px);
+  background: rgba(15, 22, 41, 0.82);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 12px;
+  padding: 20px;
+  animation: fadeIn 0.25s ease;
 }
 
 .invoiceModal {
   background: var(--glass-bg);
-  border-radius: 15px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
   width: 100%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(14px);
+  max-width: 720px;
+  max-height: 92vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 68px rgba(0, 0, 0, 0.28);
+  animation: slideUp 0.35s ease;
 }
 
 .invoiceModalHeader {
+  padding: 22px 28px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  padding: 20px 27px 0;
-  margin-bottom: 17px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.18);
 }
 
 .invoiceModalHeader h2 {
-  font-size: 1.45rem;
-  font-weight: 800;
   margin: 0;
-  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 1.48rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .invoiceModalClose {
-  background: rgba(100, 116, 139, 0.15);
-  border: 2px solid rgba(100, 116, 139, 0.2);
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  color: #64748b;
-  font-size: 20px;
+  background: rgba(255, 255, 255, 0.22);
+  border: none;
+  color: white;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  font-size: 1.5rem;
+  font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
 .invoiceModalClose:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #dc2626;
-  transform: rotate(90deg);
+  background: rgba(255, 255, 255, 0.38);
+  transform: scale(1.08);
 }
 
 .invoiceModalBody {
-  padding: 0 34px 27px;
-}
-
-.formGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(238px, 1fr));
-  gap: 14px;
-  margin-bottom: 17px;
-}
-
-.formGroup {
-  margin-bottom: 20px;
-}
-
-.formGroup label {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--primary-start);
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.formGroup .required {
-  color: #dc2626;
-}
-
-.formGroup input,
-.formGroup select,
-.formGroup textarea,
-.formSelect {
-  width: 100%;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 2px solid rgba(34, 43, 108, 0.2);
-  border-radius: 10px;
-  color: var(--text-dark);
-  font-size: 0.9rem;
-  font-family: inherit;
-  transition: all 0.3s ease;
-}
-
-.formGroup select:focus,
-.formGroup input:focus,
-.formGroup textarea:focus {
-  outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
-}
-
-.formGroup textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.fullWidth {
-  grid-column: 1 / -1;
-}
-
-.formError {
-  padding: 10px 14px;
-  border-radius: 10px;
-  margin-bottom: 17px;
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
-  color: #dc2626;
-  border: 2px solid rgba(239, 68, 68, 0.3);
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.formSuccess {
-  background: rgba(34, 197, 94, 0.15);
-  border: 2px solid rgba(34, 197, 94, 0.3);
-  color: #166534;
-  padding: 12px 16px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  padding: 24px 28px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .invoiceInfoDisplay {
-  background: rgba(34, 43, 108, 0.04);
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 20px;
+  background: rgba(34, 197, 94, 0.06);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
 }
 
 .invoiceInfoDisplay p {
@@ -635,313 +632,74 @@
 }
 
 .invoiceInfoDisplay strong {
+  color: #166534;
+  font-weight: 600;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(238px, 1fr));
+  gap: 10px 14px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroup label {
+  font-size: 0.86rem;
+  font-weight: 600;
   color: var(--primary-start);
-  font-weight: 600;
 }
 
-.invoiceModalFooter {
-  display: flex;
-  justify-content: flex-end;
-  gap: 14px;
-  padding: 20px 27px;
-  border-top: 2px solid rgba(34, 43, 108, 0.15);
+.formGroup .required {
+  color: #ef4444;
+  margin-left: 4px;
 }
 
-/* ────────────────────────────────────────────────
-   MODAL BUTTONS
-───────────────────────────────────────────────── */
-.btnCancel,
-.btnSubmit {
-  padding: 10px 24px;
+.formGroup input,
+.formGroup select,
+.formGroup textarea,
+.formSelect {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid #cbd5e1;
   border-radius: 10px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  border: none;
-  transition: all 0.3s ease;
+  font-size: 0.92rem;
+  background: white;
+  transition: all 0.2s ease;
 }
 
-.btnCancel {
-  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
-  color: var(--text-light);
-  border-radius: 14px;
-  height: 40px;
-  padding: 0 20px;
-  font-weight: 700;
-  font-size: 0.94rem;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
-  white-space: nowrap;
-  z-index: 0;
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
 }
 
-.btnCancel::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #c0392b, #e74c3c);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  z-index: -1;
+.formGroup textarea {
+  resize: vertical;
+  min-height: 86px;
 }
 
-.btnCancel::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
-  background-size: 200% 100%;
-  background-position: -100% 0;
-  transition: background-position 0.5s ease;
-  z-index: -1;
+.fullWidth {
+  grid-column: 1 / -1;
 }
 
-.btnCancel:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
+.formError {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+  grid-column: 1 / -1;
 }
 
-.btnCancel:hover::before { opacity: 1; }
-.btnCancel:hover::after  { background-position: 200% 0; }
-
-.btnCancel:disabled,
-.btnSubmit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btnSubmit {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: white;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
-}
-
-.btnSubmit:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.45);
-}
-
-/* ────────────────────────────────────────────────
-   MISC / NO DATA / LOADING
-───────────────────────────────────────────────── */
-.invoiceNoData {
-  text-align: center;
-  padding: 60px 20px;
-  color: #64748b;
-  font-size: 1.1rem;
-}
-
-.invoiceLoading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 70vh;
-  font-size: 1.3rem;
-  color: #64748b;
-}
-
-/* ────────────────────────────────────────────────
-   DARK MODE
-───────────────────────────────────────────────── */
-:global(.dark-mode) .invoiceListWrapper {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .filtersContainer {
-  background: #1e293b;
-  border-color: #475569;
-}
-
-:global(.dark-mode) .searchInput,
-:global(.dark-mode) .filterInput {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .datePlaceholder { color: #64748b; }
-
-:global(.dark-mode) .clearButton {
-  background: #334155;
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .clearButton:hover { background: #475569; }
-
-:global(.dark-mode) .invoiceStatCard {
-  background: #1e293b;
-}
-
-:global(.dark-mode) .statValue { color: #e2e8f0; }
-
-:global(.dark-mode) .invoiceTableContainer {
-  background: #1e293b;
-  border-color: #475569;
-}
-
-:global(.dark-mode) .invoiceTable th {
-  background: linear-gradient(135deg, #334155, #475569);
-}
-
-:global(.dark-mode) .invoiceTable td {
-  border-bottom-color: #475569;
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .invoiceTable tbody tr:nth-child(even) {
-  background-color: #334155;
-}
-
-:global(.dark-mode) .invoiceTable tbody tr:hover {
-  background-color: rgba(48, 178, 181, 0.12) !important;
-}
-
-:global(.dark-mode) .patientName { color: #e2e8f0; }
-:global(.dark-mode) .patientInfo { color: #94a3b8; }
-
-:global(.dark-mode) .invoiceDropdownMenu {
-  background: #1e293b;
-  border-color: #475569;
-}
-
-:global(.dark-mode) .invoiceDropdownItem {
-  background: #1e293b;
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .invoiceDropdownItem:hover { background: #334155; }
-:global(.dark-mode) .invoiceDropdownItem.payment { color: #34d399; }
-:global(.dark-mode) .invoiceDropdownItem.payment:hover { background: rgba(52, 211, 153, 0.1); }
-:global(.dark-mode) .invoiceDropdownItem.cancel  { color: #f87171; }
-:global(.dark-mode) .invoiceDropdownItem.cancel:hover  { background: rgba(248, 113, 113, 0.1); }
-
-:global(.dark-mode) .invoiceModal {
-  background: rgba(30, 41, 59, 0.94);
-  border-color: #475569;
-}
-
-:global(.dark-mode) .invoiceModalHeader h2 {
-  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-:global(.dark-mode) .formGroup label { color: var(--accent-end); }
-
-:global(.dark-mode) .formGroup input,
-:global(.dark-mode) .formGroup select,
-:global(.dark-mode) .formGroup textarea,
-:global(.dark-mode) .formSelect {
-  background: #1e293b;
-  border-color: #475569;
-  color: #e2e8f0;
-}
-
-:global(.dark-mode) .invoiceInfoDisplay {
-  background: rgba(51, 65, 85, 0.5);
-}
-
-:global(.dark-mode) .invoiceInfoDisplay p { color: #e2e8f0; }
-
-:global(.dark-mode) .statusBadge.draft {
-  background: rgba(100, 116, 139, 0.2);
-  color: #94a3b8;
-  border-color: rgba(100, 116, 139, 0.4);
-}
-
-:global(.dark-mode) .statusBadge.issued {
-  background: rgba(59, 130, 246, 0.2);
-  color: #93c5fd;
-  border-color: rgba(59, 130, 246, 0.4);
-}
-
-:global(.dark-mode) .statusBadge.paid {
-  background: rgba(34, 197, 94, 0.2);
-  color: #86efac;
-  border-color: rgba(34, 197, 94, 0.4);
-}
-
-:global(.dark-mode) .statusBadge.partial {
-  background: rgba(251, 146, 60, 0.2);
-  color: #fdba74;
-  border-color: rgba(251, 146, 60, 0.4);
-}
-
-:global(.dark-mode) .statusBadge.cancelled {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.4);
-}
-
-:global(.dark-mode) .statusBadge.refunded {
-  background: rgba(168, 85, 247, 0.2);
-  color: #d8b4fe;
-  border-color: rgba(168, 85, 247, 0.4);
-}
-
-:global(.dark-mode) .statusBadge.credit {
-  background: rgba(20, 184, 166, 0.2);
-  color: #5eead4;
-  border-color: rgba(20, 184, 166, 0.4);
-}
-
-/* ────────────────────────────────────────────────
-   RESPONSIVE
-───────────────────────────────────────────────── */
-@media (max-width: 1280px) {
-  .filtersGrid {
-     grid-template-columns: 2.5fr 1fr 1fr 1fr 1fr auto;
-  }
-}
-
-@media (max-width: 1100px) {
-  .filtersGrid {
-    grid-template-columns: 2fr 1fr 1fr auto;
-  }
-}
-
-@media (max-width: 900px) {
-  .filtersGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .searchGroup   { grid-column: 1 / -1; }
-  .filterActions { grid-column: 1 / -1; }
-}
-
-@media (max-width: 768px) {
-  .invoiceListWrapper { padding: 12px; }
-
-  .filtersGrid { grid-template-columns: 1fr; }
-
-  .filterActions { flex-wrap: wrap; }
-  .searchButton,
-  .clearButton   { flex: 1; justify-content: center; }
-
-  .invoiceStatsGrid { grid-template-columns: 1fr; }
-
-  .invoiceTableContainer { overflow-x: auto; }
-  .invoiceTable          { min-width: 900px; }
-
-  .invoiceDropdownMenu {
-    right: auto;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  .invoiceModal   { max-width: 95%; }
-  .formGrid       { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 480px) {
-  .invoiceTable th,
-  .invoiceTable td { padding: 10px 12px; font-size: 0.75rem; }
-}
-
-/* ── Search group like VendorList ── */
 .searchTypeSelect {
   min-width: 140px;
   height: 40px;
@@ -963,25 +721,131 @@
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
 }
 
-/* Smaller total amount card */
-.smallStat {
-  padding: 14px 18px;
+.formSuccess {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(34, 197, 94, 0.1);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+  grid-column: 1 / -1;
 }
 
-.statValueSmall {
-  font-size: 1.45rem;          /* was ~1.8rem */
-  font-weight: 800;
-  color: var(--text-dark);
-  line-height: 1;
+.invoiceModalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 18px 28px;
+  border-top: 1px solid rgba(34, 43, 108, 0.1);
+  background: #f8fafc;
 }
 
-/* Optional: make icon smaller too */
-.smallStat .statIconWrapper {
-  width: 42px;
-  height: 42px;
+.btnCancel,
+.btnSubmit {
+  padding: 11px 26px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.94rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.smallStat .statIconWrapper svg {
-  width: 20px;
-  height: 20px;
+.btnCancel {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.btnCancel:hover {
+  background: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.btnSubmit {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: white;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+}
+
+.btnSubmit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 22px rgba(32, 125, 156, 0.42);
+}
+
+.btnCancel:disabled,
+.btnSubmit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .filtersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .searchGroup {
+    flex-direction: column;
+  }
+
+  .searchTypeSelect {
+    border-radius: 10px;
+    border-right: 1px solid #cbd5e1;
+  }
+
+  .searchInput {
+    border-radius: 10px;
+    border-left: 1px solid #cbd5e1;
+  }
+
+  .filterActions {
+    flex-direction: column;
+  }
+
+  .searchButton,
+  .clearButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .invoiceModal {
+    max-width: 96%;
+  }
+
+  .invoiceModalBody {
+    padding: 20px 24px;
+  }
+
+  .invoiceModalFooter {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btnCancel,
+  .btnSubmit {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .invoiceListWrapper { padding: 14px; }
+
+  .invoiceModalHeader {
+    padding: 18px 22px;
+  }
+
+  .invoiceModalHeader h2 {
+    font-size: 1.3rem;
+  }
 }

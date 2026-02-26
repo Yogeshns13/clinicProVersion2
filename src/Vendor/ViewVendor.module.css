@@ -1,4 +1,6 @@
-/* ===== ROOT COLORS ===== */
+/* src/components/ViewVendor.module.css */
+
+/* ==================== CSS VARIABLES ==================== */
 :root {
   --primary-start: #222b6c;
   --primary-end: #225ca0;
@@ -6,377 +8,425 @@
   --accent-end: #30b2b5;
   --text-light: #ffffff;
   --text-dark: #1e293b;
-  --glass-bg: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(255, 255, 255, 0.4);
 }
 
-/* ===== OVERLAY / BACKDROP ===== */
-.wrapper {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: rgba(15, 23, 60, 0.65);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  padding: 20px;
-  animation: fadeInOverlay 0.25s ease forwards;
-}
-
-@keyframes fadeInOverlay {
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
-/* ===== DETAILS CARD (the popup itself) ===== */
-.detailsCard {
-  width: 100%;
-  max-width: 780px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  box-shadow:
-    0 32px 80px rgba(22, 36, 100, 0.28),
-    0 8px 24px rgba(32, 125, 156, 0.14),
-    inset 0 1px 0 rgba(255,255,255,0.6);
-  overflow: hidden;
-  animation: slideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(28px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ===== TOOLBAR (back button row) ===== */
-.toolbar {
-  display: none; /* Back button is now part of cardHeader */
-}
-
-/* ===== CARD HEADER ===== */
-.cardHeader {
-  position: relative;
-  padding: 28px 32px 24px;
-  background: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-end) 55%, var(--accent-start) 100%);
-  overflow: hidden;
-}
-
-.cardHeader::before {
-  content: '';
-  position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: rgba(48, 178, 181, 0.18);
-  pointer-events: none;
-}
-
-.cardHeader::after {
-  content: '';
-  position: absolute;
-  bottom: -60px;
-  left: 30%;
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  pointer-events: none;
-}
-
-/* Back button — repositioned into header */
-.backBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255,255,255,0.14);
-  border: 1px solid rgba(255,255,255,0.28);
-  color: rgba(255,255,255,0.85);
-  font-size: 13px;
-  font-weight: 500;
-  padding: 5px 14px;
-  border-radius: 30px;
-  cursor: pointer;
-  margin-bottom: 18px;
-  transition: background 0.2s, color 0.2s, transform 0.15s;
-  letter-spacing: 0.02em;
-  font-family: inherit;
-}
-
-.backBtn:hover {
-  background: rgba(255,255,255,0.24);
-  color: #ffffff;
-  transform: translateX(-2px);
-}
-
-.headerInfo h2 {
-  margin: 0 0 6px;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text-light);
-  letter-spacing: -0.3px;
-  line-height: 1.25;
-}
-
-.subtitle {
-  margin: 0 0 14px;
-  font-size: 13px;
-  color: rgba(255,255,255,0.72);
-  letter-spacing: 0.01em;
-}
-
-/* ===== STATUS BADGE ===== */
-.statusBadge {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  padding: 3px 10px;
-  border-radius: 20px;
-  text-transform: uppercase;
-}
-
-.statusBadge.large {
-  font-size: 11px;
-  padding: 5px 14px;
-}
-
-.active {
-  background: rgba(52, 211, 153, 0.18);
-  color: #34d399;
-  border: 1px solid rgba(52, 211, 153, 0.35);
-}
-
-/* when inside card body (light bg) */
-.detailsGrid .active {
-  background: rgba(16, 185, 129, 0.1);
-  color: #059669;
-  border-color: rgba(16, 185, 129, 0.3);
-}
-
-.inactive {
-  background: rgba(248, 113, 113, 0.18);
-  color: #f87171;
-  border: 1px solid rgba(248, 113, 113, 0.35);
-}
-
-.detailsGrid .inactive {
-  background: rgba(239, 68, 68, 0.08);
-  color: #dc2626;
-  border-color: rgba(239, 68, 68, 0.25);
-}
-
-/* ===== CARD BODY (scrollable) ===== */
-.cardBody {
-  flex: 1;
-  overflow-y: auto;
-  padding: 24px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(34, 92, 160, 0.25) transparent;
-}
-
-.cardBody::-webkit-scrollbar {
-  width: 5px;
-}
-.cardBody::-webkit-scrollbar-track {
-  background: transparent;
-}
-.cardBody::-webkit-scrollbar-thumb {
-  background: rgba(34, 92, 160, 0.25);
-  border-radius: 10px;
-}
-
-/* ===== SECTION ===== */
-.detailsSection {
-  border: 1px solid rgba(34, 92, 160, 0.1);
-  border-radius: 12px;
-  padding: 18px 20px;
-  background: rgba(255,255,255,0.65);
-  transition: box-shadow 0.2s;
-}
-
-.detailsSection:hover {
-  box-shadow: 0 4px 18px rgba(34, 92, 160, 0.08);
-}
-
-.sectionTitle {
-  margin: 0 0 14px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent-start);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.sectionTitle::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(to right, rgba(32,125,156,0.25), transparent);
-}
-
-/* ===== DETAILS GRID ===== */
-.detailsGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 20px;
-}
-
-.detailItem {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.detailItem.fullWidth {
-  grid-column: 1 / -1;
-}
-
-.detailLabel {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: #94a3b8;
-}
-
-.detailValue {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-dark);
-  word-break: break-word;
-  line-height: 1.4;
-}
-
-/* ===== CARD FOOTER ===== */
-.cardFooter {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 32px 20px;
-  border-top: 1px solid rgba(34, 92, 160, 0.1);
-  background: rgba(248, 250, 255, 0.8);
-}
-
-/* ===== BUTTONS ===== */
-.btnHold {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
-  padding: 9px 22px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  letter-spacing: 0.02em;
-  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
-}
-
-.btnHold:hover {
-  transform: translateY(-1px);
-}
-
-.btnHold:active {
-  transform: translateY(0);
-}
-
-.btnDelete {
-  background: rgba(239, 68, 68, 0.08);
-  color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-}
-
-.btnDelete:hover {
-  background: rgba(239, 68, 68, 0.14);
-  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.18);
-}
-
-.btnUpdate {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
-  padding: 9px 26px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  letter-spacing: 0.02em;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-start));
-  color: var(--text-light);
-  box-shadow: 0 4px 14px rgba(32, 92, 160, 0.3);
-  transition: transform 0.15s, box-shadow 0.15s;
-}
-
-.btnUpdate:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(32, 92, 160, 0.38);
-}
-
-.btnUpdate:active {
-  transform: translateY(0);
-}
-
-/* ===== LOADING / ERROR ===== */
-.loading,
-.error {
+/* ==================== MODAL OVERLAY ==================== */
+.detailModalOverlay {
   position: fixed;
   inset: 0;
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
-  font-weight: 500;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+  backdrop-filter: blur(4px);
+  padding: 20px;
+}
+
+/* ==================== MODAL SHELL ==================== */
+.detailModalContent {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease;
+}
+
+/* ==================== GRADIENT HEADER ==================== */
+.detailModalHeader {
+  padding: 24px 28px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
-  background: rgba(15, 23, 60, 0.65);
-  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
 }
 
-.error {
-  color: #fca5a5;
+.detailHeaderContent { flex: 1; }
+
+.detailHeaderContent h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-light);
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 600px) {
-  .detailsCard {
-    max-height: 95vh;
-    border-radius: 16px;
-  }
+.detailHeaderMeta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
-  .cardHeader,
-  .cardBody,
-  .cardFooter {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
+.workIdBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  color: var(--text-light);
+}
 
-  .detailsGrid {
-    grid-template-columns: 1fr;
-  }
+.activeBadge {
+  background: rgba(22, 163, 74, 0.35) !important;
+  border: 1px solid rgba(22, 163, 74, 0.5);
+}
 
-  .detailItem.fullWidth {
-    grid-column: 1;
-  }
+.inactiveBadge {
+  background: rgba(220, 38, 38, 0.35) !important;
+  border: 1px solid rgba(220, 38, 38, 0.5);
+}
 
-  .cardFooter {
-    flex-direction: column-reverse;
-    align-items: stretch;
-  }
+.detailCloseBtn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: var(--text-light);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
 
-  .btnHold,
-  .btnUpdate {
+.detailCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.08);
+}
+
+/* ==================== SCROLLABLE BODY ==================== */
+.detailModalBody {
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== INFO CARDS GRID ==================== */
+.infoSection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, rgba(240, 247, 255, 0.5), rgba(230, 242, 255, 0.5));
+  flex: 1;
+}
+
+.infoCard {
+  background: white;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+}
+
+.infoHeader {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
+}
+
+.infoHeader h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-start);
+}
+
+.infoContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(34, 43, 108, 0.06);
+}
+
+.infoRow:last-child { border-bottom: none; }
+
+.infoLabel {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.infoValue {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+/* ==================== INLINE STATUS BADGES ==================== */
+.statusBadge {
+  padding: 4px 10px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.blacklisted {
+  background: rgba(30, 30, 30, 0.12);
+  color: #1e1e1e;
+  border: 1px solid rgba(30, 30, 30, 0.25);
+}
+
+.suspended {
+  background: rgba(234, 179, 8, 0.15);
+  color: #854d0e;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+/* ==================== MODAL FOOTER ==================== */
+.detailModalFooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 28px;
+  border-top: 2px solid rgba(34, 43, 108, 0.1);
+  background: #f8fafc;
+}
+
+/* ==================== FOOTER BUTTONS ==================== */
+
+/* ── Close / Cancel ── */
+.btnCancel {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  border: none;
+  border-radius: 14px;
+  height: 40px;
+  padding: 0 20px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  white-space: nowrap;
+  z-index: 0;
+}
+
+.btnCancel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+}
+
+.btnCancel:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
+}
+
+.btnCancel:hover::before { opacity: 1; }
+
+.btnCancel:active { transform: translateY(-1px); }
+
+/* ── Delete ── */
+.btnDelete {
+  height: 40px;
+  padding: 0 20px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btnDelete::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btnDelete:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+.btnDelete:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.45);
+}
+
+.btnDelete:active { transform: translateY(-1px); }
+
+/* ── Update ── */
+.btnUpdate {
+  height: 40px;
+  padding: 0 20px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btnUpdate::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btnUpdate:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+.btnUpdate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+}
+
+.btnUpdate:active { transform: translateY(-1px); }
+
+/* ==================== DARK MODE ==================== */
+:global(.dark-mode) .detailModalContent { background: #1e293b; }
+
+:global(.dark-mode) .detailModalFooter {
+  background: #0f172a;
+  border-top-color: rgba(71, 85, 105, 0.5);
+}
+
+:global(.dark-mode) .infoSection {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+}
+
+:global(.dark-mode) .infoCard {
+  background: #1e293b;
+  box-shadow: 0 5px 17px rgba(0, 0, 0, 0.25);
+}
+
+:global(.dark-mode) .infoHeader h3 { color: var(--accent-end); }
+
+:global(.dark-mode) .infoLabel { color: #94a3b8; }
+
+:global(.dark-mode) .infoValue { color: #e2e8f0; }
+
+:global(.dark-mode) .infoRow { border-bottom-color: rgba(71, 85, 105, 0.4); }
+
+:global(.dark-mode) .active { color: #9cc14d; }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .infoSection { grid-template-columns: 1fr; }
+
+  .detailModalFooter { flex-wrap: wrap; }
+
+  .detailModalFooter .btnCancel,
+  .detailModalFooter .btnDelete,
+  .detailModalFooter .btnUpdate {
+    flex: 1 1 auto;
     text-align: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .detailModalOverlay  { padding: 12px; }
+
+  .detailModalHeader   { padding: 18px 20px; }
+
+  .detailHeaderContent h2 { font-size: 1.15rem; }
+
+  .infoSection { padding: 16px; }
+
+  .infoCard    { padding: 14px; }
+
+  .detailModalFooter {
+    flex-direction: column;
+    padding: 16px 20px;
+    gap: 10px;
+  }
+
+  .detailModalFooter .btnCancel,
+  .detailModalFooter .btnDelete,
+  .detailModalFooter .btnUpdate {
     width: 100%;
+    text-align: center;
   }
 }

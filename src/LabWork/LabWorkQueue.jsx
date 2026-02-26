@@ -1073,10 +1073,6 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
         <div className={styles.detailModalHeader}>
           <div className={styles.detailHeaderContent}>
             <h2>Process Lab Work Item</h2>
-            <div className={styles.detailHeaderMeta}>
-              <span className={styles.workIdBadge}>Work ID: #{workItem.workId}</span>
-              <span className={styles.orderIdBadge}>Order ID: #{workItem.orderId}</span>
-            </div>
           </div>
           <button onClick={onClose} className={styles.detailCloseBtn}>
             <FiX size={24} />

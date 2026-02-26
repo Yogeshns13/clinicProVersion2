@@ -1,57 +1,17 @@
 // src/components/ViewVendor.jsx
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft } from 'react-icons/fi';
-import { getVendorList, deleteVendor } from '../api/api-pharmacy.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
-import Header from '../Header/Header.jsx';
+import React, { useState } from 'react';
+import { deleteVendor } from '../api/api-pharmacy.js';
+import UpdateVendor from './UpdateVendor.jsx';
 import styles from './ViewVendor.module.css';
 
 // ────────────────────────────────────────────────
-const ViewVendor = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-
-  const [vendor, setVendor] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // ────────────────────────────────────────────────
-  useEffect(() => {
-    const fetchVendorDetails = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const clinicId = Number(localStorage.getItem('clinicID'));
-        const branchId = Number(localStorage.getItem('branchID'));
-
-        const data = await getVendorList(clinicId, {
-          VendorID: Number(id),
-          BranchID: branchId
-        });
-
-        if (data && data.length > 0) {
-          setVendor(data[0]);
-        } else {
-          setError({ message: 'Vendor not found' });
-        }
-      } catch (err) {
-        console.error('fetchVendorDetails error:', err);
-        setError(
-          err?.status >= 400 || err?.code >= 400
-            ? err
-            : { message: err.message || 'Failed to load vendor details' }
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchVendorDetails();
-    }
-  }, [id]);
+// Props:
+//   vendor          — the vendor object to display
+//   onClose         — called when the modal is closed
+//   onDeleteSuccess — called after successful delete or update (so VendorList can refresh)
+// ────────────────────────────────────────────────
+const ViewVendor = ({ vendor, onClose, onDeleteSuccess }) => {
+  const [isUpdateOpen, setIsUpdateOpen] = useState(false);
 
   // ────────────────────────────────────────────────
   // Helper functions
@@ -59,10 +19,10 @@ const ViewVendor = () => {
     if (!dateString) return '—';
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-IN', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
+      return date.toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
       });
     } catch {
       return dateString;
@@ -70,196 +30,189 @@ const ViewVendor = () => {
   };
 
   const getStatusClass = (status) => {
-    if (status === 'active' || status === 1) return 'active';
-    if (status === 'inactive' || status === 2) return 'inactive';
-    return 'inactive';
+    if (status === 'active'      || status === 1) return styles.active;
+    if (status === 'inactive'    || status === 2) return styles.inactive;
+    if (status === 'blacklisted' || status === 3) return styles.blacklisted;
+    if (status === 'suspended'   || status === 4) return styles.suspended;
+    return styles.inactive;
+  };
+
+  const getStatusBadgeClass = (status) => {
+    if (status === 'active' || status === 1) return styles.activeBadge;
+    return styles.inactiveBadge;
   };
 
   const getStatusLabel = (vendor) => {
     if (vendor.statusDesc) return vendor.statusDesc.toUpperCase();
-    if (vendor.status === 1 || vendor.status === 'active') return 'ACTIVE';
-    if (vendor.status === 2 || vendor.status === 'inactive') return 'INACTIVE';
+    if (vendor.status === 1 || vendor.status === 'active')      return 'ACTIVE';
+    if (vendor.status === 2 || vendor.status === 'inactive')    return 'INACTIVE';
+    if (vendor.status === 3 || vendor.status === 'blacklisted') return 'BLACKLISTED';
+    if (vendor.status === 4 || vendor.status === 'suspended')   return 'SUSPENDED';
     return 'UNKNOWN';
   };
 
   // ────────────────────────────────────────────────
   // Handlers
   const handleUpdateClick = () => {
-    navigate(`/update-vendor/${vendor.id}`);
+    setIsUpdateOpen(true);
+  };
+
+  const handleUpdateClose = () => {
+    setIsUpdateOpen(false);
+  };
+
+  const handleUpdateSuccess = () => {
+    setIsUpdateOpen(false);
+    onClose();
+    onDeleteSuccess(); // reused to refresh the vendor list after update
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this vendor?')) {
-      return;
-    }
-
+    if (!window.confirm('Are you sure you want to delete this vendor?')) return;
     try {
-      setError(null);
       await deleteVendor(vendor.id);
-      navigate('/vendor-list');
+      onDeleteSuccess();
     } catch (err) {
       console.error('Delete vendor failed:', err);
-      setError({ message: err.message || 'Failed to delete vendor.' });
+      alert(err.message || 'Failed to delete vendor.');
     }
   };
-
-  const handleBack = () => {
-    navigate('/vendor-list');
-  };
-
-  // ────────────────────────────────────────────────
-  // Early returns
-  if (error && (error?.status >= 400 || error?.code >= 400)) {
-    return <ErrorHandler error={error} />;
-  }
-
-  if (loading) return <div className={styles.loading}>Loading vendor details...</div>;
-
-  if (error) return <div className={styles.error}>Error: {error.message || error}</div>;
-
-  if (!vendor) return <div className={styles.error}>Vendor not found</div>;
 
   // ────────────────────────────────────────────────
   return (
-    <div className={styles.wrapper}>
-      <ErrorHandler error={error} />
-      <Header title="Vendor Details" />
+    <>
+      <div className={styles.detailModalOverlay} onClick={onClose}>
+        <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
 
-      {/* Back Button */}
-      <div className={styles.toolbar}>
-        <button onClick={handleBack} className={styles.backBtn}>
-          <FiArrowLeft size={20} /> Back to List
-        </button>
+          {/* ── Gradient Header ── */}
+          <div className={styles.detailModalHeader}>
+            <div className={styles.detailHeaderContent}>
+              <h2>{vendor.name}</h2>
+            </div>
+            <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
+          </div>
+
+          {/* ── Info Cards Grid ── */}
+          <div className={styles.detailModalBody}>
+            <div className={styles.infoSection}>
+
+              {/* Basic Information */}
+              <div className={styles.infoCard}>
+                <div className={styles.infoHeader}>
+                  <h3>Basic Information</h3>
+                </div>
+                <div className={styles.infoContent}>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Vendor Name</span>
+                    <span className={styles.infoValue}>{vendor.name || '—'}</span>
+                  </div>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Contact Person</span>
+                    <span className={styles.infoValue}>{vendor.contactPerson || '—'}</span>
+                  </div>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Status</span>
+                    <span className={styles.infoValue}>
+                      <span className={`${styles.statusBadge} ${getStatusClass(vendor.status)}`}>
+                        {getStatusLabel(vendor)}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className={styles.infoCard}>
+                <div className={styles.infoHeader}>
+                  <h3>Contact Information</h3>
+                </div>
+                <div className={styles.infoContent}>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Mobile</span>
+                    <span className={styles.infoValue}>{vendor.mobile || '—'}</span>
+                  </div>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Alternate Mobile</span>
+                    <span className={styles.infoValue}>{vendor.altMobile || '—'}</span>
+                  </div>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Email</span>
+                    <span className={styles.infoValue}>{vendor.email || '—'}</span>
+                  </div>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Address</span>
+                    <span className={styles.infoValue}>{vendor.address || '—'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Business Information */}
+              <div className={styles.infoCard}>
+                <div className={styles.infoHeader}>
+                  <h3>Business Information</h3>
+                </div>
+                <div className={styles.infoContent}>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>GST Number</span>
+                    <span className={styles.infoValue}>{vendor.gstNo || '—'}</span>
+                  </div>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>License Details</span>
+                    <span className={styles.infoValue}>{vendor.licenseDetail || '—'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Clinic Information */}
+              <div className={styles.infoCard}>
+                <div className={styles.infoHeader}>
+                  <h3>Clinic Information</h3>
+                </div>
+                <div className={styles.infoContent}>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Clinic Name</span>
+                    <span className={styles.infoValue}>{vendor.clinicName || '—'}</span>
+                  </div>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Branch Name</span>
+                    <span className={styles.infoValue}>{vendor.branchName || '—'}</span>
+                  </div>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Date Created</span>
+                    <span className={styles.infoValue}>{formatDate(vendor.dateCreated)}</span>
+                  </div>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Last Modified</span>
+                    <span className={styles.infoValue}>{formatDate(vendor.dateModified)}</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* ── Footer Actions ── */}
+            <div className={styles.detailModalFooter}>
+              <button onClick={handleDelete} className={styles.btnDelete}>
+                Delete Vendor
+              </button>
+              <button onClick={handleUpdateClick} className={styles.btnUpdate}>
+                Update Vendor
+              </button>
+            </div>
+          </div>
+
+        </div>
       </div>
 
-      {/* Vendor Details Card */}
-      <div className={styles.detailsCard}>
-        
-        {/* Header Section */}
-        <div className={styles.cardHeader}>
-          <div className={styles.headerInfo}>
-            <h2>
-              {vendor.name}
-            </h2>
-            <p className={styles.subtitle}>
-              Contact Person: {vendor.contactPerson || '—'} | Mobile: {vendor.mobile || '—'}
-            </p>
-            <span className={`${styles.statusBadge} ${styles.large} ${styles[getStatusClass(vendor.status)]}`}>
-              {getStatusLabel(vendor)}
-            </span>
-          </div>
-        </div>
-
-        {/* Details Body */}
-        <div className={styles.cardBody}>
-          
-          {/* Section 1: Basic Information */}
-          <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Basic Information</h3>
-
-            <div className={styles.detailsGrid}>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Vendor ID</span>
-                <span className={styles.detailValue}>{vendor.id || '—'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Vendor Name</span>
-                <span className={styles.detailValue}>{vendor.name || '—'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Contact Person</span>
-                <span className={styles.detailValue}>{vendor.contactPerson || '—'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Status</span>
-                <span className={`${styles.statusBadge} ${styles[getStatusClass(vendor.status)]}`}>
-                  {getStatusLabel(vendor)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 2: Contact Information */}
-          <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Contact Information</h3>
-            <div className={styles.detailsGrid}>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Mobile</span>
-                <span className={styles.detailValue}>{vendor.mobile || '—'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Alternate Mobile</span>
-                <span className={styles.detailValue}>{vendor.altMobile || '—'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Email</span>
-                <span className={styles.detailValue}>{vendor.email || '—'}</span>
-              </div>
-              <div className={`${styles.detailItem} ${styles.fullWidth}`}>
-                <span className={styles.detailLabel}>Address</span>
-                <span className={styles.detailValue}>{vendor.address || '—'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 3: Business Information */}
-          <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Business Information</h3>
-            <div className={styles.detailsGrid}>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>GST Number</span>
-                <span className={styles.detailValue}>{vendor.gstNo || '—'}</span>
-              </div>
-              <div className={`${styles.detailItem} ${styles.fullWidth}`}>
-                <span className={styles.detailLabel}>License Details</span>
-                <span className={styles.detailValue}>{vendor.licenseDetail || '—'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 4: Clinic Information */}
-          <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Clinic Information</h3>
-            <div className={styles.detailsGrid}>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Clinic Name</span>
-                <span className={styles.detailValue}>{vendor.clinicName || '—'}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Branch Name</span>
-                <span className={styles.detailValue}>{vendor.branchName || '—'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 5: Timestamps */}
-          <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Record Information</h3>
-            <div className={styles.detailsGrid}>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Date Created</span>
-                <span className={styles.detailValue}>{formatDate(vendor.dateCreated)}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Last Modified</span>
-                <span className={styles.detailValue}>{formatDate(vendor.dateModified)}</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Footer Actions */}
-        <div className={styles.cardFooter}>
-          <button onClick={handleDelete} className={`${styles.btnHold} ${styles.btnDelete}`}>
-            Delete Vendor
-          </button>
-          <button onClick={handleUpdateClick} className={styles.btnUpdate}>
-            Update Vendor
-          </button>
-        </div>
-      </div>
-    </div>
+      {/* ── Update Vendor Modal rendered on top ── */}
+      {isUpdateOpen && (
+        <UpdateVendor
+          vendor={vendor}
+          onClose={handleUpdateClose}
+          onUpdateSuccess={handleUpdateSuccess}
+        />
+      )}
+    </>
   );
 };
 
