@@ -171,8 +171,8 @@
 .amountBadge    { font-weight: 800; font-size: 0.85rem; color: var(--sc-green-start); }
 
 .actionsCell { display: flex; justify-content: flex-end; gap: 8px; }
-.addCartBtn { display: flex; align-items: center; gap: 7px; padding: 8px 16px; background: linear-gradient(135deg, var(--sc-green-start), var(--sc-green-end)); color: var(--sc-text-light); font-weight: 700; font-size: 0.8rem; border: none; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 14px rgba(22,163,74,0.3); white-space: nowrap; }
-.addCartBtn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(22,163,74,0.42); }
+.addCartBtn { display: flex; align-items: center; background: linear-gradient(135deg, #016183, var(--primary-end)); gap: 7px; padding: 8px 16px;  color: var(--sc-text-light); font-weight: 700; font-size: 0.8rem; border: none; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; white-space: nowrap; }
+.addCartBtn:hover:not(:disabled) { transform: translateY(-2px); }
 .addCartBtn:active:not(:disabled) { transform: translateY(-1px); }
 .addCartBtnDone { background: linear-gradient(135deg, #64748b, #94a3b8) !important; box-shadow: none !important; cursor: not-allowed !important; opacity: 0.72; }
 .addCartBtnDone:hover { transform: none !important; box-shadow: none !important; }
@@ -185,18 +185,44 @@
 
 /* ==================== MODAL ==================== */
 .modalOverlay { position: fixed; inset: 0; background: rgba(15,22,41,0.82); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; animation: fadeIn 0.25s ease; }
-.modal { background: var(--sc-glass-bg); border-radius: 18px; border: 2px solid var(--sc-glass-border); width: 100%; max-width: 640px; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.32), inset 0 1px 2px rgba(255,255,255,0.5); backdrop-filter: blur(14px); display: flex; flex-direction: column; animation: slideUp 0.35s cubic-bezier(0.4,0,0.2,1); }
+/* ↓ max-width increased 20%: 640px → 768px */
+.modal { background: var(--sc-glass-bg); border-radius: 18px; width: 100%; max-width: 768px; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.32), inset 0 1px 2px rgba(255,255,255,0.5); backdrop-filter: blur(14px); display: flex; flex-direction: column; animation: slideUp 0.35s cubic-bezier(0.4,0,0.2,1); }
 .modal::-webkit-scrollbar { width: 5px; }
 .modal::-webkit-scrollbar-track { background: #f1f5f9; }
 .modal::-webkit-scrollbar-thumb { background: var(--sc-accent-end); border-radius: 4px; }
-.modalHeader { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px 0; margin-bottom: 16px; }
+.modalHeader { padding: 22px 28px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.18);
+  margin-bottom: 20px;
+ }
 .modalHeaderContent { display: flex; align-items: center; gap: 12px; }
-.modalHeaderIcon { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--sc-green-start), var(--sc-green-end)); color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(22,163,74,0.3); flex-shrink: 0; }
-.modalHeader h2 { font-size: 1.15rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, var(--sc-primary-start), var(--sc-accent-end)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.modalSubtitle { margin: 2px 0 0; color: #64748b; font-size: 0.8rem; font-weight: 500; }
-.modalClose { background: rgba(100,116,139,0.15); border: 2px solid rgba(100,116,139,0.2); width: 30px; height: 30px; border-radius: 50%; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; flex-shrink: 0; }
-.modalClose:hover { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #dc2626; transform: rotate(90deg); }
+.modalHeaderIcon { width: 40px; height: 40px; border-radius: 12px; background:var(--accent-end);  color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(22,163,74,0.3); flex-shrink: 0; }
+.modalHeader h2 {margin: 0;
+  font-size: 1.48rem;
+  font-weight: 700;
+  letter-spacing: -0.01em; }
+.modalSubtitle { margin: 2px 0 0; font-size: 0.8rem; font-weight: 500; }
+.modalClose { background: rgba(255, 255, 255, 0.22);
+  border: none;
+  color: white;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  font-size: 1.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease; }
+.modalClose:hover { background: rgba(255, 255, 255, 0.38);
+  transform: scale(1.08); }
 .modalBody { padding: 0 24px 8px; flex: 1; }
+.presInfoNew{display: flex; gap:3px}
 .presInfoGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; background: rgba(34,43,108,0.04); border-radius: 10px; padding: 14px; border: 1px solid rgba(34,43,108,0.08); }
 .presInfoItem { display: flex; flex-direction: column; gap: 3px; }
 .presInfoFullWidth { grid-column: 1 / -1; }
@@ -237,8 +263,8 @@
 .btnCancel { padding: 10px 22px; background: rgba(100,116,139,0.12); color: #475569; font-weight: 700; font-size: 0.87rem; border: 1px solid rgba(100,116,139,0.25); border-radius: 10px; cursor: pointer; transition: all 0.3s ease; }
 .btnCancel:hover:not(:disabled) { background: rgba(239,68,68,0.1); color: #dc2626; border-color: rgba(239,68,68,0.3); transform: translateY(-1px); }
 .btnCancel:disabled { opacity: 0.5; cursor: not-allowed; }
-.btnConfirm { display: flex; align-items: center; gap: 8px; padding: 10px 22px; background: linear-gradient(135deg, var(--sc-green-start), var(--sc-green-end)); color: var(--sc-text-light); font-weight: 700; font-size: 0.87rem; border: none; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 14px rgba(22,163,74,0.3); }
-.btnConfirm:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(22,163,74,0.42); }
+.btnConfirm { display: flex; align-items: center; gap: 8px; padding: 10px 22px; background: linear-gradient(135deg, var(--accent-start), var(--accent-end)); color: var(--sc-text-light); font-weight: 700; font-size: 0.87rem; border: none; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; }
+.btnConfirm:hover:not(:disabled) { transform: translateY(-2px); }
 .btnConfirm:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
 /* ==================== DARK MODE ==================== */

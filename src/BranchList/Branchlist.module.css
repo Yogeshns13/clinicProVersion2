@@ -36,13 +36,14 @@
   min-height: 100vh;
   color: var(--text-dark);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-sizing: border-box;
 }
 
 /* ==================== FILTERS CONTAINER ==================== */
 .filtersContainer {
   background: white;
   border-radius: 17px;
-  padding: 20px;
+  padding: 16px 20px;
   margin-bottom: 20px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
@@ -50,9 +51,28 @@
 }
 
 .filtersGrid {
-  display: flex;
-  align-items: center;
-  gap: 15px;
+  display: grid;
+  grid-template-columns: minmax(240px, 2fr) minmax(160px, 1fr) minmax(160px, 1fr) minmax(160px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+@media (max-width: 1100px) {
+  .filtersGrid {
+    grid-template-columns: minmax(220px, 2fr) minmax(140px, 1fr) minmax(140px, 1fr) auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .filtersGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .filtersGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .filterGroup {
@@ -62,15 +82,14 @@
 
 .searchGroup {
   display: flex;
-  flex: 1;
   align-items: stretch;
   min-width: 0;
 }
 
 .searchTypeSelect {
-  min-width: 140px;
+  min-width: 130px;
   height: 40px;
-  padding: 0 12px;
+  padding: 0 10px;
   background: white;
   border: 1px solid #cbd5e1;
   border-radius: 10px 0 0 10px;
@@ -91,7 +110,7 @@
 .searchInput {
   flex: 1;
   height: 40px;
-  padding: 0 15px;
+  padding: 0 14px;
   background: white;
   border: 1px solid #cbd5e1;
   border-left: none;
@@ -117,12 +136,12 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 /* ==================== STATUS FILTER SELECT ==================== */
 .statusFilterSelect {
-  width: 200px;
+  width: 100%;
   height: 40px;
   padding: 0 12px;
   background: white;
@@ -140,14 +159,14 @@
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
 }
 
-.searchButton {
+.searchButton,
+.clearButton,
+.addClinicBtn {
   display: flex;
   align-items: center;
   gap: 8px;
   height: 40px;
-  padding: 0 20px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  padding: 0 18px;
   font-weight: 600;
   font-size: 0.85rem;
   border: none;
@@ -155,6 +174,12 @@
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.searchButton {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
   box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
 }
 
@@ -164,20 +189,8 @@
 }
 
 .clearButton {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 20px;
   background: #e2e8f0;
   color: #475569;
-  font-weight: 600;
-  font-size: 0.85rem;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
 }
 
 .clearButton:hover {
@@ -186,20 +199,8 @@
 }
 
 .addClinicBtn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 20px;
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: var(--text-light);
-  font-weight: 700;
-  font-size: 0.85rem;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
   box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
 }
 
@@ -212,9 +213,11 @@
 .clinicTableContainer {
   background: white;
   border-radius: 17px;
-  overflow: hidden;
+  overflow-x: auto;                 /* ← Key fix: allow horizontal scroll */
+  overflow-y: hidden;
   box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
   border: 1px solid rgba(34, 43, 108, 0.1);
+  margin-bottom: 20px;
 }
 
 .updateEmployeeContainer {
@@ -224,34 +227,38 @@
 
 .clinicTable {
   width: 100%;
+  min-width: 1000px;                /* ← Forces scroll when screen is narrower */
   table-layout: auto;
   border-collapse: collapse;
 }
 
 .clinicTable th {
   text-align: left;
-  padding: 12px 17px;
+  padding: 12px 16px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
   border: none;
+  white-space: nowrap;
 }
 
 .clinicTable td {
-  padding: 6px 17px;
+  padding: 6px 16px;
   border-bottom: 1px solid #e2e8f0;
   color: var(--text-dark);
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   vertical-align: middle;
+  white-space: nowrap;              /* ← Prevents wrapping in most cells */
 }
+
 
 .clinicTable th:last-child,
 .clinicTable td:last-child {
   text-align: right;
-  padding-right: 24px;
+  padding-right: 20px;
 }
 
 .clinicTable tbody tr:nth-child(even) {
@@ -259,8 +266,7 @@
 }
 
 .clinicTable tbody tr:hover {
-  background-color: rgba(48, 178, 181, 0.08) !important;
-  transition: background-color 0.25s ease;
+  background-color: rgba(48, 178, 181, 0.06) !important;
 }
 
 /* ==================== TABLE CELLS ==================== */
@@ -268,6 +274,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 180px;
 }
 
 .clinicAvatar {
@@ -305,9 +312,10 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.7px;
+  display: inline-block;
 }
 
-.statusBadge.active { color: #166534; }
+.statusBadge.active { color: #166534; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); }
 
 .statusBadge.inactive {
   background: rgba(239, 68, 68, 0.15);
@@ -347,26 +355,26 @@
   transition: all 0.3s ease;
   box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
   z-index: 1;
+  white-space: nowrap;
 }
 
 .clinicDetailsBtn {
   background: linear-gradient(135deg, #016183, var(--primary-end));
-  padding: 7px 15px;
-  font-size: 0.75rem;
+  padding: 7px 14px;
+  font-size: 0.78rem;
   border-radius: 9px;
-  white-space: nowrap;
 }
 
 .btnUpdate,
 .btnSubmit {
-  padding: 10px 24px;
+  padding: 10px 22px;
   font-size: 0.85rem;
   border-radius: 10px;
   box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
 }
 
 .clinicModalFooter .btnUpdate {
-  padding: 10px 31px;
+  padding: 10px 28px;
   border-radius: 26px;
 }
 
@@ -390,8 +398,8 @@
 .clinicDetailsBtn:hover::before,
 .btnUpdate:hover::before,
 .btnSubmit:hover::before {
-  width: 170px;
-  height: 170px;
+  width: 160px;
+  height: 160px;
 }
 
 .clinicDetailsBtn:hover,
@@ -409,15 +417,16 @@
 
 .btnHold,
 .btnCancel {
-  padding: 10px 24px;
+  padding: 10px 22px;
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .btnHold {
-  padding: 10px 31px;
+  padding: 10px 28px;
   background: linear-gradient(135deg, var(--primary-start));
   color: var(--text-light);
   border: none;
@@ -931,9 +940,7 @@
   gap: 14px;
 }
 
-/* ── Force exactly 3 equal columns ──
-   Used for: Contact Info (Mobile | Alt Mobile | Email)
-             Tax Info (GST No | CGST % | SGST %)           */
+/* ── Force exactly 3 equal columns ── */
 .addFormGridThreeCol {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1299,76 +1306,61 @@
 
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {
+  .clinicListWrapper {
+    padding: 16px;
+  }
+
   .filtersGrid {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .searchGroup {
-    flex-direction: column;
-  }
-
-  .searchTypeSelect {
-    border-radius: 10px;
-    border-bottom: none;
-  }
-
-  .searchInput {
-    border-radius: 0 0 10px 10px;
-    border-left: 1px solid #cbd5e1;
-    border-top: none;
-  }
-
-  .searchInput:focus {
-    border-left: 1px solid var(--accent-end);
-    border-top: 1px solid var(--accent-end);
-  }
-
-  .filterActions {
-    flex-direction: column;
-  }
-
-  .searchButton,
-  .clearButton,
-  .addClinicBtn,
-  .statusFilterSelect {
-    width: 100%;
-    justify-content: center;
+    gap: 10px;
   }
 
   .clinicTable th,
-  .clinicTable td { padding: 12px 14px; }
-
-  .clinicDetailsBtn { padding: 7px 14px; font-size: 0.72rem; }
-
-  .clinicModal { max-width: 92%; }
-
-  .clinicModalHeader,
-  .clinicModalBody,
-  .clinicModalFooter {
-    padding-left: 20px;
-    padding-right: 20px;
+  .clinicTable td {
+    padding: 10px 12px;
+    font-size: 0.8rem;
   }
 
-  .clinicModalFooter {
+  .clinicDetailsBtn {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+
+  .clinicModal,
+  .detailModalContent,
+  .addModalContent {
+    max-width: 96%;
+  }
+
+  .detailModalHeader,
+  .addModalContent .detailModalHeader {
+    padding: 16px 20px;
+  }
+
+  .detailModalBody,
+  .addModalBody {
+    padding: 16px 20px;
+  }
+
+  .detailModalFooter,
+  .addModalContent .detailModalFooter {
+    padding: 16px 20px;
     flex-direction: column;
-    gap: 14px;
-  }
-
-  .btnHold,
-  .btnUpdate { width: 100%; }
-
-  /* Stack 3-col layout on small screens */
-  .addFormGridThreeCol {
-    grid-template-columns: 1fr;
+    gap: 10px;
   }
 }
 
 @media (max-width: 480px) {
-  .clinicListWrapper { padding: 14px; }
+  .clinicListWrapper {
+    padding: 12px;
+  }
 
-  .clinicModalFooter { flex-direction: column; }
+  .addFormGrid,
+  .addFormGridThreeCol {
+    grid-template-columns: 1fr;
+  }
 
-  .btnSubmit,
-  .btnCancel { width: 100%; justify-content: center; }
+  .coordRow {
+    flex-direction: column;
+    gap: 10px;
+  }
 }

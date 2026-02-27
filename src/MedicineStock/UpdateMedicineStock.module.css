@@ -1,4 +1,4 @@
-/* src/components/AddMedicineMaster.module.css */
+/* src/components/UpdateMedicineStock.module.css */
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
@@ -10,8 +10,8 @@
   --text-dark:     #1e293b;
   --glass-bg:      rgba(255, 255, 255, 0.92);
 
-  --modal-header-h: 88px;
-  --modal-footer-h: 76px;
+  --update-header-h: 88px;
+  --update-footer-h: 76px;
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -26,7 +26,7 @@
 }
 
 /* ==================== OVERLAY ==================== */
-.overlay {
+.updateModalOverlay {
   position: fixed;
   inset: 0;
   background: rgba(15, 22, 41, 0.85);
@@ -34,13 +34,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 1100;
   padding: 20px;
   animation: fadeIn 0.3s ease;
 }
 
 /* ==================== MODAL SHELL ==================== */
-.modal {
+.updateModalContent {
   background: var(--glass-bg);
   border-radius: 20px;
   width: 100%;
@@ -54,7 +54,7 @@
 }
 
 /* ==================== GRADIENT HEADER (fixed) ==================== */
-.header {
+.updateModalHeader {
   flex-shrink: 0;
   padding: 22px 28px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
@@ -65,22 +65,22 @@
   gap: 20px;
 }
 
-.headerContent { flex: 1; }
+.updateHeaderContent { flex: 1; }
 
-.header h2 {
+.updateModalHeader h2 {
   margin: 0 0 4px;
   font-size: 1.4rem;
   font-weight: 700;
   color: var(--text-light);
 }
 
-.subtitle {
+.updateHeaderSub {
   font-size: 0.88rem;
   color: rgba(255, 255, 255, 0.8);
   font-weight: 500;
 }
 
-.closeBtn {
+.updateCloseBtn {
   background: rgba(255, 255, 255, 0.2);
   border: none;
   color: var(--text-light);
@@ -92,21 +92,18 @@
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
+  font-weight: 700;
   transition: all 0.3s ease;
   flex-shrink: 0;
 }
 
-.closeBtn:hover {
+.updateCloseBtn:hover {
   background: rgba(255, 255, 255, 0.35);
   transform: scale(1.08);
 }
 
 /* ==================== FORM WRAPPER ==================== */
-/*
-  <form> fills all remaining height between header and footer.
-  overflow: hidden so the inner .body can scroll.
-*/
-.form {
+.updateForm {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -115,39 +112,89 @@
 }
 
 /* ==================== SCROLLABLE BODY ==================== */
-.body {
+.updateModalBody {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  max-height: calc(90vh - var(--modal-header-h) - var(--modal-footer-h));
+  max-height: calc(90vh - var(--update-header-h) - var(--update-footer-h));
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 24px 28px;
+  padding: 20px 28px;
   background: linear-gradient(135deg, rgba(240, 247, 255, 0.5), rgba(230, 242, 255, 0.5));
   scrollbar-width: thin;
   scrollbar-color: rgba(48, 178, 181, 0.4) transparent;
 }
 
-.body::-webkit-scrollbar {
-  width: 6px;
+.updateModalBody::-webkit-scrollbar        { width: 6px; }
+.updateModalBody::-webkit-scrollbar-track  { background: transparent; }
+.updateModalBody::-webkit-scrollbar-thumb  { background: rgba(48, 178, 181, 0.4); border-radius: 10px; }
+.updateModalBody::-webkit-scrollbar-thumb:hover { background: rgba(48, 178, 181, 0.7); }
+
+/* ==================== INFO CARDS GRID (read-only) ==================== */
+.infoSection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
 }
 
-.body::-webkit-scrollbar-track {
-  background: transparent;
+.infoCard {
+  background: white;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
 }
 
-.body::-webkit-scrollbar-thumb {
-  background: rgba(48, 178, 181, 0.4);
-  border-radius: 10px;
+.infoHeader {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
 }
 
-.body::-webkit-scrollbar-thumb:hover {
-  background: rgba(48, 178, 181, 0.7);
+.infoHeader h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-start);
 }
 
-/* ==================== FORM SECTIONS ==================== */
+.infoContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(34, 43, 108, 0.06);
+}
+
+.infoRow:last-child { border-bottom: none; }
+
+.infoLabel {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.infoValue {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+.infoAmountGreen { color: #059669; font-size: 0.9rem; }
+.infoAmountTotal { color: var(--primary-start); font-size: 0.9rem; }
+
+/* ==================== EDITABLE FORM SECTION ==================== */
 .formSection {
   background: white;
   border-radius: 12px;
@@ -166,12 +213,8 @@
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--primary-start);
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
-/* ==================== FORM GRID ==================== */
 .formGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -185,9 +228,7 @@
 }
 
 .formGroup.fullWidth,
-.fullWidth {
-  grid-column: 1 / -1;
-}
+.fullWidth { grid-column: 1 / -1; }
 
 .formGroup label {
   font-size: 0.82rem;
@@ -198,7 +239,6 @@
 .required { color: #dc2626; font-weight: 700; }
 
 .formGroup input,
-.formGroup textarea,
 .formGroup select {
   width: 100%;
   padding: 10px 14px;
@@ -213,19 +253,9 @@
   box-sizing: border-box;
 }
 
-.formGroup textarea {
-  resize: vertical;
-  min-height: 80px;
-  line-height: 1.5;
-}
-
-.formGroup input::placeholder,
-.formGroup textarea::placeholder {
-  color: rgba(30, 41, 59, 0.35);
-}
+.formGroup input::placeholder { color: rgba(30, 41, 59, 0.35); }
 
 .formGroup input:focus,
-.formGroup textarea:focus,
 .formGroup select:focus {
   outline: none;
   border-color: var(--accent-end);
@@ -233,78 +263,34 @@
   background: white;
 }
 
-.formGroup input:disabled,
-.formGroup textarea:disabled,
-.formGroup select:disabled {
+.formGroup input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.formHint {
-  font-size: 0.75rem;
-  color: #64748b;
-  margin-top: 2px;
-}
-
-/* ==================== TIMING PILLS ==================== */
-.timingGroup {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.timingBtn {
-  padding: 8px 18px;
-  border-radius: 26px;
-  background: #f1f5f9;
-  border: 2px solid rgba(34, 43, 108, 0.15);
-  color: #475569;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: inherit;
-}
-
-.timingBtn:hover {
-  border-color: var(--accent-end);
-  color: var(--accent-start);
-  background: rgba(48, 178, 181, 0.08);
-  transform: translateY(-1px);
-}
-
-.timingBtnActive {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light) !important;
-  border-color: transparent !important;
-  box-shadow: 0 4px 12px rgba(32, 125, 156, 0.35);
-  transform: translateY(-1px);
-}
-
-.timingBtnActive:hover {
-  box-shadow: 0 6px 18px rgba(32, 125, 156, 0.5);
-  transform: translateY(-2px);
-}
-
-.timingKey {
-  font-weight: 800;
+/* ── Error / Success banners ── */
+.formError {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 2px solid rgba(239, 68, 68, 0.3);
   font-size: 0.85rem;
-  min-width: 16px;
-  text-align: center;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
+  color: #dc2626;
 }
 
-.timingBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
+.formSuccess {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.2));
+  color: #059669;
 }
 
 /* ==================== FIXED FOOTER ==================== */
-.footer {
+.updateModalFooter {
   flex-shrink: 0;
   display: flex;
   justify-content: flex-end;
@@ -347,22 +333,12 @@
   z-index: -1;
 }
 
-.btnCancel:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
-}
-
+.btnCancel:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45); }
 .btnCancel:hover::before { opacity: 1; }
-
 .btnCancel:active { transform: translateY(-1px); }
+.btnCancel:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-.btnCancel:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* ── Save / Submit ── */
+/* ── Submit ── */
 .btnSubmit {
   height: 40px;
   padding: 0 24px;
@@ -379,6 +355,9 @@
   position: relative;
   overflow: hidden;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-family: inherit;
 }
 
@@ -397,117 +376,98 @@
   pointer-events: none;
 }
 
-.btnSubmit:hover::before {
-  width: 220px;
-  height: 220px;
-}
-
-.btnSubmit:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
-}
-
+.btnSubmit:hover::before { width: 220px; height: 220px; }
+.btnSubmit:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4); }
 .btnSubmit:active { transform: translateY(-1px); }
-
-.btnSubmit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
+.btnSubmit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
 /* ==================== DARK MODE ==================== */
-:global(.dark-mode) .modal {
+:global(.dark-mode) .updateModalContent {
   background: rgba(30, 41, 59, 0.95);
 }
 
-:global(.dark-mode) .body {
+:global(.dark-mode) .updateModalBody {
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
 }
 
+:global(.dark-mode) .infoCard,
 :global(.dark-mode) .formSection {
   background: #1e293b;
   box-shadow: 0 5px 17px rgba(0, 0, 0, 0.25);
 }
 
+:global(.dark-mode) .infoHeader h3,
 :global(.dark-mode) .formSectionHeader h3 { color: var(--accent-end); }
+
+:global(.dark-mode) .infoLabel { color: #94a3b8; }
+
+:global(.dark-mode) .infoValue { color: #e2e8f0; }
+
+:global(.dark-mode) .infoRow { border-bottom-color: rgba(71, 85, 105, 0.4); }
 
 :global(.dark-mode) .formGroup label { color: var(--accent-end); }
 
 :global(.dark-mode) .formGroup input,
-:global(.dark-mode) .formGroup textarea,
 :global(.dark-mode) .formGroup select {
   background: #0f172a;
   border-color: #475569;
   color: #e2e8f0;
 }
 
-:global(.dark-mode) .timingBtn {
-  background: #334155;
-  border-color: #475569;
-  color: #94a3b8;
-}
-
-:global(.dark-mode) .timingBtn:hover {
-  border-color: var(--accent-end);
-  color: var(--accent-end);
-  background: rgba(48, 178, 181, 0.1);
-}
-
-:global(.dark-mode) .footer {
+:global(.dark-mode) .updateModalFooter {
   background: #0f172a;
   border-top-color: rgba(71, 85, 105, 0.5);
 }
 
-:global(.dark-mode) .body::-webkit-scrollbar-thumb {
+:global(.dark-mode) .updateModalBody::-webkit-scrollbar-thumb {
   background: rgba(48, 178, 181, 0.5);
 }
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
   :root {
-    --modal-header-h: 90px;
-    --modal-footer-h: 70px;
+    --update-header-h: 90px;
+    --update-footer-h: 70px;
   }
 
-  .formGrid { grid-template-columns: 1fr; }
+  .infoSection    { grid-template-columns: 1fr; }
+  .formGrid       { grid-template-columns: 1fr; }
 
-  .body { padding: 18px 20px; }
+  .updateModalFooter { flex-wrap: wrap; }
 
-  .footer { flex-wrap: wrap; }
-
-  .footer .btnCancel,
-  .footer .btnSubmit {
+  .updateModalFooter .btnCancel,
+  .updateModalFooter .btnSubmit {
     flex: 1 1 auto;
-    text-align: center;
     justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
   :root {
-    --modal-header-h: 100px;
-    --modal-footer-h: 128px;
+    --update-header-h: 100px;
+    --update-footer-h: 128px;
   }
 
-  .overlay { padding: 12px; }
+  .updateModalOverlay { padding: 12px; }
 
-  .header { padding: 18px 20px; }
+  .updateModalHeader  { padding: 18px 20px; }
 
-  .header h2 { font-size: 1.15rem; }
+  .updateModalHeader h2 { font-size: 1.15rem; }
 
-  .body { padding: 14px 16px; }
+  .updateModalBody { padding: 14px 16px; }
 
+  .infoCard,
   .formSection { padding: 14px; }
 
-  .footer {
+  .updateModalFooter {
     flex-direction: column;
     padding: 16px 20px;
     gap: 10px;
   }
 
-  .footer .btnCancel,
-  .footer .btnSubmit {
+  .updateModalFooter .btnCancel,
+  .updateModalFooter .btnSubmit {
     width: 100%;
-    text-align: center;
+    justify-content: center;
   }
 }

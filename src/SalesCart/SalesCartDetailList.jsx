@@ -17,6 +17,7 @@ import {
   FiX,
   FiPercent,
   FiEdit2,
+  FiDollarSign,
 } from 'react-icons/fi';
 import {
   getSalesCartDetailList,
@@ -555,93 +556,114 @@ const SalesCartDetailList = () => {
         </>
       )}
 
-      {/* ══ GENERATE INVOICE MODAL (unchanged) ══ */}
+      {/* ══ GENERATE INVOICE MODAL — redesigned to match uqModal / Add to Cart style ══ */}
       {invoice.isOpen && (
         <div
           className={styles.modalOverlay}
           onClick={!invoice.submitting ? closeInvoiceModal : undefined}
         >
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.ivModal} onClick={(e) => e.stopPropagation()}>
 
-            <div className={styles.modalHeader}>
-              <div className={styles.modalHeaderContent}>
-                <div className={styles.modalHeaderIcon}>
-                  <FiFileText size={20} />
-                </div>
-                <div>
-                  <h2 className={styles.modalTitle}>Generate Invoice</h2>
-                  <p className={styles.modalSubtitle}>Cart ID: #{cartId}</p>
+            {/* ── Header ── */}
+            <div className={styles.ivModalHeader}>
+              <div className={styles.ivHeaderContent}>
+                <h2>Generate Invoice</h2>
+                <div className={styles.ivHeaderMeta}>
+                  {meta?.customerName && (
+                    <span className={styles.ivPatientBadge}>{meta.customerName}</span>
+                  )}
                 </div>
               </div>
               {!invoice.submitting && !invoice.success && (
-                <button className={styles.modalClose} onClick={closeInvoiceModal}>
-                  <FiX size={16} />
+                <button className={styles.ivCloseBtn} onClick={closeInvoiceModal}>
+                  <FiX size={22} />
                 </button>
               )}
             </div>
 
-            <div className={styles.modalBody}>
+            {/* ── Body ── */}
+            <div className={styles.ivModalBody}>
+
+              {/* Success state */}
               {invoice.success && (
-                <div className={styles.successState}>
-                  <div className={styles.successIconWrap}>
-                    <FiCheckCircle size={48} />
+                <div className={styles.ivSuccessState}>
+                  <div className={styles.ivSuccessIcon}>
+                    <FiCheckCircle size={52} />
                   </div>
                   <h3>Invoice Generated!</h3>
                   {invoice.invoiceId && (
                     <p>Invoice ID: <strong>#{invoice.invoiceId}</strong></p>
                   )}
-                  <p className={styles.successMsg}>{invoice.message}</p>
+                  <p className={styles.ivSuccessMsg}>{invoice.message}</p>
                 </div>
               )}
 
               {!invoice.success && (
                 <>
-                  <div className={styles.confirmPrompt}>
-                    <FiAlertCircle size={18} className={styles.confirmIcon} />
-                    <p>
-                      Are you sure you want to generate a pharmacy invoice for this cart?
-                      This action cannot be undone.
-                    </p>
-                  </div>
-
-                  <div className={styles.inputGroup}>
-                    <label className={styles.inputLabel}>
-                      <FiPercent size={13} />
-                      Discount (%)
-                    </label>
-                    <div className={styles.inputWrapper}>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        placeholder="Enter discount % (0 – 100)"
-                        value={invoice.discount}
-                        onChange={(e) =>
-                          setInvoice((prev) => ({
-                            ...prev,
-                            discount: e.target.value,
-                            error: null,
-                          }))
-                        }
-                        className={styles.discountInput}
-                        disabled={invoice.submitting}
-                      />
-                      <span className={styles.inputSuffix}>%</span>
+                  {/* Summary info strip */}
+                  <div className={styles.ivInfoStrip}>
+                    <div className={styles.ivInfoBlock}>
+                      <span className={styles.ivInfoLabel}>Total Items</span>
+                      <span className={styles.ivInfoVal}>{details.length}</span>
                     </div>
-                    <span className={styles.inputHint}>Leave 0 for no discount</span>
+                    <div className={styles.ivInfoBlock}>
+                      <span className={styles.ivInfoLabel}>Subtotal</span>
+                      <span className={styles.ivInfoVal}>{fmt(totals.totalAmount)}</span>
+                    </div>
+                    <div className={styles.ivInfoBlock}>
+                      <span className={styles.ivInfoLabel}>Tax (CGST+SGST)</span>
+                      <span className={styles.ivInfoVal}>{fmt(totals.cgst + totals.sgst)}</span>
+                    </div>
+                    <div className={styles.ivInfoBlock}>
+                      <span className={styles.ivInfoLabel}>Net Amount</span>
+                      <span className={`${styles.ivInfoVal} ${styles.ivNetAmt}`}>{fmt(totals.netAmount)}</span>
+                    </div>
                   </div>
 
+                  {/* Discount input */}
+                  <div className={styles.ivFormSection}>
+                    <div className={styles.ivFormGroup}>
+                      <label>
+                        <FiPercent size={13} />
+                        Additional Discount (%)
+                      </label>
+                      <div className={styles.ivInputWrapper}>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          placeholder="0 – 100"
+                          value={invoice.discount}
+                          onChange={(e) =>
+                            setInvoice((prev) => ({
+                              ...prev,
+                              discount: e.target.value,
+                              error: null,
+                            }))
+                          }
+                          className={styles.ivInput}
+                          disabled={invoice.submitting}
+                          autoFocus
+                        />
+                        <span className={styles.ivInputSuffix}>%</span>
+                      </div>
+                      <span className={styles.ivInputHint}>Leave 0 for no additional discount</span>
+                    </div>
+                  </div>
+
+                  {/* Error banner */}
                   {invoice.error && (
-                    <div className={styles.errorBanner}>
+                    <div className={styles.ivErrorBanner}>
                       <FiAlertCircle size={15} />
                       <span>{invoice.error}</span>
                     </div>
                   )}
 
+                  {/* Progress banner */}
                   {invoice.submitting && (
-                    <div className={styles.progressBanner}>
-                      <div className={styles.modalSpinner} />
+                    <div className={styles.ivProgressBanner}>
+                      <div className={styles.ivSpinner} />
                       <span>Generating invoice, please wait...</span>
                     </div>
                   )}
@@ -649,38 +671,38 @@ const SalesCartDetailList = () => {
               )}
             </div>
 
+            {/* ── Footer ── */}
             {!invoice.success && (
-              <div className={styles.modalFooter}>
+              <div className={styles.ivModalFooter}>
                 <button
-                  className={styles.btnNo}
+                  className={styles.ivCancelBtn}
                   onClick={closeInvoiceModal}
                   disabled={invoice.submitting}
                 >
-                  No, Cancel
+                  Cancel
                 </button>
                 <button
-                  className={styles.btnYes}
+                  className={styles.ivConfirmBtn}
                   onClick={handleGenerateInvoice}
                   disabled={invoice.submitting}
                 >
                   {invoice.submitting ? (
                     <>
-                      <div className={styles.btnSpinner} />
+                      <div className={styles.ivBtnSpinner} />
                       Generating...
                     </>
                   ) : (
                     <>
-                      <FiCheckCircle size={15} />
+                      <FiFileText size={16} />
                       Yes, Generate
                     </>
                   )}
                 </button>
               </div>
             )}
-
             {invoice.success && (
-              <div className={styles.modalFooter}>
-                <button className={styles.btnYes} onClick={closeInvoiceModal}>
+              <div className={styles.ivModalFooter}>
+                <button className={styles.ivConfirmBtn} onClick={closeInvoiceModal}>
                   Done
                 </button>
               </div>
@@ -689,7 +711,7 @@ const SalesCartDetailList = () => {
         </div>
       )}
 
-      {/* ══ UPDATE QUANTITY MODAL — new LabWorkDetail style ══ */}
+      {/* ══ UPDATE QUANTITY MODAL ══ */}
       {updateQty.isOpen && updateQty.item && (
         <div
           className={styles.modalOverlay}

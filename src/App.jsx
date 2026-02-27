@@ -43,8 +43,6 @@ import ConsultationChargeList from "./ConsultationCharge/Consultationchargelist.
 import InvoiceManagement from "./ConsultationCharge/Invoicemanagement.jsx";
 import InvoicePaymentManagement from "./ConsultationCharge/Invoicepaymentmanagement.jsx";
 import VendorList from "./Vendor/VendorList.jsx";
-import AddVendor from "./Vendor/AddVendor.jsx";
-import UpdateVendor from "./Vendor/UpdateVendor.jsx";
 import ViewMedicineMaster from "./MedicineMaster/ViewMedicineMaster.jsx";
 import MedicineMasterList from "./MedicineMaster/MedicineMasterList.jsx";
 import AddMedicineMaster from "./MedicineMaster/Addmedicinemaster.jsx";
@@ -55,7 +53,6 @@ import ViewLabPackage from "./LabTestMaster/ViewLabPackage.jsx";
 import ViewLabMaster from "./LabTestMaster/ViewLabMaster.jsx";
 import LabMasterList from "./LabTestMaster/Labmasterlist.jsx";
 import MedicineStockList from "./MedicineStock/MedicineStocklist.jsx";
-import UpdateMedicineStock from "./MedicineStock/UpdateMedicineStock.jsx";
 import LabWorkQueue from "./LabWork/LabWorkQueue.jsx";
 import MedicineStockByMedicine from "./MedicineMaster/MedicineStockbyMedicine.jsx";
 import LabOrderList from "./LabWork/LabOrderList.jsx";
@@ -126,8 +123,6 @@ function App() {
           <Route path="/invoice-management" element={<InvoiceManagement/>} />
           <Route path="/invoice-payment" element={<InvoicePaymentManagement/>} />
           <Route path="/vendor-list" element={<VendorList/>} />
-          <Route path="/add-vendor" element={<AddVendor/>} />
-          <Route path="/update-vendor/:id" element={<UpdateVendor/>} />
           <Route path="/medicinemaster-list" element={<MedicineMasterList/>} />
           <Route path="/medicine-stock/:id" element={<MedicineStockByMedicine/>} />
           <Route path="/add-medicinemaster" element={<AddMedicineMaster/>} />
@@ -147,7 +142,6 @@ function App() {
           <Route path="/update-purchaseorderdetail/:id" element={<UpdatePurchaseOrderDetail/>} />
           <Route path="/laborder-list" element={<LabOrderList/>} />
           <Route path="/medicinestock-list" element={<MedicineStockList/>} />
-          <Route path="/update-medicinestock/:id" element={<UpdateMedicineStock/>} />
           <Route path="/lab-report-list" element={<LabReportList/>} />
           <Route path="/update-lab-report/:id" element={<UpdateLabReport/>} />
           <Route path="/lab-invoice" element={<LabInvoiceList/>} />

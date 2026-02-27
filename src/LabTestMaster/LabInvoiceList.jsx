@@ -475,7 +475,7 @@ const LabInvoiceList = () => {
                          onClick={() => handleViewInvoiceDetails(invoice)}
                          className={styles.actionBtn}
                          title="View Details">
-                          View
+                          View Details
                         </button>
                       </div>
                     </div>

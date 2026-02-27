@@ -468,14 +468,41 @@
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  background: linear-gradient(135deg, #016183, var(--primary-end));
   color: var(--text-light);
   box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  z-index: 1;
+  position: relative;
+  overflow: hidden;
 }
 
 .actionBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+}
+
+.actionBtn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.7s ease, height 0.7s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.actionBtn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.actionBtn:active {
+  transform: translateY(-1px);
 }
 
 .actionDropdown {
@@ -841,7 +868,7 @@
 
   .viewBtn,
   .actionBtn {
-    width: auto;
+    width: 100%;
     justify-content: center;
   }
 

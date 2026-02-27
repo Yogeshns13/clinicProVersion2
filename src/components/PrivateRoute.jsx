@@ -54,9 +54,7 @@ const ROUTE_PERMISSIONS = {
   "/lab-invoice": ["admin", "spradmin","labtest"],
 
   "/vendor-list": ["admin", "spradmin","pharmacy"],
-  "/add-vendor": ["admin", "spradmin","pharmacy"],
-  "/update-vendor/:id": ["admin", "spradmin","pharmacy"],
-
+  
   "/medicinemaster-list": ["admin", "spradmin","pharmacy","accounts","doctor", "fronttdesk"],
   "/view-medicinemaster/:id": ["admin", "spradmin","pharmacy","accounts"],
   "/add-medicinemaster": ["admin", "spradmin","pharmacy","accounts"],
@@ -64,7 +62,6 @@ const ROUTE_PERMISSIONS = {
 
   "/medicinestock-list": ["admin", "spradmin","fronttdesk","pharmacy","doctor"],
   "/medicine-stock/:id": ["admin", "spradmin","pharmacy"],
-  "/update-medicinestock/:id": ["admin", "spradmin","pharmacy"],
   
   "/purchaseorder-list": ["admin", "spradmin","pharmacy"],
   "/view-purchaseorder/:id": ["admin", "spradmin","pharmacy"],

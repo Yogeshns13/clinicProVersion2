@@ -130,8 +130,6 @@ const AddPurchaseOrder = ({ isOpen, onClose, onAddSuccess }) => {
           {formSuccess && <div className={styles.formSuccess}>Purchase order created successfully!</div>}
 
           <div className={styles.formGrid}>
-            {/* Purchase Order Information */}
-            <h3 className={styles.formSectionTitle}>Purchase Order Information</h3>
 
             <div className={styles.formGroup}>
               <label>

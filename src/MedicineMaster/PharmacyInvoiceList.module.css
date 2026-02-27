@@ -216,7 +216,7 @@
 .modalFooter { padding: 16px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 12px; }
 
 .invoiceHeader { background: linear-gradient(135deg, rgba(240, 247, 255, 0.5), rgba(230, 242, 255, 0.5)); border: 1px solid rgba(34, 43, 108, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
-.detailsGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.detailsGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .detailItem { display: flex; flex-direction: column; gap: 4px; }
 .detailItem label { font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
 .detailItem span { font-size: 0.94rem; color: var(--text-dark); font-weight: 500; }

@@ -9,15 +9,13 @@ import AddPurchaseOrder from './AddPurchaseOrder.jsx';
 import styles from './PurchaseOrderList.module.css';
 
 // ──────────────────────────────────────────────────
-// CONSTANTS
-// ──────────────────────────────────────────────────
 const STATUS_OPTIONS = [
-  { id: 1,  label: 'Draft'             },
-  { id: 2,  label: 'Sent'              },
-  { id: 3,  label: 'Confirmed'         },
-  { id: 4,  label: 'Partially Received'},
-  { id: 5,  label: 'Fully Received'    },
-  { id: 6,  label: 'Cancelled'         },
+  { id: 1, label: 'Draft'              },
+  { id: 2, label: 'Sent'               },
+  { id: 3, label: 'Confirmed'          },
+  { id: 4, label: 'Partially Received' },
+  { id: 5, label: 'Fully Received'     },
+  { id: 6, label: 'Cancelled'          },
 ];
 
 const SEARCH_TYPE_OPTIONS = [
@@ -29,12 +27,10 @@ const SEARCH_TYPE_OPTIONS = [
 const PurchaseOrderList = () => {
   const navigate = useNavigate();
 
-  // Data
   const [allPurchaseOrders, setAllPurchaseOrders] = useState([]);
   const [loading, setLoading]                     = useState(true);
   const [error,   setError]                       = useState(null);
 
-  // Filter inputs (not applied until Search)
   const [filterInputs, setFilterInputs] = useState({
     searchType:  'VendorName',
     searchValue: '',
@@ -43,7 +39,6 @@ const PurchaseOrderList = () => {
     dateTo:      '',
   });
 
-  // Applied filters (trigger API call)
   const [appliedFilters, setAppliedFilters] = useState({
     searchType:  'VendorName',
     searchValue: '',
@@ -52,11 +47,9 @@ const PurchaseOrderList = () => {
     dateTo:      '',
   });
 
-  // Add Form Modal
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
 
-  // ──────────────────────────────────────────────────
-  // Data fetching
+  // ── Fetch ──────────────────────────────────────
   const fetchPurchaseOrders = async (filters) => {
     try {
       setLoading(true);
@@ -71,13 +64,12 @@ const PurchaseOrderList = () => {
         Status:     filters.status !== '' ? Number(filters.status) : -1,
         VendorName: filters.searchType === 'VendorName' ? filters.searchValue : '',
         PONumber:   filters.searchType === 'PONumber'   ? filters.searchValue : '',
-        FromDate:   filters.dateFrom    || '',
-        ToDate:     filters.dateTo      || '',
+        FromDate:   filters.dateFrom || '',
+        ToDate:     filters.dateTo   || '',
       });
 
       setAllPurchaseOrders(data);
     } catch (err) {
-      console.error('fetchPurchaseOrders error:', err);
       setError(
         err?.status >= 400 || err?.code >= 400
           ? err
@@ -93,8 +85,7 @@ const PurchaseOrderList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedFilters]);
 
-  // ──────────────────────────────────────────────────
-  // Computed values
+  // ── Computed ───────────────────────────────────
   const filteredPurchaseOrders = useMemo(() => allPurchaseOrders, [allPurchaseOrders]);
 
   const isFiltersActive =
@@ -103,35 +94,29 @@ const PurchaseOrderList = () => {
     appliedFilters.dateFrom    !== '' ||
     appliedFilters.dateTo      !== '';
 
-  // ──────────────────────────────────────────────────
-  // Helper functions
-  const getStatusLabel = (status) => {
-    const found = STATUS_OPTIONS.find((s) => s.id === status);
-    return found ? found.label : 'Unknown';
-  };
+  // ── Helpers ────────────────────────────────────
+  const getStatusLabel = (status) =>
+    STATUS_OPTIONS.find((s) => s.id === status)?.label ?? 'Unknown';
 
   const getStatusClass = (status) => {
-    if (status === 5) return styles.statusFullyReceived;
-    if (status === 3) return styles.statusConfirmed;
-    if (status === 2) return styles.statusSent;
-    if (status === 1) return styles.statusDraft;
-    if (status === 4) return styles.statusPartial;
-    if (status === 6) return styles.statusCancelled;
-    return styles.statusDraft;
+    const map = {
+      1: styles.statusDraft,
+      2: styles.statusSent,
+      3: styles.statusConfirmed,
+      4: styles.statusPartial,
+      5: styles.statusFullyReceived,
+      6: styles.statusCancelled,
+    };
+    return map[status] ?? styles.statusDraft;
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return '—';
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-IN', {
-        year:  'numeric',
-        month: 'short',
-        day:   'numeric',
+      return new Date(dateString).toLocaleDateString('en-IN', {
+        year: 'numeric', month: 'short', day: 'numeric',
       });
-    } catch {
-      return dateString;
-    }
+    } catch { return dateString; }
   };
 
   const formatAmount = (amount) => {
@@ -142,148 +127,122 @@ const PurchaseOrderList = () => {
     })}`;
   };
 
-  // ──────────────────────────────────────────────────
-  // Handlers
+  // ── Handlers ───────────────────────────────────
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = () => {
-    setAppliedFilters({ ...filterInputs });
-  };
-
+  const handleSearch      = () => setAppliedFilters({ ...filterInputs });
   const handleClearFilters = () => {
     const empty = { searchType: 'VendorName', searchValue: '', status: '', dateFrom: '', dateTo: '' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
   };
 
-  const handleViewDetails = (po) => {
-    navigate(`/view-purchaseorder/${po.id}`);
-  };
+  const handleViewDetails = (po) => navigate(`/view-purchaseorder/${po.id}`);
+  const openAddForm        = () => setIsAddFormOpen(true);
+  const closeAddForm       = () => setIsAddFormOpen(false);
+  const handleAddSuccess   = () => fetchPurchaseOrders(appliedFilters);
 
-  const openAddForm  = () => setIsAddFormOpen(true);
-  const closeAddForm = () => setIsAddFormOpen(false);
-
-  const handleAddSuccess = () => {
-    fetchPurchaseOrders(appliedFilters);
-  };
-
-  // ──────────────────────────────────────────────────
-  // Early returns
+  // ── Early returns ──────────────────────────────
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.loading}>Loading purchase orders...</div>;
-  if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
-
-  // ──────────────────────────────────────────────────
+  // ── Render ─────────────────────────────────────
   return (
-    <div className={styles.listWrapper}>
+    <div className={styles.wrapper}>
       <Header title="Purchase Order List" />
 
-        {/* Filters */}
-        <div className={styles.filtersContainer}>
-          <div className={styles.filtersGrid}>
+      {/* ══ FILTERS ══ */}
+      <div className={styles.inlineFiltersContainer}>
+        <div className={styles.poFiltersGrid}>
 
-            {/* Status */}
-            <div className={styles.filterGroup}>
-              <select
-                name="status"
-                value={filterInputs.status}
-                onChange={handleFilterChange}
-                className={styles.filterInput}
-              >
-                <option value="">All Status</option>
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s.id} value={s.id}>{s.label}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Search type + value */}
-            <div className={styles.searchGroup}>
-              <select
-                name="searchType"
-                value={filterInputs.searchType}
-                onChange={handleFilterChange}
-                className={styles.searchTypeSelect}
-              >
-                {SEARCH_TYPE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                name="searchValue"
-                placeholder={`Search by ${
-                  SEARCH_TYPE_OPTIONS.find((o) => o.value === filterInputs.searchType)?.label || ''
-                }...`}
-                value={filterInputs.searchValue}
-                onChange={handleFilterChange}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className={styles.searchInput}
-              />
-            </div>
-
-            {/* From Date */}
-            <div className={styles.filterGroup}>
-              <div className={styles.dateWrapper}>
-                {!filterInputs.dateFrom && (
-                  <span className={styles.datePlaceholder}>From Date</span>
-                )}
-                <input
-                  type="date"
-                  name="dateFrom"
-                  value={filterInputs.dateFrom}
-                  onChange={handleFilterChange}
-                  className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`}
-                />
-              </div>
-            </div>
-
-            {/* To Date */}
-            <div className={styles.filterGroup}>
-              <div className={styles.dateWrapper}>
-                {!filterInputs.dateTo && (
-                  <span className={styles.datePlaceholder}>To Date</span>
-                )}
-                <input
-                  type="date"
-                  name="dateTo"
-                  value={filterInputs.dateTo}
-                  onChange={handleFilterChange}
-                  className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`}
-                />
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className={styles.filterActions}>
-              <button onClick={handleSearch} className={styles.searchButton}>
-                <FiSearch size={18} />
-                Search
-              </button>
-              {isFiltersActive && (
-                <button onClick={handleClearFilters} className={styles.clearButton}>
-                  <FiX size={18} />
-                  Clear
-                </button>
-              )}
-              <button onClick={openAddForm} className={styles.addBtn}>
-                <FiPlus size={18} />
-                Add PO
-              </button>
-            </div>
-
+          {/* Search type + value */}
+          <div className={styles.searchGroup}>
+            <select
+              name="searchType"
+              value={filterInputs.searchType}
+              onChange={handleFilterChange}
+              className={styles.searchTypeSelect}
+            >
+              {SEARCH_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              name="searchValue"
+              placeholder={`Search by ${SEARCH_TYPE_OPTIONS.find((o) => o.value === filterInputs.searchType)?.label ?? ''}...`}
+              value={filterInputs.searchValue}
+              onChange={handleFilterChange}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className={styles.searchInput}
+            />
           </div>
-        </div>
 
-        {/* Table */}
+          {/* Status */}
+          <select
+            name="status"
+            value={filterInputs.status}
+            onChange={handleFilterChange}
+            className={styles.inlineFilterSelect}
+          >
+            <option value="">All Status</option>
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s.id} value={s.id}>{s.label}</option>
+            ))}
+          </select>
+
+          {/* From Date */}
+          <div className={styles.dateWrapper}>
+            {!filterInputs.dateFrom && <span className={styles.datePlaceholder}>From Date</span>}
+            <input
+              type="date"
+              name="dateFrom"
+              value={filterInputs.dateFrom}
+              onChange={handleFilterChange}
+              className={`${styles.inlineFilterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`}
+            />
+          </div>
+
+          {/* To Date */}
+          <div className={styles.dateWrapper}>
+            {!filterInputs.dateTo && <span className={styles.datePlaceholder}>To Date</span>}
+            <input
+              type="date"
+              name="dateTo"
+              value={filterInputs.dateTo}
+              onChange={handleFilterChange}
+              className={`${styles.inlineFilterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`}
+            />
+          </div>
+
+          {/* Actions */}
+          <div className={styles.inlineFilterActions}>
+            <button onClick={handleSearch} className={styles.searchButton}>
+              <FiSearch size={16} /> Search
+            </button>
+            {isFiltersActive && (
+              <button onClick={handleClearFilters} className={styles.clearButton}>
+                <FiX size={16} /> Clear
+              </button>
+            )}
+            <button onClick={openAddForm} className={styles.addBtn}>
+              <FiPlus size={17} /> Add PO
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ══ TABLE ══ */}
+      {loading ? (
+        <div className={styles.loading}>Loading purchase orders...</div>
+      ) : error ? (
+        <div className={styles.error}>Error: {error.message || error}</div>
+      ) : (
         <div className={styles.tableContainer}>
           <table className={styles.table}>
             <thead>
@@ -301,9 +260,9 @@ const PurchaseOrderList = () => {
             <tbody>
               {filteredPurchaseOrders.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className={styles.noData}>
+                  <td colSpan={8} className={styles.noData}>
                     {isFiltersActive
-                      ? 'No purchase orders found.'
+                      ? 'No purchase orders match the filters.'
                       : 'No purchase orders registered yet.'}
                   </td>
                 </tr>
@@ -313,11 +272,11 @@ const PurchaseOrderList = () => {
                     <td>
                       <div className={styles.nameCell}>
                         <div className={styles.avatar}>
-                          {po.poNumber?.charAt(0).toUpperCase() || 'P'}
+                          {po.poNumber?.charAt(0).toUpperCase() ?? 'P'}
                         </div>
                         <div>
                           <div className={styles.name}>{po.poNumber || '—'}</div>
-                          <div className={styles.subInfo}>{po.branchName || '—'}</div>
+                          <div className={styles.subText}>{po.branchName || '—'}</div>
                         </div>
                       </div>
                     </td>
@@ -325,14 +284,10 @@ const PurchaseOrderList = () => {
                     <td>{po.vendorName || '—'}</td>
                     <td>{po.contactPerson || '—'}</td>
                     <td>
-                      <span className={styles.amountBadge}>
-                        {formatAmount(po.totalAmount)}
-                      </span>
+                      <span className={styles.amountBadge}>{formatAmount(po.totalAmount)}</span>
                     </td>
                     <td>
-                      <span className={styles.amountBadge}>
-                        {formatAmount(po.netAmount)}
-                      </span>
+                      <span className={styles.amountBadge}>{formatAmount(po.netAmount)}</span>
                     </td>
                     <td>
                       <span className={`${styles.statusBadge} ${getStatusClass(po.status)}`}>
@@ -340,12 +295,14 @@ const PurchaseOrderList = () => {
                       </span>
                     </td>
                     <td>
-                      <button
-                        onClick={() => handleViewDetails(po)}
-                        className={styles.detailsBtn}
-                      >
-                        View Details
-                      </button>
+                      <div className={styles.actionsCell}>
+                        <button
+                          onClick={() => handleViewDetails(po)}
+                          className={styles.viewBtn}
+                        >
+                          View Details
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -353,14 +310,15 @@ const PurchaseOrderList = () => {
             </tbody>
           </table>
         </div>
+      )}
 
-        {/* ──────────────── Add Purchase Order Modal ──────────────── */}
-        <AddPurchaseOrder
-          isOpen={isAddFormOpen}
-          onClose={closeAddForm}
-          onAddSuccess={handleAddSuccess}
-        />
-      </div>
+      {/* ══ ADD PURCHASE ORDER MODAL ══ */}
+      <AddPurchaseOrder
+        isOpen={isAddFormOpen}
+        onClose={closeAddForm}
+        onAddSuccess={handleAddSuccess}
+      />
+    </div>
   );
 };
 

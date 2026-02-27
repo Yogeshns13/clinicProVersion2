@@ -420,7 +420,7 @@ const SalesCartList = () => {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Cart ID</th><th>Patient</th><th>Total Items</th><th>Total Amount</th><th>Status</th><th>Created Date</th><th>Actions</th>
+                <th>Patient</th><th>Total Items</th><th>Total Amount</th><th>Status</th><th>Created Date</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -429,7 +429,6 @@ const SalesCartList = () => {
               ) : (
                 filteredSalesCarts.map((cart) => (
                   <tr key={cart.id}>
-                    <td><span className={styles.cartIdBadge}>#{cart.id}</span></td>
                     <td><div className={styles.name}>{cart.customerName || '—'}</div></td>
                     <td><span className={styles.itemCountBadge}>{cart.totalItems ?? 0} items</span></td>
                     <td><span className={styles.amountBadge}>{formatCurrency(cart.totalAmount)}</span></td>
@@ -484,13 +483,17 @@ const SalesCartList = () => {
                 <>
                   <div className={styles.presInfoGrid}>
                     <div className={styles.presInfoItem}>
+                      <div className={styles.presInfoNew}>
                       <FiUser size={14} className={styles.presInfoIcon} />
                       <span className={styles.presInfoLabel}>Patient</span>
+                      </div>
                       <span className={styles.presInfoValue}>{confirm.prescription.patientName}<span className={styles.presInfoSub}>{confirm.prescription.patientFileNo}</span></span>
                     </div>
                     <div className={styles.presInfoItem}>
+                      <div className={styles.presInfoNew}>
                       <FiCalendar size={14} className={styles.presInfoIcon} />
                       <span className={styles.presInfoLabel}>Issued</span>
+                      </div>
                       <span className={styles.presInfoValue}>{formatDate(confirm.prescription.dateIssued)}</span>
                     </div>
                     {confirm.prescription.diagnosis && (
