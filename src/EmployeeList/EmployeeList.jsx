@@ -1,11 +1,11 @@
 // src/components/EmployeeList.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiX } from 'react-icons/fi';
 import { getEmployeeList, getDepartmentList } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddEmployee from './AddEmployee.jsx';
+import ViewEmployee from './ViewEmployee.jsx';
 import styles from './EmployeeList.module.css';
 
 // ────────────────────────────────────────────────
@@ -41,8 +41,6 @@ const SEARCH_TYPE_OPTIONS = [
 
 // ────────────────────────────────────────────────
 const EmployeeList = () => {
-  const navigate = useNavigate();
-
   // Data
   const [employees, setEmployees] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -69,6 +67,9 @@ const EmployeeList = () => {
 
   // Add Form Modal
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+
+  // View Employee Modal (replaces routing)
+  const [viewEmployeeId, setViewEmployeeId] = useState(null);
 
   // ────────────────────────────────────────────────
   // Derived: are any filters actually active?
@@ -162,12 +163,20 @@ const EmployeeList = () => {
     setAppliedFilters(empty);
   };
 
-  const handleViewDetails = (employee) => navigate(`/view-employee/${employee.id}`);
+  // Opens ViewEmployee popup instead of navigating
+  const handleViewDetails = (employee) => setViewEmployeeId(employee.id);
+  const handleCloseViewEmployee = () => setViewEmployeeId(null);
 
   const openAddForm  = () => setIsAddFormOpen(true);
   const closeAddForm = () => setIsAddFormOpen(false);
 
   const handleAddSuccess = () => fetchEmployees(appliedFilters);
+
+  // Called when employee is deleted inside ViewEmployee popup
+  const handleEmployeeDeleted = () => {
+    setViewEmployeeId(null);
+    fetchEmployees(appliedFilters);
+  };
 
   // ────────────────────────────────────────────────
   // Early returns
@@ -343,12 +352,23 @@ const EmployeeList = () => {
         </table>
       </div>
 
+      {/* ── Add Employee Modal ── */}
       <AddEmployee
         isOpen={isAddFormOpen}
         onClose={closeAddForm}
         departments={departments}
         onSuccess={handleAddSuccess}
       />
+
+      {/* ── View Employee Modal (no routing) ── */}
+      {viewEmployeeId !== null && (
+        <ViewEmployee
+          isOpen={viewEmployeeId !== null}
+          employeeId={viewEmployeeId}
+          onClose={handleCloseViewEmployee}
+          onDeleted={handleEmployeeDeleted}
+        />
+      )}
     </div>
   );
 };

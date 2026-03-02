@@ -239,7 +239,7 @@
 }
 
 .table td {
-  padding: 10px 17px;
+  padding: 6px 12px;
   border-bottom: 1px solid #e2e8f0;
   color: var(--po-text-dark);
   font-size: 0.82rem;

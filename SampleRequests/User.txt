@@ -60,9 +60,8 @@ SuspendUser
     "USER_ID" : 2000000,
     "ClinicID":1,    
     "UserName":"admin"
-    
-   
 }
+
 WebUserLogin
 {
     "CHANNEL_ID":1,
@@ -82,9 +81,8 @@ UserLogin
     "ClinicID":1,    
     "UserName":"admin",
     "Password":"admin@123"
-    
-   
 }
+
 ForgetPassword
 {
     "CHANNEL_ID":1,

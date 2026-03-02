@@ -1,282 +1,363 @@
 /* src/components/UpdateMedicineMaster.module.css */
 
-/* ==================== MAIN WRAPPER ==================== */
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --primary-start: #222b6c;
+  --primary-end:   #225ca0;
+  --accent-start:  #207d9c;
+  --accent-end:    #30b2b5;
+  --text-light:    #ffffff;
+  --text-dark:     #1e293b;
+  --glass-bg:      rgba(255, 255, 255, 0.92);
+
+  --modal-header-h: 72px;
+  --modal-footer-h: 76px;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== PAGE WRAPPER (page mode) ==================== */
 .wrapper {
-  padding: 20px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
   min-height: 100vh;
-  color: #1e293b;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, rgba(240, 247, 255, 0.5), rgba(230, 242, 255, 0.5));
 }
 
-/* ==================== CONTAINER ==================== */
 .container {
-  max-width: 1000px;
+  max-width: 860px;
   margin: 0 auto;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-/* ==================== BACK BUTTON ==================== */
+/* ==================== BACK BUTTON (page mode) ==================== */
 .backBtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #016183, #225ca0);
-  color: white;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
   border: none;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 0.88rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
-  margin-bottom: 20px;
+  font-family: inherit;
+  width: fit-content;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.25);
 }
 
 .backBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
 }
 
-/* ==================== MEDICINE INFO CARD ==================== */
-.infoCard {
-  background: white;
-  border-radius: 15px;
-  padding: 24px;
-  box-shadow: 0 8px 20px rgba(34, 43, 108, 0.08);
-  margin-bottom: 24px;
-  border: 2px solid rgba(48, 178, 181, 0.2);
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
+/* ==================== MODAL OVERLAY ==================== */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 22, 41, 0.85);
+  backdrop-filter: blur(9px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
 }
 
-.infoSection {
+/* ==================== MODAL CONTAINER ==================== */
+.modalContainer {
+  background: var(--glass-bg);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 1200px;
+  max-height: 90vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.infoItem {
+/* ==================== MODAL HEADER ==================== */
+.modalHeader {
+  flex-shrink: 0;
+  padding: 22px 28px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
 }
 
-.infoLabel {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.infoValue {
-  font-size: 1rem;
+.modalTitle {
+  margin: 0;
+  font-size: 1.4rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-light);
+}
+
+.modalCloseBtn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: var(--text-light);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.modalCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.08);
+}
+
+.modalCloseBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==================== MODAL BODY (scrollable) ==================== */
+.modalBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(90vh - var(--modal-header-h));
+  background: linear-gradient(135deg, rgba(240, 247, 255, 0.5), rgba(230, 242, 255, 0.5));
+  scrollbar-width: thin;
+  scrollbar-color: rgba(48, 178, 181, 0.4) transparent;
+}
+
+.modalBody::-webkit-scrollbar { width: 6px; }
+.modalBody::-webkit-scrollbar-track { background: transparent; }
+.modalBody::-webkit-scrollbar-thumb {
+  background: rgba(48, 178, 181, 0.4);
+  border-radius: 10px;
+}
+.modalBody::-webkit-scrollbar-thumb:hover {
+  background: rgba(48, 178, 181, 0.7);
 }
 
 /* ==================== FORM ==================== */
 .form {
-  background: white;
-  border-radius: 17px;
-  overflow: hidden;
-  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
-  border: 1px solid rgba(34, 43, 108, 0.1);
-  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 28px;
 }
 
+/* ==================== FORM SECTIONS ==================== */
 .formSection {
-  margin-bottom: 28px;
-  padding: 20px;
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(48, 178, 181, 0.04));
-  border-radius: 13px;
-  border: 1px solid rgba(34, 43, 108, 0.1);
-}
-
-.formSection:last-of-type {
-  margin-bottom: 0;
+  background: white;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .formSectionTitle {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #222b6c;
-  margin: 0 0 16px 0;
+  margin: 0 0 4px;
   padding-bottom: 10px;
-  border-bottom: 2px solid #30b2b5;
+  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-start);
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.formGroup {
-  margin-bottom: 16px;
+/* ==================== FORM ROWS & GROUPS ==================== */
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
 }
 
-.formGroup:last-child {
-  margin-bottom: 0;
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Timing pill group spans 2 grid columns */
+.colSpan2 {
+  grid-column: span 2;
+}
+
+/* Spans 2 columns in the 4-col grid */
+.colSpan2 {
+  grid-column: span 2;
 }
 
 .formLabel {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #475569;
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary-start);
 }
 
-.required {
-  color: #ef4444;
-  margin-left: 2px;
-}
+.required { color: #dc2626; font-weight: 700; }
 
+/* ==================== INPUTS ==================== */
 .formInput,
-.formSelect,
-.formTextarea {
+.formTextarea,
+.formSelect {
   width: 100%;
-  padding: 12px 16px;
-  border: 2px solid #e2e8f0;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(34, 43, 108, 0.15);
   border-radius: 10px;
-  font-size: 0.95rem;
-  color: #1e293b;
-  background: white;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  font-weight: 500;
   transition: all 0.3s ease;
   font-family: inherit;
   box-sizing: border-box;
 }
 
-.formInput:focus,
-.formSelect:focus,
-.formTextarea:focus {
-  outline: none;
-  border-color: #30b2b5;
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.1);
-}
-
-.formSelect {
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 16px center;
-  background-size: 12px;
-  padding-right: 40px;
-}
-
 .formTextarea {
   resize: vertical;
-  min-height: 100px;
+  min-height: 80px;
+  line-height: 1.5;
 }
 
-.formRow {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+.formInput::placeholder,
+.formTextarea::placeholder {
+  color: rgba(30, 41, 59, 0.35);
+}
+
+.formInput:focus,
+.formTextarea:focus,
+.formSelect:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
+  background: white;
+}
+
+.formInput:disabled,
+.formTextarea:disabled,
+.formSelect:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .formHint {
   font-size: 0.75rem;
-  color: #94a3b8;
-  margin-top: 6px;
-  font-weight: 500;
-}
-
-/* ==================== TIMING SELECTOR ==================== */
-.timingGroup {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  color: #64748b;
   margin-top: 2px;
 }
 
-.timingBtn {
+/* ==================== TIMING PILLS ==================== */
+.timingGroup {
   display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 18px;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
-  background: white;
-  color: #64748b;
-  font-size: 0.88rem;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.timingBtn {
+  padding: 8px 18px;
+  border-radius: 26px;
+  background: #f1f5f9;
+  border: 2px solid rgba(34, 43, 108, 0.15);
+  color: #475569;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.25s ease;
-  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-family: inherit;
 }
 
 .timingBtn:hover {
-  border-color: #30b2b5;
-  color: #207d9c;
-  background: rgba(48, 178, 181, 0.06);
+  border-color: var(--accent-end);
+  color: var(--accent-start);
+  background: rgba(48, 178, 181, 0.08);
+  transform: translateY(-1px);
 }
 
-/* Active / selected state */
 .timingBtnActive {
-  background: linear-gradient(135deg, #016183, #225ca0);
-  border-color: transparent;
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light) !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 12px rgba(32, 125, 156, 0.35);
+  transform: translateY(-1px);
 }
 
 .timingBtnActive:hover {
-  background: linear-gradient(135deg, #016183, #225ca0);
-  color: #ffffff;
-  box-shadow: 0 6px 16px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 6px 18px rgba(32, 125, 156, 0.5);
+  transform: translateY(-2px);
 }
 
-/* Single-letter key badge inside each button */
 .timingKey {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
-  background: rgba(0, 0, 0, 0.08);
-  font-size: 0.75rem;
   font-weight: 800;
-  line-height: 1;
+  font-size: 0.85rem;
+  min-width: 16px;
+  text-align: center;
 }
 
-.timingBtnActive .timingKey {
-  background: rgba(255, 255, 255, 0.25);
+.timingBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
-/* ==================== FORM ACTIONS ==================== */
+/* ==================== FORM ACTIONS (footer) ==================== */
 .actions {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 12px;
-  padding-top: 24px;
+  padding: 18px 0 4px;
   border-top: 2px solid rgba(34, 43, 108, 0.1);
-  margin-top: 28px;
+  margin-top: 4px;
 }
 
+/* ── Cancel ── */
 .btnCancel {
-  background: linear-gradient(135deg, #222b6c, #225ca0);
-  color: #ffffff;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
   border: none;
-  border-radius: 10px;
-  height: 44px;
-  padding: 0 24px;
+  border-radius: 14px;
+  height: 40px;
+  padding: 0 20px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   cursor: pointer;
   position: relative;
   overflow: hidden;
   transition: all 0.4s ease;
-  box-shadow: 0 5px 15px rgba(34, 43, 108, 0.3);
+  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
   white-space: nowrap;
   z-index: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  font-family: inherit;
 }
 
 .btnCancel::before {
@@ -290,29 +371,39 @@
 }
 
 .btnCancel:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(231, 76, 60, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
 }
 
-.btnCancel:hover::before {
-  opacity: 1;
+.btnCancel:hover::before { opacity: 1; }
+
+.btnCancel:active { transform: translateY(-1px); }
+
+.btnCancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
+/* ── Save ── */
 .btnSave {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  height: 44px;
+  height: 40px;
   padding: 0 24px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  border: none;
+  border-radius: 14px;
   cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  white-space: nowrap;
   position: relative;
   overflow: hidden;
-  transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
-  display: flex;
+  z-index: 1;
+  font-family: inherit;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
 }
@@ -324,7 +415,7 @@
   left: 50%;
   width: 0;
   height: 0;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(48, 178, 181, 0.35);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -332,142 +423,139 @@
   pointer-events: none;
 }
 
-.btnSave:hover:not(:disabled)::before {
-  width: 200px;
-  height: 200px;
+.btnSave:hover::before {
+  width: 280px;
+  height: 280px;
 }
 
-.btnSave:hover:not(:disabled) {
+.btnSave:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.45);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
 }
 
-.btnCancel:disabled,
+.btnSave:active { transform: translateY(-1px); }
+
 .btnSave:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
-/* ==================== LOADING & ERROR ==================== */
+/* ==================== LOADING / ERROR STATES ==================== */
 .loading,
 .error {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 70vh;
-  font-size: 1.3rem;
-  color: #64748b;
+  padding: 48px 28px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary-start);
 }
 
-.error { color: #ef4444; }
+.error { color: #dc2626; }
 
 /* ==================== DARK MODE ==================== */
-:global(.dark-mode) .wrapper {
-  background: #1e293b;
+:global(.dark-mode) .modalContainer {
+  background: rgba(30, 41, 59, 0.95);
 }
 
-:global(.dark-mode) .infoCard {
-  background: #1e293b;
-  border-color: #475569;
-}
-
-:global(.dark-mode) .infoLabel { color: #94a3b8; }
-:global(.dark-mode) .infoValue { color: #e2e8f0; }
-
-:global(.dark-mode) .form {
-  background: #1e293b;
-  border-color: #475569;
+:global(.dark-mode) .modalBody {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
 }
 
 :global(.dark-mode) .formSection {
-  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
-  border-color: #475569;
+  background: #1e293b;
+  box-shadow: 0 5px 17px rgba(0, 0, 0, 0.25);
 }
 
-:global(.dark-mode) .formSectionTitle { color: #e2e8f0; }
-:global(.dark-mode) .formLabel        { color: #94a3b8; }
+:global(.dark-mode) .formSectionTitle { color: var(--accent-end); }
+
+:global(.dark-mode) .formLabel { color: var(--accent-end); }
 
 :global(.dark-mode) .formInput,
-:global(.dark-mode) .formSelect,
-:global(.dark-mode) .formTextarea {
+:global(.dark-mode) .formTextarea,
+:global(.dark-mode) .formSelect {
   background: #0f172a;
   border-color: #475569;
   color: #e2e8f0;
 }
 
-:global(.dark-mode) .formInput:focus,
-:global(.dark-mode) .formSelect:focus,
-:global(.dark-mode) .formTextarea:focus {
-  border-color: #30b2b5;
-}
-
-:global(.dark-mode) .formSelect {
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-}
-
 :global(.dark-mode) .timingBtn {
-  background: #0f172a;
+  background: #334155;
   border-color: #475569;
   color: #94a3b8;
 }
 
 :global(.dark-mode) .timingBtn:hover {
-  border-color: #30b2b5;
-  color: #30b2b5;
-  background: rgba(48, 178, 181, 0.08);
+  border-color: var(--accent-end);
+  color: var(--accent-end);
+  background: rgba(48, 178, 181, 0.1);
 }
 
-:global(.dark-mode) .timingBtnActive {
-  background: linear-gradient(135deg, #016183, #225ca0);
-  border-color: transparent;
-  color: #ffffff;
+:global(.dark-mode) .actions {
+  border-top-color: rgba(71, 85, 105, 0.5);
 }
 
-:global(.dark-mode) .timingBtnActive:hover { color: #ffffff; }
+:global(.dark-mode) .modalBody::-webkit-scrollbar-thumb {
+  background: rgba(48, 178, 181, 0.5);
+}
 
-:global(.dark-mode) .actions { border-top-color: #475569; }
+:global(.dark-mode) .wrapper {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+}
 
 /* ==================== RESPONSIVE ==================== */
+@media (max-width: 1024px) {
+  .formRow { grid-template-columns: repeat(2, 1fr); }
+  .colSpan2 { grid-column: span 2; }
+}
+
 @media (max-width: 768px) {
-  .wrapper  { padding: 14px; }
-
-  .infoCard {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 20px;
+  :root {
+    --modal-header-h: 80px;
   }
 
-  .form     { padding: 20px; }
+  .formRow { grid-template-columns: 1fr; }
+  .colSpan2 { grid-column: span 1; }
 
-  .formSection { padding: 16px; }
+  .form { padding: 18px 20px; }
 
-  .formRow  { grid-template-columns: 1fr; }
+  .actions { flex-wrap: wrap; }
 
-  .timingGroup { gap: 8px; }
-
-  .timingBtn {
-    flex: 1;
-    justify-content: center;
-    min-width: calc(50% - 4px);
-  }
-
-  .actions  { flex-direction: column; }
-
-  .btnCancel,
-  .btnSave {
-    width: 100%;
+  .actions .btnCancel,
+  .actions .btnSave {
+    flex: 1 1 auto;
     justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
-  .formSectionTitle { font-size: 1rem; }
-  .infoValue        { font-size: 0.95rem; }
+  :root {
+    --modal-header-h: 90px;
+  }
 
-  .backBtn {
+  .modalOverlay { padding: 12px; }
+
+  .modalHeader { padding: 18px 20px; }
+
+  .modalTitle { font-size: 1.15rem; }
+
+  .form { padding: 14px 16px; }
+
+  .formSection { padding: 14px; }
+
+  .actions {
+    flex-direction: column;
+    padding: 16px 0 4px;
+    gap: 10px;
+  }
+
+  .actions .btnCancel,
+  .actions .btnSave {
     width: 100%;
     justify-content: center;
   }
 
-  .timingBtn { min-width: calc(50% - 4px); }
+  .container { padding: 16px; }
 }

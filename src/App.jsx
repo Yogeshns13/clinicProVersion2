@@ -43,7 +43,6 @@ import ConsultationChargeList from "./ConsultationCharge/Consultationchargelist.
 import InvoiceManagement from "./ConsultationCharge/Invoicemanagement.jsx";
 import InvoicePaymentManagement from "./ConsultationCharge/Invoicepaymentmanagement.jsx";
 import VendorList from "./Vendor/VendorList.jsx";
-import ViewMedicineMaster from "./MedicineMaster/ViewMedicineMaster.jsx";
 import MedicineMasterList from "./MedicineMaster/MedicineMasterList.jsx";
 import AddMedicineMaster from "./MedicineMaster/Addmedicinemaster.jsx";
 import UpdateMedicineMaster from "./MedicineMaster/UpdateMedicineMaster.jsx";
@@ -58,7 +57,6 @@ import MedicineStockByMedicine from "./MedicineMaster/MedicineStockbyMedicine.js
 import LabOrderList from "./LabWork/LabOrderList.jsx";
 import PurchaseOrderList from "./PurchaseOrder/PurchaseOrderList.jsx";
 import AddPurchaseOrder from "./PurchaseOrder/AddPurchaseOrder.jsx";
-import ViewPurchaseOrder from "./PurchaseOrder/ViewPurchaseOrder.jsx";
 import PurchaseOrderItems from "./PurchaseOrder/PurchaseOrderItems.jsx";
 import AddPurchaseOrderDetail from "./PurchaseOrder/AddPurchaseOrderDetail.jsx";
 import UpdatePurchaseOrderDetail from "./PurchaseOrder/UpdatePurchaseOrderDetail.jsx";
@@ -68,6 +66,8 @@ import LabInvoiceList from "./LabTestMaster/LabInvoiceList.jsx";
 import PharmacyInvoiceList from "./MedicineMaster/PharmacyInvoiceList.jsx";
 import SalesCartDetailList from "./SalesCart/SalesCartDetailList.jsx";
 import SalesCartList from "./SalesCart/SalesCartList.jsx";
+import PurchaseOrderDetailList from "./PurchaseOrder/PurchaseOrderItems.jsx";
+import ConsultedPatients from "./Consultation/ConsultedPatients.jsx";
 
 function App() {
   return (
@@ -115,6 +115,7 @@ function App() {
           <Route path="/view-patientvisit" element={<ViewPatientVisit/>} />
           <Route path="/update-patientvisit/:id" element={<UpdatePatientVisit/>} />
           <Route path="/consultation-list" element={<ConsultationList/>} />
+          <Route path="/consulted-patient" element={<ConsultedPatients/>} />  
           <Route path="/view-consultation/:id" element={<ViewConsultation/>} />
           <Route path="/add-consultation" element={<AddConsultation/>} />
           <Route path="/update-consultation/:id" element={<UpdateConsultation/>} />
@@ -127,7 +128,6 @@ function App() {
           <Route path="/medicine-stock/:id" element={<MedicineStockByMedicine/>} />
           <Route path="/add-medicinemaster" element={<AddMedicineMaster/>} />
           <Route path="/update-medicinemaster/:id" element={<UpdateMedicineMaster/>} />
-          <Route path="/view-medicinemaster/:id" element={<ViewMedicineMaster/>} />
           <Route path="/view-prescription/:id" element={<ViewPrescription/>} />
           <Route path="/view-laborder/:id" element={<ViewLabOrder/>} />
           <Route path="/labtestmaster" element={<LabMasterList/>} />
@@ -136,7 +136,7 @@ function App() {
           <Route path="/labwork-list" element={<LabWorkQueue/>} />
           <Route path="/purchaseorder-list" element={<PurchaseOrderList/>} />
           <Route path="/add-purchaseorder" element={<AddPurchaseOrder/>} />
-          <Route path="/view-purchaseorder/:id" element={<ViewPurchaseOrder/>} />
+          <Route path="/view-purchaseorder/:id" element={<PurchaseOrderDetailList/>} />
           <Route path="/purchaseorderitem" element={<PurchaseOrderItems/>} />
           <Route path="/add-purchaseorderdetail" element={<AddPurchaseOrderDetail/>} />
           <Route path="/update-purchaseorderdetail/:id" element={<UpdatePurchaseOrderDetail/>} />

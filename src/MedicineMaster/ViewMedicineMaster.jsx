@@ -6,7 +6,7 @@ import { getMedicineMasterList, deleteMedicineMaster } from '../api/api-pharmacy
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './ViewMedicineMaster.module.css';
-import modalStyles from './ViewMedicineMaster.module.css';
+import UpdateMedicineMaster from './UpdateMedicineMaster.jsx';
 
 // ────────────────────────────────────────────────
 // CONSTANTS — UNCHANGED
@@ -37,10 +37,8 @@ const MEDICINE_UNITS = [
   { id: 10, label: 'Roll' }
 ];
 
-// Timing display helpers
 const TIMING_LABELS = { M: 'Morning', A: 'Afternoon', E: 'Evening', N: 'Night' };
 
-// "M|E|N" → [{ key:'M', label:'Morning' }, ...]
 const parseTimingPills = (str) =>
   str
     ? str.split('|').filter(k => TIMING_LABELS[k]).map(k => ({ key: k, label: TIMING_LABELS[k] }))
@@ -48,59 +46,62 @@ const parseTimingPills = (str) =>
 
 // ────────────────────────────────────────────────
 // Props:
-//   isModal  (bool)   — when true renders as a popup
-//   onClose  (func)   — called to close the popup (required when isModal=true)
-//   medicineId (any)  — pass the id directly when used as a popup
-//                       (falls back to useParams when not provided)
+//   isModal         (bool) — when true renders as a popup
+//   onClose         (func) — called to close the popup
+//   medicineId      (any)  — pass id directly when used as popup
+//   onUpdateRequest (func) — called with medicineId when Update is clicked in modal mode;
+//                            parent is responsible for closing this popup and opening update
 // ────────────────────────────────────────────────
-const ViewMedicineMaster = ({ isModal = false, onClose, medicineId }) => {
+const ViewMedicineMaster = ({ isModal = false, onClose, medicineId, onUpdateRequest }) => {
   const params   = useParams();
   const navigate = useNavigate();
 
-  // Use prop id when in modal mode, otherwise fall back to route param
   const id = isModal ? medicineId : params.id;
 
   const [medicine, setMedicine] = useState(null);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState(null);
 
+  // Only used in PAGE mode (not modal mode)
+  const [isUpdateOpen, setIsUpdateOpen] = useState(false);
+
   // ────────────────────────────────────────────────
-  useEffect(() => {
-    const fetchMedicineDetails = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchMedicineDetails = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        const clinicId = Number(localStorage.getItem('clinicID'));
-        const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
 
-        const data = await getMedicineMasterList(clinicId, {
-          BranchID:   branchId,
-          MedicineID: Number(id),
-        });
+      const data = await getMedicineMasterList(clinicId, {
+        BranchID:   branchId,
+        MedicineID: Number(id),
+      });
 
-        if (data && data.length > 0) {
-          setMedicine(data[0]);
-        } else {
-          setError({ message: 'Medicine not found' });
-        }
-      } catch (err) {
-        console.error('fetchMedicineDetails error:', err);
-        setError(
-          err?.status >= 400 || err?.code >= 400
-            ? err
-            : { message: err.message || 'Failed to load medicine details' }
-        );
-      } finally {
-        setLoading(false);
+      if (data && data.length > 0) {
+        setMedicine(data[0]);
+      } else {
+        setError({ message: 'Medicine not found' });
       }
-    };
+    } catch (err) {
+      console.error('fetchMedicineDetails error:', err);
+      setError(
+        err?.status >= 400 || err?.code >= 400
+          ? err
+          : { message: err.message || 'Failed to load medicine details' }
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (id) fetchMedicineDetails();
   }, [id]);
 
   // ────────────────────────────────────────────────
-  // Helper functions — UNCHANGED
+  // Helpers — UNCHANGED
   const getTypeLabel = (typeId) =>
     MEDICINE_TYPES.find((t) => t.id === typeId)?.label || '—';
 
@@ -110,8 +111,7 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId }) => {
   const formatDate = (dateString) => {
     if (!dateString) return '—';
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-IN', {
+      return new Date(dateString).toLocaleDateString('en-IN', {
         year: 'numeric', month: 'short', day: 'numeric',
       });
     } catch {
@@ -124,16 +124,18 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId }) => {
     return `₹${parseFloat(price).toFixed(2)}`;
   };
 
-  const getStatusClass = (status) => {
-    if (status === 'active')   return 'active';
-    if (status === 'inactive') return 'inactive';
-    return 'inactive';
+  const STATUS_MAP = {
+    1: { label: 'Active',       cls: 'active' },
+    2: { label: 'Inactive',     cls: 'inactive' },
+    3: { label: 'Discontinued', cls: 'discontinued' },
+    4: { label: 'Out of Stock', cls: 'outofstock' },
   };
 
-  // ────────────────────────────────────────────────
-  // Handlers — UNCHANGED (back/close is now modal-aware)
-  const handleUpdateClick = () => navigate(`/update-medicinemaster/${medicine.id}`);
+  const getStatusLabel = (status) => STATUS_MAP[status]?.label || '—';
+  const getStatusClass = (status) => STATUS_MAP[status]?.cls  || 'inactive';
 
+  // ────────────────────────────────────────────────
+  // Handlers — UNCHANGED
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this medicine?')) return;
     try {
@@ -158,16 +160,24 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId }) => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Close modal on overlay click (only in modal mode)
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget && isModal && onClose) onClose();
+  // ── CHANGED: in modal mode — delegate to parent via onUpdateRequest
+  //             in page mode  — open the update popup internally as before
+  const handleUpdateClick = () => {
+    if (isModal && onUpdateRequest) {
+      onUpdateRequest(id);   // parent closes this popup and opens the update popup
+    } else {
+      setIsUpdateOpen(true); // page mode: open update popup on top
+    }
+  };
+
+  // ── Called when UpdateMedicineMaster saves successfully (page mode only) ──
+  const handleUpdateSuccess = () => {
+    setIsUpdateOpen(false);
+    fetchMedicineDetails();
   };
 
   // ────────────────────────────────────────────────
-  // Build the detail content (shared between page & modal)
   const renderContent = () => {
-    // Early returns inside content
     if (error && (error?.status >= 400 || error?.code >= 400)) return <ErrorHandler error={error} />;
     if (loading)   return <div className={styles.loading}>Loading medicine details...</div>;
     if (error)     return <div className={styles.error}>Error: {error.message || error}</div>;
@@ -178,17 +188,14 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId }) => {
     return (
       <div className={styles.detailsCard}>
 
-        {/* Header Section — UNCHANGED */}
+        {/* ── Gradient Header ── */}
         <div className={styles.cardHeader}>
           <div className={styles.headerInfo}>
             <h2>{medicine.name}</h2>
             <p className={styles.subtitle}>
-              {getTypeLabel(medicine.type)} - {getUnitLabel(medicine.unit)}
+              {getTypeLabel(medicine.type)} — {getUnitLabel(medicine.unit)}
             </p>
             <div className={styles.badgeContainer}>
-              <span className={`${styles.statusBadge} ${styles[getStatusClass(medicine.status)]} ${styles.large}`}>
-                {medicine.status}
-              </span>
               {medicine.isLowStock && (
                 <span className={styles.lowStockBadge}>
                   <FiAlertTriangle size={14} />
@@ -197,14 +204,19 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId }) => {
               )}
             </div>
           </div>
+          {isModal && onClose && (
+            <button onClick={onClose} className={styles.headerCloseBtn} title="Close">
+              <FiX size={20} />
+            </button>
+          )}
         </div>
 
-        {/* Details Body */}
+        {/* ── Scrollable Body ── */}
         <div className={styles.cardBody}>
 
-          {/* Section 1: Basic Information */}
+          {/* Section 1: Medicine Details */}
           <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Basic Information</h3>
+            <h3 className={styles.sectionTitle}>Medicine Details</h3>
             <div className={styles.detailsGrid}>
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Medicine Name</span>
@@ -260,10 +272,27 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId }) => {
             )}
           </div>
 
-          {/* Section 2: Pricing Information — UNCHANGED */}
+          {/* Section 2: Inventory & Pricing */}
           <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Pricing Information</h3>
+            <h3 className={styles.sectionTitle}>Inventory &amp; Pricing Details</h3>
             <div className={styles.detailsGrid}>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Current Stock</span>
+                <span className={`${styles.detailValue} ${medicine.isLowStock ? styles.lowStockText : ''}`}>
+                  {medicine.stockQuantity}
+                  {medicine.isLowStock && <FiAlertTriangle size={16} />}
+                </span>
+              </div>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Reorder Level</span>
+                <span className={styles.detailValue}>{medicine.reorderLevelQty}</span>
+              </div>
+              <div className={styles.detailItem}>
+                <span className={styles.detailLabel}>Status</span>
+                <span className={`${styles.statusBadge} ${styles[getStatusClass(medicine.status)]}`}>
+                  {getStatusLabel(medicine.status)}
+                </span>
+              </div>
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>MRP</span>
                 <span className={styles.detailValue}>{formatPrice(medicine.mrp)}</span>
@@ -276,37 +305,6 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId }) => {
                 <span className={styles.detailLabel}>Sell Price</span>
                 <span className={styles.detailValue}>{formatPrice(medicine.sellPrice)}</span>
               </div>
-            </div>
-          </div>
-
-          {/* Section 3: Stock & Inventory — UNCHANGED */}
-          <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Stock &amp; Inventory</h3>
-            <div className={styles.detailsGrid}>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Current Stock</span>
-                <span className={`${styles.detailValue} ${medicine.isLowStock ? styles.lowStockText : ''}`}>
-                  {medicine.stockQuantity}
-                  {medicine.isLowStock && <FiAlertTriangle size={16} style={{ marginLeft: '8px' }} />}
-                </span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Reorder Level</span>
-                <span className={styles.detailValue}>{medicine.reorderLevelQty}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Status</span>
-                <span className={`${styles.statusBadge} ${styles[getStatusClass(medicine.status)]}`}>
-                  {medicine.status}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 4: Tax Information — UNCHANGED */}
-          <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Tax Information</h3>
-            <div className={styles.detailsGrid}>
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>CGST</span>
                 <span className={styles.detailValue}>{medicine.cgstPercentage}%</span>
@@ -324,9 +322,9 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId }) => {
             </div>
           </div>
 
-          {/* Section 5: Additional Details — UNCHANGED */}
+          {/* Section 3: Stock & System Info */}
           <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>Additional Details</h3>
+            <h3 className={styles.sectionTitle}>Stock &amp; System Information</h3>
             <div className={styles.detailsGrid}>
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>HSN Code</span>
@@ -340,13 +338,6 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId }) => {
                 <span className={styles.detailLabel}>Branch</span>
                 <span className={styles.detailValue}>{medicine.branchName || '—'}</span>
               </div>
-            </div>
-          </div>
-
-          {/* Section 6: System Information — UNCHANGED */}
-          <div className={styles.detailsSection}>
-            <h3 className={styles.sectionTitle}>System Information</h3>
-            <div className={styles.detailsGrid}>
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Date Created</span>
                 <span className={styles.detailValue}>{formatDate(medicine.dateCreated)}</span>
@@ -355,16 +346,12 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId }) => {
                 <span className={styles.detailLabel}>Date Modified</span>
                 <span className={styles.detailValue}>{formatDate(medicine.dateModified)}</span>
               </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Medicine ID</span>
-                <span className={styles.detailValue}>{medicine.id}</span>
-              </div>
             </div>
           </div>
 
         </div>
 
-        {/* Footer Actions — UNCHANGED */}
+        {/* ── Footer Actions ── */}
         <div className={styles.cardFooter}>
           <button onClick={handleDelete} className={`${styles.btnHold} ${styles.btnDelete}`}>
             Delete Medicine
@@ -379,18 +366,13 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId }) => {
   };
 
   // ────────────────────────────────────────────────
-  // MODAL MODE
+  // MODAL MODE — no stacked UpdateMedicineMaster here;
+  // the parent (MedicineMasterList) handles it via onUpdateRequest
   // ────────────────────────────────────────────────
   if (isModal) {
     return (
-      <div className={modalStyles.modalOverlay} onClick={handleOverlayClick}>
-        <div className={modalStyles.modalContainer}>
-          {/* Close button */}
-          <div className={modalStyles.modalTopBar}>
-            <button onClick={handleBack} className={modalStyles.modalCloseBtn}>
-              <FiX size={16} /> Close
-            </button>
-          </div>
+      <div className={styles.modalOverlay}>
+        <div className={styles.modalContainer}>
           <ErrorHandler error={error} />
           {renderContent()}
         </div>
@@ -399,7 +381,7 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId }) => {
   }
 
   // ────────────────────────────────────────────────
-  // PAGE MODE (original behaviour — UNCHANGED)
+  // PAGE MODE — UNCHANGED (update popup still stacks on top)
   // ────────────────────────────────────────────────
   return (
     <div className={styles.wrapper}>
@@ -413,6 +395,16 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId }) => {
       </div>
 
       {renderContent()}
+
+      {/* Update popup for page mode */}
+      {isUpdateOpen && (
+        <UpdateMedicineMaster
+          isModal={true}
+          medicineId={id}
+          onClose={() => setIsUpdateOpen(false)}
+          onSuccess={handleUpdateSuccess}
+        />
+      )}
     </div>
   );
 };

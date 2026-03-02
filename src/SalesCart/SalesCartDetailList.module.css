@@ -1526,3 +1526,297 @@
   .uqInfoStrip { grid-template-columns: 1fr 1fr; }
   .uqModalBody { padding: 16px; }
 }
+
+/* ==================== ADDITIONS TO SalesCartDetailList.module.css ==================== */
+/* Append these styles to the bottom of your existing SalesCartDetailList.module.css     */
+
+/* ── Delete Cart header button ── */
+.deleteCartBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 20px;
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.87rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 18px rgba(220, 38, 38, 0.32);
+  white-space: nowrap;
+}
+
+.deleteCartBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 26px rgba(220, 38, 38, 0.45);
+}
+
+/* ── Delete detail row button ── */
+.deleteDetailBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-left: 6px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.deleteDetailBtn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+}
+
+.deleteDetailBtn:active {
+  transform: translateY(0);
+}
+
+/* ==================== SHARED DELETE CONFIRM MODAL ==================== */
+
+.delModal {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  animation: scaleIn 0.3s ease;
+}
+
+/* ── Del Header ── */
+.delModalHeader {
+  padding: 22px 26px;
+  background: linear-gradient(135deg, #b91c1c, #dc2626);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.delHeaderContent {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.delHeaderContent h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+}
+
+.delBadge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  width: fit-content;
+}
+
+.delCloseBtn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.delCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.32);
+  transform: scale(1.06);
+}
+
+/* ── Del Body ── */
+.delModalBody {
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.delWarningStrip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  background: rgba(254, 202, 202, 0.35);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  border-radius: 11px;
+}
+
+.delWarningIcon {
+  color: #dc2626;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.delWarningStrip span {
+  font-size: 0.84rem;
+  color: #7f1d1d;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.delErrorBanner {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 14px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 10px;
+  color: #dc2626;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.delProgressBanner {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 14px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  border-radius: 10px;
+  color: #dc2626;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.delSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(220, 38, 38, 0.2);
+  border-top-color: #dc2626;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ── Del Footer ── */
+.delModalFooter {
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.delCancelBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 42px;
+  padding: 0 20px;
+  background: rgba(100, 116, 139, 0.1);
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.87rem;
+  border: 2px solid rgba(100, 116, 139, 0.3);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.delCancelBtn:hover:not(:disabled) {
+  background: rgba(100, 116, 139, 0.2);
+  transform: translateY(-1px);
+}
+
+.delCancelBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.delConfirmBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 22px;
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: white;
+  font-weight: 700;
+  font-size: 0.87rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 17px rgba(220, 38, 38, 0.35);
+}
+
+.delConfirmBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.48);
+}
+
+.delConfirmBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.delBtnSpinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spinBtn 0.7s linear infinite;
+}
+
+/* ── Del dark mode ── */
+:global(.dark-mode) .delModal {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+:global(.dark-mode) .delModalBody { background: #1e293b; }
+
+:global(.dark-mode) .delWarningStrip {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.25);
+}
+
+:global(.dark-mode) .delWarningStrip span { color: #fca5a5; }
+
+:global(.dark-mode) .delModalFooter {
+  background: #1a2535;
+  border-top-color: #334155;
+}
+
+:global(.dark-mode) .delCancelBtn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+/* ── Del responsive ── */
+@media (max-width: 768px) {
+  .delModal { max-width: 100%; }
+  .delModalHeader { padding: 18px 20px; }
+  .delModalBody { padding: 18px 20px; }
+  .delModalFooter { flex-direction: column; padding: 14px 20px; }
+  .delCancelBtn, .delConfirmBtn { width: 100%; justify-content: center; }
+}

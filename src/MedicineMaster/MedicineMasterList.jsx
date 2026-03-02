@@ -17,6 +17,8 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './MedicineMasterList.module.css';
 import AddMedicineMaster from './Addmedicinemaster.jsx';
+import ViewMedicineMaster from './ViewMedicineMaster.jsx';
+import UpdateMedicineMaster from './UpdateMedicineMaster.jsx';
 
 // ──────────────────────────────────────────────────
 // CONSTANTS
@@ -67,9 +69,21 @@ const MedicineMasterList = () => {
   });
 
   // UI States
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState(null);
+  const [loading, setLoading]             = useState(true);
+  const [error, setError]                 = useState(null);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+
+  // View detail modal state
+  const [viewModal, setViewModal] = useState({
+    isOpen:     false,
+    medicineId: null,
+  });
+
+  // ── Update modal state (managed here so view popup can be closed first) ──
+  const [updateModal, setUpdateModal] = useState({
+    isOpen:     false,
+    medicineId: null,
+  });
 
   // ──────────────────────────────────────────────────
   // Derived: are any filters active?
@@ -130,7 +144,7 @@ const MedicineMasterList = () => {
   }, [appliedFilters]);
 
   // ──────────────────────────────────────────────────
-  // Statistics — UNCHANGED
+  // Statistics
   const getStatistics = () => ({
     totalMedicines: medicines.length,
     activeCount:    medicines.filter(m => m.status === 1).length,
@@ -143,7 +157,7 @@ const MedicineMasterList = () => {
   const statistics = getStatistics();
 
   // ──────────────────────────────────────────────────
-  // Filter handlers (ONLY these changed)
+  // Filter handlers
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
@@ -166,21 +180,16 @@ const MedicineMasterList = () => {
   };
 
   // ──────────────────────────────────────────────────
-  // All handlers below are UNCHANGED
-  const handleViewDetails = (medicine) => {
-    navigate(`/view-medicinemaster/${medicine.id}`);
-  };
-
   const handleEditClick = (medicine) => {
     navigate(`/update-medicinemaster/${medicine.id}`);
   };
 
+  // ── CHANGED: navigate to /medicinestock-list with medicineId in state ──
   const handleViewStock = (medicine) => {
-    navigate(`/medicine-stock/${medicine.id}`, {
+    navigate('/medicinestock-list', {
       state: {
+        medicineId:   medicine.id,
         medicineName: medicine.name,
-        genericName:  medicine.genericName,
-        manufacturer: medicine.manufacturer,
       },
     });
   };
@@ -193,6 +202,33 @@ const MedicineMasterList = () => {
 
   const formatCurrency = (value) =>
     `₹${parseFloat(value || 0).toFixed(2)}`;
+
+  // Open view modal
+  const handleViewDetails = (medicine) => {
+    setViewModal({ isOpen: true, medicineId: medicine.id });
+  };
+
+  // Close view modal
+  const handleCloseViewModal = () => {
+    setViewModal({ isOpen: false, medicineId: null });
+  };
+
+  // Called by ViewMedicineMaster when "Update Medicine" is clicked
+  const handleUpdateRequest = (medicineId) => {
+    setViewModal({ isOpen: false, medicineId: null });
+    setUpdateModal({ isOpen: true, medicineId });
+  };
+
+  // Close update modal
+  const handleCloseUpdateModal = () => {
+    setUpdateModal({ isOpen: false, medicineId: null });
+  };
+
+  // Called after a successful update — refresh list and close update modal
+  const handleUpdateSuccess = () => {
+    setUpdateModal({ isOpen: false, medicineId: null });
+    fetchMedicines(appliedFilters);
+  };
 
   // ──────────────────────────────────────────────────
   // Early returns
@@ -209,41 +245,6 @@ const MedicineMasterList = () => {
     <div className={styles.wrapper}>
       <ErrorHandler error={error} />
       <Header title="Medicine Master" />
-
-      {/* Statistics Cards — UNCHANGED */}
-      <div className={styles.statsGrid}>
-        <div className={styles.statCard}>
-          <div className={styles.statCardHeader}>
-            <span className={styles.statCardTitle}>Total Medicines</span>
-            <div className={styles.statCardIcon}><FiPackage size={20} /></div>
-          </div>
-          <p className={styles.statCardValue}>{statistics.totalMedicines}</p>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statCardHeader}>
-            <span className={styles.statCardTitle}>Active</span>
-            <div className={styles.statCardIcon}><FiCheckCircle size={20} /></div>
-          </div>
-          <p className={styles.statCardValue}>{statistics.activeCount}</p>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statCardHeader}>
-            <span className={styles.statCardTitle}>Low Stock</span>
-            <div className={styles.statCardIcon}><FiAlertCircle size={20} /></div>
-          </div>
-          <p className={styles.statCardValue}>{statistics.lowStockCount}</p>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statCardHeader}>
-            <span className={styles.statCardTitle}>Total Value</span>
-            <div className={styles.statCardIcon}><FiPackage size={20} /></div>
-          </div>
-          <p className={styles.statCardValue}>{formatCurrency(statistics.totalValue)}</p>
-        </div>
-      </div>
 
       {/* ── Single-line Filter Bar ── */}
       <div className={styles.filtersContainer}>
@@ -342,7 +343,7 @@ const MedicineMasterList = () => {
         </div>
       </div>
 
-      {/* Table — UNCHANGED */}
+      {/* Table */}
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
@@ -445,12 +446,32 @@ const MedicineMasterList = () => {
         </table>
       </div>
 
-      {/* Add Medicine Modal — UNCHANGED */}
+      {/* Add Medicine Modal */}
       <AddMedicineMaster
         isOpen={isAddFormOpen}
         onClose={closeModals}
         onSuccess={handleAddSuccess}
       />
+
+      {/* View Medicine Detail Modal */}
+      {viewModal.isOpen && (
+        <ViewMedicineMaster
+          isModal={true}
+          medicineId={viewModal.medicineId}
+          onClose={handleCloseViewModal}
+          onUpdateRequest={handleUpdateRequest}
+        />
+      )}
+
+      {/* Update Medicine Modal */}
+      {updateModal.isOpen && (
+        <UpdateMedicineMaster
+          isModal={true}
+          medicineId={updateModal.medicineId}
+          onClose={handleCloseUpdateModal}
+          onSuccess={handleUpdateSuccess}
+        />
+      )}
     </div>
   );
 };

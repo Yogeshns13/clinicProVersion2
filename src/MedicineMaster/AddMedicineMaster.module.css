@@ -44,7 +44,7 @@
   background: var(--glass-bg);
   border-radius: 20px;
   width: 100%;
-  max-width: 860px;
+  max-width: 1200px;
   max-height: 90vh;
   overflow: hidden;
   display: flex;
@@ -68,7 +68,6 @@
 .headerContent { flex: 1; }
 
 .header h2 {
-  margin: 0 0 4px;
   font-size: 1.4rem;
   font-weight: 700;
   color: var(--text-light);
@@ -102,10 +101,6 @@
 }
 
 /* ==================== FORM WRAPPER ==================== */
-/*
-  <form> fills all remaining height between header and footer.
-  overflow: hidden so the inner .body can scroll.
-*/
 .form {
   flex: 1;
   display: flex;
@@ -130,19 +125,12 @@
   scrollbar-color: rgba(48, 178, 181, 0.4) transparent;
 }
 
-.body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.body::-webkit-scrollbar-track {
-  background: transparent;
-}
-
+.body::-webkit-scrollbar { width: 6px; }
+.body::-webkit-scrollbar-track { background: transparent; }
 .body::-webkit-scrollbar-thumb {
   background: rgba(48, 178, 181, 0.4);
   border-radius: 10px;
 }
-
 .body::-webkit-scrollbar-thumb:hover {
   background: rgba(48, 178, 181, 0.7);
 }
@@ -153,10 +141,12 @@
   border-radius: 12px;
   padding: 18px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .formSectionHeader {
-  margin-bottom: 16px;
   padding-bottom: 10px;
   border-bottom: 2px solid rgba(48, 178, 181, 0.2);
 }
@@ -174,7 +164,7 @@
 /* ==================== FORM GRID ==================== */
 .formGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
 }
 
@@ -184,9 +174,15 @@
   gap: 6px;
 }
 
+/* Full-width (composition textarea) */
 .formGroup.fullWidth,
 .fullWidth {
   grid-column: 1 / -1;
+}
+
+/* Timing pill group spans 2 grid columns */
+.colSpan2 {
+  grid-column: span 2;
 }
 
 .formGroup label {
@@ -315,8 +311,6 @@
   background: #f8fafc;
 }
 
-/* ==================== FOOTER BUTTONS ==================== */
-
 /* ── Cancel ── */
 .btnCancel {
   background: linear-gradient(135deg, #016183, var(--primary-end));
@@ -398,8 +392,8 @@
 }
 
 .btnSubmit:hover::before {
-  width: 220px;
-  height: 220px;
+  width: 280px;
+  height: 280px;
 }
 
 .btnSubmit:hover {
@@ -463,6 +457,11 @@
 }
 
 /* ==================== RESPONSIVE ==================== */
+@media (max-width: 1024px) {
+  .formGrid { grid-template-columns: repeat(2, 1fr); }
+  .colSpan2 { grid-column: span 2; }
+}
+
 @media (max-width: 768px) {
   :root {
     --modal-header-h: 90px;
@@ -470,6 +469,7 @@
   }
 
   .formGrid { grid-template-columns: 1fr; }
+  .colSpan2 { grid-column: span 1; }
 
   .body { padding: 18px 20px; }
 

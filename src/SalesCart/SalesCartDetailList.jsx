@@ -18,11 +18,13 @@ import {
   FiPercent,
   FiEdit2,
   FiDollarSign,
+  FiTrash2,
 } from 'react-icons/fi';
 import {
   getSalesCartDetailList,
   generatePharmacyInvoice,
   deleteSalesCartDetail,
+  deleteSalesCart,
   addSalesCartDetail,
 } from '../api/api-pharmacy.js';
 import Header from '../Header/Header.jsx';
@@ -64,6 +66,21 @@ const SalesCartDetailList = () => {
     submitting:   false,
     error:        null,
     success:      false,
+  });
+
+  // ── NEW: Delete entire cart modal state ───────────────
+  const [deleteCart, setDeleteCart] = useState({
+    isOpen:     false,
+    submitting: false,
+    error:      null,
+  });
+
+  // ── NEW: Delete single cart detail modal state ────────
+  const [deleteDetail, setDeleteDetail] = useState({
+    isOpen:     false,
+    item:       null,
+    submitting: false,
+    error:      null,
   });
 
   // ─────────────────────────────────────────────────────
@@ -322,6 +339,48 @@ const SalesCartDetailList = () => {
   };
 
   // ─────────────────────────────────────────────────────
+  // NEW: DELETE ENTIRE CART HANDLERS
+  // ─────────────────────────────────────────────────────
+  const openDeleteCartModal  = () => setDeleteCart({ isOpen: true, submitting: false, error: null });
+  const closeDeleteCartModal = () => { if (!deleteCart.submitting) setDeleteCart({ isOpen: false, submitting: false, error: null }); };
+
+  const handleDeleteCart = async () => {
+    setDeleteCart((prev) => ({ ...prev, submitting: true, error: null }));
+    try {
+      await deleteSalesCart(Number(cartId));
+      setDeleteCart({ isOpen: false, submitting: false, error: null });
+      navigate(-1);
+    } catch (err) {
+      setDeleteCart((prev) => ({
+        ...prev,
+        submitting: false,
+        error: err.message || 'Failed to delete sales cart.',
+      }));
+    }
+  };
+
+  // ─────────────────────────────────────────────────────
+  // NEW: DELETE SINGLE CART DETAIL HANDLERS
+  // ─────────────────────────────────────────────────────
+  const openDeleteDetailModal  = (item) => setDeleteDetail({ isOpen: true, item, submitting: false, error: null });
+  const closeDeleteDetailModal = () => { if (!deleteDetail.submitting) setDeleteDetail({ isOpen: false, item: null, submitting: false, error: null }); };
+
+  const handleDeleteDetail = async () => {
+    setDeleteDetail((prev) => ({ ...prev, submitting: true, error: null }));
+    try {
+      await deleteSalesCartDetail(deleteDetail.item.id);
+      setDeleteDetail({ isOpen: false, item: null, submitting: false, error: null });
+      fetchDetails();
+    } catch (err) {
+      setDeleteDetail((prev) => ({
+        ...prev,
+        submitting: false,
+        error: err.message || 'Failed to delete item.',
+      }));
+    }
+  };
+
+  // ─────────────────────────────────────────────────────
   // EARLY RETURN
   // ─────────────────────────────────────────────────────
   if (error && (error?.status >= 400 || error?.code >= 400)) {
@@ -350,6 +409,13 @@ const SalesCartDetailList = () => {
               <FiDownload size={15} />
               Export CSV
             </button>
+
+            {/* ── NEW: Delete Cart button ── */}
+            <button className={styles.deleteCartBtn} onClick={openDeleteCartModal}>
+              <FiTrash2 size={15} />
+              Delete Cart
+            </button>
+
             <button className={styles.invoiceBtn} onClick={openInvoiceModal}>
               <FiFileText size={15} />
               Generate Invoice
@@ -504,6 +570,15 @@ const SalesCartDetailList = () => {
                           <FiEdit2 size={13} />
                           Qty
                         </button>
+
+                        {/* ── NEW: Delete detail button ── */}
+                        <button
+                          className={styles.deleteDetailBtn}
+                          onClick={() => openDeleteDetailModal(item)}
+                          title="Delete item"
+                        >
+                          <FiTrash2 size={13} />
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -556,7 +631,7 @@ const SalesCartDetailList = () => {
         </>
       )}
 
-      {/* ══ GENERATE INVOICE MODAL — redesigned to match uqModal / Add to Cart style ══ */}
+      {/* ══ GENERATE INVOICE MODAL ══ */}
       {invoice.isOpen && (
         <div
           className={styles.modalOverlay}
@@ -600,7 +675,6 @@ const SalesCartDetailList = () => {
 
               {!invoice.success && (
                 <>
-                  {/* Summary info strip */}
                   <div className={styles.ivInfoStrip}>
                     <div className={styles.ivInfoBlock}>
                       <span className={styles.ivInfoLabel}>Total Items</span>
@@ -620,7 +694,6 @@ const SalesCartDetailList = () => {
                     </div>
                   </div>
 
-                  {/* Discount input */}
                   <div className={styles.ivFormSection}>
                     <div className={styles.ivFormGroup}>
                       <label>
@@ -652,7 +725,6 @@ const SalesCartDetailList = () => {
                     </div>
                   </div>
 
-                  {/* Error banner */}
                   {invoice.error && (
                     <div className={styles.ivErrorBanner}>
                       <FiAlertCircle size={15} />
@@ -660,7 +732,6 @@ const SalesCartDetailList = () => {
                     </div>
                   )}
 
-                  {/* Progress banner */}
                   {invoice.submitting && (
                     <div className={styles.ivProgressBanner}>
                       <div className={styles.ivSpinner} />
@@ -719,7 +790,6 @@ const SalesCartDetailList = () => {
         >
           <div className={styles.uqModal} onClick={(e) => e.stopPropagation()}>
 
-            {/* ── Header ── */}
             <div className={styles.uqModalHeader}>
               <div className={styles.uqHeaderContent}>
                 <h2>Update Quantity & Discount</h2>
@@ -736,10 +806,8 @@ const SalesCartDetailList = () => {
               )}
             </div>
 
-            {/* ── Body ── */}
             <div className={styles.uqModalBody}>
 
-              {/* Success flash */}
               {updateQty.success && (
                 <div className={styles.uqSuccessState}>
                   <div className={styles.uqSuccessIcon}>
@@ -758,7 +826,6 @@ const SalesCartDetailList = () => {
 
               {!updateQty.success && (
                 <>
-                  {/* Current info strip */}
                   <div className={styles.uqInfoStrip}>
                     <div className={styles.uqInfoBlock}>
                       <span className={styles.uqInfoLabel}>Medicine</span>
@@ -786,10 +853,8 @@ const SalesCartDetailList = () => {
                     </div>
                   </div>
 
-                  {/* Form fields */}
                   <div className={styles.uqFormSection}>
                     <div className={styles.uqFormGrid}>
-                      {/* Quantity */}
                       <div className={styles.uqFormGroup}>
                         <label>New Quantity</label>
                         <input
@@ -814,7 +879,6 @@ const SalesCartDetailList = () => {
                         </span>
                       </div>
 
-                      {/* Discount */}
                       <div className={styles.uqFormGroup}>
                         <label>
                           <FiPercent size={13} />
@@ -847,7 +911,6 @@ const SalesCartDetailList = () => {
                     </div>
                   </div>
 
-                  {/* Error banner */}
                   {updateQty.error && (
                     <div className={styles.uqErrorBanner}>
                       <FiAlertCircle size={15} />
@@ -855,7 +918,6 @@ const SalesCartDetailList = () => {
                     </div>
                   )}
 
-                  {/* Progress banner */}
                   {updateQty.submitting && (
                     <div className={styles.uqProgressBanner}>
                       <div className={styles.uqSpinner} />
@@ -866,7 +928,6 @@ const SalesCartDetailList = () => {
               )}
             </div>
 
-            {/* ── Footer ── */}
             {!updateQty.success && (
               <div className={styles.uqModalFooter}>
                 <button
@@ -895,6 +956,147 @@ const SalesCartDetailList = () => {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ══ NEW: DELETE ENTIRE CART MODAL ══ */}
+      {deleteCart.isOpen && (
+        <div
+          className={styles.modalOverlay}
+          onClick={!deleteCart.submitting ? closeDeleteCartModal : undefined}
+        >
+          <div className={styles.delModal} onClick={(e) => e.stopPropagation()}>
+
+            <div className={styles.delModalHeader}>
+              <div className={styles.delHeaderContent}>
+                <h2>Delete Sales Cart</h2>
+                {meta?.customerName && (
+                  <span className={styles.delBadge}>{meta.customerName}</span>
+                )}
+              </div>
+              {!deleteCart.submitting && (
+                <button className={styles.delCloseBtn} onClick={closeDeleteCartModal}>
+                  <FiX size={20} />
+                </button>
+              )}
+            </div>
+
+            <div className={styles.delModalBody}>
+              <div className={styles.delWarningStrip}>
+                <FiAlertCircle size={18} className={styles.delWarningIcon} />
+                <span>
+                  Are you sure you want to delete this entire sales cart
+                  {meta?.customerName ? <> for <strong>{meta.customerName}</strong></> : ''}?
+                  All {details.length} item{details.length !== 1 ? 's' : ''} will be removed.
+                  This action cannot be undone.
+                </span>
+              </div>
+
+              {deleteCart.error && (
+                <div className={styles.delErrorBanner}>
+                  <FiAlertCircle size={14} />
+                  <span>{deleteCart.error}</span>
+                </div>
+              )}
+
+              {deleteCart.submitting && (
+                <div className={styles.delProgressBanner}>
+                  <div className={styles.delSpinner} />
+                  <span>Deleting cart, please wait...</span>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.delModalFooter}>
+              <button
+                className={styles.delCancelBtn}
+                onClick={closeDeleteCartModal}
+                disabled={deleteCart.submitting}
+              >
+                No, Cancel
+              </button>
+              <button
+                className={styles.delConfirmBtn}
+                onClick={handleDeleteCart}
+                disabled={deleteCart.submitting}
+              >
+                {deleteCart.submitting ? (
+                  <><div className={styles.delBtnSpinner} /> Deleting...</>
+                ) : (
+                  <><FiTrash2 size={15} /> Yes, Delete</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ NEW: DELETE SINGLE DETAIL MODAL ══ */}
+      {deleteDetail.isOpen && deleteDetail.item && (
+        <div
+          className={styles.modalOverlay}
+          onClick={!deleteDetail.submitting ? closeDeleteDetailModal : undefined}
+        >
+          <div className={styles.delModal} onClick={(e) => e.stopPropagation()}>
+
+            <div className={styles.delModalHeader}>
+              <div className={styles.delHeaderContent}>
+                <h2>Delete Item</h2>
+                <span className={styles.delBadge}>{deleteDetail.item.medicineName}</span>
+              </div>
+              {!deleteDetail.submitting && (
+                <button className={styles.delCloseBtn} onClick={closeDeleteDetailModal}>
+                  <FiX size={20} />
+                </button>
+              )}
+            </div>
+
+            <div className={styles.delModalBody}>
+              <div className={styles.delWarningStrip}>
+                <FiAlertCircle size={18} className={styles.delWarningIcon} />
+                <span>
+                  Are you sure you want to delete{' '}
+                  <strong>{deleteDetail.item.medicineName}</strong> from the cart?
+                  This action cannot be undone.
+                </span>
+              </div>
+
+              {deleteDetail.error && (
+                <div className={styles.delErrorBanner}>
+                  <FiAlertCircle size={14} />
+                  <span>{deleteDetail.error}</span>
+                </div>
+              )}
+
+              {deleteDetail.submitting && (
+                <div className={styles.delProgressBanner}>
+                  <div className={styles.delSpinner} />
+                  <span>Deleting item, please wait...</span>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.delModalFooter}>
+              <button
+                className={styles.delCancelBtn}
+                onClick={closeDeleteDetailModal}
+                disabled={deleteDetail.submitting}
+              >
+                No, Cancel
+              </button>
+              <button
+                className={styles.delConfirmBtn}
+                onClick={handleDeleteDetail}
+                disabled={deleteDetail.submitting}
+              >
+                {deleteDetail.submitting ? (
+                  <><div className={styles.delBtnSpinner} /> Deleting...</>
+                ) : (
+                  <><FiTrash2 size={15} /> Yes, Delete</>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

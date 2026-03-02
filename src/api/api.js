@@ -180,7 +180,6 @@ export const uploadIDProof = async (file) => {
   }
 };
 
-
 export const getFile = async (fileId) => {
   try {
     if (!fileId) {
@@ -1044,7 +1043,7 @@ export const addEmployee = async (employeeData) => {
   }
 
   const finalClinicId = PRODUCTION_MODE ? getClinicId() : (employeeData.clinicId || 0);
-  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (employeeData.branchID || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (employeeData.branchId || 0);
 
   const payload = {
     CHANNEL_ID,

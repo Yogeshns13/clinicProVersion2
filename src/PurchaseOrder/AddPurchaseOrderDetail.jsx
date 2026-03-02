@@ -321,41 +321,6 @@ const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID
             {formError && <div className={styles.alertError}>{formError}</div>}
             {formSuccess && <div className={styles.alertSuccess}>Item added successfully!</div>}
 
-            {/* ── Purchase Order Section ── */}
-            <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>
-                <FiPackage size={17} />
-                Purchase Order
-              </h3>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  Purchase Order <span className={styles.required}>*</span>
-                </label>
-                {loadingPOs ? (
-                  <div className={`${styles.searchableInput} ${styles.searchableInputDisabled}`}>
-                    <FiSearch className={styles.searchIcon} size={15} />
-                    <span className={styles.searchablePlaceholder}>Loading purchase orders...</span>
-                    <FiChevronDown size={15} className={styles.chevron} />
-                  </div>
-                ) : (
-                  <select
-                    name="POID"
-                    value={formData.POID}
-                    onChange={handlePOChange}
-                    required
-                    className={styles.formSelect}
-                  >
-                    <option value="">Select a purchase order</option>
-                    {purchaseOrders.map(po => (
-                      <option key={po.POID} value={po.POID}>
-                        {po.poNumber} — {po.vendorName} ({new Date(po.poDate).toLocaleDateString()})
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-            </div>
 
             {/* ── Medicine Section ── */}
             <div className={styles.section}>

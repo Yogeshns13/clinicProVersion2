@@ -18,10 +18,24 @@ import { useAuth } from "../context/AuthContext";
 import "./Sidebar.css";
 import logo from "../assets/cplogo.png";
 
+const getDefaultOpenDropdowns = (profileName) => {
+  const role = profileName?.toLowerCase();
+  const defaults = {
+    nurse: "patients",
+    pharmacy: "pharmacy",
+    labtest: "lab",
+    doctor: "consultation",
+    accounts: "invoice",
+  };
+  return defaults[role] ? { [defaults[role]]: true } : {};
+};
+
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [openDropdowns, setOpenDropdowns] = useState({});
   const { logout, profileName } = useAuth();
+  const [openDropdowns, setOpenDropdowns] = useState(() =>
+    getDefaultOpenDropdowns(profileName)
+  );
   const navigate = useNavigate();
 
   const hasAccess = (roles = []) => {
@@ -81,7 +95,8 @@ const Sidebar = () => {
       roles: ["admin", "spradmin", "doctor", "nurse", "fronttdesk", "accounts"],
       hasDropdown: true,
       subItems: [
-        {to: "/consultation-list", label: "Consultation List", roles: ["admin", "spradmin", "nurse", "doctor", "fronttdesk", "accounts"],},
+        {to: "/consultation-list", label: "Consultation List", roles: ["admin", "spradmin", "doctor"],},
+        {to: "/consulted-patient", label: "Consultation List", roles: ["nurse", "fronttdesk", "accounts"],},
         {to: "/consultationcharge-config", label: "Consul Charge Config", roles: ["admin", "spradmin", "fronttdesk", "accounts"],},
         {to: "/consultation-charge", label: "Consultation Charge", roles: ["admin", "spradmin", "fronttdesk", "accounts"],},
       ],

@@ -174,7 +174,6 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
         <div className={styles.header}>
           <div className={styles.headerContent}>
             <h2>Add New Medicine</h2>
-            <span className={styles.subtitle}>Enter medicine details to add to inventory</span>
           </div>
           <button onClick={handleClose} className={styles.closeBtn}>
             <FiX size={22} />
@@ -192,8 +191,9 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
               <div className={styles.formSectionHeader}>
                 <h3><FiPackage size={16} /> Basic Medicine Information</h3>
               </div>
-              <div className={styles.formGrid}>
 
+              {/* Row 1: Name | Generic Name | Manufacturer | Type */}
+              <div className={styles.formGrid}>
                 <div className={styles.formGroup}>
                   <label>Medicine Name <span className={styles.required}>*</span></label>
                   <input
@@ -219,19 +219,7 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                   />
                 </div>
 
-                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                  <label>Composition</label>
-                  <textarea
-                    name="composition"
-                    value={formData.composition}
-                    onChange={handleInputChange}
-                    placeholder="Enter composition details"
-                    rows={3}
-                    disabled={loading}
-                  />
-                </div>
-
-                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                <div className={styles.formGroup}>
                   <label>Manufacturer</label>
                   <input
                     type="text"
@@ -259,6 +247,18 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                   </select>
                 </div>
 
+                <div className={styles.formGroup}>
+                  <label>Composition</label>
+                  <input
+                    name="composition"
+                    value={formData.composition}
+                    onChange={handleInputChange}
+                    placeholder="Enter composition details"
+                    rows={3}
+                    disabled={loading}
+                  />
+                </div>
+            
                 <div className={styles.formGroup}>
                   <label>Unit <span className={styles.required}>*</span></label>
                   <select
@@ -324,8 +324,7 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                   />
                 </div>
 
-                {/* Timing pills */}
-                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                <div className={`${styles.formGroup} ${styles.colSpan2}`}>
                   <label>Timing</label>
                   <div className={styles.timingGroup}>
                     {TIMING_OPTIONS.map(opt => (
@@ -344,14 +343,13 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                     ))}
                   </div>
                 </div>
-
               </div>
             </div>
 
             {/* ── Pricing ── */}
             <div className={styles.formSection}>
               <div className={styles.formSectionHeader}>
-                <h3><FiDollarSign size={16} /> Pricing Information</h3>
+                <h3><FiDollarSign size={16} /> Pricing & Stock Information</h3>
               </div>
               <div className={styles.formGrid}>
 
@@ -396,16 +394,6 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                     disabled={loading}
                   />
                 </div>
-
-              </div>
-            </div>
-
-            {/* ── Stock & Tax ── */}
-            <div className={styles.formSection}>
-              <div className={styles.formSectionHeader}>
-                <h3><FiBarChart2 size={16} /> Stock & Tax Information</h3>
-              </div>
-              <div className={styles.formGrid}>
 
                 <div className={styles.formGroup}>
                   <label>Stock Quantity</label>

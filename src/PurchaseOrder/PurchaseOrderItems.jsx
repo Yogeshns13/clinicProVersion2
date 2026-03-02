@@ -62,9 +62,14 @@ const PurchaseOrderDetailList = () => {
   const [itemLoading, setItemLoading] = useState(true);
   const [itemError,   setItemError]   = useState(null);
 
-  // Delete confirm (inline, no window.confirm)
+  // Delete confirm for item (inline, no window.confirm)
   const [deleteConfirm, setDeleteConfirm] = useState({
     isOpen: false, item: null, submitting: false, error: null,
+  });
+
+  // ── NEW: Delete confirm for entire PO ─────────
+  const [deletePOConfirm, setDeletePOConfirm] = useState({
+    isOpen: false, submitting: false, error: null,
   });
 
   // Add modal
@@ -207,6 +212,25 @@ const PurchaseOrderDetailList = () => {
     }
   };
 
+  // ── NEW: Delete entire PO handlers ────────────
+  const openDeletePOConfirm  = () => setDeletePOConfirm({ isOpen: true, submitting: false, error: null });
+  const closeDeletePOConfirm = () => { if (!deletePOConfirm.submitting) setDeletePOConfirm({ isOpen: false, submitting: false, error: null }); };
+
+  const handleDeletePO = async () => {
+    setDeletePOConfirm((prev) => ({ ...prev, submitting: true, error: null }));
+    try {
+      await deletePurchaseOrder(Number(id));
+      setDeletePOConfirm({ isOpen: false, submitting: false, error: null });
+      navigate('/purchaseorder-list');
+    } catch (err) {
+      setDeletePOConfirm((prev) => ({
+        ...prev,
+        submitting: false,
+        error: err.message || 'Failed to delete purchase order.',
+      }));
+    }
+  };
+
   // ── Update modal handlers ──────────────────────
   const openUpdateModal  = (item) => setUpdateModal({ isOpen: true, item });
   const closeUpdateModal = ()     => setUpdateModal({ isOpen: false, item: null });
@@ -243,6 +267,11 @@ const PurchaseOrderDetailList = () => {
 
         {!poLoading && po && (
           <div className={styles.headerActions}>
+            {/* ── NEW: Delete PO Button ── */}
+            <button className={styles.btnDelete} onClick={openDeletePOConfirm}>
+              <FiTrash2 size={15} /> Delete PO
+            </button>
+
             <button className={styles.addItemBtn} onClick={() => setIsAddModalOpen(true)}>
               <FiPlus size={15} /> Add Item
             </button>
@@ -504,7 +533,7 @@ const PurchaseOrderDetailList = () => {
         </>
       )}
 
-      {/* ══ DELETE CONFIRM MODAL ══ */}
+      {/* ══ DELETE ITEM CONFIRM MODAL ══ */}
       {deleteConfirm.isOpen && (
         <div className={styles.modalOverlay} onClick={!deleteConfirm.submitting ? closeDeleteConfirm : undefined}>
           <div className={styles.delModal} onClick={(e) => e.stopPropagation()}>
@@ -554,6 +583,69 @@ const PurchaseOrderDetailList = () => {
                 disabled={deleteConfirm.submitting}
               >
                 {deleteConfirm.submitting ? (
+                  <><div className={styles.delBtnSpinner} /> Deleting...</>
+                ) : (
+                  <><FiTrash2 size={15} /> Yes, Delete</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ NEW: DELETE ENTIRE PO CONFIRM MODAL ══ */}
+      {deletePOConfirm.isOpen && (
+        <div className={styles.modalOverlay} onClick={!deletePOConfirm.submitting ? closeDeletePOConfirm : undefined}>
+          <div className={styles.delModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.delModalHeader}>
+              <div className={styles.delHeaderContent}>
+                <h2>Delete Purchase Order</h2>
+                {po?.poNumber && (
+                  <span className={styles.delMedBadge}>{po.poNumber}</span>
+                )}
+              </div>
+              {!deletePOConfirm.submitting && (
+                <button className={styles.delCloseBtn} onClick={closeDeletePOConfirm}>
+                  <FiX size={20} />
+                </button>
+              )}
+            </div>
+            <div className={styles.delModalBody}>
+              <div className={styles.delWarningStrip}>
+                <FiAlertCircle size={18} className={styles.delWarningIcon} />
+                <span>
+                  Are you sure you want to delete purchase order{' '}
+                  <strong>{po?.poNumber}</strong>? All items within this order
+                  will also be removed. This action cannot be undone.
+                </span>
+              </div>
+              {deletePOConfirm.error && (
+                <div className={styles.delErrorBanner}>
+                  <FiAlertCircle size={14} />
+                  <span>{deletePOConfirm.error}</span>
+                </div>
+              )}
+              {deletePOConfirm.submitting && (
+                <div className={styles.delProgressBanner}>
+                  <div className={styles.delSpinner} />
+                  <span>Deleting purchase order, please wait...</span>
+                </div>
+              )}
+            </div>
+            <div className={styles.delModalFooter}>
+              <button
+                className={styles.delCancelBtn}
+                onClick={closeDeletePOConfirm}
+                disabled={deletePOConfirm.submitting}
+              >
+                No, Cancel
+              </button>
+              <button
+                className={styles.delConfirmBtn}
+                onClick={handleDeletePO}
+                disabled={deletePOConfirm.submitting}
+              >
+                {deletePOConfirm.submitting ? (
                   <><div className={styles.delBtnSpinner} /> Deleting...</>
                 ) : (
                   <><FiTrash2 size={15} /> Yes, Delete</>

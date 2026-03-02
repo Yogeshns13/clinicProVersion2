@@ -427,8 +427,8 @@
   gap: 8px;
 }
 
-.stockBtn,
-.detailsBtn,
+
+
 .editBtn {
   padding: 7px 15px;
   font-size: 0.75rem;
@@ -443,27 +443,85 @@
   gap: 6px;
 }
 
-.stockBtn {
-  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
-  color: var(--text-light);
-  box-shadow: 0 3px 10px rgba(139, 92, 246, 0.3);
-}
-
-.stockBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(139, 92, 246, 0.45);
-}
-
 .detailsBtn {
   background: linear-gradient(135deg, #016183, var(--primary-end));
   color: var(--text-light);
+  border: none;
+  padding: 7px 15px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
   box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
 }
+
+.detailsBtn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.detailsBtn:hover::before { width: 170px; height: 170px; }
 
 .detailsBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);  /* ← added same hover as addBtn */
 }
+
+.stockBtn {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  border: none;
+  padding: 7px 15px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);  /* ← stronger shadow like addBtn */
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.stockBtn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.stockBtn:hover::before { width: 170px; height: 170px; }
+
+.stockBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);  /* ← same hover effect as addBtn */
+}
+
+
 
 .editBtn {
   background: rgba(100, 116, 139, 0.1);

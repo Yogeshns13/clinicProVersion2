@@ -36,7 +36,8 @@ const ROUTE_PERMISSIONS = {
   "/view-patientvisit": ["admin", "spradmin","fronttdesk", "nurse"],
   "/update-patientvisit/:id": ["admin", "spradmin","fronttdesk", "nurse"],
 
-  "/consultation-list": ["admin", "spradmin","fronttdesk","nurse","accounts","doctor"],
+  "/consultation-list": ["admin", "spradmin", "doctor"],
+  "/consulted-patient": ["admin", "spradmin","fronttdesk","nurse","accounts"],
   "/view-consultation/:id": ["admin", "spradmin", "nurse","fronttdesk", "doctor", "accounts"],
   "/add-consultation": ["admin", "spradmin", "doctor"],
   "/update-consultation/:id": ["admin", "spradmin", "doctor"],
@@ -56,7 +57,6 @@ const ROUTE_PERMISSIONS = {
   "/vendor-list": ["admin", "spradmin","pharmacy"],
   
   "/medicinemaster-list": ["admin", "spradmin","pharmacy","accounts","doctor", "fronttdesk"],
-  "/view-medicinemaster/:id": ["admin", "spradmin","pharmacy","accounts"],
   "/add-medicinemaster": ["admin", "spradmin","pharmacy","accounts"],
   "/update-medicinemaster/:id": ["admin", "spradmin","pharmacy","accounts"],
 

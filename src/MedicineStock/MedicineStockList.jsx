@@ -1,10 +1,13 @@
 // src/components/MedicineStockList.jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   FiSearch,
   FiPlus,
   FiX,
   FiChevronDown,
+  FiArrowLeft,
+  FiPackage,
 } from 'react-icons/fi';
 import { 
   getMedicineStockList,
@@ -26,18 +29,34 @@ const DEFAULT_FILTERS = {
   searchValue: '',
   expiryFrom:  '',
   expiryTo:    '',
+  medicineId:  null,
 };
 
 // ────────────────────────────────────────────────
 const MedicineStockList = () => {
+  const location = useLocation();
+  const navigate  = useNavigate();
+
+  const locationMedicineId   = location.state?.medicineId   ?? null;
+  const locationMedicineName = location.state?.medicineName ?? null;
+
   // Data
   const [allStockList, setAllStockList] = useState([]);
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState(null);
 
   // Filter inputs (staged, not applied until Search)
-  const [filterInputs,   setFilterInputs]   = useState({ ...DEFAULT_FILTERS });
-  const [appliedFilters, setAppliedFilters] = useState({ ...DEFAULT_FILTERS });
+  const [filterInputs, setFilterInputs] = useState({
+    ...DEFAULT_FILTERS,
+    medicineId:  locationMedicineId,
+    searchValue: locationMedicineName ?? '',
+  });
+
+  const [appliedFilters, setAppliedFilters] = useState({
+    ...DEFAULT_FILTERS,
+    medicineId:  locationMedicineId,
+    searchValue: locationMedicineName ?? '',
+  });
 
   // View Details modal
   const [selectedStock, setSelectedStock] = useState(null);
@@ -86,8 +105,13 @@ const MedicineStockList = () => {
 
     const options = {
       BranchID:       branchId,
-      MedicineName:   filters.searchType === 'medicineName' ? (filters.searchValue || '') : '',
-      BatchNo:        filters.searchType === 'batchNo'      ? (filters.searchValue || '') : '',
+      MedicineID:     filters.medicineId ? Number(filters.medicineId) : 0,
+      MedicineName:   filters.medicineId
+                        ? ''
+                        : filters.searchType === 'medicineName'
+                          ? (filters.searchValue || '')
+                          : '',
+      BatchNo:        filters.searchType === 'batchNo' ? (filters.searchValue || '') : '',
       ExpiryFrom:     filters.expiryFrom || '',
       ExpiryTo:       filters.expiryTo   || '',
       NearExpiryDays: 0,
@@ -120,7 +144,13 @@ const MedicineStockList = () => {
   };
 
   useEffect(() => {
-    fetchStockList(DEFAULT_FILTERS);
+    const initialFilters = {
+      ...DEFAULT_FILTERS,
+      medicineId:  locationMedicineId,
+      searchValue: locationMedicineName ?? '',
+    };
+    fetchStockList(initialFilters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ────────────────────────────────────────────────
@@ -129,7 +159,8 @@ const MedicineStockList = () => {
       appliedFilters.searchValue !== DEFAULT_FILTERS.searchValue ||
       appliedFilters.searchType  !== DEFAULT_FILTERS.searchType  ||
       appliedFilters.expiryFrom  !== DEFAULT_FILTERS.expiryFrom  ||
-      appliedFilters.expiryTo    !== DEFAULT_FILTERS.expiryTo
+      appliedFilters.expiryTo    !== DEFAULT_FILTERS.expiryTo    ||
+      appliedFilters.medicineId  !== DEFAULT_FILTERS.medicineId
     );
   }, [appliedFilters]);
 
@@ -196,8 +227,10 @@ const MedicineStockList = () => {
   };
 
   const handleSearch = () => {
-    setAppliedFilters({ ...filterInputs });
-    fetchStockList(filterInputs);
+    const updatedFilters = { ...filterInputs, medicineId: null };
+    setFilterInputs(updatedFilters);
+    setAppliedFilters(updatedFilters);
+    fetchStockList(updatedFilters);
   };
 
   const handleKeyPress = (e) => {
@@ -210,12 +243,17 @@ const MedicineStockList = () => {
     fetchStockList(DEFAULT_FILTERS);
   };
 
+  const handleBackToMasterList = () => {
+    navigate('/medicinemaster-list');
+  };
+
   // View details modal
   const openDetails  = (stock) => setSelectedStock(stock);
   const closeModal   = ()      => setSelectedStock(null);
 
   // Update modal (opens on top of details modal)
   const handleUpdateClick = (stock) => {
+    setSelectedStock(null);
     setUpdatingStock(stock);
   };
 
@@ -325,8 +363,33 @@ const MedicineStockList = () => {
       <ErrorHandler error={error} />
       <Header title="Medicine Stock Management" />
 
-      {/* ── Filter Bar ── */}
-      <div className={styles.filtersContainer}>
+      {/* ── Context Banner ── */}
+      {locationMedicineId && appliedFilters.medicineId && (
+        <div className={styles.contextBanner}>
+          <div className={styles.contextBannerLeft}>
+            <div className={styles.contextIconWrap}>
+              <FiPackage size={18} />
+            </div>
+            <div className={styles.contextBannerText}>
+              <span className={styles.contextBannerLabel}>Viewing stock for</span>
+              <span className={styles.contextBannerName}>{locationMedicineName}</span>
+            </div>
+          </div>
+          <div className={styles.contextBannerActions}>
+            <button onClick={handleBackToMasterList} className={styles.backBtn}>
+              <FiArrowLeft size={14} />
+              Back to Master List
+            </button>
+            <button onClick={handleClearFilters} className={styles.showAllBtn}>
+              <FiX size={13} />
+              Show All Stock
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Filter Bar — hidden when viewing a specific medicine's stock ── */}
+      {!appliedFilters.medicineId && <div className={styles.filtersContainer}>
         <div className={styles.filtersRow}>
 
           <div className={styles.searchGroup}>
@@ -394,7 +457,7 @@ const MedicineStockList = () => {
             Add Stock
           </button>
         </div>
-      </div>
+      </div>}
 
       {/* ── Table ── */}
       <div className={styles.tableContainer}>
@@ -473,8 +536,6 @@ const MedicineStockList = () => {
       {selectedStock && (
         <div className={styles.detailModalOverlay} onClick={closeModal}>
           <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
-
-            {/* Gradient Header */}
             <div className={styles.detailModalHeader}>
               <div className={styles.detailHeaderContent}>
                 <div className={styles.avatarLarge}>
@@ -487,7 +548,6 @@ const MedicineStockList = () => {
               <button onClick={closeModal} className={styles.detailCloseBtn}>✕</button>
             </div>
 
-            {/* Info Cards */}
             <div className={styles.detailModalBody}>
               <div className={styles.infoSection}>
 
@@ -571,17 +631,11 @@ const MedicineStockList = () => {
 
               </div>
 
-              {/* Footer */}
               <div className={styles.detailModalFooter}>
-                <button onClick={closeModal} className={styles.btnCancel}>
-                  Close
-                </button>
-                <button onClick={() => handleUpdateClick(selectedStock)} className={styles.btnUpdate}>
-                  Update Stock
-                </button>
+                <button onClick={closeModal} className={styles.btnCancel}>Close</button>
+                <button onClick={() => handleUpdateClick(selectedStock)} className={styles.btnUpdate}>Update Stock</button>
               </div>
             </div>
-
           </div>
         </div>
       )}
@@ -600,7 +654,6 @@ const MedicineStockList = () => {
         <div className={styles.addModalOverlay} onClick={closeAddForm}>
           <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
 
-            {/* Header */}
             <div className={styles.addModalHeader}>
               <div className={styles.addHeaderContent}>
                 <h2>Add New Medicine Stock</h2>
@@ -619,7 +672,6 @@ const MedicineStockList = () => {
                   </div>
                   <div className={styles.formGrid}>
 
-                    {/* Medicine Name Searchable Dropdown */}
                     <div className={`${styles.formGroup} ${styles.fullWidth}`} ref={medicineDropdownRef}>
                       <label>Medicine Name <span className={styles.required}>*</span></label>
                       <input type="hidden" name="MedicineID" value={formData.MedicineID} required />
@@ -692,7 +744,6 @@ const MedicineStockList = () => {
                 </div>
               </div>
 
-              {/* Footer */}
               <div className={styles.addModalFooter}>
                 <button type="button" onClick={closeAddForm} className={styles.btnCancel} disabled={formLoading}>
                   Cancel

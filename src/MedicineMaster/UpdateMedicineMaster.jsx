@@ -1,7 +1,7 @@
 // src/components/UpdateMedicineMaster.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiSave, FiPackage, FiDollarSign, FiBarChart2 } from 'react-icons/fi';
+import { FiArrowLeft, FiSave, FiPackage, FiDollarSign, FiBarChart2, FiX } from 'react-icons/fi';
 import { getMedicineMasterList, updateMedicineMaster } from '../api/api-pharmacy.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
@@ -33,7 +33,6 @@ const MEDICINE_UNITS = [
   { value: 10, label: 'Roll' }
 ];
 
-// ── Timing constants
 const TIMING_OPTIONS = [
   { key: 'M', label: 'Morning' },
   { key: 'A', label: 'Afternoon' },
@@ -41,28 +40,31 @@ const TIMING_OPTIONS = [
   { key: 'N', label: 'Night' },
 ];
 
-// "M|E|N" → ['M','E','N']
 const parseTimingString = (str) =>
   str ? str.split('|').filter(k => TIMING_OPTIONS.some(o => o.key === k)) : [];
 
-// ['M','E'] → "M|E"  (order preserved per TIMING_OPTIONS)
 const buildTimingString = (selected) =>
   TIMING_OPTIONS.filter(o => selected.includes(o.key)).map(o => o.key).join('|');
 
 // ──────────────────────────────────────────────────
-const UpdateMedicineMaster = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
+const UpdateMedicineMaster = ({
+  isModal    = false,
+  onClose,
+  onSuccess,
+  medicineId,
+}) => {
+  const { id: paramId } = useParams();
+  const navigate        = useNavigate();
+
+  const id = isModal ? medicineId : paramId;
 
   const [medicine, setMedicine]           = useState(null);
   const [loading, setLoading]             = useState(true);
   const [error, setError]                 = useState(null);
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  // Timing toggle state (array of selected keys)
   const [selectedTiming, setSelectedTiming] = useState([]);
 
-  // Form data — doseCount defaults to 1
   const [formData, setFormData] = useState({
     name:            '',
     genericName:     '',
@@ -70,7 +72,7 @@ const UpdateMedicineMaster = () => {
     manufacturer:    '',
     type:            0,
     dosageForm:      '',
-    doseCount:       1,   // ← default 1
+    doseCount:       1,
     unit:            0,
     hsnCode:         '',
     reorderLevelQty: 0,
@@ -84,7 +86,6 @@ const UpdateMedicineMaster = () => {
     status:          1
   });
 
-  // UNCHANGED
   useEffect(() => {
     if (id) fetchMedicineDetails();
   }, [id]);
@@ -97,14 +98,13 @@ const UpdateMedicineMaster = () => {
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
 
-      const options = { Page: 1, PageSize: 1, BranchID: branchId, MedicineID: Number(id) };
-      const data = await getMedicineMasterList(clinicId, options);
+      const data = await getMedicineMasterList(clinicId, {
+        Page: 1, PageSize: 1, BranchID: branchId, MedicineID: Number(id),
+      });
 
       if (data && data.length > 0) {
         const med = data[0];
         setMedicine(med);
-
-        // Populate form — UNCHANGED fields + new doseCount & timing
         setFormData({
           name:            med.name            || '',
           genericName:     med.genericName     || '',
@@ -112,21 +112,19 @@ const UpdateMedicineMaster = () => {
           manufacturer:    med.manufacturer    || '',
           type:            med.type            || 0,
           dosageForm:      med.dosageForm      || '',
-          doseCount:       med.doseCount       ?? 1,   // ← from API, fallback 1
+          doseCount:       med.doseCount       ?? 1,
           unit:            med.unit            || 0,
           hsnCode:         med.hsnCode         || '',
           reorderLevelQty: med.reorderLevelQty || 0,
-          mrp:             parseFloat(med.mrp)             || 0,
-          purchasePrice:   parseFloat(med.purchasePrice)   || 0,
-          sellPrice:       parseFloat(med.sellPrice)       || 0,
+          mrp:             parseFloat(med.mrp)            || 0,
+          purchasePrice:   parseFloat(med.purchasePrice)  || 0,
+          sellPrice:       parseFloat(med.sellPrice)      || 0,
           stockQuantity:   med.stockQuantity   || 0,
-          cgstPercentage:  parseFloat(med.cgstPercentage)  || 0,
-          sgstPercentage:  parseFloat(med.sgstPercentage)  || 0,
+          cgstPercentage:  parseFloat(med.cgstPercentage) || 0,
+          sgstPercentage:  parseFloat(med.sgstPercentage) || 0,
           barcode:         med.barcode         || '',
           status:          med.status === 'active' ? 1 : 0
         });
-
-        // Parse saved timing string into selected keys array
         setSelectedTiming(parseTimingString(med.timing || ''));
       } else {
         setError({ message: 'Medicine not found' });
@@ -139,7 +137,6 @@ const UpdateMedicineMaster = () => {
     }
   };
 
-  // UNCHANGED
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
     if (type === 'number') {
@@ -149,7 +146,6 @@ const UpdateMedicineMaster = () => {
     }
   };
 
-  // Toggle a timing key on/off
   const handleTimingToggle = (key) => {
     setSelectedTiming(prev =>
       prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
@@ -159,7 +155,6 @@ const UpdateMedicineMaster = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // UNCHANGED validations
     if (!formData.name.trim()) { setError({ message: 'Medicine name is required' }); return; }
     if (formData.type === 0)   { setError({ message: 'Please select a medicine type' }); return; }
     if (formData.unit === 0)   { setError({ message: 'Please select a unit' }); return; }
@@ -181,7 +176,7 @@ const UpdateMedicineMaster = () => {
         manufacturer:    formData.manufacturer.trim(),
         type:            formData.type,
         dosageForm:      formData.dosageForm.trim(),
-        doseCount:       formData.doseCount,                   // ← new
+        doseCount:       formData.doseCount,
         unit:            formData.unit,
         hsnCode:         formData.hsnCode.trim(),
         reorderLevelQty: formData.reorderLevelQty,
@@ -193,11 +188,16 @@ const UpdateMedicineMaster = () => {
         sgstPercentage:  formData.sgstPercentage,
         barcode:         formData.barcode.trim(),
         status:          formData.status,
-        timing:          buildTimingString(selectedTiming),    // ← new  e.g. "M|E|N"
+        timing:          buildTimingString(selectedTiming),
       };
 
       await updateMedicineMaster(updateData);
-      navigate('/medicinemaster-list');
+
+      if (isModal && onSuccess) {
+        onSuccess();
+      } else {
+        navigate('/medicinemaster-list');
+      }
     } catch (err) {
       console.error('handleSubmit error:', err);
       setError(err);
@@ -206,381 +206,296 @@ const UpdateMedicineMaster = () => {
     }
   };
 
-  // UNCHANGED
-  const handleCancel = () => navigate('/medicinemaster-list');
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '—';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const handleCancel = () => {
+    if (isModal && onClose) {
+      onClose();
+    } else {
+      navigate('/medicinemaster-list');
+    }
   };
 
-  // Early returns — UNCHANGED
   if (error && (error?.status >= 400 || error?.code >= 400)) return <ErrorHandler error={error} />;
-  if (loading) return <div className={styles.loading}>Loading medicine details...</div>;
-  if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
-  if (!medicine) return <div className={styles.error}>Medicine not found</div>;
+  if (loading) return (
+    isModal
+      ? <div className={styles.modalOverlay}><div className={styles.modalContainer}><div className={styles.loading}>Loading...</div></div></div>
+      : <div className={styles.loading}>Loading medicine details...</div>
+  );
+  if (!medicine) return (
+    isModal
+      ? <div className={styles.modalOverlay}><div className={styles.modalContainer}><div className={styles.error}>Medicine not found</div></div></div>
+      : <div className={styles.error}>Medicine not found</div>
+  );
 
-  // ──────────────────────────────────────────────────
+  const renderForm = () => (
+    <form onSubmit={handleSubmit} className={styles.form}>
+
+      {/* ── Basic Information ── */}
+      <div className={styles.formSection}>
+        <h3 className={styles.formSectionTitle}>
+          <FiPackage size={18} />
+          Basic Medicine Information
+        </h3>
+
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>
+              Medicine Name <span className={styles.required}>*</span>
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              placeholder="Enter medicine name"
+              className={styles.formInput}
+              required
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Generic Name</label>
+            <input
+              type="text"
+              name="genericName"
+              value={formData.genericName}
+              onChange={handleInputChange}
+              placeholder="Enter generic name"
+              className={styles.formInput}
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Manufacturer</label>
+            <input
+              type="text"
+              name="manufacturer"
+              value={formData.manufacturer}
+              onChange={handleInputChange}
+              placeholder="Enter manufacturer name"
+              className={styles.formInput}
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Composition</label>
+            <input
+              type="text"
+              name="composition"
+              value={formData.composition}
+              onChange={handleInputChange}
+              placeholder="Enter composition"
+              className={styles.formInput}
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>
+              Type <span className={styles.required}>*</span>
+            </label>
+            <select
+              name="type"
+              value={formData.type}
+              onChange={handleInputChange}
+              className={styles.formSelect}
+              required
+            >
+              <option value={0}>Select Type</option>
+              {MEDICINE_TYPES.map(t => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>
+              Unit <span className={styles.required}>*</span>
+            </label>
+            <select
+              name="unit"
+              value={formData.unit}
+              onChange={handleInputChange}
+              className={styles.formSelect}
+              required
+            >
+              <option value={0}>Select Unit</option>
+              {MEDICINE_UNITS.map(u => (
+                <option key={u.value} value={u.value}>{u.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Dosage Form</label>
+            <input
+              type="text"
+              name="dosageForm"
+              value={formData.dosageForm}
+              onChange={handleInputChange}
+              placeholder="e.g., 500mg, 10ml"
+              className={styles.formInput}
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Dose Count</label>
+            <input
+              type="number"
+              name="doseCount"
+              value={formData.doseCount}
+              onChange={handleInputChange}
+              placeholder="1"
+              className={styles.formInput}
+              min="0"
+            />
+          </div>
+        </div>
+
+        {/* Row 2: HSN Code | Barcode | Timing (spans 2 cols) */}
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>HSN Code</label>
+            <input
+              type="text"
+              name="hsnCode"
+              value={formData.hsnCode}
+              onChange={handleInputChange}
+              placeholder="Enter HSN code"
+              className={styles.formInput}
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Barcode</label>
+            <input
+              type="text"
+              name="barcode"
+              value={formData.barcode}
+              onChange={handleInputChange}
+              placeholder="Enter barcode"
+              className={styles.formInput}
+            />
+          </div>
+
+          {/* Timing spans the remaining 2 columns */}
+          <div className={`${styles.formGroup} ${styles.colSpan2}`}>
+            <label className={styles.formLabel}>Timing</label>
+            <div className={styles.timingGroup}>
+              {TIMING_OPTIONS.map(opt => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => handleTimingToggle(opt.key)}
+                  className={`${styles.timingBtn} ${
+                    selectedTiming.includes(opt.key) ? styles.timingBtnActive : ''
+                  }`}
+                >
+                  <span className={styles.timingKey}>{opt.key}</span>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Pricing Information ── */}
+      <div className={styles.formSection}>
+        <h3 className={styles.formSectionTitle}>
+          <FiDollarSign size={18} />
+          Pricing & Stock Information
+        </h3>
+
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>MRP (₹)</label>
+            <input type="number" name="mrp" value={formData.mrp} onChange={handleInputChange}
+              placeholder="0.00" className={styles.formInput} min="0" step="0.01" />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Purchase Price (₹)</label>
+            <input type="number" name="purchasePrice" value={formData.purchasePrice} onChange={handleInputChange}
+              placeholder="0.00" className={styles.formInput} min="0" step="0.01" />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Sell Price (₹)</label>
+            <input type="number" name="sellPrice" value={formData.sellPrice} onChange={handleInputChange}
+              placeholder="0.00" className={styles.formInput} min="0" step="0.01" />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Stock Quantity</label>
+            <input type="number" name="stockQuantity" value={formData.stockQuantity} onChange={handleInputChange}
+              placeholder="0" className={styles.formInput} min="0" />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Reorder Level Quantity</label>
+            <input type="number" name="reorderLevelQty" value={formData.reorderLevelQty} onChange={handleInputChange}
+              placeholder="0" className={styles.formInput} min="0" />
+            <p className={styles.formHint}>Alert when stock falls below this quantity</p>
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>CGST (%)</label>
+            <input type="number" name="cgstPercentage" value={formData.cgstPercentage} onChange={handleInputChange}
+              placeholder="0.00" className={styles.formInput} min="0" max="100" step="0.01" />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>SGST (%)</label>
+            <input type="number" name="sgstPercentage" value={formData.sgstPercentage} onChange={handleInputChange}
+              placeholder="0.00" className={styles.formInput} min="0" max="100" step="0.01" />
+          </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Status</label>
+            <select name="status" value={formData.status} onChange={handleInputChange} className={styles.formSelect}>
+              <option value={1}>Active</option>
+              <option value={0}>Inactive</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Form Actions ── */}
+      <div className={styles.actions}>
+        <button type="button" onClick={handleCancel} className={styles.btnCancel} disabled={submitLoading}>
+          Cancel
+        </button>
+        <button type="submit" className={styles.btnSave} disabled={submitLoading}>
+          <FiSave size={18} />
+          {submitLoading ? 'Saving...' : 'Save Changes'}
+        </button>
+      </div>
+
+    </form>
+  );
+
+  // ── MODAL MODE ──
+  if (isModal) {
+    return (
+      <div className={styles.modalOverlay}>
+        <div className={styles.modalContainer}>
+          <div className={styles.modalHeader}>
+            <h2 className={styles.modalTitle}>Update Medicine</h2>
+            {onClose && (
+              <button onClick={onClose} className={styles.modalCloseBtn} disabled={submitLoading}>
+                <FiX size={20} />
+              </button>
+            )}
+          </div>
+
+          <ErrorHandler error={error} />
+
+          <div className={styles.modalBody}>
+            {renderForm()}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── PAGE MODE ──
   return (
     <div className={styles.wrapper}>
       <ErrorHandler error={error} />
       <Header title="Update Medicine Master" />
 
       <div className={styles.container}>
-        {/* Back Button — UNCHANGED */}
         <button onClick={handleCancel} className={styles.backBtn}>
           <FiArrowLeft size={20} />
           Back to Medicine List
         </button>
 
-        {/* Update Form */}
-        <form onSubmit={handleSubmit} className={styles.form}>
-
-          {/* ── Basic Information — UNCHANGED ── */}
-          <div className={styles.formSection}>
-            <h3 className={styles.formSectionTitle}>
-              <FiPackage size={18} />
-              Basic Information
-            </h3>
-
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  Medicine Name <span className={styles.required}>*</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter medicine name"
-                  className={styles.formInput}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Generic Name</label>
-                <input
-                  type="text"
-                  name="genericName"
-                  value={formData.genericName}
-                  onChange={handleInputChange}
-                  placeholder="Enter generic name"
-                  className={styles.formInput}
-                />
-              </div>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Composition</label>
-              <textarea
-                name="composition"
-                value={formData.composition}
-                onChange={handleInputChange}
-                placeholder="Enter composition details"
-                className={styles.formTextarea}
-                rows={3}
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Manufacturer</label>
-              <input
-                type="text"
-                name="manufacturer"
-                value={formData.manufacturer}
-                onChange={handleInputChange}
-                placeholder="Enter manufacturer name"
-                className={styles.formInput}
-              />
-            </div>
-          </div>
-
-          {/* ── Medicine Details ── */}
-          <div className={styles.formSection}>
-            <h3 className={styles.formSectionTitle}>
-              <FiPackage size={18} />
-              Medicine Details
-            </h3>
-
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  Type <span className={styles.required}>*</span>
-                </label>
-                <select
-                  name="type"
-                  value={formData.type}
-                  onChange={handleInputChange}
-                  className={styles.formSelect}
-                  required
-                >
-                  <option value={0}>Select Type</option>
-                  {MEDICINE_TYPES.map(t => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  Unit <span className={styles.required}>*</span>
-                </label>
-                <select
-                  name="unit"
-                  value={formData.unit}
-                  onChange={handleInputChange}
-                  className={styles.formSelect}
-                  required
-                >
-                  <option value={0}>Select Unit</option>
-                  {MEDICINE_UNITS.map(u => (
-                    <option key={u.value} value={u.value}>{u.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Dosage Form + Dose Count — side by side */}
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Dosage Form</label>
-                <input
-                  type="text"
-                  name="dosageForm"
-                  value={formData.dosageForm}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 500mg, 10ml"
-                  className={styles.formInput}
-                />
-              </div>
-
-              {/* Dose Count — right after Dosage Form */}
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Dose Count</label>
-                <input
-                  type="number"
-                  name="doseCount"
-                  value={formData.doseCount}
-                  onChange={handleInputChange}
-                  placeholder="1"
-                  className={styles.formInput}
-                  min="0"
-                />
-              </div>
-            </div>
-
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>HSN Code</label>
-                <input
-                  type="text"
-                  name="hsnCode"
-                  value={formData.hsnCode}
-                  onChange={handleInputChange}
-                  placeholder="Enter HSN code"
-                  className={styles.formInput}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Barcode</label>
-                <input
-                  type="text"
-                  name="barcode"
-                  value={formData.barcode}
-                  onChange={handleInputChange}
-                  placeholder="Enter barcode"
-                  className={styles.formInput}
-                />
-              </div>
-            </div>
-
-            {/* Timing — selectable pill buttons */}
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Timing</label>
-              <div className={styles.timingGroup}>
-                {TIMING_OPTIONS.map(opt => (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    onClick={() => handleTimingToggle(opt.key)}
-                    className={`${styles.timingBtn} ${
-                      selectedTiming.includes(opt.key) ? styles.timingBtnActive : ''
-                    }`}
-                  >
-                    <span className={styles.timingKey}>{opt.key}</span>
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-              {selectedTiming.length > 0 && (
-                <p className={styles.formHint}>
-                  Timing value: <strong>{buildTimingString(selectedTiming)}</strong>
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* ── Pricing Information — UNCHANGED ── */}
-          <div className={styles.formSection}>
-            <h3 className={styles.formSectionTitle}>
-              <FiDollarSign size={18} />
-              Pricing Information
-            </h3>
-
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>MRP (₹)</label>
-                <input
-                  type="number"
-                  name="mrp"
-                  value={formData.mrp}
-                  onChange={handleInputChange}
-                  placeholder="0.00"
-                  className={styles.formInput}
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Purchase Price (₹)</label>
-                <input
-                  type="number"
-                  name="purchasePrice"
-                  value={formData.purchasePrice}
-                  onChange={handleInputChange}
-                  placeholder="0.00"
-                  className={styles.formInput}
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-            </div>
-
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Sell Price (₹)</label>
-                <input
-                  type="number"
-                  name="sellPrice"
-                  value={formData.sellPrice}
-                  onChange={handleInputChange}
-                  placeholder="0.00"
-                  className={styles.formInput}
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Stock Quantity</label>
-                <input
-                  type="number"
-                  name="stockQuantity"
-                  value={formData.stockQuantity}
-                  onChange={handleInputChange}
-                  placeholder="0"
-                  className={styles.formInput}
-                  min="0"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* ── Stock & Tax Information — UNCHANGED ── */}
-          <div className={styles.formSection}>
-            <h3 className={styles.formSectionTitle}>
-              <FiBarChart2 size={18} />
-              Stock &amp; Tax Information
-            </h3>
-
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Reorder Level Quantity</label>
-                <input
-                  type="number"
-                  name="reorderLevelQty"
-                  value={formData.reorderLevelQty}
-                  onChange={handleInputChange}
-                  placeholder="0"
-                  className={styles.formInput}
-                  min="0"
-                />
-                <p className={styles.formHint}>Alert when stock falls below this quantity</p>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>CGST (%)</label>
-                <input
-                  type="number"
-                  name="cgstPercentage"
-                  value={formData.cgstPercentage}
-                  onChange={handleInputChange}
-                  placeholder="0.00"
-                  className={styles.formInput}
-                  min="0"
-                  max="100"
-                  step="0.01"
-                />
-              </div>
-            </div>
-
-            <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>SGST (%)</label>
-                <input
-                  type="number"
-                  name="sgstPercentage"
-                  value={formData.sgstPercentage}
-                  onChange={handleInputChange}
-                  placeholder="0.00"
-                  className={styles.formInput}
-                  min="0"
-                  max="100"
-                  step="0.01"
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Status</label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className={styles.formSelect}
-                >
-                  <option value={1}>Active</option>
-                  <option value={0}>Inactive</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Form Actions — UNCHANGED ── */}
-          <div className={styles.actions}>
-            <button
-              type="button"
-              onClick={handleCancel}
-              className={styles.btnCancel}
-              disabled={submitLoading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className={styles.btnSave}
-              disabled={submitLoading}
-            >
-              <FiSave size={18} />
-              {submitLoading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-
-        </form>
+        {renderForm()}
       </div>
     </div>
   );

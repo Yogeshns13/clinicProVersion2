@@ -67,7 +67,7 @@ const PurchaseOrderList = () => {
         FromDate:   filters.dateFrom || '',
         ToDate:     filters.dateTo   || '',
       });
-
+      
       setAllPurchaseOrders(data);
     } catch (err) {
       setError(
@@ -276,7 +276,6 @@ const PurchaseOrderList = () => {
                         </div>
                         <div>
                           <div className={styles.name}>{po.poNumber || '—'}</div>
-                          <div className={styles.subText}>{po.branchName || '—'}</div>
                         </div>
                       </div>
                     </td>

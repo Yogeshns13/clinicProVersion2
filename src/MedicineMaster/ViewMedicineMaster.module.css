@@ -1,6 +1,6 @@
-/* ViewMedicineMaster.module.css */
+/* src/components/ViewMedicineMaster.module.css */
 
-/* ==================== ROOT & VARIABLES ==================== */
+/* ==================== CSS VARIABLES ==================== */
 :root {
   --primary-start: #222b6c;
   --primary-end:   #225ca0;
@@ -8,268 +8,62 @@
   --accent-end:    #30b2b5;
   --text-light:    #ffffff;
   --text-dark:     #1e293b;
+  --glass-bg:      rgba(255, 255, 255, 0.92);
+  --glass-border:  rgba(255, 255, 255, 0.4);
 }
 
-/* ==================== MAIN WRAPPER ==================== */
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== PAGE WRAPPER (page mode) ==================== */
 .wrapper {
   padding: 20px;
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
   min-height: 100vh;
   color: var(--text-dark);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* ==================== TOOLBAR / BACK BUTTON ==================== */
+/* ==================== TOOLBAR / BACK BUTTON (page mode) ==================== */
 .toolbar {
-  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .backBtn {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
+  height: 40px;
+  padding: 0 20px;
   background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: white;
+  color: var(--text-light);
+  font-weight: 700;
+  font-size: 0.94rem;
   border: none;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  border-radius: 14px;
   cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.25);
+  transition: all 0.4s ease;
+  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  white-space: nowrap;
 }
 
 .backBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(32, 125, 156, 0.35);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(32, 125, 156, 0.45);
 }
 
-/* ==================== MEDICINE DETAILS CARD ==================== */
-.detailsCard {
-  background: white;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(34, 43, 108, 0.12);
-  border: 1px solid rgba(34, 43, 108, 0.08);
-}
-
-/* Header Section */
-.cardHeader {
-  padding: 20px 24px;
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.04), rgba(48, 178, 181, 0.04));
-  border-bottom: 1px solid rgba(34, 43, 108, 0.1);
-}
-
-.headerInfo h2 {
-  margin: 0 0 6px 0;
-  font-size: 1.45rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.subtitle {
-  margin: 0 0 10px 0;
-  color: #64748b;
-  font-size: 0.9rem;
-}
-
-/* Badge Container */
-.badgeContainer {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-/* Status Badge */
-.statusBadge {
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  display: inline-block;
-}
-
-.statusBadge.active {
-  background: rgba(34, 197, 94, 0.15);
-  color: #166534;
-  border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
-.statusBadge.inactive {
-  background: rgba(239, 68, 68, 0.15);
-  color: #991b1b;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-.statusBadge.large {
-  padding: 8px 16px;
-  font-size: 0.85rem;
-}
-
-/* Low Stock Badge */
-.lowStockBadge {
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(245, 158, 11, 0.15);
-  color: #92400e;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-/* ==================== DETAILS BODY ==================== */
-.cardBody {
-  padding: 24px;
-}
-
-.detailsSection {
-  margin-bottom: 32px;
-}
-
-.sectionTitle {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--primary-start);
-  margin: 0 0 16px 0;
-  padding-bottom: 8px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.3);
-}
-
-/* Details Grid */
-.detailsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 18px 24px;
-}
-
-.detailItem {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.fullWidthDetail {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(34, 43, 108, 0.08);
-}
-
-.detailLabel {
-  font-size: 0.74rem;
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
-
-.detailValue {
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: var(--text-dark);
-  display: flex;
-  align-items: center;
-}
-
-.lowStockText {
-  color: #d97706;
-}
-
-/* ==================== TIMING DISPLAY ==================== */
-.timingDisplay {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 2px;
-}
-
-.timingPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(1, 97, 131, 0.1), rgba(34, 92, 160, 0.1));
-  border: 1.5px solid rgba(1, 97, 131, 0.25);
-  color: #016183;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.timingPillKey {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  background: linear-gradient(135deg, #016183, #225ca0);
-  color: #ffffff;
-  font-size: 0.7rem;
-  font-weight: 800;
-  line-height: 1;
-}
-
-/* ==================== FOOTER ACTIONS ==================== */
-.cardFooter {
-  padding: 20px 24px;
-  border-top: 1px solid rgba(34, 43, 108, 0.1);
-  background: rgba(243, 244, 246, 0.4);
-  display: flex;
-  justify-content: flex-end;
-  gap: 16px;
-}
-
-.btnHold,
-.btnUpdate,
-.btnDelete {
-  padding: 10px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  border: none;
-}
-
-.btnUpdate {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: white;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
-}
-
-.btnUpdate:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(32, 125, 156, 0.4);
-}
-
-.btnDelete,
-.btnHold {
-  background: #ef4444;
-  color: white;
-}
-
-.btnDelete:hover,
-.btnHold:hover {
-  background: #dc2626;
-  transform: translateY(-2px);
-}
-
-/* ==================== LOADING & ERROR ==================== */
+/* ==================== UTILITY STATES ==================== */
 .loading,
 .error {
   display: flex;
@@ -282,160 +76,461 @@
 
 .error { color: #ef4444; }
 
-/* ==================== DARK MODE ==================== */
-:global(.dark-mode) .wrapper {
-  background: #1e293b;
-}
-
-:global(.dark-mode) .detailsCard {
-  background: #1e293b;
-  border-color: #475569;
-}
-
-:global(.dark-mode) .cardHeader {
-  background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(48, 178, 181, 0.08));
-  border-bottom-color: #475569;
-}
-
-:global(.dark-mode) .subtitle    { color: #94a3b8; }
-:global(.dark-mode) .sectionTitle { color: #e2e8f0; }
-:global(.dark-mode) .detailLabel  { color: #94a3b8; }
-:global(.dark-mode) .detailValue  { color: #e2e8f0; }
-
-:global(.dark-mode) .fullWidthDetail {
-  border-top-color: #475569;
-}
-
-:global(.dark-mode) .timingPill {
-  background: rgba(1, 97, 131, 0.18);
-  border-color: rgba(48, 178, 181, 0.3);
-  color: #30b2b5;
-}
-
-:global(.dark-mode) .cardFooter {
-  background: rgba(15, 23, 42, 0.4);
-  border-top-color: #475569;
-}
-
-/* ==================== RESPONSIVE ==================== */
-@media (max-width: 768px) {
-  .detailsGrid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .cardFooter {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .btnHold,
-  .btnUpdate,
-  .btnDelete {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .cardHeader,
-  .cardBody,
-  .cardFooter {
-    padding: 16px;
-  }
-
-  .headerInfo h2 { font-size: 1.3rem; }
-
-  .backBtn {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-/* ViewMedicineMasterModal.module.css */
-/* Modal Overlay & Container — add these to your existing ViewMedicineMaster.module.css
-   OR import this file separately in ViewMedicineMaster.jsx */
-
+/* ==================== MODAL OVERLAY (modal mode) ==================== */
+/* Mirrors .detailModalOverlay */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 1000;
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+  backdrop-filter: blur(4px);
   padding: 20px;
-  animation: overlayFadeIn 0.2s ease;
 }
 
-@keyframes overlayFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
+/* ==================== MODAL CONTAINER (modal mode) ==================== */
 .modalContainer {
   width: 100%;
-  max-width: 860px;
+  max-width: 900px;
   max-height: 90vh;
-  overflow-y: auto;
-  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== DETAILS CARD ==================== */
+/* Mirrors .detailModalContent */
+.detailsCard {
   background: white;
-  box-shadow: 0 24px 60px rgba(34, 43, 108, 0.22);
-  animation: modalSlideIn 0.25s ease;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(34, 43, 108, 0.2) transparent;
-}
-
-.modalContainer::-webkit-scrollbar { width: 6px; }
-.modalContainer::-webkit-scrollbar-track { background: transparent; }
-.modalContainer::-webkit-scrollbar-thumb { background: rgba(34, 43, 108, 0.2); border-radius: 4px; }
-
-@keyframes modalSlideIn {
-  from { opacity: 0; transform: translateY(-20px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0)    scale(1);    }
-}
-
-/* Close button row at the top of the modal */
-.modalTopBar {
+  border-radius: 20px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease;
+}
+
+/* ==================== GRADIENT HEADER ==================== */
+/* Mirrors .detailModalHeader */
+.cardHeader {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
+  display: flex;
   justify-content: space-between;
-  padding: 14px 20px 0 20px;
+  align-items: flex-start;
+  gap: 20px;
+  flex-shrink: 0;
 }
 
-.modalCloseBtn {
+/* Mirrors .detailHeaderContent */
+.headerInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Mirrors .detailHeaderTitle */
+.headerInfo h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin: 0 0 4px;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.82);
+  margin: 0 0 6px;
+}
+
+.badgeContainer {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 4px;
+}
+
+/* LOW STOCK badge — mirrors .detailBadgeDanger */
+.lowStockBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  background: rgba(220, 38, 38, 0.4);
+  border: 1px solid rgba(220, 38, 38, 0.6);
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-light);
+}
+
+/* ✕ close button — mirrors .detailCloseBtn */
+.headerCloseBtn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: var(--text-light);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #016183, #225ca0);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.85rem;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.headerCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.08);
+}
+
+/* ==================== SCROLLABLE BODY ==================== */
+/* Mirrors .detailModalBody + .detailInfoSection (2-col grid) */
+.cardBody {
+  overflow-y: auto;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, rgba(240, 247, 255, 0.5), rgba(230, 242, 255, 0.5));
+  align-content: start;
+}
+
+/* ==================== SECTION CARDS ==================== */
+/* Mirrors .detailInfoCard */
+.detailsSection {
+  background: white;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.07);
+}
+
+/* 3rd section (Stock & System) spans both columns — mirrors .detailInfoCard:nth-child(3) */
+.detailsSection:nth-child(3) {
+  grid-column: 1 / -1;
+}
+
+/* ==================== SECTION HEADER ==================== */
+/* Mirrors .detailInfoHeader */
+.sectionHeader {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
+}
+
+/* Mirrors .detailInfoHeader h3 — NOTE: JSX uses .sectionTitle directly on <h3> */
+.sectionTitle {
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-start);
+}
+
+/* ==================== ROWS INSIDE EACH CARD ==================== */
+/* Mirrors .detailInfoContent — vertical flex column */
+.detailsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Mirrors .detailInfoRow exactly */
+.detailItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(34, 43, 108, 0.06);
+}
+
+.detailItem:last-child {
+  border-bottom: none;
+}
+
+/* Mirrors .detailInfoLabel */
+.detailLabel {
+  font-size: 0.8rem;
+  color: #64748b;
   font-weight: 600;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+/* Mirrors .detailInfoValue */
+.detailValue {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Full-width row (Timing, Composition) — mirrors .detailInfoRow */
+.fullWidthDetail {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(34, 43, 108, 0.06);
+  gap: 12px;
+}
+
+.fullWidthDetail:last-child {
+  border-bottom: none;
+}
+
+/* ==================== TIMING PILLS ==================== */
+.timingDisplay {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.timingPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 26px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(48, 178, 181, 0.15);
+  color: var(--accent-start);
+  border: 1px solid rgba(48, 178, 181, 0.3);
+  white-space: nowrap;
+}
+
+.timingPillKey {
+  font-weight: 900;
+  font-size: 0.78rem;
+  color: var(--primary-start);
+}
+
+/* ==================== STATUS BADGES ==================== */
+/* Mirrors .detailInlineBadge */
+.statusBadge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.inactive {
+  background: rgba(100, 116, 139, 0.15);
+  color: #475569;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.discontinued {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.outofstock {
+  background: rgba(234, 179, 8, 0.15);
+  color: #92400e;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.lowStockText {
+  color: #dc2626 !important;
+}
+
+/* ==================== FOOTER ==================== */
+/* Mirrors .detailModalFooter */
+.cardFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 18px 28px;
+  border-top: 2px solid rgba(34, 43, 108, 0.1);
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+
+/* ==================== BUTTONS ==================== */
+/* Update — mirrors .btnUpdate */
+.btnUpdate {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  border: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.25);
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  z-index: 1;
 }
 
-.modalCloseBtn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(32, 125, 156, 0.35);
+.btnUpdate::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
 }
 
-/* Dark mode */
-:global(.dark-mode) .modalContainer {
-  background: #1e293b;
-}
-:global(.dark-mode) .modalOverlay {
-  background: rgba(5, 10, 20, 0.7);
+.btnUpdate:hover::before { width: 200px; height: 200px; }
+.btnUpdate:hover  { transform: translateY(-2px); box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45); }
+.btnUpdate:active { transform: translateY(-1px); }
+
+/* Delete base — mirrors .btnHold + .btnDelete */
+.btnHold {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 1;
 }
 
-/* Responsive */
+.btnDelete {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
+}
+
+.btnDelete::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  background: rgba(239, 68, 68, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btnDelete:hover::before { width: 200px; height: 200px; }
+.btnDelete:hover { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(220, 38, 38, 0.45); }
+
+/* ==================== DARK MODE ==================== */
+:global(.dark-mode) .wrapper {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .detailsCard  { background: #1e293b; }
+
+:global(.dark-mode) .cardBody {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+}
+
+:global(.dark-mode) .detailsSection {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark-mode) .sectionTitle    { color: var(--accent-end); border-bottom-color: rgba(48, 178, 181, 0.25); }
+:global(.dark-mode) .detailItem      { border-bottom-color: rgba(255, 255, 255, 0.05); }
+:global(.dark-mode) .fullWidthDetail { border-bottom-color: rgba(255, 255, 255, 0.05); }
+:global(.dark-mode) .detailLabel     { color: #94a3b8; }
+:global(.dark-mode) .detailValue     { color: #e2e8f0; }
+
+:global(.dark-mode) .cardFooter {
+  background: #0f172a;
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark-mode) .active       { background: rgba(34,  197, 94,  0.25); color: #86efac; }
+:global(.dark-mode) .inactive     { background: rgba(100, 116, 139, 0.25); color: #94a3b8; }
+:global(.dark-mode) .discontinued { background: rgba(239, 68,  68,  0.25); color: #fca5a5; }
+:global(.dark-mode) .outofstock   { background: rgba(234, 179, 8,   0.25); color: #fde68a; }
+
+:global(.dark-mode) .timingPill {
+  background: rgba(48, 178, 181, 0.2);
+  border-color: rgba(48, 178, 181, 0.4);
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .timingPillKey { color: var(--accent-end); }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .modalOverlay { padding: 12px; }
+
+  .detailsCard {
+    border-radius: 14px;
+    max-height: 92vh;
+  }
+
+  .cardHeader { padding: 18px 20px; }
+  .headerInfo h2 { font-size: 1.15rem; }
+
+  /* Single column on mobile */
+  .cardBody {
+    grid-template-columns: 1fr;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .detailsSection:nth-child(3) { grid-column: 1; }
+
+  .cardFooter {
+    padding: 14px 20px;
+    flex-direction: column;
+  }
+
+  .cardFooter .btnDelete,
+  .cardFooter .btnUpdate {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .timingDisplay { justify-content: flex-start; }
+}
+
 @media (max-width: 480px) {
-  .modalOverlay { padding: 0; align-items: flex-end; }
-  .modalContainer { max-height: 95vh; border-radius: 16px 16px 0 0; }
+  .wrapper        { padding: 14px; }
+  .cardHeader     { padding: 14px 16px; }
+  .cardBody       { padding: 12px; }
+  .detailsSection { padding: 14px; }
 }
