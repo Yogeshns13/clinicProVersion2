@@ -1,16 +1,11 @@
 // src/components/UpdatePatientVisit.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiSave, FiInfo } from 'react-icons/fi';
+import { FiX, FiSave, FiInfo, FiActivity, FiUser, FiCalendar } from 'react-icons/fi';
 import { getPatientVisitList, updatePatientVisit, getEmployeeList, getAppointmentList } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
-import Header from '../Header/Header.jsx';
-import './UpdatePatientVisit.css';
-import BranchList from '../BranchList/BranchList.jsx';
-
+import styles from './UpdatePatientVisit.module.css';
 
 const getLiveValidationMessage = (fieldName, value) => {
-  // Returns validation message while typing (empty string = valid)
   switch (fieldName) {
     case 'visitDate':
       if (!value) return 'Visit date is required';
@@ -18,7 +13,6 @@ const getLiveValidationMessage = (fieldName, value) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       visitDate.setHours(0, 0, 0, 0);
-      
       if (visitDate < today) return 'Visit date cannot be in the past';
       return '';
 
@@ -75,13 +69,12 @@ const getLiveValidationMessage = (fieldName, value) => {
   }
 };
 
-
 const filterInput = (fieldName, value) => {
   switch (fieldName) {
     case 'bpSystolic':
     case 'bpDiastolic':
       return value.replace(/[^0-9]/g, '');
-    
+
     case 'temperature':
     case 'weight':
       if (value === '') return value;
@@ -91,7 +84,7 @@ const filterInput = (fieldName, value) => {
         return parts[0] + '.' + parts.slice(1).join('');
       }
       return filtered;
-    
+
     default:
       return value;
   }
@@ -101,10 +94,7 @@ const getTodayDate = () => {
   return new Date().toISOString().split('T')[0];
 };
 
-const UpdatePatientVisit = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-
+const UpdatePatientVisit = ({ isOpen, onClose, onSuccess, visitId }) => {
   const [formData, setFormData] = useState({
     visitId: '',
     appointmentId: 0,
@@ -116,7 +106,8 @@ const UpdatePatientVisit = () => {
     bpSystolic: '',
     bpDiastolic: '',
     temperature: '',
-    weight: ''
+    weight: '',
+    status: ''
   });
 
   const [doctors, setDoctors] = useState([]);
@@ -129,33 +120,39 @@ const UpdatePatientVisit = () => {
   const [validationMessages, setValidationMessages] = useState({});
 
   useEffect(() => {
-    fetchVisitDetails();
-    fetchDoctors();
-  }, [id]);
+    if (isOpen && visitId) {
+      fetchVisitDetails();
+      fetchDoctors();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, visitId]);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setFormData({
+        visitId: '', appointmentId: 0, doctorId: '', visitDate: '',
+        visitTime: '', reason: '', symptoms: '', bpSystolic: '',
+        bpDiastolic: '', temperature: '', weight: '', status: ''
+      });
+      setAppointmentInfo(null);
+      setPatientInfo(null);
+      setHasAppointment(false);
+      setValidationMessages({});
+      setError(null);
+    }
+  }, [isOpen]);
 
   const formatDateForInput = (dateString) => {
-    if (!dateString) {
-      console.log('formatDateForInput: dateString is empty or null');
-      return '';
-    }
-    
+    if (!dateString) return '';
     try {
       const date = new Date(dateString);
-      
-      if (isNaN(date.getTime())) {
-        console.error('formatDateForInput: Invalid date:', dateString);
-        return '';
-      }
-      
+      if (isNaN(date.getTime())) return '';
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
-      const formatted = `${year}-${month}-${day}`;
-      
-      console.log('formatDateForInput: Input:', dateString, 'Output:', formatted);
-      return formatted;
+      return `${year}-${month}-${day}`;
     } catch (error) {
-      console.error('formatDateForInput: Error formatting date:', error);
       return '';
     }
   };
@@ -169,18 +166,13 @@ const UpdatePatientVisit = () => {
       const branchId = Number(localStorage.getItem('branchID'));
 
       const data = await getPatientVisitList(clinicId, {
-        VisitID: Number(id),
+        VisitID: Number(visitId),
         BranchID: branchId
       });
 
-      console.log('fetchVisitDetails: Raw visit data:', data);
-
       if (data && data.length > 0) {
         const visit = data[0];
-        
-        console.log('fetchVisitDetails: Visit details:', visit);
-        console.log('fetchVisitDetails: Visit date from API:', visit.visitDate);
-        
+
         setPatientInfo({
           name: visit.patientName,
           fileNo: visit.patientFileNo,
@@ -188,9 +180,8 @@ const UpdatePatientVisit = () => {
         });
 
         const formattedDate = formatDateForInput(visit.visitDate);
-        console.log('fetchVisitDetails: Formatted date:', formattedDate);
 
-        const newFormData = {
+        setFormData({
           visitId: visit.id,
           appointmentId: visit.appointmentId || 0,
           doctorId: visit.doctorId || '',
@@ -202,10 +193,8 @@ const UpdatePatientVisit = () => {
           bpDiastolic: visit.bpDiastolic || '',
           temperature: visit.temperature || '',
           weight: visit.weight || '',
-        };
-
-        console.log('fetchVisitDetails: Setting form data:', newFormData);
-        setFormData(newFormData);
+          status: visit.status ?? 0,
+        });
 
         if (visit.appointmentId && visit.appointmentId !== 0) {
           setHasAppointment(true);
@@ -238,7 +227,6 @@ const UpdatePatientVisit = () => {
 
       if (data && data.length > 0) {
         const appointment = data[0];
-        // Format the appointment date for display
         appointment.formattedDate = formatDateForInput(appointment.appointmentDate);
         setAppointmentInfo(appointment);
       }
@@ -252,34 +240,26 @@ const UpdatePatientVisit = () => {
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
 
-      const data = await getEmployeeList(clinicId, { 
+      const data = await getEmployeeList(clinicId, {
         BranchID: branchId,
         Designation: 1,
         Status: 1,
         PageSize: 100
       });
-      setDoctors(data); 
+      setDoctors(data);
     } catch (err) {
       console.error('Failed to fetch doctors:', err);
     }
   };
 
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-  
     const filteredValue = filterInput(name, value);
-    
-    setFormData(prev => ({
-      ...prev,
-      [name]: filteredValue
-    }));
+
+    setFormData(prev => ({ ...prev, [name]: filteredValue }));
 
     const validationMessage = getLiveValidationMessage(name, filteredValue);
-    setValidationMessages((prev) => ({
-      ...prev,
-      [name]: validationMessage,
-    }));
+    setValidationMessages((prev) => ({ ...prev, [name]: validationMessage }));
   };
 
   const handleSubmit = async (e) => {
@@ -288,17 +268,11 @@ const UpdatePatientVisit = () => {
     setError(null);
 
     try {
-      // Ensure date is in YYYY-MM-DD format
       let formattedDate = formData.visitDate;
-      
-      // If the date isn't already in YYYY-MM-DD format, format it
       if (formattedDate && !formattedDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
         formattedDate = formatDateForInput(formattedDate);
       }
-      
-      console.log('handleSubmit: Original date:', formData.visitDate);
-      console.log('handleSubmit: Formatted date:', formattedDate);
-      
+
       const visitData = {
         visitId: formData.visitId,
         appointmentId: formData.appointmentId,
@@ -311,23 +285,19 @@ const UpdatePatientVisit = () => {
         bpDiastolic: formData.bpDiastolic ? parseInt(formData.bpDiastolic) : 0,
         temperature: formData.temperature ? parseFloat(formData.temperature) : 0,
         weight: formData.weight ? parseFloat(formData.weight) : 0,
-        status: 0
+        status: formData.status ?? 0
       };
 
-      console.log('handleSubmit: Submitting visit data:', visitData);
-
       await updatePatientVisit(visitData);
-      navigate('/patientvisit-list');
+
+      if (onSuccess) onSuccess();
+      if (onClose) onClose();
     } catch (err) {
       console.error('Failed to update visit:', err);
       setError({ message: err.message || 'Failed to update patient visit' });
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleBack = () => {
-    navigate('/patientvisit-list');
   };
 
   const formatTime = (timeStr) => {
@@ -341,281 +311,288 @@ const UpdatePatientVisit = () => {
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
-  if (error && (error?.status >= 400 || error?.code >= 400)) {
-    return <ErrorHandler error={error} />;
-  }
-
-  if (loading) return <div className="update-visit-loading">Loading visit details...</div>;
-
-  if (error) return <div className="update-visit-error">Error: {error.message || error}</div>;
+  if (!isOpen) return null;
 
   return (
-    <div className="update-visit-wrapper">
-      <ErrorHandler error={error} />
-      <Header title="Update Patient Visit" />
+    <div className={styles.updateVisitOverlay}>
+      <div className={styles.updateVisitModal}>
 
-      <div className="update-visit-toolbar">
-        <button onClick={handleBack} className="update-visit-back-btn">
-          <FiArrowLeft size={20} /> Back to Visits
-        </button>
-      </div>
-
-      {patientInfo && (
-        <div className="patient-info-banner">
-          <div className="patient-info-content">
-            <div className="patient-info-label">Patient</div>
-            <div className="patient-info-value">{patientInfo.name}</div>
+        {/* Header */}
+        <div className={styles.updateVisitHeader}>
+          <div className={styles.updateVisitHeaderContent}>
+            <FiSave className={styles.updateVisitHeaderIcon} size={24} />
+            <h2>Update Patient Visit</h2>
           </div>
-          <div className="patient-info-content">
-            <div className="patient-info-label">File No</div>
-            <div className="patient-info-value">{patientInfo.fileNo}</div>
-          </div>
-          <div className="patient-info-content">
-            <div className="patient-info-label">Mobile</div>
-            <div className="patient-info-value">{patientInfo.mobile}</div>
-          </div>
+          <button onClick={onClose} className={styles.updateVisitClose} disabled={saving}>
+            <FiX size={20} />
+          </button>
         </div>
-      )}
 
-      {hasAppointment && appointmentInfo && (
-        <div className="appointment-info-banner">
-          <div className="appointment-banner-header">
-            <FiInfo size={20} />
-            <span>This visit is linked to an appointment</span>
-          </div>
-          <div className="appointment-banner-details">
-            <div className="appointment-banner-item">
-              <strong>Appointment Date:</strong> {formatDate(appointmentInfo.appointmentDate)}
-            </div>
-            <div className="appointment-banner-item">
-              <strong>Appointment Time:</strong> {formatTime(appointmentInfo.appointmentTime)}
-            </div>
-            <div className="appointment-banner-item">
-              <strong>Doctor:</strong> {appointmentInfo.doctorFullName}
-            </div>
-            {appointmentInfo.reason && (
-              <div className="appointment-banner-item">
-                <strong>Appointment Reason:</strong> {appointmentInfo.reason}
+        <form onSubmit={handleSubmit} className={styles.updateVisitForm}>
+          <div className={styles.updateVisitBody}>
+
+            {/* Error */}
+            {error && !loading && !(error?.status >= 400 || error?.code >= 400) && (
+              <div className={styles.updateVisitError}>{error.message || String(error)}</div>
+            )}
+
+            {/* Loading */}
+            {loading ? (
+              <div className={styles.appointmentsLoading}>
+                <div className={styles.spinner}></div>
+                <p>Loading visit details...</p>
               </div>
+            ) : error && (error?.status >= 400 || error?.code >= 400) ? (
+              <ErrorHandler error={error} />
+            ) : (
+              <>
+                {/* Patient Info Banner */}
+                {patientInfo && (
+                  <div className={styles.patientInfoBanner}>
+                    <div className={styles.patientInfoItem}>
+                      <span className={styles.patientInfoLabel}>Patient</span>
+                      <span className={styles.patientInfoValue}>{patientInfo.name}</span>
+                    </div>
+                    <div className={styles.patientInfoDivider} />
+                    <div className={styles.patientInfoItem}>
+                      <span className={styles.patientInfoLabel}>File No</span>
+                      <span className={styles.patientInfoValue}>{patientInfo.fileNo}</span>
+                    </div>
+                    <div className={styles.patientInfoDivider} />
+                    <div className={styles.patientInfoItem}>
+                      <span className={styles.patientInfoLabel}>Mobile</span>
+                      <span className={styles.patientInfoValue}>{patientInfo.mobile}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Appointment Info Banner */}
+                {hasAppointment && appointmentInfo && (
+                  <div className={styles.appointmentInfoBanner}>
+                    <div className={styles.appointmentBannerHeader}>
+                      <FiInfo size={18} />
+                      <span>This visit is linked to an appointment</span>
+                    </div>
+                    <div className={styles.appointmentBannerDetails}>
+                      <div className={styles.appointmentBannerItem}>
+                        <strong>Appointment Date:</strong> {formatDate(appointmentInfo.appointmentDate)}
+                      </div>
+                      <div className={styles.appointmentBannerItem}>
+                        <strong>Appointment Time:</strong> {formatTime(appointmentInfo.appointmentTime)}
+                      </div>
+                      <div className={styles.appointmentBannerItem}>
+                        <strong>Doctor:</strong> {appointmentInfo.doctorFullName}
+                      </div>
+                      {appointmentInfo.reason && (
+                        <div className={styles.appointmentBannerItem}>
+                          <strong>Appointment Reason:</strong> {appointmentInfo.reason}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Doctor Section (only if no appointment) */}
+                {!hasAppointment && (
+                  <div className={styles.formSection}>
+                    <h3 className={styles.sectionTitle}>
+                      <FiUser size={18} />
+                      Doctor Information
+                    </h3>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Doctor</label>
+                      <select
+                        name="doctorId"
+                        value={formData.doctorId}
+                        onChange={handleChange}
+                        className={styles.formSelect}
+                      >
+                        <option value="">Select Doctor</option>
+                        {doctors.map(doctor => (
+                          <option key={doctor.id} value={doctor.id}>
+                            {doctor.firstName} {doctor.lastName} - {doctor.employeeCode}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* Visit Details Section */}
+                <div className={styles.formSection}>
+                  <h3 className={styles.sectionTitle}>
+                    <FiCalendar size={18} />
+                    Visit Details
+                  </h3>
+
+                  <div className={styles.formRow}>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>
+                        Visit Date <span className={styles.required}>*</span>
+                      </label>
+                      <input
+                        type="date"
+                        name="visitDate"
+                        value={formData.visitDate}
+                        onChange={handleChange}
+                        min={getTodayDate()}
+                        required
+                        disabled={hasAppointment}
+                        className={styles.formInput}
+                      />
+                      {validationMessages.visitDate && !hasAppointment && (
+                        <span className={styles.validationMsg}>{validationMessages.visitDate}</span>
+                      )}
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>
+                        Visit Time <span className={styles.required}>*</span>
+                      </label>
+                      <input
+                        type="time"
+                        name="visitTime"
+                        value={formData.visitTime}
+                        onChange={handleChange}
+                        required
+                        disabled={hasAppointment}
+                        className={styles.formInput}
+                      />
+                      {validationMessages.visitTime && !hasAppointment && (
+                        <span className={styles.validationMsg}>{validationMessages.visitTime}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className={`${styles.formRow} ${styles.reasonSymptomsRow}`}>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Reason for Visit</label>
+                      <textarea
+                        name="reason"
+                        value={formData.reason}
+                        onChange={handleChange}
+                        placeholder="e.g., Regular checkup, Follow-up..."
+                        className={`${styles.formTextarea} ${styles.tallTextarea}`}
+                        maxLength="200"
+                        rows={5}
+                      />
+                      {validationMessages.reason && (
+                        <span className={styles.validationMsg}>{validationMessages.reason}</span>
+                      )}
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Symptoms</label>
+                      <textarea
+                        name="symptoms"
+                        value={formData.symptoms}
+                        onChange={handleChange}
+                        placeholder="Describe patient symptoms..."
+                        className={`${styles.formTextarea} ${styles.tallTextarea}`}
+                        maxLength="500"
+                        rows={5}
+                      />
+                      {validationMessages.symptoms && (
+                        <span className={styles.validationMsg}>{validationMessages.symptoms}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Vital Signs Section */}
+                <div className={styles.formSection}>
+                  <h3 className={styles.sectionTitle}>
+                    <FiActivity size={18} />
+                    Vital Signs
+                  </h3>
+
+                  <div className={`${styles.formRow} ${styles.vitalsRow}`}>
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Systolic BP (mmHg)</label>
+                      <input
+                        type="text"
+                        name="bpSystolic"
+                        value={formData.bpSystolic}
+                        onChange={handleChange}
+                        className={styles.formInput}
+                      />
+                      {validationMessages.bpSystolic && (
+                        <span className={styles.validationMsg}>{validationMessages.bpSystolic}</span>
+                      )}
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Diastolic BP (mmHg)</label>
+                      <input
+                        type="text"
+                        name="bpDiastolic"
+                        value={formData.bpDiastolic}
+                        onChange={handleChange}
+                        className={styles.formInput}
+                      />
+                      {validationMessages.bpDiastolic && (
+                        <span className={styles.validationMsg}>{validationMessages.bpDiastolic}</span>
+                      )}
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Temperature (°F)</label>
+                      <input
+                        type="text"
+                        name="temperature"
+                        value={formData.temperature}
+                        onChange={handleChange}
+                        className={styles.formInput}
+                      />
+                      {validationMessages.temperature && (
+                        <span className={styles.validationMsg}>{validationMessages.temperature}</span>
+                      )}
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Weight (kg)</label>
+                      <input
+                        type="text"
+                        name="weight"
+                        value={formData.weight}
+                        onChange={handleChange}
+                        className={styles.formInput}
+                      />
+                      {validationMessages.weight && (
+                        <span className={styles.validationMsg}>{validationMessages.weight}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
           </div>
-        </div>
-      )}
 
-      <form onSubmit={handleSubmit} className="update-visit-form">
-        <div className="update-visit-card">
-          {!hasAppointment && (
-            <div className="form-section">
-              <h3 className="section-title">Doctor Information</h3>
-              <div className="form-group">
-                <label className="form-label">Doctor</label>
-                <select
-                  name="doctorId"
-                  value={formData.doctorId}
-                  onChange={handleChange}
-                  className="form-select"
-                >
-                  <option value="">Select Doctor</option>
-                  {doctors.map(doctor => (
-                    <option key={doctor.id} value={doctor.id}>
-                      {doctor.firstName} {doctor.lastName} - {doctor.employeeCode}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          {/* Footer */}
+          {!loading && !(error?.status >= 400 || error?.code >= 400) && (
+            <div className={styles.updateVisitFooter}>
+              <button
+                type="button"
+                onClick={onClose}
+                className={styles.btnCancel}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className={styles.btnSubmit}
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
             </div>
           )}
-
-          <div className="form-section">
-            <h3 className="section-title">Visit Details</h3>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">
-                  Visit Date <span className="required">*</span>
-                </label>
-                <input
-                  type="date"
-                  name="visitDate"
-                  value={formData.visitDate}
-                  onChange={handleChange}
-                  min={getTodayDate()}
-                  required
-                  disabled={hasAppointment}
-                  className="form-input"
-                />
-                
-                {validationMessages.visitDate && !hasAppointment && (
-                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {validationMessages.visitDate}
-                  </span>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">
-                  Visit Time <span className="required">*</span>
-                </label>
-                <input
-                  type="time"
-                  name="visitTime"
-                  value={formData.visitTime}
-                  onChange={handleChange}
-                  required
-                  disabled={hasAppointment}
-                  className="form-input"
-                />
-                
-                {validationMessages.visitTime && !hasAppointment && (
-                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {validationMessages.visitTime}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Reason for Visit</label>
-              <input
-                type="text"
-                name="reason"
-                value={formData.reason}
-                onChange={handleChange}
-                placeholder="e.g., Regular checkup, Follow-up..."
-                className="form-input"
-                maxLength="200"
-              />
-              
-              {validationMessages.reason && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.reason}
-                </span>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Symptoms</label>
-              <textarea
-                name="symptoms"
-                value={formData.symptoms}
-                onChange={handleChange}
-                rows="4"
-                placeholder="Describe patient symptoms..."
-                className="form-textarea"
-                maxLength="500"
-              />
-              
-              {validationMessages.symptoms && (
-                <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.symptoms}
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="form-section">
-            <h3 className="section-title">Vital Signs</h3>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Systolic BP (mmHg)</label>
-                <input
-                  type="text"
-                  name="bpSystolic"
-                  value={formData.bpSystolic}
-                  onChange={handleChange}
-                  placeholder="120"
-                  className="form-input"
-                />
-              
-                {validationMessages.bpSystolic && (
-                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {validationMessages.bpSystolic}
-                  </span>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Diastolic BP (mmHg)</label>
-                <input
-                  type="text"
-                  name="bpDiastolic"
-                  value={formData.bpDiastolic}
-                  onChange={handleChange}
-                  placeholder="80"
-                  className="form-input"
-                />
-    
-                {validationMessages.bpDiastolic && (
-                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {validationMessages.bpDiastolic}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Temperature (°F)</label>
-                <input
-                  type="text"
-                  name="temperature"
-                  value={formData.temperature}
-                  onChange={handleChange}
-                  placeholder="98.6"
-                  className="form-input"
-                />
-                {validationMessages.temperature && (
-                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {validationMessages.temperature}
-                  </span>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Weight (kg)</label>
-                <input
-                  type="text"
-                  name="weight"
-                  value={formData.weight}
-                  onChange={handleChange}
-                  placeholder="70"
-                  className="form-input"
-                />
-                {validationMessages.weight && (
-                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  {validationMessages.weight}
-                </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="form-actions">
-            <button
-              type="button"
-              onClick={handleBack}
-              className="btn-cancel"
-              disabled={saving}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn-save"
-              disabled={saving}
-            >
-              <FiSave size={18} />
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

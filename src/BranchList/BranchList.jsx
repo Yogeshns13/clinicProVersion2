@@ -1,6 +1,5 @@
 // src/components/BranchList.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   FiSearch,
   FiPlus,
@@ -9,11 +8,11 @@ import {
 import { 
   getBranchList, 
   getClinicList, 
-  clearCacheByType 
 } from '../api/cachedApi.js';
 import { addBranch } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
+import UpdateBranch from './UpdateBranch.jsx';
 import styles from './BranchList.module.css';
 
 const getLiveValidationMessage = (fieldName, value) => {
@@ -89,12 +88,10 @@ const DEFAULT_FILTERS = {
 
 // ────────────────────────────────────────────────
 const BranchList = () => {
-  const navigate = useNavigate();
-
   const [branches, setBranches] = useState([]);
   const [clinics, setClinics]   = useState([]);
 
-  const [filterInputs, setFilterInputs]   = useState({ ...DEFAULT_FILTERS });
+  const [filterInputs, setFilterInputs]     = useState({ ...DEFAULT_FILTERS });
   const [appliedFilters, setAppliedFilters] = useState({ ...DEFAULT_FILTERS });
 
   const [selectedBranch, setSelectedBranch] = useState(null);
@@ -112,10 +109,14 @@ const BranchList = () => {
     branchType: 1,
   });
 
-  const [formLoading, setFormLoading]             = useState(false);
-  const [formError, setFormError]                 = useState('');
-  const [formSuccess, setFormSuccess]             = useState(false);
+  const [formLoading, setFormLoading]               = useState(false);
+  const [formError, setFormError]                   = useState('');
+  const [formSuccess, setFormSuccess]               = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
+
+  // Update Modal
+  const [updateBranchData, setUpdateBranchData] = useState(null);
+  const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);
 
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
@@ -140,7 +141,8 @@ const BranchList = () => {
     fetchBranches(appliedFilters);
   }, [appliedFilters]);
 
-  const fetchBranches = async (filters) => {
+  // forceRefresh = true bypasses cache → always fetches latest data from server
+  const fetchBranches = async (filters, forceRefresh = false) => {
     try {
       setLoading(true);
       setError(null);
@@ -153,7 +155,7 @@ const BranchList = () => {
         Status:     filters.status !== '' ? Number(filters.status) : -1,
       };
 
-      const data = await getBranchList(clinicId, options);
+      const data = await getBranchList(clinicId, options, forceRefresh);
       setBranches(data);
     } catch (err) {
       console.error('fetchBranches error:', err);
@@ -191,8 +193,8 @@ const BranchList = () => {
     setAppliedFilters({ ...DEFAULT_FILTERS });
   };
 
-  const openDetails  = (branch) => setSelectedBranch(branch);
-  const closeModal   = () => setSelectedBranch(null);
+  const openDetails = (branch) => setSelectedBranch(branch);
+  const closeModal  = () => setSelectedBranch(null);
 
   const openAddForm = () => {
     setFormData({
@@ -249,11 +251,10 @@ const BranchList = () => {
         branchType: Number(formData.branchType),
       });
 
-      clearCacheByType('GetBranchList');
       setFormSuccess(true);
       setTimeout(() => {
         closeAddForm();
-        fetchBranches(appliedFilters);
+        fetchBranches(appliedFilters, true); // forceRefresh = true
       }, 1500);
     } catch (err) {
       console.error('Add branch failed:', err);
@@ -263,8 +264,22 @@ const BranchList = () => {
     }
   };
 
+  // ── Update handlers ──
   const handleUpdateClick = (branch) => {
-    navigate(`/update-branch/${branch.id}`);
+    setUpdateBranchData(branch);
+    setSelectedBranch(null);
+    setIsUpdateFormOpen(true);
+  };
+
+  const handleUpdateClose = () => {
+    setIsUpdateFormOpen(false);
+    setUpdateBranchData(null);
+  };
+
+  const handleUpdateSuccess = () => {
+    setIsUpdateFormOpen(false);
+    setUpdateBranchData(null);
+    fetchBranches(appliedFilters, true); // forceRefresh = true
   };
 
   if (error && (error?.status >= 400 || error?.code >= 400)) {
@@ -514,7 +529,7 @@ const BranchList = () => {
                 </div>
                 <div className={styles.addFormGrid}>
 
-                  <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                  <div className={styles.addFormGroup}>
                     <label>Clinic <span className={styles.required}>*</span></label>
                     <select
                       required
@@ -628,6 +643,16 @@ const BranchList = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* ──────────────── Update Branch Modal ──────────────── */}
+      {isUpdateFormOpen && updateBranchData && (
+        <UpdateBranch
+          branch={updateBranchData}
+          clinics={clinics}
+          onClose={handleUpdateClose}
+          onSuccess={handleUpdateSuccess}
+        />
       )}
     </div>
   );

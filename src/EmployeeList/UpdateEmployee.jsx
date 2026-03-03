@@ -67,10 +67,13 @@ const getLiveValidationMessage = (fieldName, value) => {
       }
       return '';
 
-         case 'universityName':
+    case 'universityName':
       if (!value || !value.trim()) return 'University name is required';
       if (value.trim().length < 3) return 'University name must be at least 3 characters';
       if (value.trim().length > 100) return 'University name must not exceed 100 characters';
+      if (value && /[^a-zA-Z\s]/.test(value)) {
+        return 'Only letters and spaces are allowed (no numbers or special characters)';
+      }
       return '';
 
     case 'licenseExpiryDate':
@@ -87,26 +90,16 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (value && value.length > 500) return 'Address must not exceed 500 characters';
       return '';
 
-case 'qualification':
-case 'specialization':
-  if (value && value.length > 100) {
-    return 'Field must not exceed 100 characters';
-  }
-  // Safety check: if somehow invalid characters got through (e.g. paste)
-  if (value && /[^a-zA-Z\s.,()]/.test(value)) {
-    return 'Only letters, spaces, dot (.), comma (,), and parentheses ( ) allowed';
-  }
-  return '';
-
-      case 'universityName':
-  if (value && value.length > 100) {
-    return 'Field must not exceed 100 characters';
-  }
-  // Optional: extra safety check (in case of paste or direct set)
-  if (value && /[^a-zA-Z\s]/.test(value)) {
-    return 'Only letters and spaces are allowed (no numbers or special characters)';
-  }
-  return '';
+    case 'qualification':
+    case 'specialization':
+      if (value && value.length > 100) {
+        return 'Field must not exceed 100 characters';
+      }
+      // Safety check: if somehow invalid characters got through (e.g. paste)
+      if (value && /[^a-zA-Z\s.,()]/.test(value)) {
+        return 'Only letters, spaces, dot (.), comma (,), and parentheses ( ) allowed';
+      }
+      return '';
 
     case 'licenseNo':
     case 'pfNo':
@@ -127,7 +120,6 @@ case 'specialization':
       return '';
   }
 };
-
 
 const filterInput = (fieldName, value) => {
   switch (fieldName) {

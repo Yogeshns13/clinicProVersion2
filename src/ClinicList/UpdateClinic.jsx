@@ -1,10 +1,7 @@
 // src/components/UpdateClinic.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState } from 'react';
 import { FiSave } from 'react-icons/fi';
-import { getClinicList, updateClinic } from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
-import Header from '../Header/Header.jsx';
+import { updateClinic } from '../api/api.js';
 import styles from './ClinicList.module.css';
 
 const getLiveValidationMessage = (fieldName, value) => {
@@ -145,67 +142,34 @@ const STATUS_OPTIONS = [
 ];
 
 // ────────────────────────────────────────────────
-const UpdateClinic = () => {
-  const navigate  = useNavigate();
-  const params    = useParams();
-  const clinicId  = params.clinicId || params.id;
-
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState(null);
-  const [clinicData, setClinicData] = useState(null);
-
+// Props:
+//   clinic     — the clinic object to edit (required)
+//   onClose    — called when user cancels or clicks backdrop
+//   onSuccess  — called after a successful update (triggers list refresh)
+// ────────────────────────────────────────────────
+const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
-    clinicName: '', address: '', location: '', clinicType: '',
-    gstNo: '', cgstPercentage: 0, sgstPercentage: 0,
-    ownerName: '', mobile: '', altMobile: '', email: '',
-    fileNoPrefix: '', invoicePrefix: '', status: 1,
+    clinicName:     clinic.name           || '',
+    address:        clinic.address        || '',
+    location:       clinic.location       || '',
+    clinicType:     clinic.clinicType     || '',
+    gstNo:          clinic.gstNo          || '',
+    cgstPercentage: clinic.cgstPercentage || 0,
+    sgstPercentage: clinic.sgstPercentage || 0,
+    ownerName:      clinic.ownerName      || '',
+    mobile:         clinic.mobile         || '',
+    altMobile:      clinic.altMobile      || '',
+    email:          clinic.email          || '',
+    fileNoPrefix:   clinic.fileNoPrefix   || '',
+    invoicePrefix:  clinic.invoicePrefix  || '',
+    lastFileSeq:    clinic.lastFileSeq    || 0,
+    status:         clinic.status === 'active' ? 1 : 2,
   });
 
-  const [formLoading,         setFormLoading]         = useState(false);
-  const [formError,           setFormError]           = useState('');
-  const [formSuccess,         setFormSuccess]         = useState(false);
-  const [validationMessages,  setValidationMessages]  = useState({});
-
-  // ── close = go back to list ──
-  const handleClose = () => navigate('/clinic-list');
-
-  // ────────────────────────────────────────────────
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const clinicList = await getClinicList();
-        const clinic = clinicList.find((c) => c.id === Number(clinicId));
-        if (!clinic) throw new Error(`Clinic not found with ID: ${clinicId}`);
-
-        setClinicData(clinic);
-        setFormData({
-          clinicName:      clinic.name           || '',
-          address:         clinic.address        || '',
-          location:        clinic.location       || '',
-          clinicType:      clinic.clinicType     || '',
-          gstNo:           clinic.gstNo          || '',
-          cgstPercentage:  clinic.cgstPercentage || 0,
-          sgstPercentage:  clinic.sgstPercentage || 0,
-          ownerName:       clinic.ownerName      || '',
-          mobile:          clinic.mobile         || '',
-          altMobile:       clinic.altMobile      || '',
-          email:           clinic.email          || '',
-          fileNoPrefix:    clinic.fileNoPrefix   || '',
-          invoicePrefix:   clinic.invoicePrefix  || '',
-          status:          clinic.status === 'active' ? 1 : 2,
-        });
-      } catch (err) {
-        setError({ message: err.message || 'Failed to load clinic data', status: err.status || 500 });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (clinicId) fetchData();
-    else { setLoading(false); setError({ message: 'No clinic ID provided', status: 400 }); }
-  }, [clinicId]);
+  const [formLoading,        setFormLoading]        = useState(false);
+  const [formError,          setFormError]          = useState('');
+  const [formSuccess,        setFormSuccess]        = useState(false);
+  const [validationMessages, setValidationMessages] = useState({});
 
   // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
@@ -223,7 +187,7 @@ const UpdateClinic = () => {
 
     try {
       await updateClinic({
-        clinicId:       Number(clinicId),
+        clinicId:       Number(clinic.id),
         ClinicName:     formData.clinicName.trim(),
         Address:        formData.address.trim(),
         Location:       formData.location.trim(),
@@ -241,7 +205,9 @@ const UpdateClinic = () => {
       });
 
       setFormSuccess(true);
-      setTimeout(() => navigate('/clinic-list'), 1500);
+      setTimeout(() => {
+        onSuccess();
+      }, 1500);
     } catch (err) {
       setFormError(err.message || 'Failed to update clinic.');
     } finally {
@@ -249,12 +215,7 @@ const UpdateClinic = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  if (error && error?.status >= 400) return <ErrorHandler error={error} />;
-  if (loading) return <div className={styles.clinicLoading}>Loading clinic data...</div>;
-
-  // ────────────────────────────────────────────────
-  // Shared onKeyDown / onPaste handlers for prefix fields
+  // ── Shared handlers for prefix fields ──
   const prefixKeyDown = (e) => {
     const char = e.key;
     if (['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Enter'].includes(char) || e.ctrlKey || e.metaKey) return;
@@ -272,188 +233,182 @@ const UpdateClinic = () => {
 
   // ────────────────────────────────────────────────
   return (
-    <div className={styles.clinicListWrapper}>
-      <ErrorHandler error={error} />
-      <Header title="Update Clinic" />
+    <div className={styles.detailModalOverlay} onClick={onClose}>
+      <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
 
-      {/* ── Modal Overlay — clicking backdrop closes ── */}
-      <div className={styles.detailModalOverlay} onClick={handleClose}>
-        <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
-
-          {/* ── Gradient Header ── */}
-          <div className={styles.detailModalHeader}>
-            <div className={styles.detailHeaderContent}>
-              <h2>Update Clinic</h2>
-              <div className={styles.detailHeaderMeta}>
-                <span className={styles.workIdBadge}>{formData.clinicName || 'Clinic'}</span>
-                <span className={`${styles.workIdBadge} ${formData.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}>
-                  {formData.status === 1 ? 'ACTIVE' : 'INACTIVE'}
-                </span>
-              </div>
+        {/* ── Gradient Header ── */}
+        <div className={styles.detailModalHeader}>
+          <div className={styles.detailHeaderContent}>
+            <h2>Update Clinic</h2>
+            <div className={styles.detailHeaderMeta}>
+              <span className={styles.workIdBadge}>{formData.clinicName || 'Clinic'}</span>
+              <span className={`${styles.workIdBadge} ${formData.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}>
+                {formData.status === 1 ? 'ACTIVE' : 'INACTIVE'}
+              </span>
             </div>
-            <button onClick={handleClose} className={styles.detailCloseBtn}>✕</button>
+          </div>
+          <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
+        </div>
+
+        {/* ── Scrollable Form Body ── */}
+        <form onSubmit={handleSubmit} className={styles.addModalBody}>
+          {formError   && <div className={styles.formError}>{formError}</div>}
+          {formSuccess && <div className={styles.formSuccess}>Clinic updated successfully!</div>}
+
+          {/* ── Basic Information ── */}
+          <div className={styles.addSection}>
+            <div className={styles.addSectionHeader}><h3>Basic Information</h3></div>
+            <div className={styles.addFormGrid}>
+
+              <div className={styles.addFormGroup}>
+                <label>Clinic Name <span className={styles.required}>*</span></label>
+                <input required name="clinicName" value={formData.clinicName} onChange={handleInputChange} placeholder="Enter clinic name" />
+                {validationMessages.clinicName && <span className={styles.validationMsg}>{validationMessages.clinicName}</span>}
+              </div>
+
+              <div className={styles.addFormGroup}>
+                <label>Clinic Type</label>
+                <input name="clinicType" value={formData.clinicType} onChange={handleInputChange} placeholder="e.g. Dental, General" />
+                {validationMessages.clinicType && <span className={styles.validationMsg}>{validationMessages.clinicType}</span>}
+              </div>
+
+              <div className={styles.addFormGroup}>
+                <label>Owner Name <span className={styles.required}>*</span></label>
+                <input required name="ownerName" value={formData.ownerName} onChange={handleInputChange} placeholder="Enter owner name" />
+                {validationMessages.ownerName && <span className={styles.validationMsg}>{validationMessages.ownerName}</span>}
+              </div>
+
+              <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                <label>Address</label>
+                <textarea name="address" rows={2} value={formData.address} onChange={handleInputChange} placeholder="Enter full address" />
+                {validationMessages.address && <span className={styles.validationMsg}>{validationMessages.address}</span>}
+              </div>
+
+              <div className={styles.addFormGroup}>
+                <label>Location</label>
+                <input name="location" value={formData.location} onChange={handleInputChange} placeholder="e.g. 9.9252, 78.1198" />
+                {validationMessages.location && <span className={styles.validationMsg}>{validationMessages.location}</span>}
+              </div>
+
+              <div className={styles.addFormGroup}>
+                <label>Status <span className={styles.required}>*</span></label>
+                <select required name="status" value={formData.status} onChange={handleInputChange}>
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s.id} value={s.id}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+
+            </div>
           </div>
 
-          {/* ── Scrollable Form Body ── */}
-          <form onSubmit={handleSubmit} className={styles.addModalBody}>
-            {formError   && <div className={styles.formError}>{formError}</div>}
-            {formSuccess  && <div className={styles.formSuccess}>Clinic updated successfully!</div>}
+          {/* ── Contact Information — 3 columns ── */}
+          <div className={styles.addSection}>
+            <div className={styles.addSectionHeader}><h3>Contact Information</h3></div>
+            <div className={styles.addFormGridThreeCol}>
 
-            {/* ── Basic Information ── */}
-            <div className={styles.addSection}>
-              <div className={styles.addSectionHeader}><h3>Basic Information</h3></div>
-              <div className={styles.addFormGrid}>
-
-                <div className={styles.addFormGroup}>
-                  <label>Clinic Name <span className={styles.required}>*</span></label>
-                  <input required name="clinicName" value={formData.clinicName} onChange={handleInputChange} placeholder="Enter clinic name" />
-                  {validationMessages.clinicName && <span className={styles.validationMsg}>{validationMessages.clinicName}</span>}
-                </div>
-
-                <div className={styles.addFormGroup}>
-                  <label>Clinic Type</label>
-                  <input name="clinicType" value={formData.clinicType} onChange={handleInputChange} placeholder="e.g. Dental, General" />
-                  {validationMessages.clinicType && <span className={styles.validationMsg}>{validationMessages.clinicType}</span>}
-                </div>
-
-                <div className={styles.addFormGroup}>
-                  <label>Owner Name <span className={styles.required}>*</span></label>
-                  <input required name="ownerName" value={formData.ownerName} onChange={handleInputChange} placeholder="Enter owner name" />
-                  {validationMessages.ownerName && <span className={styles.validationMsg}>{validationMessages.ownerName}</span>}
-                </div>
-
-                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                  <label>Address</label>
-                  <textarea name="address" rows={2} value={formData.address} onChange={handleInputChange} placeholder="Enter full address" />
-                  {validationMessages.address && <span className={styles.validationMsg}>{validationMessages.address}</span>}
-                </div>
-
-                <div className={styles.addFormGroup}>
-                  <label>Location</label>
-                  <input name="location" value={formData.location} onChange={handleInputChange} placeholder="e.g. 9.9252, 78.1198" />
-                  {validationMessages.location && <span className={styles.validationMsg}>{validationMessages.location}</span>}
-                </div>
-
-                <div className={styles.addFormGroup}>
-                  <label>Status <span className={styles.required}>*</span></label>
-                  <select required name="status" value={formData.status} onChange={handleInputChange}>
-                    {STATUS_OPTIONS.map((s) => (
-                      <option key={s.id} value={s.id}>{s.label}</option>
-                    ))}
-                  </select>
-                </div>
-
+              <div className={styles.addFormGroup}>
+                <label>Mobile <span className={styles.required}>*</span></label>
+                <input required name="mobile" value={formData.mobile} onChange={handleInputChange} maxLength="10" placeholder="10-digit mobile" />
+                {validationMessages.mobile && <span className={styles.validationMsg}>{validationMessages.mobile}</span>}
               </div>
-            </div>
 
-            {/* ── Contact Information — 3 columns ── */}
-            <div className={styles.addSection}>
-              <div className={styles.addSectionHeader}><h3>Contact Information</h3></div>
-              <div className={styles.addFormGridThreeCol}>
-
-                <div className={styles.addFormGroup}>
-                  <label>Mobile <span className={styles.required}>*</span></label>
-                  <input required name="mobile" value={formData.mobile} onChange={handleInputChange} maxLength="10" placeholder="10-digit mobile" />
-                  {validationMessages.mobile && <span className={styles.validationMsg}>{validationMessages.mobile}</span>}
-                </div>
-
-                <div className={styles.addFormGroup}>
-                  <label>Alternate Mobile</label>
-                  <input name="altMobile" value={formData.altMobile} onChange={handleInputChange} maxLength="10" placeholder="Optional alt number" />
-                  {validationMessages.altMobile && <span className={styles.validationMsg}>{validationMessages.altMobile}</span>}
-                </div>
-
-                <div className={styles.addFormGroup}>
-                  <label>Email</label>
-                  <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="clinic@example.com" />
-                  {validationMessages.email && <span className={styles.validationMsg}>{validationMessages.email}</span>}
-                </div>
-
+              <div className={styles.addFormGroup}>
+                <label>Alternate Mobile</label>
+                <input name="altMobile" value={formData.altMobile} onChange={handleInputChange} maxLength="10" placeholder="Optional alt number" />
+                {validationMessages.altMobile && <span className={styles.validationMsg}>{validationMessages.altMobile}</span>}
               </div>
-            </div>
 
-            {/* ── Tax Information — 3 columns ── */}
-            <div className={styles.addSection}>
-              <div className={styles.addSectionHeader}><h3>Tax Information</h3></div>
-              <div className={styles.addFormGridThreeCol}>
-
-                <div className={styles.addFormGroup}>
-                  <label>GST Number</label>
-                  <input name="gstNo" value={formData.gstNo} onChange={handleInputChange} placeholder="e.g. 29ABCDE1234F1Z5" />
-                  {validationMessages.gstNo && <span className={styles.validationMsg}>{validationMessages.gstNo}</span>}
-                </div>
-
-                <div className={styles.addFormGroup}>
-                  <label>CGST Percentage</label>
-                  <input type="number" name="cgstPercentage" value={formData.cgstPercentage} onChange={handleInputChange} min="0" step="0.01" placeholder="0.00" />
-                  {validationMessages.cgstPercentage && <span className={styles.validationMsg}>{validationMessages.cgstPercentage}</span>}
-                </div>
-
-                <div className={styles.addFormGroup}>
-                  <label>SGST Percentage</label>
-                  <input type="number" name="sgstPercentage" value={formData.sgstPercentage} onChange={handleInputChange} min="0" step="0.01" placeholder="0.00" />
-                  {validationMessages.sgstPercentage && <span className={styles.validationMsg}>{validationMessages.sgstPercentage}</span>}
-                </div>
-
+              <div className={styles.addFormGroup}>
+                <label>Email</label>
+                <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="clinic@example.com" />
+                {validationMessages.email && <span className={styles.validationMsg}>{validationMessages.email}</span>}
               </div>
+
             </div>
+          </div>
 
-            {/* ── Billing Configuration ── */}
-            <div className={styles.addSection}>
-              <div className={styles.addSectionHeader}><h3>Billing Configuration</h3></div>
-              <div className={styles.addFormGrid}>
+          {/* ── Tax Information — 3 columns ── */}
+          <div className={styles.addSection}>
+            <div className={styles.addSectionHeader}><h3>Tax Information</h3></div>
+            <div className={styles.addFormGridThreeCol}>
 
-                <div className={styles.addFormGroup}>
-                  <label>File No Prefix</label>
-                  <input
-                    name="fileNoPrefix"
-                    value={formData.fileNoPrefix}
-                    onChange={handleInputChange}
-                    onKeyDown={prefixKeyDown}
-                    onPaste={prefixPaste}
-                    placeholder="e.g. FILE-2026_DOC"
-                    maxLength={20}
-                  />
-                  {validationMessages.fileNoPrefix && <span className={styles.validationMsg}>{validationMessages.fileNoPrefix}</span>}
-                </div>
-
-                <div className={styles.addFormGroup}>
-                  <label>Last File Sequence</label>
-                  <input type="number" name="lastFileSeq" value={formData.lastFileSeq} onChange={handleInputChange} min="0" placeholder="0" />
-                  {validationMessages.lastFileSeq && <span className={styles.validationMsg}>{validationMessages.lastFileSeq}</span>}
-                </div>
-
-                <div className={styles.addFormGroup}>
-                  <label>Invoice Prefix</label>
-                  <input
-                    type="text"
-                    name="invoicePrefix"
-                    value={formData.invoicePrefix || ''}
-                    onChange={handleInputChange}
-                    onKeyDown={prefixKeyDown}
-                    onPaste={prefixPaste}
-                    placeholder="e.g. INV-2026_ABC"
-                    maxLength={20}
-                  />
-                  {validationMessages.invoicePrefix && <span className={styles.validationMsg}>{validationMessages.invoicePrefix}</span>}
-                </div>
-
+              <div className={styles.addFormGroup}>
+                <label>GST Number</label>
+                <input name="gstNo" value={formData.gstNo} onChange={handleInputChange} placeholder="e.g. 29ABCDE1234F1Z5" />
+                {validationMessages.gstNo && <span className={styles.validationMsg}>{validationMessages.gstNo}</span>}
               </div>
-            </div>
 
-            {/* ── Footer ── */}
-            <div className={styles.detailModalFooter}>
-              <button type="button" onClick={handleClose} className={styles.btnCancel}>
-                Cancel
-              </button>
-              <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
-                <FiSave className={styles.btnIcon} />
-                {formLoading ? 'Updating...' : 'Update Clinic'}
-              </button>
-            </div>
+              <div className={styles.addFormGroup}>
+                <label>CGST Percentage</label>
+                <input type="number" name="cgstPercentage" value={formData.cgstPercentage} onChange={handleInputChange} min="0" step="0.01" placeholder="0.00" />
+                {validationMessages.cgstPercentage && <span className={styles.validationMsg}>{validationMessages.cgstPercentage}</span>}
+              </div>
 
-          </form>
-        </div>
+              <div className={styles.addFormGroup}>
+                <label>SGST Percentage</label>
+                <input type="number" name="sgstPercentage" value={formData.sgstPercentage} onChange={handleInputChange} min="0" step="0.01" placeholder="0.00" />
+                {validationMessages.sgstPercentage && <span className={styles.validationMsg}>{validationMessages.sgstPercentage}</span>}
+              </div>
+
+            </div>
+          </div>
+
+          {/* ── Billing Configuration ── */}
+          <div className={styles.addSection}>
+            <div className={styles.addSectionHeader}><h3>Billing Configuration</h3></div>
+            <div className={styles.addFormGrid}>
+
+              <div className={styles.addFormGroup}>
+                <label>File No Prefix</label>
+                <input
+                  name="fileNoPrefix"
+                  value={formData.fileNoPrefix}
+                  onChange={handleInputChange}
+                  onKeyDown={prefixKeyDown}
+                  onPaste={prefixPaste}
+                  placeholder="e.g. FILE-2026_DOC"
+                  maxLength={20}
+                />
+                {validationMessages.fileNoPrefix && <span className={styles.validationMsg}>{validationMessages.fileNoPrefix}</span>}
+              </div>
+
+              <div className={styles.addFormGroup}>
+                <label>Last File Sequence</label>
+                <input type="number" name="lastFileSeq" value={formData.lastFileSeq} onChange={handleInputChange} min="0" placeholder="0" />
+                {validationMessages.lastFileSeq && <span className={styles.validationMsg}>{validationMessages.lastFileSeq}</span>}
+              </div>
+
+              <div className={styles.addFormGroup}>
+                <label>Invoice Prefix</label>
+                <input
+                  type="text"
+                  name="invoicePrefix"
+                  value={formData.invoicePrefix || ''}
+                  onChange={handleInputChange}
+                  onKeyDown={prefixKeyDown}
+                  onPaste={prefixPaste}
+                  placeholder="e.g. INV-2026_ABC"
+                  maxLength={20}
+                />
+                {validationMessages.invoicePrefix && <span className={styles.validationMsg}>{validationMessages.invoicePrefix}</span>}
+              </div>
+
+            </div>
+          </div>
+
+          {/* ── Footer ── */}
+          <div className={styles.detailModalFooter}>
+            <button type="button" onClick={onClose} className={styles.btnCancel}>
+              Cancel
+            </button>
+            <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
+              <FiSave className={styles.btnIcon} />
+              {formLoading ? 'Updating...' : 'Update Clinic'}
+            </button>
+          </div>
+
+        </form>
       </div>
     </div>
   );

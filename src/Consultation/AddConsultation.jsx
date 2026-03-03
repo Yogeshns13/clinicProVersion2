@@ -1415,7 +1415,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                           <div className="snapshot-row"><span className="snapshot-label">Reason</span><span>{selectedVisit.reason}</span></div>
                         )}
                         {selectedVisit.symptoms && (
-                          <div className="snapshot-row"><span className="snapshot-label">Symptoms</span><span>{selectedVisit.symptoms}</span></div>
+                          <div className="snapshot-row"><span className="snapshot-label">Symptom</span><span>{selectedVisit.symptoms}</span></div>
                         )}
                         {(selectedVisit.bpReading || selectedVisit.temperature || selectedVisit.weight) && (
                           <div className="vitals-row" style={{ marginTop: 4 }}>

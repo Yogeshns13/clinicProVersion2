@@ -602,6 +602,10 @@
   width: 60px; flex-shrink: 0;
 }
 
+.snapshot-value{
+  color: black;
+}
+
 .form-stack { display: flex; flex-direction: column; gap: 12px; }
 .form-group { display: flex; flex-direction: column; gap: 5px; }
 

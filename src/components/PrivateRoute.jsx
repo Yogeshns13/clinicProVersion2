@@ -6,19 +6,11 @@ import { useEffect, useState } from "react";
 const ROUTE_PERMISSIONS = {
   "/dashboard": ["admin","spradmin","fronttdesk","nurse","pharmacy","labtest","accounts","doctor"],
   "/clinic-list": ["admin","spradmin","fronttdesk","nurse","pharmacy","labtest","accounts","doctor"],
-  "/update-clinic/:id": ["admin","spradmin"],
   "/branch-list": ["admin","spradmin","fronttdesk","nurse","pharmacy","labtest","accounts","doctor"],
-  "/update-branch/:id": ["admin","spradmin"],
   "/dept-list": ["admin", "spradmin","fronttdesk","nurse","pharmacy","labtest","accounts"],
-  "/update-dept/:id": ["admin", "spradmin", "fronttdesk"],
 
   "/work-shift": ["admin", "doctor","spradmin","nurse", "fronttdesk"],
-  "/update-shift/:id": ["admin", "spradmin", "fronttdesk"],
   "/employee-list": ["admin","spradmin","fronttdesk","nurse"],
-  "/update-employee/:id": ["admin", "spradmin","fronttdesk"],
-  "/employee-proof/:id": ["admin", "spradmin","fronttdesk"],
-  "/employee-account/:id": ["admin", "spradmin","fronttdesk"],
-  "/employee-shift/:id": ["admin", "spradmin","fronttdesk"],
 
   "/patient-list": ["admin", "spradmin","fronttdesk","nurse","accounts","doctor",],
   "/view-patient/:id": ["admin", "spradmin", "doctor", "fronttdesk", "nurse", "accounts"],

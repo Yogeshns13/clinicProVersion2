@@ -470,7 +470,7 @@
 
 .detailsGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 16px;
 }
 
@@ -504,7 +504,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: 20px 20px 20px 260px;
   animation: fadeIn 0.25s ease;
 }
 
@@ -512,7 +512,7 @@
   background: var(--glass-bg);
   border-radius: 20px;
   width: 100%;
-  max-width: 720px;
+  max-width: 1000px;
   max-height: 92vh;
   overflow: hidden;
   display: flex;

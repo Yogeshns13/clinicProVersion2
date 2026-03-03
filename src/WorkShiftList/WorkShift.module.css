@@ -319,7 +319,11 @@
   font-size: 0.77rem;
 }
 
-.active  { color: #166534; }
+.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
 
 .inactive {
   background: rgba(239, 68, 68, 0.15);
@@ -724,7 +728,7 @@
   z-index: 1000;
   animation: fadeIn 0.3s ease;
   backdrop-filter: blur(4px);
-  padding: 20px;
+  padding: 20px 20px 20px 260px;
 }
 
 .detailModalContent {

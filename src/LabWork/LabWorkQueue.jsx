@@ -462,49 +462,6 @@ const LabWorkQueue = () => {
       <ErrorHandler error={error} />
       <Header title="Lab Work Queue" />
 
-      {/* Quick Stats */}
-      <div className={styles.statsContainer}>
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #207d9c, #30b2b5)' }}>
-            <FiPackage size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{totalOrders}</div>
-            <div className={styles.statLabel}>Total Orders</div>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #eab308, #ca8a04)' }}>
-            <FiClock size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{pendingItems}</div>
-            <div className={styles.statLabel}>Pending Tests</div>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)' }}>
-            <FiActivity size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{inProgressItems}</div>
-            <div className={styles.statLabel}>In Progress</div>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)' }}>
-            <FiCheckCircle size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{completedItems}</div>
-            <div className={styles.statLabel}>Completed</div>
-          </div>
-        </div>
-      </div>
-
       {/* ── Filters ── */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
@@ -831,7 +788,6 @@ const LabWorkQueue = () => {
             </div>
             <div className={styles.confirmBody}>
               <p>Are you sure you want to mark this order as complete?</p>
-              <p><strong>Order ID:</strong> #{orderToComplete.orderId}</p>
               <p><strong>Patient:</strong> {orderToComplete.orderData.patientName}</p>
               <p className={styles.confirmSubtext}>This will update the order status to "In Progress".</p>
             </div>

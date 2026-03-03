@@ -1,10 +1,7 @@
 // src/components/UpdateBranch.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState } from 'react';
 import { FiSave } from 'react-icons/fi';
-import { getBranchList, getClinicList, updateBranch } from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
-import Header from '../Header/Header.jsx';
+import { updateBranch } from '../api/api.js';
 import styles from './BranchList.module.css';
 
 const getLiveValidationMessage = (fieldName, value) => {
@@ -53,91 +50,34 @@ const STATUS_OPTIONS = [
 ];
 
 // ────────────────────────────────────────────────
-const UpdateBranch = () => {
-  const navigate = useNavigate();
-  const params = useParams();
-  const branchId = params.branchId || params.id;
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [clinics, setClinics] = useState([]);
-  const [branchData, setBranchData] = useState(null);
-
+// Props:
+//   branch    — the branch object to edit (required)
+//   clinics   — clinics array passed from BranchList (avoids re-fetching)
+//   onClose   — called when user cancels or clicks backdrop
+//   onSuccess — called after a successful update (triggers list refresh)
+// ────────────────────────────────────────────────
+const UpdateBranch = ({ branch, clinics, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
-    clinicId: '',
-    branchName: '',
-    address: '',
-    location: '',
-    branchType: 1,
-    status: 1,
+    clinicId:   branch.clinicId   || '',
+    branchName: branch.name       || '',
+    address:    branch.address    || '',
+    location:   branch.location   || '',
+    branchType: branch.branchType || 1,
+    status:     branch.status === 'active' ? 1 : 2,
   });
 
-  const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState('');
-  const [formSuccess, setFormSuccess] = useState(false);
+  const [formLoading,        setFormLoading]        = useState(false);
+  const [formError,          setFormError]          = useState('');
+  const [formSuccess,        setFormSuccess]        = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
-
-  // ────────────────────────────────────────────────
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const clinicData = await getClinicList();
-        setClinics(clinicData || []);
-
-        const branchList = await getBranchList(0);
-        const branch = branchList.find((b) => b.id === Number(branchId));
-
-        if (!branch) {
-          throw new Error(`Branch not found with ID: ${branchId}`);
-        }
-
-        setBranchData(branch);
-
-        setFormData({
-          clinicId: branch.clinicId || '',
-          branchName: branch.name || '',
-          address: branch.address || '',
-          location: branch.location || '',
-          branchType: branch.branchType || 1,
-          status: branch.status === 'active' ? 1 : 2,
-        });
-      } catch (err) {
-        setError({
-          message: err.message || 'Failed to load branch data',
-          status: err.status || 500,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (branchId) {
-      fetchData();
-    } else {
-      setLoading(false);
-      setError({ message: 'No branch ID provided', status: 400 });
-    }
-  }, [branchId]);
 
   // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
     const filteredValue = filterInput(name, value);
-    
     setFormData((prev) => ({ ...prev, [name]: filteredValue }));
-
-    const validationMessage = getLiveValidationMessage(name, filteredValue);
-    setValidationMessages((prev) => ({
-      ...prev,
-      [name]: validationMessage,
-    }));
+    setValidationMessages((prev) => ({ ...prev, [name]: getLiveValidationMessage(name, filteredValue) }));
   };
-
-  const handleClose = () => navigate('/branch-list');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -147,18 +87,18 @@ const UpdateBranch = () => {
 
     try {
       await updateBranch({
-        branchId: Number(branchId),
-        clinicId: Number(formData.clinicId),
+        branchId:   Number(branch.id),
+        clinicId:   Number(formData.clinicId),
         BranchName: formData.branchName.trim(),
-        Address: formData.address.trim(),
-        Location: formData.location.trim(),
+        Address:    formData.address.trim(),
+        Location:   formData.location.trim(),
         BranchType: Number(formData.branchType),
-        Status: Number(formData.status),
+        Status:     Number(formData.status),
       });
 
       setFormSuccess(true);
       setTimeout(() => {
-        navigate('/branch-list');
+        onSuccess();
       }, 1500);
     } catch (err) {
       setFormError(err.message || 'Failed to update branch.');
@@ -168,184 +108,141 @@ const UpdateBranch = () => {
   };
 
   // ────────────────────────────────────────────────
-  if (error && error?.status >= 400) return <ErrorHandler error={error} />;
-  if (loading) return <div className={styles.clinicLoading}>Loading branch data...</div>;
-
-  if (error) {
-    return (
-      <div className={styles.clinicListWrapper}>
-        <Header title="Update Branch" />
-        <div className={styles.clinicError}>
-          {error.message || 'No branch ID provided'}
-        </div>
-      </div>
-    );
-  }
-
-  // ────────────────────────────────────────────────
   return (
-    <div className={styles.clinicListWrapper}>
-      <ErrorHandler error={error} />
-      <Header title="Update Branch" />
+    <div className={styles.detailModalOverlay} onClick={onClose}>
+      <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
 
-      {/* Modal Overlay */}
-      <div className={styles.detailModalOverlay} onClick={handleClose}>
-        <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
-
-          {/* Gradient Header */}
-          <div className={styles.detailModalHeader}>
-            <div className={styles.detailHeaderContent}>
-              <h2>Update Branch</h2>
-              <div className={styles.detailHeaderMeta}>
-                <span className={styles.workIdBadge}>
-                  {formData.branchName || 'Branch'}
-                </span>
-                <span
-                  className={`${styles.workIdBadge} ${
-                    formData.status === 1 ? styles.activeBadge : styles.inactiveBadge
-                  }`}
-                >
-                  {formData.status === 1 ? 'ACTIVE' : 'INACTIVE'}
-                </span>
-              </div>
+        {/* ── Gradient Header ── */}
+        <div className={styles.detailModalHeader}>
+          <div className={styles.detailHeaderContent}>
+            <h2>Update Branch</h2>
+            <div className={styles.detailHeaderMeta}>
+              <span className={styles.workIdBadge}>
+                {formData.branchName || 'Branch'}
+              </span>
+              <span className={`${styles.workIdBadge} ${formData.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}>
+                {formData.status === 1 ? 'ACTIVE' : 'INACTIVE'}
+              </span>
             </div>
-            <button onClick={handleClose} className={styles.detailCloseBtn}>
-              ✕
-            </button>
+          </div>
+          <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
+        </div>
+
+        {/* ── Form Body ── */}
+        <form onSubmit={handleSubmit} className={styles.addModalBody}>
+          {formError   && <div className={styles.formError}>{formError}</div>}
+          {formSuccess && <div className={styles.formSuccess}>Branch updated successfully!</div>}
+
+          <div className={styles.addSection}>
+            <div className={styles.addSectionHeader}>
+              <h3>Branch Information</h3>
+            </div>
+
+            <div className={styles.addFormGrid}>
+
+              <div className={styles.addFormGroup}>
+                <label>Clinic <span className={styles.required}>*</span></label>
+                <select
+                  required
+                  name="clinicId"
+                  value={formData.clinicId}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Select Clinic</option>
+                  {clinics.map((clinic) => (
+                    <option key={clinic.id} value={clinic.id}>
+                      {clinic.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.addFormGroup}>
+                <label>Branch Name <span className={styles.required}>*</span></label>
+                <input
+                  required
+                  name="branchName"
+                  value={formData.branchName}
+                  onChange={handleInputChange}
+                  placeholder="Enter branch name"
+                />
+                {validationMessages.branchName && (
+                  <span className={styles.validationMsg}>{validationMessages.branchName}</span>
+                )}
+              </div>
+
+              <div className={styles.addFormGroup}>
+                <label>Branch Type <span className={styles.required}>*</span></label>
+                <select
+                  required
+                  name="branchType"
+                  value={formData.branchType}
+                  onChange={handleInputChange}
+                >
+                  {BRANCH_TYPES.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                <label>Full Address</label>
+                <textarea
+                  name="address"
+                  rows={2}
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  placeholder="Enter full address"
+                />
+                {validationMessages.address && (
+                  <span className={styles.validationMsg}>{validationMessages.address}</span>
+                )}
+              </div>
+
+              <div className={styles.addFormGroup}>
+                <label>Location (Area/City)</label>
+                <input
+                  name="location"
+                  value={formData.location}
+                  onChange={handleInputChange}
+                  placeholder="e.g. Anna Nagar, Madurai"
+                />
+                {validationMessages.location && (
+                  <span className={styles.validationMsg}>{validationMessages.location}</span>
+                )}
+              </div>
+
+              <div className={styles.addFormGroup}>
+                <label>Status <span className={styles.required}>*</span></label>
+                <select
+                  required
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                >
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s.id} value={s.id}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+
+            </div>
           </div>
 
-          {/* Form Body */}
-          <form onSubmit={handleSubmit} className={styles.addModalBody}>
-            {formError && <div className={styles.formError}>{formError}</div>}
-            {formSuccess && <div className={styles.formSuccess}>Branch updated successfully!</div>}
+          {/* ── Footer ── */}
+          <div className={styles.detailModalFooter}>
+            <button type="button" onClick={onClose} className={styles.btnCancel}>
+              Cancel
+            </button>
+            <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
+              <FiSave style={{ marginRight: '8px' }} />
+              {formLoading ? 'Updating...' : 'Update Branch'}
+            </button>
+          </div>
+        </form>
 
-            <div className={styles.addSection}>
-              <div className={styles.addSectionHeader}>
-                <h3>Branch Information</h3>
-              </div>
-
-              <div className={styles.addFormGrid}>
-
-                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                  <label>
-                    Clinic <span className={styles.required}>*</span>
-                  </label>
-                  <select
-                    required
-                    name="clinicId"
-                    value={formData.clinicId}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select Clinic</option>
-                    {clinics.map((clinic) => (
-                      <option key={clinic.id} value={clinic.id}>
-                        {clinic.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={styles.addFormGroup}>
-                  <label>
-                    Branch Name <span className={styles.required}>*</span>
-                  </label>
-                  <input
-                    required
-                    name="branchName"
-                    value={formData.branchName}
-                    onChange={handleInputChange}
-                    placeholder="Enter branch name"
-                  />
-                  {validationMessages.branchName && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.branchName}
-                    </span>
-                  )}
-                </div>
-
-                <div className={styles.addFormGroup}>
-                  <label>
-                    Branch Type <span className={styles.required}>*</span>
-                  </label>
-                  <select
-                    required
-                    name="branchType"
-                    value={formData.branchType}
-                    onChange={handleInputChange}
-                  >
-                    {BRANCH_TYPES.map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                  <label>Full Address</label>
-                  <textarea
-                    name="address"
-                    rows={2}
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    placeholder="Enter full address"
-                  />
-                  {validationMessages.address && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.address}
-                    </span>
-                  )}
-                </div>
-
-                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                  <label>Location (Area/City)</label>
-                  <input
-                    name="location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    placeholder="e.g. Anna Nagar, Madurai"
-                  />
-                  {validationMessages.location && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.location}
-                    </span>
-                  )}
-                </div>
-
-                <div className={styles.addFormGroup}>
-                  <label>
-                    Status <span className={styles.required}>*</span>
-                  </label>
-                  <select
-                    required
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                  >
-                    {STATUS_OPTIONS.map((status) => (
-                      <option key={status.id} value={status.id}>
-                        {status.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className={styles.detailModalFooter}>
-              <button type="button" onClick={handleClose} className={styles.btnCancel}>
-                Cancel
-              </button>
-              <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
-                <FiSave style={{ marginRight: '8px' }} />
-                {formLoading ? 'Updating...' : 'Update Branch'}
-              </button>
-            </div>
-          </form>
-
-        </div>
       </div>
     </div>
   );

@@ -42,10 +42,10 @@
   background: rgba(15, 22, 41, 0.85);
   backdrop-filter: blur(9px);
   display: flex;
-  align-items: center;
+  align-items: center;  
   justify-content: center;
   z-index: 1000;
-  padding: 12px;
+  padding: 20px 20px 20px 260px;
   animation: fadeIn 0.3s ease;
 }
 

@@ -637,6 +637,7 @@
   z-index: 1000;
   animation: fadeIn 0.2s ease-out;
   backdrop-filter: blur(4px);
+  padding: 20px 20px 20px 260px;
 }
 
 .confirmDialog {
@@ -801,7 +802,7 @@
   z-index: 1000;
   animation: fadeIn 0.3s ease;
   backdrop-filter: blur(4px);
-  padding: 20px;
+  padding: 20px 20px 20px 260px;
   overflow-y: auto;
 }
 

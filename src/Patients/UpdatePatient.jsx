@@ -173,16 +173,29 @@ const getTodayDate = () => {
   return today.toISOString().split('T')[0];
 };
 
+const calculateAge = (birthDateString) => {
+  if (!birthDateString) return '';
+  
+  const birthDate = new Date(birthDateString);
+  const today = new Date();
+  
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  
+  return age >= 0 ? age : '';
+};
+
 // ────────────────────────────────────────────────
-// ← Changed: accepts patientId, onClose, onSuccess props (works both as modal and routed page)
 const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
   const navigate = useNavigate();
   const params = useParams();
 
-  // ← Use prop if provided (modal mode), otherwise fall back to route param
   const patientId = propPatientId || params.patientId || params.id || params.patientID;
 
-  // ← Use prop callbacks if provided, otherwise navigate (route mode)
   const handleClose = () => {
     if (onClose) onClose();
     else navigate('/patient-list');
@@ -202,7 +215,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
     lastName: '',
     gender: 0,
     birthDate: '',
-    age: 0,
+    age: '',
     bloodGroup: 0,
     maritalStatus: 0,
     mobile: '',
@@ -268,7 +281,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
           lastName: patient.lastName || '',
           gender: patient.gender || 0,
           birthDate: formatDate(patient.birthDate),
-          age: patient.age || 0,
+          age: patient.age || '',
           bloodGroup: patient.bloodGroup || 0,
           maritalStatus: patient.maritalStatus || 0,
           mobile: patient.mobile || '',
@@ -405,8 +418,27 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    const filteredValue = filterInput(name, value);
-    
+    let filteredValue = filterInput(name, value);
+
+    // Auto-calculate age when birthDate changes
+    if (name === 'birthDate') {
+      const calculatedAge = calculateAge(value);
+      setFormData((prev) => ({
+        ...prev,
+        birthDate: value,
+        age: calculatedAge !== '' ? calculatedAge : '',
+      }));
+
+      const validationMessage = getLiveValidationMessage(name, value);
+      setValidationMessages((prev) => ({
+        ...prev,
+        [name]: validationMessage,
+        age: calculatedAge === '' ? '' : getLiveValidationMessage('age', calculatedAge),
+      }));
+      return;
+    }
+
+    // Normal handling for other fields
     setFormData((prev) => ({ ...prev, [name]: filteredValue }));
     const validationMessage = getLiveValidationMessage(name, filteredValue);
     setValidationMessages((prev) => ({
@@ -430,7 +462,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
         lastName: formData.lastName.trim(),
         gender: Number(formData.gender),
         birthDate: formData.birthDate,
-        age: Number(formData.age),
+        age: Number(formData.age || 0),
         bloodGroup: Number(formData.bloodGroup),
         photoFileId: 0,
         maritalStatus: Number(formData.maritalStatus),
@@ -451,7 +483,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
 
       setFormSuccess(true);
       setTimeout(() => {
-        handleSuccessRedirect();  // ← Changed from navigate() to use prop-aware handler
+        handleSuccessRedirect();
       }, 1500);
     } catch (err) {
       setFormError(err.message || 'Failed to update patient.');
@@ -571,6 +603,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
                     value={formData.age}
                     onChange={handleInputChange}
                     min="0"
+                    readOnly={!!formData.birthDate}  // ← Optional: prevents manual edit when DOB is set
                   />
                   {validationMessages.age && (
                     <span className={styles.validationMsg}>{validationMessages.age}</span>

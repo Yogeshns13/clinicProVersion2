@@ -1,20 +1,19 @@
 // src/components/PatientVisitList.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiPlus, FiCheckCircle, FiX } from 'react-icons/fi';
+import { FiSearch, FiPlus, FiCheckCircle, FiX, FiAlertCircle } from 'react-icons/fi';
 import { getPatientVisitList, updatePatientVisit } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddPatientVisit from './AddPatientVisit.jsx';
 import PatientVisitDetails from './ViewPatientVisit.jsx';
+import UpdatePatientVisit from './UpdatePatientVisit.jsx';
 import styles from './PatientVisitList.module.css';
 
-// ──────────────────────────────────────────────────
-// CONSTANTS
-// ──────────────────────────────────────────────────
 const STATUS_OPTIONS = [
   { id: 0, label: 'Initiated' },
   { id: 1, label: 'Ready to Consult' },
+  { id: 2, label: 'Consulted'}
 ];
 
 const SEARCH_TYPE_OPTIONS = [
@@ -24,16 +23,13 @@ const SEARCH_TYPE_OPTIONS = [
 
 const todayDate = new Date().toISOString().split('T')[0];
 
-// ──────────────────────────────────────────────────
 const PatientVisitList = () => {
   const navigate = useNavigate();
 
-  // Data
   const [visits, setVisits]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
 
-  // Filter inputs (staged — not applied until Search is clicked)
   const [filterInputs, setFilterInputs] = useState({
     searchType:  'PatientName',
     searchValue: '',
@@ -43,7 +39,6 @@ const PatientVisitList = () => {
     visitDate:   todayDate,
   });
 
-  // Applied filters (drive the API call)
   const [appliedFilters, setAppliedFilters] = useState({
     searchType:  'PatientName',
     searchValue: '',
@@ -53,17 +48,20 @@ const PatientVisitList = () => {
     visitDate:   todayDate,
   });
 
-  // Add Form Modal
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
 
-  // Details Modal
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedVisit, setSelectedVisit]           = useState(null);
 
-  // Update Modal
+  // Update Modal (full edit form — no routing)
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [updateVisitId, setUpdateVisitId]         = useState(null);
+
+  // Initialize Visit Modal (quick vitals)
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [visitToUpdate, setVisitToUpdate]     = useState(null);
   const [updating, setUpdating]               = useState(false);
+  const [submitErrors, setSubmitErrors]       = useState([]);
   const [formData, setFormData] = useState({
     symptoms:    '',
     bpSystolic:  '',
@@ -72,8 +70,6 @@ const PatientVisitList = () => {
     weight:      '',
   });
 
-  // ──────────────────────────────────────────────────
-  // Derived: are any filters active beyond the default today date?
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.status             !== '' ||
@@ -81,8 +77,6 @@ const PatientVisitList = () => {
     appliedFilters.dateTo             !== '' ||
     appliedFilters.visitDate          !== todayDate;
 
-  // ──────────────────────────────────────────────────
-  // Data fetching
   const fetchVisits = async (filters = appliedFilters) => {
     try {
       setLoading(true);
@@ -100,7 +94,6 @@ const PatientVisitList = () => {
         DoctorName:  filters.searchType === 'DoctorName'  ? filters.searchValue : '',
       };
 
-      // Date logic: if range provided use range, else use single visitDate
       if (filters.dateFrom && filters.dateTo) {
         options.FromVisitDate = filters.dateFrom;
         options.ToVisitDate   = filters.dateTo;
@@ -113,7 +106,6 @@ const PatientVisitList = () => {
 
       const data = await getPatientVisitList(clinicId, options);
 
-      // Sort newest first
       const sorted = data.sort((a, b) => {
         const da = new Date((a.visitDate || '') + ' ' + (a.visitTime || '00:00:00'));
         const db = new Date((b.visitDate || '') + ' ' + (b.visitTime || '00:00:00'));
@@ -138,8 +130,6 @@ const PatientVisitList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedFilters]);
 
-  // ──────────────────────────────────────────────────
-  // Helpers
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
     const date = new Date(dateStr);
@@ -171,22 +161,21 @@ const PatientVisitList = () => {
   const getStatusLabel = (status) => {
     if (status === 0) return 'Initiated';
     if (status === 1) return 'Ready to Consult';
+    if (status === 2) return 'Consulted';
     return 'Unknown';
   };
 
   const getStatusClass = (status) => {
     if (status === 0) return styles.initiated;
     if (status === 1) return styles.ready;
+    if (status === 2) return styles.consulted;
     return styles.initiated;
   };
 
-  // ──────────────────────────────────────────────────
-  // Handlers
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs((prev) => {
       const updated = { ...prev, [name]: value };
-      // If single date changes, clear range and vice versa
       if (name === 'visitDate') {
         updated.dateFrom = '';
         updated.dateTo   = '';
@@ -215,7 +204,6 @@ const PatientVisitList = () => {
     setAppliedFilters(defaults);
   };
 
-  // Modal handlers
   const handleViewDetails = (visit) => {
     setSelectedVisit(visit);
     setIsDetailsModalOpen(true);
@@ -226,14 +214,27 @@ const PatientVisitList = () => {
     setIsDetailsModalOpen(false);
   };
 
-  const openAddForm  = () => setIsAddFormOpen(true);
-  const closeAddForm = () => setIsAddFormOpen(false);
-
+  const openAddForm      = () => setIsAddFormOpen(true);
+  const closeAddForm     = () => setIsAddFormOpen(false);
   const handleAddSuccess = () => fetchVisits(appliedFilters);
 
-  const handleEditFromModal = (visitId) => navigate(`/update-patientvisit/${visitId}`);
+  // Opens the full UpdatePatientVisit modal instead of navigating
+  const handleEditFromModal = (visitId) => {
+    setIsDetailsModalOpen(false);
+    setSelectedVisit(null);
+    setUpdateVisitId(visitId);
+    setIsUpdateModalOpen(true);
+  };
 
-  // Initialize Visit handlers
+  const closeUpdateModal = () => {
+    setIsUpdateModalOpen(false);
+    setUpdateVisitId(null);
+  };
+
+  const handleUpdateSuccess = () => {
+    fetchVisits(appliedFilters);
+  };
+
   const handleInitializeVisit = (visit) => {
     setVisitToUpdate(visit);
     setFormData({
@@ -246,9 +247,10 @@ const PatientVisitList = () => {
     setShowUpdateModal(true);
   };
 
-  const closeUpdateModal = () => {
+  const closeInitializeModal = () => {
     setShowUpdateModal(false);
     setVisitToUpdate(null);
+    setSubmitErrors([]);
     setFormData({ symptoms: '', bpSystolic: '', bpDiastolic: '', temperature: '', weight: '' });
   };
 
@@ -264,6 +266,7 @@ const PatientVisitList = () => {
     try {
       setUpdating(true);
       setError(null);
+      setSubmitErrors([]);
 
       let formattedDate = visitToUpdate.visitDate;
       if (formattedDate && !formattedDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
@@ -286,18 +289,21 @@ const PatientVisitList = () => {
       };
 
       await updatePatientVisit(visitData);
-      closeUpdateModal();
+      closeInitializeModal();
       await fetchVisits(appliedFilters);
     } catch (err) {
       console.error('Failed to update visit:', err);
-      setError({ message: err.message || 'Failed to update visit' });
+      const apiErrors = err?.response?.data?.errors || err?.data?.errors || err?.errors;
+      if (Array.isArray(apiErrors) && apiErrors.length > 0) {
+        setSubmitErrors(apiErrors);
+      } else {
+        setError({ message: err.message || 'Failed to update visit' });
+      }
     } finally {
       setUpdating(false);
     }
   };
 
-  // ──────────────────────────────────────────────────
-  // Early returns
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
@@ -305,7 +311,6 @@ const PatientVisitList = () => {
   if (loading) return <div className={styles.loading}>Loading visits...</div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
-  // ──────────────────────────────────────────────────
   return (
     <div className={styles.listWrapper}>
       <Header title="Patient Visit Management" />
@@ -314,7 +319,6 @@ const PatientVisitList = () => {
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
 
-          {/* Search type + value */}
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -342,25 +346,6 @@ const PatientVisitList = () => {
             />
           </div>
 
-          {/* Status */}
-          <div className={styles.filterGroup}>
-            <select
-              name="status"
-              value={filterInputs.status}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            >
-              <option value="">All Status</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-
-          {/* From Date */}
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
               {!filterInputs.dateFrom && (
@@ -376,7 +361,6 @@ const PatientVisitList = () => {
             </div>
           </div>
 
-          {/* To Date */}
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
               {!filterInputs.dateTo && (
@@ -392,7 +376,6 @@ const PatientVisitList = () => {
             </div>
           </div>
 
-          {/* Actions */}
           <div className={styles.filterActions}>
             <button onClick={handleSearch} className={styles.searchButton}>
               <FiSearch size={16} />
@@ -535,7 +518,15 @@ const PatientVisitList = () => {
         onEdit={handleEditFromModal}
       />
 
-      {/* ── Update Visit Modal ── */}
+      {/* ── Update Visit Modal (full form, no routing) ── */}
+      <UpdatePatientVisit
+        isOpen={isUpdateModalOpen}
+        onClose={closeUpdateModal}
+        onSuccess={handleUpdateSuccess}
+        visitId={updateVisitId}
+      />
+
+      {/* ── Initialize Visit Modal ── */}
       {showUpdateModal && visitToUpdate && (
         <div className={styles.updateOverlay}>
           <div className={styles.updateModal}>
@@ -545,7 +536,7 @@ const PatientVisitList = () => {
                 <h3>Initialize Visit - Add Vitals</h3>
               </div>
               <button
-                onClick={closeUpdateModal}
+                onClick={closeInitializeModal}
                 className={styles.updateCloseBtn}
                 disabled={updating}
               >
@@ -555,7 +546,6 @@ const PatientVisitList = () => {
 
             <form onSubmit={handleUpdateSubmit}>
               <div className={styles.updateBody}>
-                {/* Visit Info Section */}
                 <div className={styles.updateInfoSection}>
                   <h4>Visit Information</h4>
                   <div className={styles.updateInfoGrid}>
@@ -584,7 +574,6 @@ const PatientVisitList = () => {
                   </div>
                 </div>
 
-                {/* Vitals Input Section */}
                 <div className={styles.updateFormSection}>
                   <h4>Patient Vitals</h4>
 
@@ -597,6 +586,7 @@ const PatientVisitList = () => {
                       onChange={handleFormChange}
                       placeholder="Enter patient symptoms..."
                       rows="3"
+                      required
                       className={styles.formTextarea}
                     />
                   </div>
@@ -612,9 +602,9 @@ const PatientVisitList = () => {
                         name="bpSystolic"
                         value={formData.bpSystolic}
                         onChange={handleFormChange}
-                        placeholder="120"
-                        min="0"
-                        max="300"
+                        required
+                        min="50"
+                        max="250"
                         className={styles.formInput}
                       />
                     </div>
@@ -628,16 +618,13 @@ const PatientVisitList = () => {
                         id="bpDiastolic"
                         name="bpDiastolic"
                         value={formData.bpDiastolic}
+                        required
                         onChange={handleFormChange}
-                        placeholder="80"
-                        min="0"
-                        max="200"
+                        min="30"
+                        max="150"
                         className={styles.formInput}
                       />
                     </div>
-                  </div>
-
-                  <div className={styles.formRow}>
                     <div className={styles.formGroup}>
                       <label htmlFor="temperature">
                         Temperature <span className={styles.unitLabel}>(°F)</span>
@@ -647,10 +634,10 @@ const PatientVisitList = () => {
                         id="temperature"
                         name="temperature"
                         value={formData.temperature}
+                        required
                         onChange={handleFormChange}
-                        placeholder="98.6"
-                        min="0"
-                        max="120"
+                        min="90"
+                        max="110"
                         step="0.1"
                         className={styles.formInput}
                       />
@@ -666,21 +653,38 @@ const PatientVisitList = () => {
                         name="weight"
                         value={formData.weight}
                         onChange={handleFormChange}
-                        placeholder="70"
-                        min="0"
+                        required
+                        min="1"
                         max="500"
                         step="0.1"
                         className={styles.formInput}
                       />
                     </div>
                   </div>
+
                 </div>
+
+                {/* ── Inline API Error Display ── */}
+                {submitErrors.length > 0 && (
+                  <div className={styles.modalErrorBox}>
+                    <div className={styles.modalErrorTitle}>
+                      <FiAlertCircle size={16} />
+                      Please fix the following errors:
+                    </div>
+                    {submitErrors.map((err, i) => (
+                      <div key={i} className={styles.modalErrorItem}>
+                        <strong>{err.path}:</strong> {err.msg}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
               </div>
 
               <div className={styles.updateFooter}>
                 <button
                   type="button"
-                  onClick={closeUpdateModal}
+                  onClick={closeInitializeModal}
                   className={styles.updateBtnCancel}
                   disabled={updating}
                 >

@@ -83,6 +83,16 @@ UserLogin
     "Password":"admin@123"
 }
 
+GetUser
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "UserID":2000000   
+   
+}
+
 ForgetPassword
 {
     "CHANNEL_ID":1,

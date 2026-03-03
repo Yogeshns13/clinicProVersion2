@@ -264,49 +264,6 @@ const LabInvoiceList = () => {
       <ErrorHandler error={error} />
       <Header title="Lab Invoice Management" />
 
-      {/* Quick Stats */}
-      <div className={styles.statsContainer}>
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)' }}>
-            <FiFileText size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{summaryStats.uniqueInvoices}</div>
-            <div className={styles.statLabel}>Total Invoices</div>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)' }}>
-            <FiDollarSign size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{formatCurrency(summaryStats.totalRevenue)}</div>
-            <div className={styles.statLabel}>Total Revenue</div>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #eab308, #ca8a04)' }}>
-            <FiFileText size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{summaryStats.totalTests}</div>
-            <div className={styles.statLabel}>Total Tests</div>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
-            <FiDollarSign size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{formatCurrency(summaryStats.avgInvoiceValue)}</div>
-            <div className={styles.statLabel}>Avg Invoice Value</div>
-          </div>
-        </div>
-      </div>
-
       {/* Filters Container */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>

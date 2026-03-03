@@ -1120,10 +1120,10 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                     {(consultation.reason || consultation.symptoms || consultation.bpReading) && (
                       <div className="visit-snapshot">
                         {consultation.reason && (
-                          <div className="snapshot-row"><span className="snapshot-label">Reason</span><span>{consultation.reason}</span></div>
+                          <div className="snapshot-row"><span className="snapshot-label">Reason</span><span className="snapshot-value">{consultation.reason}</span></div>
                         )}
                         {consultation.symptoms && (
-                          <div className="snapshot-row"><span className="snapshot-label">Symptoms</span><span>{consultation.symptoms}</span></div>
+                          <div className="snapshot-row"><span className="snapshot-label">Symptom</span><span className="snapshot-value">{consultation.symptoms}</span></div>
                         )}
                         {(consultation.bpReading || consultation.temperature || consultation.weight) && (
                           <div className="vitals-row" style={{ marginTop: 4 }}>

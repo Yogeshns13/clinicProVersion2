@@ -488,6 +488,7 @@
   z-index: 1000;
   animation: fadeIn 0.3s ease;
   backdrop-filter: blur(4px);
+  padding: 20px 20px 20px 260px;
 }
 
 /* ==================== DETAIL MODAL (Clinic-style) ==================== */
@@ -501,7 +502,7 @@
   z-index: 1000;
   animation: fadeIn 0.3s ease;
   backdrop-filter: blur(4px);
-  padding: 20px;
+  padding: 20px 20px 20px 260px;
 }
 
 .detailModalContent {

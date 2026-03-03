@@ -87,20 +87,12 @@ function App() {
         >
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/clinic-list" element={<ClinicList />} />
-          <Route path="/update-clinic/:id" element={<UpdateClinic />} />
           <Route path="/branch-list" element={<BranchList />} />
-          <Route path="/update-branch/:id" element={<UpdateBranch/>} />
           <Route path="/dept-list" element={<DepartmentList />} />
-          <Route path="/update-dept/:id" element={<UpdateDepartment />} />
+
           <Route path="/work-shift" element={<WorkShift/>} />
-          <Route path="/update-shift/:id" element={<UpdateWorkShift />} />
           <Route path="/employee-list" element={<EmployeeList />} />
-          <Route path="/add-employee" element={<AddEmployee />} />
-          <Route path="/view-employee/:id" element={<ViewEmployee />} />
-          <Route path="/update-employee/:id" element={<UpdateEmployee />} />
-          <Route path="/employee-proof/:id" element={<EmployeeProof />} />
-          <Route path="/employee-account/:id" element={<EmployeeAccount />} />
-          <Route path="/employee-shift/:id" element={<EmployeeShift />} />
+          
           <Route path="/patient-list" element={<PatientList />} />
           <Route path="/add-patient" element={<AddPatient />} />
           <Route path="/add-slotconfig" element={<AddSlotConfig/>}/>
@@ -115,7 +107,7 @@ function App() {
           <Route path="/view-patientvisit" element={<ViewPatientVisit/>} />
           <Route path="/update-patientvisit/:id" element={<UpdatePatientVisit/>} />
           <Route path="/consultation-list" element={<ConsultationList/>} />
-          <Route path="/consulted-patient" element={<ConsultedPatients/>} />  
+          <Route path="/consulted-patient" element={<ConsultedPatients/>} />
           <Route path="/view-consultation/:id" element={<ViewConsultation/>} />
           <Route path="/add-consultation" element={<AddConsultation/>} />
           <Route path="/update-consultation/:id" element={<UpdateConsultation/>} />

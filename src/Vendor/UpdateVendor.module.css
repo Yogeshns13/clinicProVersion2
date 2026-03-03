@@ -36,7 +36,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1100;
-  padding: 16px;              /* slightly reduced */
+  padding: 20px 20px 20px 260px;              /* slightly reduced */
   animation: fadeIn 0.3s ease;
 }
 

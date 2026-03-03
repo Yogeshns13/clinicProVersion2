@@ -11,7 +11,7 @@ import styles from './SlotList.module.css';
 // ────────────────────────────────────────────────
 const STATUS_OPTIONS = [
   { id: 1,  label: 'Active' },
-  { id: -1, label: 'Deleted' },
+  { id: 2, label: 'Deleted' },
 ];
 
 const BOOKED_OPTIONS = [
@@ -131,6 +131,7 @@ const SlotList = () => {
         DoctorID:     filters.doctorId !== 'all' ? Number(filters.doctorId) : 0,
         FromSlotDate: filters.fromDate || '',
         ToSlotDate:   filters.toDate   || '',
+        PageSize: 60,
         IsBooked:
           filters.bookedFilter === 'booked'
             ? 1

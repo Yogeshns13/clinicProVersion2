@@ -1,6 +1,5 @@
 // src/components/ClinicList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   FiSearch,
   FiPlus,
@@ -12,6 +11,7 @@ import {
 } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
+import UpdateClinic from './UpdateClinic.jsx';
 import styles from './ClinicList.module.css';
 
 const getLiveValidationMessage = (fieldName, value) => {
@@ -256,8 +256,6 @@ const filterInput = (fieldName, value) => {
 
 // ────────────────────────────────────────────────
 const ClinicList = () => {
-  const navigate = useNavigate();
-
   // Data & Filter
   const [clinics, setClinics] = useState([]);
   const [allClinics, setAllClinics] = useState([]);
@@ -305,6 +303,10 @@ const ClinicList = () => {
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
+
+  // Update Modal
+  const [updateClinicData, setUpdateClinicData] = useState(null);
+  const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);
 
   // ────────────────────────────────────────────────
   // Data fetching
@@ -372,6 +374,13 @@ const ClinicList = () => {
     if (status === 'active') return styles.active;
     if (status === 'inactive') return styles.inactive;
     return styles.inactive;
+  };
+
+  const refreshClinics = () => {
+    getClinicList().then((data) => {
+      setClinics(data);
+      setAllClinics(data);
+    });
   };
 
   // ────────────────────────────────────────────────
@@ -479,10 +488,7 @@ const ClinicList = () => {
       setFormSuccess(true);
       setTimeout(() => {
         closeAddForm();
-        getClinicList().then((data) => {
-          setClinics(data);
-          setAllClinics(data);
-        });
+        refreshClinics();
       }, 1500);
     } catch (err) {
       console.error('Add clinic failed:', err);
@@ -492,8 +498,22 @@ const ClinicList = () => {
     }
   };
 
+  // ── Update handlers ──
   const handleUpdateClick = (clinic) => {
-    navigate(`/update-clinic/${clinic.id}`);
+    setUpdateClinicData(clinic);
+    setSelectedClinic(null); // close details modal
+    setIsUpdateFormOpen(true);
+  };
+
+  const handleUpdateClose = () => {
+    setIsUpdateFormOpen(false);
+    setUpdateClinicData(null);
+  };
+
+  const handleUpdateSuccess = () => {
+    setIsUpdateFormOpen(false);
+    setUpdateClinicData(null);
+    refreshClinics();
   };
 
   // ────────────────────────────────────────────────
@@ -847,7 +867,6 @@ const ClinicList = () => {
                     )}
                   </div>
 
-                  {/* Email — no longer fullWidth, sits in the 3rd column */}
                   <div className={styles.addFormGroup}>
                     <label>Email</label>
                     <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="clinic@example.com" />
@@ -866,7 +885,6 @@ const ClinicList = () => {
                 </div>
                 <div className={styles.addFormGridThreeCol}>
 
-                  {/* GST Number — no longer fullWidth, sits in the 1st column */}
                   <div className={styles.addFormGroup}>
                     <label>GST Number</label>
                     <input name="gstNo" value={formData.gstNo} onChange={handleInputChange} placeholder="e.g. 29ABCDE1234F1Z5" />
@@ -980,6 +998,15 @@ const ClinicList = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* ──────────────── Update Clinic Modal ──────────────── */}
+      {isUpdateFormOpen && updateClinicData && (
+        <UpdateClinic
+          clinic={updateClinicData}
+          onClose={handleUpdateClose}
+          onSuccess={handleUpdateSuccess}
+        />
       )}
     </div>
   );

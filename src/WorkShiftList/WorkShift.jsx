@@ -1,6 +1,5 @@
 // src/components/WorkShift.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   FiSearch,
   FiPlus,
@@ -14,6 +13,7 @@ import {
 } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
+import UpdateWorkShift from './UpdateWorkShift.jsx';
 import styles from './WorkShift.module.css';
 
 const STATUS_OPTIONS = [
@@ -22,8 +22,6 @@ const STATUS_OPTIONS = [
 ];
 
 const WorkShift = () => {
-  const navigate = useNavigate();
-
   const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,7 +33,7 @@ const WorkShift = () => {
 
   const [appliedFilters, setAppliedFilters] = useState({
     searchValue: '',
-    status: '1',
+    status: '',
   });
 
   const [selectedShift, setSelectedShift] = useState(null);
@@ -56,9 +54,13 @@ const WorkShift = () => {
   const [shiftToDelete, setShiftToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Update Modal
+  const [updateShiftData, setUpdateShiftData] = useState(null);
+  const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);
+
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
-    appliedFilters.status == '';
+    appliedFilters.status !== '';
 
   const getStoredClinicId = () => {
     const clinicId = localStorage.getItem('clinicID');
@@ -140,13 +142,13 @@ const WorkShift = () => {
   };
 
   const handleClearFilters = () => {
-    const empty = { searchValue: '', status: '1' };
+    const empty = { searchValue: '', status: '' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
   };
 
-  const openDetails  = (shift) => setSelectedShift(shift);
-  const closeModal   = () => setSelectedShift(null);
+  const openDetails = (shift) => setSelectedShift(shift);
+  const closeModal  = () => setSelectedShift(null);
 
   const openAddForm = () => {
     setFormData({ shiftName: '', timeStart: '', timeEnd: '', workingHours: '' });
@@ -212,7 +214,23 @@ const WorkShift = () => {
     }
   };
 
-  const handleUpdateClick = (shift) => navigate(`/update-shift/${shift.id}`);
+  // ── Update handlers ──
+  const handleUpdateClick = (shift) => {
+    setUpdateShiftData(shift);
+    setSelectedShift(null); // close details modal
+    setIsUpdateFormOpen(true);
+  };
+
+  const handleUpdateClose = () => {
+    setIsUpdateFormOpen(false);
+    setUpdateShiftData(null);
+  };
+
+  const handleUpdateSuccess = () => {
+    setIsUpdateFormOpen(false);
+    setUpdateShiftData(null);
+    fetchShifts(appliedFilters);
+  };
 
   const openDeleteConfirm = (shift) => {
     setShiftToDelete(shift);
@@ -534,8 +552,8 @@ const WorkShift = () => {
               <button onClick={closeDeleteConfirm} className={styles.btnCancel} disabled={deleteLoading}>
                 Cancel
               </button>
-              <button 
-                onClick={handleDelete} 
+              <button
+                onClick={handleDelete}
                 className={styles.btnSubmit}
                 style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}
                 disabled={deleteLoading}
@@ -545,6 +563,15 @@ const WorkShift = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ──────────────── Update Shift Modal ──────────────── */}
+      {isUpdateFormOpen && updateShiftData && (
+        <UpdateWorkShift
+          shift={updateShiftData}
+          onClose={handleUpdateClose}
+          onSuccess={handleUpdateSuccess}
+        />
       )}
     </div>
   );

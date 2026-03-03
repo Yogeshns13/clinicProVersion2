@@ -36,7 +36,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: 20px 20px 20px 260px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -44,7 +44,7 @@
   background: #ffffff;
   border-radius: 16px;
   width: 100%;
-  max-width: 940px;
+  max-width: 1200px;
   max-height: 92vh;
   overflow: hidden;
   display: flex;
@@ -139,8 +139,8 @@
 
 .visit-details-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px 20px;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  gap: 12px 12px;
 }
 
 .visit-detail-item {

@@ -165,6 +165,22 @@ const getTodayDate = () => {
   return today.toISOString().split('T')[0];
 };
 
+const calculateAge = (birthDateString) => {
+  if (!birthDateString) return '';
+  
+  const birthDate = new Date(birthDateString);
+  const today = new Date();
+  
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  
+  return age >= 0 ? age : '';
+};
+
 // ────────────────────────────────────────────────
 const AddPatient = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -172,7 +188,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
     lastName: '',
     gender: 0,
     birthDate: '',
-    age: 0,
+    age: '',
     bloodGroup: 0,
     maritalStatus: 0,
     mobile: '',
@@ -212,7 +228,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
       lastName: '',
       gender: 0,
       birthDate: '',
-      age: 0,
+      age: '',
       bloodGroup: 0,
       maritalStatus: 0,
       mobile: '',
@@ -311,8 +327,28 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    const filteredValue = filterInput(name, value);
-    
+    let filteredValue = filterInput(name, value);
+
+    // Special handling when birthDate changes → auto-calculate age
+    if (name === 'birthDate') {
+      const calculatedAge = calculateAge(value);
+      setFormData((prev) => ({
+        ...prev,
+        birthDate: value,
+        age: calculatedAge !== '' ? calculatedAge : '',
+      }));
+
+      // Validate birth date
+      const validationMessage = getLiveValidationMessage(name, value);
+      setValidationMessages((prev) => ({
+        ...prev,
+        [name]: validationMessage,
+        age: calculatedAge === '' ? '' : getLiveValidationMessage('age', calculatedAge),
+      }));
+      return;
+    }
+
+    // Normal handling for other fields
     setFormData((prev) => ({ ...prev, [name]: filteredValue }));
 
     const validationMessage = getLiveValidationMessage(name, filteredValue);
@@ -339,7 +375,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
         lastName: formData.lastName.trim(),
         gender: Number(formData.gender),
         birthDate: formData.birthDate,
-        age: Number(formData.age),
+        age: Number(formData.age || 0),
         bloodGroup: Number(formData.bloodGroup),
         photoFileId: 0,
         maritalStatus: Number(formData.maritalStatus),
@@ -476,6 +512,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     onChange={handleInputChange}
                     min="0"
                     placeholder="Enter age"
+                    readOnly={!!formData.birthDate}   // ← Optional: make read-only when auto-filled
                   />
                   {validationMessages.age && (
                     <span className={styles.validationMsg}>

@@ -1,4 +1,4 @@
-/* src/components/AddPatientVisit.module.css */
+/* src/components/UpdatePatientVisit.module.css */
 
 :root {
   --primary-start: #222b6c;
@@ -50,24 +50,13 @@
   }
 }
 
-@keyframes dropdownOpen {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
 /* Overlay */
-.addVisitOverlay {
+.updateVisitOverlay {
   position: fixed;
   inset: 0;
   background: rgba(15, 22, 41, 0.85);
@@ -81,7 +70,7 @@
 }
 
 /* Modal – flex container with fixed header + scrollable body + fixed footer */
-.addVisitModal {
+.updateVisitModal {
   background: var(--glass-bg);
   border-radius: 15px;
   width: 100%;
@@ -97,14 +86,14 @@
 }
 
 /* Header – stays at top */
-.addVisitHeader {
+.updateVisitHeader {
   padding: 22px 28px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
   flex-shrink: 0;
   position: sticky;
   top: 0;
@@ -112,24 +101,24 @@
   border-radius: 15px 15px 0 0;
 }
 
-.addVisitHeaderContent {
+.updateVisitHeaderContent {
   display: flex;
   align-items: center;
   gap: 14px;
 }
 
-.addVisitHeaderIcon {
+.updateVisitHeaderIcon {
   opacity: 0.9;
 }
 
-.addVisitHeader h2 {
+.updateVisitHeader h2 {
   margin: 0;
   font-size: 1.48rem;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
-.addVisitClose {
+.updateVisitClose {
   background: rgba(255, 255, 255, 0.22);
   border: none;
   color: white;
@@ -145,13 +134,19 @@
   transition: all 0.25s ease;
 }
 
-.addVisitClose:hover {
+.updateVisitClose:hover {
   background: rgba(255, 255, 255, 0.38);
   transform: scale(1.08);
 }
 
-/* Form wrapper – full height */
-.addVisitForm {
+.updateVisitClose:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Form wrapper */
+.updateVisitForm {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -159,7 +154,7 @@
 }
 
 /* Scrollable content area */
-.addVisitBody {
+.updateVisitBody {
   padding: 24px;
   flex: 1;
   overflow-y: auto;
@@ -167,7 +162,7 @@
 }
 
 /* Error & loading states */
-.addVisitError {
+.updateVisitError {
   padding: 12px 16px;
   margin-bottom: 20px;
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
@@ -192,6 +187,85 @@
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 12px;
+}
+
+/* Patient Info Banner */
+.patientInfoBanner {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.06), rgba(32, 125, 156, 0.06));
+  border: 2px solid var(--border-light);
+  border-radius: 10px;
+  padding: 14px 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.patientInfoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.patientInfoDivider {
+  width: 1px;
+  height: 36px;
+  background: var(--border-light);
+  flex-shrink: 0;
+}
+
+.patientInfoLabel {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.patientInfoValue {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--primary-start);
+}
+
+/* Appointment Info Banner */
+.appointmentInfoBanner {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(34, 197, 94, 0.04));
+  padding: 16px;
+  border-radius: 10px;
+  border: 2px solid rgba(34, 197, 94, 0.25);
+  margin-bottom: 20px;
+}
+
+.appointmentBannerHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #059669;
+}
+
+.appointmentBannerDetails {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.appointmentBannerItem {
+  font-size: 0.875rem;
+  color: var(--text-dark);
+}
+
+.appointmentBannerItem strong {
+  color: var(--muted);
+  font-weight: 600;
+  margin-right: 4px;
 }
 
 /* Section title */
@@ -230,7 +304,8 @@
 }
 
 .formInput,
-.formTextarea {
+.formTextarea,
+.formSelect {
   width: 100%;
   padding: 10px 12px;
   border: 2px solid var(--border-light);
@@ -244,8 +319,27 @@
 }
 
 .formInput:focus,
-.formTextarea:focus {
+.formTextarea:focus,
+.formSelect:focus {
+  border-color: var(--primary-start);
   box-shadow: 0 0 0 3px var(--border-focus);
+}
+
+.formInput:disabled,
+.formSelect:disabled {
+  background: #f1f5f9;
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.formSelect {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
 }
 
 .formTextarea {
@@ -292,48 +386,8 @@
   }
 }
 
-/* Selected appointment summary */
-.selectedAppointmentSummary {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(34, 197, 94, 0.04));
-  padding: 16px;
-  border-radius: 10px;
-  border: 2px solid rgba(34, 197, 94, 0.25);
-  margin-bottom: 24px;
-}
-
-.summaryHeader {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-  font-weight: 700;
-  color: #059669;
-}
-
-.summaryContent {
-  display: grid;
-  gap: 8px;
-  font-size: 0.875rem;
-}
-
-.summaryRow {
-  display: flex;
-  gap: 12px;
-}
-
-.summaryLabel {
-  font-weight: 600;
-  color: var(--muted);
-  min-width: 110px;
-}
-
-.summaryValue {
-  color: var(--text-dark);
-  font-weight: 500;
-}
-
 /* Footer – stays at bottom */
-.addVisitFooter {
+.updateVisitFooter {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
@@ -429,216 +483,9 @@
   transform: none;
 }
 
-/* No appointments */
-.noAppointments {
-  padding: 30px;
-  text-align: center;
-  background: #fef3c7;
-  border-radius: 8px;
-  border: 1px solid #fbbf24;
-  color: #92400e;
-  font-size: 0.875rem;
-}
+/* ── Dark mode overrides ─────────────────────────────────── */
 
-/* ─────────────────────────────────────────────── */
-/* Searchable Dropdown                                */
-/* ─────────────────────────────────────────────── */
-
-.searchableWrapper {
-  position: relative;
-  width: 100%;
-}
-
-.searchableInput {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 12px;
-  border: 2px solid var(--border-light);
-  border-radius: 8px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-height: 42px;
-}
-
-.searchableInput:hover {
-  border-color: rgba(34, 43, 108, 0.4);
-}
-
-.searchableInputOpen {
-  border-color: var(--primary-start);
-  box-shadow: 0 0 0 3px var(--border-focus);
-  border-radius: 8px 8px 0 0;
-}
-
-.searchIcon {
-  color: var(--muted);
-  flex-shrink: 0;
-}
-
-.searchableInnerInput {
-  flex: 1;
-  border: none;
-  outline: none;
-  font-size: 0.875rem;
-  color: var(--text-dark);
-  background: transparent;
-  padding: 0;
-}
-
-.searchableInnerInput::placeholder {
-  color: var(--muted);
-  font-style: italic;
-}
-
-.searchableSelected {
-  flex: 1;
-  font-size: 0.875rem;
-  color: var(--text-dark);
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.searchablePlaceholder {
-  flex: 1;
-  font-size: 0.875rem;
-  color: var(--muted);
-}
-
-.searchableActions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.clearBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(100, 116, 139, 0.15);
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.clearBtn:hover {
-  background: rgba(239, 68, 68, 0.15);
-  color: var(--danger-color);
-}
-
-.chevron {
-  color: var(--muted);
-  transition: transform 0.2s ease;
-}
-
-.chevronOpen {
-  transform: rotate(180deg);
-}
-
-.searchableDropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: white;
-  border: 2px solid var(--primary-start);
-  border-top: none;
-  border-radius: 0 0 8px 8px;
-  max-height: 220px;
-  overflow-y: auto;
-  z-index: 999;
-  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.15);
-  animation: dropdownOpen 0.15s ease;
-}
-
-.searchableDropdown::-webkit-scrollbar {
-  width: 5px;
-}
-.searchableDropdown::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-.searchableDropdown::-webkit-scrollbar-thumb {
-  background: rgba(34, 43, 108, 0.25);
-  border-radius: 10px;
-}
-
-.searchableNoResults {
-  padding: 14px 16px;
-  font-size: 0.85rem;
-  color: var(--muted);
-  text-align: center;
-  font-style: italic;
-}
-
-.searchableOption {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 14px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.searchableOption:hover {
-  background: rgba(34, 43, 108, 0.06);
-}
-
-.searchableOptionSelected {
-  background: rgba(34, 43, 108, 0.08);
-}
-
-.optionAvatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
-  color: white;
-  font-size: 0.8rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.optionInfo {
-  flex: 1;
-  min-width: 0;
-}
-
-.optionLabel {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-dark);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.optionSub {
-  display: block;
-  font-size: 0.76rem;
-  color: var(--muted);
-  margin-top: 1px;
-}
-
-.optionCheck {
-  color: var(--primary-start);
-  flex-shrink: 0;
-}
-
-/* Dark mode overrides */
-.dark-mode .addVisitModal h2 {
+.dark-mode .updateVisitModal h2 {
   background: linear-gradient(135deg, var(--text-light), var(--accent-end));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -651,15 +498,21 @@
 
 .dark-mode .formInput,
 .dark-mode .formTextarea,
-.dark-mode .searchableInput {
+.dark-mode .formSelect {
   background: #1e293b;
   border-color: #475569;
   color: var(--text-light);
 }
 
+.dark-mode .formInput:disabled,
+.dark-mode .formSelect:disabled {
+  background: #0f172a;
+  color: #475569;
+}
+
 .dark-mode .formInput:focus,
 .dark-mode .formTextarea:focus,
-.dark-mode .searchableInputOpen {
+.dark-mode .formSelect:focus {
   border-color: var(--accent-start);
   box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2);
 }
@@ -668,44 +521,35 @@
   color: #fca5a5;
 }
 
-.dark-mode .addVisitError {
+.dark-mode .updateVisitError {
   background: rgba(239, 68, 68, 0.2);
   border-color: rgba(239, 68, 68, 0.4);
   color: #fca5a5;
 }
 
-.dark-mode .addVisitFooter {
+.dark-mode .updateVisitFooter {
   background: linear-gradient(135deg, #1e293b, #334155);
   border-top-color: #475569;
 }
 
-.dark-mode .searchableDropdown {
-  background: #1e293b;
-  border-color: var(--accent-start);
+.dark-mode .patientInfoBanner {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(34, 211, 238, 0.04));
+  border-color: rgba(34, 211, 238, 0.2);
 }
 
-.dark-mode .searchableOption:hover {
-  background: rgba(34, 211, 238, 0.1);
-}
-
-.dark-mode .searchableOptionSelected {
-  background: rgba(34, 211, 238, 0.12);
-}
-
-.dark-mode .optionLabel {
-  color: var(--text-light);
-}
-
-.dark-mode .optionSub {
-  color: #94a3b8;
-}
-
-.dark-mode .optionCheck {
+.dark-mode .patientInfoValue {
   color: var(--accent-start);
 }
 
-.dark-mode .noAppointments {
-  background: #78350f;
-  border-color: #fbbf24;
-  color: #fef3c7;
+.dark-mode .patientInfoDivider {
+  background: rgba(71, 85, 105, 0.6);
+}
+
+.dark-mode .appointmentInfoBanner {
+  background: rgba(74, 222, 128, 0.08);
+  border-color: rgba(74, 222, 128, 0.25);
+}
+
+.dark-mode .appointmentBannerItem {
+  color: var(--text-light);
 }

@@ -548,7 +548,7 @@ const ConsultationList = () => {
                     <td>
                       <div className={styles.actionsCell}>
                         <button onClick={() => handleViewDetails(consultation)} className={styles.viewBtn}>
-                          View
+                          View Details
                         </button>
                       </div>
                     </td>

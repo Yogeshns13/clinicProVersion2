@@ -74,7 +74,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: 20px 20px 20px 260px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -294,13 +294,6 @@
   align-items: center;
   gap: 6px;
   font-family: inherit;
-}
-
-.timingBtn:hover {
-  border-color: var(--accent-end);
-  color: var(--accent-start);
-  background: rgba(48, 178, 181, 0.08);
-  transform: translateY(-1px);
 }
 
 .timingBtnActive {

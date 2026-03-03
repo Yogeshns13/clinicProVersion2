@@ -1,6 +1,5 @@
 // src/components/DepartmentList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   FiSearch,
   FiPlus,
@@ -10,11 +9,11 @@ import {
   getDepartmentList, 
   getClinicList, 
   getBranchList,
-  clearCacheByType 
 } from '../api/cachedApi.js';
 import { addDepartment } from '../api/api.js';
 import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
+import UpdateDepartment from './UpdateDepartment.jsx';
 import styles from './DepartmentList.module.css';
 
 const getLiveValidationMessage = (fieldName, value) => {
@@ -54,18 +53,17 @@ const DEFAULT_FILTERS = {
 };
 
 const DepartmentList = () => {
-  const navigate = useNavigate();
-  const [departments, setDepartments]   = useState([]);
+  const [departments, setDepartments]       = useState([]);
   const [allDepartments, setAllDepartments] = useState([]);
-  const [clinics, setClinics]           = useState([]);
+  const [clinics, setClinics]               = useState([]);
 
-  const [filterInputs, setFilterInputs] = useState({ ...DEFAULT_FILTERS });
+  const [filterInputs, setFilterInputs]     = useState({ ...DEFAULT_FILTERS });
   const [appliedFilters, setAppliedFilters] = useState({ ...DEFAULT_FILTERS });
 
   const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState(null);
-  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+  const [loading, setLoading]                       = useState(true);
+  const [error, setError]                           = useState(null);
+  const [isAddFormOpen, setIsAddFormOpen]           = useState(false);
 
   const [formData, setFormData] = useState({
     clinicId:       '',
@@ -81,6 +79,11 @@ const DepartmentList = () => {
   const [formSuccess, setFormSuccess]               = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
 
+  // Update Modal
+  const [updateDepartmentData, setUpdateDepartmentData] = useState(null);
+  const [isUpdateFormOpen, setIsUpdateFormOpen]         = useState(false);
+
+  // ────────────────────────────────────────────────
   useEffect(() => {
     const fetchClinics = async () => {
       try {
@@ -94,34 +97,34 @@ const DepartmentList = () => {
   }, []);
 
   useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const clinicId = appliedFilters.clinicId === 'all' ? 0 : Number(appliedFilters.clinicId) || 0;
-
-        const data = await getDepartmentList(clinicId, 0, {
-          DepartmentName: appliedFilters.searchType === 'departmentName'
-            ? appliedFilters.searchValue
-            : '',
-        });
-
-        setDepartments(data);
-        setAllDepartments(data);
-      } catch (err) {
-        console.error('fetchDepartments error:', err);
-        setError(
-          err?.status >= 400 || err?.code >= 400
-            ? err
-            : { message: err.message || 'Failed to load departments' }
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDepartments();
+    fetchDepartments(appliedFilters);
   }, [appliedFilters]);
+
+  // forceRefresh = true bypasses cache → always fetches latest data from server
+  const fetchDepartments = async (filters, forceRefresh = false) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const clinicId = filters.clinicId === 'all' ? 0 : Number(filters.clinicId) || 0;
+
+      const data = await getDepartmentList(clinicId, 0, {
+        DepartmentName: filters.searchType === 'departmentName' ? filters.searchValue : '',
+      }, forceRefresh);
+
+      setDepartments(data);
+      setAllDepartments(data);
+    } catch (err) {
+      console.error('fetchDepartments error:', err);
+      setError(
+        err?.status >= 400 || err?.code >= 400
+          ? err
+          : { message: err.message || 'Failed to load departments' }
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredDepartments = useMemo(() => allDepartments, [allDepartments]);
 
@@ -143,8 +146,8 @@ const DepartmentList = () => {
     setAppliedFilters({ ...DEFAULT_FILTERS });
   };
 
-  const openDetails  = (department) => setSelectedDepartment(department);
-  const closeModal   = () => setSelectedDepartment(null);
+  const openDetails = (department) => setSelectedDepartment(department);
+  const closeModal  = () => setSelectedDepartment(null);
 
   const openAddForm = () => {
     setFormData({ clinicId: '', branchId: '', departmentName: '', profile: '' });
@@ -202,19 +205,10 @@ const DepartmentList = () => {
         profile:        formData.profile.trim(),
       });
 
-      clearCacheByType('GetDepartmentList');
-
       setFormSuccess(true);
-      setTimeout(async () => {
+      setTimeout(() => {
         closeAddForm();
-        const clinicId = appliedFilters.clinicId === 'all' ? 0 : Number(appliedFilters.clinicId) || 0;
-        const data = await getDepartmentList(clinicId, 0, {
-          DepartmentName: appliedFilters.searchType === 'departmentName'
-            ? appliedFilters.searchValue
-            : '',
-        }, true);
-        setDepartments(data);
-        setAllDepartments(data);
+        fetchDepartments(appliedFilters, true); // forceRefresh = true
       }, 1500);
     } catch (err) {
       console.error('Add department failed:', err);
@@ -224,8 +218,22 @@ const DepartmentList = () => {
     }
   };
 
+  // ── Update handlers ──
   const handleUpdateClick = (department) => {
-    navigate(`/update-dept/${department.id}`);
+    setUpdateDepartmentData(department);
+    setSelectedDepartment(null); // close details modal
+    setIsUpdateFormOpen(true);
+  };
+
+  const handleUpdateClose = () => {
+    setIsUpdateFormOpen(false);
+    setUpdateDepartmentData(null);
+  };
+
+  const handleUpdateSuccess = () => {
+    setIsUpdateFormOpen(false);
+    setUpdateDepartmentData(null);
+    fetchDepartments(appliedFilters, true); // forceRefresh = true
   };
 
   if (error && (error?.status >= 400 || error?.code >= 400)) {
@@ -245,7 +253,6 @@ const DepartmentList = () => {
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
 
-          {/* Search type + value */}
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -273,7 +280,6 @@ const DepartmentList = () => {
             />
           </div>
 
-          {/* Clinic */}
           <div className={styles.filterGroup}>
             <select
               name="clinicId"
@@ -290,7 +296,6 @@ const DepartmentList = () => {
             </select>
           </div>
 
-          {/* Actions */}
           <div className={styles.filterActions}>
             <button onClick={handleSearch} className={styles.searchButton}>
               <FiSearch size={16} />
@@ -516,6 +521,16 @@ const DepartmentList = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* ──────────────── Update Department Modal ──────────────── */}
+      {isUpdateFormOpen && updateDepartmentData && (
+        <UpdateDepartment
+          department={updateDepartmentData}
+          clinics={clinics}
+          onClose={handleUpdateClose}
+          onSuccess={handleUpdateSuccess}
+        />
       )}
     </div>
   );

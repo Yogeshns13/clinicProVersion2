@@ -405,10 +405,6 @@ const SalesCartDetailList = () => {
 
         {!loading && !error && details.length > 0 && (
           <div className={styles.headerActions}>
-            <button className={styles.exportBtn} onClick={exportCSV}>
-              <FiDownload size={15} />
-              Export CSV
-            </button>
 
             {/* ── NEW: Delete Cart button ── */}
             <button className={styles.deleteCartBtn} onClick={openDeleteCartModal}>

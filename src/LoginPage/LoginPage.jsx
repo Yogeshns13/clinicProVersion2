@@ -6,10 +6,9 @@ import logo from "../assets/cplogo.png";
 import meter from "../assets/meter.svg";
 import scope from "../assets/scope.svg";
 import reff from "../assets/refresh.png";
-import { loginUser, renewToken } from "../api/api";
+import { loginUser, renewToken, getClinicList } from "../api/api";
 import { useAuth } from "../context/AuthContext";
 import doctor from "../assets/doc.png";
-
 
 // SVG ICONS
 const LockIcon = () => (
@@ -121,7 +120,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     handleRefreshToken();
-  }, []); // Dependencies
+  }, []); 
 
   const handleRefreshToken = async () => {
       setIsLoading(true);
@@ -131,7 +130,6 @@ const LoginPage = () => {
         if (result.success) {
           console.log("Silent token refresh successful");
 
-          // Update login_time from server response (same format as login)
           let newLoginTime = new Date().toLocaleTimeString("en-IN", {
             hour: "2-digit",
             minute: "2-digit",
@@ -157,27 +155,20 @@ const LoginPage = () => {
           localStorage.setItem("login_time", newLoginTime);
           console.log("Updated login_time after silent refresh:", newLoginTime);
 
-          // Reuse your existing login() from AuthContext
-          login(result); // This should set user, token, etc.
-
-          // Navigate to dashboard (only one route as per your request)
+          login(result);
           navigate("/dashboard", { replace: true });
         }
-        // If refresh fails → do nothing, show login form normally
       } catch (err) {
         console.log("Silent refresh failed (normal if session expired):", err);
-        // Silently fail — user will see login form
       } finally {
         setIsLoading(false);
       }
   };
 
-  // Regenerate CAPTCHA when mode changes
   useEffect(() => {
     generateCaptcha(mode);
   }, [mode]);
 
-  // Generate a new CAPTCHA for the given mode
   const generateCaptcha = (targetMode) => {
     const num1 = Math.floor(Math.random() * 10) + 1;
     const num2 = Math.floor(Math.random() * 10) + 1;
@@ -196,7 +187,6 @@ const LoginPage = () => {
     ctx.fillStyle = "#f0f0f0";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Noise lines
     for (let i = 0; i < 5; i++) {
       ctx.strokeStyle = `rgba(0,0,0,${Math.random() * 0.5})`;
       ctx.beginPath();
@@ -205,7 +195,6 @@ const LoginPage = () => {
       ctx.stroke();
     }
 
-    // Math text
     const text = `${num1} + ${num2} = ?`;
     ctx.font = "24px Verdana";
     ctx.fillStyle = "black";
@@ -215,10 +204,9 @@ const LoginPage = () => {
     const shiftY = Math.random() * 10;
     ctx.setTransform(1, skewY, skewX, 1, shiftX, shiftY);
     ctx.fillText(text, 20, 40);
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // reset
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
   };
 
-  // Validate CAPTCHA
   const validateCaptcha = (modeKey) => {
     const { answer, correct } = captcha[modeKey];
     if (Number(answer) !== correct) {
@@ -230,12 +218,10 @@ const LoginPage = () => {
     return true;  
   };
 
-  // Input change handlers
   const handleLoginChange = (e) => setLoginData({ ...loginData, [e.target.name]: e.target.value });
   const handleSignupChange = (e) => setSignupData({ ...signupData, [e.target.name]: e.target.value });
   const handleResetChange = (e) => setResetData({ ...resetData, [e.target.name]: e.target.value });
 
-  // UPDATED: handleLoginSubmit — now saves login_time in EXACT format expected by useTokenRenewal
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
 
@@ -256,8 +242,7 @@ const LoginPage = () => {
       if (success) {
         console.log("Login Successful:", data);
 
-        // === CRITICAL: Save login_time in 12-hour IST format with AM/PM (e.g., "06:17:47 PM") ===
-        let loginTimeIST = "12:00:00 PM"; // fallback
+        let loginTimeIST = "12:00:00 PM";
 
         if (data?.responseTime && typeof data.responseTime === "string") {
           const [, timePart] = data.responseTime.split(", ");
@@ -274,7 +259,6 @@ const LoginPage = () => {
             });
           }
         } else {
-          // Fallback to current time if server doesn't provide
           loginTimeIST = new Date().toLocaleTimeString("en-IN", {
             hour: "2-digit",
             minute: "2-digit",
@@ -283,8 +267,13 @@ const LoginPage = () => {
           });
         }
 
-        console.log("Saving login_time:", loginTimeIST); // e.g., "06:17:47 PM"
+        console.log("Saving login_time:", loginTimeIST);
         localStorage.setItem("login_time", loginTimeIST);
+
+        // ────────────────────────────────────────────────
+        // Added: Call getClinicList() right after successful login
+        await getClinicList();
+        // ────────────────────────────────────────────────
 
         login(data);
         navigate("/dashboard", { replace: true });
@@ -325,7 +314,6 @@ const LoginPage = () => {
     setMode("login");
   };
 
-  // Navigation
   const goToLogin = () => setMode("login");
   const goToSignup = () => setMode("signup");
   const goToReset = () => setMode("reset");
@@ -345,7 +333,6 @@ const LoginPage = () => {
               </p>
             </div>
 
-            {/* LOGIN FORM */}
             {mode === "login" && (
               <form onSubmit={handleLoginSubmit} className="login-form">
                 <div className="input-group">
@@ -396,7 +383,6 @@ const LoginPage = () => {
               </form>
             )}
 
-            {/* SIGNUP FORM */}
             {mode === "signup" && (
               <form onSubmit={handleSignupSubmit} className="login-form">
                 <div className="input-group">
@@ -480,7 +466,6 @@ const LoginPage = () => {
               </form>
             )}
 
-            {/* RESET PASSWORD FORM */}
             {mode === "reset" && (
               <form onSubmit={handleResetSubmit} className="login-form">
                 <div className="input-group">

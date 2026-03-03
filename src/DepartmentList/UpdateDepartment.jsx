@@ -1,10 +1,8 @@
 // src/components/UpdateDepartment.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import { FiSave } from 'react-icons/fi';
-import { getDepartmentList, getClinicList, getBranchList, updateDepartment } from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
-import Header from '../Header/Header.jsx';
+import { getBranchList } from '../api/cachedApi.js';
+import { updateDepartment } from '../api/api.js';
 import styles from './DepartmentList.module.css';
 
 const getLiveValidationMessage = (fieldName, value) => {
@@ -33,74 +31,29 @@ const filterInput = (fieldName, value) => {
   }
 };
 
-const UpdateDepartment = () => {
-  const navigate = useNavigate();
-  const params = useParams();
-  const departmentId = params.departmentId || params.id;
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [clinics, setClinics] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [departmentData, setDepartmentData] = useState(null);
-
+// ────────────────────────────────────────────────
+// Props:
+//   department — the department object to edit (required)
+//   clinics    — clinics array passed from DepartmentList (avoids re-fetching)
+//   onClose    — called when user cancels or clicks backdrop
+//   onSuccess  — called after a successful update (triggers list refresh)
+// ────────────────────────────────────────────────
+const UpdateDepartment = ({ department, clinics, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
-    clinicId: '',
-    departmentName: '',
-    profile: '',
-    status: 1,
+    clinicId:       department.clinicId  || '',
+    branchId:       department.branchId  || '',
+    departmentName: department.name      || '',
+    profile:        department.profile   || '',
+    status:         1,
   });
 
-  const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState('');
-  const [formSuccess, setFormSuccess] = useState(false);
+  const [branches,           setBranches]           = useState([]);
+  const [formLoading,        setFormLoading]        = useState(false);
+  const [formError,          setFormError]          = useState('');
+  const [formSuccess,        setFormSuccess]        = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const clinicData = await getClinicList();
-        setClinics(clinicData || []);
-
-        const departmentList = await getDepartmentList(0, 0);
-        const department = departmentList.find((d) => d.id === Number(departmentId));
-
-        if (!department) {
-          throw new Error(`Department not found with ID: ${departmentId}`);
-        }
-
-        setDepartmentData(department);
-
-        const branchData = await getBranchList(department.clinicId);
-        setBranches(branchData || []);
-
-        setFormData({
-          clinicId: department.clinicId || '',
-          departmentName: department.name || '',
-          profile: department.profile || '',
-          status: 1,
-        });
-      } catch (err) {
-        setError({
-          message: err.message || 'Failed to load department data',
-          status: err.status || 500,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (departmentId) {
-      fetchData();
-    } else {
-      setLoading(false);
-      setError({ message: 'No department ID provided', status: 400 });
-    }
-  }, [departmentId]);
-
+  // Load branches whenever clinicId changes
   useEffect(() => {
     const fetchBranches = async () => {
       if (formData.clinicId) {
@@ -118,19 +71,13 @@ const UpdateDepartment = () => {
     fetchBranches();
   }, [formData.clinicId]);
 
+  // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     const filteredValue = filterInput(name, value);
     setFormData((prev) => ({ ...prev, [name]: filteredValue }));
-
-    const validationMessage = getLiveValidationMessage(name, filteredValue);
-    setValidationMessages((prev) => ({
-      ...prev,
-      [name]: validationMessage,
-    }));
+    setValidationMessages((prev) => ({ ...prev, [name]: getLiveValidationMessage(name, filteredValue) }));
   };
-
-  const handleClose = () => navigate('/dept-list');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -140,15 +87,15 @@ const UpdateDepartment = () => {
 
     try {
       await updateDepartment({
-        departmentId: Number(departmentId),
-        clinicId: Number(formData.clinicId),
+        departmentId:   Number(department.id),
+        clinicId:       Number(formData.clinicId),
         DepartmentName: formData.departmentName.trim(),
-        Profile: formData.profile.trim(),
+        Profile:        formData.profile.trim(),
       });
 
       setFormSuccess(true);
       setTimeout(() => {
-        navigate('/dept-list');
+        onSuccess();
       }, 1500);
     } catch (err) {
       setFormError(err.message || 'Failed to update department.');
@@ -157,126 +104,116 @@ const UpdateDepartment = () => {
     }
   };
 
-  if (error && error?.status >= 400) return <ErrorHandler error={error} />;
-  if (loading) return <div className={styles.clinicLoading}>Loading department data...</div>;
-
-  if (error) {
-    return (
-      <div className={styles.clinicListWrapper}>
-        <Header title="Update Department" />
-        <div className={styles.clinicError}>Error: {error.message || error}</div>
-      </div>
-    );
-  }
-
+  // ────────────────────────────────────────────────
   return (
-    <div className={styles.clinicListWrapper}>
-      <ErrorHandler error={error} />
-      <Header title="Update Department" />
+    <div className={styles.detailModalOverlay} onClick={onClose}>
+      <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
 
-      <div className={styles.detailModalOverlay} onClick={handleClose}>
-        <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
-
-          <div className={styles.detailModalHeader}>
-            <div className={styles.detailHeaderContent}>
-              <h2>Update Department</h2>
-              <div className={styles.detailHeaderMeta}>
-                <span className={styles.workIdBadge}>
-                  {formData.departmentName || 'Department'}
-                </span>
-                <span
-                  className={`${styles.workIdBadge} ${
-                    formData.status === 1 ? styles.activeBadge : styles.inactiveBadge
-                  }`}
-                >
-                  {formData.status === 1 ? 'ACTIVE' : 'INACTIVE'}
-                </span>
-              </div>
+        {/* ── Gradient Header ── */}
+        <div className={styles.detailModalHeader}>
+          <div className={styles.detailHeaderContent}>
+            <h2>Update Department</h2>
+            <div className={styles.detailHeaderMeta}>
+              <span className={styles.workIdBadge}>
+                {formData.departmentName || 'Department'}
+              </span>
+              <span className={`${styles.workIdBadge} ${formData.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}>
+                {formData.status === 1 ? 'ACTIVE' : 'INACTIVE'}
+              </span>
             </div>
-            <button onClick={handleClose} className={styles.detailCloseBtn}>
-              ✕
-            </button>
+          </div>
+          <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
+        </div>
+
+        {/* ── Form Body ── */}
+        <form onSubmit={handleSubmit} className={styles.addModalBody}>
+          {formError   && <div className={styles.formError}>{formError}</div>}
+          {formSuccess && <div className={styles.formSuccess}>Department updated successfully!</div>}
+
+          <div className={styles.addSection}>
+            <div className={styles.addSectionHeader}>
+              <h3>Department Information</h3>
+            </div>
+
+            <div className={styles.addFormGrid}>
+
+              <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                <label>Clinic <span className={styles.required}>*</span></label>
+                <select
+                  required
+                  name="clinicId"
+                  value={formData.clinicId}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Select Clinic</option>
+                  {clinics.map((clinic) => (
+                    <option key={clinic.id} value={clinic.id}>
+                      {clinic.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                <label>Branch</label>
+                <select
+                  name="branchId"
+                  value={formData.branchId}
+                  onChange={handleInputChange}
+                  disabled={!formData.clinicId}
+                >
+                  <option value="">Select Branch</option>
+                  {branches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                <label>Department Name <span className={styles.required}>*</span></label>
+                <input
+                  required
+                  name="departmentName"
+                  value={formData.departmentName}
+                  onChange={handleInputChange}
+                  placeholder="Enter department name"
+                />
+                {validationMessages.departmentName && (
+                  <span className={styles.validationMsg}>{validationMessages.departmentName}</span>
+                )}
+              </div>
+
+              <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                <label>Description / Profile</label>
+                <textarea
+                  name="profile"
+                  rows={3}
+                  value={formData.profile}
+                  onChange={handleInputChange}
+                  placeholder="Enter department description (optional)"
+                />
+                {validationMessages.profile && (
+                  <span className={styles.validationMsg}>{validationMessages.profile}</span>
+                )}
+              </div>
+
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className={styles.addModalBody}>
-            {formError && <div className={styles.formError}>{formError}</div>}
-            {formSuccess && <div className={styles.formSuccess}>Department updated successfully!</div>}
+          {/* ── Footer ── */}
+          <div className={styles.detailModalFooter}>
+            <button type="button" onClick={onClose} className={styles.btnCancel}>
+              Cancel
+            </button>
+            <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
+              <FiSave style={{ marginRight: '8px' }} />
+              {formLoading ? 'Updating...' : 'Update Department'}
+            </button>
+          </div>
+        </form>
 
-            <div className={styles.addSection}>
-              <div className={styles.addSectionHeader}>
-                <h3>Department Information</h3>
-              </div>
-
-              <div className={styles.addFormGrid}>
-
-                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                  <label>
-                    Clinic <span className={styles.required}>*</span>
-                  </label>
-                  <select
-                    required
-                    name="clinicId"
-                    value={formData.clinicId}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select Clinic</option>
-                    {clinics.map((clinic) => (
-                      <option key={clinic.id} value={clinic.id}>
-                        {clinic.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                  <label>
-                    Department Name <span className={styles.required}>*</span>
-                  </label>
-                  <input
-                    required
-                    name="departmentName"
-                    value={formData.departmentName}
-                    onChange={handleInputChange}
-                    placeholder="Enter department name"
-                  />
-                  {validationMessages.departmentName && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.departmentName}
-                    </span>
-                  )}
-                </div>
-
-                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                  <label>Description / Profile</label>
-                  <textarea
-                    name="profile"
-                    rows={3}
-                    value={formData.profile}
-                    onChange={handleInputChange}
-                    placeholder="Enter department description (optional)"
-                  />
-                  {validationMessages.profile && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.profile}
-                    </span>
-                  )}
-                </div>
-
-              </div>
-            </div>
-
-            <div className={styles.detailModalFooter}>
-              <button type="button" onClick={handleClose} className={styles.btnCancel}>
-                Cancel
-              </button>
-              <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
-                <FiSave style={{ marginRight: '8px' }} />
-                {formLoading ? 'Updating...' : 'Update Department'}
-              </button>
-            </div>
-          </form>
-
-        </div>
       </div>
     </div>
   );

@@ -595,9 +595,9 @@
   padding: 10px 13px;
   display: flex; flex-direction: column; gap: 5px;
 }
-.snapshot-row { display: flex; gap: 8px; font-size: .82rem; align-items: baseline; }
+.snapshot-row { gap: 16px; font-size: .82rem; align-items: baseline; }
 .snapshot-label {
-  color: var(--text-3); font-weight: 700; font-size: .7rem;
+  color: black; font-weight: 700; font-size: .7rem;
   text-transform: uppercase; letter-spacing: .35px;
   width: 60px; flex-shrink: 0;
 }

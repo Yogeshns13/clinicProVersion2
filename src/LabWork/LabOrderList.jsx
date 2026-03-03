@@ -452,46 +452,6 @@ const LabOrderList = () => {
       <ErrorHandler error={error} />
       <Header title="Lab Order Management" />
 
-      {/* Quick Stats */}
-      <div className={styles.statsContainer}>
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #eab308, #ca8a04)' }}>
-            <FiClock size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{allOrders.filter(o => o.status === 1).length}</div>
-            <div className={styles.statLabel}>Pending Orders</div>
-          </div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)' }}>
-            <FiAlertCircle size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{allOrders.filter(o => o.status === 5).length}</div>
-            <div className={styles.statLabel}>In Progress</div>
-          </div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)' }}>
-            <FiCheckCircle size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{allOrders.filter(o => o.status === 2).length}</div>
-            <div className={styles.statLabel}>Completed</div>
-          </div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #207d9c, #30b2b5)' }}>
-            <FiEye size={24} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{allOrders.length}</div>
-            <div className={styles.statLabel}>Total Orders</div>
-          </div>
-        </div>
-      </div>
-
       {/* Filters Container */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
@@ -983,10 +943,6 @@ const ConfirmMakeWorkModal = ({ order, onClose, onConfirm }) => (
         <div className={styles.confirmIcon}><FiAlertCircle size={48} /></div>
         <p className={styles.confirmText}>Are you sure you want to create work items for this order?</p>
         <div className={styles.confirmDetails}>
-          <div className={styles.confirmDetailRow}>
-            <span className={styles.confirmLabel}>Order ID:</span>
-            <span className={styles.confirmValue}>#{order.id}</span>
-          </div>
           <div className={styles.confirmDetailRow}>
             <span className={styles.confirmLabel}>Patient:</span>
             <span className={styles.confirmValue}>{order.patientName}</span>
