@@ -149,6 +149,9 @@
   font-size: 1.08rem;
   font-weight: 700;
   color: var(--primary-start);
+   margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(48, 178, 181, 0.25);
 }
 
 .sectionTitle svg {
@@ -469,11 +472,6 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
-}
-
-.slotBtn:hover {
-  border-color: var(--accent-end);
-  background: rgba(48, 178, 181, 0.08);
 }
 
 .slotBtnSelected {

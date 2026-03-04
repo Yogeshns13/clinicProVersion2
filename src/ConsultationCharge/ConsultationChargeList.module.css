@@ -1,31 +1,36 @@
 /* src/components/ConsultationChargeList.module.css */
+/* FULL CSS WITH COMPREHENSIVE STYLING BASED ON CLINIC LIST PATTERNS */
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
   --primary-start: #222b6c;
-  --primary-end:   #225ca0;
-  --accent-start:  #207d9c;
-  --accent-end:    #30b2b5;
-  --text-light:    #ffffff;
-  --text-dark:     #1e293b;
-  --glass-bg:      rgba(255, 255, 255, 0.92);
-  --glass-border:  rgba(255, 255, 255, 0.4);
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.4);
 }
 
 /* ==================== ANIMATIONS ==================== */
 @keyframes fadeIn {
   from { opacity: 0; }
-  to   { opacity: 1; }
+  to { opacity: 1; }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(22px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* ======================================================
-   MAIN WRAPPER
-====================================================== */
+/* ==================== MAIN WRAPPER ==================== */
 .chargeListWrapper {
   padding: 20px;
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
@@ -34,63 +39,30 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* ======================================================
-   GLOBAL BANNERS (success / error shown outside modal)
-====================================================== */
-.formSuccess {
-  padding: 12px 16px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  border: 2px solid rgba(34, 197, 94, 0.3);
-  font-size: 0.88rem;
-  font-weight: 600;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(34, 197, 94, 0.18));
-  color: #059669;
-  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.08);
-}
-
-.formError {
-  padding: 10px 14px;
-  border-radius: 9px;
-  margin-bottom: 14px;
-  border: 2px solid rgba(239, 68, 68, 0.3);
-  font-size: 0.85rem;
-  font-weight: 600;
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(239, 68, 68, 0.18));
-  color: #dc2626;
-  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.08);
-}
-
-/* ======================================================
-   FILTER BAR  — single-line
-====================================================== */
+/* ==================== FILTERS (LabReportList style) ==================== */
 .filtersContainer {
   background: white;
-  border-radius: 17px;
-  padding: 18px 20px;
+  border-radius: 17px;  
+  padding: 16px 20px;
   margin-bottom: 20px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
 }
 
-/* 6-column grid: [search 2fr] [status 1fr] [invoiced 1fr] [dateFrom 1fr] [dateTo 1fr] [actions auto] */
 .filtersGrid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+  grid-template-columns: 1fr 180px 180px auto;
   gap: 12px;
   align-items: end;
 }
 
-/* ── Search group: select + text joined ── */
 .searchGroup {
   display: flex;
   align-items: stretch;
 }
 
-/* ── Select: no arrow, keep dropdown functional ── */
 .searchTypeSelect {
-  flex-shrink: 0;
-  min-width: 148px;
+  min-width: 140px;
   height: 40px;
   padding: 0 12px;
   background: white;
@@ -100,32 +72,26 @@
   color: var(--text-dark);
   font-size: 0.85rem;
   font-weight: 600;
+  transition: all 0.3s ease;
   cursor: pointer;
-  transition: border-color 0.25s, box-shadow 0.25s;
-  /* ── Remove dropdown arrow ── */
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
 }
 
 .searchTypeSelect:focus {
   outline: none;
   border-color: var(--accent-end);
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
-  z-index: 1;
 }
 
 .searchInput {
   flex: 1;
   height: 40px;
-  padding: 0 14px;
+  padding: 0 15px;
   background: white;
   border: 1px solid #cbd5e1;
   border-radius: 0 10px 10px 0;
   color: var(--text-dark);
   font-size: 0.85rem;
-  transition: border-color 0.25s, box-shadow 0.25s;
-  min-width: 0;
+  transition: all 0.3s ease;
 }
 
 .searchInput::placeholder { color: #94a3b8; }
@@ -133,33 +99,25 @@
 .searchInput:focus {
   outline: none;
   border-color: var(--accent-end);
-  border-left-color: var(--accent-end);
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
-  z-index: 1;
+  border-left: 1px solid var(--accent-end);
 }
 
-/* ── Generic filter cell ── */
 .filterGroup {
   display: flex;
   flex-direction: column;
 }
 
-/* ── Select filterInput: no arrow ── */
 .filterInput {
   width: 100%;
   height: 40px;
-  padding: 0 12px;
+  padding: 10px 15px;
   background: white;
   border: 1px solid #cbd5e1;
   border-radius: 10px;
   color: var(--text-dark);
   font-size: 0.85rem;
-  transition: border-color 0.25s, box-shadow 0.25s;
-  box-sizing: border-box;
-  /* ── Remove dropdown arrow for select elements ── */
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
+  transition: all 0.3s ease;
 }
 
 .filterInput::placeholder { color: #94a3b8; }
@@ -170,60 +128,60 @@
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
 }
 
-/* ── Date input wrapper: "From" / "To" prefix label inside the box ── */
-.dateInputWrapper {
+/* ── Date placeholder overlay ── */
+.dateWrapper {
   position: relative;
-  display: flex;
-  align-items: center;
   width: 100%;
 }
 
-.datePrefix {
+.dateWrapper .filterInput {
+  width: 100%;
+  color: var(--text-dark);
+}
+
+.dateEmpty::-webkit-datetime-edit-text,
+.dateEmpty::-webkit-datetime-edit-month-field,
+.dateEmpty::-webkit-datetime-edit-day-field,
+.dateEmpty::-webkit-datetime-edit-year-field {
+  color: transparent;
+}
+
+.datePlaceholder {
   position: absolute;
-  left: 10px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #64748b;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  color: #94a3b8;
   pointer-events: none;
   z-index: 1;
-  white-space: nowrap;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
 }
 
-/* date input inside wrapper — push content right to clear the prefix */
-.dateInput {
-  padding-left: 44px !important;
-  width: 100%;
-  /* Restore appearance for date inputs so the calendar picker still works */
-  appearance: auto;
-  -webkit-appearance: auto;
-  -moz-appearance: auto;
-}
-
-/* ── Search / Clear buttons ── */
 .filterActions {
   display: flex;
-  gap: 8px;
-  align-items: center;
+  gap: 10px;
 }
 
-.searchButton {
+.searchButton,
+.clearButton {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   height: 40px;
-  padding: 0 20px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  padding: 10px 20px;
   font-weight: 600;
   font-size: 0.85rem;
   border: none;
   border-radius: 10px;
   cursor: pointer;
+  transition: all 0.3s ease;
   white-space: nowrap;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.28);
-  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.searchButton {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
 }
 
 .searchButton:hover {
@@ -231,23 +189,9 @@
   box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
 }
 
-.searchButton:active { transform: translateY(0); }
-
 .clearButton {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  height: 40px;
-  padding: 0 16px;
   background: #e2e8f0;
   color: #475569;
-  font-weight: 600;
-  font-size: 0.85rem;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.25s, transform 0.25s;
 }
 
 .clearButton:hover {
@@ -255,11 +199,7 @@
   transform: translateY(-2px);
 }
 
-.clearButton:active { transform: translateY(0); }
-
-/* ======================================================
-   TABLE CONTAINER
-====================================================== */
+/* ==================== TABLE ==================== */
 .chargeListTableContainer {
   background: white;
   border-radius: 17px;
@@ -274,33 +214,30 @@
   border-collapse: collapse;
 }
 
-/* ── Header ── */
 .chargeListTable th {
   text-align: left;
-  padding: 13px 17px;
+  padding: 12px 17px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
   font-weight: 600;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 1px;
   border: none;
-  white-space: nowrap;
 }
 
-/* ── Cells ── */
 .chargeListTable td {
-  padding: 9px 17px;
+  padding: 12px 17px;
   border-bottom: 1px solid #e2e8f0;
   color: var(--text-dark);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   vertical-align: middle;
 }
 
 .chargeListTable th:last-child,
 .chargeListTable td:last-child {
   text-align: right;
-  padding-right: 20px;
+  padding-right: 24px;
 }
 
 .chargeListTable tbody tr:nth-child(even) {
@@ -309,35 +246,25 @@
 
 .chargeListTable tbody tr:hover {
   background-color: rgba(48, 178, 181, 0.08) !important;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.25s ease;
 }
 
-.chargeListNoData {
-  text-align: center;
-  padding: 64px 20px;
-  color: #64748b;
-  font-size: 1rem;
-}
-
-/* ======================================================
-   CELL CONTENT HELPERS
-====================================================== */
+/* ==================== TABLE CELLS ==================== */
 .patientCell {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .patientName {
   font-weight: 700;
   color: var(--text-dark);
-  font-size: 0.87rem;
+  font-size: 0.9rem;
 }
 
 .patientInfo {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: #64748b;
-  line-height: 1.4;
 }
 
 .doctorName {
@@ -347,220 +274,151 @@
 }
 
 .chargeCode {
-  font-size: 0.71rem;
+  font-size: 0.72rem;
   color: #64748b;
   margin-top: 2px;
-}
-
-.amountCell {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.amountMain {
-  font-weight: 700;
-  color: var(--text-dark);
-  font-size: 0.87rem;
-}
-
-.amountNet {
-  font-size: 0.71rem;
-  color: #64748b;
 }
 
 .dateText {
   font-weight: 500;
   color: var(--text-dark);
-  font-size: 0.82rem;
-  white-space: nowrap;
+  font-size: 0.85rem;
 }
 
-/* ======================================================
-   STATUS BADGES
-====================================================== */
-.statusBadge {
+.reasonText {
+  color: var(--text-dark);
+  font-size: 0.85rem;
+}
+
+.symptomsText {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.vitalsCell {
+  display: flex;
+}
+
+.vitalItem {
+  font-size: 0.75rem;
+  color: var(--text-dark);
+  padding: 2px 8px;
+  background: rgba(32, 125, 156, 0.1);
+  border-radius: 4px;
   display: inline-block;
-  padding: 4px 11px;
-  border-radius: 26px;
-  font-size: 0.67rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  white-space: nowrap;
+  width: fit-content;
 }
 
-.invoiced {
-  background: rgba(34, 197, 94, 0.14);
-  color: #166534;
-  border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
-.notInvoiced {
-  background: rgba(239, 68, 68, 0.12);
-  color: #991b1b;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-}
-
-.statusActive {
-  background: rgba(59, 130, 246, 0.14);
-  color: #1e40af;
-  border: 1px solid rgba(59, 130, 246, 0.28);
-}
-
-.statusInactive {
-  background: rgba(100, 116, 139, 0.14);
-  color: #475569;
-  border: 1px solid rgba(100, 116, 139, 0.28);
-}
-
-/* ======================================================
-   ACTIONS CELL
-====================================================== */
+/* ==================== ACTIONS CELL ==================== */
 .chargeListActionsCell {
   display: flex;
+  gap: 8px;
   justify-content: flex-end;
   align-items: center;
-  gap: 8px;
 }
 
 .invoiceBtn {
-  position: relative;
-  overflow: hidden;
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 14px;
+  padding: 8px 16px;
   background: linear-gradient(135deg, #016183, var(--primary-end));
   color: var(--text-light);
   border: none;
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   border-radius: 9px;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
   white-space: nowrap;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.28);
-  transition: transform 0.25s, box-shadow 0.25s;
-  z-index: 1;
 }
-
-.invoiceBtn::before {
-  content: '';
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 0; height: 0;
-  background: rgba(48, 178, 181, 0.32);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.55s ease, height 0.55s ease;
-  z-index: -1;
-  pointer-events: none;
-}
-
-.invoiceBtn:hover::before { width: 180px; height: 180px; }
 
 .invoiceBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(48, 178, 181, 0.42);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
 }
 
-.invoiceBtn:active { transform: translateY(0); }
-
-/* ======================================================
-   MODAL OVERLAY
-====================================================== */
+/* ==================== MODAL OVERLAY ==================== */
 .chargeListModalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 22, 41, 0.82);
+  background: rgba(15, 22, 41, 0.85);
   backdrop-filter: blur(9px);
-  -webkit-backdrop-filter: blur(9px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 260px;
+  padding: 12px;
   animation: fadeIn 0.3s ease;
 }
 
-/* ======================================================
-   MODAL
-====================================================== */
+/* ==================== MODAL ==================== */
 .chargeListModal {
   background: var(--glass-bg);
-  border-radius: 16px;
+  border-radius: 15px;
   width: 100%;
-  max-width: 580px;
+  max-width: 578px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.32), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .chargeListModalHeader {
-  padding: 22px 28px;
+  padding: 20px 28px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.18);
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 .chargeListModalHeader h2 {
- margin: 0;
-  font-size: 1.48rem;
+  margin: 0;
+  font-size: 1.45rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
 }
 
 .chargeListModalClose {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.25);
   border: none;
   color: white;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  font-size: 1.5rem;
-  font-weight: 500;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 1.3rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition: all 0.25s ease;
 }
 
 .chargeListModalClose:hover {
-  background: rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.45);
   transform: scale(1.08);
 }
 
 .chargeListModalBody {
-  padding: 0 24px 22px;
+  padding: 0 29px 23px;
   color: var(--text-dark);
 }
 
 .chargeListModalFooter {
   display: flex;
   justify-content: flex-end;
-  align-items: center;
   gap: 12px;
-  padding: 16px 24px;
-  border-top: 2px solid rgba(34, 43, 108, 0.12);
-  background: linear-gradient(to bottom, rgba(255,255,255,0.25), rgba(255,255,255,0.45));
+  padding: 17px 23px;
+  border-top: 2px solid rgba(34, 43, 108, 0.15);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
 }
 
-/* ======================================================
-   FORM GRID & GROUPS (inside modal)
-====================================================== */
+/* ==================== FORMS ==================== */
 .formGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
-  margin-bottom: 4px;
+  margin-bottom: 14px;
 }
 
 .formGroup {
@@ -572,47 +430,14 @@
   display: block;
   margin-bottom: 6px;
   color: var(--primary-start);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  letter-spacing: 0.15px;
+  letter-spacing: 0.17px;
 }
 
-.formGroup input,
-.formGroup select,
-.formGroup textarea {
-  width: 100%;
-  padding: 10px 13px;
-  background: rgba(255, 255, 255, 0.75);
-  border: 2px solid rgba(34, 43, 108, 0.18);
-  border-radius: 9px;
-  color: var(--text-dark);
-  font-size: 0.88rem;
-  font-weight: 500;
-  box-sizing: border-box;
-  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.formGroup input::placeholder,
-.formGroup textarea::placeholder {
-  color: rgba(30, 41, 59, 0.38);
-}
-
-.formGroup input:focus,
-.formGroup select:focus,
-.formGroup textarea:focus {
-  outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.16), inset 0 1px 3px rgba(0, 0, 0, 0.04);
-  background: rgba(255, 255, 255, 0.92);
-}
-
-.formGroup input:disabled,
-.formGroup select:disabled,
-.formGroup textarea:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  background: rgba(226, 232, 240, 0.5);
+.formGroup .required {
+  color: #dc2626;
+  font-weight: 700;
 }
 
 .required {
@@ -620,160 +445,185 @@
   font-weight: 700;
 }
 
-/* ======================================================
-   MODAL BUTTONS
-====================================================== */
-.btnCancel {
-  position: relative;
-  overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 22px;
-  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
-  color: var(--text-light);
-  border: none;
+.formGroup input,
+.formGroup textarea,
+.formGroup select {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid rgba(34, 43, 108, 0.2);
+  border-radius: 9px;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.formGroup input::placeholder,
+.formGroup textarea::placeholder {
+  color: rgba(30, 41, 59, 0.4);
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus,
+.formGroup select:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15), inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.formError {
+  padding: 9px 12px;
+  border-radius: 9px;
+  margin-bottom: 14px;
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
+  color: #dc2626;
+}
+
+.formSuccess {
+  padding: 9px 12px;
+  border-radius: 9px;
+  margin-bottom: 14px;
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.2));
+  color: #059669;
+}
+
+/* ==================== BUTTONS ==================== */
+.btnCancel,
+.btnSubmit {
+  padding: 10px 24px;
   border-radius: 10px;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
-  white-space: nowrap;
-  box-shadow: 0 6px 20px rgba(32, 125, 156, 0.3);
-  transition: transform 0.35s, box-shadow 0.35s;
-  z-index: 0;
+  transition: all 0.3s ease;
 }
 
-.btnCancel::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #c0392b, #e74c3c);
-  opacity: 0;
-  transition: opacity 0.35s ease;
-  z-index: -1;
-}
-
-.btnCancel:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(231, 76, 60, 0.4);
-}
-
+.btnCancel { background: linear-gradient(135deg, var(--primary-start), var(--primary-end)); color: var(--text-light); border: none; border-radius: 14px; height: 40px; padding: 0 20px; font-weight: 700; font-size: 0.94rem; cursor: pointer; position: relative; overflow: hidden; transition: all 0.4s ease; box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35); white-space: nowrap; z-index: 0; }
+.btnCancel::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, #c0392b, #e74c3c); opacity: 0; transition: opacity 0.4s ease; z-index: -1; }
+.btnCancel::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%); background-size: 200% 100%; background-position: -100% 0; transition: background-position 0.5s ease; z-index: -1; }
+.btnCancel:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45); }
 .btnCancel:hover::before { opacity: 1; }
-.btnCancel:active { transform: translateY(0); }
-
-.btnCancel:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none;
-}
+.btnCancel:hover::after { background-position: 200% 0; }
 
 .btnSubmit {
   position: relative;
   overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 24px;
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: var(--text-light);
   border: none;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow: 0 5px 16px rgba(32, 125, 156, 0.28);
-  transition: transform 0.25s, box-shadow 0.25s;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
   z-index: 1;
 }
 
 .btnSubmit::before {
   content: '';
   position: absolute;
-  top: 50%; left: 50%;
-  width: 0; height: 0;
-  background: rgba(48, 178, 181, 0.32);
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  transition: width 0.55s ease, height 0.55s ease;
+  transition: width 0.6s ease, height 0.6s ease;
   z-index: -1;
   pointer-events: none;
 }
 
-.btnSubmit:hover::before { width: 200px; height: 200px; }
+.btnSubmit:hover::before {
+  width: 170px;
+  height: 170px;
+}
 
 .btnSubmit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(48, 178, 181, 0.42);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
 }
 
-.btnSubmit:active { transform: translateY(0); }
-
 .btnSubmit:disabled {
-  opacity: 0.55;
+  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
-/* ======================================================
-   UTILITY / STATE CLASSES
-====================================================== */
+/* ==================== UTILITY STATES ==================== */
+.chargeListNoData {
+  text-align: center;
+  padding: 68px 17px;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
 .chargeListLoading,
 .chargeListError {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 70vh;
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   color: #64748b;
 }
 
 .chargeListError { color: #ef4444; }
 
-/* ======================================================
-   DARK MODE
-====================================================== */
+/* ==================== DARK MODE ==================== */
 :global(.dark-mode) .chargeListWrapper {
+  --glass-bg: rgba(30, 41, 59, 0.92);
+  --text-dark: #e2e8f0;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: #e2e8f0;
 }
 
 :global(.dark-mode) .filtersContainer {
   background: #1e293b;
-  border-color: #334155;
+  border-color: #475569;
 }
 
-:global(.dark-mode) .searchTypeSelect,
-:global(.dark-mode) .searchInput,
 :global(.dark-mode) .filterInput {
   background: #0f172a;
   border-color: #475569;
   color: #e2e8f0;
 }
 
-:global(.dark-mode) .searchTypeSelect:focus,
-:global(.dark-mode) .searchInput:focus,
-:global(.dark-mode) .filterInput:focus {
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.2);
+:global(.dark-mode) .searchTypeSelect {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
 }
 
-:global(.dark-mode) .datePrefix {
-  color: #94a3b8;
+:global(.dark-mode) .searchInput {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
 }
+
+:global(.dark-mode) .searchInput:focus {
+  border-left: 1px solid var(--accent-end);
+}
+
+:global(.dark-mode) .datePlaceholder { color: #64748b; }
 
 :global(.dark-mode) .clearButton {
   background: #334155;
-  color: #cbd5e1;
+  color: #e2e8f0;
 }
 
 :global(.dark-mode) .clearButton:hover { background: #475569; }
 
 :global(.dark-mode) .chargeListTableContainer {
   background: #1e293b;
-  border-color: #334155;
+  border-color: #475569;
 }
 
 :global(.dark-mode) .chargeListTable th {
@@ -781,60 +631,35 @@
 }
 
 :global(.dark-mode) .chargeListTable td {
-  border-bottom-color: #334155;
+  border-bottom-color: #475569;
   color: #e2e8f0;
 }
 
 :global(.dark-mode) .chargeListTable tbody tr:nth-child(even) {
-  background-color: #253347;
+  background-color: #334155;
 }
 
 :global(.dark-mode) .patientName,
 :global(.dark-mode) .doctorName,
 :global(.dark-mode) .dateText,
-:global(.dark-mode) .amountMain {
+:global(.dark-mode) .reasonText {
   color: #e2e8f0;
 }
 
 :global(.dark-mode) .patientInfo,
 :global(.dark-mode) .chargeCode,
-:global(.dark-mode) .amountNet {
+:global(.dark-mode) .symptomsText {
   color: #94a3b8;
 }
 
-:global(.dark-mode) .chargeListNoData { color: #94a3b8; }
-
-:global(.dark-mode) .invoiced {
-  background: rgba(34, 197, 94, 0.2);
-  color: #86efac;
-  border-color: rgba(34, 197, 94, 0.35);
-}
-
-:global(.dark-mode) .notInvoiced {
-  background: rgba(239, 68, 68, 0.18);
-  color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.3);
-}
-
-:global(.dark-mode) .statusActive {
-  background: rgba(59, 130, 246, 0.2);
-  color: #93c5fd;
-  border-color: rgba(59, 130, 246, 0.35);
-}
-
-:global(.dark-mode) .statusInactive {
-  background: rgba(100, 116, 139, 0.2);
-  color: #94a3b8;
-  border-color: rgba(100, 116, 139, 0.35);
-}
-
-:global(.dark-mode) .chargeListModalOverlay {
-  background: rgba(5, 10, 25, 0.88);
+:global(.dark-mode) .vitalItem {
+  background: rgba(32, 125, 156, 0.2);
+  color: #e2e8f0;
 }
 
 :global(.dark-mode) .chargeListModal {
-  background: rgba(22, 32, 52, 0.96);
-  border-color: #334155;
+  background: rgba(30, 41, 59, 0.94);
+  border-color: #475569;
   color: #e2e8f0;
 }
 
@@ -845,68 +670,35 @@
   background-clip: text;
 }
 
-:global(.dark-mode) .chargeListModalClose {
-  background: rgba(100, 116, 139, 0.2);
-  border-color: #475569;
-  color: #94a3b8;
-}
-
 :global(.dark-mode) .chargeListModalFooter {
-  border-top-color: #334155;
-  background: linear-gradient(to bottom, rgba(22, 32, 52, 0.4), rgba(22, 32, 52, 0.65));
+  background: linear-gradient(to bottom, rgba(30, 41, 59, 0.5), rgba(30, 41, 59, 0.7));
 }
 
-:global(.dark-mode) .formGroup label { color: var(--accent-end); }
+:global(.dark-mode) .formGroup label {
+  color: var(--accent-end);
+}
 
 :global(.dark-mode) .formGroup input,
-:global(.dark-mode) .formGroup select,
-:global(.dark-mode) .formGroup textarea {
-  background: #0f172a;
+:global(.dark-mode) .formGroup textarea,
+:global(.dark-mode) .formGroup select {
+  background: #1e293b;
   border-color: #475569;
   color: #e2e8f0;
 }
 
-:global(.dark-mode) .formSuccess {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(34, 197, 94, 0.25));
-  color: #86efac;
-  border-color: rgba(34, 197, 94, 0.4);
-}
-
-:global(.dark-mode) .formError {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.25));
-  color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.4);
-}
-
-/* ======================================================
-   RESPONSIVE
-====================================================== */
-@media (max-width: 1280px) {
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 1024px) {
   .filtersGrid {
-    grid-template-columns: 2fr 1fr 1fr auto;
-    grid-template-rows: auto auto;
+    grid-template-columns: 1fr 1fr auto;
   }
 
-  .searchGroup { grid-column: 1 / -1; }
-
-  .filtersGrid > .filterGroup:nth-child(4),
-  .filtersGrid > .filterGroup:nth-child(5) {
-    grid-column: span 1;
+  .searchGroup {
+    grid-column: 1 / -1;
   }
 
-  .filterActions { grid-column: span 1; }
-}
-
-@media (max-width: 900px) {
-  .filtersGrid {
-    grid-template-columns: 1fr 1fr;
+  .filterActions {
+    grid-column: 1 / -1;
   }
-
-  .searchGroup   { grid-column: 1 / -1; }
-  .filterActions { grid-column: 1 / -1; }
-
-  .searchButton,
-  .clearButton   { flex: 1; justify-content: center; }
 }
 
 @media (max-width: 768px) {
@@ -917,8 +709,6 @@
   .searchTypeSelect {
     border-radius: 10px;
     border-right: 1px solid #cbd5e1;
-    width: 100%;
-    min-width: unset;
   }
 
   .searchInput {
@@ -926,38 +716,50 @@
     border-left: 1px solid #cbd5e1;
   }
 
-  .filterActions { flex-wrap: wrap; }
+  .filterActions {
+    flex-direction: column;
+  }
+
+  .searchButton,
+  .clearButton {
+    width: 100%;
+    justify-content: center;
+  }
 
   .chargeListTable th,
   .chargeListTable td {
-    padding: 9px 12px;
-    font-size: 0.78rem;
+    padding: 10px 12px;
+    font-size: 0.8rem;
   }
 
-  .chargeListModal { max-width: 96%; }
+  .chargeListModal {
+    max-width: 95%;
+  }
 
-  .formGrid { grid-template-columns: 1fr; }
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
 
   .chargeListModalFooter {
-    flex-direction: column-reverse;
+    flex-direction: column;
     gap: 10px;
   }
 
   .btnCancel,
   .btnSubmit {
     width: 100%;
-    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
-  .chargeListWrapper  { padding: 12px; }
-  .filtersContainer   { padding: 14px; }
+  .chargeListWrapper { padding: 14px; }
+
+  .filtersContainer { padding: 14px; }
+
+  .chargeListTable { font-size: 0.75rem; }
 
   .invoiceBtn {
-    padding: 6px 11px;
-    font-size: 0.72rem;
+    padding: 6px 12px;
+    font-size: 0.75rem;
   }
-
-  .chargeListModal { border-radius: 12px; }
 }

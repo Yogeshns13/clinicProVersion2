@@ -602,6 +602,7 @@ const PatientVisitList = () => {
                         name="bpSystolic"
                         value={formData.bpSystolic}
                         onChange={handleFormChange}
+                        placeholder='50-250'
                         required
                         min="50"
                         max="250"
@@ -620,6 +621,7 @@ const PatientVisitList = () => {
                         value={formData.bpDiastolic}
                         required
                         onChange={handleFormChange}
+                        placeholder='30-150'
                         min="30"
                         max="150"
                         className={styles.formInput}
@@ -636,6 +638,7 @@ const PatientVisitList = () => {
                         value={formData.temperature}
                         required
                         onChange={handleFormChange}
+                        placeholder='90-110'
                         min="90"
                         max="110"
                         step="0.1"
@@ -653,6 +656,7 @@ const PatientVisitList = () => {
                         name="weight"
                         value={formData.weight}
                         onChange={handleFormChange}
+                        placeholder='1-500'
                         required
                         min="1"
                         max="500"

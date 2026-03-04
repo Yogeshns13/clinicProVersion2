@@ -1,8 +1,9 @@
 // src/components/ConsultationChargeList.jsx
-import React, { useState, useEffect } from 'react';
+// Simplified single-view consultation list with invoice generation
+import React, { useState, useEffect, useMemo } from 'react';
 import { FiSearch, FiFileText, FiX } from 'react-icons/fi';
 import {
-  getConsultationChargeList,
+  getConsultationList,
   getConsultingChargeConfigList,
   addConsultationCharge,
   generateConsultationInvoice
@@ -13,28 +14,25 @@ import styles from './ConsultationChargeList.module.css';
 
 const ConsultationChargeList = () => {
   const [consultations, setConsultations] = useState([]);
+  const [allConsultations, setAllConsultations] = useState([]);
   const [chargeConfigs, setChargeConfigs] = useState([]);
 
   const today = new Date().toISOString().split('T')[0];
 
   // Filter inputs (not applied until Search is clicked)
   const [filterInputs, setFilterInputs] = useState({
-    searchType: 'patientName', // patientName | patientMobile | chargeName
+    searchType: 'patientName',
     searchValue: '',
-    status: '',
-    invoicedOnly: '',
     dateFrom: today,
     dateTo: today
   });
 
-  // Applied filters (drive actual API call)
+  // Applied filters (drive API call + client-side filter)
   const [appliedFilters, setAppliedFilters] = useState({
     searchType: 'patientName',
     searchValue: '',
-    status: '',
-    invoicedOnly: '',
-    dateFrom: '',
-    dateTo: ''
+    dateFrom: today,
+    dateTo: today
   });
 
   const [loading, setLoading] = useState(true);
@@ -44,7 +42,6 @@ const ConsultationChargeList = () => {
   const [formError, setFormError] = useState(null);
   const [formSuccess, setFormSuccess] = useState(null);
 
-  // Invoice form data
   const [invoiceFormData, setInvoiceFormData] = useState({
     consultationId: null,
     chargeId: '',
@@ -53,16 +50,12 @@ const ConsultationChargeList = () => {
     discount: '0'
   });
 
-  // ── Derived: are any filters currently applied? ──
   const hasActiveFilters =
-    !!appliedFilters.searchValue ||
-    !!appliedFilters.status ||
-    appliedFilters.invoicedOnly !== '' ||
-    !!appliedFilters.dateFrom ||
-    !!appliedFilters.dateTo;
+    appliedFilters.searchValue.trim() !== '' ||
+    appliedFilters.dateFrom           !== today ||
+    appliedFilters.dateTo             !== today;
 
   // ────────────────────────────────────────────────
-  // Data fetching
   const fetchConsultations = async (filters = appliedFilters) => {
     try {
       setLoading(true);
@@ -70,25 +63,20 @@ const ConsultationChargeList = () => {
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
 
-      const options = { BranchID: branchId, PageSize: 100 };
+      const options = {
+        BranchID: branchId,
+        PageSize: 100,
+        ...(filters.dateFrom && { FromDate: filters.dateFrom }),
+        ...(filters.dateTo   && { ToDate:   filters.dateTo   }),
+      };
 
-      if (filters.searchType === 'patientName' && filters.searchValue)
-        options.PatientName = filters.searchValue;
-      if (filters.searchType === 'patientMobile' && filters.searchValue)
-        options.PatientMobile = filters.searchValue;
-      if (filters.searchType === 'chargeName' && filters.searchValue)
-        options.ChargeName = filters.searchValue;
-      if (filters.status !== '')
-        options.Status = Number(filters.status);
-      if (filters.invoicedOnly !== '')
-        options.InvoicedOnly = Number(filters.invoicedOnly);
-      if (filters.dateFrom) options.FromDate = filters.dateFrom;
-      if (filters.dateTo)   options.ToDate   = filters.dateTo;
+      const data = await getConsultationList(clinicId, options);
 
-      const data = await getConsultationChargeList(clinicId, options);
-      setConsultations(data);
+      // Filter out consultations that already have invoices
+      const withoutInvoice = data.filter(c => !c.invoiceId);
+      setAllConsultations(withoutInvoice);
     } catch (err) {
-      setError(err?.status >= 400 ? err : { message: err.message || 'Failed to load consultation charges' });
+      setError(err?.status >= 400 ? err : { message: err.message || 'Failed to load consultations' });
     } finally {
       setLoading(false);
     }
@@ -104,46 +92,58 @@ const ConsultationChargeList = () => {
     }
   };
 
-  useEffect(() => {
-    fetchChargeConfigs();
-    fetchConsultations();
-  }, []);
+  useEffect(() => { fetchChargeConfigs(); }, []);
+
+  useEffect(() => { fetchConsultations(appliedFilters); }, [appliedFilters]);
+
+  // ── Client-side filtering by search type/value
+  const filteredConsultations = useMemo(() => {
+    let filtered = allConsultations;
+
+    if (appliedFilters.searchValue) {
+      const term = appliedFilters.searchValue.toLowerCase();
+      switch (appliedFilters.searchType) {
+        case 'patientName':
+          filtered = filtered.filter(c => c.patientName?.toLowerCase().includes(term));
+          break;
+        case 'patientMobile':
+          filtered = filtered.filter(c => c.patientMobile?.toLowerCase().includes(term));
+          break;
+        case 'patientFileNo':
+          filtered = filtered.filter(c => c.patientFileNo?.toLowerCase().includes(term));
+          break;
+        case 'doctorName':
+          filtered = filtered.filter(c => c.doctorFullName?.toLowerCase().includes(term));
+          break;
+        default:
+          break;
+      }
+    }
+
+    return filtered;
+  }, [allConsultations, appliedFilters]);
 
   // ────────────────────────────────────────────────
-  // Filter handlers
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = () => {
-    const newFilters = { ...filterInputs };
-    setAppliedFilters(newFilters);
-    fetchConsultations(newFilters);
-  };
+  const handleSearch = () => setAppliedFilters({ ...filterInputs });
 
   const handleClearFilters = () => {
-    const empty = {
-      searchType: 'patientName',
-      searchValue: '',
-      status: '',
-      invoicedOnly: '',
-      dateFrom: '',
-      dateTo: ''
-    };
-    setFilterInputs({ ...empty, dateFrom: today, dateTo: today });
-    setAppliedFilters(empty);
-    fetchConsultations(empty);
+    const defaultFilters = { searchType: 'patientName', searchValue: '', dateFrom: today, dateTo: today };
+    setFilterInputs(defaultFilters);
+    setAppliedFilters(defaultFilters);
   };
 
   // ────────────────────────────────────────────────
-  // Invoice form handlers (logic unchanged)
-  const openInvoiceForm = (charge) => {
+  const openInvoiceForm = (consultation) => {
     setInvoiceFormData({
-      consultationId: charge.consultationId,
+      consultationId: consultation.id,
       chargeId: '',
       chargeAmount: '',
-      invoiceDate: charge.dateCreated?.split('T')[0] || today,
+      invoiceDate: consultation.dateCreated?.split('T')[0] || today,
       discount: '0'
     });
     setFormError(null);
@@ -211,6 +211,7 @@ const ConsultationChargeList = () => {
         chargeId: Number(invoiceFormData.chargeId),
         chargeAmount: Number(invoiceFormData.chargeAmount)
       });
+
       if (!chargeResult.success) throw new Error('Failed to add consultation charge');
 
       const invoiceResult = await generateConsultationInvoice({
@@ -220,12 +221,13 @@ const ConsultationChargeList = () => {
         invoiceDate: invoiceFormData.invoiceDate,
         discount: Number(invoiceFormData.discount)
       });
+
       if (!invoiceResult.success) throw new Error('Failed to generate invoice');
 
       setFormSuccess('Invoice generated successfully!');
       setTimeout(() => {
         closeForm();
-        fetchConsultations();
+        fetchConsultations(appliedFilters);
       }, 1500);
     } catch (err) {
       setFormError(err.message || 'Failed to generate invoice');
@@ -234,10 +236,7 @@ const ConsultationChargeList = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Helpers
-  const formatCurrency = (amount) =>
-    amount != null ? `₹${Number(amount).toFixed(2)}` : '₹0.00';
+  const formatCurrency = (amount) => amount ? `₹${Number(amount).toFixed(2)}` : '₹0.00';
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
@@ -247,14 +246,9 @@ const ConsultationChargeList = () => {
   };
 
   // ────────────────────────────────────────────────
-  // Early returns
-  if (error && (error?.status >= 400 || error?.code >= 400)) {
-    return <ErrorHandler error={error} />;
-  }
-
-  if (loading) return <div className={styles.chargeListLoading}>Loading consultation charges...</div>;
-
-  if (error) return <div className={styles.chargeListError}>Error: {error.message || error}</div>;
+  if (error && (error?.status >= 400 || error?.code >= 400)) return <ErrorHandler error={error} />;
+  if (loading) return <div className={styles.chargeListLoading}>Loading consultations...</div>;
+  if (error)   return <div className={styles.chargeListError}>Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
   return (
@@ -262,15 +256,10 @@ const ConsultationChargeList = () => {
       <ErrorHandler error={error} />
       <Header title="Consultation Charges" />
 
-      {formSuccess && !isInvoiceFormOpen && (
-        <div className={styles.formSuccess}>{formSuccess}</div>
-      )}
-
-      {/* ── Single-line Filters ── */}
+      {/* ── Filters ── */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
 
-          {/* Search type + value */}
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -278,18 +267,20 @@ const ConsultationChargeList = () => {
               onChange={handleFilterChange}
               className={styles.searchTypeSelect}
             >
-              <option value="patientName">Patient Name</option>
-              <option value="patientMobile">Mobile No.</option>
-              <option value="chargeName">Charge Name</option>
+              <option value="patientName">Name</option>
+              <option value="patientMobile">Mobile</option>
+              <option value="patientFileNo">File Code</option>
+              <option value="doctorName">Doctor Name</option>
             </select>
             <input
               type="text"
               name="searchValue"
-              placeholder={
-                filterInputs.searchType === 'patientName'   ? 'Search by patient name...'  :
-                filterInputs.searchType === 'patientMobile' ? 'Search by mobile number...' :
-                                                              'Search by charge name...'
-              }
+              placeholder={`Search by ${
+                filterInputs.searchType === 'patientName'   ? 'Name'        :
+                filterInputs.searchType === 'patientMobile' ? 'Mobile'      :
+                filterInputs.searchType === 'patientFileNo' ? 'File Code'   :
+                'Doctor Name'
+              }`}
               value={filterInputs.searchValue}
               onChange={handleFilterChange}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -297,72 +288,45 @@ const ConsultationChargeList = () => {
             />
           </div>
 
-          {/* Status */}
           <div className={styles.filterGroup}>
-            <select
-              name="status"
-              value={filterInputs.status}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            >
-              <option value="">All Status</option>
-              <option value="1">Active</option>
-              <option value="0">Inactive</option>
-            </select>
-          </div>
-
-          {/* Invoiced Only */}
-          <div className={styles.filterGroup}>
-            <select
-              name="invoicedOnly"
-              value={filterInputs.invoicedOnly}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            >
-              <option value="">All Invoices</option>
-              <option value="1">Invoiced Only</option>
-              <option value="0">Not Invoiced</option>
-            </select>
-          </div>
-
-          {/* Date From */}
-          <div className={styles.filterGroup}>
-            <div className={styles.dateInputWrapper}>
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateFrom && (
+                <span className={styles.datePlaceholder}>From Date</span>
+              )}
               <input
                 type="date"
                 name="dateFrom"
                 value={filterInputs.dateFrom}
                 onChange={handleFilterChange}
-                className={`${styles.filterInput} ${styles.dateInput}`}
                 max={today}
+                className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`}
               />
             </div>
           </div>
 
-          {/* Date To */}
           <div className={styles.filterGroup}>
-            <div className={styles.dateInputWrapper}>
+            <div className={styles.dateWrapper}>
+              {!filterInputs.dateTo && (
+                <span className={styles.datePlaceholder}>To Date</span>
+              )}
               <input
                 type="date"
                 name="dateTo"
                 value={filterInputs.dateTo}
                 onChange={handleFilterChange}
-                className={`${styles.filterInput} ${styles.dateInput}`}
                 max={today}
+                className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`}
               />
             </div>
           </div>
 
-          {/* Actions — Clear only visible when filters are active */}
           <div className={styles.filterActions}>
             <button onClick={handleSearch} className={styles.searchButton}>
-              <FiSearch size={18} />
-              Search
+              <FiSearch size={18} /> Search
             </button>
             {hasActiveFilters && (
               <button onClick={handleClearFilters} className={styles.clearButton}>
-                <FiX size={18} />
-                Clear
+                <FiX size={18} /> Clear
               </button>
             )}
           </div>
@@ -377,84 +341,60 @@ const ConsultationChargeList = () => {
             <tr>
               <th>Patient</th>
               <th>Doctor</th>
-              <th>Charge</th>
-              <th>Amount</th>
-              <th>Invoice</th>
-              <th>Status</th>
-              <th>Date</th>
+              <th>Visit Date</th>
+              <th>Reason</th>
+              <th>Symptoms</th>
+              <th>Vitals</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {consultations.length === 0 ? (
+            {filteredConsultations.length === 0 ? (
               <tr>
-                <td colSpan={8} className={styles.chargeListNoData}>
+                <td colSpan={7} className={styles.chargeListNoData}>
                   {hasActiveFilters
-                    ? 'No consultation charges found for the applied filters.'
-                    : 'No consultation charges available yet.'}
+                    ? 'No consultations found.'
+                    : 'No consultations available yet.'}
                 </td>
               </tr>
             ) : (
-              consultations.map((charge) => (
-                <tr key={charge.id}>
+              filteredConsultations.map((consult) => (
+                <tr key={consult.id}>
                   <td>
                     <div className={styles.patientCell}>
-                      <div className={styles.patientName}>{charge.patientName || '—'}</div>
-                      {charge.patientFileNo && (
-                        <div className={styles.patientInfo}>{charge.patientFileNo}</div>
-                      )}
-                      {charge.patientMobile && (
-                        <div className={styles.patientInfo}>{charge.patientMobile}</div>
-                      )}
+                      <div>
+                        <div className={styles.patientName}>{consult.patientName}</div>
+                        {consult.patientMobile && (
+                          <div className={styles.patientInfo}>{consult.patientMobile}</div>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td>
-                    <span className={styles.doctorName}>{charge.doctorFullName || '—'}</span>
-                  </td>
-                  <td>
-                    <div className={styles.doctorName}>{charge.chargeName || '—'}</div>
-                    {charge.chargeCode && (
-                      <div className={styles.chargeCode}>{charge.chargeCode}</div>
+                    <span className={styles.doctorName}>{consult.doctorFullName}</span>
+                    {consult.doctorCode && (
+                      <div className={styles.chargeCode}>{consult.doctorCode}</div>
                     )}
                   </td>
+                  <td><span className={styles.dateText}>{formatDate(consult.dateCreated)}</span></td>
+                  <td><span className={styles.reasonText}>{consult.reason || '—'}</span></td>
+                  <td><span className={styles.symptomsText}>{consult.symptoms || '—'}</span></td>
                   <td>
-                    <div className={styles.amountCell}>
-                      <span className={styles.amountMain}>{formatCurrency(charge.chargeAmount)}</span>
-                      {charge.netAmount != null && charge.netAmount !== charge.chargeAmount && (
-                        <span className={styles.amountNet}>Net: {formatCurrency(charge.netAmount)}</span>
-                      )}
+                    <div className={styles.vitalsCell}>
+                      {consult.bpReading  && <span className={styles.vitalItem}>BP: {consult.bpReading}</span>} |
+                      {consult.temperature && <span className={styles.vitalItem}>Temp: {consult.temperature}°</span>} |
+                      {consult.weight     && <span className={styles.vitalItem}>Wt: {consult.weight} kg</span>}
                     </div>
-                  </td>
-                  <td>
-                    {charge.isInvoiced ? (
-                      <span className={`${styles.statusBadge} ${styles.invoiced}`}>
-                        {charge.invoiceNo || 'Invoiced'}
-                      </span>
-                    ) : (
-                      <span className={`${styles.statusBadge} ${styles.notInvoiced}`}>
-                        Not Invoiced
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${charge.status === 'active' ? styles.statusActive : styles.statusInactive}`}>
-                      {charge.statusDesc?.toUpperCase() || 'UNKNOWN'}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={styles.dateText}>{formatDate(charge.dateCreated)}</span>
                   </td>
                   <td>
                     <div className={styles.chargeListActionsCell}>
-                      {!charge.isInvoiced && (
-                        <button
-                          onClick={() => openInvoiceForm(charge)}
-                          className={styles.invoiceBtn}
-                          title="Make Invoice"
-                        >
-                          <FiFileText size={16} /> Make Invoice
-                        </button>
-                      )}
+                      <button
+                        onClick={() => openInvoiceForm(consult)}
+                        className={styles.invoiceBtn}
+                        title="Make Invoice"
+                      >
+                        <FiFileText size={16} /> Make Invoice
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -474,7 +414,7 @@ const ConsultationChargeList = () => {
             </div>
             <form onSubmit={handleGenerateInvoice}>
               <div className={styles.chargeListModalBody}>
-                {formError && <div className={styles.formError}>{formError}</div>}
+                {formError   && <div className={styles.formError}>{formError}</div>}
                 {formSuccess && <div className={styles.formSuccess}>{formSuccess}</div>}
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
@@ -536,10 +476,19 @@ const ConsultationChargeList = () => {
                 </div>
               </div>
               <div className={styles.chargeListModalFooter}>
-                <button type="button" onClick={closeForm} className={styles.btnCancel} disabled={formLoading}>
+                <button
+                  type="button"
+                  onClick={closeForm}
+                  className={styles.btnCancel}
+                  disabled={formLoading}
+                >
                   Cancel
                 </button>
-                <button type="submit" className={styles.btnSubmit} disabled={formLoading}>
+                <button
+                  type="submit"
+                  className={styles.btnSubmit}
+                  disabled={formLoading}
+                >
                   {formLoading ? 'Processing...' : 'Generate Invoice'}
                 </button>
               </div>

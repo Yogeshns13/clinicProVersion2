@@ -145,6 +145,7 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
                 value={formData.mobile}
                 onChange={handleInputChange}
                 placeholder="Enter mobile number"
+                maxLength={10}
               />
             </div>
 
@@ -155,6 +156,7 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
                 value={formData.altMobile}
                 onChange={handleInputChange}
                 placeholder="Enter alternate mobile"
+                maxLength={10}
               />
             </div>
 

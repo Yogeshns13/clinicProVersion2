@@ -517,6 +517,7 @@ const UpdatePatientVisit = ({ isOpen, onClose, onSuccess, visitId }) => {
                         name="bpSystolic"
                         value={formData.bpSystolic}
                         onChange={handleChange}
+                        placeholder='50-250'
                         className={styles.formInput}
                       />
                       {validationMessages.bpSystolic && (
@@ -531,6 +532,7 @@ const UpdatePatientVisit = ({ isOpen, onClose, onSuccess, visitId }) => {
                         name="bpDiastolic"
                         value={formData.bpDiastolic}
                         onChange={handleChange}
+                        placeholder='30-150'
                         className={styles.formInput}
                       />
                       {validationMessages.bpDiastolic && (
@@ -545,6 +547,7 @@ const UpdatePatientVisit = ({ isOpen, onClose, onSuccess, visitId }) => {
                         name="temperature"
                         value={formData.temperature}
                         onChange={handleChange}
+                        placeholder='90-110'
                         className={styles.formInput}
                       />
                       {validationMessages.temperature && (
@@ -559,6 +562,7 @@ const UpdatePatientVisit = ({ isOpen, onClose, onSuccess, visitId }) => {
                         name="weight"
                         value={formData.weight}
                         onChange={handleChange}
+                        placeholder='1-500'
                         className={styles.formInput}
                       />
                       {validationMessages.weight && (
