@@ -26,8 +26,8 @@ AddPatient
     "FamilyMedicalHistory":"Sugar",
     "ImmunizationRecords":"NOt Available",
     "FamilyPatientID":0    
-   
 }
+
 -- Gender Text Table #1
 -- Blood Group text table tabke id  #2
 -- Marital Status text table tabke id  #3

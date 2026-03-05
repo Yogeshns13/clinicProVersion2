@@ -21,6 +21,9 @@ const STATUS_OPTIONS = [
   { id: 2, label: 'Inactive' },
 ];
 
+// ── Mirrors backend timeRegex: HH:MM or HH:MM:SS ──
+const TIME_REGEX = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
+
 const WorkShift = () => {
   const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +48,17 @@ const WorkShift = () => {
     timeEnd: '',
     workingHours: '',
   });
+
+  // ── Validation errors state ──
+  const [formErrors, setFormErrors] = useState({
+    shiftName: '',
+    timeStart: '',
+    timeEnd: '',
+    workingHours: '',
+  });
+
+  // ── Track whether user has attempted submit (to show errors on untouched fields) ──
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
@@ -152,6 +166,8 @@ const WorkShift = () => {
 
   const openAddForm = () => {
     setFormData({ shiftName: '', timeStart: '', timeEnd: '', workingHours: '' });
+    setFormErrors({ shiftName: '', timeStart: '', timeEnd: '', workingHours: '' });
+    setSubmitAttempted(false);
     setFormError('');
     setFormSuccess(false);
     setIsAddFormOpen(true);
@@ -162,24 +178,110 @@ const WorkShift = () => {
     setFormLoading(false);
     setFormError('');
     setFormSuccess(false);
+    setFormErrors({ shiftName: '', timeStart: '', timeEnd: '', workingHours: '' });
+    setSubmitAttempted(false);
   };
+
+  // ── Validate a single field by name, returns error string or '' ──
+  const validateField = (name, value) => {
+    switch (name) {
+
+      case 'shiftName': {
+        if (!value || value.trim() === '')
+          return 'ShiftName is required';
+        if (value.trim().length > 50)
+          return 'ShiftName should not exceed 50 characters';
+        if (!/^[A-Za-z0-9\s\-_]+$/.test(value.trim()))
+          return 'ShiftName contains invalid characters';
+        return '';
+      }
+
+      case 'timeStart': {
+        if (!value || value.trim() === '')
+          return 'ShiftTimeStart is required';
+        if (!TIME_REGEX.test(value))
+          return 'ShiftTimeStart must be a valid time (HH:MM or HH:MM:SS)';
+        return '';
+      }
+
+      case 'timeEnd': {
+        if (!value || value.trim() === '')
+          return 'ShiftTimeEnd is required';
+        if (!TIME_REGEX.test(value))
+          return 'ShiftTimeEnd must be a valid time (HH:MM or HH:MM:SS)';
+        return '';
+      }
+
+      case 'workingHours': {
+        if (value === '' || value === null || value === undefined)
+          return 'WorkingHours is required';
+        if (!/^\d+(\.\d{1,2})?$/.test(String(value)))
+          return 'WorkingHours must be decimal with max 2 places (e.g., 8.50)';
+        return '';
+      }
+
+      default:
+        return '';
+    }
+  };
+
+  // ── Validate all fields at once, returns errors object ──
+  const validateAll = (data) => ({
+    shiftName:    validateField('shiftName',    data.shiftName),
+    timeStart:    validateField('timeStart',    data.timeStart),
+    timeEnd:      validateField('timeEnd',      data.timeEnd),
+    workingHours: validateField('workingHours', data.workingHours),
+  });
+
+  // ── True when every error string is empty ──
+  const isFormValid = (errors) =>
+    Object.values(errors).every((msg) => msg === '');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
+
+      // Auto-calculate working hours when times change
       if (name === 'timeStart' || name === 'timeEnd') {
         if (updated.timeStart && updated.timeEnd) {
           const hours = calculateWorkingHours(updated.timeStart, updated.timeEnd);
-          updated.workingHours = hours !== null ? hours.toFixed(2) : '';
+          if (hours !== null) {
+            updated.workingHours = hours.toFixed(2);
+          }
         }
       }
+
+      // Re-validate affected fields whenever a value changes
+      setFormErrors((prevErrors) => {
+        const newErrors = { ...prevErrors };
+
+        // Validate the changed field
+        newErrors[name] = validateField(name, value);
+
+        // If times changed, also re-validate workingHours against the new auto-value
+        if (name === 'timeStart' || name === 'timeEnd') {
+          newErrors.workingHours = validateField('workingHours', updated.workingHours);
+        }
+
+        return newErrors;
+      });
+
       return updated;
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitAttempted(true);
+
+    // Run full validation before sending
+    const errors = validateAll(formData);
+    setFormErrors(errors);
+
+    if (!isFormValid(errors)) return; // Block submission if any errors
+
     setFormLoading(true);
     setFormError('');
     setFormSuccess(false);
@@ -217,7 +319,7 @@ const WorkShift = () => {
   // ── Update handlers ──
   const handleUpdateClick = (shift) => {
     setUpdateShiftData(shift);
-    setSelectedShift(null); // close details modal
+    setSelectedShift(null);
     setIsUpdateFormOpen(true);
   };
 
@@ -266,6 +368,11 @@ const WorkShift = () => {
 
   if (loading) return <div className={styles.clinicLoading}>Loading work shifts...</div>;
   if (error)   return <div className={styles.clinicError}>Error: {error.message || error}</div>;
+
+  // ── Derived: should the submit button be disabled? ──
+  const submitDisabled =
+    formLoading ||
+    (submitAttempted && !isFormValid(formErrors));
 
   return (
     <div className={styles.clinicListWrapper}>
@@ -467,6 +574,7 @@ const WorkShift = () => {
 
                 <div className={styles.addFormGrid}>
 
+                  {/* ── Shift Name ── */}
                   <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                     <label>Shift Name <span className={styles.required}>*</span></label>
                     <input
@@ -476,8 +584,12 @@ const WorkShift = () => {
                       onChange={handleInputChange}
                       placeholder="e.g., Morning Shift, Night Shift"
                     />
+                    {formErrors.shiftName && (
+                      <span className={styles.validationMsg}>{formErrors.shiftName}</span>
+                    )}
                   </div>
 
+                  {/* ── Start Time ── */}
                   <div className={styles.addFormGroup}>
                     <label>Start Time <span className={styles.required}>*</span></label>
                     <input
@@ -487,8 +599,12 @@ const WorkShift = () => {
                       value={formData.timeStart}
                       onChange={handleInputChange}
                     />
+                    {formErrors.timeStart && (
+                      <span className={styles.validationMsg}>{formErrors.timeStart}</span>
+                    )}
                   </div>
 
+                  {/* ── End Time ── */}
                   <div className={styles.addFormGroup}>
                     <label>End Time <span className={styles.required}>*</span></label>
                     <input
@@ -498,11 +614,16 @@ const WorkShift = () => {
                       value={formData.timeEnd}
                       onChange={handleInputChange}
                     />
+                    {formErrors.timeEnd && (
+                      <span className={styles.validationMsg}>{formErrors.timeEnd}</span>
+                    )}
                   </div>
 
+                  {/* ── Working Hours ── */}
                   <div className={styles.addFormGroup}>
-                    <label>Working Hours</label>
+                    <label>Working Hours <span className={styles.required}>*</span></label>
                     <input
+                      required
                       type="number"
                       step="0.01"
                       name="workingHours"
@@ -510,6 +631,9 @@ const WorkShift = () => {
                       onChange={handleInputChange}
                       placeholder="Auto-calculated from times"
                     />
+                    {formErrors.workingHours && (
+                      <span className={styles.validationMsg}>{formErrors.workingHours}</span>
+                    )}
                   </div>
 
                 </div>
@@ -519,7 +643,11 @@ const WorkShift = () => {
                 <button type="button" onClick={closeAddForm} className={styles.btnCancel}>
                   Cancel
                 </button>
-                <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
+                <button
+                  type="submit"
+                  disabled={submitDisabled}
+                  className={styles.btnSubmit}
+                >
                   {formLoading ? 'Adding...' : 'Add Shift'}
                 </button>
               </div>

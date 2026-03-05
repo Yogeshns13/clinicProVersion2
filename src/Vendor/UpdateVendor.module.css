@@ -54,6 +54,12 @@
   animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.validationMsg {
+  font-size: 0.75rem;
+  color: red;
+  margin-top: 2px;
+}
+
 /* ==================== GRADIENT HEADER (compressed) ==================== */
 .updateModalHeader {
   flex-shrink: 0;

@@ -46,6 +46,113 @@ const parseTimingString = (str) =>
 const buildTimingString = (selected) =>
   TIMING_OPTIONS.filter(o => selected.includes(o.key)).map(o => o.key).join('|');
 
+// ── Validation ──────────────────────────────────────────
+const nameRegex = /^[A-Za-z0-9\s.,\-()[\]/+]+$/;
+const decimalRegex = /^\d+(\.\d{1,2})?$/;
+
+const validateAll = (data) => {
+  const errors = {};
+
+  // Name — required, 1–200 chars, nameRegex
+  if (!data.name.trim()) {
+    errors.name = 'Medicine name is required';
+  } else if (data.name.trim().length > 200) {
+    errors.name = 'Name must be 1–200 characters';
+  } else if (!nameRegex.test(data.name.trim())) {
+    errors.name = 'Name contains invalid characters';
+  }
+
+  // Type — required, must be ≥ 1
+  if (!data.type || data.type === 0) {
+    errors.type = 'Medicine type is required';
+  }
+
+  // GenericName — optional, max 500
+  if (data.genericName && data.genericName.length > 500) {
+    errors.genericName = 'Generic name must be at most 500 characters';
+  }
+
+  // Composition — optional, max 500
+  if (data.composition && data.composition.length > 500) {
+    errors.composition = 'Composition must be at most 500 characters';
+  }
+
+  // Manufacturer — optional, max 200
+  if (data.manufacturer && data.manufacturer.length > 200) {
+    errors.manufacturer = 'Manufacturer must be at most 200 characters';
+  }
+
+  // DosageForm — optional, max 100
+  if (data.dosageForm && data.dosageForm.length > 100) {
+    errors.dosageForm = 'Dosage form must be at most 100 characters';
+  }
+
+  // HSNCode — optional, max 20
+  if (data.hsnCode && data.hsnCode.length > 20) {
+    errors.hsnCode = 'HSN Code must be at most 20 characters';
+  }
+
+  // Barcode — optional, max 100
+  if (data.barcode && data.barcode.length > 100) {
+    errors.barcode = 'Barcode must be at most 100 characters';
+  }
+
+  // ReorderLevelQty — optional, isInt min: 0
+  if (data.reorderLevelQty !== 0) {
+    if (!Number.isInteger(Number(data.reorderLevelQty)) || Number(data.reorderLevelQty) < 0) {
+      errors.reorderLevelQty = 'Reorder level must be a non-negative integer';
+    }
+  }
+
+  // StockQuantity — optional, isInt min: 0
+  if (data.stockQuantity !== 0) {
+    if (!Number.isInteger(Number(data.stockQuantity)) || Number(data.stockQuantity) < 0) {
+      errors.stockQuantity = 'Stock quantity must be a non-negative integer';
+    }
+  }
+
+  // MRP — optional, isDecimal decimal_digits: 2
+  if (data.mrp !== '' && data.mrp !== 0) {
+    if (!decimalRegex.test(String(data.mrp))) {
+      errors.mrp = 'MRP must be a valid decimal with up to 2 decimal places';
+    }
+  }
+
+  // PurchasePrice — optional, isDecimal decimal_digits: 2
+  if (data.purchasePrice !== '' && data.purchasePrice !== 0) {
+    if (!decimalRegex.test(String(data.purchasePrice))) {
+      errors.purchasePrice = 'Purchase price must be a valid decimal with up to 2 decimal places';
+    }
+  }
+
+  // SellPrice — optional, isDecimal decimal_digits: 2
+  if (data.sellPrice !== '' && data.sellPrice !== 0) {
+    if (!decimalRegex.test(String(data.sellPrice))) {
+      errors.sellPrice = 'Sell price must be a valid decimal with up to 2 decimal places';
+    }
+  }
+
+  // CGSTPercentage — optional, isDecimal decimal_digits: 2, max: 100
+  if (data.cgstPercentage !== '' && data.cgstPercentage !== 0) {
+    if (!decimalRegex.test(String(data.cgstPercentage))) {
+      errors.cgstPercentage = 'CGST must be a valid decimal with up to 2 decimal places';
+    } else if (Number(data.cgstPercentage) > 100) {
+      errors.cgstPercentage = 'CGST percentage cannot exceed 100';
+    }
+  }
+
+  // SGSTPercentage — optional, isDecimal decimal_digits: 2, max: 100
+  if (data.sgstPercentage !== '' && data.sgstPercentage !== 0) {
+    if (!decimalRegex.test(String(data.sgstPercentage))) {
+      errors.sgstPercentage = 'SGST must be a valid decimal with up to 2 decimal places';
+    } else if (Number(data.sgstPercentage) > 100) {
+      errors.sgstPercentage = 'SGST percentage cannot exceed 100';
+    }
+  }
+
+  return errors;
+};
+
 // ──────────────────────────────────────────────────
 const UpdateMedicineMaster = ({
   isModal    = false,
@@ -64,6 +171,10 @@ const UpdateMedicineMaster = ({
   const [submitLoading, setSubmitLoading] = useState(false);
 
   const [selectedTiming, setSelectedTiming] = useState([]);
+
+  // Validation state
+  const [fieldErrors, setFieldErrors]   = useState({});
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const [formData, setFormData] = useState({
     name:            '',
@@ -139,10 +250,16 @@ const UpdateMedicineMaster = ({
 
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
-    if (type === 'number') {
-      setFormData(prev => ({ ...prev, [name]: value === '' ? 0 : Number(value) }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+
+    const newFormData = type === 'number'
+      ? { ...formData, [name]: value === '' ? 0 : Number(value) }
+      : { ...formData, [name]: value };
+
+    setFormData(newFormData);
+
+    // Re-validate live only after first submit attempt
+    if (hasSubmitted) {
+      setFieldErrors(validateAll(newFormData));
     }
   };
 
@@ -155,9 +272,12 @@ const UpdateMedicineMaster = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.name.trim()) { setError({ message: 'Medicine name is required' }); return; }
-    if (formData.type === 0)   { setError({ message: 'Please select a medicine type' }); return; }
-    if (formData.unit === 0)   { setError({ message: 'Please select a unit' }); return; }
+    const errors = validateAll(formData);
+    setFieldErrors(errors);
+    setHasSubmitted(true);
+
+    // Block submit if any validation error exists
+    if (Object.keys(errors).length > 0) return;
 
     try {
       setSubmitLoading(true);
@@ -226,6 +346,8 @@ const UpdateMedicineMaster = ({
       : <div className={styles.error}>Medicine not found</div>
   );
 
+  const hasErrors = Object.keys(fieldErrors).length > 0;
+
   const renderForm = () => (
     <form onSubmit={handleSubmit} className={styles.form}>
 
@@ -250,7 +372,11 @@ const UpdateMedicineMaster = ({
               className={styles.formInput}
               required
             />
+            {fieldErrors.name && (
+              <span className="validationMsg">{fieldErrors.name}</span>
+            )}
           </div>
+
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Generic Name</label>
             <input
@@ -261,7 +387,11 @@ const UpdateMedicineMaster = ({
               placeholder="Enter generic name"
               className={styles.formInput}
             />
+            {fieldErrors.genericName && (
+              <span className="validationMsg">{fieldErrors.genericName}</span>
+            )}
           </div>
+
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Manufacturer</label>
             <input
@@ -272,7 +402,11 @@ const UpdateMedicineMaster = ({
               placeholder="Enter manufacturer name"
               className={styles.formInput}
             />
+            {fieldErrors.manufacturer && (
+              <span className="validationMsg">{fieldErrors.manufacturer}</span>
+            )}
           </div>
+
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Composition</label>
             <input
@@ -283,6 +417,9 @@ const UpdateMedicineMaster = ({
               placeholder="Enter composition"
               className={styles.formInput}
             />
+            {fieldErrors.composition && (
+              <span className="validationMsg">{fieldErrors.composition}</span>
+            )}
           </div>
 
           <div className={styles.formGroup}>
@@ -296,29 +433,33 @@ const UpdateMedicineMaster = ({
               className={styles.formSelect}
               required
             >
-              <option value={0}>Select Type</option>
+              <option value=''>Select Type</option>
               {MEDICINE_TYPES.map(t => (
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
             </select>
+            {fieldErrors.type && (
+              <span className="validationMsg">{fieldErrors.type}</span>
+            )}
           </div>
+
           <div className={styles.formGroup}>
-            <label className={styles.formLabel}>
-              Unit <span className={styles.required}>*</span>
+            <label className={styles.formLabel}>Unit <span className={styles.required}>*</span>
             </label>
             <select
+              required
               name="unit"
               value={formData.unit}
               onChange={handleInputChange}
               className={styles.formSelect}
-              required
             >
-              <option value={0}>Select Unit</option>
+              <option value=''>Select Unit</option>
               {MEDICINE_UNITS.map(u => (
                 <option key={u.value} value={u.value}>{u.label}</option>
               ))}
             </select>
           </div>
+
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Dosage Form</label>
             <input
@@ -329,7 +470,11 @@ const UpdateMedicineMaster = ({
               placeholder="e.g., 500mg, 10ml"
               className={styles.formInput}
             />
+            {fieldErrors.dosageForm && (
+              <span className="validationMsg">{fieldErrors.dosageForm}</span>
+            )}
           </div>
+
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Dose Count</label>
             <input
@@ -356,7 +501,11 @@ const UpdateMedicineMaster = ({
               placeholder="Enter HSN code"
               className={styles.formInput}
             />
+            {fieldErrors.hsnCode && (
+              <span className="validationMsg">{fieldErrors.hsnCode}</span>
+            )}
           </div>
+
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Barcode</label>
             <input
@@ -367,6 +516,9 @@ const UpdateMedicineMaster = ({
               placeholder="Enter barcode"
               className={styles.formInput}
             />
+            {fieldErrors.barcode && (
+              <span className="validationMsg">{fieldErrors.barcode}</span>
+            )}
           </div>
 
           {/* Timing spans the remaining 2 columns */}
@@ -403,38 +555,66 @@ const UpdateMedicineMaster = ({
             <label className={styles.formLabel}>MRP (₹)</label>
             <input type="number" name="mrp" value={formData.mrp} onChange={handleInputChange}
               placeholder="0.00" className={styles.formInput} min="0" step="0.01" />
+            {fieldErrors.mrp && (
+              <span className="validationMsg">{fieldErrors.mrp}</span>
+            )}
           </div>
+
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Purchase Price (₹)</label>
             <input type="number" name="purchasePrice" value={formData.purchasePrice} onChange={handleInputChange}
               placeholder="0.00" className={styles.formInput} min="0" step="0.01" />
+            {fieldErrors.purchasePrice && (
+              <span className="validationMsg">{fieldErrors.purchasePrice}</span>
+            )}
           </div>
+
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Sell Price (₹)</label>
             <input type="number" name="sellPrice" value={formData.sellPrice} onChange={handleInputChange}
               placeholder="0.00" className={styles.formInput} min="0" step="0.01" />
+            {fieldErrors.sellPrice && (
+              <span className="validationMsg">{fieldErrors.sellPrice}</span>
+            )}
           </div>
+
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Stock Quantity</label>
             <input type="number" name="stockQuantity" value={formData.stockQuantity} onChange={handleInputChange}
               placeholder="0" className={styles.formInput} min="0" />
+            {fieldErrors.stockQuantity && (
+              <span className="validationMsg">{fieldErrors.stockQuantity}</span>
+            )}
           </div>
+
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Reorder Level Quantity</label>
             <input type="number" name="reorderLevelQty" value={formData.reorderLevelQty} onChange={handleInputChange}
               placeholder="0" className={styles.formInput} min="0" />
             <p className={styles.formHint}>Alert when stock falls below this quantity</p>
+            {fieldErrors.reorderLevelQty && (
+              <span className="validationMsg">{fieldErrors.reorderLevelQty}</span>
+            )}
           </div>
+
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>CGST (%)</label>
             <input type="number" name="cgstPercentage" value={formData.cgstPercentage} onChange={handleInputChange}
               placeholder="0.00" className={styles.formInput} min="0" max="100" step="0.01" />
+            {fieldErrors.cgstPercentage && (
+              <span className="validationMsg">{fieldErrors.cgstPercentage}</span>
+            )}
           </div>
+
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>SGST (%)</label>
             <input type="number" name="sgstPercentage" value={formData.sgstPercentage} onChange={handleInputChange}
               placeholder="0.00" className={styles.formInput} min="0" max="100" step="0.01" />
+            {fieldErrors.sgstPercentage && (
+              <span className="validationMsg">{fieldErrors.sgstPercentage}</span>
+            )}
           </div>
+
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Status</label>
             <select name="status" value={formData.status} onChange={handleInputChange} className={styles.formSelect}>
@@ -450,7 +630,11 @@ const UpdateMedicineMaster = ({
         <button type="button" onClick={handleCancel} className={styles.btnCancel} disabled={submitLoading}>
           Cancel
         </button>
-        <button type="submit" className={styles.btnSave} disabled={submitLoading}>
+        <button
+          type="submit"
+          className={styles.btnSave}
+          disabled={submitLoading || (hasSubmitted && hasErrors)}
+        >
           <FiSave size={18} />
           {submitLoading ? 'Saving...' : 'Save Changes'}
         </button>

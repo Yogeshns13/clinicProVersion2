@@ -14,203 +14,109 @@ import Header from '../Header/Header.jsx';
 import UpdateClinic from './UpdateClinic.jsx';
 import styles from './ClinicList.module.css';
 
+// ── Matches backend allowedCharactersRegex ──
+const allowedCharactersRegex = /^[A-Za-z0-9 ]+$/;
+
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
     case 'clinicName':
-      if (!value || !value.trim()) return 'Clinic name is required';
-      if (value.trim().length < 3) return 'Clinic name must be at least 3 characters';
-      if (value.trim().length > 100) return 'Clinic name must not exceed 100 characters';
+      if (!value || !value.trim()) return 'ClinicName is required';
+      if (value.trim().length > 100) return 'ClinicName should not exceed 100 characters';
+      if (!allowedCharactersRegex.test(value.trim())) return 'ClinicName should not contain special characters';
+      return '';
+
+    case 'address':
+      if (!value || !value.trim()) return 'Address is required';
+      if (value.length > 500) return 'Address should not exceed 500 characters';
+      return '';
+
+    case 'location':
+      if (!value || !value.trim()) return 'Location is required';
+      if (value.length > 500) return 'Location should not exceed 500 characters';
+      return '';
+
+    case 'clinicType':
+      if (!value || !value.trim()) return 'ClinicType is required';
+      if (value.length > 500) return 'ClinicType should not exceed 500 characters';
+      return '';
+
+    case 'gstNo':
+      if (!value || !value.trim()) return 'GstNo is required';
+      if (value.trim().length < 15) return `GST number must be 15 characters (${value.trim().length}/15 entered)`;
+      if (value.trim().length > 15) return 'GST number must not exceed 15 characters';
+      if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value.trim())) return 'Invalid GST format (e.g. 29ABCDE1234F1Z5)';
+      return '';
+
+    case 'cgstPercentage':
+      if (value === '' || value === null || value === undefined) return 'CgstPercentage is required';
+      if (isNaN(Number(value))) return 'CgstPercentage should be a decimal';
+      return '';
+
+    case 'sgstPercentage':
+      if (value === '' || value === null || value === undefined) return 'SgstPercentage is required';
+      if (isNaN(Number(value))) return 'SgstPercentage should be a decimal';
       return '';
 
     case 'ownerName':
-      if (!value || !value.trim()) return 'Owner name is required';
-      if (value.trim().length < 3) return 'Owner name must be at least 3 characters';
-      if (value.trim().length > 100) return 'Owner name must not exceed 100 characters';
+      if (!value || !value.trim()) return 'OwnerName is required';
+      if (value.trim().length > 100) return 'OwnerName should not exceed 100 characters';
+      if (!allowedCharactersRegex.test(value.trim())) return 'OwnerName should not contain special characters';
       return '';
 
     case 'mobile':
-      if (!value || !value.trim()) return 'Mobile number is required';
-      if (value.trim().length < 10) return 'Mobile number must be 10 digits';
-      if (value.trim().length === 10) {
-        if (!/^[6-9]\d{9}$/.test(value.trim())) {
-          return 'Mobile number must start with 6-9';
-        }
-      }
+      if (!value || !value.trim()) return 'Mobile is required';
+      if (value.trim().length !== 10) return 'Mobile number must be 10 digits';
+      if (!/^\d{10}$/.test(value.trim())) return 'Mobile number must contain only digits';
       if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
       return '';
 
     case 'altMobile':
-      if (value && value.trim()) {
-        if (value.trim().length < 10) return 'Mobile number must be 10 digits';
-        if (value.trim().length === 10) {
-          if (!/^[6-9]\d{9}$/.test(value.trim())) {
-            return 'Mobile number must start with 6-9';
-          }
-        }
-        if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
-      }
+      if (!value || !value.trim()) return 'AltMobile is required';
+      if (value.trim().length !== 10) return 'Mobile number must be 10 digits';
+      if (!/^\d{10}$/.test(value.trim())) return 'Mobile number must contain only digits';
+      if (value.trim().length > 10) return 'Alternate Mobile cannot exceed 10 digits';
       return '';
 
     case 'email':
+      if (!value || !value.trim()) return 'Email is required';
       if (value && value.trim()) {
         if (!value.includes('@')) return 'Email must contain @';
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
           return 'Please enter a valid email address';
         }
+        if (value.trim().length > 100) return 'Email must not exceed 100 characters';
       }
-      return '';
-
-  case 'gstNo':
-  if (!value || value === '') return '';
-  
-  const len = value.length;
-  
-  if (len >= 1) {
-    if (!/^[0-9]$/.test(value[0])) {
-      return 'Char 1: Must be digit (State Code)';
-    }
-  }
-  
-  if (len >= 2) {
-    if (!/^[0-9]$/.test(value[1])) {
-      return 'Char 2: Must be digit (State Code)';
-    }
-  }
-  
-  if (len >= 3) {
-    if (!/^[A-Z]$/.test(value[2])) {
-      return 'Char 3: Must be uppercase letter (PAN letter 1/5)';
-    }
-  }
-  
-  if (len >= 4) {
-    if (!/^[A-Z]$/.test(value[3])) {
-      return 'Char 4: Must be uppercase letter (PAN letter 2/5)';
-    }
-  }
-  
-  if (len >= 5) {
-    if (!/^[A-Z]$/.test(value[4])) {
-      return 'Char 5: Must be uppercase letter (PAN letter 3/5)';
-    }
-  }
-  
-  if (len >= 6) {
-    if (!/^[A-Z]$/.test(value[5])) {
-      return 'Char 6: Must be uppercase letter (PAN letter 4/5)';
-    }
-  }
-  
-  if (len >= 7) {
-    if (!/^[A-Z]$/.test(value[6])) {
-      return 'Char 7: Must be uppercase letter (PAN letter 5/5)';
-    }
-  }
-  
-  if (len >= 8) {
-    if (!/^[0-9]$/.test(value[7])) {
-      return 'Char 8: Must be digit (PAN number 1/4)';
-    }
-  }
-  
-  if (len >= 9) {
-    if (!/^[0-9]$/.test(value[8])) {
-      return 'Char 9: Must be digit (PAN number 2/4)';
-    }
-  }
-  
-  if (len >= 10) {
-    if (!/^[0-9]$/.test(value[9])) {
-      return 'Char 10: Must be digit (PAN number 3/4)';
-    }
-  }
-  
-  if (len >= 11) {
-    if (!/^[0-9]$/.test(value[10])) {
-      return 'Char 11: Must be digit (PAN number 4/4)';
-    }
-  }
-  
-  if (len >= 12) {
-    if (!/^[A-Z]$/.test(value[11])) {
-      return 'Char 12: Must be uppercase letter (PAN last letter)';
-    }
-  }
-  
-  if (len >= 13) {
-    if (!/^[1-9A-Z]$/.test(value[12])) {
-      return 'Char 13: Must be 1-9 or A-Z (Entity number, not 0)';
-    }
-  }
-  
-  if (len >= 14) {
-    if (value[13] !== 'Z') {
-      return 'Char 14: Must be Z (fixed)';
-    }
-  }
-  
-  if (len >= 15) {
-    if (!/^[0-9A-Z]$/.test(value[14])) {
-      return 'Char 15: Must be digit or uppercase letter (Checksum)';
-    }
-  }
-  
-  if (len < 15) {
-    return `${len}/15 characters entered`;
-  }
-
-  if (len === 15) {
-    return 'Valid GST format (29ABCDE1234F1Z5)';
-  }
-  
-  return '';
-
-    case 'cgstPercentage':
-    case 'sgstPercentage':
-      if (value === '' || value === null || value === undefined) return '';
-      const num = Number(value);
-      if (isNaN(num)) return 'Must be a number';
-      if (num < 0) return 'Cannot be negative';
-      if (num > 100) return 'Cannot exceed 100';
       return '';
 
     case 'fileNoPrefix':
-    case 'invoicePrefix':
       if (value && value.trim()) {
-        if (value.trim().length > 10) return 'Must not exceed 10 characters';
-    if (/[^A-Za-z0-9-_]/.test(value)) {
-        return 'Only letters, numbers, hyphen (-) and underscore (_) allowed';
-      }
+        if (value.trim().length > 10) return 'FileNoPrefix should not exceed 10 characters';
       }
       return '';
 
     case 'lastFileSeq':
-      if (value === '' || value === null || value === undefined) return '';
-      const seq = Number(value);
-      if (isNaN(seq)) return 'Must be a number';
-      if (seq < 0) return 'Cannot be negative';
+      if (value === '' || value === null || value === undefined) return 'LastFileSeq is required';
+      if (!Number.isInteger(Number(value)) || isNaN(Number(value))) return 'LastFileSeq should be a number';
       return '';
 
-    case 'address':
-      if (value && value.length > 500) return 'Address must not exceed 500 characters';
+    case 'invoicePrefix':
+      if (value && value.trim()) {
+        if (value.trim().length > 10) return 'InvoicePrefix should not exceed 10 characters';
+      }
       return '';
 
     case 'latitude':
       if (value === '') return '';
       const lat = Number(value);
       if (isNaN(lat)) return 'Please enter a valid number';
-      if (lat < -90 || lat > 90) return 'Latitude must be between -90 and 90';
+      if (lat < -90 || lat > 90) return 'Latitude must be between -90 and +90';
       return '';
 
     case 'longitude':
       if (value === '') return '';
       const lng = Number(value);
       if (isNaN(lng)) return 'Please enter a valid number';
-      if (lng < -180 || lng > 180) return 'Longitude must be between -180 and 180';
-      return '';
-
-    case 'clinicType':
-      if (value && value.length > 50) return 'Clinic type must not exceed 50 characters';
+      if (lng < -180 || lng > 180) return 'Longitude must be between -180 and +180';
       return '';
 
     default:
@@ -289,14 +195,14 @@ const ClinicList = () => {
     longitude: '',
     clinicType: '',
     gstNo: '',
-    cgstPercentage: 0,
-    sgstPercentage: 0,
+    cgstPercentage: '',
+    sgstPercentage: '',
     ownerName: '',
     mobile: '',
     altMobile: '',
     email: '',
     fileNoPrefix: '',
-    lastFileSeq: 0,
+    lastFileSeq: '',
     invoicePrefix: '',
   });
   const [formLoading, setFormLoading] = useState(false);
@@ -369,6 +275,29 @@ const ClinicList = () => {
   }, [allClinics, appliedFilters]);
 
   // ────────────────────────────────────────────────
+  // Form validity check — button is blocked until all errors are cleared
+  const isFormValid = useMemo(() => {
+    // All required string fields must be non-empty
+    const requiredStringFields = [
+      'clinicName', 'address', 'clinicType', 'gstNo',
+      'ownerName', 'mobile', 'altMobile',
+    ];
+    const allRequiredFilled = requiredStringFields.every(
+      (f) => formData[f] && String(formData[f]).trim()
+    );
+    if (!allRequiredFilled) return false;
+
+    // location (computed from lat/lng) is required
+    if (!formData.location || !String(formData.location).trim()) return false;
+
+    // No validation messages should be non-empty
+    const hasErrors = Object.values(validationMessages).some((msg) => !!msg);
+    if (hasErrors) return false;
+
+    return true;
+  }, [formData, validationMessages]);
+
+  // ────────────────────────────────────────────────
   // Helper functions
   const getStatusClass = (status) => {
     if (status === 'active') return styles.active;
@@ -381,6 +310,40 @@ const ClinicList = () => {
       setClinics(data);
       setAllClinics(data);
     });
+  };
+
+  // Validate every field at once and populate validationMessages
+  const validateAllFields = () => {
+    const fieldsToValidate = {
+      clinicName: formData.clinicName,
+      address: formData.address,
+      location: formData.location,
+      clinicType: formData.clinicType,
+      gstNo: formData.gstNo,
+      cgstPercentage: formData.cgstPercentage,
+      sgstPercentage: formData.sgstPercentage,
+      ownerName: formData.ownerName,
+      mobile: formData.mobile,
+      altMobile: formData.altMobile,
+      email: formData.email,
+      fileNoPrefix: formData.fileNoPrefix,
+      lastFileSeq: formData.lastFileSeq,
+      invoicePrefix: formData.invoicePrefix,
+      latitude: formData.latitude,
+      longitude: formData.longitude,
+    };
+
+    const messages = {};
+    let hasErrors = false;
+
+    for (const [field, value] of Object.entries(fieldsToValidate)) {
+      const msg = getLiveValidationMessage(field, value);
+      messages[field] = msg;
+      if (msg) hasErrors = true;
+    }
+
+    setValidationMessages(messages);
+    return !hasErrors;
   };
 
   // ────────────────────────────────────────────────
@@ -416,14 +379,14 @@ const ClinicList = () => {
       longitude: '',
       clinicType: '',
       gstNo: '',
-      cgstPercentage: 0,
-      sgstPercentage: 0,
+      cgstPercentage: '',
+      sgstPercentage: '',
       ownerName: '',
       mobile: '',
       altMobile: '',
       email: '',
       fileNoPrefix: '',
-      lastFileSeq: 0,
+      lastFileSeq: '',
       invoicePrefix: '',
     });
     setFormError('');
@@ -450,6 +413,11 @@ const ClinicList = () => {
         const lat = name === 'latitude' ? filteredValue : prev.latitude || '';
         const lng = name === 'longitude' ? filteredValue : prev.longitude || '';
         updated.location = [lat, lng].filter(Boolean).join(',');
+
+        // Validate location whenever coordinates change
+        const locationMsg = getLiveValidationMessage('location', updated.location);
+        setValidationMessages((prev2) => ({ ...prev2, location: locationMsg }));
+
         return updated;
       });
     } else {
@@ -462,6 +430,11 @@ const ClinicList = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Run full validation; stop if any errors
+    const isValid = validateAllFields();
+    if (!isValid) return;
+
     setFormLoading(true);
     setFormError('');
     setFormSuccess(false);
@@ -790,86 +763,164 @@ const ClinicList = () => {
                 </div>
                 <div className={styles.addFormGrid}>
 
+                  {/* Clinic Name — required */}
                   <div className={styles.addFormGroup}>
                     <label>Clinic Name <span className={styles.required}>*</span></label>
-                    <input required name="clinicName" value={formData.clinicName} onChange={handleInputChange} placeholder="Enter clinic name" />
+                    <input
+                      required
+                      name="clinicName"
+                      value={formData.clinicName}
+                      onChange={handleInputChange}
+                      placeholder="Enter clinic name"
+                    />
                     {validationMessages.clinicName && (
                       <span className={styles.validationMsg}>{validationMessages.clinicName}</span>
                     )}
                   </div>
 
+                  {/* Clinic Type — required */}
                   <div className={styles.addFormGroup}>
-                    <label>Clinic Type</label>
-                    <input name="clinicType" value={formData.clinicType} onChange={handleInputChange} placeholder="e.g. Dental, General" />
+                    <label>Clinic Type <span className={styles.required}>*</span></label>
+                    <input
+                      required
+                      name="clinicType"
+                      value={formData.clinicType}
+                      onChange={handleInputChange}
+                      placeholder="e.g. Dental, General"
+                    />
                     {validationMessages.clinicType && (
                       <span className={styles.validationMsg}>{validationMessages.clinicType}</span>
                     )}
                   </div>
 
+                  {/* Owner Name — required */}
                   <div className={styles.addFormGroup}>
                     <label>Owner Name <span className={styles.required}>*</span></label>
-                    <input required name="ownerName" value={formData.ownerName} onChange={handleInputChange} placeholder="Enter owner name" />
+                    <input
+                      required
+                      name="ownerName"
+                      value={formData.ownerName}
+                      onChange={handleInputChange}
+                      placeholder="Enter owner name"
+                    />
                     {validationMessages.ownerName && (
                       <span className={styles.validationMsg}>{validationMessages.ownerName}</span>
                     )}
                   </div>
 
+                  {/* Address — required */}
                   <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                    <label>Address</label>
-                    <textarea name="address" rows={2} value={formData.address} onChange={handleInputChange} placeholder="Enter full address" />
+                    <label>Address <span className={styles.required}>*</span></label>
+                    <textarea
+                      required
+                      name="address"
+                      rows={2}
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      placeholder="Enter full address"
+                    />
                     {validationMessages.address && (
                       <span className={styles.validationMsg}>{validationMessages.address}</span>
                     )}
                   </div>
 
+                  {/* Location Coordinates — location is required (computed) */}
                   <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                    <label>Location Coordinates</label>
+                    <label>
+                      Location Coordinates <span className={styles.required}>*</span>
+                    </label>
                     <div className={styles.coordRow}>
                       <div className={styles.coordField}>
-                        <input type="number" step="any" min="-90" max="90" name="latitude" placeholder="Latitude" value={formData.latitude || ''} onChange={handleInputChange} />
+                        <input
+                          type="number"
+                          step="any"
+                          min="-90"
+                          max="90"
+                          name="latitude"
+                          placeholder="Latitude"
+                          value={formData.latitude || ''}
+                          onChange={handleInputChange}
+                        />
                         {validationMessages.latitude && (
                           <span className={styles.validationMsg}>{validationMessages.latitude}</span>
                         )}
                       </div>
                       <div className={styles.coordField}>
-                        <input type="number" step="any" min="-180" max="180" name="longitude" placeholder="Longitude" value={formData.longitude || ''} onChange={handleInputChange} />
+                        <input
+                          type="number"
+                          step="any"
+                          min="-180"
+                          max="180"
+                          name="longitude"
+                          placeholder="Longitude"
+                          value={formData.longitude || ''}
+                          onChange={handleInputChange}
+                        />
                         {validationMessages.longitude && (
                           <span className={styles.validationMsg}>{validationMessages.longitude}</span>
                         )}
                       </div>
                     </div>
+                    {/* Show location required error when both coords are missing */}
+                    {validationMessages.location && (
+                      <span className={styles.validationMsg}>{validationMessages.location}</span>
+                    )}
                     <small className={styles.coordHint}>Example: 9.9252, 78.1198 (Madurai city center)</small>
                   </div>
-
                 </div>
               </div>
 
-              {/* ── Section: Contact Information — 3 columns (Mobile | Alt Mobile | Email) ── */}
+              {/* ── Section: Contact Information — 3 columns ── */}
               <div className={styles.addSection}>
                 <div className={styles.addSectionHeader}>
                   <h3>Contact Information</h3>
                 </div>
                 <div className={styles.addFormGridThreeCol}>
 
+                  {/* Mobile — required */}
                   <div className={styles.addFormGroup}>
                     <label>Mobile <span className={styles.required}>*</span></label>
-                    <input required name="mobile" value={formData.mobile} onChange={handleInputChange} maxLength="10" placeholder="10-digit mobile" />
+                    <input
+                      required
+                      name="mobile"
+                      value={formData.mobile}
+                      onChange={handleInputChange}
+                      maxLength={10}
+                      placeholder="Mobile number"
+                    />
                     {validationMessages.mobile && (
                       <span className={styles.validationMsg}>{validationMessages.mobile}</span>
                     )}
                   </div>
 
+                  {/* Alternate Mobile — required */}
                   <div className={styles.addFormGroup}>
-                    <label>Alternate Mobile</label>
-                    <input name="altMobile" value={formData.altMobile} onChange={handleInputChange} maxLength="10" placeholder="Optional alt number" />
+                    <label>Alternate Mobile <span className={styles.required}>*</span></label>
+                    <input
+                      required
+                      name="altMobile"
+                      value={formData.altMobile}
+                      onChange={handleInputChange}
+                      maxLength={10}
+                      placeholder="Alternate mobile number"
+                    />
                     {validationMessages.altMobile && (
                       <span className={styles.validationMsg}>{validationMessages.altMobile}</span>
                     )}
                   </div>
 
+                  {/* Email — optional, validated if filled */}
                   <div className={styles.addFormGroup}>
-                    <label>Email</label>
-                    <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="clinic@example.com" />
+                    <label>Email <span className={styles.required}>*</span>
+                    </label>
+                    <input
+                      required
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="clinic@example.com"
+                    />
                     {validationMessages.email && (
                       <span className={styles.validationMsg}>{validationMessages.email}</span>
                     )}
@@ -878,32 +929,59 @@ const ClinicList = () => {
                 </div>
               </div>
 
-              {/* ── Section: Tax Information — 3 columns (GST No | CGST % | SGST %) ── */}
+              {/* ── Section: Tax Information — 3 columns ── */}
               <div className={styles.addSection}>
                 <div className={styles.addSectionHeader}>
                   <h3>Tax Information</h3>
                 </div>
                 <div className={styles.addFormGridThreeCol}>
 
+                  {/* GST Number — required */}
                   <div className={styles.addFormGroup}>
-                    <label>GST Number</label>
-                    <input name="gstNo" value={formData.gstNo} onChange={handleInputChange} placeholder="e.g. 29ABCDE1234F1Z5" />
+                    <label>GST Number <span className={styles.required}>*</span></label>
+                    <input
+                      required
+                      name="gstNo"
+                      value={formData.gstNo}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 29ABCDE1234F1Z5"
+                    />
                     {validationMessages.gstNo && (
                       <span className={styles.validationMsg}>{validationMessages.gstNo}</span>
                     )}
                   </div>
 
+                  {/* CGST Percentage — required */}
                   <div className={styles.addFormGroup}>
-                    <label>CGST Percentage</label>
-                    <input type="number" name="cgstPercentage" value={formData.cgstPercentage} onChange={handleInputChange} min="0" step="0.01" placeholder="0.00" />
+                    <label>CGST Percentage <span className={styles.required}>*</span></label>
+                    <input
+                      required
+                      type="number"
+                      name="cgstPercentage"
+                      value={formData.cgstPercentage}
+                      onChange={handleInputChange}
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                    />
                     {validationMessages.cgstPercentage && (
                       <span className={styles.validationMsg}>{validationMessages.cgstPercentage}</span>
                     )}
                   </div>
 
+                  {/* SGST Percentage — required */}
                   <div className={styles.addFormGroup}>
-                    <label>SGST Percentage</label>
-                    <input type="number" name="sgstPercentage" value={formData.sgstPercentage} onChange={handleInputChange} min="0" step="0.01" placeholder="0.00" />
+                    <label>SGST Percentage <span className={styles.required}>*</span></label>
+                    <input
+                      required
+                      type="number"
+                      name="sgstPercentage"
+                      value={formData.sgstPercentage}
+                      onChange={handleInputChange}
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                    />
                     {validationMessages.sgstPercentage && (
                       <span className={styles.validationMsg}>{validationMessages.sgstPercentage}</span>
                     )}
@@ -919,6 +997,7 @@ const ClinicList = () => {
                 </div>
                 <div className={styles.addFormGrid}>
 
+                  {/* File No Prefix — optional, max 10 */}
                   <div className={styles.addFormGroup}>
                     <label>File No Prefix</label>
                     <input
@@ -938,22 +1017,32 @@ const ClinicList = () => {
                         const newValue = input.value.substring(0, input.selectionStart) + clean + input.value.substring(input.selectionEnd);
                         setFormData((prev) => ({ ...prev, [input.name]: newValue }));
                       }}
-                      placeholder="e.g. FILE-2026_DOC"
-                      maxLength={20}
+                      placeholder="e.g. CPT"
+                      maxLength={10}
                     />
                     {validationMessages.fileNoPrefix && (
                       <span className={styles.validationMsg}>{validationMessages.fileNoPrefix}</span>
                     )}
                   </div>
 
+                  {/* Last File Sequence — required */}
                   <div className={styles.addFormGroup}>
-                    <label>Last File Sequence</label>
-                    <input type="number" name="lastFileSeq" value={formData.lastFileSeq} onChange={handleInputChange} min="0" placeholder="0" />
+                    <label>Last File Sequence <span className={styles.required}>*</span></label>
+                    <input
+                      required
+                      type="number"
+                      name="lastFileSeq"
+                      value={formData.lastFileSeq}
+                      onChange={handleInputChange}
+                      min="0"
+                      placeholder="e.g. 200000"
+                    />
                     {validationMessages.lastFileSeq && (
                       <span className={styles.validationMsg}>{validationMessages.lastFileSeq}</span>
                     )}
                   </div>
 
+                  {/* Invoice Prefix — optional, max 10 */}
                   <div className={styles.addFormGroup}>
                     <label>Invoice Prefix</label>
                     <input
@@ -974,8 +1063,8 @@ const ClinicList = () => {
                         const newValue = input.value.substring(0, input.selectionStart) + clean + input.value.substring(input.selectionEnd);
                         setFormData((prev) => ({ ...prev, [input.name]: newValue }));
                       }}
-                      placeholder="e.g. INV-2026_ABC"
-                      maxLength={20}
+                      placeholder="e.g. CPT-INV"
+                      maxLength={10}
                     />
                     {validationMessages.invoicePrefix && (
                       <span className={styles.validationMsg}>{validationMessages.invoicePrefix}</span>
@@ -990,7 +1079,16 @@ const ClinicList = () => {
                 <button type="button" onClick={closeAddForm} className={styles.btnCancel}>
                   Cancel
                 </button>
-                <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
+                {/*
+                  Submit is always clickable so validateAllFields runs and shows
+                  all errors on first click. The API call is blocked inside
+                  handleSubmit until isFormValid is true.
+                */}
+                <button
+                  type="submit"
+                  disabled={formLoading}
+                  className={`${styles.btnSubmit} ${!isFormValid ? styles.btnSubmitDisabled : ''}`}
+                >
                   {formLoading ? 'Adding...' : 'Add Clinic'}
                 </button>
               </div>

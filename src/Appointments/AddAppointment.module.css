@@ -210,11 +210,9 @@
 }
 
 .validationMsg {
-  display: block;
-  margin-top: 5px;
-  font-size: 0.8rem;
-  color: var(--danger-color);
-  font-weight: 500;
+  font-size: 0.75rem;
+  color: red;
+  margin-top: 2px;
 }
 
 .formRow {

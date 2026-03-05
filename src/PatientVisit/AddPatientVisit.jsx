@@ -6,6 +6,14 @@ import styles from './AddPatientVisit.module.css';
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
+    case 'PatientID':
+      if (!value) return 'Please select a patient';
+      return '';
+
+    case 'DoctorID':
+      if (!value) return 'Please select a doctor';
+      return '';
+
     case 'VisitDate':
       if (!value) return 'Visit date is required';
       const visitDate = new Date(value);
@@ -91,7 +99,7 @@ const getTodayDate = () => {
   return new Date().toISOString().split('T')[0];
 };
 
-const SearchableDropdown = ({ label, required, placeholder, items, selectedId, onSelect, getItemLabel, getItemSubLabel }) => {
+const SearchableDropdown = ({ label, required, placeholder, items, selectedId, onSelect, getItemLabel, getItemSubLabel, validationMsg }) => {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef(null);
@@ -198,6 +206,10 @@ const SearchableDropdown = ({ label, required, placeholder, items, selectedId, o
           </div>
         )}
       </div>
+
+      {validationMsg && (
+        <span className={styles.validationMsg}>{validationMsg}</span>
+      )}
     </div>
   );
 };
@@ -360,15 +372,46 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
   };
 
   const handlePatientSelect = (patient) => {
-    setFormData(prev => ({ ...prev, PatientID: patient ? patient.id : '' }));
+    const id = patient ? patient.id : '';
+    setFormData(prev => ({ ...prev, PatientID: id }));
+    setValidationMessages(prev => ({ ...prev, PatientID: getLiveValidationMessage('PatientID', id) }));
   };
 
   const handleDoctorSelect = (doctor) => {
-    setFormData(prev => ({ ...prev, DoctorID: doctor ? doctor.id : '' }));
+    const id = doctor ? doctor.id : '';
+    setFormData(prev => ({ ...prev, DoctorID: id }));
+    setValidationMessages(prev => ({ ...prev, DoctorID: getLiveValidationMessage('DoctorID', id) }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate all required fields before submitting
+    const newMessages = {};
+    let hasError = false;
+
+    if (visitMode !== 'with' || !preSelectedAppointmentId) {
+      if (!formData.PatientID) {
+        newMessages.PatientID = getLiveValidationMessage('PatientID', formData.PatientID);
+        hasError = true;
+      }
+      if (!formData.DoctorID) {
+        newMessages.DoctorID = getLiveValidationMessage('DoctorID', formData.DoctorID);
+        hasError = true;
+      }
+    }
+
+    const visitDateMsg = getLiveValidationMessage('VisitDate', formData.VisitDate);
+    if (visitDateMsg) { newMessages.VisitDate = visitDateMsg; hasError = true; }
+
+    const visitTimeMsg = getLiveValidationMessage('VisitTime', formData.VisitTime);
+    if (visitTimeMsg) { newMessages.VisitTime = visitTimeMsg; hasError = true; }
+
+    if (hasError) {
+      setValidationMessages(prev => ({ ...prev, ...newMessages }));
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -549,6 +592,7 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
                     onSelect={handlePatientSelect}
                     getItemLabel={p => `${p.firstName} ${p.lastName}`}
                     getItemSubLabel={p => p.fileNo || ''}
+                    validationMsg={validationMessages.PatientID}
                   />
                 </div>
 
@@ -566,6 +610,7 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
                     onSelect={handleDoctorSelect}
                     getItemLabel={d => `${d.firstName} ${d.lastName}`}
                     getItemSubLabel={d => d.employeeCode || ''}
+                    validationMsg={validationMessages.DoctorID}
                   />
                 </div>
               </div>

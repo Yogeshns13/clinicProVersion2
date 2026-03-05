@@ -242,6 +242,12 @@
   margin-top: 2px;
 }
 
+.validationMsg {
+  font-size: 0.75rem;
+  color: red;
+  margin-top: 2px;
+}
+
 /* ==================== TIMING PILLS ==================== */
 .timingGroup {
   display: flex;

@@ -4,20 +4,44 @@ import { FiSave } from 'react-icons/fi';
 import { updateBranch } from '../api/api.js';
 import styles from './BranchList.module.css';
 
+// ─── matches backend allowedCharactersRegex exactly ───────────────────────────
+const allowedCharactersRegex = /^[A-Za-z0-9\s\-_]+$/;
+
+// ─── Validation messages match backend updateBranchValidatorRules word-for-word ─
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
+    case 'clinicId':
+      if (!value || value === '') return 'ClinicID is required';
+      if (isNaN(Number(value)) || !Number.isInteger(Number(value)) || Number(value) < 1)
+        return 'ClinicID must be a positive integer';
+      return '';
+
     case 'branchName':
-      if (!value || !value.trim()) return 'Branch name is required';
-      if (value.trim().length < 3) return 'Branch name must be at least 3 characters';
-      if (value.trim().length > 100) return 'Branch name must not exceed 100 characters';
+      if (!value || !value.trim()) return 'BranchName is required';
+      if (value.trim().length > 100) return 'BranchName should not exceed 100 characters';
+      if (!allowedCharactersRegex.test(value.trim())) return 'BranchName contains invalid characters';
       return '';
 
+    // Address is required in backend (notEmpty)
     case 'address':
-      if (value && value.length > 500) return 'Address must not exceed 500 characters';
+      if (!value || !value.trim()) return 'Address is required';
+      if (value.length > 500) return 'Address should not exceed 500 characters';
       return '';
 
+    // Location is optional in backend — only length check
     case 'location':
-      if (value && value.length > 100) return 'Location must not exceed 100 characters';
+      if (value && value.length > 500) return 'Location should not exceed 500 characters';
+      return '';
+
+    case 'branchType':
+      if (!value) return 'BranchType is required';
+      if (isNaN(Number(value)) || Number(value) < 1) return 'BranchType must be a valid integer';
+      return '';
+
+    // Status — required in backend updateBranchValidatorRules
+    case 'status':
+      if (!value) return 'Status is required';
+      if (isNaN(Number(value))) return 'Status must be a number';
       return '';
 
     default:
@@ -28,12 +52,15 @@ const getLiveValidationMessage = (fieldName, value) => {
 const filterInput = (fieldName, value) => {
   switch (fieldName) {
     case 'branchName':
-    case 'location':
-      return value.replace(/[^a-zA-Z\s]/g, '');
+      // allow A-Za-z0-9, whitespace, hyphen, underscore — matches backend regex
+      return value.replace(/[^A-Za-z0-9\s\-_]/g, '');
     default:
       return value;
   }
 };
+
+// ─── All fields validated on submit for the Update form ───────────────────────
+const UPDATE_VALIDATED_FIELDS = ['clinicId', 'branchName', 'address', 'location', 'branchType', 'status'];
 
 const BRANCH_TYPES = [
   { id: 1, label: 'Main' },
@@ -79,8 +106,29 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess }) => {
     setValidationMessages((prev) => ({ ...prev, [name]: getLiveValidationMessage(name, filteredValue) }));
   };
 
+  // ── Run validation on all fields; returns true only if zero errors ─────────
+  const validateAllFields = () => {
+    const messages = {};
+    let isValid = true;
+
+    UPDATE_VALIDATED_FIELDS.forEach((field) => {
+      const msg = getLiveValidationMessage(field, formData[field]);
+      messages[field] = msg;
+      if (msg) isValid = false;
+    });
+
+    setValidationMessages((prev) => ({ ...prev, ...messages }));
+    return isValid;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateAllFields()) {
+      setFormError('Please correct all errors before submitting.');
+      return;
+    }
+
     setFormLoading(true);
     setFormError('');
     setFormSuccess(false);
@@ -140,6 +188,7 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess }) => {
 
             <div className={styles.addFormGrid}>
 
+              {/* ClinicID — required in backend */}
               <div className={styles.addFormGroup}>
                 <label>Clinic <span className={styles.required}>*</span></label>
                 <select
@@ -155,8 +204,12 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess }) => {
                     </option>
                   ))}
                 </select>
+                {validationMessages.clinicId && (
+                  <span className={styles.validationMsg}>{validationMessages.clinicId}</span>
+                )}
               </div>
 
+              {/* BranchName — required in backend */}
               <div className={styles.addFormGroup}>
                 <label>Branch Name <span className={styles.required}>*</span></label>
                 <input
@@ -171,6 +224,7 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess }) => {
                 )}
               </div>
 
+              {/* BranchType — required in backend */}
               <div className={styles.addFormGroup}>
                 <label>Branch Type <span className={styles.required}>*</span></label>
                 <select
@@ -185,11 +239,16 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess }) => {
                     </option>
                   ))}
                 </select>
+                {validationMessages.branchType && (
+                  <span className={styles.validationMsg}>{validationMessages.branchType}</span>
+                )}
               </div>
 
+              {/* Address — required in backend (notEmpty) */}
               <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                <label>Full Address</label>
+                <label>Full Address <span className={styles.required}>*</span></label>
                 <textarea
+                  required
                   name="address"
                   rows={2}
                   value={formData.address}
@@ -201,6 +260,7 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess }) => {
                 )}
               </div>
 
+              {/* Location — optional in backend */}
               <div className={styles.addFormGroup}>
                 <label>Location (Area/City)</label>
                 <input
@@ -214,6 +274,7 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess }) => {
                 )}
               </div>
 
+              {/* Status — required in backend */}
               <div className={styles.addFormGroup}>
                 <label>Status <span className={styles.required}>*</span></label>
                 <select
@@ -226,6 +287,9 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess }) => {
                     <option key={s.id} value={s.id}>{s.label}</option>
                   ))}
                 </select>
+                {validationMessages.status && (
+                  <span className={styles.validationMsg}>{validationMessages.status}</span>
+                )}
               </div>
 
             </div>

@@ -484,11 +484,9 @@ select.formInput:focus {
 }
 
 .validationMsg {
-  display: block;
-  margin-top: 6px;
-  font-size: 0.82rem;
-  color: #ef4444;
-  font-weight: 500;
+  font-size: 0.75rem;
+  color: red;
+  margin-top: 2px;
 }
 
 .slotDetailsInfo {

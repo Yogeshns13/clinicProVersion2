@@ -895,7 +895,7 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
           <div className={styles.modalBody}>
             <div className={styles.formGrid}>
               <div className={styles.formGroup}>
-                <label>Status *</label>
+                <label>Status <span className={styles.required}>*</span></label>
                 <select value={formData.status}
                   onChange={(e) => setFormData({...formData, status: Number(e.target.value)})}
                   className={styles.formInput} required>
@@ -905,7 +905,7 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
                 </select>
               </div>
               <div className={styles.formGroup}>
-                <label>Priority *</label>
+                <label>Priority <span className={styles.required}>*</span></label>
                 <select value={formData.priority}
                   onChange={(e) => setFormData({...formData, priority: Number(e.target.value)})}
                   className={styles.formInput} required>
@@ -923,8 +923,8 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
             </div>
           </div>
           <div className={styles.modalFooter}>
+             <button type="button" onClick={onClose} className={styles.cancelBtn}>Cancel</button>
             <button type="submit" className={styles.updateBtn}>Update Order</button>
-            <button type="button" onClick={onClose} className={styles.cancelBtn}>Cancel</button>
           </div>
         </form>
       </div>
@@ -1000,7 +1000,7 @@ const MakeInvoiceModal = ({ order, onClose, onSubmit }) => {
             </div>
             <div className={styles.invoiceFormGrid}>
               <div className={styles.formGroup}>
-                <label>Invoice Date *</label>
+                <label>Invoice Date <span className={styles.required}>*</span></label>
                 <input type="date" value={formData.invoiceDate}
                   onChange={(e) => setFormData({...formData, invoiceDate: e.target.value})}
                   className={styles.formInput} required />

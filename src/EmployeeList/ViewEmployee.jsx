@@ -33,64 +33,95 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import styles from './ViewEmployee.module.css';
 
 // ────────────────────────────────────────────────
-// VALIDATION
+// VALIDATION — mirrors AddEmployee rules exactly
 // ────────────────────────────────────────────────
+const NAME_REGEX       = /^[A-Za-z\s\.\-']+$/;
+const MOBILE_REGEX     = /^[6-9]\d{9}$/;
+const IFSC_REGEX       = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+const ACCOUNT_NO_REGEX = /^\d{9,18}$/;
+
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
+
+    // ── Step 1 : Employee fields ──
     case 'employeeCode':
-      if (!value || !value.trim()) return 'Employee code is required';
-      if (value.trim().length < 3) return 'Employee code must be at least 3 characters';
-      if (value.trim().length > 20) return 'Employee code must not exceed 20 characters';
-      return '';
-    case 'firstName':
-    case 'lastName':
-      if (!value || !value.trim()) return `${fieldName === 'firstName' ? 'First' : 'Last'} name is required`;
-      if (value.trim().length < 2) return `${fieldName === 'firstName' ? 'First' : 'Last'} name must be at least 2 characters`;
-      if (value.trim().length > 50) return `${fieldName === 'firstName' ? 'First' : 'Last'} name must not exceed 50 characters`;
-      return '';
-    case 'mobile':
-      if (!value || !value.trim()) return 'Mobile number is required';
-      if (value.trim().length < 10) return 'Mobile number must be 10 digits';
-      if (value.trim().length === 10 && !/^[6-9]\d{9}$/.test(value.trim())) return 'Mobile number must start with 6-9';
-      if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
-      return '';
-    case 'altMobile':
       if (value && value.trim()) {
-        if (value.trim().length < 10) return 'Mobile number must be 10 digits';
-        if (value.trim().length === 10 && !/^[6-9]\d{9}$/.test(value.trim())) return 'Mobile number must start with 6-9';
-        if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
+        if (value.trim().length > 20) return 'EmployeeCode cannot exceed 20 characters';
+        if (!/^[A-Za-z0-9\-_]+$/.test(value.trim())) return 'EmployeeCode contains invalid characters';
       }
       return '';
-    case 'email':
-      if (value && value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) return 'Please enter a valid email address';
+
+    case 'firstName':
+      if (!value || !value.trim()) return 'FirstName is required';
+      if (value.trim().length > 50) return 'FirstName too long';
+      if (!NAME_REGEX.test(value.trim())) return 'FirstName contains invalid characters';
       return '';
+
+    case 'lastName':
+      if (!value || !value.trim()) return 'LastName is required';
+      if (value.trim().length > 50) return 'LastName too long';
+      if (!NAME_REGEX.test(value.trim())) return 'LastName contains invalid characters';
+      return '';
+
+    case 'department':
+      if (!value || !value.trim()) return 'Department is required';
+      return '';
+
+    case 'designation':
+      if (!value || !value.trim()) return 'Designation is required';
+      return '';
+
+    case 'gender':
+      if (!value || Number(value) < 1) return 'Gender is required';
+      return '';
+
     case 'birthDate':
-      if (value) {
-        const birth = new Date(value);
-        const today = new Date();
-        const age = today.getFullYear() - birth.getFullYear();
-        const monthDiff = today.getMonth() - birth.getMonth();
-        const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate()) ? age - 1 : age;
-        if (actualAge < 18) return 'Employee must be at least 18 years old';
-        if (actualAge > 100) return 'Please enter a valid birth date';
-      }
+      if (!value) return 'BirthDate is required';
+      if (isNaN(new Date(value).getTime())) return 'BirthDate must be a valid date (YYYY-MM-DD)';
       return '';
+
+    case 'address':
+      if (!value || !value.trim()) return 'Address is required';
+      if (value.length > 1000) return 'Address too long';
+      return '';
+
+    case 'mobile':
+      if (!value || !value.trim()) return 'Mobile is required';
+      if (value.trim().length < 10 || value.trim().length > 10) return 'Mobile length should be 10';
+      if (!MOBILE_REGEX.test(value.trim())) return 'Invalid mobile number';
+      return '';
+
+    case 'altMobile':
+      if (!value || !value.trim()) return 'Alternate Mobile is required';
+      if (value.trim().length < 10 || value.trim().length > 10) return 'AltMobile length should be 10';
+      if (!MOBILE_REGEX.test(value.trim())) return 'Invalid alternate mobile number';
+      return '';
+
+    case 'email':
+      if (value && value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()))
+        return 'Invalid email format';
+      return '';
+
+    case 'qualification':
+    case 'specialization':
+      return value && value.length > 100 ? 'Field must not exceed 100 characters' : '';
+
+    case 'universityName':
+      if (value && value.trim() && value.trim().length < 3) return 'University name must be at least 3 characters';
+      if (value && value.length > 100) return 'University name must not exceed 100 characters';
+      return '';
+
+    case 'licenseNo': case 'pfNo': case 'esiNo':
+      return value && value.length > 50 ? 'Field must not exceed 50 characters' : '';
+
     case 'licenseExpiryDate':
-    case 'expiryDate':
       if (value) {
         const expiry = new Date(value);
         const today = new Date(); today.setHours(0, 0, 0, 0);
         if (expiry < today) return 'Expiry date must be in the future';
       }
       return '';
-    case 'address': return value && value.length > 500 ? 'Address must not exceed 500 characters' : '';
-    case 'qualification':
-    case 'specialization': return value && value.length > 100 ? 'Field must not exceed 100 characters' : '';
-    case 'universityName':
-      if (value && value.trim() && value.trim().length < 3) return 'University name must be at least 3 characters';
-      if (value && value.length > 100) return 'University name must not exceed 100 characters';
-      return '';
-    case 'licenseNo': case 'pfNo': case 'esiNo': return value && value.length > 50 ? 'Field must not exceed 50 characters' : '';
+
     case 'experienceYears':
       if (value !== '' && value !== null && value !== undefined) {
         const y = Number(value);
@@ -99,31 +130,54 @@ const getLiveValidationMessage = (fieldName, value) => {
         if (y > 50) return 'Experience cannot exceed 50 years';
       }
       return '';
-    case 'detail': return value && value.length > 100 ? 'Field must not exceed 100 characters' : '';
+
+    // ── Step 2 : Proof fields ──
+    case 'proofType':
+      if (!value || Number(value) < 1) return 'ProofType is required';
+      return '';
+
+    case 'idNumber':
+      if (!value || !value.trim()) return 'IdNumber is required';
+      if (value.trim().length > 20) return 'IdNumber cannot exceed 20 characters';
+      if (!/^[ A-Za-z0-9\/\-]+$/.test(value.trim())) return 'Invalid characters in IdNumber';
+      return '';
+
+    case 'detail':
+      if (value && value.length > 500) return 'Detail too long';
+      return '';
+
+    case 'expiryDate':
+      if (value && isNaN(new Date(value).getTime())) return 'ExpiryDate must be valid date';
+      return '';
+
+    // ── Step 3 : Beneficiary fields ──
     case 'AccountHolderName':
-      if (!value || !value.trim()) return 'Account holder name is required';
-      if (value.trim().length < 3) return 'Name must be at least 3 characters';
-      if (value.trim().length > 100) return 'Name must not exceed 100 characters';
+      if (!value || !value.trim()) return 'AccountHolderName is required';
+      if (value.trim().length > 100) return 'AccountHolderName too long';
+      if (!/^[A-Za-z\s\.\-']+$/.test(value.trim())) return 'Invalid characters in AccountHolderName';
       return '';
+
     case 'AccountNo':
-      if (!value || !value.trim()) return 'Account number is required';
-      if (!/^\d+$/.test(value.trim())) return 'Account number must contain only digits';
-      if (value.trim().length < 9) return 'Account number must be at least 9 digits';
+      if (!value || !value.trim()) return 'AccountNo is required';
+      if (!ACCOUNT_NO_REGEX.test(value.trim())) return 'AccountNo must be 9–18 digits';
       return '';
-    case 'IFSCCode': {
-      if (!value || !value.trim()) return 'IFSC code is required';
-      const v = value.trim();
-      if (v.length > 0 && v.length <= 4 && !/^[A-Z]+$/.test(v)) return 'First 4 characters must be letters only';
-      if (v.length === 5 && !/^[A-Z]{4}0$/.test(v)) return '5th character must be 0';
-      if (v.length > 5 && !/^[A-Z]{4}0\d*$/.test(v)) return 'After 5th character, only numbers allowed';
-      if (v.length < 11) return 'IFSC code must be 11 characters';
-      if (v.length === 11 && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(v)) return 'Invalid IFSC format (e.g., HDFC0000269)';
-      if (v.length > 11) return 'IFSC code must be exactly 11 characters';
+
+    case 'BankName':
+      if (!value || !value.trim()) return 'BankName is required';
+      if (value.trim().length > 100) return 'BankName too long';
       return '';
-    }
-    case 'BankName': return value && value.length > 100 ? 'Bank name must not exceed 100 characters' : '';
-    case 'BankAddress': return value && value.length > 500 ? 'Bank address must not exceed 500 characters' : '';
-    default: return '';
+
+    case 'IFSCCode':
+      if (value && value.trim() && !IFSC_REGEX.test(value.trim()))
+        return 'Invalid IFSC code format (e.g., SBIN0001234)';
+      return '';
+
+    case 'BankAddress':
+      if (value && value.length > 500) return 'BankAddress too long';
+      return '';
+
+    default:
+      return '';
   }
 };
 
@@ -144,7 +198,7 @@ const filterInput = (fieldName, value) => {
     case 'idNumber':
       return value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
     case 'IFSCCode':
-      return value.replace(/[^A-Z0-9]/g, '').toUpperCase();
+      return value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
     case 'experienceYears':
       return value.replace(/[^0-9]/g, '');
     default:
@@ -838,6 +892,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     setError(null);
   };
 
+  // ── Inline validation message component ──
   const ValidationMsg = ({ field, msgs }) =>
     msgs[field] ? <span className={styles.validationMsg}>{msgs[field]}</span> : null;
 
@@ -991,33 +1046,40 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                 <div className={styles.formSection}>
                   <div className={styles.formSectionHeader}><h3><FiUser size={15} /> Personal Information</h3></div>
                   <div className={styles.formGrid}>
+
                     <div className={styles.formGroup}>
-                      <label>Employee Code <span className={styles.required}>*</span></label>
-                      <input required name="employeeCode" value={formData.employeeCode} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
+                      <label>Employee Code</label>
+                      <input name="employeeCode" value={formData.employeeCode} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
                       <ValidationMsg field="employeeCode" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
                       <label>First Name <span className={styles.required}>*</span></label>
                       <input required name="firstName" value={formData.firstName} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
                       <ValidationMsg field="firstName" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
                       <label>Last Name <span className={styles.required}>*</span></label>
                       <input required name="lastName" value={formData.lastName} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
                       <ValidationMsg field="lastName" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
-                      <label>Gender</label>
-                      <select name="gender" value={formData.gender} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''}>
+                      <label>Gender <span className={styles.required}>*</span></label>
+                      <select required name="gender" value={formData.gender} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''}>
                         <option value={0}>Select Gender</option>
                         {GENDER_OPTIONS.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
                       </select>
+                      <ValidationMsg field="gender" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
-                      <label>Birth Date</label>
-                      <input type="date" name="birthDate" value={formData.birthDate} onChange={handleInputChange} max={getMaxBirthDate()} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
+                      <label>Birth Date <span className={styles.required}>*</span></label>
+                      <input required type="date" name="birthDate" value={formData.birthDate} onChange={handleInputChange} max={getMaxBirthDate()} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
                       <ValidationMsg field="birthDate" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
                       <label>Blood Group</label>
                       <select name="bloodGroup" value={formData.bloodGroup} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''}>
@@ -1025,6 +1087,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                         {BLOOD_GROUP_OPTIONS.map(bg => <option key={bg.id} value={bg.id}>{bg.label}</option>)}
                       </select>
                     </div>
+
                     <div className={styles.formGroup}>
                       <label>Marital Status</label>
                       <select name="maritalStatus" value={formData.maritalStatus} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''}>
@@ -1032,6 +1095,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                         {MARITAL_STATUS_OPTIONS.map(ms => <option key={ms.id} value={ms.id}>{ms.label}</option>)}
                       </select>
                     </div>
+
                   </div>
                 </div>
 
@@ -1039,26 +1103,31 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                 <div className={styles.formSection}>
                   <div className={styles.formSectionHeader}><h3>📞 Contact Information</h3></div>
                   <div className={styles.formGrid}>
+
                     <div className={`${styles.formGroup} ${styles.colSpan2}`}>
-                      <label>Address</label>
-                      <textarea name="address" rows={2} value={formData.address} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
+                      <label>Address <span className={styles.required}>*</span></label>
+                      <textarea required name="address" rows={2} value={formData.address} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
                       <ValidationMsg field="address" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
                       <label>Mobile <span className={styles.required}>*</span></label>
                       <input required name="mobile" value={formData.mobile} onChange={handleInputChange} maxLength="10" disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
                       <ValidationMsg field="mobile" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
-                      <label>Alternate Mobile</label>
-                      <input name="altMobile" value={formData.altMobile} onChange={handleInputChange} maxLength="10" disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
+                      <label>Alternate Mobile <span className={styles.required}>*</span></label>
+                      <input required name="altMobile" value={formData.altMobile} onChange={handleInputChange} maxLength="10" disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
                       <ValidationMsg field="altMobile" msgs={validationMessages} />
                     </div>
+
                     <div className={`${styles.formGroup} ${styles.colSpan2}`}>
-                      <label>Email</label>
-                      <input type="email" name="email" value={formData.email} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
+                      <label>Email <span className={styles.required}>*</span></label>
+                      <input required type="email" name="email" value={formData.email} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
                       <ValidationMsg field="email" msgs={validationMessages} />
                     </div>
+
                   </div>
                 </div>
 
@@ -1066,52 +1135,73 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                 <div className={styles.formSection}>
                   <div className={styles.formSectionHeader}><h3>🏥 Professional Information</h3></div>
                   <div className={styles.formGrid}>
+
                     <div className={styles.formGroup}>
                       <label>Department <span className={styles.required}>*</span></label>
                       <select required name="departmentId" value={formData.departmentId} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''}>
                         <option value={0}>Select Department</option>
                         {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                       </select>
+                      <ValidationMsg field="department" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
                       <label>Designation <span className={styles.required}>*</span></label>
                       <select required name="designation" value={formData.designation} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''}>
                         <option value={0}>Select Designation</option>
                         {DESIGNATION_OPTIONS.map(d => <option key={d.id} value={d.id}>{d.label}</option>)}
                       </select>
+                      <ValidationMsg field="designation" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
                       <label>Qualification</label>
                       <input name="qualification" value={formData.qualification} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
+                      <ValidationMsg field="qualification" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
                       <label>Specialization</label>
                       <input name="specialization" value={formData.specialization} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
+                      <ValidationMsg field="specialization" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
                       <label>License Number</label>
                       <input name="licenseNo" value={formData.licenseNo} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
+                      <ValidationMsg field="licenseNo" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
                       <label>License Expiry</label>
                       <input type="date" name="licenseExpiryDate" value={formData.licenseExpiryDate} onChange={handleInputChange} min={getTodayDate()} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
+                      <ValidationMsg field="licenseExpiryDate" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
                       <label>Experience (Years)</label>
                       <input type="number" name="experienceYears" value={formData.experienceYears} onChange={handleInputChange} min="0" disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
+                      <ValidationMsg field="experienceYears" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
                       <label>University Name</label>
                       <input name="universityName" value={formData.universityName} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
+                      <ValidationMsg field="universityName" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
                       <label>PF Number</label>
                       <input name="pfNo" value={formData.pfNo} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
+                      <ValidationMsg field="pfNo" msgs={validationMessages} />
                     </div>
+
                     <div className={styles.formGroup}>
                       <label>ESI Number</label>
                       <input name="esiNo" value={formData.esiNo} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''} />
+                      <ValidationMsg field="esiNo" msgs={validationMessages} />
                     </div>
+
                   </div>
                 </div>
               </div>
@@ -1195,27 +1285,34 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                         </div>
                       )}
                       <div className={styles.formGrid}>
+
                         <div className={styles.formGroup}>
                           <label>Proof Type <span className={styles.required}>*</span></label>
                           <select required name="proofType" value={proof.proofType} onChange={(e) => handleProofInputChange(index, e)} disabled={!editMode.proof || loading} className={!editMode.proof ? styles.inputReadOnly : ''}>
                             <option value={0}>Select Proof Type</option>
                             {ID_PROOF_OPTIONS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                           </select>
+                          <ValidationMsg field="proofType" msgs={proofValidationMessages[index] || {}} />
                         </div>
+
                         <div className={styles.formGroup}>
                           <label>ID Number <span className={styles.required}>*</span></label>
                           <input required name="idNumber" value={proof.idNumber} onChange={(e) => handleProofInputChange(index, e)} disabled={!editMode.proof || loading} className={!editMode.proof ? styles.inputReadOnly : ''} />
+                          <ValidationMsg field="idNumber" msgs={proofValidationMessages[index] || {}} />
                         </div>
+
                         <div className={styles.formGroup}>
                           <label>Detail</label>
                           <input name="detail" value={proof.detail} onChange={(e) => handleProofInputChange(index, e)} disabled={!editMode.proof || loading} className={!editMode.proof ? styles.inputReadOnly : ''} />
                           <ValidationMsg field="detail" msgs={proofValidationMessages[index] || {}} />
                         </div>
+
                         <div className={styles.formGroup}>
-                          <label>Expiry Date</label>
-                          <input type="date" name="expiryDate" value={proof.expiryDate} onChange={(e) => handleProofInputChange(index, e)} min={getTodayDate()} disabled={!editMode.proof || loading} className={!editMode.proof ? styles.inputReadOnly : ''} />
+                          <label>Expiry Date <span className={styles.required}>*</span></label>
+                          <input required type="date" name="expiryDate" value={proof.expiryDate} onChange={(e) => handleProofInputChange(index, e)} min={getTodayDate()} disabled={!editMode.proof || loading} className={!editMode.proof ? styles.inputReadOnly : ''} />
                           <ValidationMsg field="expiryDate" msgs={proofValidationMessages[index] || {}} />
                         </div>
+
                       </div>
                     </div>
                   ))}
@@ -1254,29 +1351,37 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                         {editMode.bank && beneficiaryList.length > 1 && <button type="button" className={styles.btnRemoveProof} onClick={() => handleRemoveBeneficiary(index)} disabled={loading}><FiTrash2 size={14} /></button>}
                       </div>
                       <div className={styles.formGrid}>
+
                         <div className={styles.formGroup}>
                           <label>Account Holder Name <span className={styles.required}>*</span></label>
                           <input required name="AccountHolderName" value={b.AccountHolderName} onChange={(e) => handleBeneficiaryInputChange(index, e)} disabled={!editMode.bank || loading} className={!editMode.bank ? styles.inputReadOnly : ''} />
                           <ValidationMsg field="AccountHolderName" msgs={beneficiaryValidationMessages[index] || {}} />
                         </div>
+
                         <div className={styles.formGroup}>
                           <label>Account Number <span className={styles.required}>*</span></label>
                           <input required name="AccountNo" value={b.AccountNo} onChange={(e) => handleBeneficiaryInputChange(index, e)} disabled={!editMode.bank || loading} className={!editMode.bank ? styles.inputReadOnly : ''} />
                           <ValidationMsg field="AccountNo" msgs={beneficiaryValidationMessages[index] || {}} />
                         </div>
+
                         <div className={styles.formGroup}>
                           <label>IFSC Code <span className={styles.required}>*</span></label>
                           <input required name="IFSCCode" value={b.IFSCCode} onChange={(e) => handleBeneficiaryInputChange(index, e)} maxLength="11" disabled={!editMode.bank || loading} className={!editMode.bank ? styles.inputReadOnly : ''} />
                           <ValidationMsg field="IFSCCode" msgs={beneficiaryValidationMessages[index] || {}} />
                         </div>
+
                         <div className={styles.formGroup}>
-                          <label>Bank Name</label>
-                          <input name="BankName" value={b.BankName} onChange={(e) => handleBeneficiaryInputChange(index, e)} disabled={!editMode.bank || loading} className={!editMode.bank ? styles.inputReadOnly : ''} />
+                          <label>Bank Name <span className={styles.required}>*</span></label>
+                          <input required name="BankName" value={b.BankName} onChange={(e) => handleBeneficiaryInputChange(index, e)} disabled={!editMode.bank || loading} className={!editMode.bank ? styles.inputReadOnly : ''} />
+                          <ValidationMsg field="BankName" msgs={beneficiaryValidationMessages[index] || {}} />
                         </div>
+
                         <div className={`${styles.formGroup} ${styles.colSpan2}`}>
                           <label>Bank Address</label>
                           <textarea name="BankAddress" rows={2} value={b.BankAddress} onChange={(e) => handleBeneficiaryInputChange(index, e)} disabled={!editMode.bank || loading} className={!editMode.bank ? styles.inputReadOnly : ''} />
+                          <ValidationMsg field="BankAddress" msgs={beneficiaryValidationMessages[index] || {}} />
                         </div>
+
                         {editMode.bank && (
                           <div className={`${styles.formGroup} ${styles.colSpan2}`}>
                             <label className={styles.checkboxLabel}>
@@ -1285,6 +1390,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                             </label>
                           </div>
                         )}
+
                       </div>
                     </div>
                   ))}

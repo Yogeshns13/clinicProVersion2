@@ -12,63 +12,46 @@ import ErrorHandler from '../hooks/Errorhandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './ConsultationChargeConfig.module.css';
 
+const codeRegex = /^[A-Za-z0-9\-_]+$/;
+
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
     case 'chargeCode':
-      if (!value || !value.trim()) return 'Charge code is required';
-      if (/[a-z]/.test(value)) return 'Charge code cannot contain lowercase letters';
-      if (/[^A-Z0-9]/.test(value)) return 'Charge code can only contain uppercase letters and numbers';
-      if (value.trim().length < 3) return 'Charge code must be at least 3 characters';
-      if (value.trim().length > 20) return 'Charge code must not exceed 20 characters';
+      if (!value || !value.trim()) return 'ChargeCode is required';
+      if (!codeRegex.test(value.trim())) return 'ChargeCode can only contain letters, numbers, hyphen and underscore';
+      if (value.trim().length > 20) return 'ChargeCode cannot exceed 20 characters';
       return '';
 
     case 'chargeName':
-      if (!value || !value.trim()) return 'Charge name is required';
-      if (/[0-9]/.test(value)) return 'Charge name cannot contain numbers';
-      if (/[^a-zA-Z\s]/.test(value)) return 'Charge name can only contain letters and spaces';
-      if (value.trim().length < 2) return 'Charge name must be at least 2 characters';
-      if (value.trim().length > 100) return 'Charge name must not exceed 100 characters';
+      if (!value || !value.trim()) return 'ChargeName is required';
+      if (value.trim().length < 1 || value.trim().length > 100) return 'ChargeName must be between 1 and 100 characters';
       return '';
 
-    case 'gstNo':
-      if (!value || value === '') return '';
-      const len = value.length;
-      if (len >= 1 && !/^[0-9]$/.test(value[0])) return 'Char 1: Must be digit (State Code)';
-      if (len >= 2 && !/^[0-9]$/.test(value[1])) return 'Char 2: Must be digit (State Code)';
-      if (len >= 3 && !/^[A-Z]$/.test(value[2])) return 'Char 3: Must be uppercase letter (PAN letter 1/5)';
-      if (len >= 4 && !/^[A-Z]$/.test(value[3])) return 'Char 4: Must be uppercase letter (PAN letter 2/5)';
-      if (len >= 5 && !/^[A-Z]$/.test(value[4])) return 'Char 5: Must be uppercase letter (PAN letter 3/5)';
-      if (len >= 6 && !/^[A-Z]$/.test(value[5])) return 'Char 6: Must be uppercase letter (PAN letter 4/5)';
-      if (len >= 7 && !/^[A-Z]$/.test(value[6])) return 'Char 7: Must be uppercase letter (PAN letter 5/5)';
-      if (len >= 8 && !/^[0-9]$/.test(value[7])) return 'Char 8: Must be digit (PAN number 1/4)';
-      if (len >= 9 && !/^[0-9]$/.test(value[8])) return 'Char 9: Must be digit (PAN number 2/4)';
-      if (len >= 10 && !/^[0-9]$/.test(value[9])) return 'Char 10: Must be digit (PAN number 3/4)';
-      if (len >= 11 && !/^[0-9]$/.test(value[10])) return 'Char 11: Must be digit (PAN number 4/4)';
-      if (len >= 12 && !/^[A-Z]$/.test(value[11])) return 'Char 12: Must be uppercase letter (PAN last letter)';
-      if (len >= 13 && !/^[1-9A-Z]$/.test(value[12])) return 'Char 13: Must be 1-9 or A-Z (Entity number, not 0)';
-      if (len >= 14 && value[13] !== 'Z') return 'Char 14: Must be Z (fixed)';
-      if (len >= 15 && !/^[0-9A-Z]$/.test(value[14])) return 'Char 15: Must be digit or uppercase letter (Checksum)';
-      if (len < 15) return `${len}/15 characters entered`;
-      if (len === 15) return 'Valid GST format (29ABCDE1234F1Z5)';
+    case 'defaultAmount': {
+      if (!value || value === '') return 'DefaultAmount is required';
+      const decimalRegex = /^\d+(\.\d{1,2})?$/;
+      if (!decimalRegex.test(value)) return 'DefaultAmount must be a valid decimal with up to 2 places';
+      if (parseFloat(value) <= 0) return 'DefaultAmount must be greater than 0';
       return '';
+    }
 
-    case 'defaultAmount':
-      if (!value || value === '') return 'Default amount is required';
-      const amount = Number(value);
-      if (isNaN(amount)) return 'Must be a valid number';
-      if (amount < 0) return 'Amount cannot be negative';
-      if (amount === 0) return 'Amount must be greater than zero';
-      if (amount > 1000000) return 'Amount cannot exceed ₹10,00,000';
-      return '';
-
-    case 'cgstPercentage':
-    case 'sgstPercentage':
+    case 'cgstPercentage': {
       if (value === '' || value === null || value === undefined) return '';
-      const percentage = Number(value);
-      if (isNaN(percentage)) return 'Must be a valid number';
-      if (percentage < 0) return 'Percentage cannot be negative';
-      if (percentage > 100) return 'Percentage cannot exceed 100%';
+      const decimalRegex = /^\d+(\.\d{1,2})?$/;
+      if (!decimalRegex.test(value)) return 'CGSTPercentage must be valid (e.g., 9.00)';
+      const pct = parseFloat(value);
+      if (pct < 0 || pct > 100) return 'CGSTPercentage must be between 0 and 100';
       return '';
+    }
+
+    case 'sgstPercentage': {
+      if (value === '' || value === null || value === undefined) return '';
+      const decimalRegex = /^\d+(\.\d{1,2})?$/;
+      if (!decimalRegex.test(value)) return 'SGSTPercentage must be valid (e.g., 9.00)';
+      const pct = parseFloat(value);
+      if (pct < 0 || pct > 100) return 'SGSTPercentage must be between 0 and 100';
+      return '';
+    }
 
     default:
       return '';
@@ -78,12 +61,11 @@ const getLiveValidationMessage = (fieldName, value) => {
 const filterInput = (fieldName, value) => {
   switch (fieldName) {
     case 'chargeCode':
-      return value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      return value.replace(/[^A-Za-z0-9\-_]/g, '');
     case 'chargeName':
-      return value.replace(/[^a-zA-Z\s]/g, '');
+      return value;
     case 'gstNo':
-      const filtered = value.replace(/[^A-Z0-9]/g, '');
-      return filtered.substring(0, 15), value.toUpperCase();
+      return value.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 15);
     case 'defaultAmount':
     case 'cgstPercentage':
     case 'sgstPercentage':
@@ -273,18 +255,31 @@ const ConsultationChargeConfig = () => {
     setValidationMessages(prev => ({ ...prev, [name]: validationMessage }));
   };
 
-  const validateForm = () => {
-    if (!formData.chargeCode.trim()) { setFormError('Charge Code is required'); return false; }
-    if (!formData.chargeName.trim()) { setFormError('Charge Name is required'); return false; }
-    if (!formData.defaultAmount || isNaN(formData.defaultAmount) || Number(formData.defaultAmount) < 0) {
-      setFormError('Valid Default Amount is required'); return false;
-    }
-    return true;
+  // ── Validate all fields at once and populate messages ──
+  const validateAllFields = () => {
+    const fieldsToValidate = ['chargeCode', 'chargeName', 'defaultAmount', 'cgstPercentage', 'sgstPercentage'];
+    const messages = {};
+    fieldsToValidate.forEach(field => {
+      messages[field] = getLiveValidationMessage(field, formData[field]);
+    });
+    setValidationMessages(messages);
+    return Object.values(messages).every(msg => !msg);
   };
+
+  // ── Submit button disabled state ──
+  const hasValidationErrors = Object.values(validationMessages).some(msg => msg && msg !== '');
+  const requiredFieldsFilled =
+    formData.chargeCode.trim() !== '' &&
+    formData.chargeName.trim() !== '' &&
+    formData.defaultAmount !== '';
+  const isSubmitDisabled = formLoading || hasValidationErrors || !requiredFieldsFilled;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+
+    // Run full validation before submit
+    const isValid = validateAllFields();
+    if (!isValid) return;
 
     try {
       setFormLoading(true);
@@ -313,7 +308,7 @@ const ConsultationChargeConfig = () => {
         fetchChargeConfigs();
       }, 1500);
     } catch (err) {
-      setFormError(err.message || 'Failed to save charge configuration');
+      setFormError(err.message?.split(':')[1]?.trim() || 'Failed to save charge configuration');
     } finally {
       setFormLoading(false);
     }
@@ -607,6 +602,8 @@ const ConsultationChargeConfig = () => {
                 {formError && <div className={styles.formError}>{formError}</div>}
                 {formSuccess && <div className={styles.formSuccess}>{formSuccess}</div>}
                 <div className={styles.formGrid}>
+
+                  {/* Charge Code — Required */}
                   <div className={styles.formGroup}>
                     <label>Charge Code <span className={styles.required}>*</span></label>
                     <input
@@ -614,7 +611,7 @@ const ConsultationChargeConfig = () => {
                       name="chargeCode"
                       value={formData.chargeCode}
                       onChange={handleInputChange}
-                      placeholder="CONS001"
+                      placeholder="CONS-001"
                       disabled={formLoading}
                       maxLength="20"
                       required
@@ -623,6 +620,8 @@ const ConsultationChargeConfig = () => {
                       <span className={styles.validationMsg}>{validationMessages.chargeCode}</span>
                     )}
                   </div>
+
+                  {/* Charge Name — Required */}
                   <div className={styles.formGroup}>
                     <label>Charge Name <span className={styles.required}>*</span></label>
                     <input
@@ -639,6 +638,8 @@ const ConsultationChargeConfig = () => {
                       <span className={styles.validationMsg}>{validationMessages.chargeName}</span>
                     )}
                   </div>
+
+                  {/* Default Amount — Required */}
                   <div className={styles.formGroup}>
                     <label>Default Amount (₹) <span className={styles.required}>*</span></label>
                     <input
@@ -654,6 +655,8 @@ const ConsultationChargeConfig = () => {
                       <span className={styles.validationMsg}>{validationMessages.defaultAmount}</span>
                     )}
                   </div>
+
+                  {/* GST Number — Optional (no backend validation) */}
                   <div className={styles.formGroup}>
                     <label>GST Number</label>
                     <input
@@ -665,11 +668,10 @@ const ConsultationChargeConfig = () => {
                       disabled={formLoading}
                       maxLength="15"
                     />
-                    {validationMessages.gstNo && (
-                      <span className={styles.validationMsg}>{validationMessages.gstNo}</span>
-                    )}
                     <span className={styles.inputHint}>Format: 29ABCDE1234F1Z5 (15 characters)</span>
                   </div>
+
+                  {/* CGST Percentage — Optional */}
                   <div className={styles.formGroup}>
                     <label>CGST Percentage (%)</label>
                     <input
@@ -677,13 +679,15 @@ const ConsultationChargeConfig = () => {
                       name="cgstPercentage"
                       value={formData.cgstPercentage}
                       onChange={handleInputChange}
-                      placeholder="9"
+                      placeholder="9.00"
                       disabled={formLoading}
                     />
                     {validationMessages.cgstPercentage && (
                       <span className={styles.validationMsg}>{validationMessages.cgstPercentage}</span>
                     )}
                   </div>
+
+                  {/* SGST Percentage — Optional */}
                   <div className={styles.formGroup}>
                     <label>SGST Percentage (%)</label>
                     <input
@@ -691,13 +695,14 @@ const ConsultationChargeConfig = () => {
                       name="sgstPercentage"
                       value={formData.sgstPercentage}
                       onChange={handleInputChange}
-                      placeholder="9"
+                      placeholder="9.00"
                       disabled={formLoading}
                     />
                     {validationMessages.sgstPercentage && (
                       <span className={styles.validationMsg}>{validationMessages.sgstPercentage}</span>
                     )}
                   </div>
+
                 </div>
               </div>
               <div className={styles.chargeConfigModalFooter}>
@@ -712,7 +717,7 @@ const ConsultationChargeConfig = () => {
                 <button
                   type="submit"
                   className={styles.btnSubmit}
-                  disabled={formLoading}
+                  disabled={isSubmitDisabled}
                 >
                   {formLoading ? 'Saving...' : isEditMode ? 'Update' : 'Add'}
                 </button>

@@ -65,8 +65,16 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
 
     case 'Fees':
-    case 'fees':
       if (value === '' || value === null || value === undefined) return '';
+      const testFee = Number(value);
+      if (isNaN(testFee)) return 'Must be a valid number';
+      if (testFee < 0) return 'Fees cannot be negative';
+      if (testFee > 1000000) return 'Fees cannot exceed ₹10,00,000';
+      return '';
+
+    // ── fees (package) — required ──────────────────────────────────────────
+    case 'fees':
+      if (value === '' || value === null || value === undefined) return 'Fees is required';
       const fee = Number(value);
       if (isNaN(fee)) return 'Must be a valid number';
       if (fee < 0) return 'Fees cannot be negative';
@@ -653,6 +661,14 @@ const LabMasterList = () => {
 
   const handlePackageSubmit = async (e) => {
     e.preventDefault();
+
+    // ── Validate fees before submitting ──────────────────────────────────────
+    const feesMsg = getLiveValidationMessage('fees', packageFormData.fees);
+    if (feesMsg) {
+      setPackageValidationMessages((prev) => ({ ...prev, fees: feesMsg }));
+      return;
+    }
+
     setFormLoading(true);
     setFormError('');
     setFormSuccess(false);
@@ -668,7 +684,7 @@ const LabMasterList = () => {
         packName: packageFormData.packName.trim(),
         packShortName: packageFormData.packShortName.trim(),
         description: packageFormData.description.trim(),
-        fees: Number(packageFormData.fees) || 0,
+        fees: Number(packageFormData.fees),
         cgstPercentage: Number(packageFormData.cgstPercentage) || 9,
         sgstPercentage: Number(packageFormData.sgstPercentage) || 9,
       });
@@ -1372,8 +1388,8 @@ const LabMasterList = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Fees (₹)</label>
-                  <input type="text" name="fees" value={packageFormData.fees} onChange={handlePackageInputChange} placeholder="0.00" />
+                  <label>Fees (₹) <span className={styles.required}>*</span></label>
+                  <input required type="text" name="fees" value={packageFormData.fees} onChange={handlePackageInputChange} placeholder="0.00" />
                   {packageValidationMessages.fees && (
                     <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{packageValidationMessages.fees}</span>
                   )}

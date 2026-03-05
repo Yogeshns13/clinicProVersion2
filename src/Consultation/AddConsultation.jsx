@@ -1458,7 +1458,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                           min={today()}
                         />
                       </div>
-
+                      
                       {consultDataChanged && (
                         <div className="consult-update-bar">
                           <span className="consult-update-bar__hint">

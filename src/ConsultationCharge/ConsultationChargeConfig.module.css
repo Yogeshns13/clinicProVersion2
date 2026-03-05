@@ -674,10 +674,9 @@
 }
 
 .validationMsg {
-  color: #6b7280;
   font-size: 0.75rem;
-  margin-top: 4px;
-  display: block;
+  color: red;
+  margin-top: 2px;
 }
 
 .inputHint {

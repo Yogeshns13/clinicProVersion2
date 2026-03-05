@@ -9,42 +9,55 @@ const DURATION_OPTIONS = [
   { id: 3, label: 'Specific Day', createDays: 1 },
 ];
 
+// ── Validation messages match backend slotConfigValidator word-for-word ────────
 const getLiveValidationMessage = (fieldName, value, formData = {}) => {
   switch (fieldName) {
+
+    // DoctorID — required, isInt min:1
     case 'doctorId':
-      if (!value) return 'Please select a doctor';
+      if (!value) return 'Doctor is required';
+      if (isNaN(Number(value)) || Number(value) < 1) return 'DoctorID must be valid';
       return '';
 
+    // ShiftID — required, isInt min:1
     case 'shiftId':
-      if (!value) return 'Please select a shift';
+      if (!value) return 'ShiftID is required';
+      if (isNaN(Number(value)) || Number(value) < 1) return 'ShiftID must be valid';
       return '';
 
+    // Duration — required, isIn([1,2,3])
     case 'duration':
-      if (!value) return 'Please select duration type';
+      if (!value) return 'Duration is required';
+      if (![1, 2, 3].includes(Number(value))) return 'Duration must be 1=Daily, 2=Weekend, 3=Specific Date';
       return '';
 
+    // SlotDate — required only when Duration === 3, isDate YYYY-MM-DD
     case 'slotDate':
       if (Number(formData.duration) === 3 && !value) {
-        return 'Please select a specific date';
+        return 'SlotDate is required when Duration = 3 (Specific Date)';
       }
       if (value) {
         const selected = new Date(value);
+        if (isNaN(selected.getTime())) return 'Invalid SlotDate format';
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         selected.setHours(0, 0, 0, 0);
-        if (selected < today) {
-          return 'Past dates are not allowed';
-        }
+        if (selected < today) return 'Invalid SlotDate format';
       }
       return '';
 
+    // SlotInterval — required, isInt min:5 max:120
     case 'slotInterval':
-      if (!value) return 'Slot interval is required';
+      if (value === '' || value === null || value === undefined) return 'SlotInterval is required';
       const num = Number(value);
-      if (isNaN(num)) return 'Must be a number';
-      if (num < 5) return 'Minimum 5 minutes';
-      if (num > 120) return 'Maximum 120 minutes';
-      if (num % 5 !== 0) return 'Must be multiple of 5';
+      if (isNaN(num) || !Number.isInteger(num) || num < 5 || num > 120) return 'SlotInterval must be 5–120 minutes';
+      return '';
+
+    // CreateSlotDays — required, isInt min:1 max:365
+    case 'createSlotDays':
+      if (value === '' || value === null || value === undefined || value === 0) return 'CreateSlotDays is required';
+      const days = Number(value);
+      if (isNaN(days) || !Number.isInteger(days) || days < 1 || days > 365) return 'CreateSlotDays must be 1–365';
       return '';
 
     default:
@@ -57,13 +70,13 @@ const filterInput = (fieldName, value) => {
     case 'slotInterval':
       return value.replace(/[^0-9]/g, '');
     case 'slotDate':
-      return value; 
+      return value;
     default:
       return value;
   }
 };
 
-// ────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSuccess }) => {
   const [formData, setFormData] = useState({
     doctorId: '',
@@ -140,7 +153,7 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
     }));
 
     // Live validation
-    const message = getLiveValidationMessage(name, filteredValue, formData);
+    const message = getLiveValidationMessage(name, filteredValue, { ...formData, [name]: filteredValue });
     setValidationMessages(prev => ({
       ...prev,
       [name]: message
@@ -150,18 +163,25 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
     setSuccess('');
   };
 
+  // ── Validate all fields; block submit if any errors exist ─────────────────
   const validateForm = () => {
     const errors = {};
 
+    // All required fields from backend
     ['doctorId', 'shiftId', 'duration', 'slotInterval'].forEach(field => {
       const msg = getLiveValidationMessage(field, formData[field], formData);
       if (msg) errors[field] = msg;
     });
 
+    // SlotDate only required when Duration === 3
     if (Number(formData.duration) === 3) {
       const msg = getLiveValidationMessage('slotDate', formData.slotDate, formData);
       if (msg) errors.slotDate = msg;
     }
+
+    // CreateSlotDays — required in backend
+    const createDaysMsg = getLiveValidationMessage('createSlotDays', createSlotDays, formData);
+    if (createDaysMsg) errors.createSlotDays = createDaysMsg;
 
     setValidationMessages(prev => ({ ...prev, ...errors }));
     return Object.keys(errors).length === 0;
@@ -220,8 +240,8 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
       <div className={styles.clinicModal}>
         <div className={styles.clinicModalHeader}>
           <h2>Add Slot Configuration</h2>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className={styles.clinicModalClose}
             disabled={loading}
           >
@@ -235,7 +255,8 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
             {success && <div className={styles.formSuccess}>{success}</div>}
 
             <div className={styles.formGrid}>
-              {/* Doctor Selection */}
+
+              {/* Doctor Selection — required in backend */}
               <div className={styles.formGroup}>
                 <label>
                   Doctor <span className={styles.required}>*</span>
@@ -255,13 +276,11 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
                   ))}
                 </select>
                 {validationMessages.doctorId && (
-                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {validationMessages.doctorId}
-                  </span>
+                  <span className={styles.validationMsg}>{validationMessages.doctorId}</span>
                 )}
               </div>
 
-              {/* Shift Selection */}
+              {/* Shift Selection — required in backend */}
               <div className={styles.formGroup}>
                 <label>
                   Shift <span className={styles.required}>*</span>
@@ -274,10 +293,10 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
                   disabled={loading || !formData.doctorId || availableShifts.length === 0}
                 >
                   <option value="">
-                    {!formData.doctorId 
-                      ? 'Select a doctor first' 
-                      : availableShifts.length === 0 
-                        ? 'No shifts assigned to this doctor' 
+                    {!formData.doctorId
+                      ? 'Select a doctor first'
+                      : availableShifts.length === 0
+                        ? 'No shifts assigned to this doctor'
                         : 'Select Shift'}
                   </option>
                   {availableShifts.map((shift) => (
@@ -287,13 +306,11 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
                   ))}
                 </select>
                 {validationMessages.shiftId && (
-                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {validationMessages.shiftId}
-                  </span>
+                  <span className={styles.validationMsg}>{validationMessages.shiftId}</span>
                 )}
               </div>
 
-              {/* Duration Type */}
+              {/* Duration Type — required in backend, isIn([1,2,3]) */}
               <div className={styles.formGroup}>
                 <label>
                   Duration Type <span className={styles.required}>*</span>
@@ -313,13 +330,11 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
                   ))}
                 </select>
                 {validationMessages.duration && (
-                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {validationMessages.duration}
-                  </span>
+                  <span className={styles.validationMsg}>{validationMessages.duration}</span>
                 )}
               </div>
 
-              {/* Slot Interval */}
+              {/* Slot Interval — required in backend, isInt min:5 max:120 */}
               <div className={styles.formGroup}>
                 <label>
                   Slot Interval (minutes) <span className={styles.required}>*</span>
@@ -337,13 +352,11 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
                   placeholder="e.g., 15"
                 />
                 {validationMessages.slotInterval && (
-                  <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {validationMessages.slotInterval}
-                  </span>
+                  <span className={styles.validationMsg}>{validationMessages.slotInterval}</span>
                 )}
               </div>
 
-              {/* Specific Date */}
+              {/* Specific Date — required only when Duration === 3 */}
               {showDatePicker && (
                 <div className={styles.formGroup}>
                   <label>
@@ -359,14 +372,12 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
                     min={new Date().toISOString().split('T')[0]}
                   />
                   {validationMessages.slotDate && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                      {validationMessages.slotDate}
-                    </span>
+                    <span className={styles.validationMsg}>{validationMessages.slotDate}</span>
                   )}
                 </div>
               )}
 
-              {/* Read-only days display */}
+              {/* CreateSlotDays — required in backend, auto-calculated, read-only */}
               <div className={styles.formGroup}>
                 <label>Create Slots For (Days)</label>
                 <input
@@ -376,7 +387,11 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
                   readOnly
                   className={styles.readonlyInput}
                 />
+                {validationMessages.createSlotDays && (
+                  <span className={styles.validationMsg}>{validationMessages.createSlotDays}</span>
+                )}
               </div>
+
             </div>
 
             {/* Summary box */}
@@ -384,8 +399,8 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
               <h4>Configuration Summary</h4>
               <p>
                 <strong>Duration Type:</strong>{' '}
-                {formData.duration 
-                  ? DURATION_OPTIONS.find(d => d.id === Number(formData.duration))?.label 
+                {formData.duration
+                  ? DURATION_OPTIONS.find(d => d.id === Number(formData.duration))?.label
                   : 'Not selected'}
               </p>
               <p>
@@ -400,16 +415,16 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
           </div>
 
           <div className={styles.clinicModalFooter}>
-            <button 
-              type="button" 
-              onClick={onClose} 
+            <button
+              type="button"
+              onClick={onClose}
               className={styles.btnCancel}
               disabled={loading}
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className={styles.btnSubmit}
               disabled={loading}
             >

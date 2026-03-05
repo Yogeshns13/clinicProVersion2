@@ -5,6 +5,96 @@ import { addVendor } from '../api/api-pharmacy.js';
 import styles from './AddVendor.module.css';
 
 // ────────────────────────────────────────────────
+// Validation
+// ────────────────────────────────────────────────
+const getLiveValidationMessage = (fieldName, value) => {
+  switch (fieldName) {
+    case 'name':
+      if (!value || !value.trim()) return 'Vendor name is required';
+      if (value.trim().length < 2) return 'Vendor name must be at least 2 characters';
+      if (value.trim().length > 100) return 'Vendor name must not exceed 100 characters';
+      return '';
+
+    case 'contactPerson':
+      if (value && value.trim()) {
+        if (value.trim().length < 2) return 'Contact person must be at least 2 characters';
+        if (value.trim().length > 100) return 'Contact person must not exceed 100 characters';
+      }
+      return '';
+
+    case 'mobile':
+      if (!value || !value.trim()) return 'Mobile number is required';
+      if (value.trim().length < 10) return 'Mobile number must be 10 digits';
+      if (value.trim().length === 10) {
+        if (!/^[6-9]\d{9}$/.test(value.trim())) {
+          return 'Mobile number must start with 6-9';
+        }
+      }
+      if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
+      return '';
+
+    case 'altMobile':
+      if (!value || !value.trim()) return 'Alternate Mobile is required';
+      if (value.trim().length < 10) return 'Alternate Mobile must be 10 digits';
+      if (value.trim().length === 10) {
+        if (!/^[6-9]\d{9}$/.test(value.trim())) {
+          return 'Alternate Mobile must start with 6-9';
+        }
+      }
+      if (value.trim().length > 10) return 'Alternate Mobile cannot exceed 10 digits';
+      return '';
+
+    case 'email':
+      if (!value || !value.trim()) return 'Email is required';
+      if (value && value.trim()) {
+        if (!value.includes('@')) return 'Email must contain @';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
+          return 'Please enter a valid email address';
+        }
+        if (value.trim().length > 100) return 'Email must not exceed 100 characters';
+      }
+      return '';
+
+    case 'address':
+      if (value && value.length > 500) return 'Address must not exceed 500 characters';
+      return '';
+
+    case 'gstNo':
+      if (!value || !value.trim()) return 'GST No is required';
+      if (value && value.trim()) {
+        if (value.trim().length > 15) return 'GST number must not exceed 15 characters';
+        if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value.trim())) {
+          return 'Please enter a valid GST number (e.g. 22AAAAA0000A1Z5)';
+        }
+      }
+      return '';
+
+    case 'licenseDetail':
+      if (value && value.trim()) {
+        if (value.trim().length > 200) return 'License detail must not exceed 200 characters';
+      }
+      return '';
+
+    default:
+      return '';
+  }
+};
+
+const filterInput = (fieldName, value) => {
+  switch (fieldName) {
+    case 'mobile':
+    case 'altMobile':
+      return value.replace(/[^0-9]/g, '');
+
+    case 'gstNo':
+      return value.toUpperCase().replace(/[^0-9A-Z]/g, '');
+
+    default:
+      return value;
+  }
+};
+
+// ────────────────────────────────────────────────
 const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -18,10 +108,10 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
   });
 
   const [formLoading, setFormLoading] = useState(false);
+  const [validationMessages, setValidationMessages] = useState({});
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
 
-  // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
       resetForm();
@@ -41,6 +131,7 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
     });
     setFormError('');
     setFormSuccess(false);
+    setValidationMessages({});
   };
 
   // ────────────────────────────────────────────────
@@ -48,11 +139,34 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
   // ────────────────────────────────────────────────
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const filteredValue = filterInput(name, value);
+
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+
+    const validationMessage = getLiveValidationMessage(name, filteredValue);
+    setValidationMessages((prev) => ({
+      ...prev,
+      [name]: validationMessage,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Run full validation on all fields before submitting
+    const fields = ['name', 'contactPerson', 'mobile', 'altMobile', 'email', 'address', 'gstNo', 'licenseDetail'];
+    const newMessages = {};
+    let hasError = false;
+
+    fields.forEach((field) => {
+      const msg = getLiveValidationMessage(field, formData[field]);
+      newMessages[field] = msg;
+      if (msg) hasError = true;
+    });
+
+    setValidationMessages(newMessages);
+    if (hasError) return;
+
     setFormLoading(true);
     setFormError('');
     setFormSuccess(false);
@@ -94,6 +208,8 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+
+        {/* ── Static Header (does not scroll) ── */}
         <div className={styles.modalHeader}>
           <h2>Add New Vendor</h2>
           <button onClick={onClose} className={styles.modalClose}>
@@ -101,120 +217,151 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.modalBody}>
-          {formError && <div className={styles.formError}>{formError}</div>}
-          {formSuccess && <div className={styles.formSuccess}>Vendor added successfully!</div>}
+        {/* ── Scrollable Body ── */}
+        <div className={styles.modalBodyScrollable}>
+          <form onSubmit={handleSubmit}>
+            {formError && <div className={styles.formError}>{formError}</div>}
+            {formSuccess && <div className={styles.formSuccess}>Vendor added successfully!</div>}
 
-          <div className={styles.formGrid}>
-            {/* Basic Information */}
-            <h3 className={styles.formSectionTitle}>Basic Information</h3>
+            <div className={styles.formGrid}>
 
-            <div className={styles.formGroup}>
-              <label>
-                Vendor Name <span className={styles.required}>*</span>
-              </label>
-              <input
-                required
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                placeholder="Enter vendor name"
-              />
+              {/* ── Basic Information ── */}
+              <h3 className={styles.formSectionTitle}>Basic Information</h3>
+
+              <div className={styles.formGroup}>
+                <label>Vendor Name <span className={styles.required}>*</span></label>
+                <input
+                  required
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter vendor name"
+                />
+                {validationMessages.name && (
+                  <span className={styles.validationMsg}>{validationMessages.name}</span>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Contact Person</label>
+                <input
+                  name="contactPerson"
+                  value={formData.contactPerson}
+                  onChange={handleInputChange}
+                  placeholder="Enter contact person name"
+                />
+                {validationMessages.contactPerson && (
+                  <span className={styles.validationMsg}>{validationMessages.contactPerson}</span>
+                )}
+              </div>
+
+              {/* ── Contact Information ── */}
+              <h3 className={styles.formSectionTitle}>Contact Information</h3>
+
+              <div className={styles.formGroup}>
+                <label>Mobile <span className={styles.required}>*</span></label>
+                <input
+                  required
+                  name="mobile"
+                  value={formData.mobile}
+                  onChange={handleInputChange}
+                  placeholder="Enter mobile number"
+                  maxLength="10"
+                />
+                {validationMessages.mobile && (
+                  <span className={styles.validationMsg}>{validationMessages.mobile}</span>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Alternate Mobile <span className={styles.required}>*</span></label>
+                <input
+                  required
+                  name="altMobile"
+                  value={formData.altMobile}
+                  onChange={handleInputChange}
+                  placeholder="Enter alternate mobile"
+                  maxLength="10"
+                />
+                {validationMessages.altMobile && (
+                  <span className={styles.validationMsg}>{validationMessages.altMobile}</span>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Email <span className={styles.required}>*</span></label>
+                <input
+                  required
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="Enter email address"
+                />
+                {validationMessages.email && (
+                  <span className={styles.validationMsg}>{validationMessages.email}</span>
+                )}
+              </div>
+
+              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                <label>Address</label>
+                <textarea
+                  name="address"
+                  rows={3}
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  placeholder="Enter complete address"
+                />
+                {validationMessages.address && (
+                  <span className={styles.validationMsg}>{validationMessages.address}</span>
+                )}
+              </div>
+
+              {/* ── Business Information ── */}
+              <h3 className={styles.formSectionTitle}>Business Information</h3>
+
+              <div className={styles.formGroup}>
+                <label>GST Number <span className={styles.required}>*</span></label>
+                <input
+                  required
+                  name="gstNo"
+                  value={formData.gstNo}
+                  onChange={handleInputChange}
+                  placeholder="e.g. 22AAAAA0000A1Z5"
+                  maxLength="15"
+                />
+                {validationMessages.gstNo && (
+                  <span className={styles.validationMsg}>{validationMessages.gstNo}</span>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>License Detail</label>
+                <input
+                  name="licenseDetail"
+                  value={formData.licenseDetail}
+                  onChange={handleInputChange}
+                  placeholder="Enter license details"
+                />
+                {validationMessages.licenseDetail && (
+                  <span className={styles.validationMsg}>{validationMessages.licenseDetail}</span>
+                )}
+              </div>
+
             </div>
 
-            <div className={styles.formGroup}>
-              <label>Contact Person</label>
-              <input
-                name="contactPerson"
-                value={formData.contactPerson}
-                onChange={handleInputChange}
-                placeholder="Enter contact person name"
-              />
+            {/* ── Footer ── */}
+            <div className={styles.modalFooter}>
+              <button type="button" onClick={onClose} className={styles.btnCancel}>
+                Cancel
+              </button>
+              <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
+                {formLoading ? 'Saving...' : 'Save Vendor'}
+              </button>
             </div>
+          </form>
+        </div>
 
-            {/* Contact Information */}
-            <h3 className={styles.formSectionTitle}>Contact Information</h3>
-
-            <div className={styles.formGroup}>
-              <label>
-                Mobile <span className={styles.required}>*</span>
-              </label>
-              <input
-                required
-                name="mobile"
-                value={formData.mobile}
-                onChange={handleInputChange}
-                placeholder="Enter mobile number"
-                maxLength={10}
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>Alternate Mobile</label>
-              <input
-                name="altMobile"
-                value={formData.altMobile}
-                onChange={handleInputChange}
-                placeholder="Enter alternate mobile"
-                maxLength={10}
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="Enter email address"
-              />
-            </div>
-
-            <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-              <label>Address</label>
-              <textarea
-                name="address"
-                rows={3}
-                value={formData.address}
-                onChange={handleInputChange}
-                placeholder="Enter complete address"
-              />
-            </div>
-
-            {/* Business Information */}
-            <h3 className={styles.formSectionTitle}>Business Information</h3>
-
-            <div className={styles.formGroup}>
-              <label>GST Number</label>
-              <input
-                name="gstNo"
-                value={formData.gstNo}
-                onChange={handleInputChange}
-                placeholder="Enter GST number"
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>License Detail</label>
-              <input
-                name="licenseDetail"
-                value={formData.licenseDetail}
-                onChange={handleInputChange}
-                placeholder="Enter license details"
-              />
-            </div>
-          </div>
-
-          <div className={styles.modalFooter}>
-            <button type="button" onClick={onClose} className={styles.btnCancel}>
-              Cancel
-            </button>
-            <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
-              {formLoading ? 'Saving...' : 'Save Vendor'}
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   );

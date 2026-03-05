@@ -1003,7 +1003,7 @@
 
 .validationMsg {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: red;
   margin-top: 2px;
 }
 

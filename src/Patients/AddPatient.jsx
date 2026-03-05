@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiSearch } from 'react-icons/fi';
 import { addPatient, getPatientsList } from '../api/api.js';
-import styles from './AddPatient.module.css';   
+import styles from './AddPatient.module.css';
 
 const GENDER_OPTIONS = [
   { id: 1, label: 'Male' },
@@ -30,131 +30,123 @@ const MARITAL_STATUS_OPTIONS = [
   { id: 5, label: 'Separated' },
 ];
 
+// ── Backend: nameRegex = /^[A-Za-z\s\.\-']+$/
+const nameRegex = /^[A-Za-z\s.\-']+$/;
+// ── Backend: mobileRegex = /^[6-9]\d{9}$/
+const mobileRegex = /^[6-9]\d{9}$/;
+
+// ── Validation messages match backend patientValidator word-for-word ──────────
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
-    case 'firstName':
-      if (!value || !value.trim()) return 'First name is required';
-      if (value.trim().length < 2) return 'First name must be at least 2 characters';
-      if (value.trim().length > 50) return 'First name must not exceed 50 characters';
-      return '';
 
-    case 'lastName':
-      if (!value || !value.trim()) return 'Last name is required';
-      if (value.trim().length < 2) return 'Last name must be at least 2 characters';
-      if (value.trim().length > 50) return 'Last name must not exceed 50 characters';
+    // ── Required in backend (notEmpty) ────────────────────────────────────────
+    case 'firstName':
+      if (!value || !value.trim()) return 'FirstName is required';
+      if (value.trim().length > 50) return 'FirstName too long';
+      if (!nameRegex.test(value.trim())) return 'Invalid characters in FirstName';
       return '';
 
     case 'mobile':
-      if (!value || !value.trim()) return 'Mobile number is required';
-      if (value.trim().length < 10) return 'Mobile number must be 10 digits';
-      if (value.trim().length === 10) {
-        if (!/^[6-9]\d{9}$/.test(value.trim())) {
-          return 'Mobile number must start with 6-9';
-        }
-      }
-      if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
+      if (!value || !value.trim()) return 'Mobile is required';
+      if (!mobileRegex.test(value.trim())) return 'Invalid mobile number';
       return '';
 
-    case 'altMobile':
-      if (value && value.trim()) {
-        if (value.trim().length < 10) return 'Mobile number must be 10 digits';
-        if (value.trim().length === 10) {
-          if (!/^[6-9]\d{9}$/.test(value.trim())) {
-            return 'Mobile number must start with 6-9';
-          }
-        }
-        if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
-      }
-      return '';
-
-    case 'emergencyContactNo':
-      if (value && value.trim()) {
-        if (value.trim().length < 10) return 'Contact number must be 10 digits';
-        if (value.trim().length === 10) {
-          if (!/^[6-9]\d{9}$/.test(value.trim())) {
-            return 'Contact number must start with 6-9';
-          }
-        }
-        if (value.trim().length > 10) return 'Contact number cannot exceed 10 digits';
-      }
-      return '';
-
-    case 'email':
-      if (value && value.trim()) {
-        if (!value.includes('@')) return 'Email must contain @';
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
-          return 'Please enter a valid email address';
-        }
-        if (value.trim().length > 100) return 'Email must not exceed 100 characters';
-      }
+    case 'gender':
+      if (!value || Number(value) === 0) return 'Gender is required';
+      if (isNaN(Number(value))) return 'Gender must be valid ID';
       return '';
 
     case 'age':
       if (value === '' || value === null || value === undefined) return 'Age is required';
       const age = Number(value);
-      if (isNaN(age)) return 'Age must be a number';
-      if (age <= 0) return 'Age must be greater than 0';
-      if (age > 150) return 'Please enter a valid age';
+      if (isNaN(age) || !Number.isInteger(age) || age < 0 || age > 150) return 'Age must be realistic';
       return '';
 
+    // ── Optional in backend ───────────────────────────────────────────────────
+    // LastName: optional, max 50, nameRegex
+    case 'lastName':
+      if (value && value.trim()) {
+        if (value.trim().length > 50) return 'LastName too long';
+        if (!nameRegex.test(value.trim())) return 'Invalid characters in LastName';
+      }
+      return '';
+
+    // AltMobile: optional, matches mobileRegex
+    case 'altMobile':
+      if (value && value.trim()) {
+        if (!mobileRegex.test(value.trim())) return 'Invalid alternate mobile';
+      }
+      return '';
+
+    // BirthDate: optional, isDate
+    case 'birthDate':
+      if (value) {
+        const d = new Date(value);
+        if (isNaN(d.getTime())) return 'Invalid BirthDate';
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        d.setHours(0, 0, 0, 0);
+        if (d > today) return 'Invalid BirthDate';
+      }
+      return '';
+
+    // Email: optional, isEmail
+    case 'email':
+      if (value && value.trim()) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) return 'Invalid email';
+      }
+      return '';
+
+    // Address: optional, max 500
     case 'address':
-      if (value && value.length > 500) return 'Address must not exceed 500 characters';
+      if (value && value.length > 500) return 'Address too long';
       return '';
 
+    // EmergencyContactNo: optional, matches mobileRegex
+    case 'emergencyContactNo':
+      if (value && value.trim()) {
+        if (!mobileRegex.test(value.trim())) return 'Invalid emergency contact';
+      }
+      return '';
+
+    // Allergies: optional, max 500 (no backend message — silent cap)
     case 'allergies':
       if (value && value.length > 500) return 'Allergies must not exceed 500 characters';
       return '';
 
-    case 'existingMedicalConditions':
-      if (value && value.length > 500) return 'Medical conditions must not exceed 500 characters';
-      return '';
-
-    case 'pastSurgeries':
-      if (value && value.length > 500) return 'Past surgeries must not exceed 500 characters';
-      return '';
-
+    // CurrentMedications: optional, max 500 (no backend message — silent cap)
     case 'currentMedications':
       if (value && value.length > 500) return 'Current medications must not exceed 500 characters';
       return '';
 
+    // Fields below are NOT in backend validator — no validation needed
+    case 'existingMedicalConditions':
+    case 'pastSurgeries':
     case 'familyMedicalHistory':
-      if (value && value.length > 500) return 'Family history must not exceed 500 characters';
-      return '';
-
     case 'immunizationRecords':
-      if (value && value.length > 500) return 'Immunization records must not exceed 500 characters';
       return '';
-
-    case 'birthDate':
-      if (value) {
-        const birthDate = new Date(value);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        birthDate.setHours(0, 0, 0, 0);
-        
-        if (birthDate > today) return 'Birth date cannot be in the future';
-      }
-      return '';  
 
     default:
       return '';
   }
 };
 
+// ── filterInput matches backend nameRegex (allows . - ') ─────────────────────
 const filterInput = (fieldName, value) => {
   switch (fieldName) {
     case 'firstName':
     case 'lastName':
-      return value.replace(/[^a-zA-Z\s]/g, '');
-    
+      // Allow letters, spaces, dots, hyphens, apostrophes — matches nameRegex
+      return value.replace(/[^A-Za-z\s.\-']/g, '');
+
     case 'mobile':
     case 'altMobile':
     case 'emergencyContactNo':
       return value.replace(/[^0-9]/g, '');
-    
+
     case 'age':
       return value.replace(/[^0-9]/g, '');
-    
+
     default:
       return value;
   }
@@ -167,21 +159,25 @@ const getTodayDate = () => {
 
 const calculateAge = (birthDateString) => {
   if (!birthDateString) return '';
-  
   const birthDate = new Date(birthDateString);
   const today = new Date();
-  
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
-  
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
     age--;
   }
-  
   return age >= 0 ? age : '';
 };
 
-// ────────────────────────────────────────────────
+// ── Fields validated on submit ────────────────────────────────────────────────
+const VALIDATED_FIELDS = [
+  'firstName', 'lastName', 'mobile', 'altMobile',
+  'gender', 'birthDate', 'age',
+  'email', 'address', 'emergencyContactNo',
+  'allergies', 'currentMedications',
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
 const AddPatient = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     firstName: '',
@@ -246,7 +242,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
     });
     setFormError('');
     setFormSuccess(false);
-    setValidationMessages({}); 
+    setValidationMessages({});
     setHasFamilyPatient(false);
     setSearchMobile('');
     setSearchResults([]);
@@ -257,7 +253,6 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
   const handleFamilyPatientToggle = (e) => {
     const checked = e.target.checked;
     setHasFamilyPatient(checked);
-    
     if (!checked) {
       setSearchMobile('');
       setSearchResults([]);
@@ -279,21 +274,13 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
       setSearchError('Please enter a mobile number');
       return;
     }
-
-    if (searchMobile.trim().length !== 10) {
-      setSearchError('Mobile number must be exactly 10 digits');
-      return;
-    }
-
-    if (!/^[6-9]\d{9}$/.test(searchMobile.trim())) {
+    if (!mobileRegex.test(searchMobile.trim())) {
       setSearchError('Please enter a valid mobile number starting with 6-9');
       return;
     }
-
     setSearchLoading(true);
     setSearchError('');
     setSearchResults([]);
-
     try {
       const clinicId = Number(localStorage.getItem('clinicID'));
       const branchId = Number(localStorage.getItem('branchID'));
@@ -301,7 +288,6 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
         Mobile: searchMobile.trim(),
         BranchID: branchId,
       });
-
       if (!patients || patients.length === 0) {
         setSearchError('No patients found with this mobile number');
         setSearchResults([]);
@@ -329,7 +315,6 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
     const { name, value } = e.target;
     let filteredValue = filterInput(name, value);
 
-    // Special handling when birthDate changes → auto-calculate age
     if (name === 'birthDate') {
       const calculatedAge = calculateAge(value);
       setFormData((prev) => ({
@@ -337,29 +322,42 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
         birthDate: value,
         age: calculatedAge !== '' ? calculatedAge : '',
       }));
-
-      // Validate birth date
-      const validationMessage = getLiveValidationMessage(name, value);
       setValidationMessages((prev) => ({
         ...prev,
-        [name]: validationMessage,
-        age: calculatedAge === '' ? '' : getLiveValidationMessage('age', calculatedAge),
+        [name]: getLiveValidationMessage(name, value),
+        age: calculatedAge === '' ? '' : getLiveValidationMessage('age', String(calculatedAge)),
       }));
       return;
     }
 
-    // Normal handling for other fields
     setFormData((prev) => ({ ...prev, [name]: filteredValue }));
-
-    const validationMessage = getLiveValidationMessage(name, filteredValue);
     setValidationMessages((prev) => ({
       ...prev,
-      [name]: validationMessage,
+      [name]: getLiveValidationMessage(name, filteredValue),
     }));
+  };
+
+  // ── Validate all fields; block submit if any errors exist ─────────────────
+  const validateAllFields = () => {
+    const messages = {};
+    let isValid = true;
+    VALIDATED_FIELDS.forEach((field) => {
+      const msg = getLiveValidationMessage(field, formData[field]);
+      messages[field] = msg;
+      if (msg) isValid = false;
+    });
+    setValidationMessages((prev) => ({ ...prev, ...messages }));
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateAllFields()) {
+      setFormError('Please correct all errors before submitting.');
+      return;
+    }
+
     setFormLoading(true);
     setFormError('');
     setFormSuccess(false);
@@ -419,9 +417,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
           <div className={styles.detailHeaderContent}>
             <h2>Add New Patient</h2>
           </div>
-          <button onClick={onClose} className={styles.detailCloseBtn}>
-            ✕
-          </button>
+          <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
         </div>
 
         {/* ── Scrollable Form Content ── */}
@@ -435,8 +431,9 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               <div className={styles.addSectionHeader}>
                 <h3>Basic Information</h3>
               </div>
-
               <div className={styles.addFormGrid}>
+
+                {/* FirstName — required in backend */}
                 <div className={styles.addFormGroup}>
                   <label>First Name <span className={styles.required}>*</span></label>
                   <input
@@ -447,12 +444,11 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     placeholder="Enter first name"
                   />
                   {validationMessages.firstName && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.firstName}
-                    </span>
+                    <span className={styles.validationMsg}>{validationMessages.firstName}</span>
                   )}
                 </div>
 
+                {/* LastName */}
                 <div className={styles.addFormGroup}>
                   <label>Last Name <span className={styles.required}>*</span></label>
                   <input
@@ -463,12 +459,11 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     placeholder="Enter last name"
                   />
                   {validationMessages.lastName && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.lastName}
-                    </span>
+                    <span className={styles.validationMsg}>{validationMessages.lastName}</span>
                   )}
                 </div>
 
+                {/* Gender — required in backend */}
                 <div className={styles.addFormGroup}>
                   <label>Gender <span className={styles.required}>*</span></label>
                   <select
@@ -479,16 +474,19 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                   >
                     <option value="0">Select Gender</option>
                     {GENDER_OPTIONS.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.label}
-                      </option>
+                      <option key={g.id} value={g.id}>{g.label}</option>
                     ))}
                   </select>
+                  {validationMessages.gender && (
+                    <span className={styles.validationMsg}>{validationMessages.gender}</span>
+                  )}
                 </div>
 
+                {/* BirthDate */}
                 <div className={styles.addFormGroup}>
-                  <label>Birth Date</label>
+                  <label>Birth Date <span className={styles.required}>*</span></label>
                   <input
+                    required
                     type="date"
                     name="birthDate"
                     value={formData.birthDate}
@@ -496,12 +494,11 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     max={getTodayDate()}
                   />
                   {validationMessages.birthDate && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.birthDate}
-                    </span>
+                    <span className={styles.validationMsg}>{validationMessages.birthDate}</span>
                   )}
                 </div>
 
+                {/* Age — required in backend */}
                 <div className={styles.addFormGroup}>
                   <label>Age <span className={styles.required}>*</span></label>
                   <input
@@ -512,32 +509,29 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     onChange={handleInputChange}
                     min="0"
                     placeholder="Enter age"
-                    readOnly={!!formData.birthDate}   // ← Optional: make read-only when auto-filled
+                    readOnly={!!formData.birthDate}
                   />
                   {validationMessages.age && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.age}
-                    </span>
+                    <span className={styles.validationMsg}>{validationMessages.age}</span>
                   )}
                 </div>
 
+                {/* BloodGroup — optional in backend (no * / no required) */}
                 <div className={styles.addFormGroup}>
-                  <label>Blood Group <span className={styles.required}>*</span></label>
+                  <label>Blood Group</label>
                   <select
-                    required
                     name="bloodGroup"
                     value={formData.bloodGroup}
                     onChange={handleInputChange}
                   >
                     <option value="0">Select Blood Group</option>
                     {BLOOD_GROUP_OPTIONS.map((bg) => (
-                      <option key={bg.id} value={bg.id}>
-                        {bg.label}
-                      </option>
+                      <option key={bg.id} value={bg.id}>{bg.label}</option>
                     ))}
                   </select>
                 </div>
 
+                {/* MaritalStatus — optional in backend */}
                 <div className={styles.addFormGroup}>
                   <label>Marital Status</label>
                   <select
@@ -547,12 +541,11 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                   >
                     <option value="0">Select Status</option>
                     {MARITAL_STATUS_OPTIONS.map((ms) => (
-                      <option key={ms.id} value={ms.id}>
-                        {ms.label}
-                      </option>
+                      <option key={ms.id} value={ms.id}>{ms.label}</option>
                     ))}
                   </select>
                 </div>
+
               </div>
             </div>
 
@@ -561,8 +554,9 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               <div className={styles.addSectionHeader}>
                 <h3>Contact Information</h3>
               </div>
-
               <div className={styles.addFormGrid}>
+
+                {/* Mobile — required in backend */}
                 <div className={styles.addFormGroup}>
                   <label>Mobile <span className={styles.required}>*</span></label>
                   <input
@@ -574,15 +568,15 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     maxLength="10"
                   />
                   {validationMessages.mobile && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.mobile}
-                    </span>
+                    <span className={styles.validationMsg}>{validationMessages.mobile}</span>
                   )}
                 </div>
 
+                {/* AltMobile */}
                 <div className={styles.addFormGroup}>
-                  <label>Alternate Mobile</label>
+                  <label>Alternate Mobile <span className={styles.required}>*</span></label>
                   <input
+                    required
                     name="altMobile"
                     value={formData.altMobile}
                     onChange={handleInputChange}
@@ -590,15 +584,15 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     maxLength="10"
                   />
                   {validationMessages.altMobile && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.altMobile}
-                    </span>
+                    <span className={styles.validationMsg}>{validationMessages.altMobile}</span>
                   )}
                 </div>
 
+                {/* Email */}
                 <div className={styles.addFormGroup}>
-                  <label>Email</label>
+                  <label>Email <span className={styles.required}>*</span></label>
                   <input
+                    required
                     type="email"
                     name="email"
                     value={formData.email}
@@ -606,15 +600,15 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     placeholder="Enter email address"
                   />
                   {validationMessages.email && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.email}
-                    </span>
+                    <span className={styles.validationMsg}>{validationMessages.email}</span>
                   )}
                 </div>
 
+                {/* EmergencyContactNo */}
                 <div className={styles.addFormGroup}>
-                  <label>Emergency Contact</label>
+                  <label>Emergency Contact <span className={styles.required}>*</span></label>
                   <input
+                    required
                     name="emergencyContactNo"
                     value={formData.emergencyContactNo}
                     onChange={handleInputChange}
@@ -622,12 +616,11 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     maxLength="10"
                   />
                   {validationMessages.emergencyContactNo && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.emergencyContactNo}
-                    </span>
+                    <span className={styles.validationMsg}>{validationMessages.emergencyContactNo}</span>
                   )}
                 </div>
 
+                {/* Address — optional in backend */}
                 <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                   <label>Address</label>
                   <textarea
@@ -638,11 +631,10 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     placeholder="Enter full address"
                   />
                   {validationMessages.address && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.address}
-                    </span>
+                    <span className={styles.validationMsg}>{validationMessages.address}</span>
                   )}
                 </div>
+
               </div>
             </div>
 
@@ -696,20 +688,19 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                   {searchResults.length > 0 && (
                     <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                       <label>Select Family Patient</label>
-                      <div style={{ 
-                        maxHeight: '200px', 
-                        overflowY: 'auto', 
-                        border: '1px solid #e2e8f0', 
+                      <div style={{
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                        border: '1px solid #e2e8f0',
                         borderRadius: '10px',
                         padding: '12px',
                         background: '#f8fafc'
                       }}>
                         {searchResults.map((patient) => {
                           const patientId = patient.patientId || patient.patientID || patient.id;
-                          const isSelected = selectedFamilyPatient?.patientId === patientId || 
-                                            selectedFamilyPatient?.patientID === patientId ||
-                                            selectedFamilyPatient?.id === patientId;
-
+                          const isSelected = selectedFamilyPatient?.patientId === patientId ||
+                            selectedFamilyPatient?.patientID === patientId ||
+                            selectedFamilyPatient?.id === patientId;
                           return (
                             <div
                               key={patientId}
@@ -724,12 +715,8 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                                 transition: 'all 0.2s'
                               }}
                             >
-                              <div style={{ fontWeight: '600' }}>
-                                {patient.firstName} {patient.lastName}
-                              </div>
-                              <div style={{ fontSize: '0.9rem', color: '#555' }}>
-                                Mobile: {patient.mobile}
-                              </div>
+                              <div style={{ fontWeight: '600' }}>{patient.firstName} {patient.lastName}</div>
+                              <div style={{ fontSize: '0.9rem', color: '#555' }}>Mobile: {patient.mobile}</div>
                             </div>
                           );
                         })}
@@ -758,8 +745,9 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
               <div className={styles.addSectionHeader}>
                 <h3>Medical Information</h3>
               </div>
-
               <div className={styles.addFormGrid}>
+
+                {/* Allergies — optional, max 500 */}
                 <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                   <label>Allergies</label>
                   <textarea
@@ -770,12 +758,11 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     placeholder="Enter any known allergies"
                   />
                   {validationMessages.allergies && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.allergies}
-                    </span>
+                    <span className={styles.validationMsg}>{validationMessages.allergies}</span>
                   )}
                 </div>
 
+                {/* ExistingMedicalConditions — NOT in backend validator */}
                 <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                   <label>Existing Medical Conditions</label>
                   <textarea
@@ -785,13 +772,9 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     onChange={handleInputChange}
                     placeholder="Enter existing medical conditions"
                   />
-                  {validationMessages.existingMedicalConditions && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.existingMedicalConditions}
-                    </span>
-                  )}
                 </div>
 
+                {/* PastSurgeries — NOT in backend validator */}
                 <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                   <label>Past Surgeries</label>
                   <textarea
@@ -801,13 +784,9 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     onChange={handleInputChange}
                     placeholder="Enter past surgeries"
                   />
-                  {validationMessages.pastSurgeries && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.pastSurgeries}
-                    </span>
-                  )}
                 </div>
 
+                {/* CurrentMedications — optional, max 500 */}
                 <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                   <label>Current Medications</label>
                   <textarea
@@ -818,12 +797,11 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     placeholder="Enter current medications"
                   />
                   {validationMessages.currentMedications && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.currentMedications}
-                    </span>
+                    <span className={styles.validationMsg}>{validationMessages.currentMedications}</span>
                   )}
                 </div>
 
+                {/* FamilyMedicalHistory — NOT in backend validator */}
                 <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                   <label>Family Medical History</label>
                   <textarea
@@ -833,13 +811,9 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     onChange={handleInputChange}
                     placeholder="Enter family medical history"
                   />
-                  {validationMessages.familyMedicalHistory && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.familyMedicalHistory}
-                    </span>
-                  )}
                 </div>
 
+                {/* ImmunizationRecords — NOT in backend validator */}
                 <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                   <label>Immunization Records</label>
                   <textarea
@@ -849,16 +823,12 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     onChange={handleInputChange}
                     placeholder="Enter immunization records"
                   />
-                  {validationMessages.immunizationRecords && (
-                    <span className={styles.validationMsg}>
-                      {validationMessages.immunizationRecords}
-                    </span>
-                  )}
                 </div>
+
               </div>
             </div>
 
-            {/* Footer (inside scrollable area) */}
+            {/* Footer */}
             <div className={styles.detailModalFooter}>
               <button type="button" onClick={onClose} className={styles.btnCancel}>
                 Cancel

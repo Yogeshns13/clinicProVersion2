@@ -15,18 +15,40 @@ import Header from '../Header/Header.jsx';
 import UpdateBranch from './UpdateBranch.jsx';
 import styles from './BranchList.module.css';
 
+// ─── matches backend allowedCharactersRegex exactly ───────────────────────────
+const allowedCharactersRegex = /^[A-Za-z0-9\s\-_]+$/;
+
+// ─── Validation messages match backend addBranchValidatorRules word-for-word ──
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
+    case 'clinicId':
+      if (!value || value === '') return 'ClinicID is required';
+      if (isNaN(Number(value)) || !Number.isInteger(Number(value))) return 'ClinicID must be a positive integer';
+      return '';
+
     case 'branchName':
-      if (!value || !value.trim()) return 'Branch name is required';
-      if (value.trim().length < 3) return 'Branch name must be at least 3 characters';
-      if (value.trim().length > 100) return 'Branch name must not exceed 100 characters';
+      if (!value || !value.trim()) return 'BranchName is required';
+      if (value.trim().length > 100) return 'BranchName should not exceed 100 characters';
+      if (!allowedCharactersRegex.test(value.trim())) return 'BranchName contains invalid characters';
       return '';
 
+    // Address is required in backend (notEmpty)
     case 'address':
-      if (value && value.length > 500) return 'Address must not exceed 500 characters';
+      if (!value || !value.trim()) return 'Address is required';
+      if (value.length > 500) return 'Address should not exceed 500 characters';
       return '';
 
+    // Location is optional in backend — only length check
+    case 'location':
+      if (value && value.length > 500) return 'Location should not exceed 500 characters';
+      return '';
+
+    case 'branchType':
+      if (!value) return 'BranchType is required';
+      if (isNaN(Number(value)) || Number(value) < 1) return 'BranchType must be a valid integer (from text table)';
+      return '';
+
+    // lat/lng are UX helpers — not sent directly to backend
     case 'latitude':
       if (value === '') return '';
       const lat = Number(value);
@@ -49,7 +71,8 @@ const getLiveValidationMessage = (fieldName, value) => {
 const filterInput = (fieldName, value) => {
   switch (fieldName) {
     case 'branchName':
-      return value.replace(/[^a-zA-Z\s]/g, '');
+      // allow A-Za-z0-9, whitespace, hyphen, underscore — matches backend regex
+      return value.replace(/[^A-Za-z0-9\s\-_]/g, '');
     case 'latitude':
     case 'longitude':
       return value
@@ -60,6 +83,9 @@ const filterInput = (fieldName, value) => {
       return value;
   }
 };
+
+// ─── Fields validated on submit for the Add form ──────────────────────────────
+const ADD_VALIDATED_FIELDS = ['clinicId', 'branchName', 'address', 'branchType'];
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -235,8 +261,29 @@ const BranchList = () => {
     setValidationMessages((prev) => ({ ...prev, [name]: validationMessage }));
   };
 
+  // ── Run validation on all add-form fields; returns true only if zero errors ──
+  const validateAllAddFields = () => {
+    const messages = {};
+    let isValid = true;
+
+    ADD_VALIDATED_FIELDS.forEach((field) => {
+      const msg = getLiveValidationMessage(field, formData[field]);
+      messages[field] = msg;
+      if (msg) isValid = false;
+    });
+
+    setValidationMessages((prev) => ({ ...prev, ...messages }));
+    return isValid;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateAllAddFields()) {
+      setFormError('Please correct all errors before submitting.');
+      return;
+    }
+
     setFormLoading(true);
     setFormError('');
     setFormSuccess(false);
@@ -529,6 +576,7 @@ const BranchList = () => {
                 </div>
                 <div className={styles.addFormGrid}>
 
+                  {/* ClinicID — required in backend */}
                   <div className={styles.addFormGroup}>
                     <label>Clinic <span className={styles.required}>*</span></label>
                     <select
@@ -544,8 +592,12 @@ const BranchList = () => {
                         </option>
                       ))}
                     </select>
+                    {validationMessages.clinicId && (
+                      <span className={styles.validationMsg}>{validationMessages.clinicId}</span>
+                    )}
                   </div>
 
+                  {/* BranchName — required in backend */}
                   <div className={styles.addFormGroup}>
                     <label>Branch Name <span className={styles.required}>*</span></label>
                     <input
@@ -560,6 +612,7 @@ const BranchList = () => {
                     )}
                   </div>
 
+                  {/* BranchType — required in backend */}
                   <div className={styles.addFormGroup}>
                     <label>Branch Type <span className={styles.required}>*</span></label>
                     <select
@@ -574,11 +627,16 @@ const BranchList = () => {
                         </option>
                       ))}
                     </select>
+                    {validationMessages.branchType && (
+                      <span className={styles.validationMsg}>{validationMessages.branchType}</span>
+                    )}
                   </div>
 
+                  {/* Address — required in backend (notEmpty) */}
                   <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                    <label>Full Address</label>
+                    <label>Full Address <span className={styles.required}>*</span></label>
                     <textarea
+                      required
                       name="address"
                       rows={2}
                       value={formData.address}
@@ -590,6 +648,7 @@ const BranchList = () => {
                     )}
                   </div>
 
+                  {/* Location — optional in backend */}
                   <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                     <label>Location Coordinates (optional)</label>
                     <div className={styles.coordRow}>

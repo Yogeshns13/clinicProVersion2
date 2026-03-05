@@ -835,6 +835,7 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
     rejectReason: ''
   });
 
+  const [validationMessages, setValidationMessages] = useState({});
   const [activeStep, setActiveStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -863,6 +864,11 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
   }, []);
 
   const handleSampleSave = async () => {
+    if (!sampleData.sampleCollectedTime) {
+      setValidationMessages(prev => ({ ...prev, sampleCollectedTime: 'Collection date and time is required' }));
+      return;
+    }
+    setValidationMessages(prev => ({ ...prev, sampleCollectedTime: '' }));
     try {
       setLoading(true);
       setError(null);
@@ -898,6 +904,11 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
   };
 
   const handleResultSave = async () => {
+    if (!resultData.resultValue || !resultData.resultValue.trim()) {
+      setValidationMessages(prev => ({ ...prev, resultValue: 'Result value is required' }));
+      return;
+    }
+    setValidationMessages(prev => ({ ...prev, resultValue: '' }));
     try {
       setLoading(true);
       setError(null);
@@ -1131,14 +1142,20 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
 
               <div className={styles.detailFormGrid}>
                 <div className={styles.detailFormGroup}>
-                  <label>Collection Date & Time *</label>
+                  <label>Collection Date & Time <span className={styles.required}>*</span></label>
                   <input
                     type="datetime-local"
                     value={sampleData.sampleCollectedTime}
-                    onChange={(e) => setSampleData({...sampleData, sampleCollectedTime: e.target.value})}
+                    onChange={(e) => {
+                      setSampleData({...sampleData, sampleCollectedTime: e.target.value});
+                      if (e.target.value) setValidationMessages(prev => ({ ...prev, sampleCollectedTime: '' }));
+                    }}
                     className={styles.detailFormInput}
                     required
                   />
+                  {validationMessages.sampleCollectedTime && (
+                    <span className={styles.validationMsg}>{validationMessages.sampleCollectedTime}</span>
+                  )}
                 </div>
 
                 <div className={styles.detailFormGroup}>
@@ -1175,15 +1192,21 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
 
               <div className={styles.detailFormGrid}>
                 <div className={styles.detailFormGroup}>
-                  <label>Result Value *</label>
+                  <label>Result Value <span className={styles.required}>*</span></label>
                   <input
                     type="text"
                     value={resultData.resultValue}
-                    onChange={(e) => setResultData({...resultData, resultValue: e.target.value})}
+                    onChange={(e) => {
+                      setResultData({...resultData, resultValue: e.target.value});
+                      if (e.target.value.trim()) setValidationMessages(prev => ({ ...prev, resultValue: '' }));
+                    }}
                     className={styles.detailFormInput}
                     placeholder="e.g., 120"
                     required
                   />
+                  {validationMessages.resultValue && (
+                    <span className={styles.validationMsg}>{validationMessages.resultValue}</span>
+                  )}
                 </div>
 
                 <div className={styles.detailFormGroup}>
@@ -1191,6 +1214,7 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
                   <input
                     type="text"
                     value={resultData.resultUnits}
+                    maxLength="30"
                     onChange={(e) => setResultData({...resultData, resultUnits: e.target.value})}
                     className={styles.detailFormInput}
                     placeholder="e.g., mg/dL, mmol/L"
@@ -1202,6 +1226,7 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
                   <input
                     type="text"
                     value={resultData.normalRange}
+                    maxLength="100"
                     onChange={(e) => setResultData({...resultData, normalRange: e.target.value})}
                     className={styles.detailFormInput}
                     placeholder="e.g., 70-100"

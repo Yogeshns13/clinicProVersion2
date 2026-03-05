@@ -395,9 +395,8 @@
 
 .validationMsg {
   font-size: 0.75rem;
-  color: #64748b;
+  color: red;
   margin-top: 2px;
-  display: block;
 }
 
 /* ==================== PHOTO / FILE UPLOAD ==================== */
@@ -508,12 +507,7 @@
   min-width: 58px;
   text-align: center;
 }
-.dayBtn:hover {
-  border-color: var(--accent-end);
-  color: var(--accent-start);
-  background: rgba(48, 178, 181, 0.08);
-  transform: translateY(-1px);
-}
+
 .dayBtnActive {
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: var(--text-light) !important;

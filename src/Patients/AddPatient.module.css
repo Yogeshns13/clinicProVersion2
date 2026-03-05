@@ -50,7 +50,7 @@
 
 /* ==================== HEADER ==================== */
 .detailModalHeader {
-  padding: 24px 28px;
+  padding: 14px 18px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
   display: flex;
@@ -192,9 +192,9 @@
 }
 
 .validationMsg {
-  font-size: 0.78rem;
-  color: #6b7280;
-  margin-top: 4px;
+  font-size: 0.75rem;
+  color: red;
+  margin-top: 2px;
 }
 
 /* ==================== MESSAGES ==================== */

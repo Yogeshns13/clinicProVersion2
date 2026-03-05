@@ -28,6 +28,7 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState(false);
+  const [validationMessages, setValidationMessages] = useState({});
 
   // ────────────────────────────────────────────────
   // Fetch doctors on mount
@@ -40,12 +41,10 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
         
         const employeeList = await getEmployeeList(clinicId, {
           BranchID: branchId,
-          PageSize: 100, // Get more employees
-          Status: 1 // Only active employees
+          PageSize: 100,
+          Status: 1
         });
 
-        // Filter for doctors (you may need to adjust this based on your designation values)
-        // Assuming doctors have specific designation values
         setDoctors(employeeList);
       } catch (err) {
         console.error('Failed to fetch doctors:', err);
@@ -63,7 +62,6 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
   useEffect(() => {
     if (!report) return;
 
-    // Format verifiedDateTime for datetime-local input
     let formattedDateTime = '';
     if (report.verifiedDateTime) {
       try {
@@ -92,10 +90,28 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'verifiedBy') {
+      setValidationMessages((prev) => ({
+        ...prev,
+        verifiedBy: Number(value) === 0 ? 'Please select a doctor' : '',
+      }));
+    }
+  };
+
+  const handleVerifiedByBlur = () => {
+    if (!formData.verifiedBy || Number(formData.verifiedBy) === 0) {
+      setValidationMessages((prev) => ({ ...prev, verifiedBy: 'Please select a doctor' }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!formData.verifiedBy || Number(formData.verifiedBy) === 0) {
+      setValidationMessages((prev) => ({ ...prev, verifiedBy: 'Please select a doctor' }));
+      return;
+    }
+
     setFormLoading(true);
     setFormError('');
     setFormSuccess(false);
@@ -104,7 +120,6 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
       const clinicId = Number(localStorage.getItem('clinicID')) || 0;
       const branchId = Number(localStorage.getItem('branchID')) || 0;
 
-      // Convert datetime-local format to backend format
       let verifiedDateTime = '';
       if (formData.verifiedDateTime) {
         verifiedDateTime = formData.verifiedDateTime.replace('T', ' ') + ':00';
@@ -174,6 +189,7 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
                 name="verifiedBy"
                 value={formData.verifiedBy}
                 onChange={handleInputChange}
+                onBlur={handleVerifiedByBlur}
                 disabled={loadingDoctors}
               >
                 <option value="0">-- Select Doctor --</option>
@@ -184,6 +200,9 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
                 ))}
               </select>
               {loadingDoctors && <small className={styles.loadingText}>Loading doctors...</small>}
+              {validationMessages.verifiedBy && (
+                <span className={styles.validationMsg}>{validationMessages.verifiedBy}</span>
+              )}
             </div>
 
             <div className={styles.formGroup}>
