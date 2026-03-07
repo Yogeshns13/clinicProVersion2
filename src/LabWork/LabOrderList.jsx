@@ -10,9 +10,9 @@ import {
   addLabTestReport,
   getLabTestReportList,
   updateLabTestReport
-} from '../api/api-labtest.js';
-import { getEmployeeList } from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+} from '../Api/ApiLabTests.js';
+import { getEmployeeList } from '../Api/Api.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './LabOrderList.module.css';
 

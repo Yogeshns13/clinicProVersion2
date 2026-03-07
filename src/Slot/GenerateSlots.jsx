@@ -1,6 +1,6 @@
 // src/components/GenerateSlots.jsx
 import React, { useState, useEffect } from 'react';
-import { generateSlots } from '../api/api.js';
+import { generateSlots } from '../Api/Api.js';
 import styles from './GenerateSlots.module.css';  
 
 const GenerateSlots = ({ isOpen, onClose, onSuccess }) => {

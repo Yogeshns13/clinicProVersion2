@@ -1,8 +1,8 @@
 // src/components/UpdateLabReport.jsx
 import React, { useState, useEffect } from 'react';
 import { FiSave, FiX } from 'react-icons/fi';
-import { updateLabTestReport } from '../api/api-labtest.js';
-import { getEmployeeList } from '../api/api.js';
+import { updateLabTestReport } from '../Api/ApiLabTests.js';
+import { getEmployeeList } from '../Api/Api.js';
 import styles from './LabReportList.module.css';
 
 // ────────────────────────────────────────────────

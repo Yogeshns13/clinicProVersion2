@@ -6,11 +6,10 @@ import logo from "../assets/cplogo.png";
 import meter from "../assets/meter.svg";
 import scope from "../assets/scope.svg";
 import reff from "../assets/refresh.png";
-import { loginUser, renewToken, getClinicList } from "../api/api";
-import { useAuth } from "../context/AuthContext";
+import { loginUser, renewToken, getClinicList } from "../Api/Api";
+import { useAuth } from "../Contexts/AuthContext";
 import doctor from "../assets/doc.png";
 
-// SVG ICONS
 const LockIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

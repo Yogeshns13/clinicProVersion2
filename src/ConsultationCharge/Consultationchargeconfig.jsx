@@ -6,9 +6,9 @@ import {
   addConsultationChargeConfig,
   updateConsultationChargeConfig,
   deleteConsultationChargeConfig
-} from '../api/api-consultation.js';
-import { getClinicList } from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+} from '../Api/ApiConsultation.js';
+import { getClinicList } from '../Api/Api.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './ConsultationChargeConfig.module.css';
 

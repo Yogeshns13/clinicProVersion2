@@ -1,7 +1,7 @@
 // src/components/AddPatientVisit.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { FiX, FiUser, FiCalendar, FiActivity, FiCheckCircle, FiSearch, FiChevronDown } from 'react-icons/fi';
-import { addPatientVisit, getPatientsList, getEmployeeList, getAppointmentList } from '../api/api.js';
+import { addPatientVisit, getPatientsList, getEmployeeList, getAppointmentList } from '../Api/Api.js';
 import styles from './AddPatientVisit.module.css';
 
 const getLiveValidationMessage = (fieldName, value) => {

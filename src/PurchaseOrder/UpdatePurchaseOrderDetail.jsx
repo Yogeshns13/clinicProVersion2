@@ -1,7 +1,7 @@
 // src/components/UpdatePurchaseOrderDetail.jsx
 import React, { useState, useEffect } from 'react';
 import { FiX } from 'react-icons/fi';
-import { updatePurchaseOrderDetail } from '../api/api-pharmacy.js';
+import { updatePurchaseOrderDetail } from '../Api/ApiPharmacy.js';
 import styles from './UpdatePurchaseOrderDetail.module.css';
 
 // ────────────────────────────────────────────────

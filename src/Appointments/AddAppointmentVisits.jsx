@@ -1,7 +1,6 @@
-// src/components/AddAppointmentVisit.jsx
 import React, { useState, useEffect } from 'react';
-import { FiX, FiSave, FiUser, FiCalendar, FiActivity, FiThermometer } from 'react-icons/fi';
-import { addPatientVisit } from '../api/api.js';
+import { FiX, FiSave, FiUser,FiActivity} from 'react-icons/fi';
+import { addPatientVisit } from '../Api/Api.js';
 import styles from './AddAppointmentVisit.module.css';
 
 const AddAppointmentVisit = ({ isOpen, onClose, onSuccess, appointment }) => {

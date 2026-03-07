@@ -10,8 +10,8 @@ import {
   getShiftList,
   addShift,
   deleteShift 
-} from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+} from '../Api/Api.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import UpdateWorkShift from './UpdateWorkShift.jsx';
 import styles from './WorkShift.module.css';

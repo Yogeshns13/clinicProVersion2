@@ -11,15 +11,23 @@ export const getUserId = () => {
   return localStorage.getItem("userId");
 };
 
-const UPLOAD_API_URL = '/upload';
-const FILE_API_URL = '/file';
+const baseURL = import.meta.env.PROD
+  ? `${import.meta.env.VITE_API_BASE_URL}/api`
+  : '/api';
 
-const baseURL = "/api";
+const UPLOAD_API_URL = import.meta.env.PROD
+  ? `${import.meta.env.VITE_FTP_BASE_URL}/upload`
+  : '/upload';
+
+const FILE_API_URL = import.meta.env.PROD
+  ? `${import.meta.env.VITE_FTP_BASE_URL}/file`
+  : '/file';
+
 const API = axios.create({
   baseURL,
   withCredentials: true,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
 });
 

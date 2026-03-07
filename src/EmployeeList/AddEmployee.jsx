@@ -13,8 +13,8 @@ import {
   updateEmployee,
   updateEmployeeProof,
   updateEmployeeBeneficiaryAccount,
-} from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+} from '../Api/Api.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import styles from './AddEmployee.module.css';
 
 // ────────────────────────────────────────────────

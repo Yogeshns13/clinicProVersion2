@@ -8,9 +8,9 @@ import {
 import { 
   getBranchList, 
   getClinicList, 
-} from '../api/cachedApi.js';
-import { addBranch } from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+} from '../Api/CachedApi.js';
+import { addBranch } from '../Api/Api.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import UpdateBranch from './UpdateBranch.jsx';
 import styles from './BranchList.module.css';

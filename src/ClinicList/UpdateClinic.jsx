@@ -1,7 +1,7 @@
 // src/components/UpdateClinic.jsx
 import React, { useState } from 'react';
 import { FiSave } from 'react-icons/fi';
-import { updateClinic } from '../api/api.js';
+import { updateClinic } from '../Api/Api.js';
 import styles from './ClinicList.module.css';
 
 // ─── matches backend allowedCharactersRegex exactly ───────────────────────────

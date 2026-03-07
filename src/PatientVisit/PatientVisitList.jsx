@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiCheckCircle, FiX, FiAlertCircle } from 'react-icons/fi';
-import { getPatientVisitList, updatePatientVisit } from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getPatientVisitList, updatePatientVisit } from '../Api/Api.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddPatientVisit from './AddPatientVisit.jsx';
 import PatientVisitDetails from './ViewPatientVisit.jsx';

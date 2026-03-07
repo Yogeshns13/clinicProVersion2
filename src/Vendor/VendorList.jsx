@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiX } from 'react-icons/fi';
-import { getVendorList } from '../api/api-pharmacy.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getVendorList } from '../Api/ApiPharmacy.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddVendor from './AddVendor.jsx';
 import ViewVendor from './ViewVendor.jsx';

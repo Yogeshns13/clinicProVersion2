@@ -1,8 +1,8 @@
 // src/components/InvoicePaymentList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { FiSearch, FiDollarSign, FiCreditCard, FiX } from 'react-icons/fi';
-import { getInvoicePaymentList, updateInvoicePayment } from '../api/api-invoicePayment.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getInvoicePaymentList, updateInvoicePayment } from '../Api/ApiInvoicePayment.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './InvoicePaymentManagement.module.css';
 

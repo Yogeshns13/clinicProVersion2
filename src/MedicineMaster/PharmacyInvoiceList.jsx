@@ -2,14 +2,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiX, FiCalendar, FiFilter, FiEye, FiFileText, FiDollarSign, FiDownload, FiPrinter, FiPackage } from 'react-icons/fi';
-import { getPharmacyInvoiceDetailList } from '../api/api-pharmacy.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getPharmacyInvoiceDetailList } from '../Api/ApiPharmacy.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './PharmacyInvoiceList.module.css';
 
-// ──────────────────────────────────────────────────
-// CONSTANTS
-// ──────────────────────────────────────────────────
+
 const SEARCH_TYPE_OPTIONS = [
   { value: 'customerName', label: 'Customer Name' },
   { value: 'invoiceNo',    label: 'Invoice No'    },

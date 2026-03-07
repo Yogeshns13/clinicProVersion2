@@ -1,8 +1,8 @@
 // src/components/UpdatePatientVisit.jsx
 import React, { useState, useEffect } from 'react';
 import { FiX, FiSave, FiInfo, FiActivity, FiUser, FiCalendar } from 'react-icons/fi';
-import { getPatientVisitList, updatePatientVisit, getEmployeeList, getAppointmentList } from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getPatientVisitList, updatePatientVisit, getEmployeeList, getAppointmentList } from '../Api/Api.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import styles from './UpdatePatientVisit.module.css';
 
 const getLiveValidationMessage = (fieldName, value) => {

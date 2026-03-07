@@ -1,8 +1,8 @@
 // src/components/UpdateDepartment.jsx
 import React, { useState, useEffect } from 'react';
 import { FiSave } from 'react-icons/fi';
-import { getBranchList } from '../api/cachedApi.js';
-import { updateDepartment } from '../api/api.js';
+import { getBranchList } from '../Api/CachedApi.js';
+import { updateDepartment } from '../Api/Api.js';
 import styles from './DepartmentList.module.css';
 
 const getLiveValidationMessage = (fieldName, value) => {

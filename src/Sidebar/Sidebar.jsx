@@ -14,7 +14,7 @@ import {
   FiChevronRight,
   FiPlusSquare,
 } from "react-icons/fi";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../Contexts/AuthContext";
 import "./Sidebar.css";
 import logo from "../assets/cplogo.png";
 

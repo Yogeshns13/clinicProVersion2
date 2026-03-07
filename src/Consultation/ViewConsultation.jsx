@@ -11,17 +11,17 @@ import {
   FiClipboard, FiDroplet, FiCheckCircle, FiSave, FiUsers,
   FiMove,
 } from 'react-icons/fi';
-import { getPatientsList } from '../api/api.js';
-import { updateConsultation, getConsultationList } from '../api/api-consultation.js';
+import { getPatientsList } from '../Api/Api.js';
+import { updateConsultation, getConsultationList } from '../Api/ApiConsultation.js';
 import {
   getMedicineMasterList, getPrescriptionList, getPrescriptionDetailList,
   addPrescription, addPrescriptionDetail, updatePrescriptionDetail, deletePrescriptionDetail,
-} from '../api/api-pharmacy.js';
+} from '../Api/ApiPharmacy.js';
 import {
   addLabTestOrder, addLabTestOrderItem, getLabTestMasterList,
   getLabTestPackageList, getLabTestOrderList, getLabTestOrderItemList,
   updateLabTestOrderItem, deleteLabTestOrder,
-} from '../api/api-labtest.js';
+} from '../Api/ApiLabTests.js';
 import './ViewConsultation.css';
 
 /* ─── Constants ─────────────────────────────────── */

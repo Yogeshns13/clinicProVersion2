@@ -1,6 +1,6 @@
 // src/components/UpdateVendor.jsx
 import React, { useState } from 'react';
-import { updateVendor } from '../api/api-pharmacy.js';
+import { updateVendor } from '../Api/ApiPharmacy.js';
 import styles from './UpdateVendor.module.css';
 
 // ────────────────────────────────────────────────

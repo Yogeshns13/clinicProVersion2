@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { renewToken } from "../api/api";
+import { renewToken } from "../Api/Api";
 const TOKEN_RENEWAL_INTERVAL = 300 * 60 * 1000; 
 const parseISTTime = (timeStr) => {
   if (!timeStr) {

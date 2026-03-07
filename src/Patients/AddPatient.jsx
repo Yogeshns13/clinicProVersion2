@@ -1,7 +1,7 @@
 // src/components/AddPatient.jsx
 import React, { useState, useEffect } from 'react';
 import { FiX, FiSearch } from 'react-icons/fi';
-import { addPatient, getPatientsList } from '../api/api.js';
+import { addPatient, getPatientsList } from '../Api/Api.js';
 import styles from './AddPatient.module.css';
 
 const GENDER_OPTIONS = [

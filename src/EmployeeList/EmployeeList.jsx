@@ -1,8 +1,8 @@
 // src/components/EmployeeList.jsx
 import React, { useState, useEffect } from 'react';
 import { FiSearch, FiPlus, FiX } from 'react-icons/fi';
-import { getEmployeeList, getDepartmentList } from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getEmployeeList, getDepartmentList } from '../Api/Api.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddEmployee from './AddEmployee.jsx';
 import ViewEmployee from './ViewEmployee.jsx';

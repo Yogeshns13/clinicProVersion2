@@ -9,8 +9,8 @@ import {
   FiDollarSign,
   FiLayers,
 } from 'react-icons/fi';
-import { getMedicineStockList } from '../api/api-pharmacy.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getMedicineStockList } from '../Api/ApiPharmacy.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './MedicineStockByMedicine.module.css';
 

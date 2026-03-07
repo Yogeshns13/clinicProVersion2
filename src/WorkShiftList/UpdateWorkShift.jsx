@@ -1,7 +1,7 @@
 // src/components/UpdateWorkShift.jsx
 import React, { useState } from 'react';
 import { FiSave } from 'react-icons/fi';
-import { updateShift } from '../api/api.js';
+import { updateShift } from '../Api/Api.js';
 import styles from './WorkShift.module.css';
 
 const STATUS_OPTIONS = [

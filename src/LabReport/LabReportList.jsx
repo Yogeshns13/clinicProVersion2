@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiX, FiTrash2, FiEdit } from 'react-icons/fi';
-import { getLabTestReportList, deleteLabTestReport } from '../api/api-labtest.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getLabTestReportList, deleteLabTestReport } from '../Api/ApiLabTests.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import UpdateLabReport from './UpdateLabReport.jsx';
 import styles from './LabReportList.module.css';

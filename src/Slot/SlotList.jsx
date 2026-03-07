@@ -1,8 +1,8 @@
 // src/components/SlotList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { FiSearch, FiCalendar, FiClock, FiCheckCircle, FiXCircle, FiTrash2, FiEdit, FiPlus, FiX } from 'react-icons/fi';
-import { getSlotList, getEmployeeList, deleteSlot, updateSlot, addSlot } from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getSlotList, getEmployeeList, deleteSlot, updateSlot, addSlot } from '../Api/Api.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './SlotList.module.css';
 

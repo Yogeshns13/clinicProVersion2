@@ -18,9 +18,9 @@ import {
   addSalesCart,
   addSalesCartDetail,
   getSalesCartList,
-} from '../api/api-pharmacy.js';
-import { getMedicineMasterList } from '../api/api-pharmacy.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+} from '../Api/ApiPharmacy.js';
+import { getMedicineMasterList } from '../Api/ApiPharmacy.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './SalesCartList.module.css';
 

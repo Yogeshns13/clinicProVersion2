@@ -17,14 +17,14 @@ import {
   addLabPackageItem,
   deleteLabPackageItem,
   rebuildPackageFees
-} from '../api/api-labtest.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+} from '../Api/ApiLabTests.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import ViewLabMaster from './ViewLabMaster.jsx';
 import ViewLabPackage from './ViewLabPackage.jsx';
 import styles from './LabMaster.module.css';
-import UpdateLabTestMaster from './Updatelabtestmaster.jsx';
-import UpdateLabTestPackage from './Updatelabtestpackage.jsx';
+import UpdateLabTestMaster from './UpdateLabTestMaster.jsx';
+import UpdateLabTestPackage from './UpdateLabTestPackage.jsx';
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {

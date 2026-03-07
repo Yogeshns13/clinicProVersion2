@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiSearch, FiX } from 'react-icons/fi';
-import { getPatientsList, updatePatient } from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getPatientsList, updatePatient } from '../Api/Api.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './UpdatePatient.module.css';
 

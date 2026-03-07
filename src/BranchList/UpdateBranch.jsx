@@ -1,7 +1,7 @@
 // src/components/UpdateBranch.jsx
 import React, { useState } from 'react';
 import { FiSave } from 'react-icons/fi';
-import { updateBranch } from '../api/api.js';
+import { updateBranch } from '../Api/Api.js';
 import styles from './BranchList.module.css';
 
 // ─── matches backend allowedCharactersRegex exactly ───────────────────────────

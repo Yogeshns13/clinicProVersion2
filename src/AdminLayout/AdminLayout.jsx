@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import './AdminLayout.css';
 import Sidebar from '../Sidebar/Sidebar';
-import { useTokenRenewal } from '../hooks/TokenRenewal'; // Adjust path if needed
+import { useTokenRenewal } from '../Hooks/TokenRenewal'; 
 
 const AdminLayout = () => {
   useTokenRenewal();

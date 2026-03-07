@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiX } from 'react-icons/fi';
-import { getPurchaseOrderList } from '../api/api-pharmacy.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getPurchaseOrderList } from '../Api/ApiPharmacy.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddPurchaseOrder from './AddPurchaseOrder.jsx';
 import styles from './PurchaseOrderList.module.css';

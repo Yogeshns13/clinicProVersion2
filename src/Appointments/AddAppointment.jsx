@@ -1,13 +1,9 @@
 // src/components/AddAppointment.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { FiX, FiCalendar, FiClock, FiUser, FiSearch, FiChevronDown, FiCheckCircle } from 'react-icons/fi';
-import { addAppointment, getPatientsList, getEmployeeList, getSlotList } from '../api/api.js';
+import { addAppointment, getPatientsList, getEmployeeList, getSlotList } from '../Api/Api.js';
 import styles from './AddAppointment.module.css';
 
-
-/* ─────────────────────────────────────────────── */
-/* Reusable SearchableDropdown (same as AddPatientVisit) */
-/* ─────────────────────────────────────────────── */
 const SearchableDropdown = ({
   label,
   required,

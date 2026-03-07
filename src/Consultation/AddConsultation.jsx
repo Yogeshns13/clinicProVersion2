@@ -9,18 +9,18 @@ import {
   FiThermometer, FiTrendingUp, FiSend, FiTrash2,
   FiClipboard, FiDroplet, FiCheckCircle, FiSave, FiUsers,
 } from 'react-icons/fi';
-import { getPatientVisitList, getPatientsList } from '../api/api.js';
-import { addConsultation, updateConsultation, getConsultationList } from '../api/api-consultation.js';
+import { getPatientVisitList, getPatientsList } from '../Api/Api.js';
+import { addConsultation, updateConsultation, getConsultationList } from '../Api/ApiConsultation.js';
 import {
   addPrescription, addPrescriptionDetail, getMedicineMasterList,
   getPrescriptionList, getPrescriptionDetailList,
   updatePrescriptionDetail, deletePrescriptionDetail
-} from '../api/api-pharmacy.js';
+} from '../Api/ApiPharmacy.js';
 import {
   addLabTestOrder, addLabTestOrderItem, getLabTestMasterList,
   getLabTestPackageList, getLabTestOrderList, getLabTestOrderItemList,
   updateLabTestOrderItem, deleteLabTestOrder
-} from '../api/api-labtest.js';
+} from '../Api/ApiLabTests.js';
 import './AddConsultation.css';
 
 /* ─── Constants ─────────────────────────────────── */

@@ -28,13 +28,10 @@ import {
   deleteWorkDays,
   getShiftList,
   getDepartmentList,
-} from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+} from '../Api/Api.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import styles from './ViewEmployee.module.css';
 
-// ────────────────────────────────────────────────
-// VALIDATION — mirrors AddEmployee rules exactly
-// ────────────────────────────────────────────────
 const NAME_REGEX       = /^[A-Za-z\s\.\-']+$/;
 const MOBILE_REGEX     = /^[6-9]\d{9}$/;
 const IFSC_REGEX       = /^[A-Z]{4}0[A-Z0-9]{6}$/;

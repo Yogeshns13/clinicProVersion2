@@ -2,13 +2,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiCalendar, FiX, FiActivity } from 'react-icons/fi';
-import { getAppointmentList } from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getAppointmentList } from '../Api/Api.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddAppointment from './AddAppointment.jsx';
 import AppointmentDetails from './ViewAppointment.jsx';
-import AddAppointmentVisit from './Addappointmentvisit.jsx';
 import styles from './AppointmentList.module.css';
+import AddAppointmentVisit from './AddAppointmentVisits.jsx';
+
 
 // ──────────────────────────────────────────────────
 // CONSTANTS

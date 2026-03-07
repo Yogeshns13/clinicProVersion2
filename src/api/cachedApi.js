@@ -1,12 +1,5 @@
-// cachedApi.js - Wrapper for all API functions with automatic caching
-// Import this instead of the original api.js
-
-import * as originalApi from './api';
-import { apiCache, withCache, invalidateCache } from '../Utils/cacheManager';
-
-// ══════════════════════════════════════════════════════════════
-// READ OPERATIONS (GET) - These will be cached
-// ══════════════════════════════════════════════════════════════
+import * as originalApi from './Api';
+import { apiCache, withCache, invalidateCache } from '../Utils/CacheManager';
 
 export const getClinicList = async (forceRefresh = false) => {
   return withCache(

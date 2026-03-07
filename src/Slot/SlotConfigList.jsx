@@ -1,107 +1,80 @@
-// src/components/SlotList.jsx
+// src/components/SlotConfigList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { FiSearch, FiCalendar, FiClock, FiCheckCircle, FiXCircle, FiTrash2, FiEdit, FiPlus, FiX } from 'react-icons/fi';
-import { getSlotList, getEmployeeList, deleteSlot, updateSlot, addSlot } from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { useNavigate } from 'react-router-dom';
+import { FiSearch, FiPlus, FiTrash2, FiCalendar, FiX } from 'react-icons/fi';
+import { getSlotConfigList, getEmployeeList, getShiftList, deleteSlotConfig } from '../Api/Api.js';
+
 import Header from '../Header/Header.jsx';
-import styles from './SlotList.module.css';
+import AddSlotConfig from './AddSlotConfig.jsx';
+import GenerateSlots from './GenerateSlots.jsx';
+import styles from './SlotConfigList.module.css';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 
 // ────────────────────────────────────────────────
 // CONSTANTS
 // ────────────────────────────────────────────────
+const DURATION_OPTIONS = [
+  { id: 1, label: 'Daily' },
+  { id: 2, label: 'Weekend' },
+  { id: 3, label: 'Specific Date' },
+];
+
 const STATUS_OPTIONS = [
-  { id: 1,  label: 'Active' },
-  { id: 2, label: 'Deleted' },
+  { id: 1, label: 'Active' },
+  { id: 2, label: 'Inactive' },
 ];
 
-const BOOKED_OPTIONS = [
-  { value: 'all',       label: 'All Slots' },
-  { value: 'available', label: 'Available' },
-  { value: 'booked',    label: 'Booked' },
+const SEARCH_TYPE_OPTIONS = [
+  { value: 'DoctorName', label: 'Doctor Name' },
+  { value: 'ShiftName',  label: 'Shift' },
 ];
-
-const getTodayDate = () => new Date().toISOString().split('T')[0];
 
 // ────────────────────────────────────────────────
-const SlotList = () => {
-  const [slots,    setSlots]   = useState([]);
-  const [allSlots, setAllSlots] = useState([]);
-  const [doctors,  setDoctors] = useState([]);
-  const [loading,  setLoading] = useState(true);
-  const [error,    setError]   = useState(null);
+const SlotConfigList = () => {
+  const navigate = useNavigate();
+
+  // Data
+  const [configs, setConfigs]   = useState([]);
+  const [doctors, setDoctors]   = useState([]);
+  const [shifts,  setShifts]    = useState([]);
+  const [doctorShifts, setDoctorShifts] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState(null);
 
   // Filter inputs (staged)
   const [filterInputs, setFilterInputs] = useState({
-    doctorId:   'all',
-    fromDate:   getTodayDate(),
-    toDate:     getTodayDate(),
-    bookedFilter: 'all',
-    status:     '',
+    doctorId:    'all',
+    searchType:  'DoctorName',
+    searchValue: '',
+    duration:    '',
+    status:      '',
   });
 
-  // Applied filters (drive API)
+  // Applied filters (drive the API call)
   const [appliedFilters, setAppliedFilters] = useState({
-    doctorId:     'all',
-    fromDate:     getTodayDate(),
-    toDate:       getTodayDate(),
-    bookedFilter: 'all',
-    status:       '',
+    doctorId:    'all',
+    searchType:  'DoctorName',
+    searchValue: '',
+    duration:    '',
+    status:      '',
   });
 
   // Modals
-  const [showAddModal,    setShowAddModal]    = useState(false);
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [selectedSlot,    setSelectedSlot]    = useState(null);
-  const [hoveredSlotId,   setHoveredSlotId]   = useState(null);
-
-  const [formData, setFormData] = useState({ doctorId: '', slotDate: '', slotTime: '' });
-  const [updateFormData, setUpdateFormData] = useState({ appointmentId: 0, isBooked: 0 });
-  const [addValidationMessages,    setAddValidationMessages]    = useState({});
-  const [updateValidationMessages, setUpdateValidationMessages] = useState({});
+  const [isAddFormOpen,   setIsAddFormOpen]   = useState(false);
+  const [isGenerateOpen,  setIsGenerateOpen]  = useState(false);
+  const [deleteConfirm,   setDeleteConfirm]   = useState(null);
 
   // ────────────────────────────────────────────────
-  // Derived: are any filters changed from defaults?
-  const defaultFilters = { doctorId: 'all', fromDate: getTodayDate(), toDate: getTodayDate(), bookedFilter: 'all', status: '' };
-
+  // Derived: are any filters active?
   const hasActiveFilters =
-    appliedFilters.doctorId     !== defaultFilters.doctorId     ||
-    appliedFilters.fromDate     !== defaultFilters.fromDate     ||
-    appliedFilters.toDate       !== defaultFilters.toDate       ||
-    appliedFilters.bookedFilter !== defaultFilters.bookedFilter ||
-    appliedFilters.status       !== defaultFilters.status;
+    appliedFilters.doctorId    !== 'all' ||
+    appliedFilters.searchValue.trim() !== '' ||
+    appliedFilters.duration    !== '' ||
+    appliedFilters.status      !== '';
 
   // ────────────────────────────────────────────────
-  // Validation
-  const getLiveValidationMessage = (fieldName, value) => {
-    switch (fieldName) {
-      case 'doctorId':
-        if (!value) return 'Please select a doctor';
-        return '';
-      case 'slotDate':
-        if (!value) return 'Please select a date';
-        const selected = new Date(value);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        selected.setHours(0, 0, 0, 0);
-        if (selected < today) return 'Past dates are not allowed';
-        return '';
-      case 'slotTime':
-        if (!value) return 'Please select a time';
-        return '';
-      case 'appointmentId':
-        if (value && isNaN(Number(value))) return 'Must be a number';
-        if (value && Number(value) < 0) return 'Cannot be negative';
-        return '';
-      case 'isBooked':
-        if (value === '' || value === undefined) return 'Please select booking status';
-        return '';
-      default:
-        return '';
-    }
-  };
-
-  // ────────────────────────────────────────────────
-  // Fetch doctors
+  // Fetch reference data
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
@@ -116,9 +89,36 @@ const SlotList = () => {
     fetchDoctors();
   }, []);
 
+  useEffect(() => {
+    const fetchShifts = async () => {
+      try {
+        const clinicId = Number(localStorage.getItem('clinicID'));
+        const data = await getShiftList(clinicId, { Status: 1 });
+        setShifts(data);
+      } catch (err) {
+        console.error('Failed to load shifts:', err);
+      }
+    };
+    fetchShifts();
+  }, []);
+
+  useEffect(() => {
+    const fetchDoctorShifts = async () => {
+      try {
+        const clinicId = localStorage.getItem('clinicID');
+        const { getEmployeeShiftList } = await import('../Api/Api.js');
+        const data = await getEmployeeShiftList(clinicId);
+        setDoctorShifts(data);
+      } catch (err) {
+        console.error('Failed to load doctor shifts:', err);
+      }
+    };
+    fetchDoctorShifts();
+  }, []);
+
   // ────────────────────────────────────────────────
-  // Fetch slots driven by appliedFilters
-  const fetchSlots = async (filters = appliedFilters) => {
+  // Fetch configs driven by appliedFilters
+  const fetchConfigs = async (filters = appliedFilters) => {
     try {
       setLoading(true);
       setError(null);
@@ -127,32 +127,22 @@ const SlotList = () => {
       const branchId = Number(localStorage.getItem('branchID'));
 
       const options = {
-        BranchID:     branchId,
-        DoctorID:     filters.doctorId !== 'all' ? Number(filters.doctorId) : 0,
-        FromSlotDate: filters.fromDate || '',
-        ToSlotDate:   filters.toDate   || '',
-        PageSize: 60,
-        IsBooked:
-          filters.bookedFilter === 'booked'
-            ? 1
-            : filters.bookedFilter === 'available'
-            ? 0
-            : -1,
-        Status:
-          filters.status !== ''
-            ? Number(filters.status)
-            : -1,
+        BranchID:   branchId,
+        DoctorID:   filters.doctorId !== 'all' ? Number(filters.doctorId) : 0,
+        DoctorName: filters.searchType === 'DoctorName' ? filters.searchValue : '',
+        ShiftID:    0,
+        Duration:   filters.duration  !== '' ? Number(filters.duration) : 0,
+        Status:     filters.status    !== '' ? Number(filters.status)   : -1,
       };
 
-      const data = await getSlotList(clinicId, options);
-      setSlots(data);
-      setAllSlots(data);
+      const data = await getSlotConfigList(clinicId, options);
+      setConfigs(data);
     } catch (err) {
-      console.error('fetchSlots error:', err);
+      console.error('fetchConfigs error:', err);
       setError(
         err?.status >= 400 || err?.code >= 400
           ? err
-          : { message: err.message || 'Failed to load slots' }
+          : { message: err.message || 'Failed to load slot configurations' }
       );
     } finally {
       setLoading(false);
@@ -160,55 +150,35 @@ const SlotList = () => {
   };
 
   useEffect(() => {
-    fetchSlots(appliedFilters);
+    fetchConfigs(appliedFilters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedFilters]);
 
   // ────────────────────────────────────────────────
-  // Computed values
-  const groupedSlots = useMemo(() => {
-    const groups = {};
-    allSlots.forEach((slot) => {
-      const date = slot.slotDate || 'Unknown';
-      if (!groups[date]) groups[date] = [];
-      groups[date].push(slot);
-    });
-    return Object.keys(groups)
-      .sort()
-      .reduce((acc, date) => {
-        acc[date] = groups[date].sort((a, b) =>
-          (a.slotTime || '').localeCompare(b.slotTime || '')
-        );
-        return acc;
-      }, {});
-  }, [allSlots]);
+  // Client-side search filter for ShiftName (API may not support it directly)
+  const filteredConfigs = useMemo(() => {
+    if (
+      appliedFilters.searchType !== 'ShiftName' ||
+      !appliedFilters.searchValue.trim()
+    ) {
+      return configs;
+    }
+    const term = appliedFilters.searchValue.toLowerCase();
+    return configs.filter((c) =>
+      c.shiftName?.toLowerCase().includes(term)
+    );
+  }, [configs, appliedFilters]);
 
   // ────────────────────────────────────────────────
-  // Helpers
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '—';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
-    });
-  };
+  // Helper functions
+  const getDurationLabel = (duration) =>
+    DURATION_OPTIONS.find((d) => d.id === duration)?.label || '—';
 
-  const formatTime = (timeStr) => {
-    if (!timeStr) return '—';
-    const [hours, minutes] = timeStr.split(':');
-    const hour = parseInt(hours, 10);
-    const period = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${period}`;
-  };
-
-  const getSlotStatus = (slot) => {
-    if (slot.status === 'inactive' || slot.status === 2) return 'deleted';
-    return slot.isBooked ? 'booked' : 'available';
-  };
+  const getStatusClass = (status) =>
+    status === 'active' ? styles.active : styles.inactive;
 
   // ────────────────────────────────────────────────
-  // Filter handlers
+  // Handlers
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs((prev) => ({ ...prev, [name]: value }));
@@ -219,124 +189,33 @@ const SlotList = () => {
   };
 
   const handleClearFilters = () => {
-    const empty = { ...defaultFilters };
+    const empty = { doctorId: 'all', searchType: 'DoctorName', searchValue: '', duration: '', status: '' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
   };
 
-  // ────────────────────────────────────────────────
-  // Add slot
-  const handleAddChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    const message = getLiveValidationMessage(name, value);
-    setAddValidationMessages((prev) => ({ ...prev, [name]: message }));
-  };
+  const handleDeleteClick   = (config) => setDeleteConfirm(config);
+  const handleDeleteCancel  = ()        => setDeleteConfirm(null);
 
-  const validateAddForm = () => {
-    const errors = {};
-    ['doctorId', 'slotDate', 'slotTime'].forEach((field) => {
-      const msg = getLiveValidationMessage(field, formData[field]);
-      if (msg) errors[field] = msg;
-    });
-    setAddValidationMessages((prev) => ({ ...prev, ...errors }));
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleAddSlot = async (e) => {
-    e.preventDefault();
-    if (!validateAddForm()) return;
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
     try {
-      setLoading(true);
-      const clinicId = localStorage.getItem('clinicID');
-      const branchId = localStorage.getItem('branchID');
-      await addSlot({
-        clinicId:  parseInt(clinicId),
-        branchId:  parseInt(branchId),
-        doctorId:  parseInt(formData.doctorId),
-        slotDate:  formData.slotDate,
-        slotTime:  formData.slotTime + ':00',
-      });
-      setShowAddModal(false);
-      setFormData({ doctorId: '', slotDate: '', slotTime: '' });
-      setAddValidationMessages({});
-      fetchSlots(appliedFilters);
+      await deleteSlotConfig(deleteConfirm.id);
+      setDeleteConfirm(null);
+      fetchConfigs(appliedFilters);
     } catch (err) {
-      console.error('Add slot error:', err);
+      console.error('Delete failed:', err);
       setError(err);
-    } finally {
-      setLoading(false);
     }
   };
 
-  // ────────────────────────────────────────────────
-  // Update slot
-  const handleUpdateChange = (e) => {
-    const { name, value } = e.target;
-    setUpdateFormData((prev) => ({ ...prev, [name]: value }));
-    const message = getLiveValidationMessage(name, value);
-    setUpdateValidationMessages((prev) => ({ ...prev, [name]: message }));
-  };
+  const openAddForm     = () => setIsAddFormOpen(true);
+  const closeAddForm    = () => setIsAddFormOpen(false);
+  const openGenerateSlots  = () => setIsGenerateOpen(true);
+  const closeGenerateSlots = () => setIsGenerateOpen(false);
 
-  const validateUpdateForm = () => {
-    const errors = {};
-    ['isBooked'].forEach((field) => {
-      const msg = getLiveValidationMessage(field, updateFormData[field]);
-      if (msg) errors[field] = msg;
-    });
-    const appIdMsg = getLiveValidationMessage('appointmentId', updateFormData.appointmentId);
-    if (appIdMsg) errors.appointmentId = appIdMsg;
-    setUpdateValidationMessages((prev) => ({ ...prev, ...errors }));
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleUpdateSlot = async (e) => {
-    e.preventDefault();
-    if (!validateUpdateForm()) return;
-    try {
-      setLoading(true);
-      await updateSlot({
-        slotId:        selectedSlot.id,
-        appointmentId: parseInt(updateFormData.appointmentId),
-        isBooked:      parseInt(updateFormData.isBooked),
-      });
-      setShowUpdateModal(false);
-      setSelectedSlot(null);
-      setUpdateFormData({ appointmentId: 0, isBooked: 0 });
-      setUpdateValidationMessages({});
-      fetchSlots(appliedFilters);
-    } catch (err) {
-      console.error('Update slot error:', err);
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteSlot = async (slotId) => {
-    if (!window.confirm('Are you sure you want to delete this slot?')) return;
-    try {
-      setLoading(true);
-      await deleteSlot(slotId);
-      fetchSlots(appliedFilters);
-    } catch (err) {
-      console.error('Delete slot error:', err);
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const openUpdateModal = (slot) => {
-    setSelectedSlot(slot);
-    setUpdateFormData({ appointmentId: slot.appointmentId || 0, isBooked: slot.isBooked ? 1 : 0 });
-    setShowUpdateModal(true);
-  };
-
-  useEffect(() => {
-    if (!showAddModal)    setAddValidationMessages({});
-    if (!showUpdateModal) setUpdateValidationMessages({});
-  }, [showAddModal, showUpdateModal]);
+  const handleAddSuccess      = () => fetchConfigs(appliedFilters);
+  const handleGenerateSuccess = () => console.log('Slots generated successfully');
 
   // ────────────────────────────────────────────────
   // Early returns
@@ -344,14 +223,14 @@ const SlotList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.loading}>Loading slots...</div>;
+  if (loading) return <div className={styles.loading}>Loading slot configurations...</div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
   return (
     <div className={styles.listWrapper}>
       <ErrorHandler error={error} />
-      <Header title="Appointment Slots" />
+      <Header title="Slot Configuration Management" />
 
       {/* ── Filter Bar (single line) ── */}
       <div className={styles.toolbar}>
@@ -367,22 +246,46 @@ const SlotList = () => {
             <option value="all">All Doctors</option>
             {doctors.map((doc) => (
               <option key={doc.id} value={doc.id}>
-                {doc.firstName} {doc.lastName}
+                {doc.firstName} {doc.lastName} ({doc.employeeCode})
               </option>
             ))}
           </select>
 
-         
+          {/* Search type + value */}
+          <div className={styles.searchGroup}>
+            <select
+              name="searchType"
+              value={filterInputs.searchType}
+              onChange={handleFilterChange}
+              className={styles.searchTypeSelect}
+            >
+              {SEARCH_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              name="searchValue"
+              placeholder={`Search by ${
+                SEARCH_TYPE_OPTIONS.find((o) => o.value === filterInputs.searchType)?.label || ''
+              }`}
+              value={filterInputs.searchValue}
+              onChange={handleFilterChange}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className={styles.searchInput}
+            />
+          </div>
 
-          {/* Booked filter */}
+          {/* Duration */}
           <select
-            name="bookedFilter"
-            value={filterInputs.bookedFilter}
+            name="duration"
+            value={filterInputs.duration}
             onChange={handleFilterChange}
             className={styles.selectInput}
           >
-            {BOOKED_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <option value="">All Durations</option>
+            {DURATION_OPTIONS.map((d) => (
+              <option key={d.id} value={d.id}>{d.label}</option>
             ))}
           </select>
 
@@ -399,24 +302,6 @@ const SlotList = () => {
             ))}
           </select>
 
-           {/* From Date */}
-          <input
-            type="date"
-            name="fromDate"
-            value={filterInputs.fromDate}
-            onChange={handleFilterChange}
-            className={styles.dateInput}
-          />
-
-          {/* To Date */}
-          <input
-            type="date"
-            name="toDate"
-            value={filterInputs.toDate}
-            onChange={handleFilterChange}
-            className={styles.dateInput}
-          />
-
           {/* Actions */}
           <div className={styles.filterActions}>
             <button onClick={handleSearch} className={styles.searchButton}>
@@ -431,236 +316,140 @@ const SlotList = () => {
               </button>
             )}
 
-            <button onClick={() => setShowAddModal(true)} className={styles.addBtn}>
+            <button onClick={openGenerateSlots} className={styles.generateBtn}>
+              <FiCalendar size={16} />
+              Generate Slots
+            </button>
+
+            <button onClick={openAddForm} className={styles.addBtn}>
               <FiPlus size={18} />
-              Add Slot
+              Add Config
             </button>
           </div>
         </div>
       </div>
 
-      {/* ── Slots Grouped by Date ── */}
-      <div className={styles.slotsTimeline}>
-        {Object.keys(groupedSlots).length === 0 ? (
-          <div className={styles.noData}>
-            No slots found for the selected filters.
-          </div>
-        ) : (
-          Object.entries(groupedSlots).map(([date, dateSlots]) => (
-            <div key={date} className={styles.dateGroup}>
-              <div className={styles.dateHeader}>
-                <FiCalendar size={18} />
-                <h3>{formatDate(date)}</h3>
-                <span className={styles.slotCount}>
-                  {dateSlots.length} slot{dateSlots.length !== 1 ? 's' : ''}
-                </span>
-              </div>
-
-              <div className={styles.slotsGrid}>
-                {dateSlots.map((slot) => {
-                  const slotStatus = getSlotStatus(slot);
-                  return (
-                    <div
-                      key={slot.id}
-                      className={`${styles.slotCard} ${styles[slotStatus]}`}
-                      onMouseEnter={() => setHoveredSlotId(slot.id)}
-                      onMouseLeave={() => setHoveredSlotId(null)}
-                    >
-                      <div className={styles.slotTime}>
-                        <FiClock size={14} />
-                        {formatTime(slot.slotTime)}
+      {/* ── Table ── */}
+      <div className={styles.tableContainer}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Doctor</th>
+              <th>Shift</th>
+              <th>Duration</th>
+              <th>Slot Interval</th>
+              <th>Create Days</th>
+              <th>Slot Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredConfigs.length === 0 ? (
+              <tr>
+                <td colSpan={8} className={styles.noData}>
+                  {hasActiveFilters ? 'No configurations found.' : 'No slot configurations yet.'}
+                </td>
+              </tr>
+            ) : (
+              filteredConfigs.map((config) => (
+                <tr key={config.id}>
+                  <td>
+                    <div className={styles.nameCell}>
+                      <div className={styles.avatar}>
+                        {config.doctorName?.charAt(0).toUpperCase() || 'D'}
                       </div>
-
-                      <div className={styles.slotDoctor}>
-                        <div className={styles.doctorAvatar}>
-                          {slot.doctorName?.charAt(0).toUpperCase() || 'D'}
-                        </div>
-                        <div className={styles.doctorInfo}>
-                          <div className={styles.doctorName}>{slot.doctorName}</div>
-                          <div className={styles.doctorCode}>{slot.doctorCode}</div>
-                        </div>
+                      <div>
+                        <div className={styles.name}>{config.doctorFullName}</div>
+                        <div className={styles.subInfo}>{config.doctorCode || '—'}</div>
                       </div>
-
-                      <div className={styles.slotStatus}>
-                        {slotStatus === 'deleted' ? (
-                          <>
-                            <FiTrash2 size={14} className={`${styles.statusIcon} ${styles.deleted}`} />
-                            <span className={`${styles.statusText} ${styles.deleted}`}>Deleted</span>
-                          </>
-                        ) : slotStatus === 'booked' ? (
-                          <>
-                            <FiCheckCircle size={14} className={`${styles.statusIcon} ${styles.booked}`} />
-                            <span className={`${styles.statusText} ${styles.booked}`}>Booked</span>
-                          </>
-                        ) : (
-                          <>
-                            <FiXCircle size={14} className={`${styles.statusIcon} ${styles.available}`} />
-                            <span className={`${styles.statusText} ${styles.available}`}>Available</span>
-                          </>
-                        )}
-                      </div>
-
-                      {slotStatus !== 'deleted' && (
-                        <div className={`${styles.slotActions} ${hoveredSlotId === slot.id ? styles.visible : ''}`}>
-                          {slot.isBooked && (
-                            <button
-                              onClick={() => openUpdateModal(slot)}
-                              className={styles.btnEdit}
-                              title="Update Slot"
-                            >
-                              <FiEdit size={14} />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDeleteSlot(slot.id)}
-                            className={styles.btnDelete}
-                            title="Delete Slot"
-                          >
-                            <FiTrash2 size={14} />
-                          </button>
-                        </div>
-                      )}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))
-        )}
+                  </td>
+                  <td>
+                    <span className={styles.shiftBadge}>
+                      {config.shiftName || '—'}
+                    </span>
+                  </td>
+                  <td>{getDurationLabel(config.duration)}</td>
+                  <td>{config.slotInterval} mins</td>
+                  <td>{config.createSlotDays} days</td>
+                  <td>
+                    {config.slotDate
+                      ? new Date(config.slotDate).toLocaleDateString('en-IN', {
+                          year: 'numeric', month: 'short', day: 'numeric',
+                        })
+                      : '—'}
+                  </td>
+                  <td>
+                    <span className={`${styles.statusBadge} ${getStatusClass(config.status)}`}>
+                      {config.status.toUpperCase()}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => handleDeleteClick(config)}
+                      className={styles.btnDelete}
+                      title="Delete Configuration"
+                    >
+                      <FiTrash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* ── Add Slot Modal ── */}
-      {showAddModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowAddModal(false)}>
-          <div className={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
+      {/* ── Add SlotConfig Modal ── */}
+      <AddSlotConfig
+        isOpen={isAddFormOpen}
+        onClose={closeAddForm}
+        doctors={doctors}
+        shifts={shifts}
+        doctorShifts={doctorShifts}
+        onSuccess={handleAddSuccess}
+      />
+
+      {/* ── Generate Slots Modal ── */}
+      <GenerateSlots
+        isOpen={isGenerateOpen}
+        onClose={closeGenerateSlots}
+        onSuccess={handleGenerateSuccess}
+      />
+
+      {/* ── Delete Confirmation Modal ── */}
+      {deleteConfirm && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <h2>Add New Slot</h2>
-              <button onClick={() => setShowAddModal(false)} className={styles.modalCloseBtn}>×</button>
+              <h2>Delete Slot Configuration</h2>
+              <button onClick={handleDeleteCancel} className={styles.modalClose}>×</button>
             </div>
-            <form onSubmit={handleAddSlot} className={styles.modalForm}>
-
-              <div className={styles.formGroup}>
-                <label>Doctor <span className={styles.required}>*</span></label>
-                <select
-                  name="doctorId"
-                  value={formData.doctorId}
-                  onChange={handleAddChange}
-                  required
-                  className={styles.formInput}
-                >
-                  <option value="">Select Doctor</option>
-                  {doctors.map((doc) => (
-                    <option key={doc.id} value={doc.id}>
-                      {doc.firstName} {doc.lastName}
-                    </option>
-                  ))}
-                </select>
-                {addValidationMessages.doctorId && (
-                  <span className={styles.validationMsg}>{addValidationMessages.doctorId}</span>
-                )}
+            <div className={styles.modalBody}>
+              <div className={styles.deleteConfirmation}>
+                <div className={styles.deleteIcon}>
+                  <FiTrash2 size={48} />
+                </div>
+                <p className={styles.deleteMessage}>
+                  Are you sure you want to delete this slot configuration?
+                </p>
+                <div className={styles.deleteDetails}>
+                  <p><strong>Doctor:</strong> {deleteConfirm.doctorFullName}</p>
+                  <p><strong>Shift:</strong> {deleteConfirm.shiftName}</p>
+                  <p><strong>Duration:</strong> {getDurationLabel(deleteConfirm.duration)}</p>
+                </div>
+                <p className={styles.deleteWarning}>This action cannot be undone.</p>
               </div>
-
-              <div className={styles.formGroup}>
-                <label>Slot Date <span className={styles.required}>*</span></label>
-                <input
-                  type="date"
-                  name="slotDate"
-                  value={formData.slotDate}
-                  onChange={handleAddChange}
-                  required
-                  className={styles.formInput}
-                  min={new Date().toISOString().split('T')[0]}
-                />
-                {addValidationMessages.slotDate && (
-                  <span className={styles.validationMsg}>{addValidationMessages.slotDate}</span>
-                )}
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Slot Time <span className={styles.required}>*</span></label>
-                <input
-                  type="time"
-                  name="slotTime"
-                  value={formData.slotTime}
-                  onChange={handleAddChange}
-                  required
-                  className={styles.formInput}
-                />
-                {addValidationMessages.slotTime && (
-                  <span className={styles.validationMsg}>{addValidationMessages.slotTime}</span>
-                )}
-              </div>
-
-              <div className={styles.modalActions}>
-                <button type="button" onClick={() => setShowAddModal(false)} className={styles.btnCancel}>
-                  Cancel
-                </button>
-                <button type="submit" className={styles.btnSubmit}>
-                  Add Slot
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ── Update Slot Modal ── */}
-      {showUpdateModal && selectedSlot && (
-        <div className={styles.modalOverlay} onClick={() => setShowUpdateModal(false)}>
-          <div className={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2>Update Slot</h2>
-              <button onClick={() => setShowUpdateModal(false)} className={styles.modalCloseBtn}>×</button>
             </div>
-            <form onSubmit={handleUpdateSlot} className={styles.modalForm}>
-
-              <div className={styles.slotDetailsInfo}>
-                <p><strong>Doctor:</strong> {selectedSlot.doctorName}</p>
-                <p><strong>Date:</strong> {formatDate(selectedSlot.slotDate)}</p>
-                <p><strong>Time:</strong> {formatTime(selectedSlot.slotTime)}</p>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Appointment ID</label>
-                <input
-                  type="number"
-                  name="appointmentId"
-                  value={updateFormData.appointmentId}
-                  onChange={handleUpdateChange}
-                  className={styles.formInput}
-                  placeholder="0 for no appointment"
-                />
-                {updateValidationMessages.appointmentId && (
-                  <span className={styles.validationMsg}>{updateValidationMessages.appointmentId}</span>
-                )}
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Booking Status *</label>
-                <select
-                  name="isBooked"
-                  value={updateFormData.isBooked}
-                  onChange={handleUpdateChange}
-                  required
-                  className={styles.formInput}
-                >
-                  <option value={0}>Available</option>
-                  <option value={1}>Booked</option>
-                </select>
-                {updateValidationMessages.isBooked && (
-                  <span className={styles.validationMsg}>{updateValidationMessages.isBooked}</span>
-                )}
-              </div>
-
-              <div className={styles.modalActions}>
-                <button type="button" onClick={() => setShowUpdateModal(false)} className={styles.btnCancel}>
-                  Cancel
-                </button>
-                <button type="submit" className={styles.btnSubmit}>
-                  Update Slot
-                </button>
-              </div>
-            </form>
+            <div className={styles.modalFooter}>
+              <button onClick={handleDeleteCancel} className={styles.btnCancelModal}>
+                Cancel
+              </button>
+              <button onClick={handleDeleteConfirm} className={styles.btnDeleteConfirm}>
+                Delete Configuration
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -668,4 +457,4 @@ const SlotList = () => {
   );
 };
 
-export default SlotList;
+export default SlotConfigList;

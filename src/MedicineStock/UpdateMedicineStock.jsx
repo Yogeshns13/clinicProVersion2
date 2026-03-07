@@ -1,7 +1,7 @@
 // src/components/UpdateMedicineStock.jsx
 import React, { useState } from 'react';
 import { FiSave } from 'react-icons/fi';
-import { updateMedicineStock } from '../api/api-pharmacy.js';
+import { updateMedicineStock } from '../Api/ApiPharmacy.js';
 import styles from './UpdateMedicineStock.module.css';
 
 // ────────────────────────────────────────────────

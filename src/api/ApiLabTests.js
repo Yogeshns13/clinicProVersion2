@@ -1,5 +1,5 @@
 import axios from "axios";
-import {getSessionRef, generateRefKey, getUserId, getClinicId, getBranchId} from "./api.js"
+import {getSessionRef, generateRefKey, getUserId, getClinicId, getBranchId} from "./Api.js"
 const CHANNEL_ID = 1;
 const PRODUCTION_MODE = 0;
 const API = axios.create({

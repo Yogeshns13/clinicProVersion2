@@ -1,7 +1,7 @@
 // src/components/UpdateLabTestPackage.jsx
 import React, { useState, useEffect } from 'react';
 import { FiSave, FiX } from 'react-icons/fi';
-import { getLabTestPackageList, updateLabTestPackage } from '../api/api-labtest.js';
+import { getLabTestPackageList, updateLabTestPackage } from '../Api/ApiLabTests.js';
 import styles from './LabMaster.module.css';
 
 const STATUS_OPTIONS = [

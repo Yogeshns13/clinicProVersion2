@@ -1,7 +1,7 @@
 // src/components/AddVendor.jsx
 import React, { useState, useEffect } from 'react';
 import { FiX } from 'react-icons/fi';
-import { addVendor } from '../api/api-pharmacy.js';
+import { addVendor } from '../Api/ApiPharmacy.js';
 import styles from './AddVendor.module.css';
 
 // ────────────────────────────────────────────────

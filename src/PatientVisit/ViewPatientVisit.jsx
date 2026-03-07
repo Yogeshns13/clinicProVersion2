@@ -1,7 +1,7 @@
 // src/components/ViewPatientVisit.jsx
 import React, { useState, useEffect } from 'react';
 import { FiX, FiUser, FiCalendar, FiActivity, FiFileText, FiEdit } from 'react-icons/fi';
-import { getPatientVisitList } from '../api/api.js';
+import { getPatientVisitList } from '../Api/Api.js';
 import './ViewPatientVisit.css';
 
 const ViewPatientVisit = ({ isOpen, onClose, visitId, onEdit }) => {

@@ -26,9 +26,9 @@ import {
   deleteSalesCartDetail,
   deleteSalesCart,
   addSalesCartDetail,
-} from '../api/api-pharmacy.js';
+} from '../Api/ApiPharmacy.js';
 import Header from '../Header/Header.jsx';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import styles from './SalesCartDetailList.module.css';
 
 // ─────────────────────────────────────────────────────────

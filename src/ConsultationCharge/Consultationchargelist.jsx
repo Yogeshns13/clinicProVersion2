@@ -7,8 +7,8 @@ import {
   getConsultingChargeConfigList,
   addConsultationCharge,
   generateConsultationInvoice
-} from '../api/api-consultation.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+} from '../Api/ApiConsultation.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './ConsultationChargeList.module.css';
 

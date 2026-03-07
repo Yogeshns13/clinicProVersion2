@@ -1,7 +1,7 @@
 // src/components/ViewInvoice.jsx
 import React, { useState, useEffect } from 'react';
 import { FiX, FiFileText, FiUser, FiDollarSign, FiCalendar, FiClock, FiInfo } from 'react-icons/fi';
-import { getInvoiceList } from '../api/api-invoicePayment.js';
+import { getInvoiceList } from '../Api/ApiInvoicePayment.js';
 import './ViewInvoice.css';
 
 const INVOICE_STATUSES = [

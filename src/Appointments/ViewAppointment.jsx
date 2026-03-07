@@ -1,7 +1,7 @@
 // src/components/ViewAppointment.jsx
 import React, { useState, useEffect } from 'react';
 import { FiX, FiCalendar, FiUser, FiPhone, FiFileText, FiClock } from 'react-icons/fi';
-import { getAppointmentList, cancelAppointment } from '../api/api.js';
+import { getAppointmentList, cancelAppointment } from '../Api/Api.js';
 import './ViewAppointment.css';
 
 // ────────────────────────────────────────────────

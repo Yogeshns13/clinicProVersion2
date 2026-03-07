@@ -9,9 +9,9 @@ import {
   getDepartmentList, 
   getClinicList, 
   getBranchList,
-} from '../api/cachedApi.js';
-import { addDepartment } from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+} from '../Api/CachedApi.js';
+import { addDepartment } from '../Api/Api.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import UpdateDepartment from './UpdateDepartment.jsx';
 import styles from './DepartmentList.module.css';

@@ -1,6 +1,6 @@
 // src/components/AddSlotConfig.jsx
 import React, { useState, useEffect } from 'react';
-import { addSlotConfig } from '../api/api.js';
+import { addSlotConfig } from '../Api/Api.js';
 import styles from './AddSlotConfig.module.css';
 
 const DURATION_OPTIONS = [

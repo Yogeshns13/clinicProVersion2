@@ -1,7 +1,7 @@
 // src/components/AddPurchaseOrderDetail.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { FiX, FiSearch, FiChevronDown, FiCheckCircle, FiShoppingCart, FiPackage } from 'react-icons/fi';
-import { addPurchaseOrderDetail, getPurchaseOrderList, getMedicineMasterList } from '../api/api-pharmacy.js';
+import { addPurchaseOrderDetail, getPurchaseOrderList, getMedicineMasterList } from '../Api/ApiPharmacy.js';
 import styles from './AddPurchaseOrderDetail.module.css';
 
 

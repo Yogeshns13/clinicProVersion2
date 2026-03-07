@@ -1,8 +1,8 @@
 // src/components/AddPurchaseOrder.jsx
 import React, { useState, useEffect } from 'react';
 import { FiX } from 'react-icons/fi';
-import { addPurchaseOrder } from '../api/api-pharmacy.js';
-import { getVendorList } from '../api/api-pharmacy.js';
+import { addPurchaseOrder } from '../Api/ApiPharmacy.js';
+import { getVendorList } from '../Api/ApiPharmacy.js';
 import styles from './AddPurchaseOrder.module.css';
 
 // ────────────────────────────────────────────────

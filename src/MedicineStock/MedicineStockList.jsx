@@ -13,8 +13,8 @@ import {
   getMedicineStockList,
   addMedicineStock,
   getMedicineMasterList,
-} from '../api/api-pharmacy.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+} from '../Api/ApiPharmacy.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import UpdateMedicineStock from './UpdateMedicineStock.jsx';
 import styles from './MedicineStockList.module.css';

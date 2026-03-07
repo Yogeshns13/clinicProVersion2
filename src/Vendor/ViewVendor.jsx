@@ -1,6 +1,6 @@
 // src/components/ViewVendor.jsx
 import React, { useState } from 'react';
-import { deleteVendor } from '../api/api-pharmacy.js';
+import { deleteVendor } from '../Api/ApiPharmacy.js';
 import UpdateVendor from './UpdateVendor.jsx';
 import styles from './ViewVendor.module.css';
 

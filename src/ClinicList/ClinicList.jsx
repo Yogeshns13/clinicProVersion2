@@ -8,8 +8,8 @@ import {
 import { 
   getClinicList, 
   addClinic, 
-} from '../api/api.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+} from '../Api/Api.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import UpdateClinic from './UpdateClinic.jsx';
 import styles from './ClinicList.module.css';

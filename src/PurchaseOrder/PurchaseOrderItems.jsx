@@ -22,9 +22,9 @@ import {
   getPurchaseOrderDetailList,
   deletePurchaseOrderDetail,
   deletePurchaseOrder,
-} from '../api/api-pharmacy.js';
+} from '../Api/ApiPharmacy.js';
 import Header from '../Header/Header.jsx';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import AddPurchaseOrderDetail from './AddPurchaseOrderDetail.jsx';
 import UpdatePurchaseOrderDetail from './UpdatePurchaseOrderDetail.jsx';
 import styles from './PurchaseOrderItems.module.css';

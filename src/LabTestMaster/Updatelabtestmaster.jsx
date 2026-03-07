@@ -1,8 +1,8 @@
 // src/components/UpdateLabTestMaster.jsx
 import React, { useState, useEffect } from 'react';
 import { FiArrowLeft, FiSave, FiX } from 'react-icons/fi';
-import { getLabTestMasterList, updateLabTestMaster } from '../api/api-labtest.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getLabTestMasterList, updateLabTestMaster } from '../Api/ApiLabTests.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import styles from './LabMaster.module.css';
 
 const TEST_TYPES = [

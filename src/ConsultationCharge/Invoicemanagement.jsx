@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiFilter, FiFileText, FiDollarSign, FiCalendar, FiUser, FiX, FiMoreVertical, FiEye } from 'react-icons/fi';
-import { getInvoiceList, cancelInvoice, addInvoicePayment } from '../api/api-invoicePayment.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getInvoiceList, cancelInvoice, addInvoicePayment } from '../Api/ApiInvoicePayment.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import ViewInvoice from './ViewInvoice.jsx';
 import styles from './InvoiceManagement.module.css';

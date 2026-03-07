@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FiMoon, FiSun, FiLogOut, FiUser, FiKey } from "react-icons/fi";
 import { FaUserCircle } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
-import './Header.css';           // ← create this file next
+import './Header.css';          
 
 const Header = ({ title = "Clinic Management" }) => {
   const navigate = useNavigate();

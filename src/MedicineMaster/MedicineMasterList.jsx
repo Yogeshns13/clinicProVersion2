@@ -12,11 +12,11 @@ import {
   FiEye,
   FiLayers
 } from 'react-icons/fi';
-import { getMedicineMasterList } from '../api/api-pharmacy.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getMedicineMasterList } from '../Api/ApiPharmacy.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './MedicineMasterList.module.css';
-import AddMedicineMaster from './Addmedicinemaster.jsx';
+import AddMedicineMaster from './AddMedicineMaster.jsx';
 import ViewMedicineMaster from './ViewMedicineMaster.jsx';
 import UpdateMedicineMaster from './UpdateMedicineMaster.jsx';
 

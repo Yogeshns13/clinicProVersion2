@@ -1,8 +1,8 @@
 // src/components/AddMedicineMaster.jsx
 import React, { useState } from 'react';
-import { FiX, FiPackage, FiDollarSign, FiBarChart2 } from 'react-icons/fi';
-import { addMedicineMaster } from '../api/api-pharmacy.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { FiX, FiPackage, FiDollarSign} from 'react-icons/fi';
+import { addMedicineMaster } from '../Api/ApiPharmacy.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import styles from './AddMedicineMaster.module.css';
 
 const MEDICINE_TYPES = [

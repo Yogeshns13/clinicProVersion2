@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiSave, FiPackage, FiDollarSign, FiBarChart2, FiX } from 'react-icons/fi';
-import { getMedicineMasterList, updateMedicineMaster } from '../api/api-pharmacy.js';
-import ErrorHandler from '../hooks/Errorhandler.jsx';
+import { getMedicineMasterList, updateMedicineMaster } from '../Api/ApiPharmacy.js';
+import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './UpdateMedicineMaster.module.css';
 
