@@ -35,6 +35,13 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
     }
 
+    case 'gstNo':
+      if (!value || !value.trim()) return 'GstNo is required';
+      if (value.trim().length < 15) return `GST number must be 15 characters (${value.trim().length}/15 entered)`;
+      if (value.trim().length > 15) return 'GST number must not exceed 15 characters';
+      if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value.trim())) return 'Invalid GST format (e.g. 29ABCDE1234F1Z5)';
+      return '';
+
     case 'cgstPercentage': {
       if (value === '' || value === null || value === undefined) return '';
       const decimalRegex = /^\d+(\.\d{1,2})?$/;
@@ -81,6 +88,13 @@ const filterInput = (fieldName, value) => {
   }
 };
 
+// Helper: map status string from API → numeric value for the dropdown
+const toStatusNumber = (status) => {
+  if (status === 1 || status === 2) return status;
+  if (typeof status === 'string' && status.toLowerCase() === 'active') return 1;
+  return 2; // anything else → Deleted
+};
+
 const ConsultationChargeConfig = () => {
   const [chargeConfigs, setChargeConfigs] = useState([]);
   const [allChargeConfigs, setAllChargeConfigs] = useState([]);
@@ -119,7 +133,8 @@ const ConsultationChargeConfig = () => {
     defaultAmount: '',
     gstNo: '',
     cgstPercentage: '',
-    sgstPercentage: ''
+    sgstPercentage: '',
+    status: 1   // ← NEW: default Active
   });
 
   const [validationMessages, setValidationMessages] = useState({});
@@ -209,7 +224,8 @@ const ConsultationChargeConfig = () => {
       defaultAmount: '',
       gstNo: clinic?.gstNo || '',
       cgstPercentage: clinic?.cgstPercentage || '',
-      sgstPercentage: clinic?.sgstPercentage || ''
+      sgstPercentage: clinic?.sgstPercentage || '',
+      status: 1
     });
     setFormError(null);
     setFormSuccess(null);
@@ -228,9 +244,10 @@ const ConsultationChargeConfig = () => {
       chargeCode: config.chargeCode,
       chargeName: config.chargeName,
       defaultAmount: config.defaultAmount || '',
-      gstNo: '',
+      gstNo: '',                          // ← NOT used in edit
       cgstPercentage: config.cgstPercentage || '',
-      sgstPercentage: config.sgstPercentage || ''
+      sgstPercentage: config.sgstPercentage || '',
+      status: toStatusNumber(config.status)  // ← map to 1 / 2
     });
     setFormError(null);
     setFormSuccess(null);
@@ -253,6 +270,11 @@ const ConsultationChargeConfig = () => {
     setFormData(prev => ({ ...prev, [name]: filteredValue }));
     const validationMessage = getLiveValidationMessage(name, filteredValue);
     setValidationMessages(prev => ({ ...prev, [name]: validationMessage }));
+  };
+
+  // ── Status dropdown change (no text filtering needed) ──
+  const handleStatusChange = (e) => {
+    setFormData(prev => ({ ...prev, status: Number(e.target.value) }));
   };
 
   // ── Validate all fields at once and populate messages ──
@@ -291,7 +313,8 @@ const ConsultationChargeConfig = () => {
         clinicId: Number(formData.clinicId),
         defaultAmount: Number(formData.defaultAmount),
         cgstPercentage: Number(formData.cgstPercentage) || 0,
-        sgstPercentage: Number(formData.sgstPercentage) || 0
+        sgstPercentage: Number(formData.sgstPercentage) || 0,
+        status: Number(formData.status)   // ← 1 or 2 sent to API
       };
 
       if (isEditMode) {
@@ -456,7 +479,6 @@ const ConsultationChargeConfig = () => {
                     </span>
                   </td>
                   <td>
-                    {/* Single "View Details" button — replaces Edit + Delete icons */}
                     <button
                       onClick={() => openDetails(config)}
                       className={styles.chargeConfigDetailsBtn}
@@ -568,7 +590,7 @@ const ConsultationChargeConfig = () => {
 
               </div>
 
-              {/* Footer Actions — Close | Delete | Update */}
+              {/* Footer Actions */}
               <div className={styles.detailModalFooter}>
                 <button
                   onClick={() => handleDelete(selectedConfig)}
@@ -656,20 +678,24 @@ const ConsultationChargeConfig = () => {
                     )}
                   </div>
 
-                  {/* GST Number — Optional (no backend validation) */}
-                  <div className={styles.formGroup}>
-                    <label>GST Number</label>
-                    <input
-                      type="text"
-                      name="gstNo"
-                      value={formData.gstNo}
-                      onChange={handleInputChange}
-                      placeholder="29ABCDE1234F1Z5"
-                      disabled={formLoading}
-                      maxLength="15"
-                    />
-                    <span className={styles.inputHint}>Format: 29ABCDE1234F1Z5 (15 characters)</span>
-                  </div>
+                  {/* GST Number — shown only in Add mode */}
+                  {!isEditMode && (
+                    <div className={styles.formGroup}>
+                      <label>GST Number</label>
+                      <input
+                        type="text"
+                        name="gstNo"
+                        value={formData.gstNo}
+                        onChange={handleInputChange}
+                        placeholder="29ABCDE1234F1Z5"
+                        disabled={formLoading}
+                        maxLength="15"
+                      />
+                      {validationMessages.gstNo && (
+                        <span className={styles.validationMsg}>{validationMessages.gstNo}</span>
+                      )}
+                    </div>
+                  )}
 
                   {/* CGST Percentage — Optional */}
                   <div className={styles.formGroup}>
@@ -702,6 +728,22 @@ const ConsultationChargeConfig = () => {
                       <span className={styles.validationMsg}>{validationMessages.sgstPercentage}</span>
                     )}
                   </div>
+
+                  {/* Status Dropdown — shown only in Edit mode */}
+                  {isEditMode && (
+                    <div className={styles.formGroup}>
+                      <label>Status <span className={styles.required}>*</span></label>
+                      <select
+                        name="status"
+                        value={formData.status}
+                        onChange={handleStatusChange}
+                        disabled={formLoading}
+                      >
+                        <option value={1}>Active</option>
+                        <option value={2}>Deleted</option>
+                      </select>
+                    </div>
+                  )}
 
                 </div>
               </div>

@@ -165,10 +165,16 @@ const EmployeeList = () => {
 
   // Opens ViewEmployee popup instead of navigating
   const handleViewDetails = (employee) => setViewEmployeeId(employee.id);
-  const handleCloseViewEmployee = () => setViewEmployeeId(null);
+  const handleCloseViewEmployee = () => {
+  setViewEmployeeId(null);
+  fetchEmployees(appliedFilters);
+};
 
   const openAddForm  = () => setIsAddFormOpen(true);
-  const closeAddForm = () => setIsAddFormOpen(false);
+  const closeAddForm = () => {
+  setIsAddFormOpen(false);
+  fetchEmployees(appliedFilters);
+};
 
   const handleAddSuccess = () => fetchEmployees(appliedFilters);
 

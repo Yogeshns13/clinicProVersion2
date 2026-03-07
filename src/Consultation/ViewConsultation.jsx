@@ -489,12 +489,12 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
   const [error, setError]                               = useState(null);
 
   /* ── DnD state ── */
-  const [panel2DragOver, setPanel2DragOver]   = useState(false); // medicine list → prescription
-  const [panel3DragOver, setPanel3DragOver]   = useState(false); // prescription → medicine list (remove)
-  const [dropFlashId, setDropFlashId]         = useState(null);  // tempId of newly dropped container
-  const dragOverCounterP2 = useRef(0);  // enter/leave counters to handle child elements
+  const [panel2DragOver, setPanel2DragOver]   = useState(false);
+  const [panel3DragOver, setPanel3DragOver]   = useState(false);
+  const [dropFlashId, setDropFlashId]         = useState(null);
+  const dragOverCounterP2 = useRef(0);
   const dragOverCounterP3 = useRef(0);
-  const [draggingMedItemId, setDraggingMedItemId] = useState(null); // which med-item is being dragged
+  const [draggingMedItemId, setDraggingMedItemId] = useState(null);
 
   /* ─────────────────────────────────────────────── */
 
@@ -611,13 +611,16 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     nextConsultationDate !== savedNextDate
   );
 
+  // FIX: The API may return the ID under "id" instead of "consultationId".
+  // Use a chain of fallbacks so the guard never silently exits early.
   const handleUpdateConsult = async () => {
-    if (!consultation?.consultationId) return;
+    const consultId = consultation?.consultationId ?? consultation?.id ?? activeConsultId;
+    if (!consultId) return;
     try {
       setUpdatingConsult(true); setError(null);
       const { clinicId, branchId } = getIds();
       await updateConsultation({
-        consultationId: consultation.consultationId, branchId, clinicId,
+        consultationId: consultId, branchId, clinicId,
         visitId: consultation.visitId, patientId: consultation.patientId,
         doctorId: consultation.doctorId, reason: consultation.reason || '',
         symptoms: consultation.symptoms || '', bpSystolic: consultation.bpSystolic ?? 0,
@@ -646,7 +649,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
   const toggleMedSelection = (id) =>
     setSelectedMedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
 
-  /* Build a container from a medicine master record */
   const buildContainerFromMed = (m) => {
     const timings = m.timing ? m.timing.split('|').map(t => t.trim()).filter(t => ['M','A','E','N'].includes(t)) : [];
     return {
@@ -671,21 +673,15 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
   };
 
   /* ── DRAG & DROP: Panel 3 → Panel 2 (add medicine) ── */
-
-  /* med-item drag start */
   const handleMedItemDragStart = (e, medicine) => {
     const alreadyAdded = containers.some(c => c.medicineId === medicine.id)
       || savedPrescItems.some(s => s.medicineId === medicine.id);
     if (alreadyAdded) { e.preventDefault(); return; }
-
     const payload = JSON.stringify({ medId: medicine.id });
     e.dataTransfer.setData(DND_MED_FROM_LIST, payload);
     e.dataTransfer.effectAllowed = 'copy';
-
-    // Custom ghost
     const ghost = createGhost(medicine.name);
     e.dataTransfer.setDragImage(ghost, 20, 16);
-
     setDraggingMedItemId(medicine.id);
   };
 
@@ -694,7 +690,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     removeGhost();
   };
 
-  /* Panel 2 drop zone */
   const handlePanel2DragEnter = (e) => {
     if (![...e.dataTransfer.types].includes(DND_MED_FROM_LIST)) return;
     dragOverCounterP2.current++;
@@ -718,32 +713,25 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     dragOverCounterP2.current = 0;
     setPanel2DragOver(false);
     removeGhost();
-
     const raw = e.dataTransfer.getData(DND_MED_FROM_LIST);
     if (!raw) return;
     try {
       const { medId } = JSON.parse(raw);
       const medicine = allMedicines.find(m => m.id === medId);
       if (!medicine) return;
-
       const alreadyAdded = containers.some(c => c.medicineId === medId)
         || savedPrescItems.some(s => s.medicineId === medId);
       if (alreadyAdded) return;
-
       const newContainer = buildContainerFromMed(medicine);
       setContainers(prev => [...prev, newContainer]);
-
-      // Flash animation on the new card
       setDropFlashId(newContainer.tempId);
       setTimeout(() => setDropFlashId(null), 600);
     } catch (err) { console.error('DnD parse error', err); }
   };
 
-  /* ── DRAG & DROP: Panel 2 → Panel 3 (remove / unselect saved medicine) ── */
-
+  /* ── DRAG & DROP: Panel 2 → Panel 3 (remove saved medicine) ── */
   const handleSavedCardDragStart = (medName) => {
     const ghost = createGhost(medName);
-    // ghost is already set by SavedMedicineCard's dragstart; just track state
   };
 
   const handleSavedCardDragEnd = () => {
@@ -752,7 +740,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     dragOverCounterP3.current = 0;
   };
 
-  /* Panel 3 drop zone */
   const handlePanel3DragEnter = (e) => {
     if (![...e.dataTransfer.types].includes(DND_MED_FROM_PRESC)) return;
     dragOverCounterP3.current++;
@@ -776,13 +763,10 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     dragOverCounterP3.current = 0;
     setPanel3DragOver(false);
     removeGhost();
-
     const raw = e.dataTransfer.getData(DND_MED_FROM_PRESC);
     if (!raw) return;
     try {
       const { detailId } = JSON.parse(raw);
-      // Show confirmation via a simple prompt-style state; we just delete directly here
-      // to keep UX smooth (user can always re-add). Could also show a toast.
       const { clinicId, branchId } = getIds();
       await deletePrescriptionDetail(detailId);
       setSavedPrescItems(prev => prev.filter(i => i.id !== detailId));
@@ -801,16 +785,13 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     }
     const { clinicId, branchId } = getIds();
     setError(null);
-
     const steps = [];
     if (!prescriptionId) { steps.push({ label: 'Creating prescription' }); }
     steps.push({ label: `Adding ${containers.length} medicine(s)` });
     setSubmitProgress({ steps, currentStep: 0, done: false });
-
     try {
       let s = 0;
       let activePrescId = prescriptionId;
-
       if (!activePrescId) {
         setSubmitProgress(p => ({ ...p, currentStep: s }));
         const d = (await getConsultationList(clinicId, { Page: 1, PageSize: 1, BranchID: branchId, ConsultationID: activeConsultId }))?.[0];
@@ -823,7 +804,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
         activePrescId = pr.prescriptionId;
         setPrescriptionId(pr.prescriptionId); s++;
       }
-
       setSubmitProgress(p => ({ ...p, currentStep: s }));
       for (const c of containers) {
         await addPrescriptionDetail({ clinicId, branchId, PrescriptionID: activePrescId,
@@ -833,7 +813,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
           Instructions: c.notes, Quantity: c.quantity, RefillAllowed: 0, RefillCount: 0,
           StartDate: today(), EndDate: thirtyDaysLater() });
       }
-
       const items2 = await getPrescriptionDetailList(clinicId, { PrescriptionID: activePrescId, BranchID: branchId, Page: 1, PageSize: 50 });
       setSavedPrescItems((items2 || []).filter(i => i.status === 1));
       setContainers([]);
@@ -865,19 +844,15 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     const newTestIds = selectedTestIds.filter(id => !submittedLabTestIds.includes(id) && !deactivatedLabTestIds.includes(id));
     const newPkgIds  = selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id) && !deactivatedLabPkgIds.includes(id));
     if (newTestIds.length === 0 && newPkgIds.length === 0) { setShowLabModal(false); return; }
-
     const { clinicId, branchId } = getIds();
     setShowLabModal(false); setError(null);
-
     const steps = [];
     if (!labOrderId) steps.push({ label: 'Creating lab order' });
     steps.push({ label: `Adding ${newTestIds.length + newPkgIds.length} lab item(s)` });
     setSubmitProgress({ steps, currentStep: 0, done: false });
-
     try {
       let s = 0;
       let activeOrderId = labOrderId;
-
       if (!activeOrderId) {
         setSubmitProgress(p => ({ ...p, currentStep: s }));
         const lr = await addLabTestOrder({ clinicId, branchId, ConsultationID: activeConsultId,
@@ -889,7 +864,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
         setSavedLabPriorityDesc(PRIORITY_OPTIONS.find(p => p.id === labPriority)?.label || '');
         s++;
       }
-
       setSubmitProgress(p => ({ ...p, currentStep: s }));
       for (const testId of newTestIds) {
         await addLabTestOrderItem({ clinicId, branchId, OrderID: activeOrderId,
@@ -899,12 +873,10 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
         await addLabTestOrderItem({ clinicId, branchId, OrderID: activeOrderId,
           PatientID: consultation?.patientId, DoctorID: consultation?.doctorId, TestID: 0, PackageID: pkgId });
       }
-
       setSubmittedLabTestIds(prev => [...new Set([...prev, ...newTestIds])]);
       setSubmittedLabPkgIds(prev => [...new Set([...prev, ...newPkgIds])]);
       setDeactivatedLabTestIds(prev => prev.filter(id => !newTestIds.includes(id)));
       setDeactivatedLabPkgIds(prev => prev.filter(id => !newPkgIds.includes(id)));
-
       const items = await getLabTestOrderItemList(clinicId, { OrderID: activeOrderId, BranchID: branchId, Page: 1, PageSize: 50 });
       setSavedLabItems(items || []);
       setSubmitProgress(p => ({ ...p, done: true }));
@@ -1092,7 +1064,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
               <div className="saved-banner">
                 <FiCheckCircle size={14} />
                 <span>
-                  Consultation #{activeConsultId}
+                  Consultation
                   {savedPrescItems.length > 0 && ` · ${savedPrescItems.length} medicine${savedPrescItems.length !== 1 ? 's' : ''}`}
                   {savedLabItems.filter(i => i.status === 1).length > 0 && ` · ${savedLabItems.filter(i => i.status === 1).length} lab item${savedLabItems.filter(i => i.status === 1).length !== 1 ? 's' : ''}`}
                 </span>
@@ -1167,7 +1139,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                   </div>
                 </section>
 
-                {/* ── Panel 2: Prescription + Lab — DROP ZONE for Panel 3 → 2 ── */}
+                {/* ── Panel 2: Prescription + Lab ── */}
                 <section
                   className={`panel panel--2 ${panel2DragOver ? 'panel--drop-add-active' : ''}`}
                   onDragEnter={handlePanel2DragEnter}
@@ -1185,7 +1157,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                   </div>
                   <div className={`panel__body ${panel2DragOver ? 'panel__body--droptarget' : ''}`}>
 
-                    {/* Saved prescription items */}
                     {savedPrescItems.length > 0 && (
                       <div className="saved-presc-list">
                         {savedPrescItems.map(item => (
@@ -1202,7 +1173,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                       </div>
                     )}
 
-                    {/* Pending new medicine containers */}
                     {containers.length > 0 && (
                       <div className="rx-list">
                         {containers.map(c => (
@@ -1227,7 +1197,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                       <FiPlus size={13} /> Add Medicine Manually
                     </button>
 
-                    {/* Saved lab order */}
                     {savedLabItems.length > 0 && (
                       <SavedLabSection
                         labOrderId={labOrderId}
@@ -1242,7 +1211,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                   </div>
                 </section>
 
-                {/* ── Panel 3: Medicine List — DROP ZONE for Panel 2 → 3 (remove) ── */}
+                {/* ── Panel 3: Medicine List ── */}
                 <section
                   className={`panel panel--3 ${panel3DragOver ? 'panel--drop-remove-active' : ''}`}
                   onDragEnter={handlePanel3DragEnter}

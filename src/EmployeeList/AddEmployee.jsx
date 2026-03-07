@@ -13,9 +13,23 @@ import {
   updateEmployee,
   updateEmployeeProof,
   updateEmployeeBeneficiaryAccount,
+  getClinicList,                           // ← NEW IMPORT
 } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import styles from './AddEmployee.module.css';
+
+// ────────────────────────────────────────────────
+// HELPER — fetch fileAccessToken for a given clinicId
+// via getClinicList (no localStorage token needed)
+// ────────────────────────────────────────────────
+const fetchFileAccessToken = async (clinicId) => {
+  const clinicList = await getClinicList({ ClinicID: clinicId });
+  const clinic = clinicList.find(c => c.id === clinicId);
+  if (!clinic?.fileAccessToken) {
+    throw new Error('File access token not available for the given clinic.');
+  }
+  return clinic.fileAccessToken;
+};
 
 // ────────────────────────────────────────────────
 // VALIDATION — mirrors backend rules exactly
@@ -406,16 +420,26 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     setPhotoUploadStatus('File selected. Click "Upload Photo" to submit.'); setPhotoUploaded(false);
     setFormData(prev => ({ ...prev, photoFileId:0 }));
   };
+
+  // ── MODIFIED: fetch fileAccessToken via getClinicList before uploading photo ──
   const handlePhotoUploadSubmit = async () => {
     if (!photo) { setPhotoUploadStatus('Please select a photo first.'); return; }
     setIsPhotoUploading(true); setPhotoUploadStatus('Uploading photo...');
     try {
-      const res = await uploadPhoto(photo);
+      const clinicId = Number(localStorage.getItem('clinicID'));
+
+      // Fetch the fileAccessToken for this clinic dynamically
+      const fileAccessToken = await fetchFileAccessToken(clinicId);
+
+      // Pass fileAccessToken to uploadPhoto (update your Api.js accordingly)
+      const res = await uploadPhoto(photo, fileAccessToken);
+
       setFormData(prev => ({ ...prev, photoFileId: res.fileId }));
       setPhotoUploadStatus('Photo uploaded successfully!'); setPhotoUploaded(true);
     } catch (err) { setPhotoUploaded(false); setPhotoUploadStatus(`Failed: ${err.message}`); }
     finally { setIsPhotoUploading(false); }
   };
+
   const handleRemovePhoto = () => {
     setPhoto(null); setPhotoUrl(null); setPhotoUploaded(false); setPhotoUploadStatus('');
     setFormData(prev => ({ ...prev, photoFileId:0 }));
@@ -456,13 +480,21 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     setProofList(prev => prev.map((p, i) => i === index ? { ...p, fileId: 0 } : p));
   };
 
+  // ── MODIFIED: fetch fileAccessToken via getClinicList before uploading ID proof ──
   const handleProofFileUploadSubmit = async (index) => {
     const file = proofFiles[index];
     if (!file) { updateProofUploadStatus(index, 'Please select a file first.'); return; }
     setIsProofUploading(prev => prev.map((v, i) => i === index ? true : v));
     updateProofUploadStatus(index, 'Uploading ID proof...');
     try {
-      const res = await uploadIDProof(file);
+      const clinicId = Number(localStorage.getItem('clinicID'));
+
+      // Fetch the fileAccessToken for this clinic dynamically
+      const fileAccessToken = await fetchFileAccessToken(clinicId);
+
+      // Pass fileAccessToken to uploadIDProof (update your Api.js accordingly)
+      const res = await uploadIDProof(file, fileAccessToken);
+
       setProofList(prev => prev.map((p, i) => i === index ? { ...p, fileId: res.fileId } : p));
       updateProofUploadStatus(index, 'ID proof uploaded successfully!');
       setProofFilesUploaded(prev => prev.map((v, i) => i === index ? true : v));

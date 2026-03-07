@@ -49,9 +49,6 @@ DeleteClinic
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000,
     "ClinicID": 1
-    
-    
-   
 }
 
 

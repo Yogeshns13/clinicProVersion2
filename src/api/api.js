@@ -128,7 +128,7 @@ export const renewToken = async () => {
   }
 };
 
-export const uploadPhoto = async (file) => {
+export const uploadPhoto = async (file, fileAccessToken) => {
   try {
     const fileExtension = file.name.split('.').pop().toLowerCase();
     let fileType;
@@ -139,25 +139,30 @@ export const uploadPhoto = async (file) => {
     } else {
       throw new Error('Unsupported file type. Please upload a .jpg, .jpeg, or .png file.');
     }
+
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('fileType', fileType); 
+    formData.append('fileType', fileType);
     formData.append('ClinicID', getClinicId());
-    formData.append('FileAccessToken',getFileAccessToken());
+    formData.append('FileAccessToken', fileAccessToken);   // ← passed in, not from localStorage
+
     const response = await axios.post(UPLOAD_API_URL, formData, {
-      headers: { 'Content-Type': 'multipart/form-data',
+      headers: {
+        'Content-Type': 'multipart/form-data',
         ...(PRODUCTION_MODE === 1 ? { "API-Key": API_KEY } : {})
       }
     });
+
     console.log('Photo uploaded successfully.');
     return { fileId: response.data.OUT_FILE_ID };
+
   } catch (error) {
     console.error('Error uploading photo:', error);
     throw error;
   }
 };
 
-export const uploadIDProof = async (file) => {
+export const uploadIDProof = async (file, fileAccessToken) => {
   try {
     const fileExtension = file.name.split('.').pop().toLowerCase();
     let fileType;
@@ -170,36 +175,41 @@ export const uploadIDProof = async (file) => {
     } else {
       throw new Error('Unsupported file type. Please upload a .jpg, .jpeg, .png, or .pdf file.');
     }
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('fileType', fileType);
-    formData.append('ClinicID',getClinicId());
-    formData.append('FileAccessToken',getFileAccessToken());
+    formData.append('ClinicID', getClinicId());
+    formData.append('FileAccessToken', fileAccessToken);   // ← passed in, not from localStorage
+
     const response = await axios.post(UPLOAD_API_URL, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' ,
+      headers: {
+        'Content-Type': 'multipart/form-data',
         ...(PRODUCTION_MODE === 1 ? { "API-Key": API_KEY } : {})
       }
     });
+
     console.log('ID proof uploaded successfully');
     return { fileId: response.data.OUT_FILE_ID };
+
   } catch (error) {
     console.error('Error uploading ID proof:', error);
     throw error;
   }
 };
 
-export const getFile = async (fileId) => {
+export const getFile = async (fileId, fileAccessToken) => {
   try {
     if (!fileId) {
       throw new Error('FileID is required');
     }
     const payload = {
-      ClinicID: getClinicId(),           
-      FileID: Number(fileId),            
-      FileAccessToken: getFileAccessToken()
+      ClinicID: getClinicId(),
+      FileID: Number(fileId),
+      FileAccessToken: fileAccessToken,        // ← passed in, not from localStorage
     };
 
-    console.log("getFile Request:",payload)
+    console.log("getFile Request:", payload);
 
     const response = await axios.post(FILE_API_URL, payload, {
       headers: {
@@ -208,6 +218,7 @@ export const getFile = async (fileId) => {
       },
       responseType: 'blob'
     });
+
     const imageBlob = response.data;
     const imageUrl = URL.createObjectURL(imageBlob);
 
@@ -221,52 +232,53 @@ export const getFile = async (fileId) => {
 
   } catch (error) {
     console.error('Error fetching file:', error);
-    
+
     if (error.response?.status === 404) {
       throw new Error('File not found');
     }
     if (error.response?.status === 403 || error.response?.status === 401) {
       throw new Error('Access denied - invalid or expired token');
     }
-    
+
     throw error;
   }
 };
 
 
-export const getClinicList = async (clinicId=0) => {
+export const getClinicList = async (options = {}) => {
   const userId = getUserId();
   if (!userId) {
-    const error = new Error("User not logged in. Please sign in again.");
-    error.status = 401;
-    error.code = 401;
-    throw error;
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
   }
 
+  // Default payload (you can override any field via options)
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
-    USER_ID: parseInt(userId, 10),
-    Page: 1,
-    PageSize: 20,
-    ClinicID: clinicId,          // 0 = get all (most common pattern)
-    ClinicName: "",
-    Mobile: "",
-    GstNo: "",
-    Status: -1            // -1 = all statuses
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,
+    ClinicID: options.ClinicID || 0,
+    ClinicName: options.ClinicName || "",
+    Mobile: options.Mobile || "",
+    GstNo: options.GstNo || "",
+    Status: options.Status ?? -1           
   };
 
   try {
     const response = await API.post("/GetClinicList", payload);
-    console.log("GetClinicList response:", response);
-    // Safeguard: make sure we have an array
-    const clinics = Array.isArray(response.data?.result) 
-      ? response.data.result 
-      : [];
 
-    // Map to clean frontend shape
-    const mappedClinics = clinics.map(clinic => ({
+    // Safety: ensure result is an array
+    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+
+    console.log("GetClinicList response:", results);
+
+    // Map backend response to clean frontend shape
+    return results.map((clinic) => ({
       id: clinic.clinic_id,
       name: clinic.clinic_name,
       address: clinic.address,
@@ -291,45 +303,17 @@ export const getClinicList = async (clinicId=0) => {
       dateCreated: clinic.date_created,
       dateModified: clinic.date_modified
     }));
+  } catch (error) {
+    console.error("getClinicList failed:", error);
 
-    // ── Store fileAccessToken of the selected clinic ────────────────────────
-    const storedClinicId = getClinicId(); // ← your function that reads from localStorage
-
-    let targetClinic;
-
-    if (storedClinicId) {
-      targetClinic = mappedClinics.find(c => c.id === storedClinicId);
-    }
-
-    // Fallback: if no stored ID or not found → use first clinic (common UX pattern)
-    if (!targetClinic && mappedClinics.length > 0) {
-      targetClinic = mappedClinics[0];
-      // Optional: also update stored ID to avoid confusion next time
-      // localStorage.setItem('clinicId', mappedClinics[0].id);
-    }
-
-    if (targetClinic?.fileAccessToken) {
-      localStorage.setItem('fileAccessToken', targetClinic.fileAccessToken);
-      console.log(`Stored fileAccessToken for clinic ${targetClinic.id} (${targetClinic.name})`);
-    } else if (mappedClinics.length === 0) {
-      console.warn("No clinics returned → cannot store fileAccessToken");
-    } else {
-      console.warn(`Clinic ${storedClinicId} not found in list → no fileAccessToken stored`);
-    }
-
-    return mappedClinics;
-
-  } catch (err) {
-    console.error("getClinicList failed:", err);
-
-    const error = {
-      ...err,
-      status: err.response?.status || 500,
-      code: err.response?.status || 500,
-      message: err.response?.data?.message || err.message || "Failed to load clinics"
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || 'Failed to fetch clinic list'
     };
 
-    throw error;
+    throw errorWithStatus;
   }
 };
 

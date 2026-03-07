@@ -68,8 +68,10 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
 
     case 'gstNo':
-      if (!trimmed) return 'GstNo is required';
-      if (trimmed.length > 50) return 'GstNo should not exceed 50 characters';
+      if (!value || !value.trim()) return 'GstNo is required';
+      if (value.trim().length < 15) return `GST number must be 15 characters (${value.trim().length}/15 entered)`;
+      if (value.trim().length > 15) return 'GST number must not exceed 15 characters';
+      if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value.trim())) return 'Invalid GST format (e.g. 29ABCDE1234F1Z5)';
       return '';
 
     case 'cgstPercentage':

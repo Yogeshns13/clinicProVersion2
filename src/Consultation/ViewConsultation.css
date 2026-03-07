@@ -609,7 +609,7 @@
 .form-stack { display: flex; flex-direction: column; gap: 12px; }
 .form-group { display: flex; flex-direction: column; gap: 5px; }
 
-.form-label { font-size: 1.79rem; font-weight: 700; color: var(--text-2); display: flex; align-items: center; gap: 4px; }
+.form-label { font-size: .79rem; font-weight: 700; color: var(--text-2); display: flex; align-items: center; gap: 4px; }
 .form-label--opt { color: var(--text-2); }
 .opt { color: var(--text-3); font-weight: 400; font-size: .73rem; }
 .req { color: var(--red); }
