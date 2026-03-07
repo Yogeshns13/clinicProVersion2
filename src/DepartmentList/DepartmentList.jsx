@@ -25,7 +25,7 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
 
     case 'profile':
-      if (value && value.length > 500) return 'Description must not exceed 500 characters';
+      if (value && value.length > 100) return 'Description must not exceed 100 characters';
       return '';
 
     default:
@@ -212,7 +212,7 @@ const DepartmentList = () => {
       }, 1500);
     } catch (err) {
       console.error('Add department failed:', err);
-      setFormError(err.message || 'Failed to add department.');
+      setFormError(err.message?.split(':')[1]?.trim() || 'Failed to add department.');
     } finally {
       setFormLoading(false);
     }

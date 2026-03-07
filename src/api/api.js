@@ -690,7 +690,6 @@ export const updateBranch = async (branchData) => {
   }
 };
 
-// src/api/api.js
 export const getDepartmentList = async (clinicId = 0, branchId = 0, options = {}) => {
   const userId = getUserId();
   if (!userId) {

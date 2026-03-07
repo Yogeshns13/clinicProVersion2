@@ -28,9 +28,6 @@ UpdateBranch
     "Location":"Test Branch Coordinates",
     "BranchType":1,
     "Status":1
-     
-     
-   
 }
 -- Status Text Table #38
 

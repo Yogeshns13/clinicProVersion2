@@ -465,7 +465,7 @@ const ClinicList = () => {
       }, 1500);
     } catch (err) {
       console.error('Add clinic failed:', err);
-      setFormError(err.message || 'Failed to add clinic.');
+      setFormError(err.message?.split(':')[1]?.trim() || 'Failed to add clinic.');
     } finally {
       setFormLoading(false);
     }
@@ -1018,7 +1018,6 @@ const ClinicList = () => {
                         setFormData((prev) => ({ ...prev, [input.name]: newValue }));
                       }}
                       placeholder="e.g. CPT"
-                      maxLength={10}
                     />
                     {validationMessages.fileNoPrefix && (
                       <span className={styles.validationMsg}>{validationMessages.fileNoPrefix}</span>
@@ -1064,7 +1063,6 @@ const ClinicList = () => {
                         setFormData((prev) => ({ ...prev, [input.name]: newValue }));
                       }}
                       placeholder="e.g. CPT-INV"
-                      maxLength={10}
                     />
                     {validationMessages.invoicePrefix && (
                       <span className={styles.validationMsg}>{validationMessages.invoicePrefix}</span>

@@ -149,7 +149,7 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess }) => {
         onSuccess();
       }, 1500);
     } catch (err) {
-      setFormError(err.message || 'Failed to update branch.');
+      setFormError(err.message?.split(':')[1]?.trim() ||  'Failed to update branch.');
     } finally {
       setFormLoading(false);
     }

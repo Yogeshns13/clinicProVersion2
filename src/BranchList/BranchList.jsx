@@ -305,7 +305,7 @@ const BranchList = () => {
       }, 1500);
     } catch (err) {
       console.error('Add branch failed:', err);
-      setFormError(err.message || 'Failed to add branch.');
+      setFormError(err.message?.split(':')[1]?.trim() || 'Failed to add branch.');
     } finally {
       setFormLoading(false);
     }

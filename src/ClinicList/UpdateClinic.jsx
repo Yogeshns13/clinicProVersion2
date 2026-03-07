@@ -9,10 +9,10 @@ const allowedCharactersRegex = /^[A-Za-z0-9 ]+$/;
 
 // ─── Validation messages match backend updateClinicValidatorRules word-for-word ─
 const getLiveValidationMessage = (fieldName, value) => {
-  const trimmed = (value || '').trim();
+  const strValue = value == null ? '' : String(value).trim();
+  const trimmed = strValue; // already trimmed
 
   switch (fieldName) {
-    // ── Basic Information ──────────────────────────────────────────────────────
     case 'clinicName':
       if (!trimmed) return 'ClinicName is required';
       if (trimmed.length > 100) return 'ClinicName should not exceed 100 characters';
@@ -44,7 +44,6 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (!value) return 'Status is required';
       return '';
 
-    // ── Contact Information ────────────────────────────────────────────────────
     case 'mobile':
       if (!trimmed) return 'Mobile is required';
       if (trimmed.length > 20) return 'Mobile should not exceed 20 characters';
@@ -57,14 +56,17 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (!allowedCharactersRegex.test(trimmed)) return 'AltMobile should not contain special characters';
       return '';
 
-    // Email is NOT required in backend (no notEmpty) — only format-checked if present
     case 'email':
-      if (trimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-        return 'Valid email is required';
+      if (!value || !value.trim()) return 'Email is required';
+      if (value && value.trim()) {
+        if (!value.includes('@')) return 'Email must contain @';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
+          return 'Please enter a valid email address';
+        }
+        if (value.trim().length > 100) return 'Email must not exceed 100 characters';
       }
       return '';
 
-    // ── Tax Information ────────────────────────────────────────────────────────
     case 'gstNo':
       if (!trimmed) return 'GstNo is required';
       if (trimmed.length > 50) return 'GstNo should not exceed 50 characters';
@@ -80,8 +82,6 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (isNaN(Number(value))) return 'SgstPercentage should be a decimal';
       return '';
 
-    // ── Billing Configuration ─────────────────────────────────────────────────
-    // fileNoPrefix, invoicePrefix, lastFileSeq are NOT in backend update validator
     case 'fileNoPrefix':
       if (trimmed.length > 10) return 'FileNoPrefix should not exceed 10 characters';
       return '';
@@ -91,10 +91,8 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
 
     case 'lastFileSeq':
-      if (value !== '' && value !== null && value !== undefined) {
-        const seq = Number(value);
-        if (isNaN(seq) || !Number.isInteger(seq)) return 'LastFileSeq should be a number';
-      }
+      if (value === '' || value === null || value === undefined) return 'LastFileSeq is required';
+      if (!Number.isInteger(Number(value)) || isNaN(Number(value))) return 'LastFileSeq should be a number';
       return '';
 
     default:
@@ -242,7 +240,7 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
         onSuccess();
       }, 1500);
     } catch (err) {
-      setFormError(err.message || 'Failed to update clinic.');
+      setFormError(err.message?.split(':')[1]?.trim() || 'Failed to update clinic.');
     } finally {
       setFormLoading(false);
     }
@@ -427,8 +425,9 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
 
               {/* Email — NOT required in backend (isEmail only, no notEmpty) */}
               <div className={styles.addFormGroup}>
-                <label>Email</label>
+                <label>Email <span className={styles.required}>*</span></label>
                 <input
+                  required  
                   type="email"
                   name="email"
                   value={formData.email}
@@ -518,7 +517,6 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
                   onKeyDown={prefixKeyDown}
                   onPaste={prefixPaste}
                   placeholder="e.g. FILE-2026_DOC"
-                  maxLength={10}
                 />
                 {validationMessages.fileNoPrefix && (
                   <span className={styles.validationMsg}>{validationMessages.fileNoPrefix}</span>
@@ -549,7 +547,6 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
                   onKeyDown={prefixKeyDown}
                   onPaste={prefixPaste}
                   placeholder="e.g. INV-2026_ABC"
-                  maxLength={10}
                 />
                 {validationMessages.invoicePrefix && (
                   <span className={styles.validationMsg}>{validationMessages.invoicePrefix}</span>

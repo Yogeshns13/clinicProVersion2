@@ -701,8 +701,9 @@
 .formError,
 .formSuccess {
   padding: 9px 12px;
+  text-align: center;
   border-radius: 9px;
-  margin-bottom: 14px;
+  margin: 14px;
   border: 2px solid;
   font-size: 0.65rem;
   font-weight: 600;

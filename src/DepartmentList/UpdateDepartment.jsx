@@ -14,7 +14,7 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
 
     case 'profile':
-      if (value && value.length > 500) return 'Description must not exceed 500 characters';
+      if (value && value.length > 100) return 'Description must not exceed 100 characters';
       return '';
 
     default:
@@ -98,7 +98,7 @@ const UpdateDepartment = ({ department, clinics, onClose, onSuccess }) => {
         onSuccess();
       }, 1500);
     } catch (err) {
-      setFormError(err.message || 'Failed to update department.');
+      setFormError(err.message?.split(':')[1]?.trim() || 'Failed to update department.');
     } finally {
       setFormLoading(false);
     }
