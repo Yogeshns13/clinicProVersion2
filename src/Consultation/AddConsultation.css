@@ -59,6 +59,7 @@
   --sh-xl:          0 20px 60px rgba(34,43,108,.18), 0 4px 16px rgba(34,43,108,.1);
 
   --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --footer-h: 56px;
 }
 
 /* ── Scope reset ────────────────────────────────────── */
@@ -78,6 +79,8 @@
 @keyframes confPop   { from { opacity: 0; transform: scale(.86) translateY(-8px) } to { opacity: 1; transform: none } }
 @keyframes updateSld { from { opacity: 0; transform: translateY(-5px) } to { opacity: 1; transform: none } }
 @keyframes shimmer   { from { background-position: -200% center } to { background-position: 200% center } }
+@keyframes finishPop { from { opacity: 0; transform: scale(.88) } to { opacity: 1; transform: scale(1) } }
+@keyframes footerIn  { from { opacity: 0; transform: translateY(100%) } to { opacity: 1; transform: translateY(0) } }
 
 /* ══════════════════════════════════════════════════════
    OVERLAY + SHELL
@@ -165,7 +168,6 @@
 .ac-header__sub span   { font-weight: 400; }
 
 .header-nav-group    { display: flex; align-items: center; gap: 5px; }
-.header-submit-group { display: flex; align-items: center; gap: 6px; }
 
 /* Back button */
 .btn-back {
@@ -197,6 +199,7 @@
   white-space: nowrap;
   position: relative;
 }
+
 .btn-nav:hover           { background: rgba(255,255,255,.25); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.15); }
 .btn-nav--violet         { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.24); }
 .btn-nav--violet:hover   { background: rgba(255,255,255,.26); }
@@ -213,38 +216,9 @@
   display: inline-flex; align-items: center; justify-content: center;
   margin-left: 2px;
 }
-
-/* Submit button */
-.btn-submit {
-  display: flex; align-items: center; gap: 7px;
-  background: linear-gradient(135deg, #059669, #10b981);
-  border: 1px solid rgba(255,255,255,.22);
+.badge--saved {
+  background: rgba(5,150,105,.9);
   color: #fff;
-  padding: 0 16px;
-  height: 34px;
-  border-radius: 8px;
-  font-size: .84rem; font-weight: 700;
-  cursor: pointer;
-  transition: all .2s;
-  white-space: nowrap;
-  box-shadow: 0 4px 14px rgba(5,150,105,.4);
-}
-.btn-submit:hover:not(:disabled) {
-  filter: brightness(1.08);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(5,150,105,.5);
-}
-.btn-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-.btn-submit--add {
-  background: linear-gradient(135deg, #0ea5e9, #38bdf8);
-  box-shadow: 0 4px 14px rgba(14,165,233,.38);
-}
-
-.btn-submit__badge {
-  background: rgba(255,255,255,.24);
-  border-radius: 5px;
-  padding: 2px 7px;
-  font-size: .7rem; font-weight: 700;
 }
 
 /* Icon button */
@@ -280,6 +254,102 @@
    BODY
    ══════════════════════════════════════════════════════ */
 .ac-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+/* ══════════════════════════════════════════════════════
+   BOTTOM FOOTER ACTION BAR  (NEW)
+   ══════════════════════════════════════════════════════ */
+.ac-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  height: var(--footer-h);
+  padding: 0 20px;
+  flex-shrink: 0;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 16px rgba(34,43,108,.07);
+  animation: footerIn .22s cubic-bezier(.22,1,.36,1);
+}
+
+.ac-footer__left {
+  display: flex; align-items: center; gap: 8px;
+  min-width: 0; flex: 1;
+}
+
+.ac-footer__status {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .83rem; font-weight: 600; color: var(--green);
+}
+.ac-footer__status svg { flex-shrink: 0; }
+.ac-footer__pending {
+  color: var(--amber); font-weight: 600; font-size: .78rem;
+}
+
+.ac-footer__right {
+  display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Submit / Add button in footer */
+.btn-footer-submit {
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end), var(--accent-start));
+  border: none;
+  color: #fff;
+  padding: 0 22px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: .9rem; font-weight: 700;
+  cursor: pointer;
+  transition: all .22s;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(34,43,108,.32);
+  letter-spacing: -.01em;
+}
+.btn-footer-submit:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(34,43,108,.4);
+}
+.btn-footer-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+.btn-footer-submit--add {
+  background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+  box-shadow: 0 4px 16px rgba(14,165,233,.38);
+}
+.btn-footer-submit--add:hover:not(:disabled) {
+  box-shadow: 0 8px 24px rgba(14,165,233,.48);
+}
+
+.btn-footer-submit__badge {
+  background: rgba(255,255,255,.22);
+  border-radius: 6px;
+  padding: 2px 9px;
+  font-size: .74rem; font-weight: 700;
+}
+
+/* Finish button in footer */
+.btn-footer-finish {
+  display: flex; align-items: center; gap: 9px;
+  background: linear-gradient(135deg, #059669, #10b981);
+  border: none;
+  color: #fff;
+  padding: 0 26px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: .9rem; font-weight: 700;
+  cursor: pointer;
+  transition: all .22s;
+  white-space: nowrap;
+  box-shadow: 0 4px 18px rgba(5,150,105,.4);
+  letter-spacing: -.01em;
+  animation: finishPop .28s cubic-bezier(.34,1.56,.64,1);
+}
+.btn-footer-finish:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 26px rgba(5,150,105,.5);
+}
 
 /* ══════════════════════════════════════════════════════
    SPINNERS & STATES
@@ -460,17 +530,6 @@
 .patient-bar__item--alert span   { color: var(--red); font-weight: 600; }
 .patient-bar__item--alert svg    { color: var(--red); }
 
-/* Saved banner */
-.saved-banner {
-  display: flex; align-items: center; gap: 8px;
-  padding: 0 16px; height: 34px; flex-shrink: 0;
-  background: linear-gradient(90deg, rgba(5,150,105,.07), rgba(16,185,129,.03));
-  border-bottom: 1px solid rgba(5,150,105,.14);
-  font-size: .81rem; font-weight: 600; color: #059669;
-}
-.saved-banner svg { flex-shrink: 0; }
-.saved-banner__hint { font-weight: 400; font-size: .77rem; opacity: .78; }
-
 /* Error banner */
 .error-banner {
   display: flex; align-items: center; gap: 8px;
@@ -604,7 +663,6 @@
 
 .form-stack { display: flex; flex-direction: column; gap: 12px; }
 .form-group { display: flex; flex-direction: column; gap: 5px; }
-
 
 .form-label { font-size: .79rem; font-weight: 700; color: var(--text-2); display: flex; align-items: center; gap: 4px; }
 .form-label--opt { color: var(--text-2); }
@@ -1100,6 +1158,68 @@
 /* ── LAB MODAL ── */
 .lab-modal { width: min(860px, 94vw); }
 
+/* CHANGE: Lab modal header layout — flex with actions group on right */
+.lab-modal__head {
+  padding: 0 14px 0 18px !important;
+}
+.lab-modal__head-actions {
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* Delete Order button in header (top-right of lab modal) */
+.btn-del-order-header {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 13px;
+  border-radius: 7px;
+  border: 1.5px solid rgba(220,38,38,.4);
+  background: rgba(220,38,38);
+  color: white;
+  font-size: .75rem; font-weight: 700;
+  cursor: pointer; transition: all .18s;
+  font-family: var(--font); white-space: nowrap;
+}
+.btn-del-order-header:hover {
+  background: rgba(220,38,38,.8);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Inline delete-order confirm row in lab modal header */
+.del-order-confirm-inline {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(220,38,38,.1);
+  border: 1.5px solid white;
+  border-radius: 8px;
+  padding: 5px 12px;
+}
+.del-order-confirm-inline__msg {
+  display: flex; align-items: center; gap: 5px;
+  font-size: .75rem; font-weight: 700;
+  color: white;
+  white-space: nowrap;
+}
+.btn-confirm-yes-sm {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 11px;
+  border-radius: 6px;
+  border: 1.5px solid white;
+  background: rgba(220,38,38);
+  color: white; font-size: .73rem; font-weight: 700;
+  cursor: pointer; transition: all .15s; font-family: var(--font);
+}
+.btn-confirm-yes-sm:hover { background: rgba(220,38,38,.8); color: #fff; }
+.btn-confirm-yes-sm:disabled { opacity: .5; cursor: not-allowed; }
+.btn-confirm-no-sm {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 11px;
+  border-radius: 6px;
+  border: 1.5px solid white;
+  background: green;
+  color: white; font-size: .73rem; font-weight: 700;
+  cursor: pointer; transition: all .15s; font-family: var(--font);
+}
+.btn-confirm-no-sm:hover { background: rgba(22, 163, 74, 0.8); color: var(--text-1); }
+
 .lab-priority {
   display: flex; align-items: center; gap: 14px;
   padding: 12px 18px;
@@ -1131,7 +1251,7 @@
   background: var(--surface-2);
   border-radius: var(--r-sm); padding: 11px;
   border: 1px solid var(--border);
-  max-height: 310px; overflow: hidden;
+  max-height: 280px; overflow: hidden;
 }
 .lab-col__head {
   display: flex; align-items: center; gap: 5px;
@@ -1242,6 +1362,38 @@
 }
 .btn-confirm-reactivate:hover:not(:disabled) { background: rgba(5,150,105,.2); border-color: rgba(5,150,105,.6); }
 .btn-confirm-reactivate:disabled { opacity: .6; cursor: not-allowed; }
+
+/* CHANGE: Saved lab items section inside modal */
+.lab-modal__saved-wrap {
+  border-top: 1px solid var(--border);
+  max-height: 200px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.lab-modal__saved-wrap::-webkit-scrollbar { width: 3px; }
+.lab-modal__saved-wrap::-webkit-scrollbar-thumb { background: rgba(34,43,108,.1); border-radius: 3px; }
+
+/* Modal lab saved section (used inside lab modal) */
+.modal-lab-saved-section {
+  padding: 10px 16px 4px;
+}
+.modal-lab-saved-section__head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-3);
+  margin-bottom: 6px;
+}
+.modal-lab-saved-section__title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .73rem; font-weight: 800; color: var(--green);
+  text-transform: uppercase; letter-spacing: .4px;
+}
+.modal-lab-saved-section__count {
+  font-size: .65rem; font-weight: 700; padding: 1px 6px; border-radius: 8px;
+  background: var(--green-soft); color: var(--green); text-transform: none; letter-spacing: 0;
+}
+.modal-lab-saved-section__items { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+.modal-lab-saved-section__footer { padding-bottom: 8px; }
 
 /* Lab footer */
 .lab-footer { display: flex; gap: 10px; padding: 12px 16px 14px; flex-shrink: 0; }
@@ -1482,7 +1634,7 @@
 .btn-item-cancel:disabled { opacity: .6; cursor: not-allowed; }
 
 /* ══════════════════════════════════════════════════════
-   SAVED LAB ORDER SECTION
+   SAVED LAB ORDER — now only inside modal
    ══════════════════════════════════════════════════════ */
 .saved-lab-section {
   margin-top: 9px;
@@ -1516,6 +1668,7 @@
 .btn-del-order:hover { background: rgba(220,38,38,.13); border-color: rgba(220,38,38,.48); transform: translateY(-1px); }
 
 .saved-lab-section__items { display: flex; flex-direction: column; padding: 5px 9px 7px; gap: 3px; }
+.saved-lab-section__footer { padding: 0 9px 10px; }
 
 .saved-lab-item {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -1525,7 +1678,18 @@
   transition: all .18s;
 }
 .saved-lab-item:hover { border-color: rgba(48,178,181,.24); box-shadow: var(--sh-xs); }
-.saved-lab-item--inactive { opacity: .54; background: var(--surface-3); }
+.saved-lab-item--inactive { opacity: .6; background: var(--surface-3); }
+.saved-lab-item--inactive .saved-lab-item__name { color: var(--text-2); text-decoration: line-through; text-decoration-color: rgba(0,0,0,.25); }
+.saved-lab-item--inactive:hover { border-color: transparent; box-shadow: none; }
+
+.saved-lab-item__inactive-badge {
+  font-size: .68rem; font-weight: 800;
+  padding: 2px 7px; border-radius: 4px;
+  background: rgba(107,114,128,.12);
+  border: 1.5px solid rgba(107,114,128,.25);
+  color: var(--text-2);
+  white-space: nowrap; letter-spacing: .2px; text-transform: uppercase;
+}
 
 .saved-lab-item__info { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
 .saved-lab-item__name { font-size: .83rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1562,6 +1726,8 @@
   .saved-item-card__actions { flex-wrap: wrap; }
   .consult-update-bar { flex-direction: column; align-items: flex-start; gap: 8px; }
   .consult-update-bar__btn { width: 100%; justify-content: center; }
+  .ac-footer { padding: 0 12px; }
+  .btn-footer-finish, .btn-footer-submit { height: 38px; font-size: .84rem; }
 }
 @media (max-width: 600px) {
   .visit-grid             { grid-template-columns: 1fr; }
@@ -1573,8 +1739,8 @@
   .history-filters        { display: none; }
   .header-nav-group       { gap: 3px; }
   .btn-nav span:not(.badge) { display: none; }
-  .saved-lab-section__head { flex-direction: column; align-items: flex-start; gap: 6px; }
-  .med-inline-row         { flex-wrap: wrap; }
+  .ac-footer__status span:not(:first-child) { display: none; }
+  .btn-footer-submit__badge { display: none; }
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1638,7 +1804,6 @@
 }
 
 /* ── Family Patient Second Popup ── */
-/* Higher z-index so it layers on top of the primary patient modal */
 .modal-overlay--family {
   z-index: 100200;
   background: rgba(8,16,44,.55);
@@ -1651,12 +1816,10 @@
   box-shadow: var(--sh-xl), 0 0 0 2px rgba(48,178,181,.18);
 }
 
-/* Teal-tinted header for family modal to visually distinguish from primary */
 .modal__head--family {
   background: linear-gradient(135deg, var(--accent-start) 0%, var(--accent-end) 100%) !important;
 }
 
-/* Teal-tinted hero for family modal */
 .pt-hero--family {
   background: linear-gradient(135deg, var(--accent-start) 0%, var(--accent-end) 100%) !important;
 }

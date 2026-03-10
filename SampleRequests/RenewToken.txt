@@ -1,3 +1,5 @@
+RenewToken
+
 {
     "CHANNEL_ID":2,
     "REF_KEY":"hshshshshshshshshshsh",
@@ -5,6 +7,10 @@
     "USER_ID" : 1000002,
     "UserId":2000000,
     "RefreshToken":""
+    
+
 }
 
--- the above RefreshToken is for Non Cookie based connections like mobile app. 
+-- This is for both mobile and web
+
+for mobile send the refresh token in body payload

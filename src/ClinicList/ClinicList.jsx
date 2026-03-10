@@ -170,14 +170,14 @@ const ClinicList = () => {
   const [filterInputs, setFilterInputs] = useState({
     searchType: 'name',
     searchValue: '',
-    statusFilter: '',
+    statusFilter: '1',          // ← default to Active
   });
 
   // Applied filters (only set when Search is clicked)
   const [appliedFilters, setAppliedFilters] = useState({
     searchType: 'name',
     searchValue: '',
-    statusFilter: '',
+    statusFilter: '1',          // ← default to Active
   });
 
   // Selected / Modal
@@ -275,9 +275,8 @@ const ClinicList = () => {
   }, [allClinics, appliedFilters]);
 
   // ────────────────────────────────────────────────
-  // Form validity check — button is blocked until all errors are cleared
+  // Form validity check
   const isFormValid = useMemo(() => {
-    // All required string fields must be non-empty
     const requiredStringFields = [
       'clinicName', 'address', 'clinicType', 'gstNo',
       'ownerName', 'mobile', 'altMobile',
@@ -287,10 +286,8 @@ const ClinicList = () => {
     );
     if (!allRequiredFilled) return false;
 
-    // location (computed from lat/lng) is required
     if (!formData.location || !String(formData.location).trim()) return false;
 
-    // No validation messages should be non-empty
     const hasErrors = Object.values(validationMessages).some((msg) => !!msg);
     if (hasErrors) return false;
 
@@ -312,7 +309,6 @@ const ClinicList = () => {
     });
   };
 
-  // Validate every field at once and populate validationMessages
   const validateAllFields = () => {
     const fieldsToValidate = {
       clinicName: formData.clinicName,
@@ -358,9 +354,13 @@ const ClinicList = () => {
   };
 
   const handleClearFilters = () => {
-    const empty = { searchType: 'name', searchValue: '', statusFilter: '' };
-    setFilterInputs(empty);
-    setAppliedFilters(empty);
+    const defaultState = { 
+      searchType: 'name', 
+      searchValue: '', 
+      statusFilter: '1' 
+    };
+    setFilterInputs(defaultState);
+    setAppliedFilters(defaultState);
   };
 
   const handleKeyPress = (e) => {
@@ -414,7 +414,6 @@ const ClinicList = () => {
         const lng = name === 'longitude' ? filteredValue : prev.longitude || '';
         updated.location = [lat, lng].filter(Boolean).join(',');
 
-        // Validate location whenever coordinates change
         const locationMsg = getLiveValidationMessage('location', updated.location);
         setValidationMessages((prev2) => ({ ...prev2, location: locationMsg }));
 
@@ -431,7 +430,6 @@ const ClinicList = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Run full validation; stop if any errors
     const isValid = validateAllFields();
     if (!isValid) return;
 
@@ -471,10 +469,9 @@ const ClinicList = () => {
     }
   };
 
-  // ── Update handlers ──
   const handleUpdateClick = (clinic) => {
     setUpdateClinicData(clinic);
-    setSelectedClinic(null); // close details modal
+    setSelectedClinic(null);
     setIsUpdateFormOpen(true);
   };
 
@@ -490,7 +487,6 @@ const ClinicList = () => {
   };
 
   // ────────────────────────────────────────────────
-  // Early returns
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
@@ -499,8 +495,10 @@ const ClinicList = () => {
 
   if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
-  // Has an active search applied
-  const hasActiveSearch = !!appliedFilters.searchValue.trim() || !!appliedFilters.statusFilter;
+  // Determine if any real filter is active (not default state)
+  const hasActiveFilter = 
+    appliedFilters.searchValue.trim() !== '' ||
+    appliedFilters.statusFilter !== '1';
 
   // ────────────────────────────────────────────────
   return (
@@ -551,9 +549,9 @@ const ClinicList = () => {
               onChange={handleFilterChange}
               className={styles.statusFilterSelect}
             >
-              <option value="">All Status</option>
               <option value="1">Active</option>
               <option value="2">Inactive</option>
+              <option value="">All Status</option>
             </select>
           </div>
 
@@ -564,8 +562,8 @@ const ClinicList = () => {
               Search
             </button>
 
-            {/* Clear button — only shown when a search has been applied */}
-            {hasActiveSearch && (
+            {/* Clear button shown only when filter/search is active */}
+            {hasActiveFilter && (
               <button onClick={handleClearFilters} className={styles.clearButton}>
                 <FiX size={18} />
                 Clear
@@ -599,7 +597,7 @@ const ClinicList = () => {
             {filteredClinics.length === 0 ? (
               <tr>
                 <td colSpan={7} className={styles.clinicNoData}>
-                  {hasActiveSearch ? 'No clinics found.' : 'No clinics registered yet.'}
+                  {hasActiveFilter ? 'No clinics found.' : 'No clinics registered yet.'}
                 </td>
               </tr>
             ) : (
@@ -642,7 +640,6 @@ const ClinicList = () => {
         <div className={styles.detailModalOverlay} onClick={closeModal}>
           <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
 
-            {/* Gradient Header */}
             <div className={styles.detailModalHeader}>
               <div className={styles.detailHeaderContent}>
                 <h2>{selectedClinic.name}</h2>
@@ -656,11 +653,9 @@ const ClinicList = () => {
               <button onClick={closeModal} className={styles.detailCloseBtn}>✕</button>
             </div>
 
-            {/* Info Cards Grid */}
             <div className={styles.detailModalBody}>
               <div className={styles.infoSection}>
 
-                {/* Contact Information */}
                 <div className={styles.infoCard}>
                   <div className={styles.infoHeader}>
                     <h3>Contact Information</h3>
@@ -693,7 +688,6 @@ const ClinicList = () => {
                   </div>
                 </div>
 
-                {/* Tax & Billing Information */}
                 <div className={styles.infoCard}>
                   <div className={styles.infoHeader}>
                     <h3>Tax & Billing Information</h3>
@@ -724,7 +718,6 @@ const ClinicList = () => {
 
               </div>
 
-              {/* Footer Actions */}
               <div className={styles.detailModalFooter}>
                 <button onClick={closeModal} className={styles.btnCancel}>
                   Close
@@ -741,10 +734,9 @@ const ClinicList = () => {
 
       {/* ──────────────── Add Form Modal ──────────────── */}
       {isAddFormOpen && (
-        <div className={styles.detailModalOverlay} onClick={closeAddForm}>
+        <div className={styles.detailModalOverlay}>
           <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
 
-            {/* Gradient Header */}
             <div className={styles.detailModalHeader}>
               <div className={styles.detailHeaderContent}>
                 <h2>Add New Clinic</h2>
@@ -756,14 +748,12 @@ const ClinicList = () => {
               {formError && <div className={styles.formError}>{formError}</div>}
               {formSuccess && <div className={styles.formSuccess}>Clinic added successfully!</div>}
 
-              {/* ── Section: Basic Information ── */}
               <div className={styles.addSection}>
                 <div className={styles.addSectionHeader}>
                   <h3>Basic Information</h3>
                 </div>
                 <div className={styles.addFormGrid}>
 
-                  {/* Clinic Name — required */}
                   <div className={styles.addFormGroup}>
                     <label>Clinic Name <span className={styles.required}>*</span></label>
                     <input
@@ -778,7 +768,6 @@ const ClinicList = () => {
                     )}
                   </div>
 
-                  {/* Clinic Type — required */}
                   <div className={styles.addFormGroup}>
                     <label>Clinic Type <span className={styles.required}>*</span></label>
                     <input
@@ -793,7 +782,6 @@ const ClinicList = () => {
                     )}
                   </div>
 
-                  {/* Owner Name — required */}
                   <div className={styles.addFormGroup}>
                     <label>Owner Name <span className={styles.required}>*</span></label>
                     <input
@@ -808,7 +796,6 @@ const ClinicList = () => {
                     )}
                   </div>
 
-                  {/* Address — required */}
                   <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                     <label>Address <span className={styles.required}>*</span></label>
                     <textarea
@@ -824,7 +811,6 @@ const ClinicList = () => {
                     )}
                   </div>
 
-                  {/* Location Coordinates — location is required (computed) */}
                   <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                     <label>
                       Location Coordinates <span className={styles.required}>*</span>
@@ -861,7 +847,6 @@ const ClinicList = () => {
                         )}
                       </div>
                     </div>
-                    {/* Show location required error when both coords are missing */}
                     {validationMessages.location && (
                       <span className={styles.validationMsg}>{validationMessages.location}</span>
                     )}
@@ -870,14 +855,12 @@ const ClinicList = () => {
                 </div>
               </div>
 
-              {/* ── Section: Contact Information — 3 columns ── */}
               <div className={styles.addSection}>
                 <div className={styles.addSectionHeader}>
                   <h3>Contact Information</h3>
                 </div>
                 <div className={styles.addFormGridThreeCol}>
 
-                  {/* Mobile — required */}
                   <div className={styles.addFormGroup}>
                     <label>Mobile <span className={styles.required}>*</span></label>
                     <input
@@ -893,7 +876,6 @@ const ClinicList = () => {
                     )}
                   </div>
 
-                  {/* Alternate Mobile — required */}
                   <div className={styles.addFormGroup}>
                     <label>Alternate Mobile <span className={styles.required}>*</span></label>
                     <input
@@ -909,10 +891,8 @@ const ClinicList = () => {
                     )}
                   </div>
 
-                  {/* Email — optional, validated if filled */}
                   <div className={styles.addFormGroup}>
-                    <label>Email <span className={styles.required}>*</span>
-                    </label>
+                    <label>Email <span className={styles.required}>*</span></label>
                     <input
                       required
                       type="email"
@@ -929,14 +909,12 @@ const ClinicList = () => {
                 </div>
               </div>
 
-              {/* ── Section: Tax Information — 3 columns ── */}
               <div className={styles.addSection}>
                 <div className={styles.addSectionHeader}>
                   <h3>Tax Information</h3>
                 </div>
                 <div className={styles.addFormGridThreeCol}>
 
-                  {/* GST Number — required */}
                   <div className={styles.addFormGroup}>
                     <label>GST Number <span className={styles.required}>*</span></label>
                     <input
@@ -951,7 +929,6 @@ const ClinicList = () => {
                     )}
                   </div>
 
-                  {/* CGST Percentage — required */}
                   <div className={styles.addFormGroup}>
                     <label>CGST Percentage <span className={styles.required}>*</span></label>
                     <input
@@ -969,7 +946,6 @@ const ClinicList = () => {
                     )}
                   </div>
 
-                  {/* SGST Percentage — required */}
                   <div className={styles.addFormGroup}>
                     <label>SGST Percentage <span className={styles.required}>*</span></label>
                     <input
@@ -990,14 +966,12 @@ const ClinicList = () => {
                 </div>
               </div>
 
-              {/* ── Section: Billing Configuration ── */}
               <div className={styles.addSection}>
                 <div className={styles.addSectionHeader}>
                   <h3>Billing Configuration</h3>
                 </div>
                 <div className={styles.addFormGrid}>
 
-                  {/* File No Prefix — optional, max 10 */}
                   <div className={styles.addFormGroup}>
                     <label>File No Prefix</label>
                     <input
@@ -1024,7 +998,6 @@ const ClinicList = () => {
                     )}
                   </div>
 
-                  {/* Last File Sequence — required */}
                   <div className={styles.addFormGroup}>
                     <label>Last File Sequence <span className={styles.required}>*</span></label>
                     <input
@@ -1041,7 +1014,6 @@ const ClinicList = () => {
                     )}
                   </div>
 
-                  {/* Invoice Prefix — optional, max 10 */}
                   <div className={styles.addFormGroup}>
                     <label>Invoice Prefix</label>
                     <input
@@ -1072,16 +1044,10 @@ const ClinicList = () => {
                 </div>
               </div>
 
-              {/* Footer */}
               <div className={styles.detailModalFooter}>
                 <button type="button" onClick={closeAddForm} className={styles.btnCancel}>
                   Cancel
                 </button>
-                {/*
-                  Submit is always clickable so validateAllFields runs and shows
-                  all errors on first click. The API call is blocked inside
-                  handleSubmit until isFormValid is true.
-                */}
                 <button
                   type="submit"
                   disabled={formLoading}
@@ -1090,7 +1056,6 @@ const ClinicList = () => {
                   {formLoading ? 'Adding...' : 'Add Clinic'}
                 </button>
               </div>
-
             </form>
           </div>
         </div>

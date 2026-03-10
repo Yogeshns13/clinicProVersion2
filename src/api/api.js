@@ -1,6 +1,7 @@
 // src/api.js
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
+import { API,UPLOAD_API_URL, FILE_API_URL } from "./ApiConfiguration";
 
 const CHANNEL_ID = 1;
 const PRODUCTION_MODE = 0;
@@ -11,7 +12,7 @@ export const getUserId = () => {
   return localStorage.getItem("userId");
 };
 
-const baseURL = import.meta.env.PROD
+/* const baseURL = import.meta.env.PROD
   ? `${import.meta.env.VITE_API_BASE_URL}/api`
   : '/api';
 
@@ -29,7 +30,7 @@ const API = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-});
+}); */
 
 export const generateRefKey = () => {
   const sessionRef = getSessionRef();
@@ -85,9 +86,11 @@ export const loginUser = async (username, password) => {
     if (result?.isAuthendicated) {
       // Save user data including PROFILE_NAME
       localStorage.setItem("userId", result.USER_ID);
+
       localStorage.setItem("profileName", result.PROFILE_NAME);      
       localStorage.setItem("clinicID", result.CLINIC_ID);
       localStorage.setItem("branchID", result.BRANCH_ID);
+      localStorage.setItem("sessionRef", sessionRef);
       localStorage.setItem("isLoggedIn", "true");
       console.log("Result:", result);
       return { success: true, data: result };
@@ -127,6 +130,7 @@ export const renewToken = async () => {
     return { success: false, responseTime };
   }
 };
+
 
 export const uploadPhoto = async (file, fileAccessToken) => {
   try {
@@ -316,7 +320,6 @@ export const getClinicList = async (options = {}) => {
     throw errorWithStatus;
   }
 };
-
 export const addClinic = async (clinicData) => {
   const userId = getUserId();
   if (!userId) {
@@ -4070,6 +4073,45 @@ export const updatePatientVisit = async (visitData) => {
   }
 };
 
+export const logout = async () => {
+  const userId = localStorage.getItem("userId");
+  const sessionRef = localStorage.getItem("sessionRef"); // ← you need to store this at login
+
+  if (!userId || !sessionRef) {
+    throw new Error("No active session found. Please login again.");
+  }
+
+  const payload = {
+    CHANNEL_ID: CHANNEL_ID,          
+    REF_KEY: generateRefKey(),        
+    SESSION_REF: sessionRef,
+    USER_ID: Number(userId),        
+  };
+
+  try {
+    const response = await API.post("/logout", payload);
+    
+    console.log("Logout payload:", payload);
+    console.log("Logout response:", response.data);
+
+    const result = response.data.result;
+
+    if (result?.OUT_OK === 1) {
+      localStorage.clear();  
+
+      return { success: true, message: result.OUT_ERROR || "Logged out successfully" };
+    } else {
+      throw new Error(result?.OUT_ERROR || "Logout failed");
+    }
+  } catch (err) {
+    throw new Error(
+      err.response?.data?.message || 
+      err.response?.data?.result?.OUT_ERROR || 
+      err.message || 
+      "Logout failed - network or server error"
+    );
+  }
+};
 
 
 

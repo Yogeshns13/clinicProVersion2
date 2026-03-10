@@ -7,6 +7,7 @@ const CACHED_TABLE_IDS = [1, 2, 6];
 const CACHE_PREFIX = 'tableData_';
 
 /**
+ * Load cached data from memory storage for specific TABLE_IDs
  * @param {number} tableId - The table ID to load
  * @returns {Array|null} - Cached data or null
  */

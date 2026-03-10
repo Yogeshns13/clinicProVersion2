@@ -1,5 +1,6 @@
 // src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from "react";
+import { logout as apiLogout } from "../Api/Api"; 
 
 const AuthContext = createContext();
 
@@ -10,24 +11,34 @@ export const AuthProvider = ({ children }) => {
     return localStorage.getItem("isLoggedIn") === "true";
   });
 
-  // Add current user profile
   const [profileName, setProfileName] = useState(() => {
     return localStorage.getItem("profileName") || null;
   });
 
-  const login = () => {
+  const login = (data) => {
+    const profile = data?.PROFILE_NAME || localStorage.getItem("profileName");
     setIsAuthenticated(true);
-    localStorage.setItem("isLoggedIn", "true");
-    
-    // Update profile from localStorage
-    const profile = localStorage.getItem("profileName");
     setProfileName(profile);
+    localStorage.setItem("isLoggedIn", "true");
   };
 
-  const logout = () => {
-    localStorage.clear();
-    setIsAuthenticated(false);
-    setProfileName(null);
+  const logout = async () => {
+    try {
+      await apiLogout();       
+    } catch (err) {
+      console.warn("Backend logout failed, still clearing local state", err);
+    } finally {
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("profileName");
+      localStorage.removeItem("sessionRef");
+      setIsAuthenticated(false);
+      setProfileName(null);
+    }
+  };
+
+  const setAuth = ({ isAuthenticated, profileName }) => {
+    setIsAuthenticated(isAuthenticated);
+    setProfileName(profileName);
   };
 
   useEffect(() => {
@@ -41,7 +52,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, profileName, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, profileName, login, logout, setAuth }}>
       {children}
     </AuthContext.Provider>
   );

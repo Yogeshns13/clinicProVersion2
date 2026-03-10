@@ -32,13 +32,11 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (!allowedCharactersRegex.test(value.trim())) return 'BranchName contains invalid characters';
       return '';
 
-    // Address is required in backend (notEmpty)
     case 'address':
       if (!value || !value.trim()) return 'Address is required';
       if (value.length > 500) return 'Address should not exceed 500 characters';
       return '';
 
-    // Location is optional in backend — only length check
     case 'location':
       if (value && value.length > 500) return 'Location should not exceed 500 characters';
       return '';
@@ -48,7 +46,6 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (isNaN(Number(value)) || Number(value) < 1) return 'BranchType must be a valid integer (from text table)';
       return '';
 
-    // lat/lng are UX helpers — not sent directly to backend
     case 'latitude':
       if (value === '') return '';
       const lat = Number(value);
@@ -71,7 +68,6 @@ const getLiveValidationMessage = (fieldName, value) => {
 const filterInput = (fieldName, value) => {
   switch (fieldName) {
     case 'branchName':
-      // allow A-Za-z0-9, whitespace, hyphen, underscore — matches backend regex
       return value.replace(/[^A-Za-z0-9\s\-_]/g, '');
     case 'latitude':
     case 'longitude':
@@ -84,7 +80,6 @@ const filterInput = (fieldName, value) => {
   }
 };
 
-// ─── Fields validated on submit for the Add form ──────────────────────────────
 const ADD_VALIDATED_FIELDS = ['clinicId', 'branchName', 'address', 'branchType'];
 
 // ────────────────────────────────────────────────
@@ -109,7 +104,7 @@ const DEFAULT_FILTERS = {
   searchValue: '',
   clinicId:   'all',
   branchType: '0',
-  status:     '-1',
+  status:     '1',          // ← changed: default to Active
 };
 
 // ────────────────────────────────────────────────
@@ -140,7 +135,6 @@ const BranchList = () => {
   const [formSuccess, setFormSuccess]               = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
 
-  // Update Modal
   const [updateBranchData, setUpdateBranchData] = useState(null);
   const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);
 
@@ -148,7 +142,7 @@ const BranchList = () => {
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.clinicId    !== 'all'     ||
     appliedFilters.branchType  !== '0'       ||
-    appliedFilters.status      !== '-1';
+    appliedFilters.status      !== '1';       // ← changed: compare to '1' not '-1'
 
   // ────────────────────────────────────────────────
   useEffect(() => {
@@ -167,7 +161,6 @@ const BranchList = () => {
     fetchBranches(appliedFilters);
   }, [appliedFilters]);
 
-  // forceRefresh = true bypasses cache → always fetches latest data from server
   const fetchBranches = async (filters, forceRefresh = false) => {
     try {
       setLoading(true);
@@ -178,7 +171,7 @@ const BranchList = () => {
         BranchName: filters.searchType === 'branchName' ? filters.searchValue : '',
         Location:   filters.searchType === 'location'   ? filters.searchValue : '',
         BranchType: filters.branchType !== '0' ? Number(filters.branchType) : 0,
-        Status:     filters.status !== '' ? Number(filters.status) : -1,
+        Status:     filters.status !== '' ? Number(filters.status) : 1,   // default active
       };
 
       const data = await getBranchList(clinicId, options, forceRefresh);
@@ -261,7 +254,6 @@ const BranchList = () => {
     setValidationMessages((prev) => ({ ...prev, [name]: validationMessage }));
   };
 
-  // ── Run validation on all add-form fields; returns true only if zero errors ──
   const validateAllAddFields = () => {
     const messages = {};
     let isValid = true;
@@ -301,7 +293,7 @@ const BranchList = () => {
       setFormSuccess(true);
       setTimeout(() => {
         closeAddForm();
-        fetchBranches(appliedFilters, true); // forceRefresh = true
+        fetchBranches(appliedFilters, true);
       }, 1500);
     } catch (err) {
       console.error('Add branch failed:', err);
@@ -311,7 +303,6 @@ const BranchList = () => {
     }
   };
 
-  // ── Update handlers ──
   const handleUpdateClick = (branch) => {
     setUpdateBranchData(branch);
     setSelectedBranch(null);
@@ -326,7 +317,7 @@ const BranchList = () => {
   const handleUpdateSuccess = () => {
     setIsUpdateFormOpen(false);
     setUpdateBranchData(null);
-    fetchBranches(appliedFilters, true); // forceRefresh = true
+    fetchBranches(appliedFilters, true);
   };
 
   if (error && (error?.status >= 400 || error?.code >= 400)) {
@@ -336,8 +327,6 @@ const BranchList = () => {
   if (loading) return <div className={styles.clinicLoading}>Loading branches...</div>;
 
   if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
-
-  const hasActiveSearch = hasActiveFilters;
 
   return (
     <div className={styles.clinicListWrapper}>
@@ -408,9 +397,9 @@ const BranchList = () => {
               onChange={handleFilterChange}
               className={styles.statusFilterSelect}
             >
-              <option value="-1">All Status</option>
-              <option value="1">Active</option>
+              <option value="1">Active</option>           {/* ← default selected */}
               <option value="2">Inactive</option>
+              <option value="-1">All Status</option>
             </select>
           </div>
 
@@ -449,7 +438,7 @@ const BranchList = () => {
             {branches.length === 0 ? (
               <tr>
                 <td colSpan={6} className={styles.clinicNoData}>
-                  {hasActiveSearch ? 'No branches found.' : 'No branches registered yet.'}
+                  {hasActiveFilters ? 'No branches found.' : 'No branches registered yet.'}
                 </td>
               </tr>
             ) : (
@@ -492,7 +481,7 @@ const BranchList = () => {
         </table>
       </div>
 
-      {/* ──────────────── Details Modal ──────────────── */}
+      {/* Details Modal */}
       {selectedBranch && (
         <div className={styles.detailModalOverlay} onClick={closeModal}>
           <div className={styles.detailModalContent} onClick={e => e.stopPropagation()}>
@@ -554,7 +543,7 @@ const BranchList = () => {
         </div>
       )}
 
-      {/* ──────────────── Add Form Modal ──────────────── */}
+      {/* Add Form Modal */}
       {isAddFormOpen && (
         <div className={styles.detailModalOverlay} onClick={closeAddForm}>
           <div className={styles.addModalContent} onClick={e => e.stopPropagation()}>
@@ -576,7 +565,6 @@ const BranchList = () => {
                 </div>
                 <div className={styles.addFormGrid}>
 
-                  {/* ClinicID — required in backend */}
                   <div className={styles.addFormGroup}>
                     <label>Clinic <span className={styles.required}>*</span></label>
                     <select
@@ -597,7 +585,6 @@ const BranchList = () => {
                     )}
                   </div>
 
-                  {/* BranchName — required in backend */}
                   <div className={styles.addFormGroup}>
                     <label>Branch Name <span className={styles.required}>*</span></label>
                     <input
@@ -612,7 +599,6 @@ const BranchList = () => {
                     )}
                   </div>
 
-                  {/* BranchType — required in backend */}
                   <div className={styles.addFormGroup}>
                     <label>Branch Type <span className={styles.required}>*</span></label>
                     <select
@@ -632,7 +618,6 @@ const BranchList = () => {
                     )}
                   </div>
 
-                  {/* Address — required in backend (notEmpty) */}
                   <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                     <label>Full Address <span className={styles.required}>*</span></label>
                     <textarea
@@ -648,7 +633,6 @@ const BranchList = () => {
                     )}
                   </div>
 
-                  {/* Location — optional in backend */}
                   <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                     <label>Location Coordinates (optional)</label>
                     <div className={styles.coordRow}>
@@ -704,7 +688,6 @@ const BranchList = () => {
         </div>
       )}
 
-      {/* ──────────────── Update Branch Modal ──────────────── */}
       {isUpdateFormOpen && updateBranchData && (
         <UpdateBranch
           branch={updateBranchData}

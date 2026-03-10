@@ -8,6 +8,7 @@ import {
   FiZap, FiClock, FiRefreshCw, FiChevronUp, FiHeart,
   FiThermometer, FiTrendingUp, FiSend, FiTrash2,
   FiClipboard, FiDroplet, FiCheckCircle, FiSave, FiUsers,
+  FiFlag,
 } from 'react-icons/fi';
 import { getPatientVisitList, getPatientsList } from '../Api/Api.js';
 import { addConsultation, updateConsultation, getConsultationList } from '../Api/ApiConsultation.js';
@@ -386,11 +387,9 @@ const SavedMedicineCard = ({ item, clinicId, branchId, onUpdated, onDeleted, onE
   );
 };
 
-/* ─── SavedLabSection ────────────────────────────── */
-const SavedLabSection = ({ labOrderId, labItems, labPriorityDesc, clinicId, branchId, onItemStatusChange, onOrderDeleted, onError }) => {
-  const [deletingOrder, setDeletingOrder]     = useState(false);
-  const [confirmDelOrder, setConfirmDelOrder] = useState(false);
-  const [togglingId, setTogglingId]           = useState(null);
+/* ─── SavedLabSection (only used inside Lab Modal — no delete button here) ────────── */
+const SavedLabSection = ({ labItems, labPriorityDesc, clinicId, branchId, onItemStatusChange, onError }) => {
+  const [togglingId, setTogglingId] = useState(null);
 
   const handleToggleItem = async (itemId, currentStatus) => {
     try {
@@ -405,80 +404,62 @@ const SavedLabSection = ({ labOrderId, labItems, labPriorityDesc, clinicId, bran
     }
   };
 
-  const handleDeleteOrder = async () => {
-    try {
-      setDeletingOrder(true);
-      await deleteLabTestOrder(labOrderId);
-      onOrderDeleted();
-    } catch (err) {
-      onError(err);
-    } finally {
-      setDeletingOrder(false);
-      setConfirmDelOrder(false);
-    }
-  };
-
   if (!labItems || labItems.length === 0) return null;
 
   return (
-    <div className="saved-lab-section">
-      <div className="saved-lab-section__head">
-        <div className="saved-lab-section__title">
-          <FiActivity size={13} />
-          <span>Lab Order</span>
+    <div className="modal-lab-saved-section">
+      <div className="modal-lab-saved-section__head">
+        <div className="modal-lab-saved-section__title">
+          <FiCheckCircle size={12} />
+          <span>Saved Lab Items</span>
           {labPriorityDesc && <span className="priority-tag priority-tag--saved">{labPriorityDesc}</span>}
-          <span className="saved-lab-section__count">{labItems.length} item{labItems.length !== 1 ? 's' : ''}</span>
-        </div>
-        <div className="saved-lab-section__actions">
-          {!confirmDelOrder ? (
-            <button className="btn-del-order" onClick={() => setConfirmDelOrder(true)} title="Delete entire lab order">
-              <FiTrash2 size={12} /> Delete Order
-            </button>
-          ) : (
-            <div className="confirm-del-popup confirm-del-popup--inline">
-              <div className="confirm-del-popup__inner">
-                <p className="confirm-del-popup__msg"><FiAlertCircle size={14} /> Delete entire lab order?</p>
-                <div className="confirm-del-popup__btns">
-                  <button className="btn-confirm-yes" onClick={handleDeleteOrder} disabled={deletingOrder}>
-                    {deletingOrder ? <span className="spin-sm" /> : <FiCheck size={11} />} Yes
-                  </button>
-                  <button className="btn-confirm-no" onClick={() => setConfirmDelOrder(false)}>
-                    <FiX size={11} /> No
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          <span className="modal-lab-saved-section__count">{labItems.length} item{labItems.length !== 1 ? 's' : ''}</span>
         </div>
       </div>
-      <div className="saved-lab-section__items">
-        {labItems.map(item => (
-          <div key={item.itemId} className={`saved-lab-item ${item.status === 0 ? 'saved-lab-item--inactive' : ''}`}>
-            <div className="saved-lab-item__info">
-              <span className="saved-lab-item__name">{item.testOrPackageName}</span>
-              {item.totalAmount > 0 && (
-                <span className="saved-lab-item__fee">₹{item.totalAmount?.toFixed(2)}</span>
-              )}
+      <div className="modal-lab-saved-section__items">
+        {labItems.map(item => {
+          const isActive   = item.status === 1;
+          const isInactive = item.status !== 1;
+          return (
+            <div key={item.itemId} className={`saved-lab-item ${isInactive ? 'saved-lab-item--inactive' : ''}`}>
+              <div className="saved-lab-item__info">
+                <span className="saved-lab-item__name">{item.testOrPackageName}</span>
+                {isActive && item.totalAmount > 0 && (
+                  <span className="saved-lab-item__fee">₹{item.totalAmount?.toFixed(2)}</span>
+                )}
+              </div>
+              <div className="saved-lab-item__status">
+                {isActive ? (
+                  /* Active — show Deactivate button */
+                  <button
+                    className="btn-toggle-lab btn-toggle-lab--deactivate"
+                    onClick={() => handleToggleItem(item.itemId, item.status)}
+                    disabled={togglingId === item.itemId}
+                  >
+                    {togglingId === item.itemId
+                      ? <span className="spin-sm" />
+                      : <><FiTrash2 size={11} /> Delete</>
+                    }
+                  </button>
+                ) : (
+                  /* Inactive — disabled grey view + only Activate button */
+                  <>
+                    <button
+                      className="btn-toggle-lab btn-toggle-lab--activate"
+                      onClick={() => handleToggleItem(item.itemId, item.status)}
+                      disabled={togglingId === item.itemId}
+                    >
+                      {togglingId === item.itemId
+                        ? <span className="spin-sm" />
+                        : <><FiCheck size={11} /> Add Again</>
+                      }
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-            <div className="saved-lab-item__status">
-              <span className={`status-tag ${item.status === 1 ? 'status-tag--on' : ''}`}>
-                {item.status === 1 ? 'Active' : 'Inactive'}
-              </span>
-              <button
-                className={`btn-toggle-lab ${item.status === 1 ? 'btn-toggle-lab--deactivate' : 'btn-toggle-lab--activate'}`}
-                onClick={() => handleToggleItem(item.itemId, item.status)}
-                disabled={togglingId === item.itemId}
-              >
-                {togglingId === item.itemId
-                  ? <span className="spin-sm" />
-                  : item.status === 1
-                    ? <><FiX size={11} /> Deactivate</>
-                    : <><FiCheck size={11} /> Activate</>
-                }
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -501,6 +482,9 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const [confirmedSuccess, setConfirmedSuccess]         = useState(false);
   const [submitProgress, setSubmitProgress]             = useState(null);
 
+  // CHANGE: Track whether current state is "finished" (all submitted, nothing new pending)
+  const [isFinished, setIsFinished]                     = useState(false);
+
   const [savedNotes, setSavedNotes]         = useState('');
   const [savedPlan, setSavedPlan]           = useState('');
   const [savedNextDate, setSavedNextDate]   = useState('');
@@ -520,10 +504,8 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const [showPatientModal, setShowPatientModal]     = useState(false);
   const [patientDetails, setPatientDetails]         = useState(null);
   const [loadingPatient, setLoadingPatient]         = useState(false);
-  // Family patient: fetched quietly when primary patient loads; shown inline as name+mobile
   const [familyPatientData, setFamilyPatientData]   = useState(null);
   const [loadingFamilyData, setLoadingFamilyData]   = useState(false);
-  // Second popup for full family patient details
   const [showFamilyModal, setShowFamilyModal]       = useState(false);
   const [familyPatientDetails, setFamilyPatientDetails] = useState(null);
   const [loadingFamilyDetails, setLoadingFamilyDetails] = useState(false);
@@ -546,17 +528,15 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const [savedLabItems, setSavedLabItems]           = useState([]);
   const [savedLabPriorityDesc, setSavedLabPriorityDesc] = useState('');
 
-  // ── BUG 2 FIX: Track deactivated lab item IDs separately ──
-  // When an item is deactivated, keep its test/pkg ID in "deactivated" sets
-  // so the modal knows to show a re-activate popup instead of adding a duplicate.
   const [deactivatedLabTestIds, setDeactivatedLabTestIds] = useState([]);
   const [deactivatedLabPkgIds, setDeactivatedLabPkgIds]   = useState([]);
-  // Holds { itemId, name, testId?, pkgId? } for the re-activate confirm popup in modal
   const [reactivateConfirm, setReactivateConfirm]         = useState(null);
   const [reactivating, setReactivating]                   = useState(false);
 
   const [removingLabItemId, setRemovingLabItemId]   = useState(null);
   const [confirmRemoveLabId, setConfirmRemoveLabId] = useState(null);
+  const [confirmDelOrder, setConfirmDelOrder]       = useState(false);
+  const [deletingOrder, setDeletingOrder]           = useState(false);
 
   const [historyList, setHistoryList]           = useState([]);
   const [historyLoading, setHistoryLoading]     = useState(false);
@@ -602,6 +582,19 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     nextConsultationDate !== savedNextDate
   );
 
+  // CHANGE: Derived — do we have pending (unsaved) items?
+  const pendingContainerCount = containers.filter(c => !submittedContainerIds.has(c.tempId)).length;
+  const stagedLabCount  = stagedLabTestIds.length + stagedLabPkgIds.length;
+  const hasAnythingNew  = pendingContainerCount > 0 || stagedLabCount > 0;
+
+  // CHANGE: When consultSaved and nothing new pending → finished state
+  // Reset finished if new stuff is added
+  useEffect(() => {
+    if (isFinished && hasAnythingNew) {
+      setIsFinished(false);
+    }
+  }, [hasAnythingNew]);
+
   const getIds = () => ({
     clinicId: Number(localStorage.getItem('clinicID')),
     branchId: Number(localStorage.getItem('branchID')),
@@ -632,14 +625,12 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
       const pts = await getPatientsList(clinicId, { Page: 1, PageSize: 1, BranchID: branchId, PatientID: patientId, Status: 1 });
       const pt = pts?.[0] || null;
       setPatientDetails(pt);
-      // Silently fetch family patient data (name + mobile) for the inline row
       if (pt?.familyPatientId) {
         fetchFamilyPatientData(pt.familyPatientId, clinicId, branchId);
       }
     } catch (err) { setError(err); } finally { setLoadingPatient(false); }
   };
 
-  // Fetch family patient data quietly in background — used for the inline name+mobile row
   const fetchFamilyPatientData = async (familyPatientId, clinicId, branchId) => {
     try {
       setLoadingFamilyData(true);
@@ -649,7 +640,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     finally { setLoadingFamilyData(false); }
   };
 
-  // Open the second popup with full family patient details (data already fetched)
   const handleViewFamilyPatient = () => {
     if (!familyPatientData) return;
     setFamilyPatientDetails(familyPatientData);
@@ -723,9 +713,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     setConfirmedSuccess(true);
     try {
       const items2 = await getPrescriptionDetailList(clinicId, { PrescriptionID: prescId, BranchID: branchId, Page: 1, PageSize: 50 });
-      // Only show active (status 1) details — deleted (3) and inactive are excluded,
       setSavedPrescItems((items2 || []).filter(i => i.status === 1));
-      // Clear submitted containers that are now reflected in savedPrescItems
       setContainers(prev => prev.filter(c => !items.some(i => i.tempId === c.tempId)));
       setSubmittedContainerIds(new Set());
     } catch (e) { console.error(e); }
@@ -740,7 +728,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     }
     setSubmittedLabTestIds(prev => [...new Set([...prev, ...testIds])]);
     setSubmittedLabPkgIds(prev => [...new Set([...prev, ...pkgIds])]);
-    // Remove from deactivated sets since they are now active
     setDeactivatedLabTestIds(prev => prev.filter(id => !testIds.includes(id)));
     setDeactivatedLabPkgIds(prev => prev.filter(id => !pkgIds.includes(id)));
     try {
@@ -781,12 +768,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     }
   };
 
-  /* ── Lab order submit from modal (Save Items button) ──
-     Always runs the full flow regardless of whether consultation exists yet:
-     1. addConsultation (if no consultationId yet)
-     2. addLabTestOrder (if no labOrderId yet)
-     3. addLabTestOrderItem for each new test / package
-  ── */
   const handleStageAndSubmitLabOrder = async () => {
     const newTestIds = selectedTestIds.filter(id => !submittedLabTestIds.includes(id) && !deactivatedLabTestIds.includes(id));
     const newPkgIds  = selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id) && !deactivatedLabPkgIds.includes(id));
@@ -796,8 +777,17 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
       return;
     }
 
-    // Validate: consultation notes required to create a consultation
-    if (!consultationId && !consultationNotes.trim()) {
+    // ── Before first Submit: just stage locally, no API calls ──
+    if (!consultationId) {
+      setStagedLabTestIds(prev => [...new Set([...prev, ...newTestIds])]);
+      setStagedLabPkgIds(prev => [...new Set([...prev, ...newPkgIds])]);
+      setStagedLabPriority(labPriority);
+      setShowLabModal(false);
+      return;
+    }
+
+    // ── After first Submit (consultation exists): call APIs immediately ──
+    if (!consultationNotes.trim()) {
       setError({ message: 'Please enter Consultation Notes before saving lab items.' });
       return;
     }
@@ -806,55 +796,20 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     setShowLabModal(false);
     setError(null);
 
-    // Build progress steps
     const steps = [];
-    if (!consultationId)                               steps.push({ label: 'Creating consultation' });
-    if (!labOrderId)                                   steps.push({ label: 'Creating lab order' });
+    if (!labOrderId) steps.push({ label: 'Creating lab order' });
     steps.push({ label: `Adding ${newTestIds.length + newPkgIds.length} lab item(s)` });
     setSubmitProgress({ steps, currentStep: 0, done: false });
 
     try {
       let s = 0;
-      let activeConsultationId = consultationId;
-      let activeLabOrderId     = labOrderId;
+      let activeLabOrderId = labOrderId;
 
-      // ── Step 1: Create consultation if not yet saved ──
-      if (!activeConsultationId) {
-        setSubmitProgress(p => ({ ...p, currentStep: s }));
-        const cr = await addConsultation({
-          clinicId, branchId,
-          visitId:              selectedVisit.id,
-          patientId:            selectedVisit.patientId,
-          doctorId:             selectedVisit.doctorId,
-          reason:               selectedVisit.reason      || '',
-          symptoms:             selectedVisit.symptoms    || '',
-          bpSystolic:           selectedVisit.bpSystolic  ?? null,
-          bpDiastolic:          selectedVisit.bpDiastolic ?? null,
-          temperature:          selectedVisit.temperature ?? null,
-          weight:               selectedVisit.weight      ?? null,
-          emrNotes:             '',
-          ehrNotes:             '',
-          instructions:         '',
-          consultationNotes:    consultationNotes.trim(),
-          nextConsultationDate: nextConsultationDate || '',
-          treatmentPlan:        treatmentPlan.trim(),
-        });
-        if (!cr.success || !cr.consultationId) throw new Error('Failed to create consultation');
-        activeConsultationId = cr.consultationId;
-        setConsultationId(cr.consultationId);
-        setConsultSaved(true);
-        setSavedNotes(consultationNotes);
-        setSavedPlan(treatmentPlan);
-        setSavedNextDate(nextConsultationDate);
-        s++;
-      }
-
-      // ── Step 2: Create lab order if not yet created ──
       if (!activeLabOrderId) {
         setSubmitProgress(p => ({ ...p, currentStep: s }));
         const lr = await addLabTestOrder({
           clinicId, branchId,
-          ConsultationID: activeConsultationId,
+          ConsultationID: consultationId,
           VisitID:        selectedVisit.id,
           PatientID:      selectedVisit.patientId,
           doctorId:       selectedVisit.doctorId,
@@ -867,7 +822,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
         s++;
       }
 
-      // ── Step 3: Add lab items ──
       setSubmitProgress(p => ({ ...p, currentStep: s }));
       await submitLabItems(
         clinicId, branchId,
@@ -879,6 +833,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
       setStagedLabTestIds([]);
       setStagedLabPkgIds([]);
       setSubmitProgress(p => ({ ...p, done: true }));
+      setIsFinished(true);
       fetchPatientHistory();
       setTimeout(() => setSubmitProgress(null), 2500);
     } catch (err) {
@@ -940,11 +895,25 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     }
   };
 
+  /* ── Delete entire lab order (called from modal header confirm popup) ── */
+  const handleDeleteLabOrder = async () => {
+    try {
+      setDeletingOrder(true);
+      await deleteLabTestOrder(labOrderId);
+      handleLabOrderDeleted();
+      setConfirmDelOrder(false);
+      setShowLabModal(false);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setDeletingOrder(false);
+    }
+  };
+
   const handleFinalSubmit = async () => {
     if (!consultationNotes.trim()) { setError({ message: 'Consultation Notes are required.' }); return; }
     if (!selectedVisit)            { setError({ message: 'No visit selected.' }); return; }
 
-    // Only validate unsaved (pending) containers
     const pendingContainers = containers.filter(c => !submittedContainerIds.has(c.tempId));
     for (const c of pendingContainers) {
       if (!c.medicineName.trim())  { setError({ message: 'All medicines need a name.' }); return; }
@@ -965,8 +934,10 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
       const needAddDetails  = hasNewMeds && prescriptionId !== null;
       const needNewLabOrder = hasNewLab  && labOrderId === null;
       const needAddLabItems = hasNewLab  && labOrderId !== null;
+      const notesChanged    = consultationNotes !== savedNotes || treatmentPlan !== savedPlan || nextConsultationDate !== savedNextDate;
 
       const steps = [];
+      if (notesChanged)    { steps.push({ label: 'Updating consultation notes' }); }
       if (needNewPresc)    { steps.push({ label: 'Creating prescription' }); steps.push({ label: `Adding ${pendingContainers.length} medicine(s)` }); }
       if (needAddDetails)  { steps.push({ label: `Adding ${pendingContainers.length} medicine(s)` }); }
       if (needNewLabOrder) { steps.push({ label: 'Creating lab order' }); steps.push({ label: `Adding ${newTestIds.length + newPkgIds.length} lab item(s)` }); }
@@ -977,6 +948,29 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
       setSubmitProgress({ steps, currentStep: 0, done: false }); setError(null);
       try {
         let s = 0;
+        if (notesChanged) {
+          setSubmitProgress(p => ({ ...p, currentStep: s }));
+          await updateConsultation({
+            consultationId,
+            clinicId,
+            reason:               selectedVisit?.reason      || '',
+            symptoms:             selectedVisit?.symptoms    || '',
+            bpSystolic:           selectedVisit?.bpSystolic  ?? 0,
+            bpDiastolic:          selectedVisit?.bpDiastolic ?? 0,
+            temperature:          selectedVisit?.temperature ?? 0,
+            weight:               selectedVisit?.weight      ?? 0,
+            emrNotes:             '',
+            ehrNotes:             '',
+            instructions:         '',
+            consultationNotes:    consultationNotes.trim(),
+            nextConsultationDate: nextConsultationDate || '',
+            treatmentPlan:        treatmentPlan.trim(),
+          });
+          setSavedNotes(consultationNotes);
+          setSavedPlan(treatmentPlan);
+          setSavedNextDate(nextConsultationDate);
+          s++;
+        }
         if (needNewPresc) {
           setSubmitProgress(p => ({ ...p, currentStep: s }));
           const d = (await getConsultationList(clinicId, { Page: 1, PageSize: 1, BranchID: branchId, ConsultationID: consultationId }))?.[0];
@@ -1006,6 +1000,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
         setStagedLabTestIds([]);
         setStagedLabPkgIds([]);
         setSubmitProgress(p => ({ ...p, done: true }));
+        setIsFinished(true);
         fetchPatientHistory();
         setTimeout(() => setSubmitProgress(null), 2500);
       } catch (err) { setError(err); setSubmitProgress(null); }
@@ -1046,6 +1041,8 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
       setStagedLabTestIds([]);
       setStagedLabPkgIds([]);
       setSubmitProgress(p => ({ ...p, done: true }));
+      // CHANGE: mark as finished
+      setIsFinished(true);
       fetchPatientHistory();
       setTimeout(() => setSubmitProgress(null), 2500);
     } catch (err) { setError(err); setSubmitProgress(null); }
@@ -1091,6 +1088,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     setSelectedPkgIds([...new Set([...stagedLabPkgIds, ...submittedLabPkgIds])]);
     setLabTestSearch(''); setLabPkgSearch('');
     setReactivateConfirm(null);
+    setConfirmDelOrder(false);
     setShowLabModal(true);
     if (!labMasterItems.length && !labPackages.length) fetchLabItems();
   };
@@ -1103,26 +1101,10 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     ));
   };
 
-  /* ─────────────────────────────────────────────────────────────────
-   BUG 1 FIX:
-   After a prescription detail is saved, submitted containers are moved
-   into savedPrescItems and cleared from the containers array inside
-   submitPrescriptionDetails. So handlePrescItemDeleted only needs to
-   remove from savedPrescItems — no container cleanup needed (they
-   are already gone). This prevents the "3 shown instead of 2" issue
-   where containers.length + savedPrescItems.length double-counted
-   submitted medicines.
-  ───────────────────────────────────────────────────────────────── */
   const handlePrescItemDeleted = (detailId) => {
     setSavedPrescItems(prev => prev.filter(item => item.id !== detailId));
   };
 
-  /* ─────────────────────────────────────────────────────────────────
-   BUG 2 FIX:
-   handleLabItemStatusChange now syncs the deactivated ID sets so
-   the lab modal can distinguish "deactivated (re-activate?)" from
-   "never submitted (add fresh)".
-  ───────────────────────────────────────────────────────────────── */
   const handleLabItemStatusChange = (itemId, newStatus) => {
     setSavedLabItems(prev =>
       prev.map(item => item.itemId === itemId ? { ...item, status: newStatus } : item)
@@ -1137,12 +1119,10 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
 
     if (testId) {
       if (isActive) {
-        // Activated → move back to submitted, remove from deactivated
         setSubmittedLabTestIds(prev => [...new Set([...prev, testId])]);
         setSelectedTestIds(prev => [...new Set([...prev, testId])]);
         setDeactivatedLabTestIds(prev => prev.filter(id => id !== testId));
       } else {
-        // Deactivated → move to deactivated, remove from submitted
         setSubmittedLabTestIds(prev => prev.filter(id => id !== testId));
         setSelectedTestIds(prev => prev.filter(id => id !== testId));
         setDeactivatedLabTestIds(prev => [...new Set([...prev, testId])]);
@@ -1174,6 +1154,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     setConsultationNotes(''); setTreatmentPlan(''); setNextConsultationDate('');
     setSavedNotes(''); setSavedPlan(''); setSavedNextDate('');
     setConsultationId(null); setPrescriptionId(null); setConsultSaved(false); setConfirmedSuccess(false);
+    setIsFinished(false);
     setContainers([]); setSubmittedContainerIds(new Set()); setAllMedicines([]); setFilteredMedicines([]); setSearchQuery(''); setSelectedMedIds([]);
     setSavedPrescItems([]);
     setPatientDetails(null); setFamilyPatientData(null); setShowPatientModal(false); setShowFamilyModal(false); setFamilyPatientDetails(null);
@@ -1188,6 +1169,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     setIsDragOver(false); setSubmitProgress(null); setError(null);
     setUpdatingConsult(false); setConfirmRemoveLabId(null); setRemovingLabItemId(null);
     setReactivateConfirm(null); setReactivating(false);
+    setConfirmDelOrder(false); setDeletingOrder(false);
     onClose();
   };
 
@@ -1200,12 +1182,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const filteredTests = labMasterItems.filter(t => !labTestSearch || getLabName(t).toLowerCase().includes(labTestSearch.toLowerCase()));
   const filteredPkgs  = labPackages.filter(p => !labPkgSearch || getPkgName(p).toLowerCase().includes(labPkgSearch.toLowerCase()));
 
-  // ── BUG 1 FIX: Panel 2 count = saved items + truly pending (unsaved) containers only ──
-  const pendingContainerCount = containers.filter(c => !submittedContainerIds.has(c.tempId)).length;
-  const totalPrescCount       = savedPrescItems.length + pendingContainerCount;
-
-  const stagedLabCount  = stagedLabTestIds.length + stagedLabPkgIds.length;
-  const hasAnythingNew  = pendingContainerCount > 0 || stagedLabCount > 0;
+  const totalPrescCount = savedPrescItems.length + pendingContainerCount;
 
   const submitBtnLabel = () => {
     const parts = [];
@@ -1213,6 +1190,13 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     if (stagedLabCount > 0) parts.push(`${stagedLabCount} lab`);
     return parts.join(' · ');
   };
+
+  // CHANGE: Determine what the bottom-right action button should show
+  // - Not saved yet: show Submit
+  // - Saved + no pending + isFinished: show Finish (green check)
+  // - Saved + has pending: show Submit/Add
+  const showSubmitInFooter = visitStep === 2;
+  const footerBtnIsFinish = isFinished && !hasAnythingNew && !consultDataChanged;
 
   const { clinicId, branchId } = getIds();
 
@@ -1242,46 +1226,21 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
 
           <div className="ac-header__right">
             {visitStep === 2 && (
-              <>
-                <div className="header-nav-group">
-                  <button className="btn-nav" onClick={() => { if (selectedVisit) { fetchPatientDetails(selectedVisit.patientId); setShowPatientModal(true); } }}>
-                    <FiUser size={13} /> Patient
-                  </button>
-                  <button className="btn-nav btn-nav--violet" onClick={handleOpenHistory}>
-                    <FiActivity size={13} /> History
-                  </button>
-                  <button className="btn-nav btn-nav--blue" onClick={handleOpenLabModal}>
-                    <FiFileText size={13} /> Lab Order
-                    {stagedLabCount > 0 && <span className="badge">{stagedLabCount}</span>}
-                  </button>
-                </div>
-                <div className="header-submit-group">
-                  {!consultSaved && (
-                    <button
-                      className="btn-submit"
-                      onClick={handleFinalSubmit}
-                      disabled={!!submitProgress}
-                    >
-                      {submitProgress && !submitProgress.done
-                        ? <><span className="spin-sm" /> Processing…</>
-                        : <><FiSend size={14} /> Submit{submitBtnLabel() && <span className="btn-submit__badge">{submitBtnLabel()}</span>}</>
-                      }
-                    </button>
+              <div className="header-nav-group">
+                <button className="btn-nav" onClick={() => { if (selectedVisit) { fetchPatientDetails(selectedVisit.patientId); setShowPatientModal(true); } }}>
+                  <FiUser size={13} /> Patient
+                </button>
+                <button className="btn-nav btn-nav--violet" onClick={handleOpenHistory}>
+                  <FiActivity size={13} /> History
+                </button>
+                <button className="btn-nav btn-nav--blue" onClick={handleOpenLabModal}>
+                  <FiFileText size={13} /> Lab Order
+                  {stagedLabCount > 0 && <span className="badge">{stagedLabCount}</span>}
+                  {savedLabItems.filter(i => i.status === 1).length > 0 && stagedLabCount === 0 && (
+                    <span className="badge badge--saved">{savedLabItems.filter(i => i.status === 1).length}</span>
                   )}
-                  {consultSaved && hasAnythingNew && (
-                    <button
-                      className="btn-submit btn-submit--add"
-                      onClick={handleFinalSubmit}
-                      disabled={!!submitProgress}
-                    >
-                      {submitProgress && !submitProgress.done
-                        ? <><span className="spin-sm" /> Processing…</>
-                        : <><FiPlus size={14} /> Add{submitBtnLabel() && <span className="btn-submit__badge">{submitBtnLabel()}</span>}</>
-                      }
-                    </button>
-                  )}
-                </div>
-              </>
+                </button>
+              </div>
             )}
             <button className="btn-close" onClick={handleClose}><FiX size={18} /></button>
           </div>
@@ -1381,16 +1340,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                 </div>
               )}
 
-              {consultSaved && (
-                <div className="saved-banner">
-                  <FiCheckCircle size={14} />
-                  <span>Consultation saved{confirmedSuccess ? ' · Prescription added' : ''}{labOrderId ? ' · Lab order added' : ''}</span>
-                  {!confirmedSuccess && !labOrderId && (
-                    <span className="saved-banner__hint">— Add medicines or lab items</span>
-                  )}
-                </div>
-              )}
-
               {error && (
                 <div className="error-banner">
                   <FiAlertCircle size={13} />
@@ -1458,29 +1407,11 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                           min={today()}
                         />
                       </div>
-                      
-                      {consultDataChanged && (
-                        <div className="consult-update-bar">
-                          <span className="consult-update-bar__hint">
-                            <FiAlertCircle size={12} /> Unsaved changes
-                          </span>
-                          <button
-                            className="consult-update-bar__btn"
-                            onClick={handleInlineUpdateConsult}
-                            disabled={updatingConsult}
-                          >
-                            {updatingConsult
-                              ? <><span className="spin-sm spin-sm--teal" /> Updating…</>
-                              : <><FiSave size={13} /> Save Changes</>
-                            }
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </section>
 
-                {/* Panel 2 — Prescription */}
+                {/* Panel 2 — Prescription ONLY (no lab items here) */}
                 <section
                   className={`panel panel--2 ${isDragOver ? 'panel--drop' : ''}`}
                   onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
@@ -1488,7 +1419,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                   <div className="panel__head">
                     <span className="panel__num panel__num--2">2</span>
                     <h3 className="panel__title">Prescription</h3>
-                    {/* BUG 1 FIX: count only saved + truly pending — no double-counting */}
                     {totalPrescCount > 0 && (
                       <span className="panel__count">{totalPrescCount}</span>
                     )}
@@ -1536,18 +1466,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                       <FiPlus size={13} /> Add Medicine Manually
                     </button>
 
-                    {savedLabItems.length > 0 && (
-                      <SavedLabSection
-                        labOrderId={labOrderId}
-                        labItems={savedLabItems}
-                        labPriorityDesc={savedLabPriorityDesc}
-                        clinicId={clinicId}
-                        branchId={branchId}
-                        onItemStatusChange={handleLabItemStatusChange}
-                        onOrderDeleted={handleLabOrderDeleted}
-                        onError={setError}
-                      />
-                    )}
+                    {/* CHANGE: Lab items REMOVED from here — they only appear in Lab Order modal */}
                   </div>
                 </section>
 
@@ -1590,7 +1509,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                         <div className="state-empty state-empty--sm"><p>No medicines found</p></div>
                       ) : filteredMedicines.map(m => {
                         const isSelected   = selectedMedIds.includes(m.id);
-                        // alreadyAdded: in pending containers OR in saved prescription items
                         const alreadyAdded = containers.some(c => c.medicineId === m.id)
                           || savedPrescItems.some(item => item.medicineId === m.id);
                         return (
@@ -1624,6 +1542,57 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
             </div>
           )}
         </main>
+
+        {/* ══════════════════════════════════════════════════════
+            CHANGE: BOTTOM ACTION FOOTER BAR
+            Shows Submit / Add / Finish button at bottom-right
+           ══════════════════════════════════════════════════════ */}
+        {showSubmitInFooter && (
+          <footer className="ac-footer">
+            <div className="ac-footer__left">
+              {consultSaved && (
+                <div className="ac-footer__status">
+                  <FiCheckCircle size={14} />
+                  <span>
+                    Saved
+                    {confirmedSuccess && ' · Prescription'}
+                    {labOrderId ? ' · Lab order' : ''}
+                  </span>
+                  {!footerBtnIsFinish && hasAnythingNew && (
+                    <span className="ac-footer__pending">
+                      — {submitBtnLabel()} pending
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="ac-footer__right">
+              {footerBtnIsFinish ? (
+                /* ── FINISH button ── */
+                <button
+                  className="btn-footer-finish"
+                  onClick={handleClose}
+                >
+                  <FiCheckCircle size={16} />
+                  Finish & Close
+                </button>
+              ) : (
+                /* ── SUBMIT button — always Submit, never Add ── */
+                <button
+                  className="btn-footer-submit"
+                  onClick={handleFinalSubmit}
+                  disabled={!!submitProgress}
+                >
+                  {submitProgress && !submitProgress.done ? (
+                    <><span className="spin-sm" /> Processing…</>
+                  ) : (
+                    <><FiSend size={15} /> Submit</>
+                  )}
+                </button>
+              )}
+            </div>
+          </footer>
+        )}
 
         {/* ═══ PROGRESS ═══ */}
         {submitProgress && (
@@ -1699,7 +1668,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                       <div className="pt-cell pt-cell--full"><label>Address</label><span>{patientDetails.address}</span></div>
                     )}
 
-                    {/* ── Family Patient row ── */}
                     {patientDetails.familyPatientId && (
                       <div className="pt-cell pt-cell--full pt-cell--family">
                         <label><FiUsers size={10} /> Family Patient</label>
@@ -1805,9 +1773,43 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
         {showLabModal && (
           <div className="modal-overlay" onClick={() => setShowLabModal(false)}>
             <div className="modal lab-modal" onClick={e => e.stopPropagation()}>
-              <div className="modal__head">
+
+              {/* CHANGE: Lab modal header now includes Delete Order button on right */}
+              <div className="modal__head lab-modal__head">
                 <span><FiFileText size={14} /> Lab Order</span>
-                <button className="modal__close" onClick={() => setShowLabModal(false)}><FiX size={16} /></button>
+                <div className="lab-modal__head-actions">
+                  {/* Delete Order button in header — only shown when order exists */}
+                  {labOrderId && !confirmDelOrder && (
+                    <button
+                      className="btn-del-order-header"
+                      onClick={() => setConfirmDelOrder(true)}
+                      title="Delete entire lab order"
+                    >
+                      <FiTrash2 size={13} /> Delete Order
+                    </button>
+                  )}
+                  {labOrderId && confirmDelOrder && (
+                    <div className="del-order-confirm-inline">
+                      <span className="del-order-confirm-inline__msg">
+                        <FiAlertCircle size={12} /> Delete entire order?
+                      </span>
+                      <button
+                        className="btn-confirm-yes-sm"
+                        onClick={handleDeleteLabOrder}
+                        disabled={deletingOrder}
+                      >
+                        {deletingOrder ? <span className="spin-sm" /> : <FiCheck size={11} />} Yes
+                      </button>
+                      <button
+                        className="btn-confirm-no-sm"
+                        onClick={() => setConfirmDelOrder(false)}
+                      >
+                        <FiX size={11} /> No
+                      </button>
+                    </div>
+                  )}
+                  <button className="modal__close" onClick={() => setShowLabModal(false)}><FiX size={16} /></button>
+                </div>
               </div>
 
               <div className="lab-priority">
@@ -1856,7 +1858,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                           const id         = t.id || t.testId;
                           const sel        = selectedTestIds.includes(id);
                           const frozen     = submittedLabTestIds.includes(id);
-                          // BUG 2 FIX: detect deactivated items
                           const deactivated = deactivatedLabTestIds.includes(id);
                           const savedItem  = savedLabItems.find(s => (s.testId === id || s.testID === id));
 
@@ -1869,7 +1870,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                                   e.preventDefault();
                                   setConfirmRemoveLabId({ itemId: savedItem.itemId, name: getLabName(t) });
                                 } else if (deactivated && savedItem) {
-                                  // BUG 2 FIX: show re-activate popup instead of adding duplicate
                                   e.preventDefault();
                                   setReactivateConfirm({ itemId: savedItem.itemId, name: getLabName(t), testId: id, pkgId: 0 });
                                 }
@@ -1888,7 +1888,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                               <span className="lab-item__name">
                                 {getLabName(t) || 'Unknown'}
                                 {frozen && <span className="lab-item__saved-tag"><FiCheck size={8} /> Saved</span>}
-                                {deactivated && <span className="lab-item__deact-tag"><FiX size={8} /> Inactive</span>}
+                                {deactivated && <span className="lab-item__deact-tag"><FiX size={8} /> Deleted</span>}
                               </span>
                               {(t.fees || t.Fees) && <span className="lab-item__fee">₹{t.fees || t.Fees}</span>}
                               {frozen     && <span className="lab-item__remove-hint"><FiX size={9} /></span>}
@@ -1928,7 +1928,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                           const id          = p.id || p.packageId;
                           const sel         = selectedPkgIds.includes(id);
                           const frozen      = submittedLabPkgIds.includes(id);
-                          // BUG 2 FIX: detect deactivated packages
                           const deactivated = deactivatedLabPkgIds.includes(id);
                           const savedItem   = savedLabItems.find(s => (s.packageId === id || s.packageID === id));
 
@@ -1941,7 +1940,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                                   e.preventDefault();
                                   setConfirmRemoveLabId({ itemId: savedItem.itemId, name: getPkgName(p) });
                                 } else if (deactivated && savedItem) {
-                                  // BUG 2 FIX: show re-activate popup instead of adding duplicate
                                   e.preventDefault();
                                   setReactivateConfirm({ itemId: savedItem.itemId, name: getPkgName(p), testId: 0, pkgId: id });
                                 }
@@ -1972,6 +1970,20 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                 </div>
               </div>
 
+              {/* CHANGE: Saved lab items now shown inside modal below columns */}
+              {savedLabItems.length > 0 && (
+                <div className="lab-modal__saved-wrap">
+                  <SavedLabSection
+                    labItems={savedLabItems}
+                    labPriorityDesc={savedLabPriorityDesc}
+                    clinicId={clinicId}
+                    branchId={branchId}
+                    onItemStatusChange={handleLabItemStatusChange}
+                    onError={setError}
+                  />
+                </div>
+              )}
+
               <div className="lab-footer">
                 <button className="lab-footer__cancel" onClick={() => setShowLabModal(false)}><FiX size={12} /> Cancel</button>
                 <button className="lab-footer__save" onClick={handleStageAndSubmitLabOrder}>
@@ -1987,7 +1999,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                 </button>
               </div>
 
-              {/* BUG 2 FIX: Re-activate confirm popup */}
+              {/* Re-activate confirm popup */}
               {reactivateConfirm && (
                 <div className="lab-remove-confirm-overlay" onClick={() => setReactivateConfirm(null)}>
                   <div className="lab-remove-confirm lab-remove-confirm--reactivate" onClick={e => e.stopPropagation()}>

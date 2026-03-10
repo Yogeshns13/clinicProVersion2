@@ -153,8 +153,7 @@ const Sidebar = () => {
 
   const handleLogout = (e) => {
     e.preventDefault();
-    logout();
-    navigate("/login", { replace: true });
+    navigate("/logout", { replace: true });
   };
 
   const filteredMenu = mainMenuItems.filter((item) =>

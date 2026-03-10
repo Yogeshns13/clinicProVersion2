@@ -1,14 +1,15 @@
-import axios from "axios";
+
 import {getSessionRef, generateRefKey, getUserId, getClinicId, getBranchId} from "./Api.js"
+import { API } from "./ApiConfiguration";
 const CHANNEL_ID = 1;
 const PRODUCTION_MODE = 0;
-const API = axios.create({
+/* const API = axios.create({
   baseURL: "/api",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
-});
+}); */
 
 export const getVendorList = async (clinicId = 0, options = {}) => {
   const userId = getUserId();

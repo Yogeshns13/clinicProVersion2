@@ -12,7 +12,7 @@ import ClinicList from "./ClinicList/ClinicList.jsx";
 import BranchList from "./BranchList/BranchList.jsx";
 import DepartmentList from "./DepartmentList/DepartmentList.jsx";
 
-import WorkShift from "./WorkShiftList/WorkShift.jsx";
+import WorkShift from "./WorkShiftList/WorkShift.jsx"; 
 import EmployeeList from "./EmployeeList/EmployeeList.jsx";
 import PatientList from "./Patients/PatientList.jsx";
 import SlotConfigList from "./Slot/SlotConfigList.jsx";
@@ -43,6 +43,7 @@ import PharmacyInvoiceList from "./MedicineMaster/PharmacyInvoiceList.jsx";
 
 import InvoiceManagement from "./ConsultationCharge/InvoiceManagement.jsx";
 import InvoicePaymentManagement from "./ConsultationCharge/InvoicePaymentManagement.jsx";
+import Logout from "./Logout/Logout.jsx";
 
 function App() {
   return (
@@ -98,6 +99,7 @@ function App() {
 
           <Route path="/invoice-management" element={<InvoiceManagement/>} />
           <Route path="/invoice-payment" element={<InvoicePaymentManagement/>} />
+          <Route path="/logout" element={<Logout/>} />
 
           <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
         </Route>

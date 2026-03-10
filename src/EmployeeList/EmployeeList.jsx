@@ -176,6 +176,7 @@ const EmployeeList = () => {
   fetchEmployees(appliedFilters);
 };
 
+
   const handleAddSuccess = () => fetchEmployees(appliedFilters);
 
   // Called when employee is deleted inside ViewEmployee popup

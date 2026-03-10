@@ -1,72 +1,160 @@
-const ErrorHandler = ({ error }) => {
+import styles from "../ClinicList/ClinicList.module.css";
+
+const ErrorHandler = ({ error, onClose }) => {
   if (!error) return null;
 
   const statusCode = error?.status || error?.code;
   const message = error?.message || error?.error || "An unexpected error occurred";
 
-  // Only show for client errors (400+)
-  if (statusCode >= 400) {
-    return (
-      <div className="certificate-list" style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-        <div className="error-container system-error" style={{ 
-          backgroundColor: '#fff', 
-          border: '1px solid #e0e0e0', 
-          borderRadius: '8px', 
-          padding: '30px', 
-          textAlign: 'center',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-        }}>
-          <div className="error-content" style={{ color: '#d32f2f' }}>
-            <h3 style={{ 
-              color: '#d32f2f', 
-              marginBottom: '20px', 
-              fontSize: '24px', 
-              fontWeight: '600' 
-            }}>
-              General System Error
-            </h3>
-            <div className="error-details" style={{ 
-              backgroundColor: '#fee', 
-              border: '1px solid #f5c6cb', 
-              borderRadius: '6px', 
-              padding: '20px', 
-              textAlign: 'left',
-              maxWidth: '500px',
-              margin: '0 auto'
-            }}>
-              <p style={{ margin: '8px 0', fontSize: '16px' }}>
-                <strong style={{ color: '#c62828' }}>Status Code:</strong> {statusCode}
-              </p>
-              <p style={{ margin: '8px 0', fontSize: '16px' }}>
-                <strong style={{ color: '#c62828' }}>Message:</strong> {message}
-              </p>
-            </div>
-            <div style={{ marginTop: '25px' }}>
-              <button 
-                onClick={() => window.location.reload()} 
+  if (statusCode < 400) return null;
+
+  // Determine error severity label
+  const getSeverityLabel = (code) => {
+    if (code >= 500) return "Server Error";
+    if (code === 404) return "Not Found";
+    if (code === 403) return "Forbidden";
+    if (code === 401) return "Unauthorized";
+    if (code === 400) return "Bad Request";
+    return "Client Error";
+  };
+
+  const handleReload = () => window.location.reload();
+
+  return (
+    <div className={styles.clinicModalOverlay} onClick={onClose}>
+      <div
+        className={`${styles.clinicModal} ${styles.formModal}`}
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: "460px" }}
+      >
+        {/* ── Header ── */}
+        <div className={styles.clinicModalHeader}>
+          <h2 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "1.1rem" }}>⚠</span>
+            General System Error
+          </h2>
+          {onClose && (
+            <button className={styles.clinicModalClose} onClick={onClose}>
+              ✕
+            </button>
+          )}
+        </div>
+
+        {/* ── Body ── */}
+        <div className={styles.clinicModalBody} style={{ padding: "20px 24px 24px" }}>
+
+          {/* Status badge row */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              marginBottom: "18px",
+            }}
+          >
+            <span
+              className={`${styles.statusBadge} ${styles.inactive} ${styles.large}`}
+            >
+              {getSeverityLabel(statusCode)}
+            </span>
+          </div>
+
+          {/* Error details card */}
+          <div
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.12))",
+              border: "2px solid rgba(239,68,68,0.25)",
+              borderRadius: "13px",
+              padding: "18px 20px",
+              boxShadow: "inset 0 1px 4px rgba(0,0,0,0.05)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+              }}
+            >
+              <div
                 style={{
-                  backgroundColor: '#1976d2',
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: '500'
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  paddingBottom: "10px",
+                  borderBottom: "1px solid rgba(239,68,68,0.15)",
                 }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#1565c0'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#1976d2'}
               >
-                Try Again
-              </button>
+                <span
+                  style={{
+                    fontSize: "0.75rem",
+                    fontWeight: "700",
+                    color: "#991b1b",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  Status Code
+                </span>
+                <span
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: "800",
+                    color: "#dc2626",
+                    background: "rgba(239,68,68,0.12)",
+                    padding: "3px 12px",
+                    borderRadius: "8px",
+                    border: "1px solid rgba(239,68,68,0.2)",
+                  }}
+                >
+                  {statusCode}
+                </span>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <span
+                  style={{
+                    fontSize: "0.75rem",
+                    fontWeight: "700",
+                    color: "#991b1b",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  Message
+                </span>
+                <span
+                  style={{
+                    fontSize: "0.85rem",
+                    fontWeight: "600",
+                    color: "#7f1d1d",
+                    lineHeight: "1.5",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {message}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    );
-  }
 
-  return null;
+        {/* ── Footer ── */}
+        <div className={styles.clinicModalFooter}>
+          {onClose && (
+            <button className={styles.btnCancel} onClick={onClose}>
+              Dismiss
+            </button>
+          )}
+          <button className={styles.btnSubmit} onClick={handleReload}>
+            Try Again
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default ErrorHandler;

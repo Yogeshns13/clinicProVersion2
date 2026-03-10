@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../Contexts/AuthContext";
-import { checkSession } from "../Api/Api"; 
+import { checkSession } from "../Api/Api";
 import { useEffect, useState } from "react";
 
 const ROUTE_PERMISSIONS = {
@@ -66,6 +66,7 @@ const ROUTE_PERMISSIONS = {
   "/Add-purchaseorderdetail": ["admin", "spradmin","pharmacy"],
   "/update-purchaseorderdetail/:id": ["admin", "spradmin","pharmacy"],
   "/view-prescription/:id": ["admin", "spradmin"],
+  "/logout": ["admin","spradmin","fronttdesk","nurse","pharmacy","labtest","accounts","doctor"]
 };
 
 const matchRoute = (pathname, pattern) => {
@@ -81,21 +82,23 @@ const PrivateRoute = ({ children }) => {
 
   useEffect(() => {
     const verify = async () => {
-      if (!isAuthenticated) {
-        try {
-          const sessionValid = await checkSession();
-          if (sessionValid) {
-            setAuth({ isAuthenticated: true, profileName: profileName || "unknown" });
-          }
-        } catch (err) {
-          console.error("Session check failed", err);
+      setIsChecking(true);
+      try {
+        const sessionValid = await checkSession();
+        if (sessionValid) {
+          setAuth({ isAuthenticated: true, profileName: profileName || "unknown" });
+        } else {
+          setAuth({ isAuthenticated: false, profileName: null });
         }
+      } catch (err) {
+        console.error("Session check failed", err);
+        setAuth({ isAuthenticated: false, profileName: null });
       }
       setIsChecking(false);
     };
 
     verify();
-  }, [isAuthenticated, setAuth, profileName]);
+  }, [location.pathname]);
 
   if (isChecking) {
     return <div>Verifying session...</div>;

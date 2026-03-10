@@ -8,10 +8,7 @@ AddBranch
     "BranchName"  :"Test Main",
     "Address":"Anna Nagar",
     "Location":"Test Branch Coordinates",
-    "BranchType":1
-     
-     
-   
+    "BranchType":1 
 }
 -- Branch Type Text Table #7 
 

@@ -39,10 +39,11 @@ const Header = ({ title = "Clinic Management" }) => {
     setIsProfileOpen(false);
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate('/login');
+  const handleLogout = (e) => {
+    e.preventDefault();
+    navigate("/logout", { replace: true });
   };
+
 
   return (
     <div className="clinic-list-header">
