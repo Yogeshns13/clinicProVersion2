@@ -200,8 +200,8 @@
 .btn-nav:hover           { background: rgba(255,255,255,.25); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.15); }
 .btn-nav--violet         { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.24); }
 .btn-nav--violet:hover   { background: rgba(255,255,255,.26); }
-.btn-nav--blue           { background: rgba(48,178,181,.28); border-color: rgba(48,178,181,.45); }
-.btn-nav--blue:hover     { background: rgba(48,178,181,.42); }
+.btn-nav--blue           { background: linear-gradient(135deg, var(--primary-start), var(--primary-end), var(--accent-start)); border-color: rgba(48,178,181,.45); }
+.btn-nav--blue:hover     { background: linear-gradient(135deg, var(--accent-start), var(--primary-end), var(--primary-start)); }
 
 /* Badge */
 .badge {
@@ -1435,21 +1435,21 @@
   display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;
   border-radius: 5px;
   border: 1.5px solid rgba(32,125,156,.32);
-  background: rgba(32,125,156,.07);
-  color: var(--accent-start); font-size: .71rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: white; font-size: .71rem; font-weight: 700;
   cursor: pointer; transition: all .18s; font-family: var(--font); white-space: nowrap;
 }
-.btn-item-edit:hover { background: rgba(32,125,156,.14); border-color: rgba(32,125,156,.55); transform: translateY(-1px); }
+.btn-item-edit:hover { background: rgba(32,125,156,.8); border-color: rgba(32,125,156,.55); transform: translateY(-1px); }
 
 .btn-item-delete {
   display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;
   border-radius: 5px;
   border: 1.5px solid rgba(220,38,38,.26);
-  background: rgba(220,38,38,.05);
-  color: var(--red); font-size: .71rem; font-weight: 700;
+  background: linear-gradient(135deg, #016183, var(--primary-end));;
+  color: white; font-size: .71rem; font-weight: 700;
   cursor: pointer; transition: all .18s; font-family: var(--font); white-space: nowrap;
 }
-.btn-item-delete:hover { background: rgba(220,38,38,.13); border-color: rgba(220,38,38,.52); transform: translateY(-1px); }
+.btn-item-delete:hover { background: red; border-color: rgba(220,38,38,.52); transform: translateY(-1px); }
 
 .saved-item-card--editing { border-color: rgba(32,125,156,.42); background: rgba(32,125,156,.03); }
 
@@ -1541,8 +1541,8 @@
   font-family: var(--font); white-space: nowrap;
 }
 .btn-toggle-lab:disabled { opacity: .6; cursor: not-allowed; }
-.btn-toggle-lab--deactivate { border: 1.5px solid rgba(220,38,38,.26); background: rgba(220,38,38,.06); color: var(--red); }
-.btn-toggle-lab--deactivate:hover:not(:disabled) { background: rgba(220,38,38,.14); border-color: rgba(220,38,38,.48); }
+.btn-toggle-lab--deactivate { border: 1.5px solid rgba(220,38,38,.26); background: rgba(220,38,38); color: white; }
+.btn-toggle-lab--deactivate:hover:not(:disabled) { background: rgba(220,38,38,.8); border-color: rgba(220,38,38,.48); }
 .btn-toggle-lab--activate { border: 1.5px solid rgba(5,150,105,.28); background: rgba(5,150,105,.06); color: #059669; }
 .btn-toggle-lab--activate:hover:not(:disabled) { background: rgba(5,150,105,.14); border-color: rgba(5,150,105,.48); }
 

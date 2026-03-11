@@ -1,7 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../Contexts/AuthContext";
-import { checkSession } from "../Api/Api";
-import { useEffect, useState } from "react";
 
 const ROUTE_PERMISSIONS = {
   "/dashboard": ["admin","spradmin","fronttdesk","nurse","pharmacy","labtest","accounts","doctor"],
@@ -76,33 +74,8 @@ const matchRoute = (pathname, pattern) => {
 };
 
 const PrivateRoute = ({ children }) => {
-  const { isAuthenticated, profileName, setAuth } = useAuth();
+  const { isAuthenticated, profileName } = useAuth();
   const location = useLocation();
-  const [isChecking, setIsChecking] = useState(true);
-
-  useEffect(() => {
-    const verify = async () => {
-      setIsChecking(true);
-      try {
-        const sessionValid = await checkSession();
-        if (sessionValid) {
-          setAuth({ isAuthenticated: true, profileName: profileName || "unknown" });
-        } else {
-          setAuth({ isAuthenticated: false, profileName: null });
-        }
-      } catch (err) {
-        console.error("Session check failed", err);
-        setAuth({ isAuthenticated: false, profileName: null });
-      }
-      setIsChecking(false);
-    };
-
-    verify();
-  }, [location.pathname]);
-
-  if (isChecking) {
-    return <div>Verifying session...</div>;
-  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;

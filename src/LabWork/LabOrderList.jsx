@@ -1,7 +1,7 @@
 // src/components/LabWork/LabOrderList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiX, FiCalendar, FiFilter, FiEye, FiCheckCircle, FiClock, FiAlertCircle, FiFileText, FiEdit } from 'react-icons/fi';
+import { FiSearch, FiX, FiCalendar, FiFilter, FiEye, FiCheckCircle, FiClock, FiAlertCircle, FiFileText, FiEdit, FiPrinter } from 'react-icons/fi';
 import { 
   getLabTestOrderList, 
   updateLabTestOrder, 
@@ -9,11 +9,13 @@ import {
   generateLabInvoice,
   addLabTestReport,
   getLabTestReportList,
-  updateLabTestReport
+  updateLabTestReport,
+  getLabTestOrderItemList
 } from '../Api/ApiLabTests.js';
 import { getEmployeeList } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
+import LabOrderPrintModal from './LabOrderPrintModal.jsx';
 import styles from './LabOrderList.module.css';
 
 const LabOrderList = () => {
@@ -55,6 +57,14 @@ const LabOrderList = () => {
   const [isConfirmWorkOpen, setIsConfirmWorkOpen] = useState(false);
   const [isMakeInvoiceOpen, setIsMakeInvoiceOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrderItems, setSelectedOrderItems] = useState([]);
+  const [loadingOrderItems, setLoadingOrderItems] = useState(false);
+
+  // Print Modal States
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [printOrder, setPrintOrder] = useState(null);
+  const [printOrderItems, setPrintOrderItems] = useState([]);
+  const [loadingPrintItems, setLoadingPrintItems] = useState(false);
 
   // Report Modal States
   const [showReportModal, setShowReportModal] = useState(false);
@@ -229,7 +239,42 @@ const LabOrderList = () => {
 
   const handleKeyPress = (e) => { if (e.key === 'Enter') handleSearch(); };
 
-  const handleViewOrderDetails = (order) => { setSelectedOrder(order); setIsOrderDetailsOpen(true); };
+  const handleViewOrderDetails = async (order) => {
+    setSelectedOrder(order);
+    setSelectedOrderItems([]);
+    setIsOrderDetailsOpen(true);
+    try {
+      setLoadingOrderItems(true);
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+      const items = await getLabTestOrderItemList(clinicId, { OrderID: order.id, BranchID: branchId, Page: 1, PageSize: 100 });
+      setSelectedOrderItems(items);
+    } catch (err) {
+      console.error('Failed to fetch order items:', err);
+      setSelectedOrderItems([]);
+    } finally {
+      setLoadingOrderItems(false);
+    }
+  };
+
+  const handlePrintClick = async (order) => {
+    setPrintOrder(order);
+    setPrintOrderItems([]);
+    setIsPrintModalOpen(true);
+    try {
+      setLoadingPrintItems(true);
+      const clinicId = Number(localStorage.getItem('clinicID'));
+      const branchId = Number(localStorage.getItem('branchID'));
+      const items = await getLabTestOrderItemList(clinicId, { OrderID: order.id, BranchID: branchId, Page: 1, PageSize: 100 });
+      setPrintOrderItems(items);
+    } catch (err) {
+      console.error('Failed to fetch print order items:', err);
+      setPrintOrderItems([]);
+    } finally {
+      setLoadingPrintItems(false);
+    }
+  };
+
   const handleUpdateOrder      = (order) => { setSelectedOrder(order); setIsUpdateOrderOpen(true); };
   const handleMakeWorkClick    = (order) => { setSelectedOrder(order); setIsConfirmWorkOpen(true); };
   const handleMakeInvoiceClick = (order) => { setSelectedOrder(order); setIsMakeInvoiceOpen(true); };
@@ -570,6 +615,9 @@ const LabOrderList = () => {
                         <button onClick={() => handleViewOrderDetails(order)} className={styles.viewBtn} title="View Details">
                           <FiEye size={16} />
                         </button>
+                        <button onClick={() => handlePrintClick(order)} className={styles.printBtn} title="Print Order">
+                          <FiPrinter size={16} />
+                        </button>
                         <div className={styles.actionDropdownWrapper}>
                           <button className={styles.actionBtn}>Actions</button>
                           <div className={styles.actionDropdown}>
@@ -613,8 +661,10 @@ const LabOrderList = () => {
       {isOrderDetailsOpen && selectedOrder && (
         <OrderDetailsModal
           order={selectedOrder}
+          orderItems={selectedOrderItems}
+          loadingOrderItems={loadingOrderItems}
           statusOptions={statusOptions}
-          onClose={() => { setIsOrderDetailsOpen(false); setSelectedOrder(null); }}
+          onClose={() => { setIsOrderDetailsOpen(false); setSelectedOrder(null); setSelectedOrderItems([]); }}
           onUpdate={() => { setIsOrderDetailsOpen(false); handleUpdateOrder(selectedOrder); }}
         />
       )}
@@ -722,14 +772,19 @@ const LabOrderList = () => {
           </div>
         </div>
       )}
+      {/* Print Modal */}
+      {isPrintModalOpen && printOrder && (
+        <LabOrderPrintModal
+          order={printOrder}
+          orderItems={loadingPrintItems ? [] : printOrderItems}
+          onClose={() => { setIsPrintModalOpen(false); setPrintOrder(null); setPrintOrderItems([]); }}
+        />
+      )}
     </div>
   );
 };
-
 // ─────────────────────────────────────────────────────────────────────────────
-// Order Details Modal — Clinic-style layout with 3 info-card sections
-// ─────────────────────────────────────────────────────────────────────────────
-const OrderDetailsModal = ({ order, statusOptions, onClose, onUpdate }) => {
+const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions, onClose, onUpdate }) => {
   const isCompleted = order.status === 2;
   const isCancelled = order.status === 3;
 
@@ -752,7 +807,7 @@ const OrderDetailsModal = ({ order, statusOptions, onClose, onUpdate }) => {
           <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
         </div>
 
-        {/* ── Scrollable Body with 3 Info Cards ── */}
+        {/* ── Scrollable Body with Info Cards + Order Items ── */}
         <div className={styles.detailModalBody}>
           <div className={styles.detailInfoSection}>
 
@@ -841,6 +896,54 @@ const OrderDetailsModal = ({ order, statusOptions, onClose, onUpdate }) => {
                   <span className={styles.detailInfoValue}>{order.notes || 'No notes'}</span>
                 </div>
               </div>
+            </div>
+
+            {/* Card 4 — Order Items (full width) */}
+            <div className={`${styles.detailInfoCard} ${styles.detailInfoCardFullWidth}`}>
+              <div className={styles.detailInfoHeader}>
+                <h3>Order Items</h3>
+              </div>
+              {loadingOrderItems ? (
+                <div className={styles.orderItemsLoading}>
+                  <div className={styles.orderItemsSpinner}></div>
+                  <span>Loading items...</span>
+                </div>
+              ) : orderItems.length === 0 ? (
+                <div className={styles.orderItemsEmpty}>No items found for this order.</div>
+              ) : (
+                <div className={styles.orderItemsTable}>
+                  <table className={styles.itemsTable}>
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Test / Package Name</th>
+                        <th>Fees</th>
+                        <th>CGST</th>
+                        <th>SGST</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orderItems.map((item, index) => (
+                        <tr key={item.itemId} className={styles.itemsTableRow}>
+                          <td className={styles.itemsTableIndex}>{index + 1}</td>
+                          <td className={styles.itemsTableName}>{item.testOrPackageName}</td>
+                          <td className={styles.itemsTableAmount}>₹{item.fees.toFixed(2)}</td>
+                          <td className={styles.itemsTableAmount}>₹{item.cgst.toFixed(2)}</td>
+                          <td className={styles.itemsTableAmount}>₹{item.sgst.toFixed(2)}</td>
+                          <td className={styles.itemsTableTotal}>₹{item.totalAmount.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                      <tr className={styles.itemsTableFooterRow}>
+                        <td colSpan={5} className={styles.itemsTableFooterLabel}>Grand Total</td>
+                        <td className={styles.itemsTableFooterTotal}>
+                          ₹{orderItems.reduce((sum, item) => sum + item.totalAmount, 0).toFixed(2)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
           </div>

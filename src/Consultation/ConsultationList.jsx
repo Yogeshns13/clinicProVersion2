@@ -25,7 +25,10 @@ const CONSULT_SEARCH_TYPES = [
 const ConsultationList = () => {
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState('pending');
+  // ── CHANGE: read the last-used tab from sessionStorage so it survives navigation ──
+  const [activeTab, setActiveTab] = useState(
+    () => sessionStorage.getItem('consultationListActiveTab') || 'pending'
+  );
 
   const [patientVisits, setPatientVisits]                 = useState([]);
   const [consultations, setConsultations]                 = useState([]);
@@ -163,7 +166,9 @@ const ConsultationList = () => {
     }
   };
 
+  // ── CHANGE: persist activeTab to sessionStorage whenever it changes ──
   useEffect(() => {
+    sessionStorage.setItem('consultationListActiveTab', activeTab);
     if (activeTab === 'visited') {
       fetchConsultations(consultAppliedFilters);
     } else {
@@ -171,6 +176,23 @@ const ConsultationList = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
+
+  // CHANGE 1: Refresh list whenever this page becomes visible again
+  // (handles the ViewConsultation route-page closing and navigating back)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        if (activeTab === 'visited') {
+          fetchConsultations(consultAppliedFilters);
+        } else {
+          fetchPatientVisits(visitAppliedFilters);
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, visitAppliedFilters, consultAppliedFilters]);
 
   const handleVisitFilterChange = (e) => {
     const { name, value } = e.target;
@@ -211,9 +233,16 @@ const ConsultationList = () => {
   };
 
   const openAddForm  = () => setIsAddFormOpen(true);
+
+  // CHANGE 2: closeAddForm now also refreshes the list
   const closeAddForm = () => {
     setIsAddFormOpen(false);
     setConsultingVisitId(null);
+    if (activeTab === 'visited') {
+      fetchConsultations(consultAppliedFilters);
+    } else {
+      fetchPatientVisits(visitAppliedFilters);
+    }
   };
 
   const handleAddSuccess = () => {
@@ -547,7 +576,12 @@ const ConsultationList = () => {
                     </td>
                     <td>
                       <div className={styles.actionsCell}>
-                        <button onClick={() => handleViewDetails(consultation)} className={styles.viewBtn}>
+                        {/* CHANGE 3: pass state flag so ViewConsultation route-page
+                            can navigate back and trigger visibilitychange refresh */}
+                        <button
+                          onClick={() => handleViewDetails(consultation)}
+                          className={styles.viewBtn}
+                        >
                           View Details
                         </button>
                       </div>

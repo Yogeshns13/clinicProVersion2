@@ -1,0 +1,660 @@
+/* ============================================================
+   LabOrderPrintModal.module.css
+   Covers BOTH:
+     1. Modal chrome  — overlay, top-bar, scroll-area, paper
+     2. A4 document   — header, cards, table, footer, watermark
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+/* ──────────────────────────────────────────────────────────
+   MODAL CHROME
+────────────────────────────────────────────────────────── */
+
+/* OVERLAY */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 15, 40, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(6px);
+  padding: 16px 16px 16px 276px;
+  animation: overlayIn 0.22s ease;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* MODAL SHELL */
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 880px;
+  max-height: 94vh;
+  background: #d0dbe8;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.07),
+    0 32px 80px rgba(0, 0, 0, 0.48);
+  animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.92) translateY(24px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+/* TOP BAR */
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 20px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  flex-shrink: 0;
+}
+
+.topBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topBarIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.topBarTitle {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+
+.topBarSub {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.58);
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.topBarActions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+/* ACTION BUTTONS */
+.printBtn,
+.downloadBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 17px;
+  border: none;
+  border-radius: 9px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  letter-spacing: 0.3px;
+}
+
+.printBtn {
+  background: linear-gradient(135deg, #30b2b5, #0d7aa8);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(13, 122, 168, 0.42);
+}
+
+.printBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(13, 122, 168, 0.58);
+}
+
+.downloadBtn {
+  background: rgba(255, 255, 255, 0.13);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.downloadBtn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-2px);
+}
+
+.closeBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeBtn:hover {
+  background: rgba(220, 38, 38, 0.5);
+  color: #fff;
+}
+
+/* PREVIEW SCROLL AREA */
+.previewArea {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 28px 32px;
+  display: flex;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(13, 122, 168, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 85% 80%, rgba(15, 32, 87, 0.07) 0%,  transparent 50%),
+    #c8d5e2;
+}
+
+.previewArea::-webkit-scrollbar { width: 6px; }
+.previewArea::-webkit-scrollbar-track { background: transparent; }
+.previewArea::-webkit-scrollbar-thumb {
+  background: rgba(15, 32, 87, 0.22);
+  border-radius: 3px;
+}
+
+/* PAPER — A4 shadow wrapper */
+.paper {
+  width: 210mm;
+  min-width: 210mm;
+  background: #fff;
+  border-radius: 3px;
+  box-shadow:
+    0 1px 3px  rgba(0, 0, 0, 0.06),
+    0 6px 20px rgba(0, 0, 0, 0.12),
+    0 20px 56px rgba(0, 0, 0, 0.14);
+}
+
+/* ──────────────────────────────────────────────────────────
+   A4 DOCUMENT
+────────────────────────────────────────────────────────── */
+
+/* PAGE ROOT — true A4 with flex column so footer sits at bottom */
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  height: 297mm;
+  background: #fff;
+  font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+  color: #1a1a2e;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ── */
+.docHeader {
+  background: linear-gradient(135deg, #0f2057 0%, #1a3a8f 50%, #0d7aa8 100%);
+  padding: 26px 36px 20px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.headerCircle1 {
+  position: absolute;
+  top: -55px;
+  right: -55px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.headerCircle2 {
+  position: absolute;
+  bottom: -35px;
+  left: 110px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(13, 122, 168, 0.25);
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+}
+
+.clinicBrand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.clinicLogoBox {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.clinicLogoImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.clinicName {
+  font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  font-size: 20px;
+  color: #fff;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.branchName {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 500;
+  margin-top: 3px;
+  letter-spacing: 0.5px;
+}
+
+.docTitleBlock {
+  text-align: right;
+}
+
+.docTitle {
+  font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  font-size: 24px;
+  color: #fff;
+  letter-spacing: 1px;
+  margin: 0;
+  font-weight: 400;
+}
+
+.docSubtitle {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.58);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-top: 5px;
+}
+
+/* ── ACCENT BAR ── */
+.accentBar {
+  height: 4px;
+  background: linear-gradient(90deg, #30b2b5, #0d7aa8, #1a3a8f);
+  flex-shrink: 0;
+}
+
+/* ── BADGE STRIP — status/priority/date only, no order # ── */
+.badgeStrip {
+  background: #f0f7ff;
+  border-bottom: 1px solid #dde8f5;
+  padding: 9px 36px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.badgeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.orderStripDate {
+  font-size: 11px;
+  color: #5a6887;
+  font-weight: 500;
+}
+
+/* ── BADGES ── */
+.badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+
+.badgePending   { background: rgba(234, 179, 8, 0.12);  color: #92670a; border-color: rgba(234, 179, 8, 0.35); }
+.badgeCompleted { background: rgba(22, 163, 74, 0.1);   color: #166534; border-color: rgba(22, 163, 74, 0.3); }
+.badgeCancelled { background: rgba(220, 38, 38, 0.1);   color: #991b1b; border-color: rgba(220, 38, 38, 0.3); }
+.badgeInvoice   { background: rgba(2, 132, 199, 0.1);   color: #075985; border-color: rgba(2, 132, 199, 0.3); }
+.badgeProgress  { background: rgba(139, 92, 246, 0.1);  color: #5b21b6; border-color: rgba(139, 92, 246, 0.3); }
+.badgeNormal    { background: rgba(100, 116, 139, 0.1); color: #374151; border-color: rgba(100, 116, 139, 0.3); }
+.badgeUrgent    { background: rgba(234, 88, 12, 0.1);   color: #c2410c; border-color: rgba(234, 88, 12, 0.3); }
+.badgeStat      { background: rgba(220, 38, 38, 0.12);  color: #991b1b; border-color: rgba(220, 38, 38, 0.4); }
+
+/* ── INFO GRID (2 cards side by side) ── */
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 18px 36px;
+  flex-shrink: 0;
+}
+
+.infoCard {
+  border: 1px solid #dde8f5;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.infoCardHeader {
+  background: linear-gradient(135deg, #0f2057, #1a3a8f);
+  padding: 7px 14px;
+}
+
+.infoCardHeader h3 {
+  margin: 0;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6.5px 14px;
+  border-bottom: 1px solid #f0f4fa;
+}
+
+.infoRowLast {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6.5px 14px;
+}
+
+.infoLabel {
+  font-size: 9.5px;
+  color: #7a8aaa;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+.infoValue {
+  font-size: 11.5px;
+  color: #1a1a2e;
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+/* ── SECTION DIVIDER ── */
+.sectionDivider {
+  margin: 0 36px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c8d8ee, transparent);
+  flex-shrink: 0;
+}
+
+/* ── ITEMS SECTION ── */
+.itemsSection {
+  padding: 14px 36px 18px;
+  flex-shrink: 0;
+}
+
+.itemsSectionTitle {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 14px;
+  color: #0f2057;
+  font-weight: 400;
+  margin-bottom: 11px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.itemsSectionTitle::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, #c8d8ee, transparent);
+}
+
+/* TABLE */
+.tableWrapper {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #dde8f5;
+}
+
+.itemsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.itemsTable thead tr {
+  background: linear-gradient(135deg, #0f2057, #1a3a8f);
+}
+
+.itemsTable thead th {
+  padding: 9px 11px;
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 700;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  text-align: left;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.itemsTable thead th.thCenter {
+  text-align: center;
+  width: 32px;
+}
+
+.itemsTable tbody tr:nth-child(even) {
+  background: #f5f9ff;
+}
+
+.itemsTable tbody tr:hover {
+  background: #eef4ff;
+}
+
+.itemsTable tbody td {
+  padding: 8px 11px;
+  border-bottom: 1px solid #e8eff8;
+  vertical-align: middle;
+}
+
+.itemsTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tdIndex {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 600;
+  width: 32px;
+}
+
+.tdName {
+  color: #0f2057;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.tdEmpty {
+  padding: 20px 11px;
+  text-align: center;
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 11px;
+}
+
+/* ── NOTES ── */
+.notesSection {
+  margin: 0 36px 14px;
+  padding: 11px 15px;
+  background: #f8fbff;
+  border-left: 3px solid #0d7aa8;
+  border-radius: 0 8px 8px 0;
+  flex-shrink: 0;
+}
+
+.notesLabel {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #0d7aa8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+}
+
+.notesText {
+  font-size: 11px;
+  color: #334155;
+  line-height: 1.6;
+}
+
+/* ── PAGE SPACER — pushes footer to bottom of A4 ── */
+.pageSpacer {
+  flex: 1;
+}
+
+/* ── FOOTER — always at bottom of A4 page ── */
+.docFooter {
+  padding: 13px 36px;
+  border-top: 1px solid #dde8f5;
+  background: #f8fbff;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.footerLeft {
+  font-size: 10px;
+  color: #7a8aaa;
+  line-height: 1.75;
+}
+
+.footerLeft strong {
+  color: #334155;
+  font-weight: 700;
+}
+
+.footerDisclaimer {
+  font-size: 9px;
+  color: #b0bdd0;
+  margin-top: 4px;
+}
+
+.signatureBlock {
+  text-align: center;
+}
+
+.signatureLine {
+  width: 130px;
+  height: 1px;
+  background: #94a3b8;
+  margin: 0 auto 6px;
+}
+
+.signatureLabel {
+  font-size: 10px;
+  color: #7a8aaa;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── WATERMARK ── */
+.watermark {
+  position: absolute;
+  bottom: 70px;
+  right: 36px;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 90px;
+  color: rgba(13, 122, 168, 0.04);
+  font-style: italic;
+  pointer-events: none;
+  user-select: none;
+  transform: rotate(-18deg);
+  letter-spacing: -2px;
+  line-height: 1;
+}
+
+/* ──────────────────────────────────────────────────────────
+   PRINT MEDIA
+────────────────────────────────────────────────────────── */
+@media print {
+  .page {
+    width: 210mm;
+    height: 297mm;
+    min-height: 297mm;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────
+   RESPONSIVE
+────────────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .overlay { padding: 12px; }
+  .paper   { width: 100%; min-width: unset; }
+  .page    { width: 100%; min-height: unset; height: auto; }
+  .previewArea { padding: 16px; }
+  .infoGrid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 540px) {
+  .topBar { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .topBarActions { width: 100%; }
+  .printBtn, .downloadBtn { flex: 1; justify-content: center; }
+  .docHeader { padding: 18px 20px; }
+  .badgeStrip { flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 20px; }
+  .infoGrid   { padding: 14px 20px; }
+  .itemsSection { padding: 12px 20px 16px; }
+  .docFooter  { flex-direction: column; gap: 16px; padding: 14px 20px; }
+}

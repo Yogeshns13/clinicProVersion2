@@ -387,7 +387,7 @@ const SavedMedicineCard = ({ item, clinicId, branchId, onUpdated, onDeleted, onE
   );
 };
 
-/* ─── SavedLabSection (only used inside Lab Modal — no delete button here) ────────── */
+/* ─── SavedLabSection (only used inside Lab Modal) ────────── */
 const SavedLabSection = ({ labItems, labPriorityDesc, clinicId, branchId, onItemStatusChange, onError }) => {
   const [togglingId, setTogglingId] = useState(null);
 
@@ -430,7 +430,6 @@ const SavedLabSection = ({ labItems, labPriorityDesc, clinicId, branchId, onItem
               </div>
               <div className="saved-lab-item__status">
                 {isActive ? (
-                  /* Active — show Deactivate button */
                   <button
                     className="btn-toggle-lab btn-toggle-lab--deactivate"
                     onClick={() => handleToggleItem(item.itemId, item.status)}
@@ -442,24 +441,40 @@ const SavedLabSection = ({ labItems, labPriorityDesc, clinicId, branchId, onItem
                     }
                   </button>
                 ) : (
-                  /* Inactive — disabled grey view + only Activate button */
-                  <>
-                    <button
-                      className="btn-toggle-lab btn-toggle-lab--activate"
-                      onClick={() => handleToggleItem(item.itemId, item.status)}
-                      disabled={togglingId === item.itemId}
-                    >
-                      {togglingId === item.itemId
-                        ? <span className="spin-sm" />
-                        : <><FiCheck size={11} /> Add Again</>
-                      }
-                    </button>
-                  </>
+                  <button
+                    className="btn-toggle-lab btn-toggle-lab--activate"
+                    onClick={() => handleToggleItem(item.itemId, item.status)}
+                    disabled={togglingId === item.itemId}
+                  >
+                    {togglingId === item.itemId
+                      ? <span className="spin-sm" />
+                      : <><FiCheck size={11} /> Add Again</>
+                    }
+                  </button>
                 )}
               </div>
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+};
+
+/* ─── ErrorPopup ─────────────────────────────────── */
+const ErrorPopup = ({ message, onClose }) => {
+  if (!message) return null;
+  return (
+    <div className="error-popup-overlay" onClick={onClose}>
+      <div className="error-popup" onClick={e => e.stopPropagation()}>
+        <div className="error-popup__icon">
+          <FiAlertCircle size={28} />
+        </div>
+        <p className="error-popup__title">Something went wrong</p>
+        <p className="error-popup__msg">{message}</p>
+        <button className="error-popup__btn" onClick={onClose}>
+          <FiCheck size={14} /> OK
+        </button>
       </div>
     </div>
   );
@@ -482,7 +497,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const [confirmedSuccess, setConfirmedSuccess]         = useState(false);
   const [submitProgress, setSubmitProgress]             = useState(null);
 
-  // CHANGE: Track whether current state is "finished" (all submitted, nothing new pending)
   const [isFinished, setIsFinished]                     = useState(false);
 
   const [savedNotes, setSavedNotes]         = useState('');
@@ -547,6 +561,8 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const [showViewDetail, setShowViewDetail]       = useState(false);
   const [viewDetail, setViewDetail]               = useState(null);
   const [viewDetailLoading, setViewDetailLoading] = useState(false);
+
+  // ── Error as popup instead of banner ──
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -582,13 +598,15 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     nextConsultationDate !== savedNextDate
   );
 
-  // CHANGE: Derived — do we have pending (unsaved) items?
   const pendingContainerCount = containers.filter(c => !submittedContainerIds.has(c.tempId)).length;
   const stagedLabCount  = stagedLabTestIds.length + stagedLabPkgIds.length;
   const hasAnythingNew  = pendingContainerCount > 0 || stagedLabCount > 0;
 
-  // CHANGE: When consultSaved and nothing new pending → finished state
-  // Reset finished if new stuff is added
+  // ── Submit enabled only when there is actual input ──
+  // Notes typed, or medicines added, or lab items staged
+  const hasNotes        = consultationNotes.trim().length > 0;
+  const submitEnabled   = hasNotes || pendingContainerCount > 0 || stagedLabCount > 0;
+
   useEffect(() => {
     if (isFinished && hasAnythingNew) {
       setIsFinished(false);
@@ -777,7 +795,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
       return;
     }
 
-    // ── Before first Submit: just stage locally, no API calls ──
     if (!consultationId) {
       setStagedLabTestIds(prev => [...new Set([...prev, ...newTestIds])]);
       setStagedLabPkgIds(prev => [...new Set([...prev, ...newPkgIds])]);
@@ -786,7 +803,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
       return;
     }
 
-    // ── After first Submit (consultation exists): call APIs immediately ──
     if (!consultationNotes.trim()) {
       setError({ message: 'Please enter Consultation Notes before saving lab items.' });
       return;
@@ -842,7 +858,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     }
   };
 
-  /* ── BUG 2 FIX: Re-activate a deactivated lab item from modal ── */
+  /* ── Re-activate a deactivated lab item from modal ── */
   const handleReactivateLabItem = async () => {
     if (!reactivateConfirm) return;
     const { itemId, testId, pkgId } = reactivateConfirm;
@@ -895,7 +911,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     }
   };
 
-  /* ── Delete entire lab order (called from modal header confirm popup) ── */
+  /* ── Delete entire lab order ── */
   const handleDeleteLabOrder = async () => {
     try {
       setDeletingOrder(true);
@@ -1041,7 +1057,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
       setStagedLabTestIds([]);
       setStagedLabPkgIds([]);
       setSubmitProgress(p => ({ ...p, done: true }));
-      // CHANGE: mark as finished
       setIsFinished(true);
       fetchPatientHistory();
       setTimeout(() => setSubmitProgress(null), 2500);
@@ -1051,7 +1066,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const handleVisitSelect   = (v) => { setSelectedVisit(v); setVisitStep(2); };
   const updateContainer     = (tid, ch) => setContainers(prev => prev.map(c => c.tempId === tid ? { ...c, ...ch } : c));
   const removeContainer     = (tid)      => setContainers(prev => prev.filter(c => c.tempId !== tid));
-  const addBlankContainer   = ()         => setContainers(prev => [...prev, createContainer()]);
 
   const handleSearch = () => {
     const q = searchQuery.toLowerCase().trim();
@@ -1061,7 +1075,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const toggleMedSelection = (id) => setSelectedMedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   const clearMedSelection  = () => setSelectedMedIds([]);
 
-  const handleAddSelectedMeds = () => {
+  const handleAddSelectedMeds = () => { 
     if (!selectedMedIds.length) return;
     setContainers(prev => [...prev, ...selectedMedIds.map(id => createContainer(allMedicines.find(m => m.id === id)))]);
     setSelectedMedIds([]);
@@ -1109,35 +1123,18 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     setSavedLabItems(prev =>
       prev.map(item => item.itemId === itemId ? { ...item, status: newStatus } : item)
     );
-
     const changedItem = savedLabItems.find(item => item.itemId === itemId);
     if (!changedItem) return;
-
     const isActive = newStatus === 1;
     const testId   = changedItem.testId   ?? changedItem.testID   ?? 0;
     const pkgId    = changedItem.packageId ?? changedItem.packageID ?? 0;
-
     if (testId) {
-      if (isActive) {
-        setSubmittedLabTestIds(prev => [...new Set([...prev, testId])]);
-        setSelectedTestIds(prev => [...new Set([...prev, testId])]);
-        setDeactivatedLabTestIds(prev => prev.filter(id => id !== testId));
-      } else {
-        setSubmittedLabTestIds(prev => prev.filter(id => id !== testId));
-        setSelectedTestIds(prev => prev.filter(id => id !== testId));
-        setDeactivatedLabTestIds(prev => [...new Set([...prev, testId])]);
-      }
+      if (isActive) { setSubmittedLabTestIds(prev => [...new Set([...prev, testId])]); setSelectedTestIds(prev => [...new Set([...prev, testId])]); setDeactivatedLabTestIds(prev => prev.filter(id => id !== testId)); }
+      else          { setSubmittedLabTestIds(prev => prev.filter(id => id !== testId)); setSelectedTestIds(prev => prev.filter(id => id !== testId)); setDeactivatedLabTestIds(prev => [...new Set([...prev, testId])]); }
     }
     if (pkgId) {
-      if (isActive) {
-        setSubmittedLabPkgIds(prev => [...new Set([...prev, pkgId])]);
-        setSelectedPkgIds(prev => [...new Set([...prev, pkgId])]);
-        setDeactivatedLabPkgIds(prev => prev.filter(id => id !== pkgId));
-      } else {
-        setSubmittedLabPkgIds(prev => prev.filter(id => id !== pkgId));
-        setSelectedPkgIds(prev => prev.filter(id => id !== pkgId));
-        setDeactivatedLabPkgIds(prev => [...new Set([...prev, pkgId])]);
-      }
+      if (isActive) { setSubmittedLabPkgIds(prev => [...new Set([...prev, pkgId])]); setSelectedPkgIds(prev => [...new Set([...prev, pkgId])]); setDeactivatedLabPkgIds(prev => prev.filter(id => id !== pkgId)); }
+      else          { setSubmittedLabPkgIds(prev => prev.filter(id => id !== pkgId)); setSelectedPkgIds(prev => prev.filter(id => id !== pkgId)); setDeactivatedLabPkgIds(prev => [...new Set([...prev, pkgId])]); }
     }
   };
 
@@ -1191,12 +1188,8 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     return parts.join(' · ');
   };
 
-  // CHANGE: Determine what the bottom-right action button should show
-  // - Not saved yet: show Submit
-  // - Saved + no pending + isFinished: show Finish (green check)
-  // - Saved + has pending: show Submit/Add
-  const showSubmitInFooter = visitStep === 2;
-  const footerBtnIsFinish = isFinished && !hasAnythingNew && !consultDataChanged;
+  const showSubmitInFooter  = visitStep === 2;
+  const footerBtnIsFinish   = isFinished && !hasAnythingNew && !consultDataChanged;
 
   const { clinicId, branchId } = getIds();
 
@@ -1340,13 +1333,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                 </div>
               )}
 
-              {error && (
-                <div className="error-banner">
-                  <FiAlertCircle size={13} />
-                  <span>{error?.message || String(error)}</span>
-                  <button onClick={() => setError(null)}><FiX size={12} /></button>
-                </div>
-              )}
+              {/* ── NO error-banner here — errors shown as popup ── */}
 
               <div className={`panels ${isDragOver ? 'panels--dragover' : ''}`}>
 
@@ -1411,7 +1398,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                   </div>
                 </section>
 
-                {/* Panel 2 — Prescription ONLY (no lab items here) */}
+                {/* Panel 2 — Prescription */}
                 <section
                   className={`panel panel--2 ${isDragOver ? 'panel--drop' : ''}`}
                   onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
@@ -1461,12 +1448,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                         ))}
                       </div>
                     )}
-
-                    <button type="button" className="btn-add-med" onClick={addBlankContainer}>
-                      <FiPlus size={13} /> Add Medicine Manually
-                    </button>
-
-                    {/* CHANGE: Lab items REMOVED from here — they only appear in Lab Order modal */}
                   </div>
                 </section>
 
@@ -1543,10 +1524,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
           )}
         </main>
 
-        {/* ══════════════════════════════════════════════════════
-            CHANGE: BOTTOM ACTION FOOTER BAR
-            Shows Submit / Add / Finish button at bottom-right
-           ══════════════════════════════════════════════════════ */}
+        {/* ── BOTTOM ACTION FOOTER BAR ── */}
         {showSubmitInFooter && (
           <footer className="ac-footer">
             <div className="ac-footer__left">
@@ -1568,20 +1546,15 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
             </div>
             <div className="ac-footer__right">
               {footerBtnIsFinish ? (
-                /* ── FINISH button ── */
-                <button
-                  className="btn-footer-finish"
-                  onClick={handleClose}
-                >
+                <button className="btn-footer-finish" onClick={handleClose}>
                   <FiCheckCircle size={16} />
                   Finish & Close
                 </button>
               ) : (
-                /* ── SUBMIT button — always Submit, never Add ── */
                 <button
-                  className="btn-footer-submit"
+                  className={`btn-footer-submit ${!submitEnabled ? 'btn-footer-submit--disabled' : ''}`}
                   onClick={handleFinalSubmit}
-                  disabled={!!submitProgress}
+                  disabled={!submitEnabled || !!submitProgress}
                 >
                   {submitProgress && !submitProgress.done ? (
                     <><span className="spin-sm" /> Processing…</>
@@ -1625,6 +1598,12 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
             </div>
           </div>
         )}
+
+        {/* ═══ ERROR POPUP ═══ */}
+        <ErrorPopup
+          message={error?.message || (typeof error === 'string' ? error : null)}
+          onClose={() => setError(null)}
+        />
 
         {/* ═══ PATIENT MODAL ═══ */}
         {showPatientModal && (
@@ -1712,7 +1691,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
           </div>
         )}
 
-        {/* ═══ FAMILY PATIENT MODAL (second popup) ═══ */}
+        {/* ═══ FAMILY PATIENT MODAL ═══ */}
         {showFamilyModal && familyPatientDetails && (
           <div className="modal-overlay modal-overlay--family" onClick={() => setShowFamilyModal(false)}>
             <div className="modal patient-modal family-patient-modal" onClick={e => e.stopPropagation()}>
@@ -1774,18 +1753,16 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
           <div className="modal-overlay" onClick={() => setShowLabModal(false)}>
             <div className="modal lab-modal" onClick={e => e.stopPropagation()}>
 
-              {/* CHANGE: Lab modal header now includes Delete Order button on right */}
               <div className="modal__head lab-modal__head">
                 <span><FiFileText size={14} /> Lab Order</span>
                 <div className="lab-modal__head-actions">
-                  {/* Delete Order button in header — only shown when order exists */}
                   {labOrderId && !confirmDelOrder && (
                     <button
                       className="btn-del-order-header"
                       onClick={() => setConfirmDelOrder(true)}
                       title="Delete entire lab order"
                     >
-                      <FiTrash2 size={13} /> Delete Order
+                      <FiTrash2 size={13} /> Delete Lab Order
                     </button>
                   )}
                   {labOrderId && confirmDelOrder && (
@@ -1860,38 +1837,23 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                           const frozen     = submittedLabTestIds.includes(id);
                           const deactivated = deactivatedLabTestIds.includes(id);
                           const savedItem  = savedLabItems.find(s => (s.testId === id || s.testID === id));
-
                           return (
-                            <label
-                              key={id}
+                            <label key={id}
                               className={`lab-item ${frozen ? 'lab-item--frozen' : deactivated ? 'lab-item--deactivated' : sel ? 'lab-item--sel' : ''}`}
                               onClick={e => {
-                                if (frozen && savedItem) {
-                                  e.preventDefault();
-                                  setConfirmRemoveLabId({ itemId: savedItem.itemId, name: getLabName(t) });
-                                } else if (deactivated && savedItem) {
-                                  e.preventDefault();
-                                  setReactivateConfirm({ itemId: savedItem.itemId, name: getLabName(t), testId: id, pkgId: 0 });
-                                }
+                                if (frozen && savedItem)      { e.preventDefault(); setConfirmRemoveLabId({ itemId: savedItem.itemId, name: getLabName(t) }); }
+                                else if (deactivated && savedItem) { e.preventDefault(); setReactivateConfirm({ itemId: savedItem.itemId, name: getLabName(t), testId: id, pkgId: 0 }); }
                               }}
                             >
-                              <input
-                                type="checkbox"
-                                checked={frozen || sel}
-                                disabled={frozen || deactivated}
-                                onChange={() => {
-                                  if (!frozen && !deactivated) {
-                                    setSelectedTestIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-                                  }
-                                }}
-                              />
+                              <input type="checkbox" checked={frozen || sel} disabled={frozen || deactivated}
+                                onChange={() => { if (!frozen && !deactivated) setSelectedTestIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]); }} />
                               <span className="lab-item__name">
                                 {getLabName(t) || 'Unknown'}
-                                {frozen && <span className="lab-item__saved-tag"><FiCheck size={8} /> Saved</span>}
+                                {frozen      && <span className="lab-item__saved-tag"><FiCheck size={8} /> Saved</span>}
                                 {deactivated && <span className="lab-item__deact-tag"><FiX size={8} /> Deleted</span>}
                               </span>
                               {(t.fees || t.Fees) && <span className="lab-item__fee">₹{t.fees || t.Fees}</span>}
-                              {frozen     && <span className="lab-item__remove-hint"><FiX size={9} /></span>}
+                              {frozen      && <span className="lab-item__remove-hint"><FiX size={9} /></span>}
                               {deactivated && <span className="lab-item__reactivate-hint"><FiRefreshCw size={9} /></span>}
                             </label>
                           );
@@ -1930,38 +1892,23 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                           const frozen      = submittedLabPkgIds.includes(id);
                           const deactivated = deactivatedLabPkgIds.includes(id);
                           const savedItem   = savedLabItems.find(s => (s.packageId === id || s.packageID === id));
-
                           return (
-                            <label
-                              key={id}
+                            <label key={id}
                               className={`lab-item ${frozen ? 'lab-item--frozen' : deactivated ? 'lab-item--deactivated' : sel ? 'lab-item--sel' : ''}`}
                               onClick={e => {
-                                if (frozen && savedItem) {
-                                  e.preventDefault();
-                                  setConfirmRemoveLabId({ itemId: savedItem.itemId, name: getPkgName(p) });
-                                } else if (deactivated && savedItem) {
-                                  e.preventDefault();
-                                  setReactivateConfirm({ itemId: savedItem.itemId, name: getPkgName(p), testId: 0, pkgId: id });
-                                }
+                                if (frozen && savedItem)      { e.preventDefault(); setConfirmRemoveLabId({ itemId: savedItem.itemId, name: getPkgName(p) }); }
+                                else if (deactivated && savedItem) { e.preventDefault(); setReactivateConfirm({ itemId: savedItem.itemId, name: getPkgName(p), testId: 0, pkgId: id }); }
                               }}
                             >
-                              <input
-                                type="checkbox"
-                                checked={frozen || sel}
-                                disabled={frozen || deactivated}
-                                onChange={() => {
-                                  if (!frozen && !deactivated) {
-                                    setSelectedPkgIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-                                  }
-                                }}
-                              />
+                              <input type="checkbox" checked={frozen || sel} disabled={frozen || deactivated}
+                                onChange={() => { if (!frozen && !deactivated) setSelectedPkgIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]); }} />
                               <span className="lab-item__name">
                                 {getPkgName(p) || 'Unknown'}
-                                {frozen && <span className="lab-item__saved-tag"><FiCheck size={8} /> Saved</span>}
+                                {frozen      && <span className="lab-item__saved-tag"><FiCheck size={8} /> Saved</span>}
                                 {deactivated && <span className="lab-item__deact-tag"><FiX size={8} /> Inactive</span>}
                               </span>
                               {(p.fees || p.Fees) && <span className="lab-item__fee">₹{p.fees || p.Fees}</span>}
-                              {frozen     && <span className="lab-item__remove-hint"><FiX size={9} /></span>}
+                              {frozen      && <span className="lab-item__remove-hint"><FiX size={9} /></span>}
                               {deactivated && <span className="lab-item__reactivate-hint"><FiRefreshCw size={9} /></span>}
                             </label>
                           );
@@ -1970,7 +1917,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                 </div>
               </div>
 
-              {/* CHANGE: Saved lab items now shown inside modal below columns */}
+              {/* Saved lab items inside modal */}
               {savedLabItems.length > 0 && (
                 <div className="lab-modal__saved-wrap">
                   <SavedLabSection
@@ -1999,7 +1946,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                 </button>
               </div>
 
-              {/* Re-activate confirm popup */}
+              {/* Reactivate confirm popup */}
               {reactivateConfirm && (
                 <div className="lab-remove-confirm-overlay" onClick={() => setReactivateConfirm(null)}>
                   <div className="lab-remove-confirm lab-remove-confirm--reactivate" onClick={e => e.stopPropagation()}>
@@ -2008,11 +1955,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                     <p className="lab-remove-confirm__name">{reactivateConfirm.name}</p>
                     <p className="lab-remove-confirm__sub">This item is currently inactive. Re-activate it?</p>
                     <div className="lab-remove-confirm__btns">
-                      <button
-                        className="btn-confirm-reactivate"
-                        onClick={handleReactivateLabItem}
-                        disabled={reactivating}
-                      >
+                      <button className="btn-confirm-reactivate" onClick={handleReactivateLabItem} disabled={reactivating}>
                         {reactivating ? <span className="spin-sm" /> : <FiCheck size={12} />} Yes, Re-activate
                       </button>
                       <button className="btn-confirm-no" onClick={() => setReactivateConfirm(null)}>
@@ -2023,7 +1966,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                 </div>
               )}
 
-              {/* Remove (deactivate) lab item confirm popup */}
+              {/* Remove lab item confirm popup */}
               {confirmRemoveLabId && (
                 <div className="lab-remove-confirm-overlay" onClick={() => setConfirmRemoveLabId(null)}>
                   <div className="lab-remove-confirm" onClick={e => e.stopPropagation()}>
@@ -2031,11 +1974,9 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                     <p className="lab-remove-confirm__title">Remove Lab Item?</p>
                     <p className="lab-remove-confirm__name">{confirmRemoveLabId.name}</p>
                     <div className="lab-remove-confirm__btns">
-                      <button
-                        className="btn-confirm-yes"
+                      <button className="btn-confirm-yes"
                         onClick={() => handleRemoveLabItemFromModal(confirmRemoveLabId.itemId)}
-                        disabled={removingLabItemId === confirmRemoveLabId.itemId}
-                      >
+                        disabled={removingLabItemId === confirmRemoveLabId.itemId}>
                         {removingLabItemId === confirmRemoveLabId.itemId ? <span className="spin-sm" /> : <FiTrash2 size={12} />} Yes, Remove
                       </button>
                       <button className="btn-confirm-no" onClick={() => setConfirmRemoveLabId(null)}>

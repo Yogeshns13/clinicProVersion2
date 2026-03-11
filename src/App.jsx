@@ -92,7 +92,7 @@ function App() {
           <Route path="/medicinemaster-list" element={<MedicineMasterList/>} />
           <Route path="/medicinestock-list" element={<MedicineStockList/>} />
           <Route path="/purchaseorder-list" element={<PurchaseOrderList/>} />
-          <Route path="/purchaseorderitem" element={<PurchaseOrderItems/>} />
+          <Route path="/purchaseorderitem/:id" element={<PurchaseOrderItems/>} />
           <Route path="/salescart-list" element={<SalesCartList/>} />
           <Route path="/salescartdetail-list/:id" element={<SalesCartDetailList/>} />
           <Route path="/pharmacy-invoice" element={<PharmacyInvoiceList/>} />

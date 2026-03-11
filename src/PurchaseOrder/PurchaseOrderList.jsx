@@ -140,7 +140,7 @@ const PurchaseOrderList = () => {
     setAppliedFilters(empty);
   };
 
-  const handleViewDetails = (po) => navigate(`/view-purchaseorder/${po.id}`);
+  const handleViewDetails = (po) => navigate(`/purchaseorderitem/${po.id}`);
   const openAddForm        = () => setIsAddFormOpen(true);
   const closeAddForm       = () => setIsAddFormOpen(false);
   const handleAddSuccess   = () => fetchPurchaseOrders(appliedFilters);
