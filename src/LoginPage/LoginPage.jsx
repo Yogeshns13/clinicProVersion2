@@ -6,7 +6,7 @@ import logo from "../assets/cplogo.png";
 import meter from "../assets/meter.svg";
 import scope from "../assets/scope.svg";
 import reff from "../assets/refresh.png";
-import { loginUser, renewToken, getClinicList } from "../Api/Api";
+import { loginUser, renewToken, getClinicList, forgetPassword } from "../Api/Api";
 import { useAuth } from "../Contexts/AuthContext";
 import doctor from "../assets/doc.png";
 
@@ -93,17 +93,17 @@ const Captcha = ({ canvasRef, answer, setAnswer, onRefresh, isLoading, refreshIc
 );
 
 const LoginPage = () => {
-  const [mode, setMode] = useState("login"); // "login" | "signup" | "reset"
+  const [mode, setMode] = useState("login"); // "login" | "reset"
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const [loginData, setLoginData] = useState({ username: "", password: ""});
-  const [signupData, setSignupData] = useState({ email: "", mobile: "", password: "", confirmPassword: "" });
-  const [resetData, setResetData] = useState({ username: "", email: "" });
+  const [loginData, setLoginData] = useState({ username: "", password: "" });
+  const [resetData, setResetData] = useState({ email: "" });
 
-  const [showPassword, setShowPassword] = useState({ login: false, signup: false, confirm: false });
+  const [showPassword, setShowPassword] = useState({ login: false });
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
+  const [isResetSuccess, setIsResetSuccess] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -111,7 +111,6 @@ const LoginPage = () => {
   // CAPTCHA state for each mode
   const [captcha, setCaptcha] = useState({
     login: { answer: "", correct: 0 },
-    signup: { answer: "", correct: 0 },
     reset: { answer: "", correct: 0 },
   });
 
@@ -119,49 +118,49 @@ const LoginPage = () => {
 
   useEffect(() => {
     handleRefreshToken();
-  }, []); 
+  }, []);
 
   const handleRefreshToken = async () => {
-      setIsLoading(true);
-      try {
-        const result = await renewToken();
-        console.log("Refresh token result:", result);
-        if (result.success) {
-          console.log("Silent token refresh successful");
+    setIsLoading(true);
+    try {
+      const result = await renewToken();
+      console.log("Refresh token result:", result);
+      if (result.success) {
+        console.log("Silent token refresh successful");
 
-          let newLoginTime = new Date().toLocaleTimeString("en-IN", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: true,
-          });
+        let newLoginTime = new Date().toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        });
 
-          if (result.responseTime && typeof result.responseTime === "string") {
-            const parts = result.responseTime.split(", ");
-            if (parts.length > 1) {
-              const [h, m, s] = parts[1].split(":").map(Number);
-              const tempDate = new Date();
-              tempDate.setHours(h, m, s, 0);
-              newLoginTime = tempDate.toLocaleTimeString("en-IN", {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                hour12: true,
-              });
-            }
+        if (result.responseTime && typeof result.responseTime === "string") {
+          const parts = result.responseTime.split(", ");
+          if (parts.length > 1) {
+            const [h, m, s] = parts[1].split(":").map(Number);
+            const tempDate = new Date();
+            tempDate.setHours(h, m, s, 0);
+            newLoginTime = tempDate.toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hour12: true,
+            });
           }
-
-          localStorage.setItem("login_time", newLoginTime);
-          console.log("Updated login_time after silent refresh:", newLoginTime);
-
-          login(result);
-          navigate("/dashboard", { replace: true });
         }
-      } catch (err) {
-        console.log("Silent refresh failed (normal if session expired):", err);
-      } finally {
-        setIsLoading(false);
+
+        localStorage.setItem("login_time", newLoginTime);
+        console.log("Updated login_time after silent refresh:", newLoginTime);
+
+        login(result);
+        navigate("/dashboard", { replace: true });
       }
+    } catch (err) {
+      console.log("Silent refresh failed (normal if session expired):", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -209,16 +208,16 @@ const LoginPage = () => {
   const validateCaptcha = (modeKey) => {
     const { answer, correct } = captcha[modeKey];
     if (Number(answer) !== correct) {
+      setIsResetSuccess(false);
       setPopupMessage("CAPTCHA answer is incorrect. Please try again.");
       setShowPopup(true);
       generateCaptcha(modeKey);
       return false;
     }
-    return true;  
+    return true;
   };
 
   const handleLoginChange = (e) => setLoginData({ ...loginData, [e.target.name]: e.target.value });
-  const handleSignupChange = (e) => setSignupData({ ...signupData, [e.target.name]: e.target.value });
   const handleResetChange = (e) => setResetData({ ...resetData, [e.target.name]: e.target.value });
 
   const handleLoginSubmit = async (e) => {
@@ -277,12 +276,14 @@ const LoginPage = () => {
         login(data);
         navigate("/dashboard", { replace: true });
       } else {
+        setIsResetSuccess(false);
         setPopupMessage(data?.message || "Invalid credentials");
         setShowPopup(true);
         generateCaptcha("login");
       }
     } catch (err) {
       console.error("Login failed:", err);
+      setIsResetSuccess(false);
       setPopupMessage(err.message || "Login failed. Please try again.");
       setShowPopup(true);
       generateCaptcha("login");
@@ -292,29 +293,36 @@ const LoginPage = () => {
     }
   };
 
-  const handleSignupSubmit = (e) => {
-    e.preventDefault();
-    if (signupData.password !== signupData.confirmPassword) {
-      setPopupMessage("Passwords do not match!");
-      setShowPopup(true);
-      return;
-    }
-    if (!validateCaptcha("signup")) return;
-    console.log("Signup:", signupData);
-    // Add your signup API call here
-  };
-
-  const handleResetSubmit = (e) => {
+  const handleResetSubmit = async (e) => {
     e.preventDefault();
     if (!validateCaptcha("reset")) return;
-    console.log("Reset:", resetData);
-    setPopupMessage(`Password reset link sent to ${resetData.email}`);
-    setShowPopup(true);
-    setMode("login");
+
+    setIsLoading(true);
+    try {
+      const result = await forgetPassword(resetData.email, resetData.email);
+      setIsResetSuccess(true);
+      setPopupMessage(result.message || "Mail Sent Successfully");
+      setShowPopup(true);
+    } catch (err) {
+      setIsResetSuccess(false);
+      setPopupMessage(err.message || "Failed to send reset email. Please try again.");
+      setShowPopup(true);
+      generateCaptcha("reset");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePopupOk = () => {
+    setShowPopup(false);
+    if (isResetSuccess) {
+      setResetData({ email: "" });
+      setIsResetSuccess(false);
+      setMode("login");
+    }
   };
 
   const goToLogin = () => setMode("login");
-  const goToSignup = () => setMode("signup");
   const goToReset = () => setMode("reset");
 
   return (
@@ -327,7 +335,6 @@ const LoginPage = () => {
               <h1>Clinic Pro</h1>
               <p>
                 {mode === "login" && "Welcome back. Sign in to continue."}
-                {mode === "signup" && "Create your account to get started."}
                 {mode === "reset" && "Recover your password."}
               </p>
             </div>
@@ -371,9 +378,9 @@ const LoginPage = () => {
                   refreshIcon={reff}
                 />
 
-                <button type="submit" className="login-btn">
+                <button type="submit" className="login-btn" disabled={isLoading}>
                   <LockIcon />
-                  <span>Login Securely</span>
+                  <span>{isLoading ? "Signing in..." : "Login Securely"}</span>
                 </button>
 
                 <p className="forgot-link" onClick={goToReset} style={{ cursor: "pointer", marginTop: "22px" }}>
@@ -382,97 +389,17 @@ const LoginPage = () => {
               </form>
             )}
 
-            {mode === "signup" && (
-              <form onSubmit={handleSignupSubmit} className="login-form">
-                <div className="input-group">
-                  <input type="email" name="email" value={signupData.email} onChange={handleSignupChange} required placeholder="Email Address" />
-                </div>
-
-                <div className="input-group">
-                  <input
-                    type="tel"
-                    name="mobile"
-                    value={signupData.mobile}
-                    onChange={handleSignupChange}
-                    required
-                    placeholder="Mobile Number"
-                    pattern="[0-9]{10}"
-                  />
-                </div>
-
-                <div className="input-group password-wrapper">
-                  <input
-                    type={showPassword.signup ? "text" : "password"}
-                    name="password"
-                    value={signupData.password}
-                    onChange={handleSignupChange}
-                    required
-                    placeholder="Create Password"
-                    minLength={6}
-                  />
-                  <button
-                    type="button"
-                    className="eye-toggle"
-                    onClick={() => setShowPassword({ ...showPassword, signup: !showPassword.signup })}
-                    onMouseDown={(e) => e.preventDefault()}
-                  >
-                    {showPassword.signup ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
-                </div>
-
-                <div className="input-group password-wrapper">
-                  <input
-                    type={showPassword.confirm ? "text" : "password"}
-                    name="confirmPassword"
-                    value={signupData.confirmPassword}
-                    onChange={handleSignupChange}
-                    required
-                    placeholder="Confirm Password"
-                    minLength={6}
-                  />
-                  <button
-                    type="button"
-                    className="eye-toggle"
-                    onClick={() => setShowPassword({ ...showPassword, confirm: !showPassword.confirm })}
-                    onMouseDown={(e) => e.preventDefault()}
-                  >
-                    {showPassword.confirm ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
-                </div>
-
-                <Captcha
-                  canvasRef={canvasRef}
-                  answer={captcha.signup.answer}
-                  setAnswer={(val) =>
-                    setCaptcha((prev) => ({
-                      ...prev,
-                      signup: { ...prev.signup, answer: val },
-                    }))
-                  }
-                  onRefresh={() => generateCaptcha("signup")}
-                  isLoading={isLoading}
-                  refreshIcon={reff}
-                />
-
-                <button type="submit" className="login-btn">
-                  <LockIcon />
-                  <span>Create Account</span>
-                </button>
-
-                <p className="forgot-link" style={{ marginTop: "16px" }}>
-                  Already have an account? <span onClick={goToLogin} className="toggle-link">Sign In</span>
-                </p>
-              </form>
-            )}
-
             {mode === "reset" && (
               <form onSubmit={handleResetSubmit} className="login-form">
                 <div className="input-group">
-                  <input type="text" name="username" value={resetData.username} onChange={handleResetChange} required placeholder="User Name" />
-                </div>
-
-                <div className="input-group">
-                  <input type="email" name="email" value={resetData.email} onChange={handleResetChange} required placeholder="Email Address" />
+                  <input
+                    type="email"
+                    name="email"
+                    value={resetData.email}
+                    onChange={handleResetChange}
+                    required
+                    placeholder="Email Address"
+                  />
                 </div>
 
                 <Captcha
@@ -489,8 +416,8 @@ const LoginPage = () => {
                   refreshIcon={reff}
                 />
 
-                <button type="submit" className="login-btn">
-                  <span>Get Password</span>
+                <button type="submit" className="login-btn" disabled={isLoading}>
+                  <span>{isLoading ? "Sending..." : "Get Password"}</span>
                 </button>
 
                 <p className="forgot-link" style={{ marginTop: "16px" }}>
@@ -506,18 +433,13 @@ const LoginPage = () => {
             <div className="promo-content">
               <img src={logo} alt="Clinic Pro" className="logo" />
               <h2>
-                {mode === "login" && "New to Clinic Pro?"}
-                {mode === "signup" && "Already have an account?"}
+                {mode === "login" && "Welcome to Clinic Pro"}
                 {mode === "reset" && "Need help?"}
               </h2>
               <p>
                 {mode === "login" && "Manage patients, staff, and operations with intelligent, secure tools."}
-                {mode === "signup" && "Sign in to continue managing your clinic."}
-                {mode === "reset" && "Enter your details and we’ll send you a reset link."}
+                {mode === "reset" && "Enter your email and we'll send you a reset link."}
               </p>
-              <button className="signup-btn" onClick={mode === "signup" ? goToLogin : goToSignup}>
-                {mode === "signup" ? "Login" : "Sign Up"}
-              </button>
             </div>
             <div className="circle-1"></div>
             <div className="circle-2"></div>
@@ -527,13 +449,14 @@ const LoginPage = () => {
 
       <img src={scope} className="scope" alt="scope decoration" />
       <img src={meter} className="meter" alt="meter decoration" />
+
       {showPopup && (
         <div className="modal-overlay">
           <div className="modal-content">
             <p>{popupMessage}</p>
             <button
               className="modal-button"
-              onClick={() => setShowPopup(false)}
+              onClick={handlePopupOk}
               onMouseOver={(e) => (e.target.style.backgroundColor = "#218838")}
               onMouseOut={(e) => (e.target.style.backgroundColor = "#28a745")}
             >

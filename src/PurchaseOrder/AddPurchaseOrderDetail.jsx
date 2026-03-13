@@ -1,9 +1,21 @@
 // src/components/AddPurchaseOrderDetail.jsx
-import React, { useState, useEffect, useRef } from 'react';
-import { FiX, FiSearch, FiChevronDown, FiCheckCircle, FiShoppingCart, FiPackage } from 'react-icons/fi';
-import { addPurchaseOrderDetail, getPurchaseOrderList, getMedicineMasterList } from '../Api/ApiPharmacy.js';
-import styles from './AddPurchaseOrderDetail.module.css';
-
+import React, { useState, useEffect, useRef } from "react";
+import {
+  FiX,
+  FiSearch,
+  FiChevronDown,
+  FiCheckCircle,
+  FiShoppingCart,
+  FiPackage,
+} from "react-icons/fi";
+import {
+  addPurchaseOrderDetail,
+  getPurchaseOrderList,
+  getMedicineMasterList,
+} from "../Api/ApiPharmacy.js";
+import styles from "./AddPurchaseOrderDetail.module.css";
+import { FaClinicMedical } from "react-icons/fa";
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 /* ─────────────────────────────────────────────── */
 /* Reusable SearchableDropdown                      */
@@ -20,11 +32,11 @@ const SearchableDropdown = ({
   disabled = false,
   loading = false,
 }) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef(null);
 
-  const selectedItem = items.find(i => String(i.id) === String(selectedId));
+  const selectedItem = items.find((i) => String(i.id) === String(selectedId));
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -32,27 +44,27 @@ const SearchableDropdown = ({
         setOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filtered = items.filter(item => {
+  const filtered = items.filter((item) => {
     const lbl = getItemLabel(item).toLowerCase();
-    const sub = getItemSubLabel ? getItemSubLabel(item).toLowerCase() : '';
+    const sub = getItemSubLabel ? getItemSubLabel(item).toLowerCase() : "";
     const q = query.toLowerCase();
     return lbl.includes(q) || sub.includes(q);
   });
 
   const handleSelect = (item) => {
     onSelect(item);
-    setQuery('');
+    setQuery("");
     setOpen(false);
   };
 
   const handleClear = (e) => {
     e.stopPropagation();
     onSelect(null);
-    setQuery('');
+    setQuery("");
     setOpen(false);
   };
 
@@ -70,7 +82,7 @@ const SearchableDropdown = ({
 
       <div className={styles.searchableWrapper}>
         <div
-          className={`${styles.searchableInput} ${open ? styles.searchableInputOpen : ''} ${disabled || loading ? styles.searchableInputDisabled : ''}`}
+          className={`${styles.searchableInput} ${open ? styles.searchableInputOpen : ""} ${disabled || loading ? styles.searchableInputDisabled : ""}`}
           onClick={handleOpen}
         >
           <FiSearch className={styles.searchIcon} size={15} />
@@ -79,26 +91,42 @@ const SearchableDropdown = ({
             <input
               autoFocus
               className={styles.searchableInnerInput}
-              placeholder={selectedItem ? getItemLabel(selectedItem) : placeholder}
+              placeholder={
+                selectedItem ? getItemLabel(selectedItem) : placeholder
+              }
               value={query}
-              onChange={e => setQuery(e.target.value)}
-              onClick={e => e.stopPropagation()}
+              onChange={(e) => setQuery(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <span className={selectedItem ? styles.searchableSelected : styles.searchablePlaceholder}>
-              {loading ? 'Loading...' : selectedItem ? getItemLabel(selectedItem) : placeholder}
+            <span
+              className={
+                selectedItem
+                  ? styles.searchableSelected
+                  : styles.searchablePlaceholder
+              }
+            >
+              {loading
+                ? "Loading..."
+                : selectedItem
+                  ? getItemLabel(selectedItem)
+                  : placeholder}
             </span>
           )}
 
           <div className={styles.searchableActions}>
             {selectedItem && !open && (
-              <button type="button" className={styles.clearBtn} onClick={handleClear}>
+              <button
+                type="button"
+                className={styles.clearBtn}
+                onClick={handleClear}
+              >
                 <FiX size={13} />
               </button>
             )}
             <FiChevronDown
               size={15}
-              className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`}
+              className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`}
             />
           </div>
         </div>
@@ -108,19 +136,23 @@ const SearchableDropdown = ({
             {filtered.length === 0 ? (
               <div className={styles.searchableNoResults}>No results found</div>
             ) : (
-              filtered.map(item => (
+              filtered.map((item) => (
                 <div
                   key={item.id}
-                  className={`${styles.searchableOption} ${String(item.id) === String(selectedId) ? styles.searchableOptionSelected : ''}`}
+                  className={`${styles.searchableOption} ${String(item.id) === String(selectedId) ? styles.searchableOptionSelected : ""}`}
                   onMouseDown={() => handleSelect(item)}
                 >
                   <div className={styles.optionAvatar}>
                     {getItemLabel(item).charAt(0).toUpperCase()}
                   </div>
                   <div className={styles.optionInfo}>
-                    <span className={styles.optionLabel}>{getItemLabel(item)}</span>
+                    <span className={styles.optionLabel}>
+                      {getItemLabel(item)}
+                    </span>
                     {getItemSubLabel && (
-                      <span className={styles.optionSub}>{getItemSubLabel(item)}</span>
+                      <span className={styles.optionSub}>
+                        {getItemSubLabel(item)}
+                      </span>
                     )}
                   </div>
                   {String(item.id) === String(selectedId) && (
@@ -136,16 +168,20 @@ const SearchableDropdown = ({
   );
 };
 
-
 /* ─────────────────────────────────────────────── */
 /* Main Component                                   */
 /* ─────────────────────────────────────────────── */
-const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID = null }) => {
+const AddPurchaseOrderDetail = ({
+  isOpen,
+  onClose,
+  onAddSuccess,
+  preselectedPOID = null,
+}) => {
   const [formData, setFormData] = useState({
-    POID: '',
-    MedicineID: '',
-    Quantity: '',
-    UnitPrice: '',
+    POID: "",
+    MedicineID: "",
+    Quantity: "",
+    UnitPrice: "",
   });
 
   const [purchaseOrders, setPurchaseOrders] = useState([]);
@@ -153,7 +189,7 @@ const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID
   const [loadingPOs, setLoadingPOs] = useState(false);
   const [loadingMedicines, setLoadingMedicines] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState('');
+  const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState(false);
 
   /* fetch on open */
@@ -167,7 +203,7 @@ const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID
   /* set preselected PO */
   useEffect(() => {
     if (preselectedPOID) {
-      setFormData(prev => ({ ...prev, POID: preselectedPOID }));
+      setFormData((prev) => ({ ...prev, POID: preselectedPOID }));
     }
   }, [preselectedPOID]);
 
@@ -179,8 +215,8 @@ const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID
   const fetchPurchaseOrders = async () => {
     try {
       setLoadingPOs(true);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = Number(localStorage.getItem("clinicID"));
+      const branchId = Number(localStorage.getItem("branchID"));
       const data = await getPurchaseOrderList(clinicId, {
         BranchID: branchId,
         POID: 0,
@@ -188,8 +224,8 @@ const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID
       });
       setPurchaseOrders(data);
     } catch (err) {
-      console.error('Fetch purchase orders error:', err);
-      setFormError('Failed to load purchase orders. Please try again.');
+      console.error("Fetch purchase orders error:", err);
+      setFormError("Failed to load purchase orders. Please try again.");
     } finally {
       setLoadingPOs(false);
     }
@@ -198,8 +234,8 @@ const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID
   const fetchMedicines = async () => {
     try {
       setLoadingMedicines(true);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = Number(localStorage.getItem("clinicID"));
+      const branchId = Number(localStorage.getItem("branchID"));
       const data = await getMedicineMasterList(clinicId, {
         BranchID: branchId,
         Status: 1,
@@ -208,8 +244,8 @@ const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID
       });
       setMedicines(data);
     } catch (err) {
-      console.error('Fetch medicines error:', err);
-      setFormError('Failed to load medicines. Please try again.');
+      console.error("Fetch medicines error:", err);
+      setFormError("Failed to load medicines. Please try again.");
     } finally {
       setLoadingMedicines(false);
     }
@@ -217,45 +253,46 @@ const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID
 
   const resetForm = () => {
     setFormData({
-      POID: preselectedPOID || '',
-      MedicineID: '',
-      Quantity: '',
-      UnitPrice: '',
+      POID: preselectedPOID || "",
+      MedicineID: "",
+      Quantity: "",
+      UnitPrice: "",
     });
-    setFormError('');
+    setFormError("");
     setFormSuccess(false);
   };
 
   /* ── Handlers ── */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePOChange = (e) => {
-    setFormData(prev => ({ ...prev, POID: e.target.value }));
+    setFormData((prev) => ({ ...prev, POID: e.target.value }));
   };
 
   const handleMedicineSelect = (medicine) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      MedicineID: medicine ? String(medicine.id) : '',
+      MedicineID: medicine ? String(medicine.id) : "",
       // Auto-fill unit price from medicine's purchase price if available
-      UnitPrice: medicine?.purchasePrice && medicine.purchasePrice !== '0.00'
-        ? medicine.purchasePrice
-        : prev.UnitPrice,
+      UnitPrice:
+        medicine?.purchasePrice && medicine.purchasePrice !== "0.00"
+          ? medicine.purchasePrice
+          : prev.UnitPrice,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
-    setFormError('');
+    setFormError("");
     setFormSuccess(false);
 
     try {
-      const clinicId = localStorage.getItem('clinicID');
-      const branchId = localStorage.getItem('branchID');
+      const clinicId = localStorage.getItem("clinicID");
+      const branchId = localStorage.getItem("branchID");
 
       const payload = {
         clinicId: clinicId ? Number(clinicId) : 0,
@@ -275,11 +312,11 @@ const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID
           onClose();
         }, 1500);
       } else {
-        setFormError(response.message || 'Failed to add purchase order item.');
+        setFormError(response.message || "Failed to add purchase order item.");
       }
     } catch (err) {
-      console.error('Add purchase order detail failed:', err);
-      setFormError(err.message || 'Failed to add purchase order item.');
+      console.error("Add purchase order detail failed:", err);
+      setFormError(err.message || "Failed to add purchase order item.");
     } finally {
       setFormLoading(false);
     }
@@ -291,10 +328,14 @@ const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID
   };
 
   /* derived values */
-  const selectedMedicine = medicines.find(m => String(m.id) === String(formData.MedicineID));
+  const selectedMedicine = medicines.find(
+    (m) => String(m.id) === String(formData.MedicineID),
+  );
   const totalAmount =
     formData.Quantity && formData.UnitPrice
-      ? (parseFloat(formData.Quantity) * parseFloat(formData.UnitPrice)).toFixed(2)
+      ? (
+          parseFloat(formData.Quantity) * parseFloat(formData.UnitPrice)
+        ).toFixed(2)
       : null;
 
   if (!isOpen) return null;
@@ -302,25 +343,38 @@ const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
-
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerContent}>
             <FiShoppingCart className={styles.headerIcon} size={22} />
             <h2>Add Item to Purchase Order</h2>
           </div>
-          <button className={styles.closeBtn} onClick={handleClose} disabled={formLoading}>
+          <div className={styles.clinicNameone}>
+            <FaClinicMedical
+              size={20}
+              style={{ verticalAlign: "middle", margin: "6px" }}
+            />
+            {localStorage.getItem("clinicName") || "—"}
+          </div>
+
+          <button
+            className={styles.closeBtn}
+            onClick={handleClose}
+            disabled={formLoading}
+          >
             <FiX size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.body}>
-
             {/* Alerts */}
             {formError && <div className={styles.alertError}>{formError}</div>}
-            {formSuccess && <div className={styles.alertSuccess}>Item added successfully!</div>}
-
+            {formSuccess && (
+              <div className={styles.alertSuccess}>
+                Item added successfully!
+              </div>
+            )}
 
             {/* ── Medicine Section ── */}
             <div className={styles.section}>
@@ -337,11 +391,11 @@ const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID
                 items={medicines}
                 selectedId={formData.MedicineID}
                 onSelect={handleMedicineSelect}
-                getItemLabel={m => m.name}
-                getItemSubLabel={m =>
+                getItemLabel={(m) => m.name}
+                getItemSubLabel={(m) =>
                   [m.genericName, m.typeDesc, m.manufacturer]
                     .filter(Boolean)
-                    .join(' · ')
+                    .join(" · ")
                 }
                 loading={loadingMedicines}
                 disabled={loadingMedicines}
@@ -354,46 +408,64 @@ const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID
                     {selectedMedicine.genericName && (
                       <div className={styles.infoCardItem}>
                         <span className={styles.infoCardKey}>GENERIC NAME</span>
-                        <span className={styles.infoCardValue}>{selectedMedicine.genericName}</span>
+                        <span className={styles.infoCardValue}>
+                          {selectedMedicine.genericName}
+                        </span>
                       </div>
                     )}
                     {selectedMedicine.typeDesc && (
                       <div className={styles.infoCardItem}>
                         <span className={styles.infoCardKey}>TYPE</span>
-                        <span className={styles.infoCardValue}>{selectedMedicine.typeDesc}</span>
+                        <span className={styles.infoCardValue}>
+                          {selectedMedicine.typeDesc}
+                        </span>
                       </div>
                     )}
                     {selectedMedicine.manufacturer && (
                       <div className={styles.infoCardItem}>
                         <span className={styles.infoCardKey}>MANUFACTURER</span>
-                        <span className={styles.infoCardValue}>{selectedMedicine.manufacturer}</span>
+                        <span className={styles.infoCardValue}>
+                          {selectedMedicine.manufacturer}
+                        </span>
                       </div>
                     )}
                     {selectedMedicine.unitDesc && (
                       <div className={styles.infoCardItem}>
                         <span className={styles.infoCardKey}>UNIT</span>
-                        <span className={styles.infoCardValue}>{selectedMedicine.unitDesc}</span>
+                        <span className={styles.infoCardValue}>
+                          {selectedMedicine.unitDesc}
+                        </span>
                       </div>
                     )}
                     <div className={styles.infoCardItem}>
                       <span className={styles.infoCardKey}>STOCK QTY</span>
-                      <span className={`${styles.infoCardValue} ${selectedMedicine.isLowStock ? styles.lowStock : ''}`}>
+                      <span
+                        className={`${styles.infoCardValue} ${selectedMedicine.isLowStock ? styles.lowStock : ""}`}
+                      >
                         {selectedMedicine.stockQuantity}
-                        {selectedMedicine.isLowStock && <span className={styles.lowStockBadge}>Low</span>}
+                        {selectedMedicine.isLowStock && (
+                          <span className={styles.lowStockBadge}>Low</span>
+                        )}
                       </span>
                     </div>
                     <div className={styles.infoCardItem}>
                       <span className={styles.infoCardKey}>PURCHASE PRICE</span>
-                      <span className={styles.infoCardValue}>₹{selectedMedicine.purchasePrice}</span>
+                      <span className={styles.infoCardValue}>
+                        ₹{selectedMedicine.purchasePrice}
+                      </span>
                     </div>
                     <div className={styles.infoCardItem}>
                       <span className={styles.infoCardKey}>MRP</span>
-                      <span className={styles.infoCardValue}>₹{selectedMedicine.mrp}</span>
+                      <span className={styles.infoCardValue}>
+                        ₹{selectedMedicine.mrp}
+                      </span>
                     </div>
                     {selectedMedicine.hsnCode && (
                       <div className={styles.infoCardItem}>
                         <span className={styles.infoCardKey}>HSN CODE</span>
-                        <span className={styles.infoCardValue}>{selectedMedicine.hsnCode}</span>
+                        <span className={styles.infoCardValue}>
+                          {selectedMedicine.hsnCode}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -446,8 +518,8 @@ const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID
             </div>
 
             <p className={styles.noteText}>
-              Fields marked with <span className={styles.required}>*</span> are required.
-              Total amount is calculated automatically.
+              Fields marked with <span className={styles.required}>*</span> are
+              required. Total amount is calculated automatically.
             </p>
           </div>
 
@@ -466,7 +538,7 @@ const AddPurchaseOrderDetail = ({ isOpen, onClose, onAddSuccess, preselectedPOID
               className={styles.btnSubmit}
               disabled={formLoading || !formData.POID || !formData.MedicineID}
             >
-              {formLoading ? 'Adding...' : 'Add Item'}
+              {formLoading ? "Adding..." : "Add Item"}
             </button>
           </div>
         </form>

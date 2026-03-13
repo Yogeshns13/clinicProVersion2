@@ -11,6 +11,7 @@ import {
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './ConsultationChargeList.module.css';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const ConsultationChargeList = () => {
   const [consultations, setConsultations] = useState([]);
@@ -60,8 +61,8 @@ const ConsultationChargeList = () => {
     try {
       setLoading(true);
       setError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const options = {
         BranchID: branchId,
@@ -84,7 +85,7 @@ const ConsultationChargeList = () => {
 
   const fetchChargeConfigs = async () => {
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
+      const clinicId = await getStoredClinicId();
       const data = await getConsultingChargeConfigList(clinicId, { PageSize: 100, Status: 1 });
       setChargeConfigs(data);
     } catch (err) {
@@ -201,8 +202,8 @@ const ConsultationChargeList = () => {
     try {
       setFormLoading(true);
       setFormError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const chargeResult = await addConsultationCharge({
         clinicId,

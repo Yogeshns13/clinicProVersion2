@@ -19,6 +19,7 @@ import styles from './MedicineMasterList.module.css';
 import AddMedicineMaster from './AddMedicineMaster.jsx';
 import ViewMedicineMaster from './ViewMedicineMaster.jsx';
 import UpdateMedicineMaster from './UpdateMedicineMaster.jsx';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 // ──────────────────────────────────────────────────
 // CONSTANTS
@@ -100,8 +101,8 @@ const MedicineMasterList = () => {
       setLoading(true);
       setError(null);
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const options = {
         Page:         1,

@@ -8,6 +8,9 @@ import Header from '../Header/Header.jsx';
 import AddPatient from './AddPatient.jsx';
 import UpdatePatient from './UpdatePatient.jsx';  // ← Added
 import styles from './PatientList.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+
 
 // ────────────────────────────────────────────────
 // CONSTANTS (shared)
@@ -112,8 +115,8 @@ const PatientList = () => {
       setListLoading(true);
       setListError(null);
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const options = {
         BranchID:   branchId,
@@ -156,8 +159,8 @@ const PatientList = () => {
         setDetailError(null);
         setFamilyPatientName('—');
 
-        const clinicId = Number(localStorage.getItem('clinicID'));
-        const branchId = Number(localStorage.getItem('branchID'));
+        const clinicId = await getStoredClinicId();
+        const branchId = await getStoredBranchId();
 
         const data = await getPatientsList(clinicId, {
           PatientID: selectedPatient.id,
@@ -441,11 +444,12 @@ const PatientList = () => {
                 </div>
                 <div>
                   <h2>{selectedPatient.firstName} {selectedPatient.lastName}</h2>
-                  <p className={styles.shiftSubtitle}>
-                    File No: {selectedPatient.fileNo || '—'} | Age: {selectedPatient.age || '—'}
-                  </p>
                 </div>
               </div>
+              <div className={styles.clinicNameone}>
+               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                { getStoredClinicId() || '—'}
+                </div>
 
               <button onClick={closeDetailModal} className={styles.detailCloseBtn}>✕</button>
             </div>

@@ -61,18 +61,20 @@
    ──────────────────────────────────────────────── */
 
 .invoice-modal-header {
-  padding: 20px 28px;
+  padding: 14px 18px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 20px;
 }
 
 .invoice-header-content {
   display: flex;
+  flex: 1;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 
 .invoice-header-icon {
@@ -80,9 +82,22 @@
 }
 
 .invoice-modal-header h2 {
-  margin: 0;
-  font-size: 1.45rem;
+ 
+  font-size: 1.2rem;
   font-weight: 700;
+}
+
+.clinicNameone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;           
+  font-weight: 600;
+  color: var(--text-light);
+  line-height: 1.2;
+  white-space: nowrap;          
+  text-overflow: ellipsis;      
+  max-width: 220px;             
 }
 
 .invoice-modal-close {

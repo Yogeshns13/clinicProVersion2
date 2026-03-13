@@ -1,18 +1,21 @@
 // src/components/SlotConfigList.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiTrash2, FiCalendar, FiX } from 'react-icons/fi';
-import { getSlotConfigList, getEmployeeList, getShiftList, deleteSlotConfig } from '../Api/Api.js';
+import { getSlotConfigList, getEmployeeList, getShiftList, deleteSlotConfig, getTaskList, deleteTask } from '../Api/Api.js';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 import Header from '../Header/Header.jsx';
 import AddSlotConfig from './AddSlotConfig.jsx';
 import GenerateSlots from './GenerateSlots.jsx';
+import AutoSlotGeneration from './AutoSlotGeneration.jsx';
 import styles from './SlotConfigList.module.css';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 
 // ────────────────────────────────────────────────
-// CONSTANTS
-// ────────────────────────────────────────────────
+const TASK_TYPE = 2;
+const TASK_NAME = 'GenerateSlots';
+
 const DURATION_OPTIONS = [
   { id: 1, label: 'Daily' },
   { id: 2, label: 'Weekend' },
@@ -34,13 +37,19 @@ const SlotConfigList = () => {
   const navigate = useNavigate();
 
   // Data
-  const [configs, setConfigs]   = useState([]);
-  const [doctors, setDoctors]   = useState([]);
-  const [shifts,  setShifts]    = useState([]);
+  const [configs,      setConfigs]      = useState([]);
+  const [doctors,      setDoctors]      = useState([]);
+  const [shifts,       setShifts]       = useState([]);
   const [doctorShifts, setDoctorShifts] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
+
+  // Auto-generation task state
+  const [autoTaskExists,     setAutoTaskExists]     = useState(false);
+  const [autoTaskLoading,    setAutoTaskLoading]    = useState(true);
+  const [showDisableConfirm, setShowDisableConfirm] = useState(false);
+  const [disabling,          setDisabling]          = useState(false);
 
   // Filter inputs (staged)
   const [filterInputs, setFilterInputs] = useState({
@@ -51,7 +60,7 @@ const SlotConfigList = () => {
     status:      '',
   });
 
-  // Applied filters (drive the API call)
+  // Applied filters
   const [appliedFilters, setAppliedFilters] = useState({
     doctorId:    'all',
     searchType:  'DoctorName',
@@ -61,25 +70,77 @@ const SlotConfigList = () => {
   });
 
   // Modals
-  const [isAddFormOpen,   setIsAddFormOpen]   = useState(false);
-  const [isGenerateOpen,  setIsGenerateOpen]  = useState(false);
-  const [deleteConfirm,   setDeleteConfirm]   = useState(null);
+  const [isAddFormOpen,  setIsAddFormOpen]  = useState(false);
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
+  const [isAutoGenOpen,  setIsAutoGenOpen]  = useState(false);
+  const [deleteConfirm,  setDeleteConfirm]  = useState(null);
 
   // ────────────────────────────────────────────────
-  // Derived: are any filters active?
   const hasActiveFilters =
     appliedFilters.doctorId    !== 'all' ||
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.duration    !== '' ||
     appliedFilters.status      !== '';
 
-  // ────────────────────────────────────────────────
-  // Fetch reference data
+  // ── Fetch auto task status ──
+  const fetchAutoTaskStatus = useCallback(async () => {
+    setAutoTaskLoading(true);
+    try {
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
+      const res = await getTaskList({ clinicId, branchId, taskType: TASK_TYPE });
+      const exists = res.tasks?.some(
+        (t) => t.taskType === TASK_TYPE && t.taskName === TASK_NAME
+      );
+      setAutoTaskExists(!!exists);
+    } catch {
+      setAutoTaskExists(false);
+    } finally {
+      setAutoTaskLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAutoTaskStatus();
+  }, [fetchAutoTaskStatus]);
+
+  // ── Toggle click ──
+  const handleToggleClick = () => {
+    if (autoTaskExists) {
+      setShowDisableConfirm(true);   // ON → confirm before disabling
+    } else {
+      setIsAutoGenOpen(true);        // OFF → open add form
+    }
+  };
+
+  // ── Confirm disable ──
+  const handleDisableConfirm = async () => {
+    setDisabling(true);
+    try {
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
+      await deleteTask({ clinicId, branchId, taskType: TASK_TYPE, taskName: TASK_NAME });
+      setAutoTaskExists(false);
+      setShowDisableConfirm(false);
+    } catch (err) {
+      console.error('Disable auto generation failed:', err);
+    } finally {
+      setDisabling(false);
+    }
+  };
+
+  // ── After add-task success ──
+  const handleAutoGenSuccess = () => {
+    setAutoTaskExists(true);
+    setIsAutoGenOpen(false);
+  };
+
+  // ── Fetch reference data ──
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const clinicId = Number(localStorage.getItem('clinicID'));
-        const branchId = Number(localStorage.getItem('branchID'));
+        const clinicId = await getStoredClinicId();
+        const branchId = await getStoredBranchId();
         const data = await getEmployeeList(clinicId, { BranchID: branchId, Designation: 1, Status: 1 });
         setDoctors(data);
       } catch (err) {
@@ -92,7 +153,7 @@ const SlotConfigList = () => {
   useEffect(() => {
     const fetchShifts = async () => {
       try {
-        const clinicId = Number(localStorage.getItem('clinicID'));
+        const clinicId = await getStoredClinicId();
         const data = await getShiftList(clinicId, { Status: 1 });
         setShifts(data);
       } catch (err) {
@@ -105,7 +166,7 @@ const SlotConfigList = () => {
   useEffect(() => {
     const fetchDoctorShifts = async () => {
       try {
-        const clinicId = localStorage.getItem('clinicID');
+        const clinicId = await getStoredClinicId();
         const { getEmployeeShiftList } = await import('../Api/Api.js');
         const data = await getEmployeeShiftList(clinicId);
         setDoctorShifts(data);
@@ -116,16 +177,13 @@ const SlotConfigList = () => {
     fetchDoctorShifts();
   }, []);
 
-  // ────────────────────────────────────────────────
-  // Fetch configs driven by appliedFilters
+  // ── Fetch configs ──
   const fetchConfigs = async (filters = appliedFilters) => {
     try {
       setLoading(true);
       setError(null);
-
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
-
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const options = {
         BranchID:   branchId,
         DoctorID:   filters.doctorId !== 'all' ? Number(filters.doctorId) : 0,
@@ -134,7 +192,6 @@ const SlotConfigList = () => {
         Duration:   filters.duration  !== '' ? Number(filters.duration) : 0,
         Status:     filters.status    !== '' ? Number(filters.status)   : -1,
       };
-
       const data = await getSlotConfigList(clinicId, options);
       setConfigs(data);
     } catch (err) {
@@ -154,39 +211,27 @@ const SlotConfigList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedFilters]);
 
-  // ────────────────────────────────────────────────
-  // Client-side search filter for ShiftName (API may not support it directly)
+  // ── Client-side ShiftName filter ──
   const filteredConfigs = useMemo(() => {
-    if (
-      appliedFilters.searchType !== 'ShiftName' ||
-      !appliedFilters.searchValue.trim()
-    ) {
+    if (appliedFilters.searchType !== 'ShiftName' || !appliedFilters.searchValue.trim()) {
       return configs;
     }
     const term = appliedFilters.searchValue.toLowerCase();
-    return configs.filter((c) =>
-      c.shiftName?.toLowerCase().includes(term)
-    );
+    return configs.filter((c) => c.shiftName?.toLowerCase().includes(term));
   }, [configs, appliedFilters]);
 
-  // ────────────────────────────────────────────────
-  // Helper functions
   const getDurationLabel = (duration) =>
     DURATION_OPTIONS.find((d) => d.id === duration)?.label || '—';
 
   const getStatusClass = (status) =>
     status === 'active' ? styles.active : styles.inactive;
 
-  // ────────────────────────────────────────────────
-  // Handlers
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = () => {
-    setAppliedFilters({ ...filterInputs });
-  };
+  const handleSearch = () => setAppliedFilters({ ...filterInputs });
 
   const handleClearFilters = () => {
     const empty = { doctorId: 'all', searchType: 'DoctorName', searchValue: '', duration: '', status: '' };
@@ -194,8 +239,8 @@ const SlotConfigList = () => {
     setAppliedFilters(empty);
   };
 
-  const handleDeleteClick   = (config) => setDeleteConfirm(config);
-  const handleDeleteCancel  = ()        => setDeleteConfirm(null);
+  const handleDeleteClick  = (config) => setDeleteConfirm(config);
+  const handleDeleteCancel = ()        => setDeleteConfirm(null);
 
   const handleDeleteConfirm = async () => {
     if (!deleteConfirm) return;
@@ -209,40 +254,23 @@ const SlotConfigList = () => {
     }
   };
 
-  const openAddForm     = () => setIsAddFormOpen(true);
-  const closeAddForm    = () => setIsAddFormOpen(false);
-  const openGenerateSlots  = () => setIsGenerateOpen(true);
-  const closeGenerateSlots = () => setIsGenerateOpen(false);
-
-  const handleAddSuccess      = () => fetchConfigs(appliedFilters);
-  const handleGenerateSuccess = () => console.log('Slots generated successfully');
-
   // ────────────────────────────────────────────────
-  // Early returns
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
-
   if (loading) return <div className={styles.loading}>Loading slot configurations...</div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
-  // ────────────────────────────────────────────────
   return (
     <div className={styles.listWrapper}>
       <ErrorHandler error={error} />
       <Header title="Slot Configuration Management" />
 
-      {/* ── Filter Bar (single line) ── */}
+      {/* ── Filter Bar ── */}
       <div className={styles.toolbar}>
         <div className={styles.filtersRow}>
 
-          {/* Doctor */}
-          <select
-            name="doctorId"
-            value={filterInputs.doctorId}
-            onChange={handleFilterChange}
-            className={styles.selectInput}
-          >
+          <select name="doctorId" value={filterInputs.doctorId} onChange={handleFilterChange} className={styles.selectInput}>
             <option value="all">All Doctors</option>
             {doctors.map((doc) => (
               <option key={doc.id} value={doc.id}>
@@ -251,14 +279,8 @@ const SlotConfigList = () => {
             ))}
           </select>
 
-          {/* Search type + value */}
           <div className={styles.searchGroup}>
-            <select
-              name="searchType"
-              value={filterInputs.searchType}
-              onChange={handleFilterChange}
-              className={styles.searchTypeSelect}
-            >
+            <select name="searchType" value={filterInputs.searchType} onChange={handleFilterChange} className={styles.searchTypeSelect}>
               {SEARCH_TYPE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
@@ -266,9 +288,7 @@ const SlotConfigList = () => {
             <input
               type="text"
               name="searchValue"
-              placeholder={`Search by ${
-                SEARCH_TYPE_OPTIONS.find((o) => o.value === filterInputs.searchType)?.label || ''
-              }`}
+              placeholder={`Search by ${SEARCH_TYPE_OPTIONS.find((o) => o.value === filterInputs.searchType)?.label || ''}`}
               value={filterInputs.searchValue}
               onChange={handleFilterChange}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -276,54 +296,55 @@ const SlotConfigList = () => {
             />
           </div>
 
-          {/* Duration */}
-          <select
-            name="duration"
-            value={filterInputs.duration}
-            onChange={handleFilterChange}
-            className={styles.selectInput}
-          >
+          <select name="duration" value={filterInputs.duration} onChange={handleFilterChange} className={styles.selectInput}>
             <option value="">All Durations</option>
             {DURATION_OPTIONS.map((d) => (
               <option key={d.id} value={d.id}>{d.label}</option>
             ))}
           </select>
 
-          {/* Status */}
-          <select
-            name="status"
-            value={filterInputs.status}
-            onChange={handleFilterChange}
-            className={styles.selectInput}
-          >
+          <select name="status" value={filterInputs.status} onChange={handleFilterChange} className={styles.selectInput}>
             <option value="">All Status</option>
             {STATUS_OPTIONS.map((s) => (
               <option key={s.id} value={s.id}>{s.label}</option>
             ))}
           </select>
 
-          {/* Actions */}
           <div className={styles.filterActions}>
             <button onClick={handleSearch} className={styles.searchButton}>
-              <FiSearch size={16} />
-              Search
+              <FiSearch size={16} /> Search
             </button>
 
             {hasActiveFilters && (
               <button onClick={handleClearFilters} className={styles.clearButton}>
-                <FiX size={16} />
-                Clear
+                <FiX size={16} /> Clear
               </button>
             )}
 
-            <button onClick={openGenerateSlots} className={styles.generateBtn}>
-              <FiCalendar size={16} />
-              Generate Slots
+            <button onClick={() => setIsGenerateOpen(true)} className={styles.generateBtn}>
+              <FiCalendar size={16} /> Generate Slots
             </button>
 
-            <button onClick={openAddForm} className={styles.addBtn}>
-              <FiPlus size={18} />
-              Add Config
+            {/* ── Auto Generation Toggle Switch ── */}
+            <div
+              className={styles.autoToggleWrapper}
+              title={autoTaskExists ? 'Auto generation ON — click to disable' : 'Auto generation OFF — click to enable'}
+            >
+              <span className={`${styles.autoToggleLabel} ${autoTaskExists ? styles.autoToggleLabelOn : ''}`}>
+                Auto Generate Slots
+              </span>
+              <button
+                className={`${styles.toggleSwitch} ${autoTaskExists ? styles.toggleOn : styles.toggleOff}`}
+                onClick={handleToggleClick}
+                disabled={autoTaskLoading}
+                aria-label="Toggle auto slot generation"
+              >
+                <span className={styles.toggleThumb} />
+              </button>
+            </div>
+
+            <button onClick={() => setIsAddFormOpen(true)} className={styles.addBtn}>
+              <FiPlus size={18} /> Add Config
             </button>
           </div>
         </div>
@@ -365,19 +386,13 @@ const SlotConfigList = () => {
                       </div>
                     </div>
                   </td>
-                  <td>
-                    <span className={styles.shiftBadge}>
-                      {config.shiftName || '—'}
-                    </span>
-                  </td>
+                  <td><span className={styles.shiftBadge}>{config.shiftName || '—'}</span></td>
                   <td>{getDurationLabel(config.duration)}</td>
                   <td>{config.slotInterval} mins</td>
                   <td>{config.createSlotDays} days</td>
                   <td>
                     {config.slotDate
-                      ? new Date(config.slotDate).toLocaleDateString('en-IN', {
-                          year: 'numeric', month: 'short', day: 'numeric',
-                        })
+                      ? new Date(config.slotDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })
                       : '—'}
                   </td>
                   <td>
@@ -386,11 +401,7 @@ const SlotConfigList = () => {
                     </span>
                   </td>
                   <td>
-                    <button
-                      onClick={() => handleDeleteClick(config)}
-                      className={styles.btnDelete}
-                      title="Delete Configuration"
-                    >
+                    <button onClick={() => handleDeleteClick(config)} className={styles.btnDelete} title="Delete Configuration">
                       <FiTrash2 size={16} />
                     </button>
                   </td>
@@ -401,24 +412,72 @@ const SlotConfigList = () => {
         </table>
       </div>
 
-      {/* ── Add SlotConfig Modal ── */}
+      {/* ── Modals ── */}
       <AddSlotConfig
         isOpen={isAddFormOpen}
-        onClose={closeAddForm}
+        onClose={() => setIsAddFormOpen(false)}
         doctors={doctors}
         shifts={shifts}
         doctorShifts={doctorShifts}
-        onSuccess={handleAddSuccess}
+        onSuccess={() => fetchConfigs(appliedFilters)}
       />
 
-      {/* ── Generate Slots Modal ── */}
       <GenerateSlots
         isOpen={isGenerateOpen}
-        onClose={closeGenerateSlots}
-        onSuccess={handleGenerateSuccess}
+        onClose={() => setIsGenerateOpen(false)}
+        onSuccess={() => console.log('Slots generated')}
       />
 
-      {/* ── Delete Confirmation Modal ── */}
+      <AutoSlotGeneration
+        isOpen={isAutoGenOpen}
+        onClose={() => setIsAutoGenOpen(false)}
+        onSuccess={handleAutoGenSuccess}
+      />
+
+      {/* ── Disable Auto Generation Confirm Popup ── */}
+      {showDisableConfirm && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.confirmModal}>
+            <div className={styles.confirmHeader}>
+              <div className={styles.confirmToggleIcon}>
+                {/* visual: toggle-off */}
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                  <rect x="1" y="6" width="22" height="12" rx="6" fill="rgba(239,68,68,0.15)" stroke="#ef4444" strokeWidth="1.5"/>
+                  <circle cx="8" cy="12" r="4" fill="#ef4444"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className={styles.confirmTitle}>Disable Auto Generation?</h3>
+                <p className={styles.confirmSub}>The scheduled task will be deleted</p>
+              </div>
+            </div>
+            <p className={styles.confirmMsg}>
+              Are you sure you want to turn off Auto Slot Generation? Automatic slot creation will stop immediately.
+            </p>
+            <div className={styles.confirmActions}>
+              <button
+                className={styles.confirmNo}
+                onClick={() => setShowDisableConfirm(false)}
+                disabled={disabling}
+              >
+                No, Keep It
+              </button>
+              <button
+                className={styles.confirmYes}
+                onClick={handleDisableConfirm}
+                disabled={disabling}
+              >
+                {disabling
+                  ? <><span className={styles.btnSpinner} />Disabling…</>
+                  : 'Yes, Disable'
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Config Confirmation Modal ── */}
       {deleteConfirm && (
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
@@ -428,12 +487,8 @@ const SlotConfigList = () => {
             </div>
             <div className={styles.modalBody}>
               <div className={styles.deleteConfirmation}>
-                <div className={styles.deleteIcon}>
-                  <FiTrash2 size={48} />
-                </div>
-                <p className={styles.deleteMessage}>
-                  Are you sure you want to delete this slot configuration?
-                </p>
+                <div className={styles.deleteIcon}><FiTrash2 size={48} /></div>
+                <p className={styles.deleteMessage}>Are you sure you want to delete this slot configuration?</p>
                 <div className={styles.deleteDetails}>
                   <p><strong>Doctor:</strong> {deleteConfirm.doctorFullName}</p>
                   <p><strong>Shift:</strong> {deleteConfirm.shiftName}</p>
@@ -443,12 +498,8 @@ const SlotConfigList = () => {
               </div>
             </div>
             <div className={styles.modalFooter}>
-              <button onClick={handleDeleteCancel} className={styles.btnCancelModal}>
-                Cancel
-              </button>
-              <button onClick={handleDeleteConfirm} className={styles.btnDeleteConfirm}>
-                Delete Configuration
-              </button>
+              <button onClick={handleDeleteCancel} className={styles.btnCancelModal}>Cancel</button>
+              <button onClick={handleDeleteConfirm} className={styles.btnDeleteConfirm}>Delete Configuration</button>
             </div>
           </div>
         </div>

@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { updateVendor } from '../Api/ApiPharmacy.js';
 import styles from './UpdateVendor.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -196,8 +198,12 @@ const UpdateVendor = ({ vendor, onClose, onUpdateSuccess }) => {
         <div className={styles.updateModalHeader}>
           <div className={styles.updateHeaderContent}>
             <h2>Update Vendor</h2>
-            <span className={styles.updateHeaderSub}>{vendor.name}</span>
-          </div>
+            </div>
+            <div className={styles.clinicNameone}>
+                           <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                             {localStorage.getItem('clinicName') || '—'}
+                        </div>
+          
           <button onClick={onClose} className={styles.updateCloseBtn}>✕</button>
         </div>
 

@@ -1,93 +1,109 @@
 // src/components/AddVendor.jsx
-import React, { useState, useEffect } from 'react';
-import { FiX } from 'react-icons/fi';
-import { addVendor } from '../Api/ApiPharmacy.js';
-import styles from './AddVendor.module.css';
+import React, { useState, useEffect } from "react";
+import { FiX } from "react-icons/fi";
+import { addVendor } from "../Api/ApiPharmacy.js";
+import styles from "./AddVendor.module.css";
+import { FaClinicMedical } from "react-icons/fa";
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 // ────────────────────────────────────────────────
 // Validation
 // ────────────────────────────────────────────────
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
-    case 'name':
-      if (!value || !value.trim()) return 'Vendor name is required';
-      if (value.trim().length < 2) return 'Vendor name must be at least 2 characters';
-      if (value.trim().length > 100) return 'Vendor name must not exceed 100 characters';
-      return '';
+    case "name":
+      if (!value || !value.trim()) return "Vendor name is required";
+      if (value.trim().length < 2)
+        return "Vendor name must be at least 2 characters";
+      if (value.trim().length > 100)
+        return "Vendor name must not exceed 100 characters";
+      return "";
 
-    case 'contactPerson':
+    case "contactPerson":
       if (value && value.trim()) {
-        if (value.trim().length < 2) return 'Contact person must be at least 2 characters';
-        if (value.trim().length > 100) return 'Contact person must not exceed 100 characters';
+        if (value.trim().length < 2)
+          return "Contact person must be at least 2 characters";
+        if (value.trim().length > 100)
+          return "Contact person must not exceed 100 characters";
       }
-      return '';
+      return "";
 
-    case 'mobile':
-      if (!value || !value.trim()) return 'Mobile number is required';
-      if (value.trim().length < 10) return 'Mobile number must be 10 digits';
+    case "mobile":
+      if (!value || !value.trim()) return "Mobile number is required";
+      if (value.trim().length < 10) return "Mobile number must be 10 digits";
       if (value.trim().length === 10) {
         if (!/^[6-9]\d{9}$/.test(value.trim())) {
-          return 'Mobile number must start with 6-9';
+          return "Mobile number must start with 6-9";
         }
       }
-      if (value.trim().length > 10) return 'Mobile number cannot exceed 10 digits';
-      return '';
+      if (value.trim().length > 10)
+        return "Mobile number cannot exceed 10 digits";
+      return "";
 
-    case 'altMobile':
-      if (!value || !value.trim()) return 'Alternate Mobile is required';
-      if (value.trim().length < 10) return 'Alternate Mobile must be 10 digits';
+    case "altMobile":
+      if (!value || !value.trim()) return "Alternate Mobile is required";
+      if (value.trim().length < 10) return "Alternate Mobile must be 10 digits";
       if (value.trim().length === 10) {
         if (!/^[6-9]\d{9}$/.test(value.trim())) {
-          return 'Alternate Mobile must start with 6-9';
+          return "Alternate Mobile must start with 6-9";
         }
       }
-      if (value.trim().length > 10) return 'Alternate Mobile cannot exceed 10 digits';
-      return '';
+      if (value.trim().length > 10)
+        return "Alternate Mobile cannot exceed 10 digits";
+      return "";
 
-    case 'email':
-      if (!value || !value.trim()) return 'Email is required';
+    case "email":
+      if (!value || !value.trim()) return "Email is required";
       if (value && value.trim()) {
-        if (!value.includes('@')) return 'Email must contain @';
+        if (!value.includes("@")) return "Email must contain @";
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
-          return 'Please enter a valid email address';
+          return "Please enter a valid email address";
         }
-        if (value.trim().length > 100) return 'Email must not exceed 100 characters';
+        if (value.trim().length > 100)
+          return "Email must not exceed 100 characters";
       }
-      return '';
+      return "";
 
-    case 'address':
-      if (value && value.length > 500) return 'Address must not exceed 500 characters';
-      return '';
+    case "address":
+      if (value && value.length > 500)
+        return "Address must not exceed 500 characters";
+      return "";
 
-    case 'gstNo':
-      if (!value || !value.trim()) return 'GST No is required';
+    case "gstNo":
+      if (!value || !value.trim()) return "GST No is required";
       if (value && value.trim()) {
-        if (value.trim().length > 15) return 'GST number must not exceed 15 characters';
-        if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value.trim())) {
-          return 'Please enter a valid GST number (e.g. 22AAAAA0000A1Z5)';
+        if (value.trim().length > 15)
+          return "GST number must not exceed 15 characters";
+        if (
+          !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(
+            value.trim(),
+          )
+        ) {
+          return "Please enter a valid GST number (e.g. 22AAAAA0000A1Z5)";
         }
       }
-      return '';
+      return "";
 
-    case 'licenseDetail':
+    case "licenseDetail":
       if (value && value.trim()) {
-        if (value.trim().length > 200) return 'License detail must not exceed 200 characters';
+        if (value.trim().length > 200)
+          return "License detail must not exceed 200 characters";
       }
-      return '';
+      return "";
 
     default:
-      return '';
+      return "";
   }
 };
 
 const filterInput = (fieldName, value) => {
   switch (fieldName) {
-    case 'mobile':
-    case 'altMobile':
-      return value.replace(/[^0-9]/g, '');
+    case "mobile":
+    case "altMobile":
+      return value.replace(/[^0-9]/g, "");
 
-    case 'gstNo':
-      return value.toUpperCase().replace(/[^0-9A-Z]/g, '');
+    case "gstNo":
+      return value.toUpperCase().replace(/[^0-9A-Z]/g, "");
 
     default:
       return value;
@@ -97,19 +113,19 @@ const filterInput = (fieldName, value) => {
 // ────────────────────────────────────────────────
 const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    contactPerson: '',
-    mobile: '',
-    altMobile: '',
-    email: '',
-    address: '',
-    gstNo: '',
-    licenseDetail: '',
+    name: "",
+    contactPerson: "",
+    mobile: "",
+    altMobile: "",
+    email: "",
+    address: "",
+    gstNo: "",
+    licenseDetail: "",
   });
 
   const [formLoading, setFormLoading] = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
-  const [formError, setFormError] = useState('');
+  const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState(false);
 
   useEffect(() => {
@@ -120,16 +136,16 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      contactPerson: '',
-      mobile: '',
-      altMobile: '',
-      email: '',
-      address: '',
-      gstNo: '',
-      licenseDetail: '',
+      name: "",
+      contactPerson: "",
+      mobile: "",
+      altMobile: "",
+      email: "",
+      address: "",
+      gstNo: "",
+      licenseDetail: "",
     });
-    setFormError('');
+    setFormError("");
     setFormSuccess(false);
     setValidationMessages({});
   };
@@ -154,7 +170,16 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
     e.preventDefault();
 
     // Run full validation on all fields before submitting
-    const fields = ['name', 'contactPerson', 'mobile', 'altMobile', 'email', 'address', 'gstNo', 'licenseDetail'];
+    const fields = [
+      "name",
+      "contactPerson",
+      "mobile",
+      "altMobile",
+      "email",
+      "address",
+      "gstNo",
+      "licenseDetail",
+    ];
     const newMessages = {};
     let hasError = false;
 
@@ -168,12 +193,12 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
     if (hasError) return;
 
     setFormLoading(true);
-    setFormError('');
+    setFormError("");
     setFormSuccess(false);
 
     try {
-      const clinicId = localStorage.getItem('clinicID');
-      const branchId = localStorage.getItem('branchID');
+      const clinicId = localStorage.getItem("clinicID");
+      const branchId = localStorage.getItem("branchID");
 
       const payload = {
         clinicId: clinicId ? Number(clinicId) : 0,
@@ -196,8 +221,8 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
         onClose();
       }, 1500);
     } catch (err) {
-      console.error('Add vendor failed:', err);
-      setFormError(err.message || 'Failed to add vendor.');
+      console.error("Add vendor failed:", err);
+      setFormError(err.message || "Failed to add vendor.");
     } finally {
       setFormLoading(false);
     }
@@ -208,28 +233,42 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-
         {/* ── Static Header (does not scroll) ── */}
         <div className={styles.modalHeader}>
           <h2>Add New Vendor</h2>
-          <button onClick={onClose} className={styles.modalClose}>
-            <FiX />
-          </button>
+
+          <div className={styles.headerRight}>
+            <div className={styles.clinicNameone}>
+              <FaClinicMedical
+                size={20}
+                style={{ verticalAlign: "middle", margin: "6px" }}
+              />
+              {localStorage.getItem("clinicName") || "—"}
+            </div>
+            <button onClick={onClose} className={styles.modalClose}>
+              <FiX />
+            </button>
+          </div>
         </div>
 
         {/* ── Scrollable Body ── */}
         <div className={styles.modalBodyScrollable}>
           <form onSubmit={handleSubmit}>
             {formError && <div className={styles.formError}>{formError}</div>}
-            {formSuccess && <div className={styles.formSuccess}>Vendor added successfully!</div>}
+            {formSuccess && (
+              <div className={styles.formSuccess}>
+                Vendor added successfully!
+              </div>
+            )}
 
             <div className={styles.formGrid}>
-
               {/* ── Basic Information ── */}
               <h3 className={styles.formSectionTitle}>Basic Information</h3>
 
               <div className={styles.formGroup}>
-                <label>Vendor Name <span className={styles.required}>*</span></label>
+                <label>
+                  Vendor Name <span className={styles.required}>*</span>
+                </label>
                 <input
                   required
                   name="name"
@@ -238,7 +277,9 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
                   placeholder="Enter vendor name"
                 />
                 {validationMessages.name && (
-                  <span className={styles.validationMsg}>{validationMessages.name}</span>
+                  <span className={styles.validationMsg}>
+                    {validationMessages.name}
+                  </span>
                 )}
               </div>
 
@@ -251,7 +292,9 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
                   placeholder="Enter contact person name"
                 />
                 {validationMessages.contactPerson && (
-                  <span className={styles.validationMsg}>{validationMessages.contactPerson}</span>
+                  <span className={styles.validationMsg}>
+                    {validationMessages.contactPerson}
+                  </span>
                 )}
               </div>
 
@@ -259,7 +302,9 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
               <h3 className={styles.formSectionTitle}>Contact Information</h3>
 
               <div className={styles.formGroup}>
-                <label>Mobile <span className={styles.required}>*</span></label>
+                <label>
+                  Mobile <span className={styles.required}>*</span>
+                </label>
                 <input
                   required
                   name="mobile"
@@ -269,12 +314,16 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
                   maxLength="10"
                 />
                 {validationMessages.mobile && (
-                  <span className={styles.validationMsg}>{validationMessages.mobile}</span>
+                  <span className={styles.validationMsg}>
+                    {validationMessages.mobile}
+                  </span>
                 )}
               </div>
 
               <div className={styles.formGroup}>
-                <label>Alternate Mobile <span className={styles.required}>*</span></label>
+                <label>
+                  Alternate Mobile <span className={styles.required}>*</span>
+                </label>
                 <input
                   required
                   name="altMobile"
@@ -284,12 +333,16 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
                   maxLength="10"
                 />
                 {validationMessages.altMobile && (
-                  <span className={styles.validationMsg}>{validationMessages.altMobile}</span>
+                  <span className={styles.validationMsg}>
+                    {validationMessages.altMobile}
+                  </span>
                 )}
               </div>
 
               <div className={styles.formGroup}>
-                <label>Email <span className={styles.required}>*</span></label>
+                <label>
+                  Email <span className={styles.required}>*</span>
+                </label>
                 <input
                   required
                   type="email"
@@ -299,7 +352,9 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
                   placeholder="Enter email address"
                 />
                 {validationMessages.email && (
-                  <span className={styles.validationMsg}>{validationMessages.email}</span>
+                  <span className={styles.validationMsg}>
+                    {validationMessages.email}
+                  </span>
                 )}
               </div>
 
@@ -313,7 +368,9 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
                   placeholder="Enter complete address"
                 />
                 {validationMessages.address && (
-                  <span className={styles.validationMsg}>{validationMessages.address}</span>
+                  <span className={styles.validationMsg}>
+                    {validationMessages.address}
+                  </span>
                 )}
               </div>
 
@@ -321,7 +378,9 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
               <h3 className={styles.formSectionTitle}>Business Information</h3>
 
               <div className={styles.formGroup}>
-                <label>GST Number <span className={styles.required}>*</span></label>
+                <label>
+                  GST Number <span className={styles.required}>*</span>
+                </label>
                 <input
                   required
                   name="gstNo"
@@ -331,7 +390,9 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
                   maxLength="15"
                 />
                 {validationMessages.gstNo && (
-                  <span className={styles.validationMsg}>{validationMessages.gstNo}</span>
+                  <span className={styles.validationMsg}>
+                    {validationMessages.gstNo}
+                  </span>
                 )}
               </div>
 
@@ -344,24 +405,32 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
                   placeholder="Enter license details"
                 />
                 {validationMessages.licenseDetail && (
-                  <span className={styles.validationMsg}>{validationMessages.licenseDetail}</span>
+                  <span className={styles.validationMsg}>
+                    {validationMessages.licenseDetail}
+                  </span>
                 )}
               </div>
-
             </div>
 
             {/* ── Footer ── */}
             <div className={styles.modalFooter}>
-              <button type="button" onClick={onClose} className={styles.btnCancel}>
+              <button
+                type="button"
+                onClick={onClose}
+                className={styles.btnCancel}
+              >
                 Cancel
               </button>
-              <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
-                {formLoading ? 'Saving...' : 'Save Vendor'}
+              <button
+                type="submit"
+                disabled={formLoading}
+                className={styles.btnSubmit}
+              >
+                {formLoading ? "Saving..." : "Save Vendor"}
               </button>
             </div>
           </form>
         </div>
-
       </div>
     </div>
   );

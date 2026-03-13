@@ -5,6 +5,9 @@ import { getSlotList, getEmployeeList, deleteSlot, updateSlot, addSlot } from '.
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './SlotList.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -105,8 +108,8 @@ const SlotList = () => {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const clinicId = Number(localStorage.getItem('clinicID'));
-        const branchId = Number(localStorage.getItem('branchID'));
+        const clinicId = await getStoredClinicId();
+        const branchId = await getStoredBranchId();
         const data = await getEmployeeList(clinicId, { BranchID: branchId, Designation: 1, Status: 1 });
         setDoctors(data);
       } catch (err) {
@@ -123,8 +126,8 @@ const SlotList = () => {
       setLoading(true);
       setError(null);
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const options = {
         BranchID:     branchId,
@@ -248,8 +251,8 @@ const SlotList = () => {
     if (!validateAddForm()) return;
     try {
       setLoading(true);
-      const clinicId = localStorage.getItem('clinicID');
-      const branchId = localStorage.getItem('branchID');
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       await addSlot({
         clinicId:  parseInt(clinicId),
         branchId:  parseInt(branchId),
@@ -535,8 +538,16 @@ const SlotList = () => {
           <div className={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Add New Slot</h2>
+             <div className={styles.headerRight}>
+                 <div className={styles.clinicNameone}>
+                   <FaClinicMedical
+                    size={20} style={{ verticalAlign: "middle", margin: "6px" }} />
+                   {localStorage.getItem("clinicName") || "—"}
+                 </div>
+
               <button onClick={() => setShowAddModal(false)} className={styles.modalCloseBtn}>×</button>
             </div>
+           </div> 
             <form onSubmit={handleAddSlot} className={styles.modalForm}>
 
               <div className={styles.formGroup}>

@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FiX, FiUser, FiCalendar, FiActivity, FiCheckCircle, FiSearch, FiChevronDown } from 'react-icons/fi';
 import { addPatientVisit, getPatientsList, getEmployeeList, getAppointmentList } from '../Api/Api.js';
 import styles from './AddPatientVisit.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
@@ -266,8 +268,8 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
   const fetchSingleAppointment = async (appointmentId) => {
     try {
       setLoadingAppointments(true);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const data = await getAppointmentList(clinicId, {
         BranchID: branchId,
         AppointmentID: appointmentId,
@@ -301,8 +303,8 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
 
   const fetchPatients = async () => {
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const data = await getPatientsList(clinicId, { BranchID: branchId, Status: 1, PageSize: 100 });
       setPatients(data);
     } catch (err) {
@@ -312,8 +314,8 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
 
   const fetchDoctors = async () => {
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const data = await getEmployeeList(clinicId, {
         BranchID: branchId,
         Designation: 1,
@@ -470,11 +472,16 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
       <div className={styles.addVisitModal}>
         <div className={styles.addVisitHeader}>
           <div className={styles.addVisitHeaderContent}>
-            <FiActivity className={styles.addVisitHeaderIcon} size={24} />
+            <FiActivity className={styles.addVisitHeaderIcon} size={20} />
             <h2>
               {preSelectedAppointmentId ? 'Complete Visit from Appointment' : 'Add New Patient Visit'}
             </h2>
           </div>
+          <div className={styles.clinicNameone}>
+                <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px" }} />
+                {localStorage.getItem("clinicName") || "—"}
+              </div>
+
           <button onClick={onClose} className={styles.addVisitClose}>
             <FiX size={20} />
           </button>

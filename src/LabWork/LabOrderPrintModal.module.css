@@ -1,26 +1,17 @@
-/* ============================================================
-   LabOrderPrintModal.module.css
-   Covers BOTH:
-     1. Modal chrome  — overlay, top-bar, scroll-area, paper
-     2. A4 document   — header, cards, table, footer, watermark
-   ============================================================ */
-
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
 /* ──────────────────────────────────────────────────────────
-   MODAL CHROME
+   MODAL SHELL
 ────────────────────────────────────────────────────────── */
-
-/* OVERLAY */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(8, 15, 40, 0.78);
+  background: rgba(5, 10, 30, 0.80);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(7px);
   padding: 16px 16px 16px 276px;
   animation: overlayIn 0.22s ease;
 }
@@ -30,19 +21,18 @@
   to   { opacity: 1; }
 }
 
-/* MODAL SHELL */
 .modal {
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 880px;
   max-height: 94vh;
-  background: #d0dbe8;
-  border-radius: 18px;
+  background: #c8d4de;
+  border-radius: 16px;
   overflow: hidden;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.07),
-    0 32px 80px rgba(0, 0, 0, 0.48);
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 32px 80px rgba(0, 0, 0, 0.52);
   animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -56,7 +46,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 13px 20px;
+  padding: 12px 20px;
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   flex-shrink: 0;
 }
@@ -70,9 +60,9 @@
 .topBarIcon {
   width: 38px;
   height: 38px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,17 +71,17 @@
 }
 
 .topBarTitle {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 1.05rem;
-  font-weight: 400;
+  font-weight: 700;
   color: #fff;
   letter-spacing: 0.3px;
 }
 
 .topBarSub {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.58);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.50);
   letter-spacing: 0.5px;
   margin-top: 2px;
 }
@@ -99,55 +89,38 @@
 .topBarActions {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
 }
 
-/* ACTION BUTTONS */
-.printBtn,
-.downloadBtn {
+.printBtn {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 17px;
+  padding: 8px 16px;
   border: none;
-  border-radius: 9px;
-  font-family: 'DM Sans', sans-serif;
+  border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.22s ease;
-  letter-spacing: 0.3px;
-}
-
-.printBtn {
-  background: linear-gradient(135deg, #30b2b5, #0d7aa8);
+  background: linear-gradient(135deg, #0f2057 0%, #1a3a8f 55%, #0d7aa8 100%);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(13, 122, 168, 0.42);
+  box-shadow: 0 4px 14px rgba(13, 122, 168, 0.45);
 }
 
 .printBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(13, 122, 168, 0.58);
-}
-
-.downloadBtn {
-  background: rgba(255, 255, 255, 0.13);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-}
-
-.downloadBtn:hover {
-  background: rgba(255, 255, 255, 0.22);
-  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(13, 122, 168, 0.60);
 }
 
 .closeBtn {
   width: 36px;
   height: 36px;
-  border-radius: 9px;
+  border-radius: 8px;
   border: none;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -156,11 +129,11 @@
 }
 
 .closeBtn:hover {
-  background: rgba(220, 38, 38, 0.5);
+  background: rgba(220, 38, 38, 0.50);
   color: #fff;
 }
 
-/* PREVIEW SCROLL AREA */
+/* PREVIEW SCROLL */
 .previewArea {
   flex: 1;
   overflow-y: auto;
@@ -168,42 +141,39 @@
   display: flex;
   justify-content: center;
   background:
-    radial-gradient(circle at 15% 20%, rgba(13, 122, 168, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 85% 80%, rgba(15, 32, 87, 0.07) 0%,  transparent 50%),
-    #c8d5e2;
+    radial-gradient(circle at 18% 22%, rgba(13, 122, 168, 0.09) 0%, transparent 50%),
+    radial-gradient(circle at 82% 78%, rgba(15, 32, 87, 0.08) 0%,  transparent 50%),
+    #c0cdd8;
 }
 
 .previewArea::-webkit-scrollbar { width: 6px; }
 .previewArea::-webkit-scrollbar-track { background: transparent; }
 .previewArea::-webkit-scrollbar-thumb {
-  background: rgba(15, 32, 87, 0.22);
+  background: rgba(15, 32, 87, 0.24);
   border-radius: 3px;
 }
 
-/* PAPER — A4 shadow wrapper */
 .paper {
   width: 210mm;
   min-width: 210mm;
   background: #fff;
-  border-radius: 3px;
+  border-radius: 2px;
   box-shadow:
     0 1px 3px  rgba(0, 0, 0, 0.06),
-    0 6px 20px rgba(0, 0, 0, 0.12),
-    0 20px 56px rgba(0, 0, 0, 0.14);
+    0 6px 20px rgba(0, 0, 0, 0.13),
+    0 20px 56px rgba(0, 0, 0, 0.16);
 }
 
 /* ──────────────────────────────────────────────────────────
-   A4 DOCUMENT
+   A4 PAGE
 ────────────────────────────────────────────────────────── */
-
-/* PAGE ROOT — true A4 with flex column so footer sits at bottom */
 .page {
   width: 210mm;
   min-height: 297mm;
   height: 297mm;
   background: #fff;
-  font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
-  color: #1a1a2e;
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+  color: #0f2057;
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
@@ -211,55 +181,132 @@
   flex-direction: column;
 }
 
-/* ── HEADER ── */
+/* graph-paper grid watermark */
+.page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(13, 122, 168, 0.027) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 122, 168, 0.027) 1px, transparent 1px);
+  background-size: 11mm 11mm;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── DOC HEADER ── */
 .docHeader {
-  background: linear-gradient(135deg, #0f2057 0%, #1a3a8f 50%, #0d7aa8 100%);
-  padding: 26px 36px 20px;
   position: relative;
-  overflow: hidden;
+  z-index: 1;
   flex-shrink: 0;
 }
 
-.headerCircle1 {
-  position: absolute;
-  top: -55px;
-  right: -55px;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
+.headerStripe {
+  height: 5px;
+  background: linear-gradient(90deg, #0f2057 0%, #1a3a8f 40%, #0d7aa8 72%, #30b2b5 100%);
 }
 
-.headerCircle2 {
-  position: absolute;
-  bottom: -35px;
-  left: 110px;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: rgba(13, 122, 168, 0.25);
+.headerRibbon {
+  background: #0f2057;
+  padding: 4px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.headerInner {
+.ribbonContacts {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ribbonItem {
+  font-size: 8.5px;
+  color: rgba(255, 255, 255, 0.68);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.3px;
+}
+
+.ribbonIcon {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: rgba(48, 178, 181, 0.20);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 7px;
+  color: #30b2b5;
+  flex-shrink: 0;
+}
+
+.ribbonRight {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.38);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.headerMain {
+  background: linear-gradient(135deg, #0f2057 0%, #1a3a8f 52%, #0d7aa8 100%);
+  padding: 17px 28px 15px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: relative;
-  z-index: 1;
+  overflow: hidden;
 }
 
-.clinicBrand {
+.hdCircle1 {
+  position: absolute;
+  top: -55px;
+  right: -55px;
+  width: 175px;
+  height: 175px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+}
+
+.hdCircle2 {
+  position: absolute;
+  bottom: -38px;
+  left: 150px;
+  width: 115px;
+  height: 115px;
+  border-radius: 50%;
+  background: rgba(48, 178, 181, 0.09);
+  pointer-events: none;
+}
+
+.hdCaduceus {
+  position: absolute;
+  right: 195px;
+  top: 4px;
+  font-size: 76px;
+  color: rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+  line-height: 1;
+}
+
+.hdLeft {
   display: flex;
   align-items: center;
   gap: 14px;
+  position: relative;
+  z-index: 1;
 }
 
-.clinicLogoBox {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  background: #ffffff;
-  border: 2px solid rgba(255, 255, 255, 0.6);
+.hdLogoWrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  background: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.50);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -267,367 +314,512 @@
   flex-shrink: 0;
 }
 
-.clinicLogoImg {
+.hdLogoImg {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-.clinicName {
-  font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
-  font-size: 20px;
+.hdClinicInfo {}
+
+.hdClinicName {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 18px;
+  font-weight: 700;
   color: #fff;
-  font-weight: 400;
   letter-spacing: 0.3px;
   line-height: 1.2;
-  margin: 0;
+  margin: 0 0 2px;
 }
 
-.branchName {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.72);
-  font-weight: 500;
-  margin-top: 3px;
-  letter-spacing: 0.5px;
-}
-
-.docTitleBlock {
-  text-align: right;
-}
-
-.docTitle {
-  font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
-  font-size: 24px;
-  color: #fff;
-  letter-spacing: 1px;
-  margin: 0;
-  font-weight: 400;
-}
-
-.docSubtitle {
-  font-size: 10px;
+.hdClinicAddr {
+  font-size: 9px;
   color: rgba(255, 255, 255, 0.58);
-  letter-spacing: 2.5px;
+  line-height: 1.55;
+  max-width: 240px;
+}
+
+.hdRight {
+  text-align: right;
+  position: relative;
+  z-index: 1;
+}
+
+.hdFormTitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 3px;
   text-transform: uppercase;
-  margin-top: 5px;
+}
+
+.hdFormSub {
+  font-size: 7.5px;
+  color: rgba(255, 255, 255, 0.48);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+.hdRefBlock {
+  margin-top: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  border-radius: 5px;
+  padding: 7px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  display: inline-block;
+  text-align: left;
+  min-width: 155px;
+}
+
+.hdRefRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.hdRefRow + .hdRefRow {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.hdRefLabel {
+  font-size: 7.5px;
+  color: rgba(255, 255, 255, 0.42);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+}
+
+.hdRefValue {
+  font-size: 10px;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.3px;
 }
 
 /* ── ACCENT BAR ── */
 .accentBar {
-  height: 4px;
-  background: linear-gradient(90deg, #30b2b5, #0d7aa8, #1a3a8f);
+  height: 2px;
+  background: linear-gradient(90deg, #30b2b5, #0d7aa8, #1a3a8f, #0f2057);
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
-/* ── BADGE STRIP — status/priority/date only, no order # ── */
-.badgeStrip {
-  background: #f0f7ff;
-  border-bottom: 1px solid #dde8f5;
-  padding: 9px 36px;
+/* ── STATUS STRIP ── */
+.statusRibbon {
+  background: #eef5fb;
+  border-bottom: 1.5px solid #c8ddef;
+  padding: 7px 28px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
-.badgeRow {
+.statusRibbonLeft {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
 }
 
-.orderStripDate {
-  font-size: 11px;
-  color: #5a6887;
+.statusRibbonRight {
+  font-size: 9.5px;
+  color: #4a6a8a;
   font-weight: 500;
 }
 
-/* ── BADGES ── */
+/* BADGES */
 .badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 3px 9px;
-  border-radius: 5px;
-  font-size: 9.5px;
+  border-radius: 3px;
+  font-size: 8px;
   font-weight: 700;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.9px;
   text-transform: uppercase;
   border: 1px solid;
 }
 
-.badgePending   { background: rgba(234, 179, 8, 0.12);  color: #92670a; border-color: rgba(234, 179, 8, 0.35); }
-.badgeCompleted { background: rgba(22, 163, 74, 0.1);   color: #166534; border-color: rgba(22, 163, 74, 0.3); }
-.badgeCancelled { background: rgba(220, 38, 38, 0.1);   color: #991b1b; border-color: rgba(220, 38, 38, 0.3); }
-.badgeInvoice   { background: rgba(2, 132, 199, 0.1);   color: #075985; border-color: rgba(2, 132, 199, 0.3); }
-.badgeProgress  { background: rgba(139, 92, 246, 0.1);  color: #5b21b6; border-color: rgba(139, 92, 246, 0.3); }
-.badgeNormal    { background: rgba(100, 116, 139, 0.1); color: #374151; border-color: rgba(100, 116, 139, 0.3); }
-.badgeUrgent    { background: rgba(234, 88, 12, 0.1);   color: #c2410c; border-color: rgba(234, 88, 12, 0.3); }
-.badgeStat      { background: rgba(220, 38, 38, 0.12);  color: #991b1b; border-color: rgba(220, 38, 38, 0.4); }
+.badgePending   { background: rgba(234, 179, 8,  0.11); color: #92670a; border-color: rgba(234, 179, 8,  0.32); }
+.badgeCompleted { background: rgba(22,  163, 74, 0.09); color: #166534; border-color: rgba(22,  163, 74, 0.28); }
+.badgeCancelled { background: rgba(220, 38,  38, 0.09); color: #991b1b; border-color: rgba(220, 38,  38, 0.26); }
+.badgeInvoice   { background: rgba(13,  122, 168,0.10); color: #0d5e82; border-color: rgba(13,  122, 168,0.26); }
+.badgeProgress  { background: rgba(139, 92,  246,0.09); color: #5b21b6; border-color: rgba(139, 92,  246,0.26); }
+.badgeNormal    { background: rgba(15,  32,  87, 0.08); color: #0f2057; border-color: rgba(15,  32,  87, 0.20); }
+.badgeUrgent    { background: rgba(234, 88,  12, 0.10); color: #c2410c; border-color: rgba(234, 88,  12, 0.26); }
+.badgeStat      { background: rgba(220, 38,  38, 0.13); color: #991b1b; border-color: rgba(220, 38,  38, 0.38); }
 
-/* ── INFO GRID (2 cards side by side) ── */
-.infoGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  padding: 18px 36px;
-  flex-shrink: 0;
-}
-
-.infoCard {
-  border: 1px solid #dde8f5;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.infoCardHeader {
-  background: linear-gradient(135deg, #0f2057, #1a3a8f);
-  padding: 7px 14px;
-}
-
-.infoCardHeader h3 {
-  margin: 0;
-  font-size: 9.5px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.92);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  font-family: 'DM Sans', sans-serif;
-}
-
-.infoRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6.5px 14px;
-  border-bottom: 1px solid #f0f4fa;
-}
-
-.infoRowLast {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6.5px 14px;
-}
-
-.infoLabel {
-  font-size: 9.5px;
-  color: #7a8aaa;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  flex-shrink: 0;
-  margin-right: 10px;
-}
-
-.infoValue {
-  font-size: 11.5px;
-  color: #1a1a2e;
-  font-weight: 600;
-  text-align: right;
-  word-break: break-word;
-}
-
-/* ── SECTION DIVIDER ── */
-.sectionDivider {
-  margin: 0 36px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #c8d8ee, transparent);
-  flex-shrink: 0;
-}
-
-/* ── ITEMS SECTION ── */
-.itemsSection {
-  padding: 14px 36px 18px;
-  flex-shrink: 0;
-}
-
-.itemsSectionTitle {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 14px;
-  color: #0f2057;
-  font-weight: 400;
-  margin-bottom: 11px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.itemsSectionTitle::after {
+.badgeUrgent::before,
+.badgeStat::before {
   content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.badgeUrgent::before { background: #c2410c; }
+.badgeStat::before   { background: #991b1b; }
+
+/* ──────────────────────────────────────────────────────────
+   FORM BODY
+────────────────────────────────────────────────────────── */
+.formBody {
+  padding: 11px 28px 0;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* section header row */
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 7px;
+}
+
+.sectionBar {
+  width: 3px;
+  height: 12px;
+  background: linear-gradient(180deg, #0f2057, #0d7aa8);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.sectionText {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f2057;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.sectionLine {
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, #c8d8ee, transparent);
+  background: linear-gradient(90deg, #b8d0e5, transparent);
 }
 
-/* TABLE */
-.tableWrapper {
-  width: 100%;
-  border-radius: 10px;
+/* ── FIELD GRID ── requisition form bordered cells */
+.fieldGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border: 1.5px solid #c0d4e4;
+  border-radius: 6px;
   overflow: hidden;
-  border: 1px solid #dde8f5;
+  margin-bottom: 9px;
 }
 
-.itemsTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11px;
-}
-
-.itemsTable thead tr {
+/* dark header spanning all 3 cols */
+.fgHeader {
+  grid-column: span 3;
   background: linear-gradient(135deg, #0f2057, #1a3a8f);
+  padding: 5px 11px;
+  border-bottom: 1.5px solid #0d7aa8;
 }
 
-.itemsTable thead th {
-  padding: 9px 11px;
-  color: rgba(255, 255, 255, 0.92);
+.fgHeaderText {
+  font-size: 7.5px;
   font-weight: 700;
-  font-size: 9px;
+  color: rgba(255, 255, 255, 0.86);
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  text-align: left;
-  border: none;
-  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 1.5px;
 }
 
-.itemsTable thead th.thCenter {
-  text-align: center;
-  width: 32px;
+/* individual field cell */
+.fc {
+  padding: 6px 10px;
+  border-right: 1px solid #c0d4e4;
+  border-bottom: 1px solid #c0d4e4;
 }
 
-.itemsTable tbody tr:nth-child(even) {
-  background: #f5f9ff;
-}
+.noRight  { border-right: none !important; }
+.noBottom { border-bottom: none !important; }
+.span2    { grid-column: span 2; }
+.span3    { grid-column: span 3; border-right: none !important; }
 
-.itemsTable tbody tr:hover {
-  background: #eef4ff;
-}
-
-.itemsTable tbody td {
-  padding: 8px 11px;
-  border-bottom: 1px solid #e8eff8;
-  vertical-align: middle;
-}
-
-.itemsTable tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.tdIndex {
-  text-align: center;
-  color: #94a3b8;
-  font-size: 10px;
-  font-weight: 600;
-  width: 32px;
-}
-
-.tdName {
-  color: #0f2057;
-  font-weight: 600;
-  font-size: 11px;
-}
-
-.tdEmpty {
-  padding: 20px 11px;
-  text-align: center;
-  color: #94a3b8;
-  font-style: italic;
-  font-size: 11px;
-}
-
-/* ── NOTES ── */
-.notesSection {
-  margin: 0 36px 14px;
-  padding: 11px 15px;
-  background: #f8fbff;
-  border-left: 3px solid #0d7aa8;
-  border-radius: 0 8px 8px 0;
-  flex-shrink: 0;
-}
-
-.notesLabel {
-  font-size: 9.5px;
+/* field label */
+.fl {
+  font-size: 7.5px;
   font-weight: 700;
   color: #0d7aa8;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 5px;
+  letter-spacing: 0.8px;
+  margin-bottom: 3px;
 }
 
-.notesText {
-  font-size: 11px;
-  color: #334155;
-  line-height: 1.6;
+/* field value */
+.fv {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #0f2057;
+  line-height: 1.3;
+  min-height: 14px;
+  word-break: break-word;
 }
 
-/* ── PAGE SPACER — pushes footer to bottom of A4 ── */
-.pageSpacer {
-  flex: 1;
+.fvLg    { font-size: 12px; font-weight: 700; }
+.fvMuted { color: #4a6a8a; font-weight: 500; }
+
+/* ──────────────────────────────────────────────────────────
+   TESTS TABLE
+────────────────────────────────────────────────────────── */
+.testsSection {
+  padding: 0 28px 8px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
-/* ── FOOTER — always at bottom of A4 page ── */
-.docFooter {
-  padding: 13px 36px;
-  border-top: 1px solid #dde8f5;
-  background: #f8fbff;
+.tableWrap {
+  border: 1.5px solid #c0d4e4;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.reqTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5px;
+}
+
+.reqTable thead tr {
+  background: linear-gradient(135deg, #0f2057 0%, #1a3a8f 55%, #0d7aa8 100%);
+}
+
+.reqTable thead th {
+  padding: 8px 11px;
+  color: rgba(255, 255, 255, 0.90);
+  font-weight: 700;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  text-align: left;
+  border: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.thNo   { text-align: center; width: 34px; }
+.thType { width: 78px; }
+
+.reqTable tbody tr { border-bottom: 1px solid #deeaf5; }
+.reqTable tbody tr:nth-child(even):not(.pkgRow) { background: #f4f9fd; }
+.reqTable tbody tr:last-child { border-bottom: none; }
+
+.reqTable tbody td {
+  padding: 6px 11px;
+  vertical-align: middle;
+}
+
+.tdNo    { text-align: center; color: #7a9ab8; font-size: 9.5px; font-weight: 700; width: 34px; }
+.tdName  { font-weight: 600; font-size: 10.5px; color: #0f2057; }
+.tdNameIndent { padding-left: 22px !important; }
+.tdType  { width: 78px; }
+.tdEmpty { text-align: center; padding: 18px; color: #7a9ab8; font-style: italic; font-size: 10.5px; }
+
+/* type pill */
+.typePill {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.typeTest { background: rgba(13, 122, 168, 0.10); color: #0d7aa8; border: 1px solid rgba(13, 122, 168, 0.20); }
+.typePkg  { background: rgba(15, 32,  87,  0.09); color: #0f2057; border: 1px solid rgba(15, 32,  87,  0.18); }
+
+/* package header row */
+.pkgRow {
+  background: linear-gradient(90deg, #e8f2fb, #f4f9fd) !important;
+  border-top: 1.5px solid #b0ccdf !important;
+  border-bottom: 1px solid #b0ccdf !important;
+}
+
+.pkgCell { padding: 7px 11px !important; }
+
+.pkgInner {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  align-items: center;
+  gap: 7px;
+}
+
+.pkgChevron {
+  font-size: 9px;
+  color: #0d7aa8;
   flex-shrink: 0;
 }
 
-.footerLeft {
+.pkgLabel {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f2057;
+  flex: 1;
+}
+
+.pkgCountPill {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 7.5px;
+  font-weight: 700;
+  background: rgba(13, 122, 168, 0.11);
+  color: #0d7aa8;
+  border: 1px solid rgba(13, 122, 168, 0.20);
+}
+
+/* sub-test rows */
+.subRow td { background: transparent; }
+.subRow .tdNo   { color: #a8c4d8; font-size: 9px; }
+.subRow .tdName { color: #1a3a6a; font-weight: 500; font-size: 10px; }
+
+/* loading */
+.loadingRow {
+  text-align: center;
+  padding: 14px;
+  color: #7a9ab8;
+  font-size: 11px;
+  font-style: italic;
+}
+
+/* ── NOTES ── */
+.notesBox {
+  margin: 0 28px 8px;
+  border: 1.5px solid #c0d4e4;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.notesHdr {
+  background: linear-gradient(135deg, #0f2057, #1a3a8f);
+  padding: 5px 11px;
+}
+
+.notesHdrText {
+  font-size: 7.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.86);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.notesBody {
+  padding: 8px 11px;
   font-size: 10px;
-  color: #7a8aaa;
-  line-height: 1.75;
+  color: #1a3060;
+  line-height: 1.65;
+  background: #f6fbff;
+  min-height: 26px;
+}
+
+/* ── SPACER ── */
+.pgSpacer {
+  flex: 1;
+  min-height: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── SIGNATURE ROW ── */
+.signRow {
+  margin: 0 28px 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.signBlock { text-align: center; }
+
+.signLine {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #0d7aa8 30%, #0d7aa8 70%, transparent);
+  margin-bottom: 5px;
+}
+
+.signLabel {
+  font-size: 7.5px;
+  color: #4a6a8a;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+/* ── FOOTER ── */
+.docFooter {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.footerAccent {
+  height: 2px;
+  background: linear-gradient(90deg, #0f2057, #0d7aa8, #30b2b5);
+}
+
+.footerInner {
+  background: #0f2057;
+  padding: 8px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footerLeft {
+  font-size: 8.5px;
+  color: rgba(255, 255, 255, 0.52);
+  line-height: 1.7;
 }
 
 .footerLeft strong {
-  color: #334155;
-  font-weight: 700;
-}
-
-.footerDisclaimer {
-  font-size: 9px;
-  color: #b0bdd0;
-  margin-top: 4px;
-}
-
-.signatureBlock {
-  text-align: center;
-}
-
-.signatureLine {
-  width: 130px;
-  height: 1px;
-  background: #94a3b8;
-  margin: 0 auto 6px;
-}
-
-.signatureLabel {
-  font-size: 10px;
-  color: #7a8aaa;
+  color: rgba(255, 255, 255, 0.78);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+}
+
+.footerRight {
+  font-size: 7.5px;
+  color: rgba(255, 255, 255, 0.32);
+  text-align: right;
+  line-height: 1.6;
 }
 
 /* ── WATERMARK ── */
 .watermark {
   position: absolute;
-  bottom: 70px;
-  right: 36px;
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 90px;
-  color: rgba(13, 122, 168, 0.04);
+  bottom: 65px;
+  right: 18px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 105px;
+  color: rgba(13, 122, 168, 0.032);
   font-style: italic;
   pointer-events: none;
   user-select: none;
-  transform: rotate(-18deg);
-  letter-spacing: -2px;
+  transform: rotate(-20deg);
+  letter-spacing: -5px;
   line-height: 1;
+  z-index: 0;
 }
 
 /* ──────────────────────────────────────────────────────────
-   PRINT MEDIA
+   PRINT
 ────────────────────────────────────────────────────────── */
 @media print {
   .page {
@@ -635,26 +827,45 @@
     height: 297mm;
     min-height: 297mm;
   }
+
+  .pkgRow,
+  .headerMain,
+  .reqTable thead tr,
+  .fgHeader,
+  .notesHdr,
+  .headerStripe,
+  .accentBar,
+  .footerAccent,
+  .headerRibbon,
+  .footerInner {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 
 /* ──────────────────────────────────────────────────────────
    RESPONSIVE
 ────────────────────────────────────────────────────────── */
 @media (max-width: 960px) {
-  .overlay { padding: 12px; }
-  .paper   { width: 100%; min-width: unset; }
-  .page    { width: 100%; min-height: unset; height: auto; }
+  .overlay     { padding: 12px; }
+  .paper       { width: 100%; min-width: unset; }
+  .page        { width: 100%; min-height: unset; height: auto; }
   .previewArea { padding: 16px; }
-  .infoGrid { grid-template-columns: 1fr; }
+  .fieldGrid   { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 540px) {
-  .topBar { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .topBarActions { width: 100%; }
-  .printBtn, .downloadBtn { flex: 1; justify-content: center; }
-  .docHeader { padding: 18px 20px; }
-  .badgeStrip { flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 20px; }
-  .infoGrid   { padding: 14px 20px; }
-  .itemsSection { padding: 12px 20px 16px; }
-  .docFooter  { flex-direction: column; gap: 16px; padding: 14px 20px; }
+  .topBar       { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .topBarActions{ width: 100%; }
+  .printBtn     { flex: 1; justify-content: center; }
+  .headerMain   { flex-direction: column; gap: 12px; padding: 14px 18px; }
+  .hdRight      { text-align: left; }
+  .hdRefBlock   { display: block; }
+  .headerRibbon { padding: 5px 18px; flex-wrap: wrap; gap: 6px; }
+  .fieldGrid    { grid-template-columns: 1fr 1fr; }
+  .formBody     { padding: 10px 18px 0; }
+  .testsSection { padding: 0 18px 8px; }
+  .notesBox     { margin: 0 18px 8px; }
+  .signRow      { margin: 0 18px 10px; gap: 10px; }
+  .footerInner  { flex-direction: column; gap: 8px; padding: 10px 18px; }
 }

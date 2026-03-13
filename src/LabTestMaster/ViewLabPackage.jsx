@@ -1,6 +1,8 @@
 import React from 'react';
 import { FiX, FiEdit, FiPlus, FiRefreshCw, FiTrash2 } from 'react-icons/fi';
 import styles from './ViewLabPackage.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const PACKAGE_STATUS_OPTIONS = [
   { id: 1, label: 'Active' },
@@ -40,11 +42,14 @@ const ViewLabPackage = ({
             </div>
             <div>
               <h2>{pkg.packName}</h2>
-              <p className={styles.subtitle}>
-                {pkg.packShortName || 'Package'}
-              </p>
+              
             </div>
           </div>
+
+          <div className={styles.clinicNameone}>
+            <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+              {localStorage.getItem('clinicName') || '—'}
+            </div>
           <button onClick={onClose} className={styles.modalClose}>
             ×
           </button>

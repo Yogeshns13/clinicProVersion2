@@ -1,10 +1,13 @@
-/* SlotList.module.css - Updated modal styles to match patient add/detail popup style */
+/* SlotList.module.css */
 
 /* ==================== WRAPPER ==================== */
 .listWrapper {
   padding: 20px;
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
-  min-height: 100vh;
+  height: 100vh;           /* ← fixed height instead of min-height */
+  overflow: hidden;        /* ← prevent wrapper itself from scrolling */
+  display: flex;           /* ← flex column so children stack */
+  flex-direction: column;  /* ← stack Header, toolbar, slotsTimeline */
   color: #1e293b;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --primary-start: #222b6c;
@@ -23,6 +26,7 @@
   margin-bottom: 20px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
+  flex-shrink: 0;          /* ← don't shrink, stay fixed height */
 }
 
 .filtersRow {
@@ -134,6 +138,9 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  flex: 1;           /* ← take all remaining height */
+  min-height: 0;     /* ← CRITICAL: allows flex child to scroll */
+  overflow-y: auto;  /* ← scroll here only */
 }
 
 .dateGroup {
@@ -142,6 +149,7 @@
   overflow: hidden;
   box-shadow: 0 8px 24px rgba(34, 43, 108, 0.1);
   border: 1px solid rgba(34, 43, 108, 0.08);
+  flex-shrink: 0;    /* ← don't shrink date groups */
 }
 
 .dateHeader {
@@ -151,6 +159,9 @@
   padding: 12px 18px;
   background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
   border-bottom: 1px solid rgba(34, 43, 108, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .dateHeader svg {
@@ -307,9 +318,9 @@
 
 .statusIcon { flex-shrink: 0; }
 
-.statusIcon.booked   { color: #16a34a; }
+.statusIcon.booked    { color: #16a34a; }
 .statusIcon.available { color: var(--accent-start); }
-.statusIcon.deleted  { color: #ef4444; }
+.statusIcon.deleted   { color: #ef4444; }
 
 .statusText {
   font-size: 0.7rem;
@@ -318,9 +329,9 @@
   letter-spacing: 0.3px;
 }
 
-.statusText.booked   { color: #16a34a; }
+.statusText.booked    { color: #16a34a; }
 .statusText.available { color: var(--accent-start); }
-.statusText.deleted  { color: #ef4444; }
+.statusText.deleted   { color: #ef4444; }
 
 /* ==================== SLOT ACTIONS (hover) ==================== */
 .slotActions {
@@ -357,11 +368,11 @@
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-.btnEdit  { color: #3b82f6; }
-.btnEdit:hover  { background: #3b82f6; color: white; transform: scale(1.1); }
+.btnEdit           { color: #3b82f6; }
+.btnEdit:hover     { background: #3b82f6; color: white; transform: scale(1.1); }
 
-.btnDelete { color: #ef4444; }
-.btnDelete:hover { background: #ef4444; color: white; transform: scale(1.1); }
+.btnDelete         { color: #ef4444; }
+.btnDelete:hover   { background: #ef4444; color: white; transform: scale(1.1); }
 
 /* ==================== NO DATA / STATES ==================== */
 .noData {
@@ -383,10 +394,7 @@
 
 .error { color: #ef4444; }
 
-/* ─────────────────────────────────────────────── */
-/*        MODAL ── Add & Update Slot               */
-/* ─────────────────────────────────────────────── */
-
+/* ==================== MODAL ==================== */
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -410,11 +418,10 @@
   display: flex;
   flex-direction: column;
   box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.4s ease;
 }
 
 .modalHeader {
-  padding: 24px 28px;
+  padding: 14px 18px;
   margin-bottom: 20px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
@@ -426,8 +433,27 @@
 
 .modalHeader h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.clinicNameone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-light);
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
 
 .modalCloseBtn {

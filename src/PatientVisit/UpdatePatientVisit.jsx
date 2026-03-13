@@ -4,6 +4,8 @@ import { FiX, FiSave, FiInfo, FiActivity, FiUser, FiCalendar } from 'react-icons
 import { getPatientVisitList, updatePatientVisit, getEmployeeList, getAppointmentList } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import styles from './UpdatePatientVisit.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
@@ -162,8 +164,8 @@ const UpdatePatientVisit = ({ isOpen, onClose, onSuccess, visitId }) => {
       setLoading(true);
       setError(null);
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const data = await getPatientVisitList(clinicId, {
         VisitID: Number(visitId),
@@ -217,8 +219,8 @@ const UpdatePatientVisit = ({ isOpen, onClose, onSuccess, visitId }) => {
 
   const fetchAppointmentDetails = async (appointmentId) => {
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const data = await getAppointmentList(clinicId, {
         BranchID: branchId,
@@ -237,8 +239,8 @@ const UpdatePatientVisit = ({ isOpen, onClose, onSuccess, visitId }) => {
 
   const fetchDoctors = async () => {
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const data = await getEmployeeList(clinicId, {
         BranchID: branchId,
@@ -326,6 +328,10 @@ const UpdatePatientVisit = ({ isOpen, onClose, onSuccess, visitId }) => {
             <FiSave className={styles.updateVisitHeaderIcon} size={24} />
             <h2>Update Patient Visit</h2>
           </div>
+          <div className={styles.clinicNameone}>
+            <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+              {localStorage.getItem('clinicName') || '—'}
+                </div>
           <button onClick={onClose} className={styles.updateVisitClose} disabled={saving}>
             <FiX size={20} />
           </button>

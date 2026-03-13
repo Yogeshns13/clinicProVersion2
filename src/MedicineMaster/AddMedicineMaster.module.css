@@ -56,7 +56,7 @@
 /* ==================== GRADIENT HEADER (fixed) ==================== */
 .header {
   flex-shrink: 0;
-  padding: 22px 28px;
+  padding: 14px 18px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
   display: flex;
@@ -68,10 +68,24 @@
 .headerContent { flex: 1; }
 
 .header h2 {
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--text-light);
 }
+
+.clinicNameone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;           
+  font-weight: 600;
+  color: var(--text-light);
+  line-height: 1.2;
+  white-space: nowrap;          
+  text-overflow: ellipsis;      
+  max-width: 220px;             
+}
+
 
 .subtitle {
   font-size: 0.88rem;

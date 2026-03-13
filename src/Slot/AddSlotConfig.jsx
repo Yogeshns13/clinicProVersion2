@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { addSlotConfig } from '../Api/Api.js';
 import styles from './AddSlotConfig.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const DURATION_OPTIONS = [
   { id: 1, label: 'Daily', createDays: 30 },
@@ -200,8 +202,8 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
     setLoading(true);
 
     try {
-      const clinicId = localStorage.getItem('clinicID');
-      const branchId = localStorage.getItem('branchID');
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const payload = {
         clinicId: Number(clinicId),
@@ -240,6 +242,12 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
       <div className={styles.clinicModal}>
         <div className={styles.clinicModalHeader}>
           <h2>Add Slot Configuration</h2>
+           <div className={styles.headerRight}>
+    <div className={styles.clinicNameone}>
+      <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px" }} />
+      {localStorage.getItem("clinicName") || "—"}
+    </div>
+
           <button
             onClick={onClose}
             className={styles.clinicModalClose}
@@ -248,6 +256,7 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
             ×
           </button>
         </div>
+        </div>  
 
         <form onSubmit={handleSubmit}>
           <div className={styles.clinicModalBody}>

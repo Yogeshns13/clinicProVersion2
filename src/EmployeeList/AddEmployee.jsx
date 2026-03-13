@@ -17,6 +17,8 @@ import {
 } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import styles from './AddEmployee.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 // ────────────────────────────────────────────────
 // HELPER — fetch fileAccessToken for a given clinicId
@@ -387,7 +389,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
   const fetchShifts = async () => {
     setShiftsLoading(true);
     try {
-      const clinicId = localStorage.getItem('clinicID');
+      const clinicId = await getStoredClinicId();
       const list = await getShiftList(clinicId ? Number(clinicId) : 0, { Status: 1 });
       setShifts(list);
     } catch { setShifts([]); }
@@ -426,7 +428,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     if (!photo) { setPhotoUploadStatus('Please select a photo first.'); return; }
     setIsPhotoUploading(true); setPhotoUploadStatus('Uploading photo...');
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
+      const clinicId = await getStoredClinicId();
 
       // Fetch the fileAccessToken for this clinic dynamically
       const fileAccessToken = await fetchFileAccessToken(clinicId);
@@ -487,7 +489,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     setIsProofUploading(prev => prev.map((v, i) => i === index ? true : v));
     updateProofUploadStatus(index, 'Uploading ID proof...');
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
+      const clinicId = await getStoredClinicId();
 
       // Fetch the fileAccessToken for this clinic dynamically
       const fileAccessToken = await fetchFileAccessToken(clinicId);
@@ -610,8 +612,8 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
 
     setLoading(true); setError(null); setStepSuccess('');
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const payload = {
         clinicId, branchId,
         employeeCode: formData.employeeCode.trim(),
@@ -652,8 +654,8 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
 
     setLoading(true); setError(null); setStepSuccess('');
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const updatedSavedIds = [...savedProofIds];
 
       for (let i = 0; i < proofList.length; i++) {
@@ -692,8 +694,8 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
 
     setLoading(true); setError(null); setStepSuccess('');
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const payload = {
         ClinicID: clinicId, BranchID: branchId, EmployeeID: createdEmployeeId,
         AccountHolderName: beneficiaryData.AccountHolderName.trim(),
@@ -719,7 +721,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     e.preventDefault();
     setLoading(true); setError(null); setStepSuccess('');
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
+      const clinicId = await getStoredClinicId();
       for (const shiftId of selectedShifts) {
         await addEmployeeShift({ ClinicID: clinicId, EmployeeID: createdEmployeeId, ShiftID: Number(shiftId) });
       }
@@ -800,11 +802,11 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
         <div className={styles.header}>
           <div className={styles.headerContent}>
             <h2>Add New Employee</h2>
-            <p className={styles.subtitle}>
-              Step {currentStep} of 4 — {STEPS[currentStep - 1].label}
-              {createdEmployeeId && <span className={styles.idBadge}> · ID: {createdEmployeeId}</span>}
-            </p>
           </div>
+          <div className={styles.clinicNameone}>
+                <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px" }} />
+                {localStorage.getItem("clinicName") || "—"}
+              </div>
           <button onClick={handleClose} className={styles.closeBtn}><FiX size={22} /></button>
         </div>
 

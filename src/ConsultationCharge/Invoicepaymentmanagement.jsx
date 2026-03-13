@@ -5,6 +5,8 @@ import { getInvoicePaymentList, updateInvoicePayment } from '../Api/ApiInvoicePa
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './InvoicePaymentManagement.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const PAYMENT_STATUSES = [
   { id: 1, label: 'Success' },
@@ -76,8 +78,8 @@ const InvoicePaymentList = () => {
     try {
       setLoading(true);
       setError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const options = {
         Page:      1,
@@ -167,8 +169,8 @@ const InvoicePaymentList = () => {
     try {
       setFormLoading(true);
       setFormError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       await updateInvoicePayment({
         clinicId, branchId,
         paymentId: selectedPayment.id,
@@ -385,7 +387,14 @@ const InvoicePaymentList = () => {
           <div className={styles.paymentModal}>
             <div className={styles.paymentModalHeader}>
               <h2>Update Payment Status</h2>
+              
+              <div className={styles.headerRight}>
+              <div className={styles.clinicNameone}>
+                             <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                               {localStorage.getItem('clinicName') || '—'}
+                          </div>
               <button onClick={closeModal} className={styles.paymentModalClose}>×</button>
+            </div>
             </div>
             <form onSubmit={handleUpdatePayment}>
               <div className={styles.paymentModalBody}>

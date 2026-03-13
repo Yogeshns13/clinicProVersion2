@@ -47,6 +47,9 @@
   margin-bottom: 20px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .filtersGrid {
@@ -203,7 +206,8 @@
 .chargeListTableContainer {
   background: white;
   border-radius: 17px;
-  overflow: hidden;
+  overflow-y: auto;
+   max-height: calc(100vh - 220px); 
   box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
   border: 1px solid rgba(34, 43, 108, 0.1);
 }
@@ -224,6 +228,9 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   border: none;
+  position: sticky;   /* ← new */
+  top: 0;             /* ← new */
+  z-index: 2;
 }
 
 .chargeListTable td {

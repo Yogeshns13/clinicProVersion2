@@ -3,13 +3,9 @@ import React, { useState } from 'react';
 import { FiSave } from 'react-icons/fi';
 import { updateMedicineStock } from '../Api/ApiPharmacy.js';
 import styles from './UpdateMedicineStock.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
-// ────────────────────────────────────────────────
-// Props:
-//   stock           — the stock object (from MedicineStockList)
-//   onClose         — called when modal is cancelled / closed
-//   onUpdateSuccess — called after successful update
-// ────────────────────────────────────────────────
 const UpdateMedicineStock = ({ stock, onClose, onUpdateSuccess }) => {
   const formatDateForInput = (dateString) => {
     if (!dateString) return '';
@@ -53,8 +49,8 @@ const UpdateMedicineStock = ({ stock, onClose, onUpdateSuccess }) => {
     setFormSuccess(false);
 
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       await updateMedicineStock({
         StockID:       Number(stock.id),
@@ -84,8 +80,11 @@ const UpdateMedicineStock = ({ stock, onClose, onUpdateSuccess }) => {
         <div className={styles.updateModalHeader}>
           <div className={styles.updateHeaderContent}>
             <h2>Update Medicine Stock</h2>
-            <span className={styles.updateHeaderSub}>{stock.medicineName}</span>
           </div>
+          <div className={styles.clinicNameone}>
+                         <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                           {localStorage.getItem('clinicName') || '—'}
+                      </div>
           <button type="button" onClick={onClose} className={styles.updateCloseBtn}>✕</button>
         </div>
 

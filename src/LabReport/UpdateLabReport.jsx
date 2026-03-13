@@ -4,6 +4,8 @@ import { FiSave, FiX } from 'react-icons/fi';
 import { updateLabTestReport } from '../Api/ApiLabTests.js';
 import { getEmployeeList } from '../Api/Api.js';
 import styles from './LabReportList.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 // ────────────────────────────────────────────────
 const STATUS_OPTIONS = [
@@ -158,9 +160,16 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
       >
         <div className={styles.clinicModalHeader}>
           <h2>Update Lab Report</h2>
+
+          <div className={styles.headerRight}>
+                        <div className={styles.clinicNameone}>
+                                       <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                                         {localStorage.getItem('clinicName') || '—'}
+                                    </div>
           <button onClick={onClose} className={styles.clinicModalClose}>
             ×
           </button>
+        </div>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.clinicModalBody}>

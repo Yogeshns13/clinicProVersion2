@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { deleteVendor } from '../Api/ApiPharmacy.js';
 import UpdateVendor from './UpdateVendor.jsx';
 import styles from './ViewVendor.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 // ────────────────────────────────────────────────
 // Props:
@@ -89,6 +91,10 @@ const ViewVendor = ({ vendor, onClose, onDeleteSuccess }) => {
             <div className={styles.detailHeaderContent}>
               <h2>{vendor.name}</h2>
             </div>
+            <div className={styles.clinicNameone}>
+               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                 {localStorage.getItem('clinicName') || '—'}
+               </div>
             <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
           </div>
 

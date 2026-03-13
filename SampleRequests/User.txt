@@ -25,7 +25,6 @@ UpdateUser
     "Mobile": "8220485398",   
     "EMail": "hameedsha21@gmail.com",
     "ProfileName":"admin"
-   
 }
 
 
@@ -38,7 +37,6 @@ UpdatePassword
     "ClinicID":1,    
     "UserID":1,  
     "Password" : "1qaz2wsx"
-   
 }
 
 DeleteUser 
@@ -99,7 +97,24 @@ ForgetPassword
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000,
-    "ClinicID":1,    
+    "ClinicID":0, 
     "UserName":"admin",
     "Email":"siva@gmail.com"
+}
+
+ForgetPassword
+
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",    
+    "UserName":"ns13yogesh@gmail.com",
+    "Email":"ns13yogesh@gmail.com"
+}
+
+{
+    "result": {
+        "status": "Success",
+        "message": "Mail Sent Successfully"
+    }
 }

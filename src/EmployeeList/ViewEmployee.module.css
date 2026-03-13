@@ -69,13 +69,13 @@
 /* ==================== GRADIENT HEADER ==================== */
 .header {
   flex-shrink: 0;
-  padding: 18px 24px;
+  padding: 14px 18px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 .headerLeft {
   display: flex;
@@ -85,21 +85,22 @@
   min-width: 0;
 }
 .empAvatar {
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.25);
   border: 2px solid rgba(255, 255, 255, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: white;
   flex-shrink: 0;
   text-transform: uppercase;
 }
 .headerContent {
+  flex: 1;
   min-width: 0;
 }
 .headerContent h2 {
@@ -111,14 +112,20 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.subtitle {
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 500;
+
+.clinicNameone {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  font-size: 1.05rem;           
+  font-weight: 600;
+  color: var(--text-light);
+  line-height: 1.2;
+  white-space: nowrap;          
+  text-overflow: ellipsis;      
+  max-width: 220px;             
 }
+
 .idBadge {
   background: rgba(255, 255, 255, 0.2);
   padding: 2px 8px;
@@ -128,16 +135,18 @@
 }
 .headerRight {
   display: flex;
+  flex: 1;
   align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
+  justify-content: flex-end;
+  gap: 2px;
+  
 }
 .deleteEmpBtn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 6px;
   padding: 7px 14px;
-  background: rgba(220, 38, 38, 0.2);
+  background:red;
   border: 1.5px solid rgba(255, 255, 255, 0.35);
   color: white;
   border-radius: 10px;
@@ -149,7 +158,7 @@
   white-space: nowrap;
 }
 .deleteEmpBtn:hover {
-  background: rgba(220, 38, 38, 0.45);
+  background: red;
   border-color: rgba(255, 255, 255, 0.6);
   transform: translateY(-1px);
 }

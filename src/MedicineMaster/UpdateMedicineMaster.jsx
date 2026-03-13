@@ -6,6 +6,8 @@ import { getMedicineMasterList, updateMedicineMaster } from '../Api/ApiPharmacy.
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './UpdateMedicineMaster.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const MEDICINE_TYPES = [
   { value: 1,  label: 'Tablet' },
@@ -206,8 +208,8 @@ const UpdateMedicineMaster = ({
       setLoading(true);
       setError(null);
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const data = await getMedicineMasterList(clinicId, {
         Page: 1, PageSize: 1, BranchID: branchId, MedicineID: Number(id),
@@ -283,8 +285,8 @@ const UpdateMedicineMaster = ({
       setSubmitLoading(true);
       setError(null);
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const updateData = {
         medicineId:      Number(id),
@@ -650,11 +652,19 @@ const UpdateMedicineMaster = ({
         <div className={styles.modalContainer}>
           <div className={styles.modalHeader}>
             <h2 className={styles.modalTitle}>Update Medicine</h2>
+
+            <div className={styles.headerRight}>
+            <div className={styles.clinicNameone}>
+                           <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                             {localStorage.getItem('clinicName') || '—'}
+                        </div>
+
             {onClose && (
               <button onClick={onClose} className={styles.modalCloseBtn} disabled={submitLoading}>
                 <FiX size={20} />
               </button>
             )}
+          </div>
           </div>
 
           <ErrorHandler error={error} />

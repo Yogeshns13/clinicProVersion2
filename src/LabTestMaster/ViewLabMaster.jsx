@@ -1,6 +1,8 @@
 import React from 'react';
 import { FiX, FiEdit, FiTrash2 } from 'react-icons/fi';
 import styles from './ViewLabMaster.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const TEST_TYPES = [
   { id: 1, label: 'Blood' },
@@ -46,10 +48,12 @@ const ViewLabMaster = ({ test, onClose, onUpdate, onDelete }) => {
             </div>
             <div>
               <h2>{test.testName}</h2>
-              <p className={styles.subtitle}>
-                {getTestTypeLabel(test.testType)}
-              </p>
+              
             </div>
+          </div>
+          <div className={styles.clinicNameone}>
+              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                {localStorage.getItem('clinicName') || '—'}
           </div>
           <button onClick={onClose} className={styles.modalClose}>
             ×

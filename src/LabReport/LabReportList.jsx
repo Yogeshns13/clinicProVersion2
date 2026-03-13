@@ -7,6 +7,8 @@ import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import UpdateLabReport from './UpdateLabReport.jsx';
 import styles from './LabReportList.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 // ────────────────────────────────────────────────
 const LabReportList = () => {
@@ -61,8 +63,8 @@ const LabReportList = () => {
     try {
       setLoading(true);
       setError(null);
-      const clinicId = Number(localStorage.getItem('clinicID')) || 0;
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const options = { BranchID: branchId };
       const data = await getLabTestReportList(clinicId, options);
       setReports(data);
@@ -361,20 +363,25 @@ const LabReportList = () => {
 
             {/* ── Gradient Header ── */}
             <div className={styles.detailModalHeader}>
-              <div className={styles.detailHeaderContent}>
-                <div className={styles.detailHeaderTop}>
-                  <div className={styles.detailHeaderAvatar}>
-                    {selectedReport.patientFileNo
-                      ? String(selectedReport.patientFileNo).charAt(0).toUpperCase()
-                      : 'F'}
-                  </div>
-                  <div>
-                    <h2 className={styles.detailHeaderTitle}>{selectedReport.patientName || '—'}</h2>
-                  </div>
-                </div>
-              </div>
-              <button onClick={closeModal} className={styles.detailCloseBtn}>✕</button>
-            </div>
+  <div className={styles.detailHeaderContent}>
+    {/* Left: Avatar + Patient name */}
+    <div className={styles.detailHeaderTop}>
+      <div className={styles.detailHeaderAvatar}>
+        {selectedReport.patientFileNo
+          ? String(selectedReport.patientFileNo).charAt(0).toUpperCase()
+          : 'F'}
+      </div>
+      <h2 className={styles.detailHeaderTitle}>{selectedReport.patientName || '—'}</h2>
+    </div>
+    <div className={styles.clinicNameone}>
+        <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+        {localStorage.getItem('clinicName') || '—'}
+      </div>
+     
+  </div>
+
+  <button onClick={closeModal} className={styles.detailCloseBtn}>✕</button>
+</div>
 
             {/* ── Scrollable Body ── */}
             <div className={styles.detailModalBody}>

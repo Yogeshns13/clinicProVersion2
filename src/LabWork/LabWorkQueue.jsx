@@ -19,6 +19,8 @@ import { getEmployeeList } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './LabWorkQueue.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const LabWorkQueue = () => {
   const navigate = useNavigate();
@@ -86,8 +88,8 @@ const LabWorkQueue = () => {
   // Fetch Doctors List
   const fetchDoctors = async () => {
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       
       const options = {
         Page: 1,
@@ -107,8 +109,8 @@ const LabWorkQueue = () => {
   // NEW: Fetch order statuses for all unique order IDs
   const fetchOrderStatuses = async (orderIds) => {
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       
       const statusesMap = {};
       
@@ -138,8 +140,8 @@ const LabWorkQueue = () => {
     try {
       setLoading(true);
       setError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const options = {
         Page: 1,
@@ -389,8 +391,8 @@ const LabWorkQueue = () => {
       setCompletingOrder(true);
       setError(null);
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const orderDetails = await getLabTestOrderList(clinicId, {
         OrderID: orderToComplete.orderId,
@@ -874,8 +876,8 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
       setError(null);
       setStatusMessage({ type: '', text: '' });
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const formattedDateTime = sampleData.sampleCollectedTime.replace('T', ' ') + ':00';
 
@@ -914,8 +916,8 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
       setError(null);
       setStatusMessage({ type: '', text: '' });
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       await updateLabWorkItemResult({
         workId: workItem.workId,
@@ -956,8 +958,8 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
       setError(null);
       setStatusMessage({ type: '', text: '' });
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       await approveLabWorkItem({
         workId: workItem.workId,
@@ -999,8 +1001,8 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
       setError(null);
       setStatusMessage({ type: '', text: '' });
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       await rejectLabWorkItem({
         WorkID: workItem.workId,
@@ -1041,6 +1043,10 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
           <div className={styles.detailHeaderContent}>
             <h2>Process Lab Work Item</h2>
           </div>
+           <div className={styles.clinicNameone}>
+               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                 {localStorage.getItem('clinicName') || '—'}
+            </div>
           <button onClick={onClose} className={styles.detailCloseBtn}>
             <FiX size={24} />
           </button>

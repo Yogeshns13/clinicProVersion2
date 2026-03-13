@@ -23,6 +23,7 @@ import {
   updateLabTestOrderItem, deleteLabTestOrder
 } from '../Api/ApiLabTests.js';
 import './AddConsultation.css';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 /* ─── Constants ─────────────────────────────────── */
 const TIMING_OPTIONS = [

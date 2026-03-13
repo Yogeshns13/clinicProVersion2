@@ -11,6 +11,8 @@ import { getClinicList } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './ConsultationChargeConfig.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const codeRegex = /^[A-Za-z0-9\-_]+$/;
 
@@ -144,7 +146,7 @@ const ConsultationChargeConfig = () => {
     try {
       setLoading(true);
       setError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
+      const clinicId = await getStoredClinicId();
       const data = await getConsultingChargeConfigList(clinicId, { PageSize: 100 });
       setChargeConfigs(data);
       setAllChargeConfigs(data);
@@ -159,7 +161,7 @@ const ConsultationChargeConfig = () => {
 
   const fetchClinics = async () => {
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
+      const clinicId = await getStoredClinicId();
       const data = await getClinicList(clinicId);
       setClinics(data);
     } catch (err) {
@@ -212,10 +214,10 @@ const ConsultationChargeConfig = () => {
   const closeDetails = () => setSelectedConfig(null);
 
   // ── Add Form ──
-  const openAddForm = () => {
+  const openAddForm = async() => {
     setIsEditMode(false);
     setEditingConfig(null);
-    const clinicId = Number(localStorage.getItem('clinicID'));
+    const clinicId = await getStoredClinicId();
     const clinic = clinics.find(c => c.id === clinicId);
     setFormData({
       clinicId: clinicId || '',
@@ -503,6 +505,10 @@ const ConsultationChargeConfig = () => {
               <div className={styles.detailHeaderContent}>
                 <h2>{selectedConfig.chargeName}</h2>
               </div>
+              <div className={styles.clinicNameone}>
+                 <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                  {localStorage.getItem('clinicName') || '—'}
+                  </div>
               <button onClick={closeDetails} className={styles.detailCloseBtn}>✕</button>
             </div>
 
@@ -617,7 +623,14 @@ const ConsultationChargeConfig = () => {
           <div className={styles.chargeConfigModal}>
             <div className={styles.chargeConfigModalHeader}>
               <h2>{isEditMode ? 'Edit' : 'Add'} Charge Configuration</h2>
+              <div className={styles.headerRight}>
+              <div className={styles.clinicNameone}>
+                             <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                               {localStorage.getItem('clinicName') || '—'}
+                          </div>
+              
               <button onClick={closeForm} className={styles.chargeConfigModalClose}>×</button>
+            </div>
             </div>
             <form onSubmit={handleSubmit}>
               <div className={styles.chargeConfigModalBody}>

@@ -25,6 +25,8 @@ import ViewLabPackage from './ViewLabPackage.jsx';
 import styles from './LabMaster.module.css';
 import UpdateLabTestMaster from './UpdateLabTestMaster.jsx';
 import UpdateLabTestPackage from './UpdateLabTestPackage.jsx';
+import { FaClinicMedical } from 'react-icons/fa'; 
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
@@ -282,8 +284,8 @@ const LabMasterList = () => {
       setLoading(true);
       setError(null);
       
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const options = { BranchID: branchId };
       if (filters.searchValue) options.TestName = filters.searchValue;
@@ -311,8 +313,8 @@ const LabMasterList = () => {
       setLoading(true);
       setError(null);
       
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const options = { BranchID: branchId };
       if (filters.searchValue) options.PackNameSearch = filters.searchValue;
@@ -336,8 +338,8 @@ const LabMasterList = () => {
 
   const fetchPackageItems = async (PackageId) => {
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       
       const data = await getLabTestPackageItemList({
         packageId: PackageId,
@@ -355,8 +357,8 @@ const LabMasterList = () => {
 
   const fetchAvailableTests = async () => {
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       
       const data = await getLabTestMasterList(clinicId, { BranchID: branchId, Status: 1 });
       setAvailableTests(data);
@@ -547,8 +549,8 @@ const LabMasterList = () => {
     setError(null);
 
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       await addLabTestMaster({
         clinicId,
@@ -675,8 +677,8 @@ const LabMasterList = () => {
     setError(null);
 
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       await addLabTestPackage({
         clinicId,
@@ -746,8 +748,8 @@ const LabMasterList = () => {
     setFormError('');
 
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       for (const testId of selectedTestIds) {
         await addLabPackageItem({
@@ -790,8 +792,8 @@ const LabMasterList = () => {
     setFormError('');
 
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const result = await rebuildPackageFees({
         packageId: selectedPackage.id,
@@ -1240,9 +1242,16 @@ const LabMasterList = () => {
           <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Add New Lab Test</h2>
+
+              <div className={styles.headerRight}>
+              <div className={styles.clinicNameone}>
+                 <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                   {localStorage.getItem('clinicName') || '—'}
+               </div>
               <button onClick={closeAddTestForm} className={styles.modalClose}>
                 <FiX />
               </button>
+             </div>
             </div>
 
             <form onSubmit={handleTestSubmit} className={styles.modalBody}>
@@ -1351,9 +1360,16 @@ const LabMasterList = () => {
           <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Add New Lab Test Package</h2>
+
+              <div className={styles.headerRight}>
+              <div className={styles.clinicNameone}>
+                 <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                   {localStorage.getItem('clinicName') || '—'}
+               </div>
               <button onClick={closeAddPackageForm} className={styles.modalClose}>
                 <FiX />
               </button>
+            </div>
             </div>
 
             <form onSubmit={handlePackageSubmit} className={styles.modalBody}>

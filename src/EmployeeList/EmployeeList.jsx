@@ -7,6 +7,7 @@ import Header from '../Header/Header.jsx';
 import AddEmployee from './AddEmployee.jsx';
 import ViewEmployee from './ViewEmployee.jsx';
 import styles from './EmployeeList.module.css';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -83,8 +84,8 @@ const EmployeeList = () => {
   // Fetch departments (once)
   useEffect(() => {
     const fetchDepartments = async () => {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       try {
         const data = await getDepartmentList(clinicId, branchId, {});
         setDepartments(data);
@@ -102,8 +103,8 @@ const EmployeeList = () => {
       setLoading(true);
       setError(null);
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const options = {
         BranchID:      branchId,

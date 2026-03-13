@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { FiX, FiCalendar, FiUser, FiPhone, FiFileText, FiClock } from 'react-icons/fi';
 import { getAppointmentList, cancelAppointment } from '../Api/Api.js';
 import './ViewAppointment.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+
 
 // ────────────────────────────────────────────────
 // Helper function to convert status code to string
@@ -49,8 +52,8 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRe
         setLoading(true);
         setError(null);
 
-        const clinicId = Number(localStorage.getItem('clinicID'));
-        const branchId = Number(localStorage.getItem('branchID'));
+        const clinicId = await getStoredClinicId();
+        const branchId = await getStoredBranchId();
 
         const data = await getAppointmentList(clinicId, {
           BranchID: branchId,
@@ -163,6 +166,10 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRe
             <FiCalendar className="appointment-header-icon" size={24} />
             <h2>Appointment Details</h2>
           </div>
+          <div className="clinicNameone">
+             <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+               {localStorage.getItem('clinicName') || '—'}
+                  </div>
           <button onClick={onClose} className="appointment-modal-close">
             <FiX size={20} />
           </button>

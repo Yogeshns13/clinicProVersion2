@@ -3,6 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FiX, FiCalendar, FiClock, FiUser, FiSearch, FiChevronDown, FiCheckCircle } from 'react-icons/fi';
 import { addAppointment, getPatientsList, getEmployeeList, getSlotList } from '../Api/Api.js';
 import styles from './AddAppointment.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+
 
 const SearchableDropdown = ({
   label,
@@ -208,8 +211,8 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
 
   const fetchPatients = async () => {
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const data = await getPatientsList(clinicId, { BranchID: branchId, Status: 1, PageSize: 100 });
       setPatients(data);
     } catch (err) {
@@ -219,8 +222,8 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
 
   const fetchDoctors = async () => {
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const data = await getEmployeeList(clinicId, { BranchID: branchId, Designation: 1, Status: 1, PageSize: 100 });
       setDoctors(data);
     } catch (err) {
@@ -231,8 +234,8 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
   const fetchAvailableSlots = async (doctorId, date) => {
     setLoadingSlots(true);
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const data = await getSlotList(clinicId, {
         BranchID: branchId,
         DoctorID: doctorId,
@@ -299,8 +302,8 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
     setError(null);
     setSuccess(null);
     try {
-      const clinicId = localStorage.getItem('clinicID');
-      const branchId = localStorage.getItem('branchID');
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       await addAppointment({
         clinicId: parseInt(clinicId),
         branchId: parseInt(branchId),
@@ -364,9 +367,14 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerContent}>
-            <FiCalendar className={styles.headerIcon} size={24} />
+            <FiCalendar className={styles.headerIcon} size={20} />
             <h2>Book New Appointment</h2>
           </div>
+          <div className={styles.clinicNameone}>
+                <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px" }} />
+                {localStorage.getItem("clinicName") || "—"}
+              </div>
+
           <button onClick={handleClose} className={styles.closeBtn} disabled={loading}>
             <FiX size={20} />
           </button>

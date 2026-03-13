@@ -28,6 +28,8 @@ import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import AddPurchaseOrderDetail from './AddPurchaseOrderDetail.jsx';
 import UpdatePurchaseOrderDetail from './UpdatePurchaseOrderDetail.jsx';
 import styles from './PurchaseOrderItems.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 // ──────────────────────────────────────────────────
 const PO_STATUS_OPTIONS = [
@@ -83,8 +85,8 @@ const PurchaseOrderDetailList = () => {
     try {
       setPoLoading(true);
       setPoError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const data = await getPurchaseOrderList(clinicId, {
         POID:     Number(id),
@@ -112,8 +114,8 @@ const PurchaseOrderDetailList = () => {
     try {
       setItemLoading(true);
       setItemError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const data = await getPurchaseOrderDetailList(clinicId, {
         BranchID:   branchId,
@@ -325,6 +327,15 @@ const PurchaseOrderDetailList = () => {
 
           {/* Row 2 */}
           <div className={`${styles.infoRow} ${styles.infoRowAmounts}`}>
+            {po.clinicName && (
+              <div className={styles.infoItem}>
+                <FaClinicMedical size={13} className={styles.infoIcon} />
+                <div>
+                  <span className={styles.infoLabel}>Clinic</span>
+                  <span className={styles.infoValue}>{po.clinicName}</span>
+                </div>
+              </div>
+            )}
             {po.branchName && (
               <div className={styles.infoItem}>
                 <FiMapPin size={13} className={styles.infoIcon} />
@@ -334,6 +345,7 @@ const PurchaseOrderDetailList = () => {
                 </div>
               </div>
             )}
+            
             <div className={styles.infoItem}>
               <FiDollarSign size={13} className={styles.infoIcon} />
               <div>

@@ -13,6 +13,7 @@ import { getMedicineStockList } from '../Api/ApiPharmacy.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './MedicineStockByMedicine.module.css';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const MedicineStockByMedicine = () => {
   const { medicineId } = useParams();
@@ -34,8 +35,8 @@ const MedicineStockByMedicine = () => {
         setLoading(true);
         setError(null);
 
-        const clinicId = Number(localStorage.getItem('clinicID'));
-        const branchId = Number(localStorage.getItem('branchID'));
+        const clinicId = await getStoredClinicId();
+        const branchId = await getStoredBranchId();
 
         const options = {
           BranchID: branchId,

@@ -4,6 +4,8 @@ import { FiX } from 'react-icons/fi';
 import { addPurchaseOrder } from '../Api/ApiPharmacy.js';
 import { getVendorList } from '../Api/ApiPharmacy.js';
 import styles from './AddPurchaseOrder.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 // ────────────────────────────────────────────────
 const AddPurchaseOrder = ({ isOpen, onClose, onAddSuccess }) => {
@@ -39,8 +41,8 @@ const AddPurchaseOrder = ({ isOpen, onClose, onAddSuccess }) => {
   const fetchVendors = async () => {
     try {
       setLoadingVendors(true);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const data = await getVendorList(clinicId, {
         BranchID: branchId,
@@ -120,9 +122,16 @@ const AddPurchaseOrder = ({ isOpen, onClose, onAddSuccess }) => {
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h2>Add New Purchase Order</h2>
+          <div className={styles.headerRight}>
+    <div className={styles.clinicNameone}>
+      <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px" }} />
+      {localStorage.getItem("clinicName") || "—"}
+    </div>
+
           <button onClick={onClose} className={styles.modalClose}>
             <FiX />
           </button>
+        </div>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.modalBody}>

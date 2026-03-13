@@ -41,17 +41,24 @@
   background: var(--glass-bg);
   border-radius: 20px;
   width: 100%;
-  max-width: 1200px;               /* Slightly wider than Clinic to fit more fields */
-  max-height: 90vh;
-  overflow-y: auto;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  height: 90vh;
+  overflow: hidden;
   box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.4s ease;
 }
 
 /* ==================== HEADER ==================== */
 .detailModalHeader {
-  padding: 14px 18px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  flex-shrink: 0;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   color: var(--text-light);
   display: flex;
   justify-content: space-between;
@@ -104,8 +111,16 @@
 }
 
 /* ==================== FORM BODY ==================== */
-.addModalBody {
-  padding: 0 28px 24px;
+.addModalBodyScrollable {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.addModalBodyScrollable form {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }
 
 /* ==================== SECTIONS ==================== */
@@ -164,6 +179,11 @@
   font-weight: 700;
 }
 
+.required {
+  color: #dc2626;
+  font-weight: 700;
+}
+
 .addFormGroup input,
 .addFormGroup textarea,
 .addFormGroup select {
@@ -206,6 +226,7 @@
   font-size: 0.9rem;
   font-weight: 600;
   border: 2px solid;
+  margin: 16px 24px;
 }
 
 .formError {
@@ -222,12 +243,14 @@
 
 /* ==================== FOOTER ==================== */
 .detailModalFooter {
+  margin-top: auto;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   padding: 20px 28px;
   border-top: 2px solid rgba(34, 43, 108, 0.1);
   background: #f8fafc;
+  flex-shrink: 0;
 }
 
 .btnCancel {
@@ -275,7 +298,6 @@
 }
 
 .btnCancel:hover::before { opacity: 1; }
-
 .btnCancel:hover::after { background-position: 200% 0; }
 
 .btnSubmit {
@@ -294,6 +316,9 @@
   box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
   white-space: nowrap;
   z-index: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .btnSubmit:hover {
@@ -307,20 +332,218 @@
   transform: none;
 }
 
-/* ==================== FAMILY SEARCH ==================== */
-.flexRow {
+/* ==================== FAMILY PATIENT LINK — NEW LAYOUT ==================== */
+
+/* Single row: 40% search | 60% results */
+.familySearchRow {
   display: flex;
-  gap: 12px;
+  gap: 16px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* Left panel: 40% */
+.familySearchLeft {
+  flex: 0 0 40%;
+  max-width: 40%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Right panel: 60% — results list */
+.familyResultsRight {
+  flex: 0 0 calc(60% - 16px);
+  max-width: calc(60% - 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.familyResultsEmpty {
+  /* placeholder to keep layout stable when no results */
+  min-height: 40px;
+}
+
+.familySearchLabel {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--primary-start);
+}
+
+.familySearchInputRow {
+  display: flex;
+  gap: 8px;
   align-items: center;
 }
 
-.searchInput {
+.familySearchInput {
   flex: 1;
-  height: 44px;
-  padding: 0 16px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.9);
   border: 2px solid rgba(34, 43, 108, 0.15);
   border-radius: 10px;
+  color: var(--text-dark);
   font-size: 0.9rem;
+  transition: all 0.3s ease;
+  height: 40px;
+}
+
+.familySearchInput:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
+  background: white;
+}
+
+/* Results list — table style */
+.familyResultsList {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+/* Header row */
+.familyResultsHeader {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.07), rgba(48, 178, 181, 0.1));
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.familyResultsHeaderSelect {
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.familyResultsHeaderCell {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Each result row */
+.familyResultItem {
+  display: flex;
+  align-items: center;
+  padding: 9px 12px;
+  background: white;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.15s ease;
+}
+
+.familyResultItem:last-child {
+  border-bottom: none;
+}
+
+.familyResultItem:hover {
+  background: #f0f9ff;
+}
+
+.familyResultItemSelected {
+  background: #e8f5e9 !important;
+  border-left: 3px solid #4caf50;
+}
+
+.familyResultSelectCell {
+  width: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.familyRadio {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent-end);
+  cursor: pointer;
+}
+
+.familyResultCell {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  padding-right: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==================== MEDICAL INFORMATION — NEW LAYOUT ==================== */
+
+/* Row 1: Three equal columns (30% each) for Allergies, Past Surgeries, Family Medical History */
+.medicalThreeColRow {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.medicalColGroup {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Tall textarea — enough for ~200 characters */
+.medicalTallTextarea {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(34, 43, 108, 0.15);
+  border-radius: 10px;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  resize: vertical;
+  min-height: 120px;   /* tall enough for ~200 chars */
+  line-height: 1.5;
+}
+
+.medicalTallTextarea:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
+  background: white;
+}
+
+/* Row 2 — same .medicalThreeColRow + .medicalColGroup as Row 1 */
+/* Label with checkbox inline */
+.medicalColLabel {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--primary-start);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.medicalCheckbox {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent-end);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Placeholder box — same height as tall textarea, dashed border, no content */
+.medicalCheckboxPlaceholder {
+  width: 100%;
+  min-height: 120px;
+  border: 2px dashed rgba(34, 43, 108, 0.15);
+  border-radius: 10px;
+  background: rgba(34, 43, 108, 0.02);
+}
+
+.medicalCheckboxBox {
+  display: flex;
+  flex-direction: column;
 }
 
 /* ==================== RESPONSIVE ==================== */
@@ -343,15 +566,40 @@
     width: 100%;
   }
 
-  .flexRow {
+  /* Family search stacks on mobile */
+  .familySearchRow {
     flex-direction: column;
-    gap: 10px;
+  }
+
+  .familySearchLeft,
+  .familyResultsRight {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  /* Medical three cols stack on mobile */
+  .medicalThreeColRow {
+    flex-direction: column;
+  }
+
+  .medicalCheckboxRow {
+    flex-direction: column;
+    border-radius: 12px;
+  }
+
+  .medicalCheckboxItem {
+    border-right: none;
+    border-bottom: 1px solid rgba(34, 43, 108, 0.1);
+  }
+
+  .medicalCheckboxItem:last-child {
+    border-bottom: none;
   }
 }
 
 @media (max-width: 480px) {
   .detailModalHeader {
-    padding: 20px 24px;
+    padding: 16px 18px;
   }
 
   .detailHeaderContent h2 {
@@ -372,42 +620,4 @@
     font-size: 0.88rem;
     padding: 9px 12px;
   }
-}
-
-.addModalContent {
-  display: flex;
-  flex-direction: column;
-  height: 90vh;                    /* or max-height: 90vh */
-  overflow: hidden;                /* Prevent whole modal from scrolling */
-}
-
-.detailModalHeader {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  flex-shrink: 0;                  /* Header won't shrink */
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  padding: 24px 28px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.addModalBodyScrollable {
-  flex: 1 1 auto;                  /* Grow to fill space */
-  overflow-y: auto;                /* Only body scrolls */
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Make sure footer stays at bottom even if content is short */
-.addModalBodyScrollable form {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
-}
-
-.detailModalFooter {
-  margin-top: auto;                /* Pushes footer to bottom */
-  padding: 20px 28px;
-  background: #f8fafc;
-  border-top: 2px solid rgba(34, 43, 108, 0.1);
-  flex-shrink: 0;
 }

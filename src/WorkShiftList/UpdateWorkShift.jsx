@@ -3,26 +3,17 @@ import React, { useState } from 'react';
 import { FiSave } from 'react-icons/fi';
 import { updateShift } from '../Api/Api.js';
 import styles from './WorkShift.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId } from '../Utils/Cryptoutils.js';
 
 const STATUS_OPTIONS = [
   { id: 1, label: 'Active' },
   { id: 2, label: 'Inactive' },
 ];
 
-// ── Mirrors backend timeRegex: HH:MM or HH:MM:SS ──
 const TIME_REGEX = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
 
-// ────────────────────────────────────────────────
-// Props:
-//   shift     — the shift object to edit (required)
-//   onClose   — called when user cancels or clicks backdrop
-//   onSuccess — called after a successful update (triggers list refresh)
-// ────────────────────────────────────────────────
 const UpdateWorkShift = ({ shift, onClose, onSuccess }) => {
-  const getStoredClinicId = () => {
-    const clinicId = localStorage.getItem('clinicID');
-    return clinicId ? parseInt(clinicId, 10) : null;
-  };
 
   const formatTimeFor24Hr = (time) => {
     if (!time) return '';
@@ -236,15 +227,11 @@ const UpdateWorkShift = ({ shift, onClose, onSuccess }) => {
         <div className={styles.detailModalHeader}>
           <div className={styles.detailHeaderContent}>
             <h2>Update Work Shift</h2>
-            <div className={styles.detailHeaderMeta}>
-              <span className={styles.workIdBadge}>
-                {formData.shiftName || 'Shift'}
-              </span>
-              <span className={`${styles.workIdBadge} ${formData.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}>
-                {formData.status === 1 ? 'ACTIVE' : 'INACTIVE'}
-              </span>
-            </div>
-          </div>
+           </div>
+           <div className={styles.clinicNameone}>
+                          <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                            {localStorage.getItem('clinicName') || '—'}
+                       </div>
           <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
         </div>
 

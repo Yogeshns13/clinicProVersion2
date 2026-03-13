@@ -17,6 +17,8 @@ import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import LabOrderPrintModal from './LabOrderPrintModal.jsx';
 import styles from './LabOrderList.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const LabOrderList = () => {
   const navigate = useNavigate();
@@ -121,8 +123,8 @@ const LabOrderList = () => {
   // Fetch Doctors List
   const fetchDoctors = async () => {
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const options = {
         Page: 1,
         PageSize: 100,
@@ -140,8 +142,8 @@ const LabOrderList = () => {
   // Fetch Lab Test Reports to check if orders have reports
   const fetchLabTestReports = async () => {
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const options = { Page: 1, PageSize: 100, BranchID: branchId };
       const reports = await getLabTestReportList(clinicId, options);
       const reportsMap = {};
@@ -159,8 +161,8 @@ const LabOrderList = () => {
     try {
       setLoading(true);
       setError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const options = { Page: 1, PageSize: 100, BranchID: branchId };
       const data = await getLabTestOrderList(clinicId, options);
       const sortedData = data.sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated));
@@ -245,8 +247,8 @@ const LabOrderList = () => {
     setIsOrderDetailsOpen(true);
     try {
       setLoadingOrderItems(true);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const items = await getLabTestOrderItemList(clinicId, { OrderID: order.id, BranchID: branchId, Page: 1, PageSize: 100 });
       setSelectedOrderItems(items);
     } catch (err) {
@@ -263,8 +265,8 @@ const LabOrderList = () => {
     setIsPrintModalOpen(true);
     try {
       setLoadingPrintItems(true);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const items = await getLabTestOrderItemList(clinicId, { OrderID: order.id, BranchID: branchId, Page: 1, PageSize: 100 });
       setPrintOrderItems(items);
     } catch (err) {
@@ -283,7 +285,7 @@ const LabOrderList = () => {
     if (!selectedOrder) return;
     try {
       setLoading(true);
-      const clinicId = Number(localStorage.getItem('clinicID'));
+      const clinicId = await getStoredClinicId();
       await createWorkItemsForOrder(selectedOrder.id, clinicId);
       setIsConfirmWorkOpen(false);
       setSelectedOrder(null);
@@ -334,8 +336,8 @@ const LabOrderList = () => {
       setSubmittingReport(true);
       setIsUpdateMode(false);
       setCurrentReportId(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const orderList = await getLabTestOrderList(clinicId, { OrderID: order.id, BranchID: branchId, Page: 1, PageSize: 1 });
       if (!orderList || orderList.length === 0) throw new Error('Order details not found');
       setOrderDetails(orderList[0]);
@@ -355,8 +357,8 @@ const LabOrderList = () => {
   const handleUpdateReportClick = async (order) => {
     try {
       setSubmittingReport(true);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const reports = await getLabTestReportList(clinicId, { OrderID: order.id, BranchID: branchId, Page: 1, PageSize: 1 });
       if (!reports || reports.length === 0) throw new Error('Report not found for this order');
       const existingReport = reports[0];
@@ -802,8 +804,13 @@ const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions
               <div>
                 <h2 className={styles.detailHeaderTitle}>{order.patientName}</h2>
               </div>
+             </div>
+              <div className={styles.clinicNameone}>
+               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                {localStorage.getItem('clinicName') || '—'}
+             </div>
             </div>
-          </div>
+          
           <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
         </div>
 
@@ -975,10 +982,10 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
     testApprovedBy: order.doctorId
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
-    const clinicId = Number(localStorage.getItem('clinicID'));
-    const branchId = Number(localStorage.getItem('branchID'));
+    const clinicId = await getStoredClinicId();
+    const branchId = await getStoredBranchId();
     onSubmit({
       orderId: order.id, clinicId, branchId,
       status: formData.status, priority: formData.priority,
@@ -992,7 +999,15 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h2>Update Order</h2>
+
+          <div className={styles.headerRight}>
+                        <div className={styles.clinicNameone}>
+                                       <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                                         {localStorage.getItem('clinicName') || '—'}
+                                    </div>
+
           <button onClick={onClose} className={styles.closeBtn}>×</button>
+        </div>
         </div>
         <form onSubmit={handleSubmit}>
           <div className={styles.modalBody}>
@@ -1074,10 +1089,10 @@ const MakeInvoiceModal = ({ order, onClose, onSubmit }) => {
   };
   const [formData, setFormData] = useState({ invoiceDate: getTodayDate(), discount: 0 });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
-    const clinicId = Number(localStorage.getItem('clinicID'));
-    const branchId = Number(localStorage.getItem('branchID'));
+    const clinicId = await getStoredClinicId();
+    const branchId = await getStoredBranchId();
     onSubmit({ orderId: order.id, clinicId, branchId, invoiceDate: formData.invoiceDate, discount: Number(formData.discount) });
   };
 
@@ -1085,7 +1100,7 @@ const MakeInvoiceModal = ({ order, onClose, onSubmit }) => {
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2>Generate Invoice</h2>
+          <h2>Generate Invoice</h2>  
           <button onClick={onClose} className={styles.closeBtn}>×</button>
         </div>
         <form onSubmit={handleSubmit}>
@@ -1100,6 +1115,11 @@ const MakeInvoiceModal = ({ order, onClose, onSubmit }) => {
                 <span className={styles.confirmLabel}>Doctor:</span>
                 <span className={styles.confirmValue}>{order.doctorFullName}</span>
               </div>
+              <div className={styles.confirmDetailRow}>
+                <span className={styles.confirmLabel}>ClinicName:</span>
+                <span className={styles.confirmValue}>{localStorage.getItem('clinicName') || '—'}</span>
+              </div>
+
             </div>
             <div className={styles.invoiceFormGrid}>
               <div className={styles.formGroup}>

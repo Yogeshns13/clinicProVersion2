@@ -166,20 +166,27 @@ select{
   display:flex; align-items:center; justify-content:center; gap:5.95px;
   z-index: 5;
 }
+.login-btn:disabled{
+  opacity:0.7; cursor:not-allowed; transform:none;
+}
 .login-btn .icon{ width:15.3px; height:15.3px; color:var(--primary-end); }
-.login-btn:hover{
+.login-btn:hover:not(:disabled){
   background:#dbeafe; color:#1e40af; transform:translateY(-1.7px);
   box-shadow:0 5.95px 17px rgba(0,0,0,.22);
 }
-.login-btn:hover .icon{ color:#1e40af; }
+.login-btn:hover:not(:disabled) .icon{ color:#1e40af; }
 
-/* ===== FORGOT LINK (VISIBLE) ===== */
+/* ===== FORGOT / TOGGLE LINKS ===== */
 .forgot-link{
   text-align:center; margin-top:11.9px; font-size:10.88px;
   color:#dbeafe; cursor:pointer; transition:.2s; pointer-events:auto;
   z-index: 5;
 }
 .forgot-link:hover{ color:white; text-decoration:underline; }
+.toggle-link{
+  color:white; font-weight:600; cursor:pointer; text-decoration:underline;
+}
+.toggle-link:hover{ opacity:0.8; }
 
 /* ===== RIGHT PANEL ===== */
 .promo-panel{
@@ -201,15 +208,6 @@ select{
 }
 .promo-content h2{ font-size:20.4px; font-weight:600; margin-bottom:11.9px; }
 .promo-content p{ font-size:12.325px; line-height:1.7; opacity:.94; margin-bottom:23.8px; }
-.signup-btn{
-  background:white; color:var(--accent-end); border:none;
-  padding:11.9px 32.3px; border-radius:13.6px; font-weight:600; font-size:12.75px;
-  cursor:pointer; transition:all .3s ease; box-shadow:0 4.25px 15.3px rgba(0,0,0,.16);
-}
-.signup-btn:hover{
-  background:#ecfeff; color:#065f46; transform:translateY(-2.55px);
-  box-shadow:0 8.5px 25.5px rgba(0,0,0,.22);
-}
 
 .modal-overlay {
   position: fixed;

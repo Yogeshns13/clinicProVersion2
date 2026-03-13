@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FiX, FiSave, FiUser,FiActivity} from 'react-icons/fi';
 import { addPatientVisit } from '../Api/Api.js';
 import styles from './AddAppointmentVisit.module.css';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+
 
 const AddAppointmentVisit = ({ isOpen, onClose, onSuccess, appointment }) => {
   const [formData, setFormData] = useState({
@@ -57,8 +59,8 @@ const AddAppointmentVisit = ({ isOpen, onClose, onSuccess, appointment }) => {
     setLoading(true);
     setError(null);
 
-    const clinicId = Number(localStorage.getItem('clinicID'));
-    const branchId = Number(localStorage.getItem('branchID'));
+    const clinicId = await getStoredClinicId();
+    const branchId = await getStoredBranchId();
 
     try {
       // Convert to YYYY-MM-DD in Asia/Kolkata (IST)

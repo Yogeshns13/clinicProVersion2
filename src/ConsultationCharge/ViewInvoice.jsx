@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { FiX, FiFileText, FiUser, FiDollarSign, FiCalendar, FiClock, FiInfo } from 'react-icons/fi';
 import { getInvoiceList } from '../Api/ApiInvoicePayment.js';
 import './ViewInvoice.css';
+import {FaClinicMedical} from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const INVOICE_STATUSES = [
   { id: 1, label: 'Draft' },
@@ -27,8 +29,8 @@ const ViewInvoice = ({ isOpen, onClose, invoiceId }) => {
         setLoading(true);
         setError(null);
 
-        const clinicId = Number(localStorage.getItem('clinicID'));
-        const branchId = Number(localStorage.getItem('branchID'));
+        const clinicId = await getStoredClinicId();
+        const branchId = await getStoredBranchId();
 
         const data = await getInvoiceList(clinicId, {
           BranchID: branchId,
@@ -109,6 +111,10 @@ const ViewInvoice = ({ isOpen, onClose, invoiceId }) => {
             <FiFileText className="invoice-header-icon" size={24} />
             <h2>Invoice Details</h2>
           </div>
+          <div className="clinicNameone">
+            <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+              {localStorage.getItem('clinicName') || '—'}
+                </div>
           <button onClick={onClose} className="invoice-modal-close">
             <FiX size={20} />
           </button>

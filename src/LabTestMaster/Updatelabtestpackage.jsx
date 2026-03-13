@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { FiSave, FiX } from 'react-icons/fi';
 import { getLabTestPackageList, updateLabTestPackage } from '../Api/ApiLabTests.js';
 import styles from './LabMaster.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const STATUS_OPTIONS = [
   { id: 1, label: 'Active' },
@@ -97,8 +99,8 @@ const UpdateLabTestPackage = ({ pkg, onClose, onUpdateSuccess }) => {
         setLoading(true);
         setError(null);
 
-        const clinicId = Number(localStorage.getItem('clinicID'));
-        const branchId = Number(localStorage.getItem('branchID'));
+        const clinicId = await getStoredClinicId();
+        const branchId = await getStoredBranchId();
 
         const packageList = await getLabTestPackageList(clinicId, { BranchID: branchId });
         const fetchedPkg = packageList.find((p) => p.id === Number(packageId));
@@ -150,7 +152,7 @@ const UpdateLabTestPackage = ({ pkg, onClose, onUpdateSuccess }) => {
     setFormSuccess(false);
 
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
+      const clinicId = await getStoredClinicId();
 
       await updateLabTestPackage({
         packageId: Number(packageId),
@@ -182,6 +184,11 @@ const UpdateLabTestPackage = ({ pkg, onClose, onUpdateSuccess }) => {
       <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h2>Update Package</h2>
+
+          <div className={styles.clinicNameone}>
+                <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px" }} />
+                {localStorage.getItem("clinicName") || "—"}
+              </div>
           <button onClick={onClose} className={styles.modalClose}>
             <FiX />
           </button>

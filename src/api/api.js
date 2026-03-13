@@ -2,6 +2,7 @@
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { API,UPLOAD_API_URL, FILE_API_URL } from "./ApiConfiguration";
+import { setEncrypted } from "../Utils/Cryptoutils"; 
 
 const CHANNEL_ID = 1;
 const PRODUCTION_MODE = 0;
@@ -75,7 +76,8 @@ export const loginUser = async (username, password) => {
     REF_KEY: generateRefKey(),
     SESSION_REF: sessionRef,
     USER_ID: 0,
-    UserName: username,    Password: password
+    UserName: username,
+    Password: password
   };
 
   try {
@@ -84,14 +86,26 @@ export const loginUser = async (username, password) => {
     const result = response.data.result;
 
     if (result?.isAuthendicated) {
-      // Save user data including PROFILE_NAME
       localStorage.setItem("userId", result.USER_ID);
-
-      localStorage.setItem("profileName", result.PROFILE_NAME);      
-      localStorage.setItem("clinicID", result.CLINIC_ID);
-      localStorage.setItem("branchID", result.BRANCH_ID);
+      localStorage.setItem("profileName", result.PROFILE_NAME);
       localStorage.setItem("sessionRef", sessionRef);
       localStorage.setItem("isLoggedIn", "true");
+
+      // Encrypted sensitive fields
+      await setEncrypted("clinicID", result.CLINIC_ID);
+      await setEncrypted("branchID", result.BRANCH_ID);
+      await setEncrypted("userID", result.USER_ID);
+
+      try {
+        const clinicList = await getClinicList({ ClinicID: result.CLINIC_ID });
+        const matchedClinic = clinicList.find((clinic) => clinic.id === result.CLINIC_ID);
+        if (matchedClinic) {
+          await setEncrypted("clinicName", matchedClinic.name); // Encrypted
+        }
+      } catch (clinicErr) {
+        console.warn("Failed to fetch clinic name:", clinicErr.message);
+      }
+
       console.log("Result:", result);
       return { success: true, data: result };
     } else {
@@ -99,6 +113,44 @@ export const loginUser = async (username, password) => {
     }
   } catch (err) {
     throw new Error(err.response?.data?.message || err.message || "Network error");
+  }
+};
+
+export const forgetPassword = async (username, email) => {
+  const sessionRef = uuidv4();
+  storeSessionRef(sessionRef);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: sessionRef,
+    UserName: username,
+    Email: email
+  };
+
+  try {
+    const response = await API.post("/ForgetPassword", payload);
+    console.log("forgetPassword Payload:", payload);
+
+    const result = response.data.result;
+
+    if (result?.status === "Success") {
+      localStorage.setItem("sessionRef", sessionRef);
+
+      console.log("Forget Password Result:", result);
+      return { 
+        success: true, 
+        message: result.message || "Mail Sent Successfully" 
+      };
+    } else {
+      throw new Error(result?.message || "Failed to send reset email");
+    }
+  } catch (err) {
+    throw new Error(
+      err.response?.data?.message || 
+      err.message || 
+      "Network error - please try again later"
+    );
   }
 };
 
@@ -320,6 +372,7 @@ export const getClinicList = async (options = {}) => {
     throw errorWithStatus;
   }
 };
+
 export const addClinic = async (clinicData) => {
   const userId = getUserId();
   if (!userId) {
@@ -4110,6 +4163,264 @@ export const logout = async () => {
       err.message || 
       "Logout failed - network or server error"
     );
+  }
+};
+
+
+export const getTaskList = async (taskData = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (!taskData?.clinicId && taskData?.clinicId !== 0) {
+    const validationError = new Error("ClinicID is required.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (taskData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (taskData.branchId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    Page: Number(taskData.page ?? 1),
+    PageSize: Number(taskData.pageSize ?? 20),
+    ...(taskData.taskType && { TaskType: Number(taskData.taskType) }),
+  };
+
+  console.log("getTaskList payload:", payload);
+
+  try {
+    const response = await API.post("/GetTaskList", payload);
+    console.log("GetTaskList response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result) {
+      throw new Error("Failed to fetch task list");
+    }
+
+    return {
+      success: true,
+      tasks: result.map((task) => ({
+        taskId: task.TASK_ID,
+        clinicId: task.clinic_id,
+        branchId: task.branch_id,
+        taskType: task.task_type,
+        taskName: task.task_name,
+        taskParamsJson: (() => {
+          try {
+            return JSON.parse(task.task_params_json);
+          } catch {
+            return task.task_params_json;
+          }
+        })(),
+        status: task.status,
+        maxRetry: task.max_retry,
+        repeatIntervalMinutes: task.repeat_interval_minutes,
+        dateCreated: task.date_created,
+      })),
+    };
+
+  } catch (error) {
+    console.error("getTaskList error:", error);
+
+    const errorMessage =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to fetch task list";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
+  }
+};
+
+export const addTask = async (taskData = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Required fields validation
+  if (!taskData?.clinicId && taskData?.clinicId !== 0) {
+    const validationError = new Error("ClinicID is required.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  if (!taskData?.taskType) {
+    const validationError = new Error("TaskType is required.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  if (!taskData?.taskName || typeof taskData.taskName !== "string" || taskData.taskName.trim() === "") {
+    const validationError = new Error("TaskName is required and must be a non-empty string.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const taskParams = taskData.taskParamsJson || {};
+  if (typeof taskParams !== "object" || Array.isArray(taskParams)) {
+    const validationError = new Error("TaskParamsJson must be a valid object.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (taskData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (taskData.branchId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    TaskType: Number(taskData.taskType),           
+    TaskName: taskData.taskName.trim(),
+    TaskParamsJson: taskParams,                    // object → will be JSON.stringified by axios
+    MaxRetry: Number(taskData.maxRetry ?? 3),
+    RepeatIntervalMinutes: Number(taskData.repeatIntervalMinutes ?? 0)
+  };
+
+  console.log("addTask payload:", payload);
+
+  try {
+    const response = await API.post("/AddTask", payload);
+    console.log("AddTask response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || result.OUT_OK !== 1) {
+      const errorMsg = result?.OUT_ERROR || "Failed to add task";
+      throw new Error(errorMsg);
+    }
+
+    return {
+      success: true,
+      message: "Task added successfully",
+
+    };
+
+  } catch (error) {
+    console.error("addTask error:", error);
+
+    const errorMessage =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to add task";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
+  }
+};
+
+export const deleteTask = async (taskData = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (!taskData?.clinicId && taskData?.clinicId !== 0) {
+    const validationError = new Error("ClinicID is required.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  if (!taskData?.taskType) {
+    const validationError = new Error("TaskType is required.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  if (!taskData?.taskName || typeof taskData.taskName !== "string" || taskData.taskName.trim() === "") {
+    const validationError = new Error("TaskName is required and must be a non-empty string.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (taskData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (taskData.branchId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    TaskType: Number(taskData.taskType),
+    TaskName: taskData.taskName.trim()
+  };
+
+  console.log("deleteTask payload:", payload);
+
+  try {
+    const response = await API.post("/DeleteTask", payload);
+    console.log("DeleteTask response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || result.OUT_OK !== 1) {
+      const errorMsg = result?.OUT_ERROR || "Failed to delete task";
+      throw new Error(errorMsg);
+    }
+
+    return {
+      success: true,
+      message: "Task deleted successfully",
+      deletedTask: {
+        taskType: payload.TaskType,
+        taskName: payload.TaskName
+      }
+    };
+
+  } catch (error) {
+    console.error("deleteTask error:", error);
+
+    const errorMessage =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to delete task";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
   }
 };
 

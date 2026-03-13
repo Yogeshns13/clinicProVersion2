@@ -30,6 +30,9 @@ import {
 import Header from '../Header/Header.jsx';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import styles from './SalesCartDetailList.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+
 
 // ─────────────────────────────────────────────────────────
 const SalesCartDetailList = () => {
@@ -97,8 +100,8 @@ const SalesCartDetailList = () => {
       setLoading(true);
       setError(null);
       setDetails([]);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const data = await getSalesCartDetailList(clinicId, {
         CartID:   numericId,
         BranchID: branchId,
@@ -224,8 +227,8 @@ const SalesCartDetailList = () => {
     setInvoice((prev) => ({ ...prev, submitting: true, error: null }));
 
     try {
-      const clinicId    = Number(localStorage.getItem('clinicID'));
-      const branchId    = Number(localStorage.getItem('branchID'));
+      const clinicId    = await getStoredClinicId();
+      const branchId    = await getStoredBranchId();
       const invoiceDate = new Date().toISOString().split('T')[0];
 
       const result = await generatePharmacyInvoice({
@@ -295,8 +298,8 @@ const SalesCartDetailList = () => {
     setUpdateQty((prev) => ({ ...prev, submitting: true, error: null }));
 
     const item     = updateQty.item;
-    const clinicId = Number(localStorage.getItem('clinicID'));
-    const branchId = Number(localStorage.getItem('branchID'));
+    const clinicId = await getStoredClinicId();
+    const branchId = await getStoredBranchId();
 
     // ── Phase 1: Delete existing cart detail ──────────────
     try {
@@ -447,6 +450,15 @@ const SalesCartDetailList = () => {
               </div>
             </div>
           )}
+          {meta.clinicName && (
+            <div className={styles.infoItem}>
+              <FaClinicMedical size={13} className={styles.infoIcon} />
+            <div>
+               <span className={styles.infoLabel}>Clinic</span>
+                <span className={styles.infoValue}>{meta.clinicName}</span>
+                  </div>
+                </div>
+             )}
           {meta.branchName && (
             <div className={styles.infoItem}>
               <FiMapPin size={13} className={styles.infoIcon} />
@@ -789,12 +801,12 @@ const SalesCartDetailList = () => {
             <div className={styles.uqModalHeader}>
               <div className={styles.uqHeaderContent}>
                 <h2>Update Quantity & Discount</h2>
-                <div className={styles.uqHeaderMeta}>
-                  <span className={styles.uqMedBadge}>
-                    {updateQty.item.medicineName}
-                  </span>
-                </div>
               </div>
+                <div className={styles.clinicNameone}>
+                               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                                 {localStorage.getItem('clinicName') || '—'}
+                            </div>
+
               {!updateQty.submitting && !updateQty.success && (
                 <button className={styles.uqCloseBtn} onClick={closeUpdateQtyModal}>
                   <FiX size={22} />

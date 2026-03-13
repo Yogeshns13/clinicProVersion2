@@ -4,6 +4,8 @@ import { FiArrowLeft, FiSave, FiX } from 'react-icons/fi';
 import { getLabTestMasterList, updateLabTestMaster } from '../Api/ApiLabTests.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import styles from './LabMaster.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const TEST_TYPES = [
   { id: 1, label: 'Blood' },
@@ -129,8 +131,8 @@ const UpdateLabTestMaster = ({ test, onClose, onUpdateSuccess }) => {
         setLoading(true);
         setError(null);
 
-        const clinicId = Number(localStorage.getItem('clinicID'));
-        const branchId = Number(localStorage.getItem('branchID'));
+        const clinicId = await getStoredClinicId();
+        const branchId = await getStoredBranchId();
 
         const testList = await getLabTestMasterList(clinicId, { BranchID: branchId });
         const fetchedTest = testList.find((t) => t.id === Number(testId));
@@ -185,8 +187,8 @@ const UpdateLabTestMaster = ({ test, onClose, onUpdateSuccess }) => {
     setFormSuccess(false);
 
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       await updateLabTestMaster({
         TestID: Number(testId),
@@ -221,11 +223,20 @@ const UpdateLabTestMaster = ({ test, onClose, onUpdateSuccess }) => {
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
+
         <div className={styles.modalHeader}>
           <h2>Update Lab Test</h2>
+
+ <div className={styles.headerRight}>
+              <div className={styles.clinicNameone}>
+                             <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                               {localStorage.getItem('clinicName') || '—'}
+                          </div>
+
           <button onClick={onClose} className={styles.modalClose}>
             <FiX />
           </button>
+        </div>
         </div>
 
         {loading ? (

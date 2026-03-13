@@ -46,7 +46,9 @@
   margin-bottom: 20px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
-  animation: slideUp 0.3s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .filtersGrid {
@@ -212,7 +214,8 @@
 .clinicTableContainer {
   background: white;
   border-radius: 17px;
-  overflow: hidden;
+  overflow-y: auto;
+   max-height: calc(100vh - 220px); 
   box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
   border: 1px solid rgba(34, 43, 108, 0.1);
 }
@@ -232,6 +235,9 @@
   text-align: left;
   padding: 12px 17px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  position: sticky;   /* ← new */
+  top: 0;             /* ← new */
+  z-index: 2;
   color: var(--text-light);
   font-weight: 600;
   font-size: 0.75rem;
@@ -1440,4 +1446,10 @@
 .filterGroup .statusFilterSelect,
 .filterGroup .filterInput {
   min-width: 180px; /* or whatever fits your design */
+}
+
+:global(.dark-mode) .filterInput {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
 }

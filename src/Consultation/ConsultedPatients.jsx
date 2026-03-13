@@ -6,6 +6,7 @@ import { getConsultationList } from '../Api/ApiConsultation.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './ConsultedPatients.module.css';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const today = new Date().toISOString().split('T')[0];
 
@@ -46,8 +47,8 @@ const ConsultedPatients = () => {
     try {
       setLoading(true);
       setError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const options = { Page: 1, PageSize: 100, BranchID: branchId };
 
       if (filters.searchValue.trim()) {

@@ -32,6 +32,8 @@ import {
 } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import styles from './ViewEmployee.module.css';
+import { FaClinicMedical } from 'react-icons/fa'; 
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const NAME_REGEX       = /^[A-Za-z\s\.\-']+$/;
 const MOBILE_REGEX     = /^[6-9]\d{9}$/;
@@ -464,8 +466,8 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     setPageLoading(true);
     setPageError(null);
     try {
-      const clinicId   = Number(localStorage.getItem('clinicID'));
-      const branchId   = Number(localStorage.getItem('branchID'));
+      const clinicId   = await getStoredClinicId();
+      const branchId   = await getStoredBranchId();
       const employeeId = Number(id);
 
       const [empList, deptList, shiftList, proofs, beneficiaries, empShifts, workDays] = await Promise.all([
@@ -585,7 +587,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     if (!photo) return;
     setIsPhotoUploading(true); setPhotoUploadStatus('Uploading...');
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
+      const clinicId = await getStoredClinicId();
 
       // Fetch the fileAccessToken for this clinic dynamically
       const fileAccessToken = await fetchFileAccessToken(clinicId);
@@ -657,8 +659,8 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
   const handleBasicSave = async (e) => {
     e.preventDefault(); setLoading(true); setError(null);
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       await updateEmployee({
         employeeId: Number(id), clinicId, branchId,
         employeeCode: formData.employeeCode.trim(),
@@ -750,7 +752,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     setIsProofUploading(prev => prev.map((v, i) => i === index ? true : v));
     updateProofStatus(index, 'Uploading...');
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
+      const clinicId = await getStoredClinicId();
 
       // Fetch the fileAccessToken for this clinic dynamically
       const fileAccessToken = await fetchFileAccessToken(clinicId);
@@ -779,8 +781,8 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
   const handleProofSave = async (e) => {
     e.preventDefault(); setLoading(true); setError(null);
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const updatedIds = [...savedProofIds];
       for (let i = 0; i < proofList.length; i++) {
         const proof = proofList[i];
@@ -841,8 +843,8 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
   const handleBankSave = async (e) => {
     e.preventDefault(); setLoading(true); setError(null);
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const updatedIds = [...savedBeneficiaryIds];
       for (let i = 0; i < beneficiaryList.length; i++) {
         const b = beneficiaryList[i];
@@ -873,7 +875,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
   const handleShiftSave = async (e) => {
     e.preventDefault(); setLoading(true); setError(null);
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
+      const clinicId = await getStoredClinicId();
       for (const map of existingShiftMaps) {
         if (!selectedShifts.includes(map.shiftId)) await deleteEmployeeShift(map.shiftMapId);
       }
@@ -964,23 +966,18 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
             </div>
             <div className={styles.headerContent}>
               <h2>{pageLoading ? 'Loading...' : `${formData.firstName} ${formData.lastName}`}</h2>
-              <span className={styles.subtitle}>
-                {formData.employeeCode && <span className={styles.idBadge}>{formData.employeeCode}</span>}
-                Employee Details
-              </span>
-            </div>
-          </div>
-          <div className={styles.headerRight}>
-            {!pageLoading && !pageError && (
-              <button className={styles.deleteEmpBtn} onClick={handleDeleteEmployee}>
-                <FiTrash2 size={14} /> Delete
-              </button>
-            )}
+              </div>
+              </div>
+              <div className={styles.clinicNameone}>
+                             <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                               {localStorage.getItem('clinicName') || '—'}
+                          </div>
+          
             <button className={styles.closeBtn} onClick={onClose}>
               <FiX size={18} />
             </button>
           </div>
-        </div>
+        
 
         {/* ── Tab Bar ── */}
         {!pageLoading && !pageError && (
@@ -995,7 +992,15 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                 <span>{tab.label}</span>
               </button>
             ))}
-          </div>
+          
+        <div className={styles.headerRight}>
+            {!pageLoading && !pageError && (
+              <button className={styles.deleteEmpBtn} onClick={handleDeleteEmployee}>
+                <FiTrash2 size={14} /> Delete
+              </button>
+            )}
+            </div>
+            </div>
         )}
 
         {/* ── Success Banner ── */}

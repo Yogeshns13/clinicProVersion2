@@ -8,6 +8,7 @@ import Header from '../Header/Header.jsx';
 import AddVendor from './AddVendor.jsx';
 import ViewVendor from './ViewVendor.jsx';
 import styles from './VendorList.module.css';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const STATUS_OPTIONS = [
   { id: 1, label: 'Active' },
@@ -71,8 +72,8 @@ const VendorList = () => {
       setLoading(true);
       setError(null);
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const options = {
         BranchID:      branchId,

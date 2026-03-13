@@ -53,6 +53,9 @@
   margin-bottom: 20px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .filtersGrid {
@@ -185,7 +188,8 @@
 .tableContainer {
   background: white;
   border-radius: 17px;
-  overflow: hidden;
+  overflow-y: auto;
+  max-height: calc(100vh - 220px);
   box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
   border: 1px solid rgba(34, 43, 108, 0.1);
 }
@@ -199,6 +203,9 @@
   text-align: left;
   padding: 12px 17px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  position: sticky;   /* ← new */
+  top: 0;             /* ← new */
+  z-index: 2;
   color: var(--text-light);
   font-weight: 600;
   font-size: 0.75rem;
@@ -347,7 +354,7 @@
 }
 
 .detailModalHeader {
-  padding: 24px 28px;
+  padding: 14px 18px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
   display: flex;
@@ -364,13 +371,13 @@
 }
 
 .shiftAvatarLarge {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: white;
-  font-size: 1.4rem;
-  font-weight: bold;
+  font-size: 1.2rem;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -379,8 +386,21 @@
 
 .detailHeaderContent h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
+}
+
+.clinicNameone {
+  display: flex;
+  align-items: center;
+  font-size: 1.05rem;           /* a bit smaller than patient name */
+  font-weight: 600;
+  color: var(--text-light);
+  line-height: 1.2;
+  white-space: nowrap;          /* ← prevents wrapping to next line */
+  overflow: hidden;
+  text-overflow: ellipsis;      /* cuts off very long names nicely */
+  max-width: 220px;             /* adjust depending on your design */
 }
 
 .shiftSubtitle {

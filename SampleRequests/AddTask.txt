@@ -1,0 +1,83 @@
+AddTask
+{
+    
+
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "TaskType":2,
+    "TaskName":"GenerateSlots",
+    "TaskParamsJson": {
+                        "DaysCount": 10,
+                        "FromDate": null,
+                        "ToDate": null
+                    },
+    "MaxRetry":3,
+    "RepeatIntervalMinutes":5
+}
+
+{
+    "result": {
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-- TaskType 1- OntTime 2-Repeated Text Table #49
+-- RepeatIntervalMinutes is only for TaskType 2 so pass 0 for type 1
+
+-----------------------------------------------------------
+
+DeleteTask
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000, 
+    "ClinicID": 1,
+    "BranchID"  :1,
+    "TaskType":2,
+    "TaskName":"GenerateSlots"
+}
+
+{
+    "result": {
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+----------------------------------------
+GetTaskList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "ClinicID":1,
+    "BranchID":1,    
+    "TaskType":2
+}
+
+{
+    "result": [
+        {
+            "TASK_ID": 6,
+            "clinic_id": 1,
+            "branch_id": 1,
+            "task_type": 2,
+            "repeat_interval_minutes": 10,
+            "task_name": "GenerateSlots",
+            "task_params_json": "{\"DaysCount\":10,\"FromDate\":null,\"ToDate\":null}",
+            "status": 2,
+            "max_retry": 3,
+            "date_created": "2026-03-13T05:09:17.000Z"
+        }
+    ]
+}
+

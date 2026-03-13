@@ -64,7 +64,7 @@
   color: var(--text-light);
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 20px;
 }
 
@@ -76,12 +76,12 @@
 }
 
 .avatarLarge {
-  width: 54px;
-  height: 54px;
+  width: 42px;
+  height: 42px;
   border-radius: 14px;
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: white;
-  font-size: 2rem;
+  font-size: 1.2rem;
   font-weight: bold;
   display: flex;
   align-items: center;
@@ -92,9 +92,23 @@
 
 .detailsHeaderContent h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
 }
+
+.clinicNameone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;           
+  font-weight: 600;
+  color: var(--text-light);
+  line-height: 1.2;
+  white-space: nowrap;          
+  text-overflow: ellipsis;      
+  max-width: 220px;             
+}
+
 
 .subtitle {
   margin: 4px 0 0 0;

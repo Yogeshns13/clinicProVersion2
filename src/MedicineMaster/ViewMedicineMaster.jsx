@@ -7,6 +7,8 @@ import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './ViewMedicineMaster.module.css';
 import UpdateMedicineMaster from './UpdateMedicineMaster.jsx';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 // ────────────────────────────────────────────────
 // CONSTANTS — UNCHANGED
@@ -71,8 +73,8 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId, onUpdateRequ
       setLoading(true);
       setError(null);
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const data = await getMedicineMasterList(clinicId, {
         BranchID:   branchId,
@@ -192,9 +194,6 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId, onUpdateRequ
         <div className={styles.cardHeader}>
           <div className={styles.headerInfo}>
             <h2>{medicine.name}</h2>
-            <p className={styles.subtitle}>
-              {getTypeLabel(medicine.type)} — {getUnitLabel(medicine.unit)}
-            </p>
             <div className={styles.badgeContainer}>
               {medicine.isLowStock && (
                 <span className={styles.lowStockBadge}>
@@ -204,6 +203,10 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId, onUpdateRequ
               )}
             </div>
           </div>
+          <div className={styles.clinicNameone}>
+                         <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                           {localStorage.getItem('clinicName') || '—'}
+                      </div>
           {isModal && onClose && (
             <button onClick={onClose} className={styles.headerCloseBtn} title="Close">
               <FiX size={20} />

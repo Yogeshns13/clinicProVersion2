@@ -7,6 +7,7 @@ import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddPurchaseOrder from './AddPurchaseOrder.jsx';
 import styles from './PurchaseOrderList.module.css';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 // ──────────────────────────────────────────────────
 const STATUS_OPTIONS = [
@@ -55,8 +56,8 @@ const PurchaseOrderList = () => {
       setLoading(true);
       setError(null);
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const data = await getPurchaseOrderList(clinicId, {
         BranchID:   branchId,

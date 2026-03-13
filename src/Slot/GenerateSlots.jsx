@@ -1,7 +1,9 @@
 // src/components/GenerateSlots.jsx
 import React, { useState, useEffect } from 'react';
 import { generateSlots } from '../Api/Api.js';
-import styles from './GenerateSlots.module.css';  
+import styles from './GenerateSlots.module.css';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+
 
 const GenerateSlots = ({ isOpen, onClose, onSuccess }) => {
   const [generationType, setGenerationType] = useState('days'); // 'days' or 'dateRange'
@@ -71,8 +73,8 @@ const GenerateSlots = ({ isOpen, onClose, onSuccess }) => {
     setLoading(true);
 
     try {
-      const clinicId = localStorage.getItem('clinicID');
-      const branchId = localStorage.getItem('branchID');
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const payload = {
         clinicId: Number(clinicId),

@@ -61,7 +61,7 @@
 
 /* ==================== MODAL HEADER ==================== */
 .detailsModalHeader {
-  padding: 22px 28px;
+  padding: 12px 14px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
   display: flex;
@@ -74,15 +74,16 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
 }
 
 .avatarLarge {
-  width: 37px;
-  height: 37px;
-  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: white;
-  font-size: 16px;
+  font-size: 1.2rem;
   font-weight: bold;
   display: flex;
   align-items: center;
@@ -92,9 +93,24 @@
 
 .detailsModalHeader h2 {
   margin: 0;
-  font-size: 1.48rem;
+  font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: -0.01em;
+}
+
+.clinicNameone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px;
+  font-size: 1.05rem;           /* a bit smaller than patient name */
+  font-weight: 600;
+  color: var(--text-light);
+  line-height: 1.2;
+  white-space: nowrap;          /* ← prevents wrapping to next line */
+  overflow: hidden;
+  text-overflow: ellipsis;      /* cuts off very long names nicely */
+  max-width: 220px;             /* adjust depending on your design */
 }
 
 .subtitle {

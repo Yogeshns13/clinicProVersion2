@@ -44,7 +44,10 @@
 .wrapper {
   padding: 20px;
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
-  min-height: 100vh;
+  height: 100vh;           /* CHANGED: was min-height: 100vh */
+  overflow: hidden;        /* ADDED */
+  display: flex;           /* ADDED */
+  flex-direction: column;  /* ADDED */
   color: var(--text-dark);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -137,7 +140,10 @@
   margin-bottom: 20px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
-  animation: slideUp 0.3s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;  /* ADDED */
 }
 
 /* [searchGroup 2fr] [status 1fr] [doctor 1fr] [dateFrom 1fr] [dateTo 1fr] [actions auto] */
@@ -300,6 +306,9 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  flex: 1;          /* ADDED */
+  min-height: 0;    /* ADDED — critical */
+  overflow-y: auto; /* ADDED */
 }
 
 .noData {
@@ -321,6 +330,7 @@
   border: 1px solid rgba(34, 43, 108, 0.08);
   transition: all 0.3s ease;
   animation: slideUp 0.4s ease;
+  flex-shrink: 0; /* ADDED */
 }
 
 .orderGroup:hover {
@@ -833,7 +843,7 @@
 .detailHeaderContent { flex: 1; }
 
 .detailHeaderContent h2 {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
 }
 
@@ -841,6 +851,19 @@
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.clinicNameone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;           
+  font-weight: 600;
+  color: var(--text-light);
+  line-height: 1.2;
+  white-space: nowrap;          
+  text-overflow: ellipsis;      
+  max-width: 220px;             
 }
 
 .workIdBadge,

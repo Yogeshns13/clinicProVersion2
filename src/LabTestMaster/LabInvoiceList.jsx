@@ -6,6 +6,8 @@ import { getLabInvoiceDetailList } from '../Api/ApiLabTests.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './LabInvoiceList.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const LabInvoiceList = () => {
   const navigate = useNavigate();
@@ -49,8 +51,8 @@ const LabInvoiceList = () => {
     try {
       setLoading(true);
       setError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const options = {
         Page: 1,
@@ -465,9 +467,17 @@ const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) =
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+       
         <div className={styles.modalHeader}>
           <h2>Invoice Details - {invoice.invoiceNo}</h2>
+
+          <div className={styles.headerRight}>
+            <div className={styles.clinicNameone}>
+                <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                  {localStorage.getItem('clinicName') || '—'}
+                 </div>
           <button onClick={onClose} className={styles.closeBtn}>×</button>
+        </div>
         </div>
         <div className={styles.modalBody}>
           {/* Invoice Header Info */}

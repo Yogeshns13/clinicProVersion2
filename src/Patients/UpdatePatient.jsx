@@ -6,6 +6,8 @@ import { getPatientsList, updatePatient } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './UpdatePatient.module.css';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+
 
 const GENDER_OPTIONS = [
   { id: 1, label: 'Male' },
@@ -44,11 +46,9 @@ const nameRegex = /^[A-Za-z\s.\-']+$/;
 const mobileRegex = /^[6-9]\d{9}$/;
 
 // ── Validation messages match backend patientValidator word-for-word ──────────
-// updatePatientValidatorRules = Status(required) + all addPatientRules from FirstName onward
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
 
-    // ── Required in backend (notEmpty) ────────────────────────────────────────
     case 'firstName':
       if (!value || !value.trim()) return 'FirstName is required';
       if (value.trim().length > 50) return 'FirstName too long';
@@ -71,14 +71,11 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (isNaN(age) || !Number.isInteger(age) || age < 0 || age > 150) return 'Age must be realistic';
       return '';
 
-    // Status — required only in updatePatientValidatorRules
     case 'status':
       if (!value || Number(value) === 0) return 'Status is required';
       if (isNaN(Number(value))) return 'Status must be valid';
       return '';
 
-    // ── Optional in backend ───────────────────────────────────────────────────
-    // LastName: optional, max 50, nameRegex
     case 'lastName':
       if (value && value.trim()) {
         if (value.trim().length > 50) return 'LastName too long';
@@ -86,14 +83,12 @@ const getLiveValidationMessage = (fieldName, value) => {
       }
       return '';
 
-    // AltMobile: optional, matches mobileRegex
     case 'altMobile':
       if (value && value.trim()) {
         if (!mobileRegex.test(value.trim())) return 'Invalid alternate mobile';
       }
       return '';
 
-    // BirthDate: optional, isDate
     case 'birthDate':
       if (value) {
         const d = new Date(value);
@@ -105,36 +100,30 @@ const getLiveValidationMessage = (fieldName, value) => {
       }
       return '';
 
-    // Email: optional, isEmail
     case 'email':
       if (value && value.trim()) {
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) return 'Invalid email';
       }
       return '';
 
-    // Address: optional, max 500
     case 'address':
       if (value && value.length > 500) return 'Address too long';
       return '';
 
-    // EmergencyContactNo: optional, matches mobileRegex
     case 'emergencyContactNo':
       if (value && value.trim()) {
         if (!mobileRegex.test(value.trim())) return 'Invalid emergency contact';
       }
       return '';
 
-    // Allergies: optional, max 500 (no backend message — silent cap)
     case 'allergies':
       if (value && value.length > 500) return 'Allergies must not exceed 500 characters';
       return '';
 
-    // CurrentMedications: optional, max 500 (no backend message — silent cap)
     case 'currentMedications':
       if (value && value.length > 500) return 'Current medications must not exceed 500 characters';
       return '';
 
-    // Fields below are NOT in backend validator — no validation needed
     case 'existingMedicalConditions':
     case 'pastSurgeries':
     case 'familyMedicalHistory':
@@ -151,7 +140,6 @@ const filterInput = (fieldName, value) => {
   switch (fieldName) {
     case 'firstName':
     case 'lastName':
-      // Allow letters, spaces, dots, hyphens, apostrophes — matches nameRegex
       return value.replace(/[^A-Za-z\s.\-']/g, '');
 
     case 'mobile':
@@ -191,6 +179,11 @@ const VALIDATED_FIELDS = [
   'email', 'address', 'emergencyContactNo',
   'allergies', 'currentMedications',
 ];
+
+const getGenderLabel = (genderId) => {
+  const found = GENDER_OPTIONS.find(g => g.id === Number(genderId));
+  return found ? found.label : '-';
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
@@ -247,14 +240,19 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
   const [searchError, setSearchError] = useState('');
   const [selectedFamilyPatient, setSelectedFamilyPatient] = useState(null);
 
+  // ── Checkbox states for conditional medical inputs ────────────────────────
+  const [showExistingMedical, setShowExistingMedical] = useState(false);
+  const [showCurrentMedications, setShowCurrentMedications] = useState(false);
+  const [showImmunization, setShowImmunization] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const clinicId = Number(localStorage.getItem('clinicID'));
-        const branchId = Number(localStorage.getItem('branchID'));
+        const clinicId = await getStoredClinicId();
+        const branchId = await getStoredBranchId();
 
         const patientList = await getPatientsList(clinicId, {
           BranchID: branchId,
@@ -279,7 +277,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
 
         const familyPatientId = patient.familyPatientId || patient.familyPatientID || 0;
 
-        setFormData({
+        const loadedData = {
           firstName: patient.firstName || '',
           lastName: patient.lastName || '',
           gender: patient.gender || 0,
@@ -300,7 +298,20 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
           immunizationRecords: patient.immunizationRecords || '',
           familyPatientId: familyPatientId,
           status: patient.status === 'active' ? 1 : 2,
-        });
+        };
+
+        setFormData(loadedData);
+
+        // Pre-check set 2 checkboxes if data exists
+        if (loadedData.existingMedicalConditions && loadedData.existingMedicalConditions.trim()) {
+          setShowExistingMedical(true);
+        }
+        if (loadedData.currentMedications && loadedData.currentMedications.trim()) {
+          setShowCurrentMedications(true);
+        }
+        if (loadedData.immunizationRecords && loadedData.immunizationRecords.trim()) {
+          setShowImmunization(true);
+        }
 
         if (familyPatientId > 0) {
           setHasFamilyPatient(true);
@@ -366,8 +377,8 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
     setSearchError('');
     setSearchResults([]);
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const patients = await getPatientsList(clinicId, {
         Mobile: searchMobile.trim(),
         BranchID: branchId,
@@ -515,7 +526,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
     <div className={styles.detailModalOverlay}>
       <div className={styles.addModalContent}>
 
-        {/* Static Header */}
+        {/* ── Static Header ── */}
         <div className={styles.detailModalHeader}>
           <div className={styles.detailHeaderContent}>
             <h2>Update Patient</h2>
@@ -531,7 +542,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
           <button onClick={handleClose} className={styles.detailCloseBtn}>✕</button>
         </div>
 
-        {/* Scrollable Body */}
+        {/* ── Scrollable Form Content ── */}
         <div className={styles.addModalBodyScrollable}>
           <form onSubmit={handleSubmit}>
             {formError && <div className={styles.formError}>{formError}</div>}
@@ -544,7 +555,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
               </div>
               <div className={styles.addFormGrid}>
 
-                {/* FirstName — required in backend */}
+                {/* FirstName — required */}
                 <div className={styles.addFormGroup}>
                   <label>First Name <span className={styles.required}>*</span></label>
                   <input
@@ -558,7 +569,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
                   )}
                 </div>
 
-                {/* LastName — optional in backend (no * / no required) */}
+                {/* LastName — optional */}
                 <div className={styles.addFormGroup}>
                   <label>Last Name</label>
                   <input
@@ -571,7 +582,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
                   )}
                 </div>
 
-                {/* Gender — required in backend */}
+                {/* Gender — required */}
                 <div className={styles.addFormGroup}>
                   <label>Gender <span className={styles.required}>*</span></label>
                   <select required name="gender" value={formData.gender} onChange={handleInputChange}>
@@ -585,7 +596,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
                   )}
                 </div>
 
-                {/* BirthDate — optional in backend */}
+                {/* BirthDate — optional */}
                 <div className={styles.addFormGroup}>
                   <label>Birth Date</label>
                   <input
@@ -600,7 +611,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
                   )}
                 </div>
 
-                {/* Age — required in backend */}
+                {/* Age — required */}
                 <div className={styles.addFormGroup}>
                   <label>Age <span className={styles.required}>*</span></label>
                   <input
@@ -617,7 +628,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
                   )}
                 </div>
 
-                {/* BloodGroup — optional in backend (no * / no required) */}
+                {/* BloodGroup — optional */}
                 <div className={styles.addFormGroup}>
                   <label>Blood Group</label>
                   <select name="bloodGroup" value={formData.bloodGroup} onChange={handleInputChange}>
@@ -628,7 +639,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
                   </select>
                 </div>
 
-                {/* MaritalStatus — optional in backend */}
+                {/* MaritalStatus — optional */}
                 <div className={styles.addFormGroup}>
                   <label>Marital Status</label>
                   <select name="maritalStatus" value={formData.maritalStatus} onChange={handleInputChange}>
@@ -639,7 +650,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
                   </select>
                 </div>
 
-                {/* Status — required in updatePatientValidatorRules */}
+                {/* Status — required in update */}
                 <div className={styles.addFormGroup}>
                   <label>Status <span className={styles.required}>*</span></label>
                   <select required name="status" value={formData.status} onChange={handleInputChange}>
@@ -662,7 +673,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
               </div>
               <div className={styles.addFormGrid}>
 
-                {/* Mobile — required in backend */}
+                {/* Mobile — required */}
                 <div className={styles.addFormGroup}>
                   <label>Mobile <span className={styles.required}>*</span></label>
                   <input
@@ -677,7 +688,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
                   )}
                 </div>
 
-                {/* AltMobile — optional in backend */}
+                {/* AltMobile — optional */}
                 <div className={styles.addFormGroup}>
                   <label>Alternate Mobile</label>
                   <input
@@ -691,7 +702,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
                   )}
                 </div>
 
-                {/* Email — optional in backend */}
+                {/* Email — optional */}
                 <div className={styles.addFormGroup}>
                   <label>Email</label>
                   <input
@@ -705,7 +716,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
                   )}
                 </div>
 
-                {/* EmergencyContactNo — optional in backend */}
+                {/* EmergencyContactNo — optional */}
                 <div className={styles.addFormGroup}>
                   <label>Emergency Contact</label>
                   <input
@@ -719,7 +730,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
                   )}
                 </div>
 
-                {/* Address — optional in backend */}
+                {/* Address — optional */}
                 <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                   <label>Address</label>
                   <textarea
@@ -736,7 +747,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
               </div>
             </div>
 
-            {/* Family Patient Link */}
+            {/* ── Family Patient Link ── */}
             <div className={styles.addSection}>
               <div className={styles.addSectionHeader}>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: 0 }}>
@@ -753,26 +764,27 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
               </div>
 
               {hasFamilyPatient && (
-                <div className={styles.addFormGrid}>
-                  <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                    <label>Search by Mobile Number</label>
-                    <div style={{ display: 'flex', gap: '12px' }}>
+                <div className={styles.familySearchRow}>
+                  {/* Left: 40% — Search input + button */}
+                  <div className={styles.familySearchLeft}>
+                    <label className={styles.familySearchLabel}>Search by Mobile Number</label>
+                    <div className={styles.familySearchInputRow}>
                       <input
                         type="text"
                         value={searchMobile}
                         onChange={handleSearchMobileChange}
                         placeholder="Enter 10-digit mobile"
                         maxLength="10"
-                        style={{ flex: 1 }}
+                        className={styles.familySearchInput}
                       />
                       <button
                         type="button"
                         onClick={handleSearchPatients}
                         disabled={searchLoading}
                         className={styles.btnSubmit}
-                        style={{ padding: '0 20px' }}
+                        style={{ padding: '0 16px', height: '40px', whiteSpace: 'nowrap' }}
                       >
-                        <FiSearch />
+                        <FiSearch style={{ marginRight: '4px' }} />
                         {searchLoading ? 'Searching...' : 'Search'}
                       </button>
                     </div>
@@ -783,143 +795,198 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
                     )}
                   </div>
 
-                  {searchResults.length > 0 && (
-                    <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                      <label>Select Family Patient</label>
-                      <div style={{
-                        maxHeight: '200px',
-                        overflowY: 'auto',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '10px',
-                        padding: '12px',
-                        background: '#f8fafc'
-                      }}>
-                        {searchResults.map((patient) => {
-                          const pId = patient.patientId || patient.patientID || patient.id;
-                          const isSelected = selectedFamilyPatient && (
-                            selectedFamilyPatient.patientId === pId ||
-                            selectedFamilyPatient.patientID === pId ||
-                            selectedFamilyPatient.id === pId
-                          );
-                          return (
-                            <div
-                              key={pId}
-                              onClick={() => handleSelectFamilyPatient(patient)}
-                              style={{
-                                padding: '10px',
-                                marginBottom: '8px',
-                                background: isSelected ? '#e8f5e9' : 'white',
-                                border: isSelected ? '2px solid #4caf50' : '1px solid #e0e0e0',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s'
-                              }}
-                            >
-                              <div style={{ fontWeight: '600' }}>{patient.firstName} {patient.lastName}</div>
-                              <div style={{ fontSize: '0.9rem', color: '#555' }}>Mobile: {patient.mobile}</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedFamilyPatient && (
-                    <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                      <div style={{
-                        padding: '12px',
-                        background: '#e8f5e9',
-                        border: '1px solid #4caf50',
-                        borderRadius: '10px'
-                      }}>
-                        <strong>Selected:</strong> {selectedFamilyPatient.firstName} {selectedFamilyPatient.lastName} - {selectedFamilyPatient.mobile}
-                      </div>
-                    </div>
-                  )}
+                  {/* Right: 60% — Results list with Name, Sex, File No */}
+                  <div className={styles.familyResultsRight}>
+                    {searchResults.length > 0 ? (
+                      <>
+                        <label className={styles.familySearchLabel}>Select Patient</label>
+                        <div className={styles.familyResultsList}>
+                          {/* Table header */}
+                          <div className={styles.familyResultsHeader}>
+                            <span className={styles.familyResultsHeaderSelect} />
+                            <span className={styles.familyResultsHeaderCell} style={{ flex: 2 }}>Patient Name</span>
+                            <span className={styles.familyResultsHeaderCell} style={{ flex: 1 }}>Sex</span>
+                            <span className={styles.familyResultsHeaderCell} style={{ flex: 1 }}>File No</span>
+                          </div>
+                          {searchResults.map((patient) => {
+                            const pId = patient.patientId || patient.patientID || patient.id;
+                            const isSelected =
+                              selectedFamilyPatient?.patientId === pId ||
+                              selectedFamilyPatient?.patientID === pId ||
+                              selectedFamilyPatient?.id === pId;
+                            return (
+                              <div
+                                key={pId}
+                                className={`${styles.familyResultItem} ${isSelected ? styles.familyResultItemSelected : ''}`}
+                              >
+                                <span className={styles.familyResultSelectCell}>
+                                  <input
+                                    type="radio"
+                                    name="familyPatientRadio"
+                                    checked={isSelected}
+                                    onChange={() => handleSelectFamilyPatient(patient)}
+                                    onClick={() => {
+                                      if (isSelected) {
+                                        setSelectedFamilyPatient(null);
+                                        setFormData((prev) => ({ ...prev, familyPatientId: 0 }));
+                                      }
+                                    }}
+                                    className={styles.familyRadio}
+                                  />
+                                </span>
+                                <span className={styles.familyResultCell} style={{ flex: 2, fontWeight: '600' }}>
+                                  {patient.firstName} {patient.lastName}
+                                </span>
+                                <span className={styles.familyResultCell} style={{ flex: 1 }}>
+                                  {getGenderLabel(patient.gender || patient.genderId)}
+                                </span>
+                                <span className={styles.familyResultCell} style={{ flex: 1 }}>
+                                  {patient.fileNo || patient.fileNumber || patient.patientId || patient.patientID || '-'}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    ) : (
+                      <div className={styles.familyResultsEmpty} />
+                    )}
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Medical Information */}
+            {/* ── Medical Information ── */}
             <div className={styles.addSection}>
               <div className={styles.addSectionHeader}>
                 <h3>Medical Information</h3>
               </div>
-              <div className={styles.addFormGrid}>
 
-                {/* Allergies — optional, max 500 */}
-                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                  <label>Allergies</label>
+              {/* Row 1: Allergies | Past Surgeries | Family Medical History */}
+              <div className={styles.medicalThreeColRow}>
+                <div className={styles.medicalColGroup}>
+                  <label className={styles.medicalColLabel}>Allergies</label>
                   <textarea
                     name="allergies"
-                    rows={2}
                     value={formData.allergies}
                     onChange={handleInputChange}
+                    placeholder="Enter any known allergies"
+                    className={styles.medicalTallTextarea}
                   />
                   {validationMessages.allergies && (
                     <span className={styles.validationMsg}>{validationMessages.allergies}</span>
                   )}
                 </div>
 
-                {/* ExistingMedicalConditions — NOT in backend validator */}
-                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                  <label>Existing Medical Conditions</label>
-                  <textarea
-                    name="existingMedicalConditions"
-                    rows={2}
-                    value={formData.existingMedicalConditions}
-                    onChange={handleInputChange}
-                  />
-                </div>
-
-                {/* PastSurgeries — NOT in backend validator */}
-                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                  <label>Past Surgeries</label>
+                <div className={styles.medicalColGroup}>
+                  <label className={styles.medicalColLabel}>Past Surgeries</label>
                   <textarea
                     name="pastSurgeries"
-                    rows={2}
                     value={formData.pastSurgeries}
                     onChange={handleInputChange}
+                    placeholder="Enter past surgeries"
+                    className={styles.medicalTallTextarea}
                   />
                 </div>
 
-                {/* CurrentMedications — optional, max 500 */}
-                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                  <label>Current Medications</label>
-                  <textarea
-                    name="currentMedications"
-                    rows={2}
-                    value={formData.currentMedications}
-                    onChange={handleInputChange}
-                  />
-                  {validationMessages.currentMedications && (
-                    <span className={styles.validationMsg}>{validationMessages.currentMedications}</span>
-                  )}
-                </div>
-
-                {/* FamilyMedicalHistory — NOT in backend validator */}
-                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                  <label>Family Medical History</label>
+                <div className={styles.medicalColGroup}>
+                  <label className={styles.medicalColLabel}>Family Medical History</label>
                   <textarea
                     name="familyMedicalHistory"
-                    rows={2}
                     value={formData.familyMedicalHistory}
                     onChange={handleInputChange}
+                    placeholder="Enter family medical history"
+                    className={styles.medicalTallTextarea}
                   />
                 </div>
-
-                {/* ImmunizationRecords — NOT in backend validator */}
-                <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                  <label>Immunization Records</label>
-                  <textarea
-                    name="immunizationRecords"
-                    rows={2}
-                    value={formData.immunizationRecords}
-                    onChange={handleInputChange}
-                  />
-                </div>
-
               </div>
+
+              {/* Row 2: Existing Medical Conditions | Current Medications | Immunization Records */}
+              <div className={styles.medicalThreeColRow}>
+                <div className={styles.medicalColGroup}>
+                  <label className={styles.medicalColLabel}>
+                    <input
+                      type="checkbox"
+                      checked={showExistingMedical}
+                      onChange={(e) => setShowExistingMedical(e.target.checked)}
+                      className={styles.medicalCheckbox}
+                    />
+                    Existing Medical Conditions
+                  </label>
+                  <div className={styles.medicalCheckboxBox}>
+                    {showExistingMedical ? (
+                      <textarea
+                        name="existingMedicalConditions"
+                        rows={3}
+                        value={formData.existingMedicalConditions}
+                        onChange={handleInputChange}
+                        placeholder="Enter existing medical conditions"
+                        className={styles.medicalTallTextarea}
+                      />
+                    ) : (
+                      <div/>
+                    )}
+                  </div>
+                </div>
+
+                <div className={styles.medicalColGroup}>
+                  <label className={styles.medicalColLabel}>
+                    <input
+                      type="checkbox"
+                      checked={showCurrentMedications}
+                      onChange={(e) => setShowCurrentMedications(e.target.checked)}
+                      className={styles.medicalCheckbox}
+                    />
+                    Current Medications
+                  </label>
+                  <div className={styles.medicalCheckboxBox}>
+                    {showCurrentMedications ? (
+                      <>
+                        <textarea
+                          name="currentMedications"
+                          rows={3}
+                          value={formData.currentMedications}
+                          onChange={handleInputChange}
+                          placeholder="Enter current medications"
+                          className={styles.medicalTallTextarea}
+                        />
+                        {validationMessages.currentMedications && (
+                          <span className={styles.validationMsg}>{validationMessages.currentMedications}</span>
+                        )}
+                      </>
+                    ) : (
+                      <div/>
+                    )}
+                  </div>
+                </div>
+
+                <div className={styles.medicalColGroup}>
+                  <label className={styles.medicalColLabel}>
+                    <input
+                      type="checkbox"
+                      checked={showImmunization}
+                      onChange={(e) => setShowImmunization(e.target.checked)}
+                      className={styles.medicalCheckbox}
+                    />
+                    Immunization Records
+                  </label>
+                  <div className={styles.medicalCheckboxBox}>
+                    {showImmunization ? (
+                      <textarea
+                        name="immunizationRecords"
+                        rows={3}
+                        value={formData.immunizationRecords}
+                        onChange={handleInputChange}
+                        placeholder="Enter immunization records"
+                        className={styles.medicalTallTextarea}
+                      />
+                    ) : (
+                      <div/>
+                    )}
+                  </div>
+                </div>
+              </div>
+
             </div>
 
             {/* Footer */}

@@ -9,6 +9,8 @@ import AddAppointment from './AddAppointment.jsx';
 import AppointmentDetails from './ViewAppointment.jsx';
 import styles from './AppointmentList.module.css';
 import AddAppointmentVisit from './AddAppointmentVisits.jsx';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+
 
 
 // ──────────────────────────────────────────────────
@@ -81,8 +83,8 @@ const AppointmentList = () => {
       setLoading(true);
       setError(null);
 
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const options = {
         BranchID:  branchId,

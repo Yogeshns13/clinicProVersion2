@@ -7,6 +7,7 @@ import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import ViewInvoice from './ViewInvoice.jsx';
 import styles from './InvoiceManagement.module.css';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const INVOICE_STATUSES = [
   { id: 1, label: 'Draft' },
@@ -146,8 +147,8 @@ const InvoiceList = () => {
     try {
       setLoading(true);
       setError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const options = {
         Page: 1,
@@ -301,8 +302,8 @@ const InvoiceList = () => {
     try {
       setFormLoading(true);
       setFormError(null);
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       await addInvoicePayment({
         clinicId, branchId,
         invoiceId: selectedInvoice.id,
@@ -324,8 +325,8 @@ const InvoiceList = () => {
   const handleCancelInvoice = async (invoice) => {
     if (!window.confirm(`Cancel invoice ${invoice.invoiceNo}?`)) return;
     try {
-      const clinicId = Number(localStorage.getItem('clinicID'));
-      const branchId = Number(localStorage.getItem('branchID'));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       await cancelInvoice(invoice.id, clinicId, branchId);
       setActiveDropdown(null);
       fetchInvoices();

@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { FiX } from 'react-icons/fi';
 import { updatePurchaseOrderDetail } from '../Api/ApiPharmacy.js';
 import styles from './UpdatePurchaseOrderDetail.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
+import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -90,6 +92,11 @@ const UpdatePurchaseOrderDetail = ({ isOpen, onClose, onUpdateSuccess, item }) =
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h2>Update Item: {item.medicineName}</h2>
+
+          <div className={styles.clinicNameone}>
+                <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px" }} />
+                {localStorage.getItem("clinicName") || "—"}
+              </div>
           <button onClick={onClose} className={styles.modalClose}>
             <FiX />
           </button>
