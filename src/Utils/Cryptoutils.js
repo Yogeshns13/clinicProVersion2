@@ -61,7 +61,12 @@ export const getStoredBranchId = async () => {
   return branchId ? parseInt(branchId, 10) : null;
 };
 
+export const getStoredUserId = async () => {
+  const userId = await getDecrypted('userID');
+  return userId ? parseInt(userId, 10) : null;
+};
+
 export const getStoredClinicName = async () => {
-  const clinicName = await getDecrypted('clinicName');
-  return clinicName ? parseInt(clinicName, 10) : null;
+  const clincName = await getDecrypted('clinicName');
+  return clincName || null;   
 };

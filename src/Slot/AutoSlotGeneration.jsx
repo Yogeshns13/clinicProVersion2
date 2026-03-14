@@ -1,22 +1,88 @@
 // src/components/AutoSlotGeneration.jsx
-import React, { useState } from 'react';
-import { FiZap, FiX, FiCalendar, FiHash, FiAlertCircle } from 'react-icons/fi';
+import React, { useState, useEffect, useRef } from 'react';
+import { FiZap, FiX, FiCalendar, FiHash, FiAlertCircle, FiEdit2 } from 'react-icons/fi';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
-import { addTask } from '../Api/Api.js';
+import { addTask, deleteTask } from '../Api/Api.js';
 import styles from './AutoSlotGeneration.module.css';
 
 const TASK_TYPE = 2;
 const TASK_NAME = 'GenerateSlots';
 const MAX_RETRY = 3;
 
-const AutoSlotGeneration = ({ isOpen, onClose, onSuccess }) => {
-  const [rangeType,   setRangeType]   = useState('days');  // 'days' | 'range'
+// ── Parse existing task data into form state ──
+const parseExistingTask = (taskData) => {
+  if (!taskData) return null;
+  try {
+    const params =
+      typeof taskData.taskParamsJson === 'string'
+        ? JSON.parse(taskData.taskParamsJson)
+        : taskData.taskParamsJson || {};
+
+    const hasDaysCount = params.DaysCount !== null && params.DaysCount !== undefined;
+    return {
+      rangeType: hasDaysCount ? 'days' : 'range',
+      daysCount: hasDaysCount ? Number(params.DaysCount) : 10,
+      fromDate:  params.FromDate || '',
+      toDate:    params.ToDate   || '',
+      interval:  Number(taskData.repeatIntervalMinutes) || 5,
+    };
+  } catch {
+    return null;
+  }
+};
+
+// ────────────────────────────────────────────────
+const AutoSlotGeneration = ({ isOpen, onClose, onSuccess, mode = 'add', existingTaskData = null }) => {
+  const isEdit = mode === 'edit';
+
+  const [rangeType,   setRangeType]   = useState('days');
   const [daysCount,   setDaysCount]   = useState(10);
   const [fromDate,    setFromDate]    = useState('');
   const [toDate,      setToDate]      = useState('');
   const [interval,    setInterval]    = useState(5);
   const [submitting,  setSubmitting]  = useState(false);
   const [submitError, setSubmitError] = useState(null);
+
+  // Track original values to detect changes in edit mode
+  const originalRef = useRef(null);
+
+  // ── Prefill form when opening ──
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (isEdit && existingTaskData) {
+      const parsed = parseExistingTask(existingTaskData);
+      if (parsed) {
+        setRangeType(parsed.rangeType);
+        setDaysCount(parsed.daysCount);
+        setFromDate(parsed.fromDate);
+        setToDate(parsed.toDate);
+        setInterval(parsed.interval);
+        originalRef.current = { ...parsed };
+      }
+    } else {
+      // Add mode — reset to defaults
+      setRangeType('days');
+      setDaysCount(10);
+      setFromDate('');
+      setToDate('');
+      setInterval(5);
+      originalRef.current = null;
+    }
+
+    setSubmitError(null);
+  }, [isOpen, isEdit, existingTaskData]);
+
+  // ── Dirty check: has the user changed anything from original? ──
+  const isDirty = () => {
+    if (!isEdit || !originalRef.current) return false;
+    const orig = originalRef.current;
+    if (rangeType !== orig.rangeType) return true;
+    if (rangeType === 'days'  && daysCount !== orig.daysCount) return true;
+    if (rangeType === 'range' && (fromDate !== orig.fromDate || toDate !== orig.toDate)) return true;
+    if (interval !== orig.interval) return true;
+    return false;
+  };
 
   const resetForm = () => {
     setRangeType('days');
@@ -25,6 +91,7 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess }) => {
     setToDate('');
     setInterval(5);
     setSubmitError(null);
+    originalRef.current = null;
   };
 
   const handleClose = () => {
@@ -65,6 +132,11 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess }) => {
           ? { DaysCount: Number(daysCount), FromDate: null, ToDate: null }
           : { DaysCount: null, FromDate: fromDate, ToDate: toDate };
 
+      if (isEdit) {
+        // Update = delete existing task first, then re-create with new values
+        await deleteTask({ clinicId, branchId, taskType: TASK_TYPE, taskName: TASK_NAME });
+      }
+
       await addTask({
         clinicId,
         branchId,
@@ -78,13 +150,19 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess }) => {
       resetForm();
       onSuccess?.();
     } catch (err) {
-      setSubmitError(err.message || 'Failed to enable auto generation');
+      setSubmitError(
+        isEdit
+          ? err.message || 'Failed to update auto generation'
+          : err.message || 'Failed to enable auto generation'
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
   if (!isOpen) return null;
+
+  const showUpdateBtn = isEdit && isDirty();
 
   return (
     <div className={styles.overlay}>
@@ -93,10 +171,18 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess }) => {
         {/* ── Header ── */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}><FiZap size={20} /></div>
+            <div className={styles.headerIcon}>
+              {isEdit ? <FiEdit2 size={20} /> : <FiZap size={20} />}
+            </div>
             <div>
-              <h2 className={styles.headerTitle}>Enable Auto Generation</h2>
-              <p className={styles.headerSub}>Configure automatic slot creation schedule</p>
+              <h2 className={styles.headerTitle}>
+                {isEdit ? 'Edit Auto Generation' : 'Enable Auto Generation'}
+              </h2>
+              <p className={styles.headerSub}>
+                {isEdit
+                  ? 'Modify the automatic slot creation schedule'
+                  : 'Configure automatic slot creation schedule'}
+              </p>
             </div>
           </div>
           <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">
@@ -124,10 +210,7 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess }) => {
                   className={styles.hiddenRadio}
                 />
                 <div className={styles.radioIcon}><FiHash size={18} /></div>
-                <div>
-                  <div className={styles.radioTitle}>Days Ahead</div>
-                  <div className={styles.radioDesc}>Generate slots N days in advance</div>
-                </div>
+                <div className={styles.radioTitle}>Days Ahead</div>
                 <div className={styles.radioCheck} />
               </label>
 
@@ -144,10 +227,7 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess }) => {
                   className={styles.hiddenRadio}
                 />
                 <div className={styles.radioIcon}><FiCalendar size={18} /></div>
-                <div>
-                  <div className={styles.radioTitle}>Date Range</div>
-                  <div className={styles.radioDesc}>Generate slots between two dates</div>
-                </div>
+                <div className={styles.radioTitle}>Date Range</div>
                 <div className={styles.radioCheck} />
               </label>
             </div>
@@ -156,10 +236,7 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess }) => {
           {/* Conditional inputs */}
           {rangeType === 'days' ? (
             <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>
-                Days Count
-                <span className={styles.fieldHint}>How many days ahead to generate slots</span>
-              </label>
+              <label className={styles.fieldLabel}>Days Count</label>
               <div className={styles.counterRow}>
                 <button
                   type="button"
@@ -209,10 +286,7 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess }) => {
 
           {/* Interval */}
           <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel}>
-              Repeat Interval
-              <span className={styles.fieldHint}>How often to run this task</span>
-            </label>
+            <label className={styles.fieldLabel}>Repeat Interval</label>
             <div className={styles.intervalRow}>
               {[5, 10, 15, 30, 60].map((val) => (
                 <button
@@ -236,22 +310,6 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess }) => {
             </div>
           </div>
 
-          {/* Fixed values info */}
-          <div className={styles.fixedInfo}>
-            <div className={styles.fixedInfoItem}>
-              <span className={styles.fixedLabel}>Task name</span>
-              <span className={styles.fixedValue}>GenerateSlots</span>
-            </div>
-            <div className={styles.fixedInfoItem}>
-              <span className={styles.fixedLabel}>Task type</span>
-              <span className={styles.fixedValue}>2</span>
-            </div>
-            <div className={styles.fixedInfoItem}>
-              <span className={styles.fixedLabel}>Max retry</span>
-              <span className={styles.fixedValue}>3</span>
-            </div>
-          </div>
-
           {/* Error */}
           {submitError && (
             <div className={styles.errorBanner}>
@@ -263,15 +321,28 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess }) => {
 
         {/* ── Footer ── */}
         <div className={styles.footer}>
-          <button className={styles.cancelBtn} onClick={handleClose}>
+          <button className={styles.cancelBtn} onClick={handleClose} disabled={submitting}>
             Cancel
           </button>
-          <button className={styles.saveBtn} onClick={handleSave} disabled={submitting}>
-            {submitting
-              ? <><span className={styles.btnSpinner} />Enabling…</>
-              : <><FiZap size={15} />Enable Auto Generation</>
-            }
-          </button>
+
+          {/* Edit mode: show Update only when something changed */}
+          {isEdit ? (
+            showUpdateBtn && (
+              <button className={styles.saveBtn} onClick={handleSave} disabled={submitting}>
+                {submitting
+                  ? <><span className={styles.btnSpinner} />Updating…</>
+                  : <><FiZap size={15} />Update</>
+                }
+              </button>
+            )
+          ) : (
+            <button className={styles.saveBtn} onClick={handleSave} disabled={submitting}>
+              {submitting
+                ? <><span className={styles.btnSpinner} />Enabling…</>
+                : <><FiZap size={15} />Enable Auto Generation</>
+              }
+            </button>
+          )}
         </div>
 
       </div>

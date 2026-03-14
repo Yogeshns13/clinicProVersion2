@@ -24,6 +24,7 @@ import {
 } from '../Api/ApiLabTests.js';
 import './AddConsultation.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import { FaClinicMedical } from 'react-icons/fa';
 
 /* ─── Constants ─────────────────────────────────── */
 const TIMING_OPTIONS = [
@@ -614,15 +615,16 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     }
   }, [hasAnythingNew]);
 
-  const getIds = () => ({
-    clinicId: Number(localStorage.getItem('clinicID')),
-    branchId: Number(localStorage.getItem('branchID')),
-  });
+  const getIds = async () => {
+  const clinicId = await getStoredClinicId();
+  const branchId = await getStoredBranchId();
+  return { clinicId, branchId };
+};
 
   const fetchTodayVisits = async () => {
     try {
       setLoading(true); setError(null);
-      const { clinicId, branchId } = getIds();
+      const { clinicId, branchId } = await getIds();
       setTodayVisits(await getPatientVisitList(clinicId, { Page: 1, PageSize: 50, BranchID: branchId, VisitDate: today() }));
     } catch (err) { setError(err); } finally { setLoading(false); }
   };
@@ -630,7 +632,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const fetchMedicines = async () => {
     try {
       setLoadingMeds(true);
-      const { clinicId, branchId } = getIds();
+      const { clinicId, branchId } = await getIds();
       const meds = await getMedicineMasterList(clinicId, { BranchID: branchId, PageSize: 200, Status: 1 });
       setAllMedicines(meds); setFilteredMedicines(meds);
     } catch (err) { console.error(err); } finally { setLoadingMeds(false); }
@@ -640,7 +642,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     try {
       setLoadingPatient(true); setError(null);
       setFamilyPatientData(null);
-      const { clinicId, branchId } = getIds();
+      const { clinicId, branchId } = await getIds();
       const pts = await getPatientsList(clinicId, { Page: 1, PageSize: 1, BranchID: branchId, PatientID: patientId, Status: 1 });
       const pt = pts?.[0] || null;
       setPatientDetails(pt);
@@ -669,7 +671,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     if (!selectedVisit?.patientId) return;
     try {
       setHistoryLoading(true);
-      const { clinicId, branchId } = getIds();
+      const { clinicId, branchId } = await getIds();
       setHistoryList((await getConsultationList(clinicId, { Page: 1, PageSize: 50, BranchID: branchId, PatientID: selectedVisit.patientId, FromDate: historyFrom || '', ToDate: historyTo || '' })) || []);
     } catch (err) { console.error(err); } finally { setHistoryLoading(false); }
   };
@@ -677,7 +679,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const fetchViewDetail = async (consultId) => {
     try {
       setViewDetailLoading(true); setShowViewDetail(true); setViewDetail(null);
-      const { clinicId, branchId } = getIds();
+      const { clinicId, branchId } = await getIds();
       const [consultList, prescList, labOrders] = await Promise.all([
         getConsultationList(clinicId, { ConsultationID: consultId, BranchID: branchId, Page: 1, PageSize: 1 }),
         getPrescriptionList(clinicId, { ConsultationID: consultId, BranchID: branchId, Page: 1, PageSize: 5 }),
@@ -697,7 +699,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const fetchLabItems = async () => {
     try {
       setLabItemsLoading(true);
-      const { clinicId, branchId } = getIds();
+      const { clinicId, branchId } = await getIds();
       const [masters, pkgs] = await Promise.all([
         getLabTestMasterList(clinicId, { BranchID: branchId, PageSize: 200, Status: 1 }),
         getLabTestPackageList(clinicId, { BranchID: branchId, PageSize: 100, Status: 1 }),
@@ -763,7 +765,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
       setUpdatingConsult(true); setError(null);
       await updateConsultation({
         consultationId,
-        clinicId: getIds().clinicId,
+        clinicId: await getIds().clinicId,
         reason: selectedVisit?.reason || '',
         symptoms: selectedVisit?.symptoms || '',
         bpSystolic:  selectedVisit?.bpSystolic  ?? 0,
@@ -865,7 +867,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     const { itemId, testId, pkgId } = reactivateConfirm;
     try {
       setReactivating(true);
-      const { clinicId, branchId } = getIds();
+      const { clinicId, branchId } = await getIds();
       await updateLabTestOrderItem({ itemId, clinicId, branchId, status: 1 });
       setSavedLabItems(prev => prev.map(i => i.itemId === itemId ? { ...i, status: 1 } : i));
       if (testId) {
@@ -890,7 +892,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const handleRemoveLabItemFromModal = async (itemId) => {
     try {
       setRemovingLabItemId(itemId);
-      const { clinicId, branchId } = getIds();
+      const { clinicId, branchId } = await getIds();
       await updateLabTestOrderItem({ itemId, clinicId, branchId, status: 2 });
       const savedItem = savedLabItems.find(s => s.itemId === itemId);
       setSavedLabItems(prev => prev.map(i => i.itemId === itemId ? { ...i, status: 2 } : i));
@@ -940,7 +942,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
 
     const hasMedicines = pendingContainers.length > 0;
     const hasLabOrder  = stagedLabTestIds.length > 0 || stagedLabPkgIds.length > 0;
-    const { clinicId, branchId } = getIds();
+    const { clinicId, branchId } = await getIds();
 
     if (consultationId) {
       const newTestIds      = stagedLabTestIds.filter(id => !submittedLabTestIds.includes(id));
@@ -1219,6 +1221,10 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
           </div>
 
           <div className="ac-header__right">
+            <div className="styles.clinicNameone">
+               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                {localStorage.getItem('clinicName') || '—'}
+                </div>
             {visitStep === 2 && (
               <div className="header-nav-group">
                 <button className="btn-nav" onClick={() => { if (selectedVisit) { fetchPatientDetails(selectedVisit.patientId); setShowPatientModal(true); } }}>

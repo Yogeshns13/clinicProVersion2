@@ -448,7 +448,7 @@ const PatientList = () => {
               </div>
               <div className={styles.clinicNameone}>
                <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
-                { getStoredClinicId() || '—'}
+                 {localStorage.getItem('clinicName') || '—'}
                 </div>
 
               <button onClick={closeDetailModal} className={styles.detailCloseBtn}>✕</button>

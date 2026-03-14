@@ -33,10 +33,18 @@ UpdatePassword
     "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
-    "USER_ID" : 2000000,
+    "USER_ID" : 89000,
     "ClinicID":1,    
-    "UserID":1,  
+    "UserID":89009,  
     "Password" : "1qaz2wsx"
+}
+
+{
+    "result": {
+        "IN_USER_ID": 89009,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
 }
 
 DeleteUser 

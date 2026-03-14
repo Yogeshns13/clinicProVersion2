@@ -17,6 +17,7 @@ const LabReportList = () => {
   // Data & Filter
   const [reports, setReports] = useState([]);
   const [allReports, setAllReports] = useState([]);
+  const [clinicName, setClinicName] = useState('—');
   
   // Filter inputs (not applied until search)
   const [filterInputs, setFilterInputs] = useState({
@@ -60,6 +61,15 @@ const LabReportList = () => {
   }, []);
 
   const fetchReports = async () => {
+    try {
+            // Get clinic name from encrypted storage
+            const clinicName = String(await getStoredClinicName());
+            setClinicName(clinicName || '—');
+          } catch (err) {
+            console.error('Failed to fetch clinic name:', err);
+            setClinicName('—');
+          }
+
     try {
       setLoading(true);
       setError(null);

@@ -100,7 +100,7 @@ export const loginUser = async (username, password) => {
         const clinicList = await getClinicList({ ClinicID: result.CLINIC_ID });
         const matchedClinic = clinicList.find((clinic) => clinic.id === result.CLINIC_ID);
         if (matchedClinic) {
-          await setEncrypted("clinicName", matchedClinic.name); // Encrypted
+          localStorage.setItem("clinicName", matchedClinic.name); // Encrypted
         }
       } catch (clinicErr) {
         console.warn("Failed to fetch clinic name:", clinicErr.message);
@@ -4415,6 +4415,77 @@ export const deleteTask = async (taskData = {}) => {
       error.response?.data?.message ||
       error.message ||
       "Failed to delete task";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
+  }
+};
+
+export const updatePassword = async (passwordData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (!passwordData?.UserID && passwordData?.UserID !== 0) {
+    const validationError = new Error("UserID is required to update password.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  if (!passwordData?.Password || typeof passwordData.Password !== "string" || passwordData.Password.trim() === "") {
+    const validationError = new Error("New password is required and cannot be empty.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (passwordData.ClinicID ?? 0);
+  const finalTargetUserId = PRODUCTION_MODE ? parseInt(userId) : parseInt(passwordData.UserID);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),          
+    ClinicID: finalClinicId,
+    UserID: finalTargetUserId,       
+    Password: passwordData.Password.trim(),
+  };
+
+  console.log("update Password payload:", payload);
+
+  try {
+    const response = await API.post("/UpdatePassword", payload);
+    console.log("UpdatePassword response:", response.data);
+
+    const result = response.data?.result;
+
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to update password");
+    }
+
+    return {
+      success: true,
+      userId: result.IN_USER_ID || finalTargetUserId,
+      message: "Password updated successfully"
+    };
+
+  } catch (error) {
+    console.error("updatePassword error:", error);
+
+    const errorMessage =
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to update password";
 
     const formattedError = new Error(errorMessage);
     formattedError.status = error.response?.status || 500;

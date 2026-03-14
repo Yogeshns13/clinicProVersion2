@@ -1,7 +1,7 @@
 // src/components/SlotConfigList.jsx
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiPlus, FiTrash2, FiCalendar, FiX } from 'react-icons/fi';
+import { FiSearch, FiPlus, FiTrash2, FiCalendar, FiX, FiZap, FiCheckCircle } from 'react-icons/fi';
 import { getSlotConfigList, getEmployeeList, getShiftList, deleteSlotConfig, getTaskList, deleteTask } from '../Api/Api.js';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
@@ -47,9 +47,13 @@ const SlotConfigList = () => {
 
   // Auto-generation task state
   const [autoTaskExists,     setAutoTaskExists]     = useState(false);
+  const [autoTaskData,       setAutoTaskData]       = useState(null);
   const [autoTaskLoading,    setAutoTaskLoading]    = useState(true);
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
   const [disabling,          setDisabling]          = useState(false);
+
+  // Toast notification
+  const [toast, setToast] = useState(null);
 
   // Filter inputs (staged)
   const [filterInputs, setFilterInputs] = useState({
@@ -73,7 +77,14 @@ const SlotConfigList = () => {
   const [isAddFormOpen,  setIsAddFormOpen]  = useState(false);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [isAutoGenOpen,  setIsAutoGenOpen]  = useState(false);
+  const [isAutoEditOpen, setIsAutoEditOpen] = useState(false);
   const [deleteConfirm,  setDeleteConfirm]  = useState(null);
+
+  // ── Toast helper ──
+  const showToast = useCallback((message) => {
+    setToast({ message });
+    setTimeout(() => setToast(null), 3000);
+  }, []);
 
   // ────────────────────────────────────────────────
   const hasActiveFilters =
@@ -89,12 +100,14 @@ const SlotConfigList = () => {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       const res = await getTaskList({ clinicId, branchId, taskType: TASK_TYPE });
-      const exists = res.tasks?.some(
+      const foundTask = res.tasks?.find(
         (t) => t.taskType === TASK_TYPE && t.taskName === TASK_NAME
       );
-      setAutoTaskExists(!!exists);
+      setAutoTaskExists(!!foundTask);
+      setAutoTaskData(foundTask || null);
     } catch {
       setAutoTaskExists(false);
+      setAutoTaskData(null);
     } finally {
       setAutoTaskLoading(false);
     }
@@ -104,12 +117,25 @@ const SlotConfigList = () => {
     fetchAutoTaskStatus();
   }, [fetchAutoTaskStatus]);
 
-  // ── Toggle click ──
-  const handleToggleClick = () => {
+  // ── Toggle area click inside the compound button ──
+  // Clicking the toggle area:
+  //   OFF → open add popup
+  //   ON  → show disable confirm
+  const handleToggleAreaClick = (e) => {
+    e.stopPropagation();
     if (autoTaskExists) {
-      setShowDisableConfirm(true);   // ON → confirm before disabling
+      setShowDisableConfirm(true);
     } else {
-      setIsAutoGenOpen(true);        // OFF → open add form
+      setIsAutoGenOpen(true);
+    }
+  };
+
+  // ── Label/icon area click: open edit if ON, add if OFF ──
+  const handleLabelAreaClick = () => {
+    if (autoTaskExists) {
+      setIsAutoEditOpen(true);
+    } else {
+      setIsAutoGenOpen(true);
     }
   };
 
@@ -121,6 +147,7 @@ const SlotConfigList = () => {
       const branchId = await getStoredBranchId();
       await deleteTask({ clinicId, branchId, taskType: TASK_TYPE, taskName: TASK_NAME });
       setAutoTaskExists(false);
+      setAutoTaskData(null);
       setShowDisableConfirm(false);
     } catch (err) {
       console.error('Disable auto generation failed:', err);
@@ -131,8 +158,16 @@ const SlotConfigList = () => {
 
   // ── After add-task success ──
   const handleAutoGenSuccess = () => {
-    setAutoTaskExists(true);
     setIsAutoGenOpen(false);
+    fetchAutoTaskStatus();
+    showToast('Auto generation enabled successfully!');
+  };
+
+  // ── After edit-task success ──
+  const handleAutoEditSuccess = () => {
+    setIsAutoEditOpen(false);
+    fetchAutoTaskStatus();
+    showToast('Auto generation updated successfully!');
   };
 
   // ── Fetch reference data ──
@@ -266,6 +301,14 @@ const SlotConfigList = () => {
       <ErrorHandler error={error} />
       <Header title="Slot Configuration Management" />
 
+      {/* ── Toast Notification ── */}
+      {toast && (
+        <div className={styles.toast}>
+          <FiCheckCircle size={18} />
+          <span>{toast.message}</span>
+        </div>
+      )}
+
       {/* ── Filter Bar ── */}
       <div className={styles.toolbar}>
         <div className={styles.filtersRow}>
@@ -325,21 +368,35 @@ const SlotConfigList = () => {
               <FiCalendar size={16} /> Generate Slots
             </button>
 
-            {/* ── Auto Generation Toggle Switch ── */}
+            {/* ── Compound Auto Generate Slots button with embedded toggle ── */}
             <div
-              className={styles.autoToggleWrapper}
-              title={autoTaskExists ? 'Auto generation ON — click to disable' : 'Auto generation OFF — click to enable'}
+              className={`${styles.autoGenCompound} ${autoTaskExists ? styles.autoGenCompoundOn : ''} ${autoTaskLoading ? styles.autoGenCompoundDisabled : ''}`}
             >
-              <span className={`${styles.autoToggleLabel} ${autoTaskExists ? styles.autoToggleLabelOn : ''}`}>
-                Auto Generate Slots
-              </span>
+              {/* Left clickable area: label + icon → opens add/edit popup */}
               <button
-                className={`${styles.toggleSwitch} ${autoTaskExists ? styles.toggleOn : styles.toggleOff}`}
-                onClick={handleToggleClick}
+                className={styles.autoGenLabel}
+                onClick={handleLabelAreaClick}
                 disabled={autoTaskLoading}
-                aria-label="Toggle auto slot generation"
+                title={autoTaskExists ? 'Click to edit auto generation settings' : 'Click to enable auto generation'}
               >
-                <span className={styles.toggleThumb} />
+                <FiZap size={14} />
+                <span>Auto Generate Slots</span>
+              </button>
+
+              {/* Divider */}
+              <span className={styles.autoGenDivider} />
+
+              {/* Right clickable area: toggle switch → turns ON/OFF */}
+              <button
+                className={styles.autoGenToggleArea}
+                onClick={handleToggleAreaClick}
+                disabled={autoTaskLoading}
+                title={autoTaskExists ? 'Turn off auto generation' : 'Turn on auto generation'}
+                aria-label={autoTaskExists ? 'Disable auto generation' : 'Enable auto generation'}
+              >
+                <span className={`${styles.miniToggle} ${autoTaskExists ? styles.miniToggleOn : styles.miniToggleOff}`}>
+                  <span className={styles.miniThumb} />
+                </span>
               </button>
             </div>
 
@@ -428,10 +485,22 @@ const SlotConfigList = () => {
         onSuccess={() => console.log('Slots generated')}
       />
 
+      {/* ADD mode */}
       <AutoSlotGeneration
         isOpen={isAutoGenOpen}
         onClose={() => setIsAutoGenOpen(false)}
         onSuccess={handleAutoGenSuccess}
+        mode="add"
+        existingTaskData={null}
+      />
+
+      {/* EDIT mode */}
+      <AutoSlotGeneration
+        isOpen={isAutoEditOpen}
+        onClose={() => setIsAutoEditOpen(false)}
+        onSuccess={handleAutoEditSuccess}
+        mode="edit"
+        existingTaskData={autoTaskData}
       />
 
       {/* ── Disable Auto Generation Confirm Popup ── */}
@@ -440,7 +509,6 @@ const SlotConfigList = () => {
           <div className={styles.confirmModal}>
             <div className={styles.confirmHeader}>
               <div className={styles.confirmToggleIcon}>
-                {/* visual: toggle-off */}
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
                   <rect x="1" y="6" width="22" height="12" rx="6" fill="rgba(239,68,68,0.15)" stroke="#ef4444" strokeWidth="1.5"/>
                   <circle cx="8" cy="12" r="4" fill="#ef4444"/>
@@ -492,7 +560,7 @@ const SlotConfigList = () => {
                 <div className={styles.deleteDetails}>
                   <p><strong>Doctor:</strong> {deleteConfirm.doctorFullName}</p>
                   <p><strong>Shift:</strong> {deleteConfirm.shiftName}</p>
-                  <p><strong>Duration:</strong> {getDurationLabel(deleteConfirm.duration)}</p>
+                  <p><strong>Duration:</strong> {deleteConfirm.duration}</p>
                 </div>
                 <p className={styles.deleteWarning}>This action cannot be undone.</p>
               </div>

@@ -24,6 +24,15 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ==================== MAIN WRAPPER ==================== */
 .listWrapper {
   padding: 20px;
@@ -31,6 +40,27 @@
   min-height: 100vh;
   color: var(--text-dark);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ==================== TOAST NOTIFICATION ==================== */
+.toast {
+  position: fixed;
+  top: 24px;
+  right: 28px;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #0f6e56, #1d9e75);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 8px 28px rgba(15, 110, 86, 0.35);
+  animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  min-width: 240px;
 }
 
 /* ==================== LOADING / ERROR STATES ==================== */
@@ -180,78 +210,131 @@
   box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
 }
 
-/* ==================== AUTO TOGGLE SWITCH ==================== */
-.autoToggleWrapper {
+/* ==================== COMPOUND AUTO GEN BUTTON ==================== */
+
+/* Outer pill wrapper — OFF state */
+.autoGenCompound {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 12px;
   height: 40px;
-  background: white;
-  border: 1px solid #cbd5e1;
   border-radius: 10px;
-  cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  border: 1.5px solid #cbd5e1;
+  background: white;
+  overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s;
   flex-shrink: 0;
 }
 
-.autoToggleWrapper:hover {
+.autoGenCompound:hover:not(.autoGenCompoundDisabled) {
   border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.12);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.14);
 }
 
-.autoToggleLabel {
-  font-size: 0.78rem;
+/* Outer pill wrapper — ON state */
+.autoGenCompoundOn {
+  border-color: var(--accent-end);
+  background: linear-gradient(135deg, rgba(32, 125, 156, 0.07), rgba(48, 178, 181, 0.1));
+  box-shadow: 0 0 0 2px rgba(48, 178, 181, 0.22);
+}
+
+.autoGenCompoundOn:hover:not(.autoGenCompoundDisabled) {
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.32);
+}
+
+.autoGenCompoundDisabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* Left: label + icon area */
+.autoGenLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  padding: 0 14px 0 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.82rem;
   font-weight: 700;
-  color: #94a3b8;
-  letter-spacing: 0.03em;
-  transition: color 0.3s;
+  color: #64748b;
   white-space: nowrap;
-  user-select: none;
+  transition: color 0.2s;
 }
 
-.autoToggleLabelOn {
+.autoGenCompoundOn .autoGenLabel {
   color: var(--accent-start);
 }
 
-/* The toggle track */
-.toggleSwitch {
-  position: relative;
-  width: 40px;
-  height: 22px;
-  border-radius: 11px;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.3s ease;
-  flex-shrink: 0;
-  outline: none;
+.autoGenLabel:hover {
+  color: var(--accent-start);
 }
 
-.toggleSwitch:disabled {
-  opacity: 0.5;
+.autoGenLabel:disabled {
   cursor: not-allowed;
 }
 
-.toggleSwitch:focus-visible {
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.3);
+/* Vertical divider between label and toggle */
+.autoGenDivider {
+  width: 1px;
+  height: 22px;
+  background: #cbd5e1;
+  flex-shrink: 0;
+  transition: background 0.2s;
 }
 
-/* ON state — theme accent gradient */
-.toggleOn {
+.autoGenCompoundOn .autoGenDivider {
+  background: rgba(48, 178, 181, 0.4);
+}
+
+/* Right: toggle area */
+.autoGenToggleArea {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.autoGenToggleArea:hover {
+  background: rgba(48, 178, 181, 0.08);
+}
+
+.autoGenToggleArea:disabled {
+  cursor: not-allowed;
+}
+
+/* ── Mini toggle inside compound button ── */
+.miniToggle {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  transition: background 0.3s ease;
+  flex-shrink: 0;
+}
+
+/* OFF — muted grey matching theme */
+.miniToggleOff {
+  background: #cbd5e1;
+}
+
+/* ON — theme accent gradient */
+.miniToggleOn {
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   box-shadow: 0 2px 8px rgba(32, 125, 156, 0.4);
 }
 
-/* OFF state — muted grey */
-.toggleOff {
-  background: #cbd5e1;
-}
-
-/* The sliding thumb */
-.toggleThumb {
+/* Thumb */
+.miniThumb {
   position: absolute;
-  top: 3px;
+  top: 2px;
   width: 16px;
   height: 16px;
   border-radius: 50%;
@@ -260,8 +343,8 @@
   transition: left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.toggleOn  .toggleThumb { left: 21px; }
-.toggleOff .toggleThumb { left: 3px; }
+.miniToggleOff .miniThumb { left: 2px; }
+.miniToggleOn  .miniThumb { left: 18px; }
 
 /* ==================== TABLE ==================== */
 .tableContainer {
@@ -529,10 +612,6 @@
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 /* ==================== DELETE CONFIG MODAL ==================== */

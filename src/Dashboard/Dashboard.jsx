@@ -13,11 +13,30 @@ import {
   FiUserPlus,
   FiUpload,
   FiClock,
+  FiLock,
+  FiEye,
+  FiEyeOff,
+  FiX,
+  FiCheck,
+  FiAlertCircle,
 } from "react-icons/fi";
 import scope from "../assets/account.png";
+import { updatePassword } from "../Api/Api.js";
+import { getStoredClinicId, getStoredUserId } from "../Utils/Cryptoutils.js";
 
 const Dashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // ---------- Change Password Modal State ----------
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  // -------------------------------------------------
 
   // ---------- Get doctor name from localStorage ----------
   const getDoctorName = () => {
@@ -36,6 +55,49 @@ const Dashboard = () => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+
+
+  const handleCloseModal = () => {
+    setShowChangePassword(false);
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordError("");
+    setShowNewPass(false);
+    setShowConfirmPass(false);
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError("");
+
+    if (!newPassword.trim()) {
+      setPasswordError("New password cannot be empty.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match. Please try again.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const userId = await getStoredUserId();
+      const clinicId = await getStoredClinicId();
+
+      await updatePassword({
+        UserID: userId,
+        ClinicID: clinicId,
+        Password: newPassword.trim(),
+      });
+
+      handleCloseModal();
+      setShowSuccessPopup(true);
+    } catch (err) {
+      setPasswordError(err.message || "Failed to update password. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Sample Data
   const patientFlow = [
@@ -86,6 +148,15 @@ const Dashboard = () => {
             <FiBell className="icon" />
             <span className="badge">3</span>
           </div>
+
+          {/* Update Password Button */}
+          <button
+            className="change-password-btn"
+            onClick={() => setShowChangePassword(true)}
+          >
+            Update Password
+          </button>
+
           <div className="user-profile">
             <div className="avatar">
               <img src={scope} alt={doctorName} />
@@ -230,6 +301,133 @@ const Dashboard = () => {
           </div>
         </div>
       </section>
+
+      {/* ===================== CHANGE PASSWORD MODAL ===================== */}
+      {showChangePassword && (
+        <div className="cp-overlay">
+          <div className="cp-modal">
+            {/* Modal Header */}
+            <div className="cp-modal-header">
+              <div className="cp-header-icon">
+                <FiLock size={22} />
+              </div>
+              <div>
+                <h2>Change Password</h2>
+                <p>Set a new secure password for your account</p>
+              </div>
+              <button className="cp-close-btn" onClick={handleCloseModal} aria-label="Close">
+                <FiX size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="cp-modal-body">
+              {/* New Password */}
+              <div className="cp-field">
+                <label>New Password</label>
+                <div className="cp-input-wrap">
+                  <input
+                    type={showNewPass ? "text" : "password"}
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      setPasswordError("");
+                    }}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    className="cp-eye-btn"
+                    onClick={() => setShowNewPass((v) => !v)}
+                    tabIndex={-1}
+                    aria-label="Toggle new password visibility"
+                  >
+                    {showNewPass ? <FiEyeOff size={17} /> : <FiEye size={17} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Password */}
+              <div className="cp-field">
+                <label>Confirm Password</label>
+                <div className={`cp-input-wrap ${confirmPassword && newPassword !== confirmPassword ? "mismatch" : confirmPassword && newPassword === confirmPassword ? "match" : ""}`}>
+                  <input
+                    type={showConfirmPass ? "text" : "password"}
+                    placeholder="Re-enter new password"
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      setPasswordError("");
+                    }}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    className="cp-eye-btn"
+                    onClick={() => setShowConfirmPass((v) => !v)}
+                    tabIndex={-1}
+                    aria-label="Toggle confirm password visibility"
+                  >
+                    {showConfirmPass ? <FiEyeOff size={17} /> : <FiEye size={17} />}
+                  </button>
+                  {confirmPassword && newPassword === confirmPassword && (
+                    <span className="cp-match-icon"><FiCheck size={15} /></span>
+                  )}
+                </div>
+              </div>
+
+              {/* Inline mismatch / error message */}
+              {passwordError && (
+                <div className="cp-error-msg">
+                  <FiAlertCircle size={15} />
+                  <span>{passwordError}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="cp-modal-footer">
+              <button className="cp-btn-cancel" onClick={handleCloseModal} disabled={isSubmitting}>
+                Cancel
+              </button>
+              <button
+                className="cp-btn-submit"
+                onClick={handleChangePassword}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <span className="cp-spinner" />
+                ) : (
+                  <>
+                    <FiLock size={15} />
+                    Update Password
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== SUCCESS POPUP ===================== */}
+      {showSuccessPopup && (
+        <div className="cp-overlay">
+          <div className="cp-success-popup">
+            <div className="cp-success-icon">
+              <FiCheck size={32} />
+            </div>
+            <h3>Password Updated!</h3>
+            <p>Your password has been changed successfully.</p>
+            <button
+              className="cp-btn-okay"
+              onClick={() => setShowSuccessPopup(false)}
+            >
+              Okay
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

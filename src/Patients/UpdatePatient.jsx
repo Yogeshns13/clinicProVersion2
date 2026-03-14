@@ -7,6 +7,7 @@ import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './UpdatePatient.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import { FaClinicMedical } from 'react-icons/fa';
 
 
 const GENDER_OPTIONS = [
@@ -530,15 +531,11 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
         <div className={styles.detailModalHeader}>
           <div className={styles.detailHeaderContent}>
             <h2>Update Patient</h2>
-            <div className={styles.detailHeaderMeta}>
-              <span className={styles.workIdBadge}>
-                {formData.firstName} {formData.lastName}
-              </span>
-              <span className={`${styles.workIdBadge} ${formData.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}>
-                {formData.status === 1 ? 'ACTIVE' : 'INACTIVE'}
-              </span>
             </div>
-          </div>
+            <div className={styles.clinicNameone}>
+               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                {localStorage.getItem('clinicName') || '—'}
+                </div>
           <button onClick={handleClose} className={styles.detailCloseBtn}>✕</button>
         </div>
 

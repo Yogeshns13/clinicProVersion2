@@ -24,6 +24,7 @@ import {
 } from '../Api/ApiLabTests.js';
 import './ViewConsultation.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import { FaClinicMedical } from 'react-icons/fa';
 
 /* ─── Constants ─────────────────────────────────── */
 const TIMING_OPTIONS = [
@@ -59,7 +60,11 @@ const formatDate      = (ds) => { if (!ds) return '—'; return new Date(ds).toL
 const formatTime      = (ts) => { if (!ts) return '—'; const [h, m] = ts.split(':').map(Number); return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`; };
 const today           = () => new Date().toISOString().split('T')[0];
 const thirtyDaysLater = () => new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
-const getIds          = () => ({ clinicId: Number(localStorage.getItem('clinicID')), branchId: Number(localStorage.getItem('branchID')) });
+const getIds = async () => {
+  const clinicId = await getStoredClinicId();
+  const branchId = await getStoredBranchId();
+  return { clinicId, branchId };
+};
 
 const createContainer = (medicine = null) => {
   const timings       = parseTimings(medicine?.timing);
@@ -585,7 +590,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
   const loadAll = async (consultId) => {
     try {
       setLoading(true); setError(null);
-      const { clinicId, branchId } = getIds();
+      const { clinicId, branchId } = await getIds();
 
       const [consultList, prescList, labOrders] = await Promise.all([
         getConsultationList(clinicId, { ConsultationID: consultId, BranchID: branchId, Page: 1, PageSize: 1 }),
@@ -1117,6 +1122,10 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
           </div>
 
           <div className="ac-header__right">
+            <div className="styles.clinicNameone">
+               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                {localStorage.getItem('clinicName') || '—'}
+                </div>
             {consultation && (
               <div className="header-nav-group">
                 <button className="btn-nav" onClick={() => { if (consultation) { fetchPatientDetails(consultation.patientId); setShowPatientModal(true); } }}>
@@ -1800,4 +1809,4 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     : ReactDOM.createPortal(shell, document.body);
 };
 
-export default ViewConsultation;
+export default ViewConsultation; 

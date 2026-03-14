@@ -147,6 +147,16 @@
 .ac-header__left  { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .ac-header__right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
+.clinicNameone {
+  font-size: 1.05rem;           /* a bit smaller than patient name */
+  font-weight: 600;
+  color: var(--text-light);
+  line-height: 1.2;
+  white-space: nowrap;          /* ← prevents wrapping to next line */
+  overflow: hidden;
+  text-overflow: ellipsis;      /* cuts off very long names nicely */
+  max-width: 220px;             /* adjust depending on your design */
+}
 .ac-header__title-group { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .ac-header__title {
   margin: 0;

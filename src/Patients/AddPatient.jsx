@@ -4,6 +4,7 @@ import { FiX, FiSearch } from 'react-icons/fi';
 import { addPatient, getPatientsList } from '../Api/Api.js';
 import styles from './AddPatient.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import { FaClinicMedical } from 'react-icons/fa';
 
 const GENDER_OPTIONS = [
   { id: 1, label: 'Male' },
@@ -421,6 +422,10 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
           <div className={styles.detailHeaderContent}>
             <h2>Add New Patient</h2>
           </div>
+          <div className={styles.clinicNameone}>
+               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                {localStorage.getItem('clinicName') || '—'}
+                </div>
           <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
         </div>
 
