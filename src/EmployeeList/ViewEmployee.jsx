@@ -589,11 +589,8 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     try {
       const clinicId = await getStoredClinicId();
 
-      // Fetch the fileAccessToken for this clinic dynamically
       const fileAccessToken = await fetchFileAccessToken(clinicId);
-
-      // Pass fileAccessToken to uploadPhoto (update your Api.js accordingly)
-      const res = await uploadPhoto(photo, fileAccessToken);
+      const res = await uploadPhoto(clinicId, photo, fileAccessToken);
 
       setFormData(prev => ({ ...prev, photoFileId: res.fileId }));
       setPhotoUploadStatus('Photo uploaded!'); setPhotoUploaded(true);
@@ -611,11 +608,11 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     if (!formData.photoFileId || formData.photoFileId <= 0) return;
     setPhotoFetchLoading(true);
     try {
-      // Use the employee's own clinicId fetched from the API, not localStorage
+      const clinicId = await getStoredClinicId();
+
       const fileAccessToken = await fetchFileAccessToken(employeeClinicId);
 
-      // Pass fileAccessToken to getFile (update your Api.js accordingly)
-      const res = await getFile(formData.photoFileId, fileAccessToken);
+      const res = await getFile(clinicId, formData.photoFileId, fileAccessToken);
 
       setFetchedPhotoUrl(res.url);
       setLightbox({ open: true, url: res.url, title: 'Employee Photo' });
@@ -631,11 +628,11 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     if (!fileId || fileId <= 0) return;
     setProofFetchLoading(prev => { const a = [...prev]; a[index] = true; return a; });
     try {
-      // Use the employee's own clinicId fetched from the API, not localStorage
+      const clinicId = await getStoredClinicId();
+
       const fileAccessToken = await fetchFileAccessToken(employeeClinicId);
 
-      // Pass fileAccessToken to getFile (update your Api.js accordingly)
-      const res = await getFile(fileId, fileAccessToken);
+      const res = await getFile(clinicId, fileId, fileAccessToken);
 
       setFetchedProofUrls(prev => { const a = [...prev]; a[index] = res.url; return a; });
       setLightbox({ open: true, url: res.url, title: `Proof ${index + 1}` });
@@ -753,12 +750,8 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     updateProofStatus(index, 'Uploading...');
     try {
       const clinicId = await getStoredClinicId();
-
-      // Fetch the fileAccessToken for this clinic dynamically
       const fileAccessToken = await fetchFileAccessToken(clinicId);
-
-      // Pass fileAccessToken to uploadIDProof (update your Api.js accordingly)
-      const res = await uploadIDProof(file, fileAccessToken);
+      const res = await uploadIDProof(clinicId, file, fileAccessToken);
 
       setProofList(prev => prev.map((p, i) => i === index ? { ...p, fileId: res.fileId } : p));
       setProofFilesUploaded(prev => prev.map((v, i) => i === index ? true : v));
@@ -969,7 +962,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
               </div>
               </div>
               <div className={styles.clinicNameone}>
-                             <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                             <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
                                {localStorage.getItem('clinicName') || '—'}
                           </div>
           

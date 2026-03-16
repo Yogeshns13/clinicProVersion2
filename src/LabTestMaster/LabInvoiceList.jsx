@@ -473,7 +473,7 @@ const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) =
 
           <div className={styles.headerRight}>
             <div className={styles.clinicNameone}>
-                <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
                   {localStorage.getItem('clinicName') || '—'}
                  </div>
           <button onClick={onClose} className={styles.closeBtn}>×</button>

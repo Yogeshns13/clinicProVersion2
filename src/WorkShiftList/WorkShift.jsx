@@ -32,6 +32,9 @@ const WorkShift = () => {
     status: "",
   });
 
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
   const [selectedShift, setSelectedShift] = useState(null);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
 
@@ -68,6 +71,9 @@ const WorkShift = () => {
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== "" || appliedFilters.status !== "";
 
+  const startRecord = shifts.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = (page - 1) * pageSize + shifts.length;
+
   const calculateWorkingHours = (start, end) => {
     if (!start || !end) return null;
     const [startHour, startMin] = start.split(":").map(Number);
@@ -84,7 +90,7 @@ const WorkShift = () => {
     return hours + minutes / 60;
   };
 
-  const fetchShifts = async (filters = appliedFilters) => {
+  const fetchShifts = async (filters = appliedFilters, currentPage = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -94,10 +100,12 @@ const WorkShift = () => {
       const options = {
         ShiftName: filters.searchValue || "",
         Status: filters.status !== "" ? Number(filters.status) : -1,
+        Page: currentPage,
+        PageSize: pageSize,
       };
 
       const data = await getShiftList(clinicId, options);
-      setShifts(data);
+      setShifts(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("fetchShifts error:", err);
       setError(
@@ -111,8 +119,8 @@ const WorkShift = () => {
   };
 
   useEffect(() => {
-    fetchShifts(appliedFilters);
-  }, [appliedFilters]);
+    fetchShifts(appliedFilters, page);
+  }, [appliedFilters, page]);
 
   const getStatusClass = (status) => {
     if (status === "active") return styles.active;
@@ -145,12 +153,19 @@ const WorkShift = () => {
 
   const handleSearch = () => {
     setAppliedFilters({ ...filterInputs });
+    setPage(1);
   };
 
   const handleClearFilters = () => {
     const empty = { searchValue: "", status: "" };
     setFilterInputs(empty);
     setAppliedFilters(empty);
+    setPage(1);
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
   };
 
   const openDetails = (shift) => setSelectedShift(shift);
@@ -315,7 +330,8 @@ const WorkShift = () => {
       setFormSuccess(true);
       setTimeout(() => {
         closeAddForm();
-        fetchShifts(appliedFilters);
+        fetchShifts(appliedFilters, 1);
+        setPage(1);
       }, 1500);
     } catch (err) {
       console.error("Add shift failed:", err);
@@ -340,7 +356,7 @@ const WorkShift = () => {
   const handleUpdateSuccess = () => {
     setIsUpdateFormOpen(false);
     setUpdateShiftData(null);
-    fetchShifts(appliedFilters);
+    fetchShifts(appliedFilters, page);
   };
 
   const openDeleteConfirm = (shift) => {
@@ -360,7 +376,7 @@ const WorkShift = () => {
 
     try {
       await deleteShift(shiftToDelete.id);
-      fetchShifts(appliedFilters);
+      fetchShifts(appliedFilters, page);
       closeDeleteConfirm();
       if (selectedShift?.id === shiftToDelete.id) closeModal();
     } catch (err) {
@@ -394,9 +410,10 @@ const WorkShift = () => {
       <ErrorHandler error={error} />
       <Header title="Work Shift Management" />
 
-      {/* Filters */}
+      {/* ── Filters + Add Shift bar ── */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
+
           <div className={styles.searchGroup}>
             <input
               type="text"
@@ -427,98 +444,138 @@ const WorkShift = () => {
 
           <div className={styles.filterActions}>
             <button onClick={handleSearch} className={styles.searchButton}>
-              <FiSearch size={18} /> Search
+              <FiSearch size={18} />
+              Search
             </button>
 
             {hasActiveFilters && (
-              <button
-                onClick={handleClearFilters}
-                className={styles.clearButton}
-              >
-                <FiX size={18} /> Clear
+              <button onClick={handleClearFilters} className={styles.clearButton}>
+                <FiX size={18} />
+                Clear
               </button>
             )}
 
             <button onClick={openAddForm} className={styles.addClinicBtn}>
-              <FiPlus size={18} /> Add Shift
+              <FiPlus size={18} />
+              Add Shift
             </button>
           </div>
+
         </div>
       </div>
 
-      {/* Table */}
-      <div className={styles.clinicTableContainer}>
-        <table className={styles.clinicTable}>
-          <thead>
-            <tr>
-              <th>Shift Name</th>
-              <th>Clinic</th>
-              <th>Start Time</th>
-              <th>End Time</th>
-              <th>Working Hours</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {shifts.length === 0 ? (
+      {/* ── Table + Pagination wrapper ── */}
+      <div className={styles.tableSection}>
+
+        <div className={styles.clinicTableContainer}>
+          <table className={styles.clinicTable}>
+            <thead>
               <tr>
-                <td colSpan={7} className={styles.clinicNoData}>
-                  {hasActiveFilters
-                    ? "No work shifts found."
-                    : "No work shifts registered yet."}
-                </td>
+                <th>Shift Name</th>
+                <th>Clinic</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Working Hours</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              shifts.map((shift) => (
-                <tr key={shift.id}>
-                  <td>
-                    <div className={styles.clinicNameCell}>
-                      <div className={styles.clinicAvatar}>
-                        {shift.shiftName?.charAt(0).toUpperCase() || "S"}
-                      </div>
-                      <div>
-                        <div className={styles.clinicName}>
-                          {shift.shiftName}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{shift.clinicName || "—"}</td>
-                  <td>{formatTime(shift.timeStart)}</td>
-                  <td>{formatTime(shift.timeEnd)}</td>
-                  <td>
-                    {shift.workingHours ? `${shift.workingHours} hrs` : "—"}
-                  </td>
-                  <td>
-                    <span
-                      className={`${styles.statusBadge} ${getStatusClass(shift.status)}`}
-                    >
-                      {shift.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => openDetails(shift)}
-                      className={styles.clinicDetailsBtn}
-                    >
-                      View Details
-                    </button>
+            </thead>
+            <tbody>
+              {shifts.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className={styles.clinicNoData}>
+                    {hasActiveFilters ? 'No work shifts found.' : 'No work shifts registered yet.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                shifts.map((shift) => (
+                  <tr key={shift.id}>
+                    <td>
+                      <div className={styles.clinicNameCell}>
+                        <div className={styles.clinicAvatar}>
+                          {shift.shiftName?.charAt(0).toUpperCase() || 'S'}
+                        </div>
+                        <div>
+                          <div className={styles.clinicName}>{shift.shiftName}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{shift.clinicName || '—'}</td>
+                    <td>{formatTime(shift.timeStart)}</td>
+                    <td>{formatTime(shift.timeEnd)}</td>
+                    <td>
+                      {shift.workingHours ? `${shift.workingHours} hrs` : '—'}
+                    </td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${getStatusClass(shift.status)}`}>
+                        {shift.status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td>
+                      <button onClick={() => openDetails(shift)} className={styles.clinicDetailsBtn}>
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Pagination Bar — pinned to bottom of tableSection ── */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {shifts.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={shifts.length < pageSize}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{pageSize}</strong>
+          </div>
+        </div>
+
+      </div>{/* end tableSection */}
 
       {/* ──────────────── Details Modal ──────────────── */}
       {selectedShift && (
         <div className={styles.detailModalOverlay} onClick={closeModal}>
-          <div
-            className={styles.detailModalContent}
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
+
             <div className={styles.detailModalHeader}>
               <div className={styles.detailHeaderContent}>
                 <h2>{selectedShift.shiftName}</h2>
@@ -526,17 +583,16 @@ const WorkShift = () => {
               <div className={styles.clinicNameone}>
                 <FaClinicMedical
                   size={20}
-                  style={{ verticalAlign: "middle", margin: "6px" }}
+                  style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
                 />
                 {localStorage.getItem("clinicName") || "—"}
               </div>
-              <button onClick={closeModal} className={styles.detailCloseBtn}>
-                ✕
-              </button>
+              <button onClick={closeModal} className={styles.detailCloseBtn}>✕</button>
             </div>
 
             <div className={styles.detailModalBody}>
               <div className={styles.infoSection}>
+
                 <div className={styles.infoCard}>
                   <div className={styles.infoHeader}>
                     <h3>Shift Information</h3>
@@ -544,97 +600,73 @@ const WorkShift = () => {
                   <div className={styles.infoContent}>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Clinic</span>
-                      <span className={styles.infoValue}>
-                        {selectedShift.clinicName || "—"}
-                      </span>
+                      <span className={styles.infoValue}>{selectedShift.clinicName || '—'}</span>
                     </div>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Shift Name</span>
-                      <span className={styles.infoValue}>
-                        {selectedShift.shiftName}
-                      </span>
+                      <span className={styles.infoValue}>{selectedShift.shiftName}</span>
                     </div>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Start Time</span>
-                      <span className={styles.infoValue}>
-                        {formatTime(selectedShift.timeStart)}
-                      </span>
+                      <span className={styles.infoValue}>{formatTime(selectedShift.timeStart)}</span>
                     </div>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>End Time</span>
-                      <span className={styles.infoValue}>
-                        {formatTime(selectedShift.timeEnd)}
-                      </span>
+                      <span className={styles.infoValue}>{formatTime(selectedShift.timeEnd)}</span>
                     </div>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Working Hours</span>
                       <span className={styles.infoValue}>
-                        {selectedShift.workingHours
-                          ? `${selectedShift.workingHours} hours`
-                          : "—"}
+                        {selectedShift.workingHours ? `${selectedShift.workingHours} hours` : '—'}
                       </span>
                     </div>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Created</span>
                       <span className={styles.infoValue}>
                         {selectedShift.dateCreated
-                          ? new Date(
-                              selectedShift.dateCreated,
-                            ).toLocaleDateString()
-                          : "—"}
+                          ? new Date(selectedShift.dateCreated).toLocaleDateString()
+                          : '—'}
                       </span>
                     </div>
                   </div>
                 </div>
+
               </div>
 
               <div className={styles.detailModalFooter}>
-                <button
-                  onClick={() => openDeleteConfirm(selectedShift)}
-                  className={styles.btnCancel}
-                >
+                <button onClick={() => openDeleteConfirm(selectedShift)} className={styles.btnCancel}>
                   <FiTrash2 style={{ marginRight: "8px" }} /> Delete
                 </button>
-                <button
-                  onClick={() => handleUpdateClick(selectedShift)}
-                  className={styles.btnUpdate}
-                >
+                <button onClick={() => handleUpdateClick(selectedShift)} className={styles.btnUpdate}>
                   Update Shift
                 </button>
               </div>
             </div>
+
           </div>
         </div>
       )}
 
       {/* ──────────────── Add Form Modal ──────────────── */}
       {isAddFormOpen && (
-        <div className={styles.detailModalOverlay} onClick={closeAddForm}>
-          <div
-            className={styles.addModalContent}
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className={styles.detailModalOverlay}>
+          <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
+
             <div className={styles.detailModalHeader}>
               <div className={styles.detailHeaderContent}>
                 <h2>Add New Work Shift</h2>
               </div>
-             <div className={styles.clinicNameone}>
-                   <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px" }} />
-                   {localStorage.getItem("clinicName") || "—"}
-                 </div>
+              <div className={styles.clinicNameone}>
+                <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
+                {localStorage.getItem("clinicName") || "—"}
+              </div>
 
-              <button onClick={closeAddForm} className={styles.detailCloseBtn}>
-                ✕
-              </button>
+              <button onClick={closeAddForm} className={styles.detailCloseBtn}>✕</button>
             </div>
 
             <form onSubmit={handleSubmit} className={styles.addModalBody}>
               {formError && <div className={styles.formError}>{formError}</div>}
-              {formSuccess && (
-                <div className={styles.formSuccess}>
-                  Work shift added successfully!
-                </div>
-              )}
+              {formSuccess && <div className={styles.formSuccess}>Work shift added successfully!</div>}
 
               <div className={styles.addSection}>
                 <div className={styles.addSectionHeader}>
@@ -642,11 +674,9 @@ const WorkShift = () => {
                 </div>
 
                 <div className={styles.addFormGrid}>
-                  {/* ── Shift Name ── */}
+
                   <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                    <label>
-                      Shift Name <span className={styles.required}>*</span>
-                    </label>
+                    <label>Shift Name <span className={styles.required}>*</span></label>
                     <input
                       required
                       name="shiftName"
@@ -655,17 +685,12 @@ const WorkShift = () => {
                       placeholder="e.g., Morning Shift, Night Shift"
                     />
                     {formErrors.shiftName && (
-                      <span className={styles.validationMsg}>
-                        {formErrors.shiftName}
-                      </span>
+                      <span className={styles.validationMsg}>{formErrors.shiftName}</span>
                     )}
                   </div>
 
-                  {/* ── Start Time ── */}
                   <div className={styles.addFormGroup}>
-                    <label>
-                      Start Time <span className={styles.required}>*</span>
-                    </label>
+                    <label>Start Time <span className={styles.required}>*</span></label>
                     <input
                       required
                       type="time"
@@ -674,17 +699,12 @@ const WorkShift = () => {
                       onChange={handleInputChange}
                     />
                     {formErrors.timeStart && (
-                      <span className={styles.validationMsg}>
-                        {formErrors.timeStart}
-                      </span>
+                      <span className={styles.validationMsg}>{formErrors.timeStart}</span>
                     )}
                   </div>
 
-                  {/* ── End Time ── */}
                   <div className={styles.addFormGroup}>
-                    <label>
-                      End Time <span className={styles.required}>*</span>
-                    </label>
+                    <label>End Time <span className={styles.required}>*</span></label>
                     <input
                       required
                       type="time"
@@ -693,17 +713,12 @@ const WorkShift = () => {
                       onChange={handleInputChange}
                     />
                     {formErrors.timeEnd && (
-                      <span className={styles.validationMsg}>
-                        {formErrors.timeEnd}
-                      </span>
+                      <span className={styles.validationMsg}>{formErrors.timeEnd}</span>
                     )}
                   </div>
 
-                  {/* ── Working Hours ── */}
                   <div className={styles.addFormGroup}>
-                    <label>
-                      Working Hours <span className={styles.required}>*</span>
-                    </label>
+                    <label>Working Hours <span className={styles.required}>*</span></label>
                     <input
                       required
                       type="number"
@@ -714,20 +729,15 @@ const WorkShift = () => {
                       placeholder="Auto-calculated from times"
                     />
                     {formErrors.workingHours && (
-                      <span className={styles.validationMsg}>
-                        {formErrors.workingHours}
-                      </span>
+                      <span className={styles.validationMsg}>{formErrors.workingHours}</span>
                     )}
                   </div>
+
                 </div>
               </div>
 
               <div className={styles.detailModalFooter}>
-                <button
-                  type="button"
-                  onClick={closeAddForm}
-                  className={styles.btnCancel}
-                >
+                <button type="button" onClick={closeAddForm} className={styles.btnCancel}>
                   Cancel
                 </button>
                 <button
@@ -735,7 +745,7 @@ const WorkShift = () => {
                   disabled={submitDisabled}
                   className={styles.btnSubmit}
                 >
-                  {formLoading ? "Adding..." : "Add Shift"}
+                  {formLoading ? 'Adding...' : 'Add Shift'}
                 </button>
               </div>
             </form>

@@ -22,15 +22,6 @@ const priorityBadgeClass = (p, st) => {
 const fmt   = (d) => d ? new Date(d).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }) : '—';
 const fmtDT = (d) => d ? new Date(d).toLocaleString('en-US',    { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
 
-/* ═══════════════════════════════════════════════════════════
-   PRINT_CSS  ·  standalone un-hashed class names
-   Fonts: Plus Jakarta Sans (body) + Cormorant Garamond (headings)
-   Brand palette:
-     #0f2057  deep navy
-     #1a3a8f  mid blue
-     #0d7aa8  teal
-     #30b2b5  cyan accent
-═══════════════════════════════════════════════════════════ */
 const PRINT_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 

@@ -184,7 +184,7 @@ export const renewToken = async () => {
 };
 
 
-export const uploadPhoto = async (file, fileAccessToken) => {
+export const uploadPhoto = async (clinicId, file, fileAccessToken) => {
   try {
     const fileExtension = file.name.split('.').pop().toLowerCase();
     let fileType;
@@ -199,7 +199,7 @@ export const uploadPhoto = async (file, fileAccessToken) => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('fileType', fileType);
-    formData.append('ClinicID', getClinicId());
+    formData.append('ClinicID', clinicId);
     formData.append('FileAccessToken', fileAccessToken);   // ← passed in, not from localStorage
 
     const response = await axios.post(UPLOAD_API_URL, formData, {
@@ -218,7 +218,7 @@ export const uploadPhoto = async (file, fileAccessToken) => {
   }
 };
 
-export const uploadIDProof = async (file, fileAccessToken) => {
+export const uploadIDProof = async (clinicId, file, fileAccessToken) => {
   try {
     const fileExtension = file.name.split('.').pop().toLowerCase();
     let fileType;
@@ -235,7 +235,7 @@ export const uploadIDProof = async (file, fileAccessToken) => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('fileType', fileType);
-    formData.append('ClinicID', getClinicId());
+    formData.append('ClinicID', clinicId);
     formData.append('FileAccessToken', fileAccessToken);   // ← passed in, not from localStorage
 
     const response = await axios.post(UPLOAD_API_URL, formData, {
@@ -254,13 +254,13 @@ export const uploadIDProof = async (file, fileAccessToken) => {
   }
 };
 
-export const getFile = async (fileId, fileAccessToken) => {
+export const getFile = async (clinicId, fileId, fileAccessToken) => {
   try {
     if (!fileId) {
       throw new Error('FileID is required');
     }
     const payload = {
-      ClinicID: getClinicId(),
+      ClinicID: clinicId,
       FileID: Number(fileId),
       FileAccessToken: fileAccessToken,        // ← passed in, not from localStorage
     };
@@ -738,75 +738,75 @@ export const updateBranch = async (branchData) => {
   }
 };
 
-export const getDepartmentList = async (clinicId = 0, branchId = 0, options = {}) => {
-  const userId = getUserId();
-  if (!userId) {
-    const authError = new Error("User ID is missing. Please log in again.");
-    authError.status = 401;
-    authError.code = 401;
-    throw authError;
-  }
+  export const getDepartmentList = async (clinicId = 0, branchId = 0, options = {}) => {
+    const userId = getUserId();
+    if (!userId) {
+      const authError = new Error("User ID is missing. Please log in again.");
+      authError.status = 401;
+      authError.code = 401;
+      throw authError;
+    }
 
-  if (clinicId < 0 || branchId < 0) {
-    const error = new Error("Invalid Clinic ID or Branch ID");
-    error.status = 400;
-    throw error;
-  }
-
-  if (PRODUCTION_MODE !== true) {
-    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
-      const error = new Error("Invalid Clinic ID");
+    if (clinicId < 0 || branchId < 0) {
+      const error = new Error("Invalid Clinic ID or Branch ID");
       error.status = 400;
       throw error;
     }
-  }
 
-  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
-  const finalBranchId = PRODUCTION_MODE ? getBranchId() : branchId;
+    if (PRODUCTION_MODE !== true) {
+      if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+        const error = new Error("Invalid Clinic ID");
+        error.status = 400;
+        throw error;
+      }
+    }
 
-  const payload = {
-    CHANNEL_ID,
-    REF_KEY: generateRefKey(),
-    SESSION_REF: getSessionRef(),
-    USER_ID: parseInt(userId),
-    Page: options.Page || 1,
-    PageSize: options.PageSize || 50,
-    ClinicID: finalClinicId,
-    BranchID: finalBranchId,
-    DepartmentID: options.DepartmentID || 0,
-    DepartmentName: options.DepartmentName || ""
-  };
-  
-  console.log("getDepartmentList Payload",payload)
+    const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+    const finalBranchId = PRODUCTION_MODE ? getBranchId() : branchId;
 
-  try {
-    const response = await API.post("/GetDepartmentList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
-
-    console.log("GetDepartmentList response:", results);
-
-    return results.map((dept) => ({
-      id: dept.department_id,
-      uniqueSeq: dept.unique_seq,
-      clinicId: dept.clinic_id,
-      clinicName: dept.clinic_name || "—",
-      branchId: dept.branch_id,
-      branchName: dept.branch_name || "—",
-      name: dept.department_name,
-      profile: dept.profile || null,           // This is your description field
-      dateCreated: dept.date_created,
-      dateModified: dept.date_modified
-    }));
-  } catch (error) {
-    console.error("getDepartmentList failed:", error);
-    const err = {
-      ...error,
-      status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch departments"
+    const payload = {
+      CHANNEL_ID,
+      REF_KEY: generateRefKey(),
+      SESSION_REF: getSessionRef(),
+      USER_ID: parseInt(userId),
+      Page: options.Page || 1,
+      PageSize: options.PageSize || 50,
+      ClinicID: finalClinicId,
+      BranchID: finalBranchId,
+      DepartmentID: options.DepartmentID || 0,
+      DepartmentName: options.DepartmentName || ""
     };
-    throw err;
-  }
-};
+    
+    console.log("getDepartmentList Payload",payload)
+
+    try {
+      const response = await API.post("/GetDepartmentList", payload);
+      const results = Array.isArray(response.data?.result) ? response.data.result : [];
+
+      console.log("GetDepartmentList response:", results);
+
+      return results.map((dept) => ({
+        id: dept.department_id,
+        uniqueSeq: dept.unique_seq,
+        clinicId: dept.clinic_id,
+        clinicName: dept.clinic_name || "—",
+        branchId: dept.branch_id,
+        branchName: dept.branch_name || "—",
+        name: dept.department_name,
+        profile: dept.profile || null,           // This is your description field
+        dateCreated: dept.date_created,
+        dateModified: dept.date_modified
+      }));
+    } catch (error) {
+      console.error("getDepartmentList failed:", error);
+      const err = {
+        ...error,
+        status: error.response?.status || 500,
+        message: error.response?.data?.message || error.message || "Failed to fetch departments"
+      };
+      throw err;
+    }
+  };
 
 export const addDepartment = async (departmentData) => {
   const userId = getUserId();

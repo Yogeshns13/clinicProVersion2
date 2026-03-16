@@ -279,7 +279,7 @@ const SalesCartList = () => {
       setConfirm((prev) => ({
         ...prev,
         cartId,
-        submitProgress: `Cart created (ID: ${cartId}). Adding medicines...`,
+        submitProgress: 'Cart created. Adding medicines...',
       }));
       const errors = [];
       for (let i = 0; i < details.length; i++) {
@@ -742,7 +742,7 @@ const SalesCartList = () => {
               <div className={styles.clinicNameone}>
                 <FaClinicMedical
                   size={20}
-                  style={{ verticalAlign: "middle", margin: "6px" }}
+                  style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
                 />
                 {localStorage.getItem("clinicName") || "—"}
               </div>
@@ -758,9 +758,6 @@ const SalesCartList = () => {
                 <div className={styles.successState}>
                   <FiCheckCircle size={48} className={styles.successIcon} />
                   <h3>Cart Created Successfully!</h3>
-                  <p>
-                    Cart ID: <strong>#{confirm.cartId}</strong>
-                  </p>
                   <p className={styles.successSub}>
                     All {confirm.details.length} medicine(s) have been added to
                     the cart.

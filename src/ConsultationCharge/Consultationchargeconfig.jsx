@@ -506,7 +506,7 @@ const ConsultationChargeConfig = () => {
                 <h2>{selectedConfig.chargeName}</h2>
               </div>
               <div className={styles.clinicNameone}>
-                 <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                 <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
                   {localStorage.getItem('clinicName') || '—'}
                   </div>
               <button onClick={closeDetails} className={styles.detailCloseBtn}>✕</button>
@@ -625,7 +625,7 @@ const ConsultationChargeConfig = () => {
               <h2>{isEditMode ? 'Edit' : 'Add'} Charge Configuration</h2>
               <div className={styles.headerRight}>
               <div className={styles.clinicNameone}>
-                             <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                             <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
                                {localStorage.getItem('clinicName') || '—'}
                           </div>
               

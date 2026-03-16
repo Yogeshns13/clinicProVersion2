@@ -13,7 +13,8 @@ import {
   approveLabWorkItem,
   rejectLabWorkItem,
   getLabTestOrderList,
-  updateLabTestOrder
+  updateLabTestOrder,
+  getLabTestMasterList
 } from '../Api/ApiLabTests.js';
 import { getEmployeeList } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
@@ -820,11 +821,17 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
 
   const [resultData, setResultData] = useState({
     resultValue: workItem.resultValue || '',
-    resultUnits: workItem.resultUnits || '',
-    normalRange: workItem.normalRange || '',
     interpretation: workItem.interpretation || null,
     remarks: '',
     testDoneBy: 0
+  });
+
+  // Master data fetched from API — units and normalRange are read-only
+  const [testMasterData, setTestMasterData] = useState({
+    resultUnits: workItem.resultUnits || '',
+    normalRange: workItem.normalRange || '',
+    loading: false,
+    fetched: false
   });
 
   const [approvalData, setApprovalData] = useState({
@@ -852,6 +859,53 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
     { value: 3, label: 'Abnormal - Low' },
     { value: 4, label: 'Critical' }
   ];
+
+  // Fetch test master data to get default units and normal range
+  useEffect(() => {
+    const fetchTestMaster = async () => {
+      if (!workItem.testId) return;
+
+      setTestMasterData(prev => ({ ...prev, loading: true }));
+      try {
+        const clinicId = await getStoredClinicId();
+        const branchId = await getStoredBranchId();
+
+        const masterList = await getLabTestMasterList(clinicId, {
+          TestID: workItem.testId,
+          BranchID: branchId,
+          Page: 1,
+          PageSize: 1
+        });
+
+        if (masterList && masterList.length > 0) {
+          const master = masterList[0];
+          setTestMasterData({
+            resultUnits: master.units || workItem.resultUnits || '',
+            normalRange: master.normalRange || workItem.normalRange || '',
+            loading: false,
+            fetched: true
+          });
+        } else {
+          setTestMasterData({
+            resultUnits: workItem.resultUnits || '',
+            normalRange: workItem.normalRange || '',
+            loading: false,
+            fetched: true
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch test master data:', err);
+        setTestMasterData({
+          resultUnits: workItem.resultUnits || '',
+          normalRange: workItem.normalRange || '',
+          loading: false,
+          fetched: true
+        });
+      }
+    };
+
+    fetchTestMaster();
+  }, [workItem.testId]);
 
   useEffect(() => {
     let initialStep = 1;
@@ -924,8 +978,8 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
         clinicId,
         branchId,
         resultValue: resultData.resultValue,
-        resultUnits: resultData.resultUnits,
-        normalRange: resultData.normalRange,
+        resultUnits: testMasterData.resultUnits,
+        normalRange: testMasterData.normalRange,
         interpretation: resultData.interpretation,
         remarks: resultData.remarks,
         testDoneBy: resultData.testDoneBy
@@ -1044,7 +1098,7 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
             <h2>Process Lab Work Item</h2>
           </div>
            <div className={styles.clinicNameone}>
-               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
                  {localStorage.getItem('clinicName') || '—'}
             </div>
           <button onClick={onClose} className={styles.detailCloseBtn}>
@@ -1194,6 +1248,25 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
               <div className={styles.sectionHeader}>
                 <FiFileText size={20} />
                 <h3>Test Results Entry</h3>
+                {/* Read-only units and normal range from master data */}
+                <div className={styles.masterDataBadges}>
+                  <span className={styles.masterDataBadge}>
+                    <span className={styles.masterDataBadgeLabel}>Units:</span>
+                    <span className={styles.masterDataBadgeValue}>
+                      {testMasterData.loading
+                        ? '...'
+                        : testMasterData.resultUnits || '—'}
+                    </span>
+                  </span>
+                  <span className={styles.masterDataBadge}>
+                    <span className={styles.masterDataBadgeLabel}>Normal Range:</span>
+                    <span className={styles.masterDataBadgeValue}>
+                      {testMasterData.loading
+                        ? '...'
+                        : testMasterData.normalRange || '—'}
+                    </span>
+                  </span>
+                </div>
               </div>
 
               <div className={styles.detailFormGrid}>
@@ -1216,30 +1289,6 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
                 </div>
 
                 <div className={styles.detailFormGroup}>
-                  <label>Result Units</label>
-                  <input
-                    type="text"
-                    value={resultData.resultUnits}
-                    maxLength="30"
-                    onChange={(e) => setResultData({...resultData, resultUnits: e.target.value})}
-                    className={styles.detailFormInput}
-                    placeholder="e.g., mg/dL, mmol/L"
-                  />
-                </div>
-
-                <div className={styles.detailFormGroup}>
-                  <label>Normal Range</label>
-                  <input
-                    type="text"
-                    value={resultData.normalRange}
-                    maxLength="100"
-                    onChange={(e) => setResultData({...resultData, normalRange: e.target.value})}
-                    className={styles.detailFormInput}
-                    placeholder="e.g., 70-100"
-                  />
-                </div>
-
-                <div className={styles.detailFormGroup}>
                   <label>Interpretation</label>
                   <select
                     value={resultData.interpretation || ''}
@@ -1253,13 +1302,14 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
                 </div>
 
                 <div className={styles.detailFormGroup}>
-                  <label>Test Done By</label>
+                  <label>Test Done By <span className={styles.required}>*</span></label>
                   <select
+                    required
                     value={resultData.testDoneBy}
                     onChange={(e) => setResultData({...resultData, testDoneBy: Number(e.target.value)})}
                     className={styles.detailFormInput}
                   >
-                    <option value={0}>Select Technician</option>
+                    <option value="">Select Technician</option>
                     {employees.map(emp => (
                       <option key={emp.id} value={emp.id}>
                         {emp.name} ({emp.employeeCode})
@@ -1290,7 +1340,7 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
                 <button 
                   onClick={handleResultSave} 
                   className={styles.saveBtn}
-                  disabled={loading || !resultData.resultValue}
+                  disabled={loading || !resultData.resultValue || !resultData.testDoneBy}
                 >
                   <FiSave size={18} />
                   {loading ? 'Saving...' : 'Save & Continue'}
@@ -1329,11 +1379,14 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
                   <h4>Test Results</h4>
                   <div className={styles.reviewRow}>
                     <span>Value:</span>
-                    <strong>{workItem.resultValue || resultData.resultValue || 'Not entered'} {workItem.resultUnits || resultData.resultUnits}</strong>
+                    <strong>
+                      {workItem.resultValue || resultData.resultValue || 'Not entered'}{' '}
+                      {testMasterData.resultUnits || workItem.resultUnits || ''}
+                    </strong>
                   </div>
                   <div className={styles.reviewRow}>
                     <span>Normal Range:</span>
-                    <strong>{workItem.normalRange || resultData.normalRange || 'Not specified'}</strong>
+                    <strong>{testMasterData.normalRange || workItem.normalRange || 'Not specified'}</strong>
                   </div>
                   <div className={styles.reviewRow}>
                     <span>Interpretation:</span>

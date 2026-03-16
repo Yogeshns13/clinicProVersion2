@@ -197,8 +197,8 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
     setFormSuccess(false);
 
     try {
-      const clinicId = localStorage.getItem("clinicID");
-      const branchId = localStorage.getItem("branchID");
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const payload = {
         clinicId: clinicId ? Number(clinicId) : 0,
@@ -241,7 +241,7 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
             <div className={styles.clinicNameone}>
               <FaClinicMedical
                 size={20}
-                style={{ verticalAlign: "middle", margin: "6px" }}
+                style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
               />
               {localStorage.getItem("clinicName") || "—"}
             </div>

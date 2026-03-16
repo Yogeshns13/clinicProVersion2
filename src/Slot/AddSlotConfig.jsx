@@ -244,7 +244,7 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
           <h2>Add Slot Configuration</h2>
            <div className={styles.headerRight}>
     <div className={styles.clinicNameone}>
-      <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px" }} />
+      <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
       {localStorage.getItem("clinicName") || "—"}
     </div>
 

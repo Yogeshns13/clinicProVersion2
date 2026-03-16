@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { FiSave } from 'react-icons/fi';
 import { updateBranch } from '../Api/Api.js';
 import styles from './BranchList.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
 
 // ─── matches backend allowedCharactersRegex exactly ───────────────────────────
 const allowedCharactersRegex = /^[A-Za-z0-9\s\-_]+$/;
@@ -10,12 +11,6 @@ const allowedCharactersRegex = /^[A-Za-z0-9\s\-_]+$/;
 // ─── Validation messages match backend updateBranchValidatorRules word-for-word ─
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
-    case 'clinicId':
-      if (!value || value === '') return 'ClinicID is required';
-      if (isNaN(Number(value)) || !Number.isInteger(Number(value)) || Number(value) < 1)
-        return 'ClinicID must be a positive integer';
-      return '';
-
     case 'branchName':
       if (!value || !value.trim()) return 'BranchName is required';
       if (value.trim().length > 100) return 'BranchName should not exceed 100 characters';
@@ -59,8 +54,8 @@ const filterInput = (fieldName, value) => {
   }
 };
 
-// ─── All fields validated on submit for the Update form ───────────────────────
-const UPDATE_VALIDATED_FIELDS = ['clinicId', 'branchName', 'address', 'location', 'branchType', 'status'];
+// ─── clinicId removed from validated fields — it's fixed, not user-entered ───
+const UPDATE_VALIDATED_FIELDS = ['branchName', 'address', 'location', 'branchType', 'status'];
 
 const BRANCH_TYPES = [
   { id: 1, label: 'Main' },
@@ -84,8 +79,11 @@ const STATUS_OPTIONS = [
 //   onSuccess — called after a successful update (triggers list refresh)
 // ────────────────────────────────────────────────
 const UpdateBranch = ({ branch, clinics, onClose, onSuccess }) => {
+  // Resolve clinic name from clinics array for display in header
+  const clinicName = clinics.find((c) => c.id === branch.clinicId)?.name || `Clinic #${branch.clinicId}`;
+
   const [formData, setFormData] = useState({
-    clinicId:   branch.clinicId   || '',
+    clinicId:   branch.clinicId   || '',   // kept in state, sent to API, not shown in form
     branchName: branch.name       || '',
     address:    branch.address    || '',
     location:   branch.location   || '',
@@ -136,7 +134,7 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess }) => {
     try {
       await updateBranch({
         branchId:   Number(branch.id),
-        clinicId:   Number(formData.clinicId),
+        clinicId:   Number(formData.clinicId),   // passed as-is from original branch data
         BranchName: formData.branchName.trim(),
         Address:    formData.address.trim(),
         Location:   formData.location.trim(),
@@ -149,7 +147,7 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess }) => {
         onSuccess();
       }, 1500);
     } catch (err) {
-      setFormError(err.message?.split(':')[1]?.trim() ||  'Failed to update branch.');
+      setFormError(err.message?.split(':')[1]?.trim() || 'Failed to update branch.');
     } finally {
       setFormLoading(false);
     }
@@ -164,15 +162,12 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess }) => {
         <div className={styles.detailModalHeader}>
           <div className={styles.detailHeaderContent}>
             <h2>Update Branch</h2>
-            <div className={styles.detailHeaderMeta}>
-              <span className={styles.workIdBadge}>
-                {formData.branchName || 'Branch'}
-              </span>
-              <span className={`${styles.workIdBadge} ${formData.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}>
-                {formData.status === 1 ? 'ACTIVE' : 'INACTIVE'}
-              </span>
-            </div>
+            
           </div>
+          <div className={styles.clinicNameone}>
+               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
+                {branch.clinicName || '—'}
+                </div>
           <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
         </div>
 
@@ -187,27 +182,6 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess }) => {
             </div>
 
             <div className={styles.addFormGrid}>
-
-              {/* ClinicID — required in backend */}
-              <div className={styles.addFormGroup}>
-                <label>Clinic <span className={styles.required}>*</span></label>
-                <select
-                  required
-                  name="clinicId"
-                  value={formData.clinicId}
-                  onChange={handleInputChange}
-                >
-                  <option value="">Select Clinic</option>
-                  {clinics.map((clinic) => (
-                    <option key={clinic.id} value={clinic.id}>
-                      {clinic.name}
-                    </option>
-                  ))}
-                </select>
-                {validationMessages.clinicId && (
-                  <span className={styles.validationMsg}>{validationMessages.clinicId}</span>
-                )}
-              </div>
 
               {/* BranchName — required in backend */}
               <div className={styles.addFormGroup}>

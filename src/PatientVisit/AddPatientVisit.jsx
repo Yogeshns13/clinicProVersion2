@@ -417,8 +417,8 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
     setLoading(true);
     setError(null);
     try {
-      const clinicId = localStorage.getItem('clinicID');
-      const branchId = localStorage.getItem('branchID');
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const formattedDate = formatDateForInput(formData.VisitDate);
       const visitData = {
         ...formData,
@@ -478,7 +478,7 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
             </h2>
           </div>
           <div className={styles.clinicNameone}>
-                <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px" }} />
+                <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
                 {localStorage.getItem("clinicName") || "—"}
               </div>
 

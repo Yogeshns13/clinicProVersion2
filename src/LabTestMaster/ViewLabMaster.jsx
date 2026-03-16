@@ -52,7 +52,7 @@ const ViewLabMaster = ({ test, onClose, onUpdate, onDelete }) => {
             </div>
           </div>
           <div className={styles.clinicNameone}>
-              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
                 {localStorage.getItem('clinicName') || '—'}
           </div>
           <button onClick={onClose} className={styles.modalClose}>

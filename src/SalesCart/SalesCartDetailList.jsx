@@ -92,7 +92,7 @@ const SalesCartDetailList = () => {
   const fetchDetails = async () => {
     const numericId = Number(cartId);
     if (!cartId || isNaN(numericId) || numericId <= 0) {
-      setError({ message: `Invalid cart ID: "${cartId}".` });
+      setError({ message: `Invalid cart ID` });
       setLoading(false);
       return;
     }
@@ -803,7 +803,7 @@ const SalesCartDetailList = () => {
                 <h2>Update Quantity & Discount</h2>
               </div>
                 <div className={styles.clinicNameone}>
-                               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
                                  {localStorage.getItem('clinicName') || '—'}
                             </div>
 

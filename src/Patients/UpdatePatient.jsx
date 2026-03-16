@@ -533,7 +533,7 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
             <h2>Update Patient</h2>
             </div>
             <div className={styles.clinicNameone}>
-               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
                 {localStorage.getItem('clinicName') || '—'}
                 </div>
           <button onClick={handleClose} className={styles.detailCloseBtn}>✕</button>

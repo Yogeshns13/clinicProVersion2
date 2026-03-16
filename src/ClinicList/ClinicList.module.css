@@ -30,12 +30,24 @@
 }
 
 /* ==================== MAIN WRAPPER ==================== */
+/*
+  KEY CHANGE:
+  - height: 100vh  →  hard-clamps the wrapper to the viewport height
+  - overflow: hidden  →  prevents the wrapper itself from scrolling
+  - display: flex + flex-direction: column  →  lets children fill remaining space
+  The table container gets flex:1 + overflow-y:auto, so only the table scrolls.
+  The pagination bar is flex-shrink:0, so it never moves away from the bottom.
+*/
 .clinicListWrapper {
   padding: 20px;
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   color: var(--text-dark);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 /* ==================== FILTERS CONTAINER ==================== */
@@ -46,9 +58,10 @@
   margin-bottom: 20px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
-   overflow: hidden;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;   /* never compress the filter bar */
 }
 
 .filtersGrid {
@@ -210,12 +223,31 @@
   box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
 }
 
-/* ==================== TABLE ==================== */
+/* ==================== TABLE SECTION ==================== */
+/*
+  flex: 1        → fills ALL remaining height after the filter bar
+  min-height: 0  → allows it to shrink below its content (required for nested scroll)
+  display:flex + flex-direction:column → so clinicTableContainer can flex:1 inside it
+*/
+.tableSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== TABLE CONTAINER ==================== */
+/*
+  flex: 1        → fills all space between filter bar and pagination bar
+  min-height: 0  → allows shrinking (critical for scroll to work)
+  overflow-y: auto → table scrolls here, not the page
+*/
 .clinicTableContainer {
   background: white;
   border-radius: 17px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-   max-height: calc(100vh - 220px);    /* ← was: hidden */ 
   box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
   border: 1px solid rgba(34, 43, 108, 0.1);
 }
@@ -235,9 +267,9 @@
   text-align: left;
   padding: 12px 17px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-   position: sticky;   /* ← new */
-  top: 0;             /* ← new */
-  z-index: 2; 
+  position: sticky;
+  top: 0;
+  z-index: 2;
   color: var(--text-light);
   font-weight: 600;
   font-size: 0.75rem;
@@ -935,16 +967,12 @@
   color: var(--primary-start);
 }
 
-/* Default auto-fit grid (Basic Info & Billing sections) */
 .addFormGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
 }
 
-/* ── Force exactly 3 equal columns ──
-   Used for: Contact Info (Mobile | Alt Mobile | Email)
-             Tax Info (GST No | CGST % | SGST %)           */
 .addFormGridThreeCol {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1052,6 +1080,103 @@
   color: #6b7280;
   margin-top: 6px;
   display: block;
+}
+
+/* ==================== PAGINATION BAR ==================== */
+/*
+  flex-shrink: 0  → never compressed, always visible at the bottom of tableSection
+  margin-top: 14px → gap between table and bar
+*/
+.paginationBar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 14px;
+  padding: 10px 20px;
+  margin-top: 14px;
+  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  gap: 16px;
+}
+
+.paginationInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.paginationLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.pageBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: var(--primary-start);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-color: var(--accent-end);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.3);
+}
+
+.pageBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pageIndicator {
+  min-width: 36px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0 8px;
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
+}
+
+.pageSizeInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pageSizeInfo strong {
+  color: var(--primary-start);
+  font-weight: 700;
 }
 
 /* ==================== PROFILE HEADER ==================== */
@@ -1308,6 +1433,28 @@
   color: #e2e8f0;
 }
 
+:global(.dark-mode) .paginationBar {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .paginationInfo,
+:global(.dark-mode) .pageSizeInfo { color: #94a3b8; }
+
+:global(.dark-mode) .paginationLabel { color: var(--accent-end); }
+
+:global(.dark-mode) .pageBtn {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-color: var(--accent-end);
+  color: white;
+}
+
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {
   .filtersGrid {
@@ -1369,9 +1516,18 @@
   .btnHold,
   .btnUpdate { width: 100%; }
 
-  /* Stack 3-col layout on small screens */
   .addFormGridThreeCol {
     grid-template-columns: 1fr;
+  }
+
+  .paginationBar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .paginationControls {
+    align-self: center;
   }
 }
 

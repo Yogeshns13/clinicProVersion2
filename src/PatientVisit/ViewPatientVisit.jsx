@@ -26,8 +26,8 @@ const ViewPatientVisit = ({ isOpen, onClose, visitId, onEdit }) => {
         setLoading(true);
         setError(null);
 
-        const clinicId = Number(localStorage.getItem("clinicID"));
-        const branchId = Number(localStorage.getItem("branchID"));
+        const clinicId = await getStoredClinicId();
+        const branchId = await getStoredBranchId();
 
         const data = await getPatientVisitList(clinicId, {
           VisitID: Number(visitId),
@@ -97,7 +97,7 @@ const ViewPatientVisit = ({ isOpen, onClose, visitId, onEdit }) => {
           <div className="clinicNameone">
             <FaClinicMedical
               size={18}
-              style={{ verticalAlign: "middle", margin: "6px" }}
+              style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
             />
             {localStorage.getItem("clinicName") || "—"}
           </div>

@@ -66,14 +66,21 @@ const EmployeeList = () => {
     designation:   '',
   });
 
+  // Pagination
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
   // Add Form Modal
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
 
-  // View Employee Modal (replaces routing)
+  // View Employee Modal
   const [viewEmployeeId, setViewEmployeeId] = useState(null);
 
   // ────────────────────────────────────────────────
-  // Derived: are any filters actually active?
+  // Derived: pagination display values
+  const startRecord = employees.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = (page - 1) * pageSize + employees.length;
+
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.status             !== '' ||
@@ -97,8 +104,8 @@ const EmployeeList = () => {
   }, []);
 
   // ────────────────────────────────────────────────
-  // Data fetching — driven by appliedFilters
-  const fetchEmployees = async (filters = appliedFilters) => {
+  // Data fetching — now includes pagination
+  const fetchEmployees = async (filters = appliedFilters, currentPage = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -115,10 +122,12 @@ const EmployeeList = () => {
         DepartmentID:  filters.departmentId !== '' ? Number(filters.departmentId) : 0,
         Designation:   filters.designation  !== '' ? Number(filters.designation)  : 0,
         Status:        filters.status       !== '' ? Number(filters.status)        : -1,
+        Page:          currentPage,
+        PageSize:      pageSize,
       };
 
       const data = await getEmployeeList(clinicId, options);
-      setEmployees(data);
+      setEmployees(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('fetchEmployees error:', err);
       setError(
@@ -132,9 +141,8 @@ const EmployeeList = () => {
   };
 
   useEffect(() => {
-    fetchEmployees(appliedFilters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appliedFilters]);
+    fetchEmployees(appliedFilters, page);
+  }, [appliedFilters, page]);
 
   // ────────────────────────────────────────────────
   // Helper functions
@@ -156,31 +164,35 @@ const EmployeeList = () => {
 
   const handleSearch = () => {
     setAppliedFilters({ ...filterInputs });
+    setPage(1); // Reset to page 1 on new search
   };
 
   const handleClearFilters = () => {
     const empty = { searchType: 'Name', searchValue: '', status: '', departmentId: '', designation: '' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
+    setPage(1);
   };
 
-  // Opens ViewEmployee popup instead of navigating
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+  };
+
   const handleViewDetails = (employee) => setViewEmployeeId(employee.id);
   const handleCloseViewEmployee = () => {
-  setViewEmployeeId(null);
-  fetchEmployees(appliedFilters);
-};
+    setViewEmployeeId(null);
+    fetchEmployees(appliedFilters);
+  };
 
   const openAddForm  = () => setIsAddFormOpen(true);
   const closeAddForm = () => {
-  setIsAddFormOpen(false);
-  fetchEmployees(appliedFilters);
-};
-
+    setIsAddFormOpen(false);
+    fetchEmployees(appliedFilters);
+  };
 
   const handleAddSuccess = () => fetchEmployees(appliedFilters);
 
-  // Called when employee is deleted inside ViewEmployee popup
   const handleEmployeeDeleted = () => {
     setViewEmployeeId(null);
     fetchEmployees(appliedFilters);
@@ -295,69 +307,119 @@ const EmployeeList = () => {
         </div>
       </div>
 
-      {/* ── Table ── */}
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Employee</th>
-              <th>Code</th>
-              <th>Department</th>
-              <th>Designation</th>
-              <th>Mobile</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees.length === 0 ? (
+      {/* ── Table + Pagination wrapper ── */}
+      <div className={styles.tableSection}>
+
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead>
               <tr>
-                <td colSpan={7} className={styles.noData}>
-                  {hasActiveFilters ? 'No employees found.' : 'No employees registered yet.'}
-                </td>
+                <th>Employee</th>
+                <th>Code</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Mobile</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              employees.map((employee) => (
-                <tr key={employee.id}>
-                  <td>
-                    <div className={styles.nameCell}>
-                      <div className={styles.avatar}>
-                        {employee.firstName?.charAt(0).toUpperCase() || 'E'}
-                      </div>
-                      <div>
-                        <div className={styles.name}>
-                          {employee.firstName} {employee.lastName}
-                        </div>
-                        <div className={styles.subInfo}>{employee.email || '—'}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{employee.employeeCode || '—'}</td>
-                  <td>{employee.departmentName || '—'}</td>
-                  <td>
-                    <span className={styles.designationBadge}>
-                      {getDesignationLabel(employee.designation)}
-                    </span>
-                  </td>
-                  <td>{employee.mobile || '—'}</td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${getStatusClass(employee.status)}`}>
-                      {employee.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => handleViewDetails(employee)}
-                      className={styles.detailsBtn}
-                    >
-                      View Details
-                    </button>
+            </thead>
+            <tbody>
+              {employees.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className={styles.noData}>
+                    {hasActiveFilters ? 'No employees found.' : 'No employees registered yet.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                employees.map((employee) => (
+                  <tr key={employee.id}>
+                    <td>
+                      <div className={styles.nameCell}>
+                        <div className={styles.avatar}>
+                          {employee.firstName?.charAt(0).toUpperCase() || 'E'}
+                        </div>
+                        <div>
+                          <div className={styles.name}>
+                            {employee.firstName} {employee.lastName}
+                          </div>
+                          <div className={styles.subInfo}>{employee.email || '—'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{employee.employeeCode || '—'}</td>
+                    <td>{employee.departmentName || '—'}</td>
+                    <td>
+                      <span className={styles.designationBadge}>
+                        {getDesignationLabel(employee.designation)}
+                      </span>
+                    </td>
+                    <td>{employee.mobile || '—'}</td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${getStatusClass(employee.status)}`}>
+                        {employee.status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => handleViewDetails(employee)}
+                        className={styles.detailsBtn}
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Pagination Bar ── */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {employees.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={employees.length < pageSize}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{pageSize}</strong>
+          </div>
+        </div>
+
       </div>
 
       {/* ── Add Employee Modal ── */}
@@ -368,7 +430,7 @@ const EmployeeList = () => {
         onSuccess={handleAddSuccess}
       />
 
-      {/* ── View Employee Modal (no routing) ── */}
+      {/* ── View Employee Modal ── */}
       {viewEmployeeId !== null && (
         <ViewEmployee
           isOpen={viewEmployeeId !== null}

@@ -85,8 +85,8 @@ const AddPurchaseOrder = ({ isOpen, onClose, onAddSuccess }) => {
     setFormSuccess(false);
 
     try {
-      const clinicId = localStorage.getItem('clinicID');
-      const branchId = localStorage.getItem('branchID');
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const payload = {
         clinicId: clinicId ? Number(clinicId) : 0,
@@ -124,7 +124,7 @@ const AddPurchaseOrder = ({ isOpen, onClose, onAddSuccess }) => {
           <h2>Add New Purchase Order</h2>
           <div className={styles.headerRight}>
     <div className={styles.clinicNameone}>
-      <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px" }} />
+      <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
       {localStorage.getItem("clinicName") || "—"}
     </div>
 

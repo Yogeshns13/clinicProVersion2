@@ -185,7 +185,7 @@ const UpdateWorkShift = ({ shift, onClose, onSuccess }) => {
     setFormSuccess(false);
 
     try {
-      const clinicId = getStoredClinicId();
+      const clinicId = await getStoredClinicId();
       if (!clinicId) throw new Error('Clinic ID not found in localStorage');
 
       const workingHours = formData.workingHours
@@ -229,7 +229,7 @@ const UpdateWorkShift = ({ shift, onClose, onSuccess }) => {
             <h2>Update Work Shift</h2>
            </div>
            <div className={styles.clinicNameone}>
-                          <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                          <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
                             {localStorage.getItem('clinicName') || '—'}
                        </div>
           <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>

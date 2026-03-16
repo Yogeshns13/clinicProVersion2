@@ -160,25 +160,46 @@ const filterInput = (fieldName, value) => {
   }
 };
 
+// ── Map searchType dropdown → API payload fields ──
+const buildSearchPayload = (searchType, searchValue) => {
+  const val = searchValue.trim();
+  switch (searchType) {
+    case 'name':   return { ClinicName: val, Mobile: '',  GstNo: '' };
+    case 'mobile': return { ClinicName: '',  Mobile: val, GstNo: '' };
+    case 'gstNo':  return { ClinicName: '',  Mobile: '',  GstNo: val };
+    default:       return { ClinicName: '',  Mobile: '',  GstNo: '' };
+  }
+};
+
+// ── Status dropdown → API Status integer ──
+const buildStatusParam = (statusFilter) => {
+  if (statusFilter === '1') return 1;
+  if (statusFilter === '2') return 2;
+  return -1;
+};
+
 // ────────────────────────────────────────────────
 const ClinicList = () => {
-  // Data & Filter
+  // Data
   const [clinics, setClinics] = useState([]);
-  const [allClinics, setAllClinics] = useState([]);
 
-  // Filter inputs (not applied until search)
+  // Filter inputs (not applied until Search is clicked)
   const [filterInputs, setFilterInputs] = useState({
     searchType: 'name',
     searchValue: '',
-    statusFilter: '1',          // ← default to Active
+    statusFilter: '1',
   });
 
   // Applied filters (only set when Search is clicked)
   const [appliedFilters, setAppliedFilters] = useState({
     searchType: 'name',
     searchValue: '',
-    statusFilter: '1',          // ← default to Active
+    statusFilter: '1',
   });
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
 
   // Selected / Modal
   const [selectedClinic, setSelectedClinic] = useState(null);
@@ -215,67 +236,36 @@ const ClinicList = () => {
   const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);
 
   // ────────────────────────────────────────────────
-  // Data fetching
+  const fetchClinics = async (filters, currentPage) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const searchPayload = buildSearchPayload(filters.searchType, filters.searchValue);
+      const data = await getClinicList({
+        Page: currentPage,
+        PageSize: pageSize,
+        ...searchPayload,
+        Status: buildStatusParam(filters.statusFilter),
+      });
+      setClinics(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('fetchClinics error:', err);
+      setError(
+        err?.status >= 400 || err?.code >= 400
+          ? err
+          : { message: err.message || 'Failed to load clinics' }
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchClinics = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getClinicList();
-        setClinics(data);
-        setAllClinics(data);
-      } catch (err) {
-        console.error('fetchClinics error:', err);
-        setError(
-          err?.status >= 400 || err?.code >= 400
-            ? err
-            : { message: err.message || 'Failed to load clinics' }
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchClinics();
+    fetchClinics(appliedFilters, page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ────────────────────────────────────────────────
-  // Computed values
-  const filteredClinics = useMemo(() => {
-    let result = allClinics;
-
-    if (appliedFilters.statusFilter) {
-      const targetStatus = appliedFilters.statusFilter === '1' ? 'active' : 'inactive';
-      result = result.filter(c => c.status?.toLowerCase() === targetStatus);
-    }
-
-    if (!appliedFilters.searchValue.trim()) return result;
-    const term = appliedFilters.searchValue.toLowerCase();
-
-    switch (appliedFilters.searchType) {
-      case 'name':
-        return result.filter(c => c.name?.toLowerCase().includes(term));
-      case 'ownerName':
-        return result.filter(c => c.ownerName?.toLowerCase().includes(term));
-      case 'mobile':
-        return result.filter(c => c.mobile?.toLowerCase().includes(term));
-      case 'email':
-        return result.filter(c => c.email?.toLowerCase().includes(term));
-      case 'gstNo':
-        return result.filter(c => c.gstNo?.toLowerCase().includes(term));
-      default:
-        return result.filter(
-          c =>
-            c.name?.toLowerCase().includes(term) ||
-            c.ownerName?.toLowerCase().includes(term) ||
-            c.mobile?.toLowerCase().includes(term) ||
-            c.email?.toLowerCase().includes(term) ||
-            c.gstNo?.toLowerCase().includes(term)
-        );
-    }
-  }, [allClinics, appliedFilters]);
-
-  // ────────────────────────────────────────────────
-  // Form validity check
   const isFormValid = useMemo(() => {
     const requiredStringFields = [
       'clinicName', 'address', 'clinicType', 'gstNo',
@@ -285,17 +275,13 @@ const ClinicList = () => {
       (f) => formData[f] && String(formData[f]).trim()
     );
     if (!allRequiredFilled) return false;
-
     if (!formData.location || !String(formData.location).trim()) return false;
-
     const hasErrors = Object.values(validationMessages).some((msg) => !!msg);
     if (hasErrors) return false;
-
     return true;
   }, [formData, validationMessages]);
 
   // ────────────────────────────────────────────────
-  // Helper functions
   const getStatusClass = (status) => {
     if (status === 'active') return styles.active;
     if (status === 'inactive') return styles.inactive;
@@ -303,10 +289,7 @@ const ClinicList = () => {
   };
 
   const refreshClinics = () => {
-    getClinicList().then((data) => {
-      setClinics(data);
-      setAllClinics(data);
-    });
+    fetchClinics(appliedFilters, page);
   };
 
   const validateAllFields = () => {
@@ -343,28 +326,38 @@ const ClinicList = () => {
   };
 
   // ────────────────────────────────────────────────
-  // Handlers
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSearch = () => {
-    setAppliedFilters({ ...filterInputs });
+    const newFilters = { ...filterInputs };
+    setAppliedFilters(newFilters);
+    setPage(1);
+    fetchClinics(newFilters, 1);
   };
 
   const handleClearFilters = () => {
-    const defaultState = { 
-      searchType: 'name', 
-      searchValue: '', 
-      statusFilter: '1' 
+    const defaultState = {
+      searchType: 'name',
+      searchValue: '',
+      statusFilter: '1',
     };
     setFilterInputs(defaultState);
     setAppliedFilters(defaultState);
+    setPage(1);
+    fetchClinics(defaultState, 1);
   };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') handleSearch();
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+    fetchClinics(appliedFilters, newPage);
   };
 
   const openDetails = (clinic) => setSelectedClinic(clinic);
@@ -413,10 +406,8 @@ const ClinicList = () => {
         const lat = name === 'latitude' ? filteredValue : prev.latitude || '';
         const lng = name === 'longitude' ? filteredValue : prev.longitude || '';
         updated.location = [lat, lng].filter(Boolean).join(',');
-
         const locationMsg = getLiveValidationMessage('location', updated.location);
         setValidationMessages((prev2) => ({ ...prev2, location: locationMsg }));
-
         return updated;
       });
     } else {
@@ -495,10 +486,12 @@ const ClinicList = () => {
 
   if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
-  // Determine if any real filter is active (not default state)
-  const hasActiveFilter = 
+  const hasActiveFilter =
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.statusFilter !== '1';
+
+  const startRecord = clinics.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = (page - 1) * pageSize + clinics.length;
 
   // ────────────────────────────────────────────────
   return (
@@ -510,7 +503,6 @@ const ClinicList = () => {
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
 
-          {/* Search group */}
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -519,9 +511,7 @@ const ClinicList = () => {
               className={styles.searchTypeSelect}
             >
               <option value="name">Clinic Name</option>
-              <option value="ownerName">Owner Name</option>
               <option value="mobile">Mobile</option>
-              <option value="email">Email</option>
               <option value="gstNo">GST No</option>
             </select>
 
@@ -529,10 +519,8 @@ const ClinicList = () => {
               type="text"
               name="searchValue"
               placeholder={`Search by ${
-                filterInputs.searchType === 'name' ? 'Clinic Name' :
-                filterInputs.searchType === 'ownerName' ? 'Owner Name' :
-                filterInputs.searchType === 'mobile' ? 'Mobile' :
-                filterInputs.searchType === 'email' ? 'Email' :
+                filterInputs.searchType === 'name'   ? 'Clinic Name' :
+                filterInputs.searchType === 'mobile' ? 'Mobile'      :
                 'GST No'
               }`}
               value={filterInputs.searchValue}
@@ -556,13 +544,11 @@ const ClinicList = () => {
           </div>
 
           <div className={styles.filterActions}>
-
             <button onClick={handleSearch} className={styles.searchButton}>
               <FiSearch size={18} />
               Search
             </button>
 
-            {/* Clear button shown only when filter/search is active */}
             {hasActiveFilter && (
               <button onClick={handleClearFilters} className={styles.clearButton}>
                 <FiX size={18} />
@@ -579,61 +565,111 @@ const ClinicList = () => {
         </div>
       </div>
 
-      {/* Table */}
-      <div className={styles.clinicTableContainer}>
-        <table className={styles.clinicTable}>
-          <thead>
-            <tr>
-              <th>Clinic Name</th>
-              <th>Owner</th>
-              <th>Location</th>
-              <th>Mobile</th>
-              <th>GST No</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredClinics.length === 0 ? (
+      {/* ── Table + Pagination wrapper ── */}
+      <div className={styles.tableSection}>
+
+        <div className={styles.clinicTableContainer}>
+          <table className={styles.clinicTable}>
+            <thead>
               <tr>
-                <td colSpan={7} className={styles.clinicNoData}>
-                  {hasActiveFilter ? 'No clinics found.' : 'No clinics registered yet.'}
-                </td>
+                <th>Clinic Name</th>
+                <th>Owner</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>GST No</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              filteredClinics.map((clinic) => (
-                <tr key={clinic.id}>
-                  <td>
-                    <div className={styles.clinicNameCell}>
-                      <div className={styles.clinicAvatar}>
-                        {clinic.name?.charAt(0).toUpperCase() || 'C'}
-                      </div>
-                      <div>
-                        <div className={styles.clinicName}>{clinic.name}</div>
-                        <div className={styles.clinicType}>{clinic.email || '—'}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{clinic.ownerName || '—'}</td>
-                  <td>{clinic.location || '—'}</td>
-                  <td>{clinic.mobile || '—'}</td>
-                  <td>{clinic.gstNo || '—'}</td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${getStatusClass(clinic.status)}`}>
-                      {clinic.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td>
-                    <button onClick={() => openDetails(clinic)} className={styles.clinicDetailsBtn}>
-                      View Details
-                    </button>
+            </thead>
+            <tbody>
+              {clinics.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className={styles.clinicNoData}>
+                    {hasActiveFilter ? 'No clinics found.' : 'No clinics registered yet.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                clinics.map((clinic) => (
+                  <tr key={clinic.id}>
+                    <td>
+                      <div className={styles.clinicNameCell}>
+                        <div className={styles.clinicAvatar}>
+                          {clinic.name?.charAt(0).toUpperCase() || 'C'}
+                        </div>
+                        <div>
+                          <div className={styles.clinicName}>{clinic.name}</div>
+                          <div className={styles.clinicType}>{clinic.email || '—'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{clinic.ownerName || '—'}</td>
+                    <td>{clinic.email || '—'}</td>
+                    <td>{clinic.mobile || '—'}</td>
+                    <td>{clinic.gstNo || '—'}</td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${getStatusClass(clinic.status)}`}>
+                        {clinic.status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td>
+                      <button onClick={() => openDetails(clinic)} className={styles.clinicDetailsBtn}>
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Pagination Bar — pinned to bottom of tableSection ── */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {clinics.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={clinics.length < pageSize}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{pageSize}</strong>
+          </div>
+        </div>
+
+      </div>{/* end tableSection */}
 
       {/* ──────────────── Details Modal ──────────────── */}
       {selectedClinic && (

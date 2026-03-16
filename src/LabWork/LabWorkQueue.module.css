@@ -1097,6 +1097,10 @@
   color: var(--primary-start);
 }
 
+.detailFormGroup .required{
+  color: red;
+}
+
 .detailFormInput,
 .detailFormTextarea {
   width: 100%;
@@ -1352,6 +1356,38 @@
 .confirmRejectBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* ── Master Data Badges (Units & Normal Range in Test Results Entry header) ── */
+.masterDataBadges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.masterDataBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: var(--color-primary-light, #e8f4f8);
+  border: 1px solid var(--color-primary, #207d9c);
+  border-radius: 20px;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.masterDataBadgeLabel {
+  color: var(--color-primary, #207d9c);
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.masterDataBadgeValue {
+  color: var(--color-text-primary, #1a2b3c);
+  font-weight: 500;
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */

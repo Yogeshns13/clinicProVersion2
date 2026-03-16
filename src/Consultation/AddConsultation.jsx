@@ -1222,7 +1222,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
 
           <div className="ac-header__right">
             <div className="styles.clinicNameone">
-               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
                 {localStorage.getItem('clinicName') || '—'}
                 </div>
             {visitStep === 2 && (

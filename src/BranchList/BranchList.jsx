@@ -100,11 +100,18 @@ const SEARCH_TYPE_OPTIONS = [
 ];
 
 const DEFAULT_FILTERS = {
-  searchType: 'branchName',
+  searchType:  'branchName',
   searchValue: '',
-  clinicId:   'all',
-  branchType: '0',
-  status:     '1',          // ← changed: default to Active
+  clinicId:    'all',
+  branchType:  '0',
+  status:      '1',          // default Active
+};
+
+// ── Status dropdown → API Status integer ──
+const buildStatusParam = (status) => {
+  if (status === '1')  return 1;
+  if (status === '2')  return 2;
+  return -1;  // '-1' or anything else → All
 };
 
 // ────────────────────────────────────────────────
@@ -114,6 +121,10 @@ const BranchList = () => {
 
   const [filterInputs, setFilterInputs]     = useState({ ...DEFAULT_FILTERS });
   const [appliedFilters, setAppliedFilters] = useState({ ...DEFAULT_FILTERS });
+
+  // Pagination
+  const [page, setPage]       = useState(1);
+  const [pageSize]            = useState(20);
 
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [loading, setLoading]               = useState(true);
@@ -142,9 +153,10 @@ const BranchList = () => {
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.clinicId    !== 'all'     ||
     appliedFilters.branchType  !== '0'       ||
-    appliedFilters.status      !== '1';       // ← changed: compare to '1' not '-1'
+    appliedFilters.status      !== '1';
 
   // ────────────────────────────────────────────────
+  // Load clinic dropdown once
   useEffect(() => {
     const fetchClinics = async () => {
       try {
@@ -157,25 +169,32 @@ const BranchList = () => {
     fetchClinics();
   }, []);
 
+  // Initial load
   useEffect(() => {
-    fetchBranches(appliedFilters);
-  }, [appliedFilters]);
+    fetchBranches(appliedFilters, 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const fetchBranches = async (filters, forceRefresh = false) => {
+  // ────────────────────────────────────────────────
+  // Core fetch — explicit filters + page, no stale closures
+  const fetchBranches = async (filters, currentPage, forceRefresh = false) => {
     try {
       setLoading(true);
       setError(null);
 
       const clinicId = filters.clinicId === 'all' ? 0 : Number(filters.clinicId) || 0;
+
       const options = {
-        BranchName: filters.searchType === 'branchName' ? filters.searchValue : '',
-        Location:   filters.searchType === 'location'   ? filters.searchValue : '',
+        Page:       currentPage,
+        PageSize:   pageSize,
+        BranchName: filters.searchType === 'branchName' ? filters.searchValue.trim() : '',
+        Location:   filters.searchType === 'location'   ? filters.searchValue.trim() : '',
         BranchType: filters.branchType !== '0' ? Number(filters.branchType) : 0,
-        Status:     filters.status !== '' ? Number(filters.status) : 1,   // default active
+        Status:     buildStatusParam(filters.status),
       };
 
       const data = await getBranchList(clinicId, options, forceRefresh);
-      setBranches(data);
+      setBranches(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('fetchBranches error:', err);
       setError(
@@ -188,6 +207,7 @@ const BranchList = () => {
     }
   };
 
+  // ────────────────────────────────────────────────
   const getBranchTypeLabel = (branchTypeId) => {
     return BRANCH_TYPES.find((t) => t.id === branchTypeId)?.label || 'Main';
   };
@@ -203,13 +223,26 @@ const BranchList = () => {
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
+  // Search button → apply filters, reset to page 1, call API
   const handleSearch = () => {
-    setAppliedFilters({ ...filterInputs });
+    const newFilters = { ...filterInputs };
+    setAppliedFilters(newFilters);
+    setPage(1);
+    fetchBranches(newFilters, 1);
   };
 
   const handleClearFilters = () => {
     setFilterInputs({ ...DEFAULT_FILTERS });
     setAppliedFilters({ ...DEFAULT_FILTERS });
+    setPage(1);
+    fetchBranches({ ...DEFAULT_FILTERS }, 1);
+  };
+
+  // Pagination — reuse appliedFilters, only page changes
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+    fetchBranches(appliedFilters, newPage);
   };
 
   const openDetails = (branch) => setSelectedBranch(branch);
@@ -293,7 +326,7 @@ const BranchList = () => {
       setFormSuccess(true);
       setTimeout(() => {
         closeAddForm();
-        fetchBranches(appliedFilters, true);
+        fetchBranches(appliedFilters, page, true);
       }, 1500);
     } catch (err) {
       console.error('Add branch failed:', err);
@@ -317,9 +350,10 @@ const BranchList = () => {
   const handleUpdateSuccess = () => {
     setIsUpdateFormOpen(false);
     setUpdateBranchData(null);
-    fetchBranches(appliedFilters, true);
+    fetchBranches(appliedFilters, page, true);
   };
 
+  // ────────────────────────────────────────────────
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
@@ -328,6 +362,10 @@ const BranchList = () => {
 
   if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
+  const startRecord = branches.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = (page - 1) * pageSize + branches.length;
+
+  // ────────────────────────────────────────────────
   return (
     <div className={styles.clinicListWrapper}>
       <ErrorHandler error={error} />
@@ -397,7 +435,7 @@ const BranchList = () => {
               onChange={handleFilterChange}
               className={styles.statusFilterSelect}
             >
-              <option value="1">Active</option>           {/* ← default selected */}
+              <option value="1">Active</option>
               <option value="2">Inactive</option>
               <option value="-1">All Status</option>
             </select>
@@ -421,65 +459,116 @@ const BranchList = () => {
         </div>
       </div>
 
-      {/* Table */}
-      <div className={styles.clinicTableContainer}>
-        <table className={styles.clinicTable}>
-          <thead>
-            <tr>
-              <th>Branch Name</th>
-              <th>Clinic</th>
-              <th>Type</th>
-              <th>Location</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {branches.length === 0 ? (
+      {/* Table + Pagination wrapper */}
+      <div className={styles.tableSection}>
+
+        {/* Table */}
+        <div className={styles.clinicTableContainer}>
+          <table className={styles.clinicTable}>
+            <thead>
               <tr>
-                <td colSpan={6} className={styles.clinicNoData}>
-                  {hasActiveFilters ? 'No branches found.' : 'No branches registered yet.'}
-                </td>
+                <th>Branch Name</th>
+                <th>Clinic</th>
+                <th>Type</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              branches.map((branch) => (
-                <tr key={branch.id}>
-                  <td>
-                    <div className={styles.clinicNameCell}>
-                      <div className={styles.clinicAvatar}>
-                        {branch.name?.charAt(0).toUpperCase() || 'B'}
-                      </div>
-                      <div>
-                        <div className={styles.clinicName}>{branch.name}</div>
-                        <div className={styles.clinicType}>
-                          {getBranchTypeLabel(branch.branchType)}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{branch.clinicName || '—'}</td>
-                  <td>
-                    <span className={styles.statusBadge}>
-                      {getBranchTypeLabel(branch.branchType)}
-                    </span>
-                  </td>
-                  <td>{branch.location || branch.address?.split(',')[0] || '—'}</td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${getStatusClass(branch.status)}`}>
-                      {branch.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td>
-                    <button onClick={() => openDetails(branch)} className={styles.clinicDetailsBtn}>
-                      View Details
-                    </button>
+            </thead>
+            <tbody>
+              {branches.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className={styles.clinicNoData}>
+                    {hasActiveFilters ? 'No branches found.' : 'No branches registered yet.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                branches.map((branch) => (
+                  <tr key={branch.id}>
+                    <td>
+                      <div className={styles.clinicNameCell}>
+                        <div className={styles.clinicAvatar}>
+                          {branch.name?.charAt(0).toUpperCase() || 'B'}
+                        </div>
+                        <div>
+                          <div className={styles.clinicName}>{branch.name}</div>
+                          <div className={styles.clinicType}>
+                            {getBranchTypeLabel(branch.branchType)}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{branch.clinicName || '—'}</td>
+                    <td>
+                      <span className={styles.statusBadge}>
+                        {getBranchTypeLabel(branch.branchType)}
+                      </span>
+                    </td>
+                    <td>{branch.location || branch.address?.split(',')[0] || '—'}</td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${getStatusClass(branch.status)}`}>
+                        {branch.status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td>
+                      <button onClick={() => openDetails(branch)} className={styles.clinicDetailsBtn}>
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Bar — always at bottom */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {branches.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={branches.length < pageSize}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{pageSize}</strong>
+          </div>
+        </div>
+
+      </div>{/* end tableSection */}
 
       {/* Details Modal */}
       {selectedBranch && (

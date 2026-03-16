@@ -806,7 +806,7 @@ const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions
               </div>
              </div>
               <div className={styles.clinicNameone}>
-               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
                 {localStorage.getItem('clinicName') || '—'}
              </div>
             </div>
@@ -1002,7 +1002,7 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
 
           <div className={styles.headerRight}>
                         <div className={styles.clinicNameone}>
-                                       <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                                       <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
                                          {localStorage.getItem('clinicName') || '—'}
                                     </div>
 

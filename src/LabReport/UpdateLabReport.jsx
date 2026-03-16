@@ -38,8 +38,8 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
     const fetchDoctors = async () => {
       try {
         setLoadingDoctors(true);
-        const clinicId = Number(localStorage.getItem('clinicID')) || 0;
-        const branchId = Number(localStorage.getItem('branchID')) || 0;
+        const clinicId = await getStoredClinicId();
+        const branchId = await getStoredBranchId();
         
         const employeeList = await getEmployeeList(clinicId, {
           BranchID: branchId,
@@ -119,8 +119,8 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
     setFormSuccess(false);
 
     try {
-      const clinicId = Number(localStorage.getItem('clinicID')) || 0;
-      const branchId = Number(localStorage.getItem('branchID')) || 0;
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       let verifiedDateTime = '';
       if (formData.verifiedDateTime) {
@@ -163,7 +163,7 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
 
           <div className={styles.headerRight}>
                         <div className={styles.clinicNameone}>
-                                       <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+                                       <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
                                          {localStorage.getItem('clinicName') || '—'}
                                     </div>
           <button onClick={onClose} className={styles.clinicModalClose}>

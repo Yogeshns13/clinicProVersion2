@@ -230,8 +230,8 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
       setLoading(true);
       setError(null);
 
-      const clinicId = Number(localStorage.getItem("clinicID"));
-      const branchId = Number(localStorage.getItem("branchID"));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const medicineData = {
         clinicId,
@@ -304,7 +304,7 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
           <div className={styles.clinicNameone}>
             <FaClinicMedical
               size={20}
-              style={{ verticalAlign: "middle", margin: "6px" }}
+              style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
             />
             {localStorage.getItem("clinicName") || "—"}
           </div>
@@ -542,7 +542,7 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
               </div>
               <div className={styles.formGrid}>
                 <div className={styles.formGroup}>
-                  <label>MRP (₹)</label>
+                  <label>MRP (₹) <span className={styles.required}>*</span></label>
                   <input
                     type="number"
                     name="mrp"
@@ -552,6 +552,7 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                     min="0"
                     step="0.01"
                     disabled={loading}
+                    required
                   />
                   {fieldErrors.mrp && (
                     <span className={styles.validationMsg}>
@@ -669,6 +670,7 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                     max="100"
                     step="0.01"
                     disabled={loading}
+                    required
                   />
                   {fieldErrors.sgstPercentage && (
                     <span className={styles.validationMsg}>

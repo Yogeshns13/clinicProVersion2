@@ -167,7 +167,7 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRe
             <h2>Appointment Details</h2>
           </div>
           <div className="clinicNameone">
-             <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+             <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
                {localStorage.getItem('clinicName') || '—'}
                   </div>
           <button onClick={onClose} className="appointment-modal-close">

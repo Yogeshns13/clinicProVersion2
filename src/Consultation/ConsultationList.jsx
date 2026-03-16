@@ -583,7 +583,7 @@ const ConsultationList = () => {
                           onClick={() => handleViewDetails(consultation)}
                           className={styles.viewBtn}
                         >
-                          View Details
+                          Edit Details
                         </button>
                       </div>
                     </td>

@@ -149,7 +149,7 @@
 
 .clinicNameone {
   font-size: 1.05rem;           /* a bit smaller than patient name */
-  font-weight: 600;
+  font-weight: 800;
   color: var(--text-light);
   line-height: 1.2;
   white-space: nowrap;          /* ← prevents wrapping to next line */

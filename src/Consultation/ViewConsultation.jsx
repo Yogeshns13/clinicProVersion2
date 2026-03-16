@@ -647,7 +647,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
   const fetchMedicines = async () => {
     try {
       setLoadingMeds(true);
-      const { clinicId, branchId } = getIds();
+      const { clinicId, branchId } = await getIds();
       const meds = await getMedicineMasterList(clinicId, { BranchID: branchId, PageSize: 200, Status: 1 });
       setAllMedicines(meds); setFilteredMedicines(meds);
     } catch (err) { console.error(err); } finally { setLoadingMeds(false); }
@@ -656,7 +656,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
   const fetchPatientDetails = async (patientId) => {
     try {
       setLoadingPatient(true); setFamilyPatientData(null);
-      const { clinicId, branchId } = getIds();
+      const { clinicId, branchId } = await getIds();
       const pts = await getPatientsList(clinicId, { Page: 1, PageSize: 1, BranchID: branchId, PatientID: patientId, Status: 1 });
       const pt = pts?.[0] || null;
       setPatientDetails(pt);
@@ -675,7 +675,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
   const fetchLabItems = async () => {
     try {
       setLabItemsLoading(true);
-      const { clinicId, branchId } = getIds();
+      const { clinicId, branchId } = await getIds();
       const [masters, pkgs] = await Promise.all([
         getLabTestMasterList(clinicId, { BranchID: branchId, PageSize: 200, Status: 1 }),
         getLabTestPackageList(clinicId, { BranchID: branchId, PageSize: 100, Status: 1 }),
@@ -691,7 +691,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     if (!consultId) return;
     try {
       setUpdatingConsult(true); setError(null);
-      const { clinicId, branchId } = getIds();
+      const { clinicId, branchId } = await getIds();
       await updateConsultation({
         consultationId: consultId, clinicId, branchId,
         reason: consultation.reason || '',
@@ -817,7 +817,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
 
     if (newTestIds.length === 0 && newPkgIds.length === 0) { setShowLabModal(false); return; }
 
-    const { clinicId, branchId } = getIds();
+    const { clinicId, branchId } = await getIds();
     setShowLabModal(false); setError(null);
 
     const steps = [];
@@ -874,7 +874,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
       if (c.quantity <= 0)         { setError({ message: `Quantity > 0 required for "${c.medicineName}".` }); return; }
     }
 
-    const { clinicId, branchId } = getIds();
+    const { clinicId, branchId } = await getIds();
     const consultId = consultation?.consultationId ?? consultation?.id ?? activeConsultId;
 
     const newTestIds      = stagedLabTestIds.filter(id => !submittedLabTestIds.includes(id));
@@ -970,7 +970,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     const { itemId, testId, pkgId } = reactivateConfirm;
     try {
       setReactivating(true);
-      const { clinicId, branchId } = getIds();
+      const { clinicId, branchId } = await getIds();
       await updateLabTestOrderItem({ itemId, clinicId, branchId, status: 1 });
       setSavedLabItems(prev => prev.map(i => i.itemId === itemId ? { ...i, status: 1 } : i));
       if (testId) {
@@ -991,7 +991,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
   const handleRemoveLabItemFromModal = async (itemId) => {
     try {
       setRemovingLabItemId(itemId);
-      const { clinicId, branchId } = getIds();
+      const { clinicId, branchId } = await getIds();
       await updateLabTestOrderItem({ itemId, clinicId, branchId, status: 2 });
       const savedItem = savedLabItems.find(s => s.itemId === itemId);
       setSavedLabItems(prev => prev.map(i => i.itemId === itemId ? { ...i, status: 2 } : i));
@@ -1123,7 +1123,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
 
           <div className="ac-header__right">
             <div className="styles.clinicNameone">
-               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px' }} />  
+               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px'}} />  
                 {localStorage.getItem('clinicName') || '—'}
                 </div>
             {consultation && (
@@ -1146,7 +1146,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
           </div>
         </header>
 
-        {/* ── BODY ── */}
         <main className="ac-body">
           {loading && (
             <div className="state-loading" style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

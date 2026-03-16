@@ -4,6 +4,7 @@ import { FiSave } from 'react-icons/fi';
 import { getBranchList } from '../Api/CachedApi.js';
 import { updateDepartment } from '../Api/Api.js';
 import styles from './DepartmentList.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
@@ -31,13 +32,6 @@ const filterInput = (fieldName, value) => {
   }
 };
 
-// ────────────────────────────────────────────────
-// Props:
-//   department — the department object to edit (required)
-//   clinics    — clinics array passed from DepartmentList (avoids re-fetching)
-//   onClose    — called when user cancels or clicks backdrop
-//   onSuccess  — called after a successful update (triggers list refresh)
-// ────────────────────────────────────────────────
 const UpdateDepartment = ({ department, clinics, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     clinicId:       department.clinicId  || '',
@@ -53,7 +47,10 @@ const UpdateDepartment = ({ department, clinics, onClose, onSuccess }) => {
   const [formSuccess,        setFormSuccess]        = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
 
-  // Load branches whenever clinicId changes
+  // Derive clinic name from the clinics prop
+  const clinicName = clinics.find((c) => String(c.id) === String(formData.clinicId))?.name || '';
+
+  // Load branches on mount (clinicId won't change since it's read-only now)
   useEffect(() => {
     const fetchBranches = async () => {
       if (formData.clinicId) {
@@ -64,14 +61,14 @@ const UpdateDepartment = ({ department, clinics, onClose, onSuccess }) => {
           console.error('Failed to load branches:', err);
           setBranches([]);
         }
-      } else {
-        setBranches([]);
       }
     };
     fetchBranches();
   }, [formData.clinicId]);
 
-  // ────────────────────────────────────────────────
+  // Derive branch name for the read-only display
+  const branchName = branches.find((b) => String(b.id) === String(formData.branchId))?.name || '—';
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     const filteredValue = filterInput(name, value);
@@ -104,7 +101,6 @@ const UpdateDepartment = ({ department, clinics, onClose, onSuccess }) => {
     }
   };
 
-  // ────────────────────────────────────────────────
   return (
     <div className={styles.detailModalOverlay} onClick={onClose}>
       <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
@@ -113,18 +109,15 @@ const UpdateDepartment = ({ department, clinics, onClose, onSuccess }) => {
         <div className={styles.detailModalHeader}>
           <div className={styles.detailHeaderContent}>
             <h2>Update Department</h2>
-            <div className={styles.detailHeaderMeta}>
-              <span className={styles.workIdBadge}>
-                {formData.departmentName || 'Department'}
-              </span>
-              <span className={`${styles.workIdBadge} ${formData.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}>
-                {formData.status === 1 ? 'ACTIVE' : 'INACTIVE'}
-              </span>
-            </div>
           </div>
-          <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
-        </div>
+          <div className={styles.clinicNameone}>
+                         <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
+                          {department.clinicName || '—'}
+                          </div>
 
+            <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
+          </div>
+        
         {/* ── Form Body ── */}
         <form onSubmit={handleSubmit} className={styles.addModalBody}>
           {formError   && <div className={styles.formError}>{formError}</div>}
@@ -137,38 +130,15 @@ const UpdateDepartment = ({ department, clinics, onClose, onSuccess }) => {
 
             <div className={styles.addFormGrid}>
 
-              <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                <label>Clinic <span className={styles.required}>*</span></label>
-                <select
-                  required
-                  name="clinicId"
-                  value={formData.clinicId}
-                  onChange={handleInputChange}
-                >
-                  <option value="">Select Clinic</option>
-                  {clinics.map((clinic) => (
-                    <option key={clinic.id} value={clinic.id}>
-                      {clinic.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
+              {/* Branch — read-only display */}
               <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                 <label>Branch</label>
-                <select
-                  name="branchId"
-                  value={formData.branchId}
-                  onChange={handleInputChange}
-                  disabled={!formData.clinicId}
-                >
-                  <option value="">Select Branch</option>
-                  {branches.map((branch) => (
-                    <option key={branch.id} value={branch.id}>
-                      {branch.name}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  readOnly
+                  value={branchName}
+                  className={styles.readOnlyInput}
+                  style={{ backgroundColor: 'var(--input-disabled-bg, #f5f5f5)', cursor: 'not-allowed' }}
+                />
               </div>
 
               <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>

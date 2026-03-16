@@ -25,7 +25,6 @@ import { getStoredClinicId, getStoredBranchId, getStoredClinicName } from '../Ut
 // HELPERS
 // ────────────────────────────────────────────────
 const getTodayDate = () => new Date().toISOString().split("T")[0];
-const clinicName = getStoredClinicName()
 
 const DEFAULT_FILTERS = {
   searchType: "medicineName",
@@ -47,6 +46,14 @@ const MedicineStockList = () => {
   const [allStockList, setAllStockList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Clinic Name
+  const [clinicName, setClinicName] = useState("");
+
+  useEffect(() => {
+  const name = localStorage.getItem("clinicName");
+  setClinicName(name || "");
+}, []);
 
   // Filter inputs (staged, not applied until Search)
   const [filterInputs, setFilterInputs] = useState({
@@ -590,7 +597,7 @@ const MedicineStockList = () => {
               <div className={styles.clinicNameone}>
                 <FaClinicMedical
                   size={20}
-                  style={{ verticalAlign: "middle", margin: "6px" }}
+                  style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
                 />
                 { clinicName || "—"}
               </div>
@@ -755,7 +762,7 @@ const MedicineStockList = () => {
               <div className={styles.clinicNameone}>
                 <FaClinicMedical
                   size={20}
-                  style={{ verticalAlign: "middle", margin: "6px" }}
+                  style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
                 />
                 { clinicName || "—"}
               </div>

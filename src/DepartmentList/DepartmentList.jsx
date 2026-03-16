@@ -1,5 +1,5 @@
 // src/components/DepartmentList.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FiSearch,
   FiPlus,
@@ -52,13 +52,17 @@ const DEFAULT_FILTERS = {
   clinicId:    'all',
 };
 
+// ────────────────────────────────────────────────
 const DepartmentList = () => {
-  const [departments, setDepartments]       = useState([]);
-  const [allDepartments, setAllDepartments] = useState([]);
-  const [clinics, setClinics]               = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [clinics, setClinics]         = useState([]);
 
   const [filterInputs, setFilterInputs]     = useState({ ...DEFAULT_FILTERS });
   const [appliedFilters, setAppliedFilters] = useState({ ...DEFAULT_FILTERS });
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [pageSize]      = useState(20);
 
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [loading, setLoading]                       = useState(true);
@@ -84,6 +88,7 @@ const DepartmentList = () => {
   const [isUpdateFormOpen, setIsUpdateFormOpen]         = useState(false);
 
   // ────────────────────────────────────────────────
+  // Load clinic dropdown once
   useEffect(() => {
     const fetchClinics = async () => {
       try {
@@ -96,12 +101,15 @@ const DepartmentList = () => {
     fetchClinics();
   }, []);
 
+  // Initial load
   useEffect(() => {
-    fetchDepartments(appliedFilters);
-  }, [appliedFilters]);
+    fetchDepartments(appliedFilters, 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // forceRefresh = true bypasses cache → always fetches latest data from server
-  const fetchDepartments = async (filters, forceRefresh = false) => {
+  // ────────────────────────────────────────────────
+  // Core fetch — explicit filters + page, no stale closures
+  const fetchDepartments = async (filters, currentPage, forceRefresh = false) => {
     try {
       setLoading(true);
       setError(null);
@@ -109,11 +117,12 @@ const DepartmentList = () => {
       const clinicId = filters.clinicId === 'all' ? 0 : Number(filters.clinicId) || 0;
 
       const data = await getDepartmentList(clinicId, 0, {
-        DepartmentName: filters.searchType === 'departmentName' ? filters.searchValue : '',
+        Page:           currentPage,
+        PageSize:       pageSize,
+        DepartmentName: filters.searchType === 'departmentName' ? filters.searchValue.trim() : '',
       }, forceRefresh);
 
-      setDepartments(data);
-      setAllDepartments(data);
+      setDepartments(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('fetchDepartments error:', err);
       setError(
@@ -126,8 +135,7 @@ const DepartmentList = () => {
     }
   };
 
-  const filteredDepartments = useMemo(() => allDepartments, [allDepartments]);
-
+  // ────────────────────────────────────────────────
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.clinicId           !== 'all';
@@ -137,13 +145,26 @@ const DepartmentList = () => {
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
+  // Search button → apply filters, reset to page 1, call API
   const handleSearch = () => {
-    setAppliedFilters({ ...filterInputs });
+    const newFilters = { ...filterInputs };
+    setAppliedFilters(newFilters);
+    setPage(1);
+    fetchDepartments(newFilters, 1);
   };
 
   const handleClearFilters = () => {
     setFilterInputs({ ...DEFAULT_FILTERS });
     setAppliedFilters({ ...DEFAULT_FILTERS });
+    setPage(1);
+    fetchDepartments({ ...DEFAULT_FILTERS }, 1);
+  };
+
+  // Pagination — reuse appliedFilters, only page changes
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+    fetchDepartments(appliedFilters, newPage);
   };
 
   const openDetails = (department) => setSelectedDepartment(department);
@@ -173,6 +194,7 @@ const DepartmentList = () => {
     setValidationMessages((prev) => ({ ...prev, [name]: validationMessage }));
   };
 
+  // Load branches when clinic changes inside the add form
   useEffect(() => {
     const fetchBranches = async () => {
       if (formData.clinicId) {
@@ -208,7 +230,7 @@ const DepartmentList = () => {
       setFormSuccess(true);
       setTimeout(() => {
         closeAddForm();
-        fetchDepartments(appliedFilters, true); // forceRefresh = true
+        fetchDepartments(appliedFilters, page, true);
       }, 1500);
     } catch (err) {
       console.error('Add department failed:', err);
@@ -218,10 +240,9 @@ const DepartmentList = () => {
     }
   };
 
-  // ── Update handlers ──
   const handleUpdateClick = (department) => {
     setUpdateDepartmentData(department);
-    setSelectedDepartment(null); // close details modal
+    setSelectedDepartment(null);
     setIsUpdateFormOpen(true);
   };
 
@@ -233,9 +254,10 @@ const DepartmentList = () => {
   const handleUpdateSuccess = () => {
     setIsUpdateFormOpen(false);
     setUpdateDepartmentData(null);
-    fetchDepartments(appliedFilters, true); // forceRefresh = true
+    fetchDepartments(appliedFilters, page, true);
   };
 
+  // ────────────────────────────────────────────────
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
@@ -244,6 +266,10 @@ const DepartmentList = () => {
 
   if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
+  const startRecord = departments.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = (page - 1) * pageSize + departments.length;
+
+  // ────────────────────────────────────────────────
   return (
     <div className={styles.clinicListWrapper}>
       <ErrorHandler error={error} />
@@ -285,7 +311,7 @@ const DepartmentList = () => {
               name="clinicId"
               value={filterInputs.clinicId}
               onChange={handleFilterChange}
-              className={styles.filterInput}
+              className={styles.statusFilterSelect}
             >
               <option value="all">All Clinics</option>
               {clinics.map((clinic) => (
@@ -309,7 +335,7 @@ const DepartmentList = () => {
               </button>
             )}
 
-            <button onClick={openAddForm} className={styles.clinicAddBtn}>
+            <button onClick={openAddForm} className={styles.addClinicBtn}>
               <FiPlus size={18} />
               Add Dept
             </button>
@@ -318,52 +344,103 @@ const DepartmentList = () => {
         </div>
       </div>
 
-      {/* ── Table ── */}
-      <div className={styles.clinicTableContainer}>
-        <table className={styles.clinicTable}>
-          <thead>
-            <tr>
-              <th>Department Name</th>
-              <th>Description</th>
-              <th>Clinic</th>
-              <th>Branch</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredDepartments.length === 0 ? (
+      {/* ── Table + Pagination wrapper ── */}
+      <div className={styles.tableSection}>
+
+        {/* ── Table ── */}
+        <div className={styles.clinicTableContainer}>
+          <table className={styles.clinicTable}>
+            <thead>
               <tr>
-                <td colSpan={5} className={styles.clinicNoData}>
-                  {hasActiveFilters ? 'No departments found.' : 'No departments registered yet.'}
-                </td>
+                <th>Department Name</th>
+                <th>Description</th>
+                <th>Clinic</th>
+                <th>Branch</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              filteredDepartments.map((department) => (
-                <tr key={department.id}>
-                  <td>
-                    <div className={styles.clinicNameCell}>
-                      <div className={styles.clinicAvatar}>
-                        {department.name?.charAt(0).toUpperCase() || 'D'}
-                      </div>
-                      <div>
-                        <div className={styles.clinicName}>{department.name}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{department.profile || '—'}</td>
-                  <td>{department.clinicName || '—'}</td>
-                  <td>{department.branchName || '—'}</td>
-                  <td>
-                    <button onClick={() => openDetails(department)} className={styles.clinicDetailsBtn}>
-                      View Details
-                    </button>
+            </thead>
+            <tbody>
+              {departments.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className={styles.clinicNoData}>
+                    {hasActiveFilters ? 'No departments found.' : 'No departments registered yet.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                departments.map((department) => (
+                  <tr key={department.id}>
+                    <td>
+                      <div className={styles.clinicNameCell}>
+                        <div className={styles.clinicAvatar}>
+                          {department.name?.charAt(0).toUpperCase() || 'D'}
+                        </div>
+                        <div>
+                          <div className={styles.clinicName}>{department.name}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{department.profile || '—'}</td>
+                    <td>{department.clinicName || '—'}</td>
+                    <td>{department.branchName || '—'}</td>
+                    <td>
+                      <button onClick={() => openDetails(department)} className={styles.clinicDetailsBtn}>
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Pagination Bar — always at bottom ── */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {departments.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={departments.length < pageSize}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{pageSize}</strong>
+          </div>
+        </div>
+
+      </div>{/* end tableSection */}
 
       {/* ──────────────── Details Modal ──────────────── */}
       {selectedDepartment && (

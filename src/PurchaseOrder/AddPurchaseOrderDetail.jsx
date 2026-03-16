@@ -215,8 +215,8 @@ const AddPurchaseOrderDetail = ({
   const fetchPurchaseOrders = async () => {
     try {
       setLoadingPOs(true);
-      const clinicId = Number(localStorage.getItem("clinicID"));
-      const branchId = Number(localStorage.getItem("branchID"));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const data = await getPurchaseOrderList(clinicId, {
         BranchID: branchId,
         POID: 0,
@@ -234,8 +234,8 @@ const AddPurchaseOrderDetail = ({
   const fetchMedicines = async () => {
     try {
       setLoadingMedicines(true);
-      const clinicId = Number(localStorage.getItem("clinicID"));
-      const branchId = Number(localStorage.getItem("branchID"));
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const data = await getMedicineMasterList(clinicId, {
         BranchID: branchId,
         Status: 1,
@@ -291,8 +291,8 @@ const AddPurchaseOrderDetail = ({
     setFormSuccess(false);
 
     try {
-      const clinicId = localStorage.getItem("clinicID");
-      const branchId = localStorage.getItem("branchID");
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
 
       const payload = {
         clinicId: clinicId ? Number(clinicId) : 0,
@@ -352,7 +352,7 @@ const AddPurchaseOrderDetail = ({
           <div className={styles.clinicNameone}>
             <FaClinicMedical
               size={20}
-              style={{ verticalAlign: "middle", margin: "6px" }}
+              style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
             />
             {localStorage.getItem("clinicName") || "—"}
           </div>

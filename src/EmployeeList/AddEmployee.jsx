@@ -433,8 +433,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
       // Fetch the fileAccessToken for this clinic dynamically
       const fileAccessToken = await fetchFileAccessToken(clinicId);
 
-      // Pass fileAccessToken to uploadPhoto (update your Api.js accordingly)
-      const res = await uploadPhoto(photo, fileAccessToken);
+      const res = await uploadPhoto(clinicId, photo, fileAccessToken);
 
       setFormData(prev => ({ ...prev, photoFileId: res.fileId }));
       setPhotoUploadStatus('Photo uploaded successfully!'); setPhotoUploaded(true);
@@ -491,11 +490,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     try {
       const clinicId = await getStoredClinicId();
 
-      // Fetch the fileAccessToken for this clinic dynamically
       const fileAccessToken = await fetchFileAccessToken(clinicId);
 
-      // Pass fileAccessToken to uploadIDProof (update your Api.js accordingly)
-      const res = await uploadIDProof(file, fileAccessToken);
+      const res = await uploadIDProof(clinicId, file, fileAccessToken);
 
       setProofList(prev => prev.map((p, i) => i === index ? { ...p, fileId: res.fileId } : p));
       updateProofUploadStatus(index, 'ID proof uploaded successfully!');
@@ -804,7 +801,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
             <h2>Add New Employee</h2>
           </div>
           <div className={styles.clinicNameone}>
-                <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px" }} />
+                <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
                 {localStorage.getItem("clinicName") || "—"}
               </div>
           <button onClick={handleClose} className={styles.closeBtn}><FiX size={22} /></button>
