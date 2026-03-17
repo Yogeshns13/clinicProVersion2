@@ -38,13 +38,22 @@ const CART_SEARCH_TYPE_OPTIONS = [
   { value: "patientName", label: "Patient Name" },
 ];
 
+const PAGE_SIZE = 20;
+
 const SalesCartList = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("prescriptions");
+
+  // Prescriptions pagination & data
   const [prescriptions, setPrescriptions] = useState([]);
-  const [filteredPrescriptions, setFilteredPrescriptions] = useState([]);
+  const [presPage, setPresPage] = useState(1);
+  const [presHasNext, setPresHasNext] = useState(false);
+
+  // Sales Carts pagination & data
   const [salesCarts, setSalesCarts] = useState([]);
-  const [filteredSalesCarts, setFilteredSalesCarts] = useState([]);
+  const [cartPage, setCartPage] = useState(1);
+  const [cartHasNext, setCartHasNext] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cartedPrescriptionIds, setCartedPrescriptionIds] = useState(new Set());
@@ -78,7 +87,7 @@ const SalesCartList = () => {
     cartId: null,
   });
 
-  const fetchPrescriptions = async (overrides = {}) => {
+  const fetchPrescriptions = async (page = presPage, overrides = {}) => {
     try {
       setLoading(true);
       setError(null);
@@ -86,8 +95,8 @@ const SalesCartList = () => {
       const branchId = await getStoredBranchId();
       const f = { ...presFilterInputs, ...overrides };
       const options = {
-        Page: 1,
-        PageSize: 100,
+        Page: page,
+        PageSize: PAGE_SIZE,
         BranchID: branchId,
         PatientName: f.searchType === "patientName" ? f.searchValue.trim() : "",
         DoctorName: f.searchType === "doctorName" ? f.searchValue.trim() : "",
@@ -101,7 +110,7 @@ const SalesCartList = () => {
         (a, b) => new Date(b.dateCreated) - new Date(a.dateCreated),
       );
       setPrescriptions(sorted);
-      setFilteredPrescriptions(sorted);
+      setPresHasNext(sorted.length === PAGE_SIZE);
     } catch (err) {
       console.error("fetchPrescriptions error:", err);
       setError(
@@ -114,7 +123,7 @@ const SalesCartList = () => {
     }
   };
 
-  const fetchSalesCarts = async (overrides = {}) => {
+  const fetchSalesCarts = async (page = cartPage, overrides = {}) => {
     try {
       setLoading(true);
       setError(null);
@@ -122,8 +131,8 @@ const SalesCartList = () => {
       const branchId = await getStoredBranchId();
       const f = { ...cartFilterInputs, ...overrides };
       const options = {
-        Page: 1,
-        PageSize: 100,
+        Page: page,
+        PageSize: PAGE_SIZE,
         BranchID: branchId,
         PatientName: f.searchValue.trim(),
         Status: f.status !== "" ? Number(f.status) : -1,
@@ -133,7 +142,7 @@ const SalesCartList = () => {
         (a, b) => new Date(b.dateCreated) - new Date(a.dateCreated),
       );
       setSalesCarts(sorted);
-      setFilteredSalesCarts(sorted);
+      setCartHasNext(sorted.length === PAGE_SIZE);
     } catch (err) {
       console.error("fetchSalesCarts error:", err);
       setError(
@@ -147,20 +156,34 @@ const SalesCartList = () => {
   };
 
   useEffect(() => {
-    if (activeTab === "prescriptions") fetchPrescriptions();
-    else fetchSalesCarts();
+    if (activeTab === "prescriptions") {
+      fetchPrescriptions(1);
+      setPresPage(1);
+    } else {
+      fetchSalesCarts(1);
+      setCartPage(1);
+    }
   }, [activeTab]);
 
   const handlePresFilterChange = (e) => {
     const { name, value } = e.target;
     setPresFilterInputs((prev) => ({ ...prev, [name]: value }));
   };
+
   const handleCartFilterChange = (e) => {
     const { name, value } = e.target;
     setCartFilterInputs((prev) => ({ ...prev, [name]: value }));
   };
-  const handlePresSearch = () => fetchPrescriptions();
-  const handleCartSearch = () => fetchSalesCarts();
+
+  const handlePresSearch = () => {
+    fetchPrescriptions(1);
+    setPresPage(1);
+  };
+
+  const handleCartSearch = () => {
+    fetchSalesCarts(1);
+    setCartPage(1);
+  };
 
   const clearPresFilters = () => {
     const empty = {
@@ -171,12 +194,15 @@ const SalesCartList = () => {
       status: "",
     };
     setPresFilterInputs(empty);
-    fetchPrescriptions(empty);
+    fetchPrescriptions(1, empty);
+    setPresPage(1);
   };
+
   const clearCartFilters = () => {
     const empty = { searchType: "patientName", searchValue: "", status: "" };
     setCartFilterInputs(empty);
-    fetchSalesCarts(empty);
+    fetchSalesCarts(1, empty);
+    setCartPage(1);
   };
 
   const hasPresFilters = !!(
@@ -185,9 +211,22 @@ const SalesCartList = () => {
     presFilterInputs.toDate !== today ||
     presFilterInputs.status
   );
+
   const hasCartFilters = !!(
     cartFilterInputs.searchValue || cartFilterInputs.status
   );
+
+  const handlePresPageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPresPage(newPage);
+    fetchPrescriptions(newPage);
+  };
+
+  const handleCartPageChange = (newPage) => {
+    if (newPage < 1) return;
+    setCartPage(newPage);
+    fetchSalesCarts(newPage);
+  };
 
   const handleAddToCartClick = async (prescription) => {
     setConfirm({
@@ -328,8 +367,8 @@ const SalesCartList = () => {
         }));
         setTimeout(() => {
           closeConfirm();
-          if (activeTab === "prescriptions") fetchPrescriptions();
-          else fetchSalesCarts();
+          if (activeTab === "prescriptions") fetchPrescriptions(presPage);
+          else fetchSalesCarts(cartPage);
         }, 2000);
       }
     } catch (err) {
@@ -367,8 +406,10 @@ const SalesCartList = () => {
       day: "numeric",
     });
   };
+
   const formatCurrency = (val) =>
     val == null ? "—" : `₹${Number(val).toFixed(2)}`;
+
   const totalCartValue = useMemo(() => {
     const { details, medicineMap } = confirm;
     return details.reduce((sum, d) => {
@@ -382,6 +423,12 @@ const SalesCartList = () => {
   if (loading) return <div className={styles.loading}>Loading...</div>;
   if (error)
     return <div className={styles.error}>Error: {error.message || error}</div>;
+
+  const getStartRecord = (page, records) =>
+    records.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+
+  const getEndRecord = (page, records) =>
+    Math.min(getStartRecord(page, records) + records.length - 1, (page - 1) * PAGE_SIZE + records.length);
 
   return (
     <div className={styles.wrapper}>
@@ -403,11 +450,10 @@ const SalesCartList = () => {
         </button>
       </div>
 
-      {/* ══ PRESCRIPTION INLINE FILTERS ══ */}
+      {/* PRESCRIPTION FILTERS */}
       {activeTab === "prescriptions" && (
         <div className={styles.inlineFiltersContainer}>
           <div className={styles.presFiltersGrid}>
-            {/* VendorList-style joined search type + value */}
             <div className={styles.searchGroup}>
               <select
                 name="searchType"
@@ -432,7 +478,6 @@ const SalesCartList = () => {
               />
             </div>
 
-            {/* From Date */}
             <div className={styles.dateWrapper}>
               {!presFilterInputs.fromDate && (
                 <span className={styles.datePlaceholder}>From Date</span>
@@ -446,7 +491,6 @@ const SalesCartList = () => {
               />
             </div>
 
-            {/* To Date */}
             <div className={styles.dateWrapper}>
               {!presFilterInputs.toDate && (
                 <span className={styles.datePlaceholder}>To Date</span>
@@ -460,7 +504,6 @@ const SalesCartList = () => {
               />
             </div>
 
-            {/* Status */}
             <select
               name="status"
               value={presFilterInputs.status}
@@ -472,19 +515,12 @@ const SalesCartList = () => {
               <option value="2">Cancelled</option>
             </select>
 
-            {/* Actions */}
             <div className={styles.inlineFilterActions}>
-              <button
-                onClick={handlePresSearch}
-                className={styles.searchButton}
-              >
+              <button onClick={handlePresSearch} className={styles.searchButton}>
                 <FiSearch size={15} /> Search
               </button>
               {hasPresFilters && (
-                <button
-                  onClick={clearPresFilters}
-                  className={styles.clearButton}
-                >
+                <button onClick={clearPresFilters} className={styles.clearButton}>
                   <FiX size={15} /> Clear
                 </button>
               )}
@@ -493,11 +529,10 @@ const SalesCartList = () => {
         </div>
       )}
 
-      {/* ══ SALES CARTS INLINE FILTERS ══ */}
+      {/* SALES CART FILTERS */}
       {activeTab === "salesCarts" && (
         <div className={styles.inlineFiltersContainer}>
           <div className={styles.cartFiltersGrid}>
-            {/* VendorList-style joined search type + value */}
             <div className={styles.searchGroup}>
               <select
                 name="searchType"
@@ -522,7 +557,6 @@ const SalesCartList = () => {
               />
             </div>
 
-            {/* Status */}
             <select
               name="status"
               value={cartFilterInputs.status}
@@ -535,19 +569,12 @@ const SalesCartList = () => {
               <option value="3">Completed</option>
             </select>
 
-            {/* Actions */}
             <div className={styles.inlineFilterActions}>
-              <button
-                onClick={handleCartSearch}
-                className={styles.searchButton}
-              >
+              <button onClick={handleCartSearch} className={styles.searchButton}>
                 <FiSearch size={15} /> Search
               </button>
               {hasCartFilters && (
-                <button
-                  onClick={clearCartFilters}
-                  className={styles.clearButton}
-                >
+                <button onClick={clearCartFilters} className={styles.clearButton}>
                   <FiX size={15} /> Clear
                 </button>
               )}
@@ -556,175 +583,269 @@ const SalesCartList = () => {
         </div>
       )}
 
-      {/* ══ PRESCRIPTION TABLE ══ */}
+      {/* PRESCRIPTIONS TABLE + PAGINATION */}
       {activeTab === "prescriptions" && (
-        <div className={styles.tableContainer}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Doctor</th>
-                <th>Date Issued</th>
-                <th>Valid Until</th>
-                <th>Notes</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPrescriptions.length === 0 ? (
+        <div className={styles.tableSection}>
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
                 <tr>
-                  <td colSpan={7} className={styles.noData}>
-                    No prescriptions found.
-                  </td>
+                  <th>Patient</th>
+                  <th>Doctor</th>
+                  <th>Date Issued</th>
+                  <th>Valid Until</th>
+                  <th>Notes</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
-              ) : (
-                filteredPrescriptions.map((pres) => {
-                  const isCarted = cartedPrescriptionIds.has(pres.id);
-                  return (
-                    <tr key={pres.id}>
-                      <td>
-                        <div className={styles.nameCell}>
-                          <div className={styles.avatar}>
-                            {pres.patientName?.charAt(0).toUpperCase() || "P"}
-                          </div>
-                          <div>
-                            <div className={styles.name}>
-                              {pres.patientName}
+              </thead>
+              <tbody>
+                {prescriptions.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className={styles.noData}>
+                      No prescriptions found.
+                    </td>
+                  </tr>
+                ) : (
+                  prescriptions.map((pres) => {
+                    const isCarted = cartedPrescriptionIds.has(pres.id);
+                    return (
+                      <tr key={pres.id}>
+                        <td>
+                          <div className={styles.nameCell}>
+                            <div className={styles.avatar}>
+                              {pres.patientName?.charAt(0).toUpperCase() || "P"}
+                            </div>
+                            <div>
+                              <div className={styles.name}>
+                                {pres.patientName}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div className={styles.name}>{pres.doctorFullName}</div>
-                        <div className={styles.subText}>
-                          {pres.doctorCode || "—"}
-                        </div>
-                      </td>
+                        </td>
+                        <td>
+                          <div className={styles.name}>{pres.doctorFullName}</div>
+                          <div className={styles.subText}>
+                            {pres.doctorCode || "—"}
+                          </div>
+                        </td>
+                        <td>
+                          <div className={styles.name}>
+                            {formatDate(pres.dateIssued)}
+                          </div>
+                        </td>
+                        <td>
+                          <div className={styles.name}>
+                            {formatDate(pres.validUntil)}
+                          </div>
+                        </td>
+                        <td>
+                          <div className={styles.notesCell}>
+                            {pres.notes && (
+                              <div className={styles.subText}>{pres.notes}</div>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <span
+                            className={`${styles.badge} ${pres.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}
+                          >
+                            {pres.statusDesc}
+                          </span>
+                        </td>
+                        <td>
+                          <div className={styles.actionsCell}>
+                            <button
+                              onClick={() => handleAddToCartClick(pres)}
+                              className={`${styles.addCartBtn} ${isCarted ? styles.addCartBtnDone : ""}`}
+                              disabled={isCarted}
+                            >
+                              {isCarted ? (
+                                <>
+                                  <FiCheckCircle size={15} /> Cart Added
+                                </>
+                              ) : (
+                                <>
+                                  <FiShoppingCart size={15} /> Add to Cart
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className={styles.paginationBar}>
+            <div className={styles.paginationInfo}>
+              {prescriptions.length > 0
+                ? `Showing ${getStartRecord(presPage, prescriptions)}–${getEndRecord(presPage, prescriptions)} records`
+                : 'No records'}
+            </div>
+
+            <div className={styles.paginationControls}>
+              <span className={styles.paginationLabel}>Page</span>
+
+              <button
+                className={styles.pageBtn}
+                onClick={() => handlePresPageChange(1)}
+                disabled={presPage === 1}
+                title="First page"
+              >
+                «
+              </button>
+
+              <button
+                className={styles.pageBtn}
+                onClick={() => handlePresPageChange(presPage - 1)}
+                disabled={presPage === 1}
+                title="Previous page"
+              >
+                ‹
+              </button>
+
+              <span className={styles.pageIndicator}>{presPage}</span>
+
+              <button
+                className={styles.pageBtn}
+                onClick={() => handlePresPageChange(presPage + 1)}
+                disabled={!presHasNext}
+                title="Next page"
+              >
+                ›
+              </button>
+            </div>
+
+            <div className={styles.pageSizeInfo}>
+              Page Size: <strong>{PAGE_SIZE}</strong>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SALES CARTS TABLE + PAGINATION */}
+      {activeTab === "salesCarts" && (
+        <div className={styles.tableSection}>
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Total Items</th>
+                  <th>Total Amount</th>
+                  <th>Status</th>
+                  <th>Created Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salesCarts.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className={styles.noData}>
+                      No sales carts found.
+                    </td>
+                  </tr>
+                ) : (
+                  salesCarts.map((cart) => (
+                    <tr key={cart.id}>
                       <td>
                         <div className={styles.name}>
-                          {formatDate(pres.dateIssued)}
+                          {cart.customerName || "—"}
                         </div>
                       </td>
                       <td>
-                        <div className={styles.name}>
-                          {formatDate(pres.validUntil)}
-                        </div>
+                        <span className={styles.itemCountBadge}>
+                          {cart.totalItems ?? 0} items
+                        </span>
                       </td>
                       <td>
-                        <div className={styles.notesCell}>
-                          {pres.notes && (
-                            <div className={styles.subText}>{pres.notes}</div>
-                          )}
-                        </div>
+                        <span className={styles.amountBadge}>
+                          {formatCurrency(cart.totalAmount)}
+                        </span>
                       </td>
                       <td>
                         <span
-                          className={`${styles.badge} ${pres.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}
+                          className={`${styles.badge} ${cart.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}
                         >
-                          {pres.statusDesc}
+                          {cart.statusDesc || "Active"}
                         </span>
+                      </td>
+                      <td>
+                        <div className={styles.name}>
+                          {formatDate(cart.dateCreated)}
+                        </div>
                       </td>
                       <td>
                         <div className={styles.actionsCell}>
                           <button
-                            onClick={() => handleAddToCartClick(pres)}
-                            className={`${styles.addCartBtn} ${isCarted ? styles.addCartBtnDone : ""}`}
-                            disabled={isCarted}
+                            onClick={() =>
+                              navigate(`/salescartdetail-list/${cart.id}`)
+                            }
+                            className={styles.viewBtn}
                           >
-                            {isCarted ? (
-                              <>
-                                <FiCheckCircle size={15} /> Cart Added
-                              </>
-                            ) : (
-                              <>
-                                <FiShoppingCart size={15} /> Add to Cart
-                              </>
-                            )}
+                            View Cart
                           </button>
                         </div>
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className={styles.paginationBar}>
+            <div className={styles.paginationInfo}>
+              {salesCarts.length > 0
+                ? `Showing ${getStartRecord(cartPage, salesCarts)}–${getEndRecord(cartPage, salesCarts)} records`
+                : 'No records'}
+            </div>
+
+            <div className={styles.paginationControls}>
+              <span className={styles.paginationLabel}>Page</span>
+
+              <button
+                className={styles.pageBtn}
+                onClick={() => handleCartPageChange(1)}
+                disabled={cartPage === 1}
+                title="First page"
+              >
+                «
+              </button>
+
+              <button
+                className={styles.pageBtn}
+                onClick={() => handleCartPageChange(cartPage - 1)}
+                disabled={cartPage === 1}
+                title="Previous page"
+              >
+                ‹
+              </button>
+
+              <span className={styles.pageIndicator}>{cartPage}</span>
+
+              <button
+                className={styles.pageBtn}
+                onClick={() => handleCartPageChange(cartPage + 1)}
+                disabled={!cartHasNext}
+                title="Next page"
+              >
+                ›
+              </button>
+            </div>
+
+            <div className={styles.pageSizeInfo}>
+              Page Size: <strong>{PAGE_SIZE}</strong>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* ══ SALES CART TABLE ══ */}
-      {activeTab === "salesCarts" && (
-        <div className={styles.tableContainer}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Total Items</th>
-                <th>Total Amount</th>
-                <th>Status</th>
-                <th>Created Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredSalesCarts.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className={styles.noData}>
-                    No sales carts found.
-                  </td>
-                </tr>
-              ) : (
-                filteredSalesCarts.map((cart) => (
-                  <tr key={cart.id}>
-                    <td>
-                      <div className={styles.name}>
-                        {cart.customerName || "—"}
-                      </div>
-                    </td>
-                    <td>
-                      <span className={styles.itemCountBadge}>
-                        {cart.totalItems ?? 0} items
-                      </span>
-                    </td>
-                    <td>
-                      <span className={styles.amountBadge}>
-                        {formatCurrency(cart.totalAmount)}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={`${styles.badge} ${cart.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}
-                      >
-                        {cart.statusDesc || "Active"}
-                      </span>
-                    </td>
-                    <td>
-                      <div className={styles.name}>
-                        {formatDate(cart.dateCreated)}
-                      </div>
-                    </td>
-                    <td>
-                      <div className={styles.actionsCell}>
-                        <button
-                          onClick={() =>
-                            navigate(`/salescartdetail-list/${cart.id}`)
-                          }
-                          className={styles.viewBtn}
-                        >
-                          View Cart
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* ══ CONFIRM MODAL ══ */}
+      {/* CONFIRM MODAL */}
       {confirm.isOpen && (
         <div
           className={styles.modalOverlay}
@@ -735,10 +856,10 @@ const SalesCartList = () => {
               <div className={styles.modalHeaderContent}>
                 <div className={styles.modalHeaderIcon}>
                   <FiShoppingCart size={20} />
-                  </div>
-                  <h2>Add to Sales Cart</h2>
                 </div>
-              
+                <h2>Add to Sales Cart</h2>
+              </div>
+
               <div className={styles.clinicNameone}>
                 <FaClinicMedical
                   size={20}
@@ -753,6 +874,7 @@ const SalesCartList = () => {
                 </button>
               )}
             </div>
+
             <div className={styles.modalBody}>
               {confirm.success && (
                 <div className={styles.successState}>
@@ -830,6 +952,7 @@ const SalesCartList = () => {
                         </div>
                       )}
                     </div>
+
                     {confirm.details.length > 0 && (
                       <div className={styles.medicineSection}>
                         <h4 className={styles.medicineSectionTitle}>
@@ -907,6 +1030,7 @@ const SalesCartList = () => {
                   </>
                 )}
             </div>
+
             {!confirm.success && (
               <div className={styles.modalFooter}>
                 <button
@@ -932,6 +1056,7 @@ const SalesCartList = () => {
                 </button>
               </div>
             )}
+
             {confirm.success && (
               <div className={styles.modalFooter}>
                 <button onClick={closeConfirm} className={styles.btnConfirm}>

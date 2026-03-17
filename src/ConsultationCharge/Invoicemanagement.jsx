@@ -97,6 +97,10 @@ const InvoiceList = () => {
 
   const today = getTodayStr();
 
+  // ── Pagination ──
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
   const [filterInputs, setFilterInputs] = useState({
     searchType: 'InvoiceNo',
     searchValue: '',
@@ -143,7 +147,7 @@ const InvoiceList = () => {
     appliedFilters.dateFrom !== today ||
     appliedFilters.dateTo !== today;
 
-  const fetchInvoices = async (filters = appliedFilters) => {
+  const fetchInvoices = async (filters = appliedFilters, currentPage = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -151,8 +155,8 @@ const InvoiceList = () => {
       const branchId = await getStoredBranchId();
 
       const options = {
-        Page: 1,
-        PageSize: 100,
+        Page: currentPage,
+        PageSize: pageSize,
         BranchID: branchId,
         FromDate: filters.dateFrom || today,
         ToDate: filters.dateTo || today,
@@ -172,7 +176,7 @@ const InvoiceList = () => {
   };
 
   useEffect(() => {
-    fetchInvoices(appliedFilters);
+    fetchInvoices(appliedFilters, page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedFilters]);
 
@@ -209,6 +213,16 @@ const InvoiceList = () => {
     return { total, paid, pending, cancelled, count: filteredInvoices.length };
   }, [filteredInvoices]);
 
+  // ── Pagination helpers ──
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+    fetchInvoices(appliedFilters, newPage);
+  };
+
+  const startRecord = filteredInvoices.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = (page - 1) * pageSize + filteredInvoices.length;
+
   const calculateBalanceAmount = (netAmount, paidAmount) => {
     const net = Number(netAmount) || 0;
     const paid = Number(paidAmount) || 0;
@@ -221,6 +235,7 @@ const InvoiceList = () => {
   };
 
   const handleSearch = () => {
+    setPage(1);
     setAppliedFilters({ ...filterInputs });
   };
 
@@ -234,6 +249,7 @@ const InvoiceList = () => {
       dateFrom: today,
       dateTo: today,
     };
+    setPage(1);
     setFilterInputs(defaults);
     setAppliedFilters(defaults);
   };
@@ -366,11 +382,10 @@ const InvoiceList = () => {
         <div className={styles.formSuccess}>{formSuccess}</div>
       )}
 
-      {/* ── Filter Bar ── same style as VendorList ── */}
+      {/* ── Filter Bar ── */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
 
-          {/* Search type + value (like VendorList) */}
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -397,7 +412,6 @@ const InvoiceList = () => {
             />
           </div>
 
-          {/* Invoice Type */}
           <div className={styles.filterGroup}>
             <select
               name="invoiceType"
@@ -412,7 +426,6 @@ const InvoiceList = () => {
             </select>
           </div>
 
-          {/* Status */}
           <div className={styles.filterGroup}>
             <select
               name="status"
@@ -427,7 +440,6 @@ const InvoiceList = () => {
             </select>
           </div>
 
-          {/* From Date */}
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
               {!filterInputs.dateFrom && (
@@ -444,7 +456,6 @@ const InvoiceList = () => {
             </div>
           </div>
 
-          {/* To Date */}
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
               {!filterInputs.dateTo && (
@@ -461,7 +472,6 @@ const InvoiceList = () => {
             </div>
           </div>
 
-          {/* Actions */}
           <div className={styles.filterActions}>
             <button onClick={handleSearch} className={styles.searchButton}>
               <FiSearch size={16} />
@@ -479,110 +489,149 @@ const InvoiceList = () => {
         </div>
       </div>
 
-      {/* Statistics - smaller total amount card */}
-      <div className={styles.invoiceStatsGrid}>
-        <div className={`${styles.invoiceStatCard} ${styles.statTotal} ${styles.smallStat}`}>
-          <div className={styles.statIconWrapper}><FiDollarSign size={20} /></div>
-          <div className={styles.statContent}>
-            <div className={styles.statLabel}>Total Amount</div>
-            <div className={styles.statValueSmall}>{formatCurrency(statistics.total)}</div>
+      {/* ── Table + Pagination wrapper ── */}
+      <div className={styles.tableSection}>
+
+        <div className={styles.invoiceTableContainer}>
+          <table className={styles.invoiceTable}>
+            <thead>
+              <tr>
+                <th>Invoice No</th>
+                <th>Patient</th>
+                <th>Invoice Date</th>
+                <th>Net Amount</th>
+                <th>Paid Amount</th>
+                <th>Balance Amount</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredInvoices.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className={styles.invoiceNoData}>
+                    {hasActiveFilters ? 'No invoices found.' : 'No invoices for today.'}
+                  </td>
+                </tr>
+              ) : (
+                filteredInvoices.map((invoice) => {
+                  const balanceAmount = calculateBalanceAmount(invoice.netAmount, invoice.paidAmount);
+                  return (
+                    <tr key={invoice.id}>
+                      <td><div className={styles.invoiceNoBadge}>{invoice.invoiceNo}</div></td>
+                      <td>
+                        <div className={styles.patientCell}>
+                          <FiUser size={16} className={styles.patientIcon} />
+                          <div>
+                            <div className={styles.patientName}>{invoice.patientName}</div>
+                            <div className={styles.patientInfo}>{invoice.patientFileNo}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td><span className={styles.dateText}>{formatDate(invoice.invoiceDate)}</span></td>
+                      <td><span className={`${styles.amountText} ${styles.total}`}>{formatCurrency(invoice.netAmount)}</span></td>
+                      <td><span className={styles.discountText}>{formatCurrency(invoice.paidAmount)}</span></td>
+                      <td><span className={styles.amountText}>{formatCurrency(balanceAmount)}</span></td>
+                      <td><span className={getStatusBadgeClass(invoice.status)}>{getStatusLabel(invoice.status)}</span></td>
+                      <td>
+                        <div className={styles.invoiceActionsCell}>
+                          <button
+                            onClick={() => openViewModal(invoice)}
+                            className={styles.invoiceViewBtn}
+                            title="View Details"
+                          >
+                            Details
+                          </button>
+                          <div className={styles.invoiceActionsDropdown}>
+                            {invoice.status !== 5 && (
+                              <button
+                                onClick={(e) => toggleDropdown(invoice.id, e)}
+                                className={styles.invoiceActionsBtn}
+                                title="Actions"
+                              >
+                                <FiMoreVertical size={18} />
+                              </button>
+                            )}
+                            {activeDropdown === invoice.id && (
+                              <div className={styles.invoiceDropdownMenu}>
+                                {invoice.status !== 3 && invoice.status !== 5 && (
+                                  <button
+                                    onClick={() => openPaymentModal(invoice)}
+                                    className={`${styles.invoiceDropdownItem} ${styles.payment}`}
+                                  >
+                                    <FiDollarSign size={16} />
+                                    Add Payment
+                                  </button>
+                                )}
+                                {invoice.status !== 5 && (
+                                  <button
+                                    onClick={() => handleCancelInvoice(invoice)}
+                                    className={`${styles.invoiceDropdownItem} ${styles.cancel}`}
+                                  >
+                                    <FiX size={16} />
+                                    Cancel Invoice
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Pagination Bar — pinned to bottom of tableSection ── */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {filteredInvoices.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={filteredInvoices.length < pageSize}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Total: <strong>{formatCurrency(statistics.total)}</strong>
           </div>
         </div>
-      </div>
 
-      {/* Table */}
-      <div className={styles.invoiceTableContainer}>
-        <table className={styles.invoiceTable}>
-          <thead>
-            <tr>
-              <th>Invoice No</th>
-              <th>Patient</th>
-              <th>Invoice Date</th>
-              <th>Net Amount</th>
-              <th>Paid Amount</th>
-              <th>Balance Amount</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredInvoices.length === 0 ? (
-              <tr>
-                <td colSpan={8} className={styles.invoiceNoData}>
-                  {hasActiveFilters ? 'No invoices found.' : 'No invoices for today.'}
-                </td>
-              </tr>
-            ) : (
-              filteredInvoices.map((invoice) => {
-                const balanceAmount = calculateBalanceAmount(invoice.netAmount, invoice.paidAmount);
-                return (
-                  <tr key={invoice.id}>
-                    <td><div className={styles.invoiceNoBadge}>{invoice.invoiceNo}</div></td>
-                    <td>
-                      <div className={styles.patientCell}>
-                        <FiUser size={16} className={styles.patientIcon} />
-                        <div>
-                          <div className={styles.patientName}>{invoice.patientName}</div>
-                          <div className={styles.patientInfo}>{invoice.patientFileNo}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td><span className={styles.dateText}>{formatDate(invoice.invoiceDate)}</span></td>
-                    <td><span className={`${styles.amountText} ${styles.total}`}>{formatCurrency(invoice.netAmount)}</span></td>
-                    <td><span className={styles.discountText}>{formatCurrency(invoice.paidAmount)}</span></td>
-                    <td><span className={styles.amountText}>{formatCurrency(balanceAmount)}</span></td>
-                    <td><span className={getStatusBadgeClass(invoice.status)}>{getStatusLabel(invoice.status)}</span></td>
-                    <td>
-                      <div className={styles.invoiceActionsCell}>
-                        <button
-                          onClick={() => openViewModal(invoice)}
-                          className={styles.invoiceViewBtn}
-                          title="View Details"
-                        >
-                          Details
-                        </button>
-                        <div className={styles.invoiceActionsDropdown}>
-                          {invoice.status !== 5 && (
-                            <button
-                              onClick={(e) => toggleDropdown(invoice.id, e)}
-                              className={styles.invoiceActionsBtn}
-                              title="Actions"
-                            >
-                              <FiMoreVertical size={18} />
-                            </button>
-                          )}
-                          {activeDropdown === invoice.id && (
-                            <div className={styles.invoiceDropdownMenu}>
-                              {invoice.status !== 3 && invoice.status !== 5 && (
-                                <button
-                                  onClick={() => openPaymentModal(invoice)}
-                                  className={`${styles.invoiceDropdownItem} ${styles.payment}`}
-                                >
-                                  <FiDollarSign size={16} />
-                                  Add Payment
-                                </button>
-                              )}
-                              {invoice.status !== 5 && (
-                                <button
-                                  onClick={() => handleCancelInvoice(invoice)}
-                                  className={`${styles.invoiceDropdownItem} ${styles.cancel}`}
-                                >
-                                  <FiX size={16} />
-                                  Cancel Invoice
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+      </div>{/* end tableSection */}
 
       {/* View Invoice Modal */}
       <ViewInvoice
@@ -606,21 +655,21 @@ const InvoiceList = () => {
                 <div className={styles.invoiceHeader}>
                   <div className={styles.detailsGrid}>
                     <div className={styles.detailItem}>
-                                    <label>Invoice:</label>
-                                    <span>{selectedInvoice?.invoiceNo}</span>
-                                  </div>
+                      <label>Invoice:</label>
+                      <span>{selectedInvoice?.invoiceNo}</span>
+                    </div>
                     <div className={styles.detailItem}>
-                                    <label>Patinet:</label>
-                                    <span>{selectedInvoice?.patientName}</span>
-                                  </div>
+                      <label>Patient:</label>
+                      <span>{selectedInvoice?.patientName}</span>
+                    </div>
                     <div className={styles.detailItem}>
-                                    <label>Total:</label>
-                                    <span>{formatCurrency(selectedInvoice?.netAmount)}</span>
-                                  </div>
+                      <label>Total:</label>
+                      <span>{formatCurrency(selectedInvoice?.netAmount)}</span>
+                    </div>
                     <div className={styles.detailItem}>
-                                    <label>Balance:</label>
-                                    <span>{formatCurrency(calculateBalanceAmount(selectedInvoice?.netAmount, selectedInvoice?.paidAmount))}</span>
-                                  </div>
+                      <label>Balance:</label>
+                      <span>{formatCurrency(calculateBalanceAmount(selectedInvoice?.netAmount, selectedInvoice?.paidAmount))}</span>
+                    </div>
                   </div>
                 </div>
                 <div className={styles.formGrid}>

@@ -39,6 +39,11 @@
   min-height: 100vh;
   color: var(--text-dark);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* ==================== STATISTICS CARDS ==================== */
@@ -115,6 +120,7 @@
   margin-bottom: 20px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
+  flex-shrink: 0;
 }
 
 .filtersGrid {
@@ -262,16 +268,23 @@
   box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
 }
 
-/* ==================== TABLE ==================== */
+/* ==================== TABLE SECTION ==================== */
+.tableSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== TABLE CONTAINER ==================== */
 .tableContainer {
   background: white;
   border-radius: 17px;
-  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
   border: 1px solid rgba(34, 43, 108, 0.1);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 .table {
@@ -290,14 +303,12 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   border: none;
-  position: sticky;   /* ← new */
-  top: 0;             /* ← new */
-  z-index: 2; 
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .table td {
-  height: -100px;
-  line-height: 1.2;
   padding: 4px 8px;
   border-bottom: 1px solid #e2e8f0;
   color: var(--text-dark);
@@ -426,85 +437,36 @@
   border-color: rgba(107, 114, 128, 0.3);
 }
 
-/* ==================== ACTION BUTTONS — UNCHANGED ==================== */
+/* ==================== ACTION BUTTONS ==================== */
 .actionsCell {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
 }
 
-
-
-.editBtn {
-  padding: 7px 15px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 9px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.detailsBtn {
+.detailsBtn,
+.stockBtn {
+  position: relative;
+  overflow: hidden;
   background: linear-gradient(135deg, #016183, var(--primary-end));
   color: var(--text-light);
   border: none;
-  padding: 7px 15px;
-  font-size: 0.75rem;
   font-weight: 600;
-  border-radius: 9px;
   cursor: pointer;
   transition: all 0.3s ease;
-  white-space: nowrap;
   box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
-  position: relative;
-  overflow: hidden;
   z-index: 1;
-}
-
-.detailsBtn::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background: rgba(48, 178, 181, 0.35);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.6s ease, height 0.6s ease;
-  z-index: -1;
-  pointer-events: none;
-}
-
-.detailsBtn:hover::before { width: 170px; height: 170px; }
-
-.detailsBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);  /* ← added same hover as addBtn */
+  padding: 7px 15px;
+  font-size: 0.75rem;
+  border-radius: 9px;
+  white-space: nowrap;
 }
 
 .stockBtn {
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
-  border: none;
-  padding: 7px 15px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border-radius: 9px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);  /* ← stronger shadow like addBtn */
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
 }
 
+.detailsBtn::before,
 .stockBtn::before {
   content: '';
   position: absolute;
@@ -520,24 +482,114 @@
   pointer-events: none;
 }
 
-.stockBtn:hover::before { width: 170px; height: 170px; }
+.detailsBtn:hover::before,
+.stockBtn:hover::before {
+  width: 170px;
+  height: 170px;
+}
 
+.detailsBtn:hover,
 .stockBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);  /* ← same hover effect as addBtn */
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
 }
 
-
-
-.editBtn {
-  background: rgba(100, 116, 139, 0.1);
-  color: #475569;
-  border: 1px solid rgba(100, 116, 139, 0.3);
+.detailsBtn:active,
+.stockBtn:active {
+  transform: translateY(-1px);
 }
 
-.editBtn:hover {
-  background: rgba(100, 116, 139, 0.2);
-  transform: translateY(-2px);
+/* ==================== PAGINATION BAR ==================== */
+.paginationBar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 14px;
+  padding: 10px 20px;
+  margin-top: 14px;
+  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  gap: 16px;
+}
+
+.paginationInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.paginationLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.pageBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: var(--primary-start);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-color: var(--accent-end);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.3);
+}
+
+.pageBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pageIndicator {
+  min-width: 36px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0 8px;
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
+}
+
+.pageSizeInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pageSizeInfo strong {
+  color: var(--primary-start);
+  font-weight: 700;
 }
 
 /* ==================== UTILITY STATES ==================== */
@@ -622,14 +674,30 @@
 :global(.dark-mode) .name    { color: #e2e8f0; }
 :global(.dark-mode) .type    { color: #94a3b8; }
 
-:global(.dark-mode) .editBtn {
-  background: rgba(100, 116, 139, 0.2);
-  color: #cbd5e1;
-  border-color: rgba(100, 116, 139, 0.4);
+:global(.dark-mode) .paginationBar {
+  background: #1e293b;
+  border-color: #475569;
 }
 
-:global(.dark-mode) .editBtn:hover {
-  background: rgba(100, 116, 139, 0.3);
+:global(.dark-mode) .paginationInfo,
+:global(.dark-mode) .pageSizeInfo {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .paginationLabel {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .pageBtn {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-color: var(--accent-end);
+  color: white;
 }
 
 /* ==================== RESPONSIVE ==================== */
@@ -638,7 +706,6 @@
     grid-template-columns: 2fr 1fr 1fr auto;
   }
 
-  /* Move lowStock into second row */
   .filterGroup:nth-child(4) {
     grid-column: 1 / -1;
   }
@@ -700,13 +767,22 @@
   }
 
   .stockBtn,
-  .detailsBtn,
-  .editBtn {
+  .detailsBtn {
     width: 100%;
   }
 
   .statsGrid {
     grid-template-columns: 1fr;
+  }
+
+  .paginationBar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .paginationControls {
+    align-self: center;
   }
 }
 

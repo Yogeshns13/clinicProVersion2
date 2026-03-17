@@ -1,5 +1,6 @@
 /* LabTestMaster.module.css */
 
+/* ==================== ROOT VARIABLES ==================== */
 :root {
   --primary-start: #222b6c;
   --primary-end: #225ca0;
@@ -22,14 +23,20 @@
   to   { opacity: 1; }
 }
 
+/* ==================== MAIN WRAPPER ==================== */
 .wrapper {
   padding: 20px;
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   color: var(--text-dark);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-sizing: border-box;
 }
 
+/* ==================== HEADER ==================== */
 .header {
   margin-bottom: 10px;
   text-align: left;
@@ -50,7 +57,7 @@
   letter-spacing: -0.35px;
 }
 
-/* ==================== TAB NAVIGATION ==================== */
+/* ==================== TABS ==================== */
 .tabs {
   display: flex;
   gap: 12px;
@@ -59,6 +66,7 @@
   padding: 8px;
   border-radius: 14px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  flex-shrink: 0;
 }
 
 .tab {
@@ -91,9 +99,7 @@
 
 .tab svg { flex-shrink: 0; }
 
-/* ======================================================
-   FILTER BAR
-====================================================== */
+/* ==================== FILTERS ==================== */
 .filtersContainer {
   background: white;
   border-radius: 17px;
@@ -104,9 +110,9 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
 }
 
-/* Master: [searchGroup 2fr] [testType 1fr] [status 1fr] [dateFrom 1fr] [dateTo 1fr] [actions auto] */
 .masterFiltersGrid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
@@ -114,7 +120,6 @@
   align-items: center;
 }
 
-/* Packages: [searchGroup 2fr] [status 1fr] [dateFrom 1fr] [dateTo 1fr] [actions auto] */
 .packageFiltersGrid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr auto;
@@ -122,12 +127,6 @@
   align-items: center;
 }
 
-.filterGroup {
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── Fused search type + value (VendorList pattern) ── */
 .searchGroup {
   display: flex;
   align-items: stretch;
@@ -146,9 +145,6 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
 }
 
 .searchTypeSelect:focus {
@@ -178,7 +174,11 @@
   border-left: 1px solid var(--accent-end);
 }
 
-/* ── Inputs & selects ── */
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+}
+
 .filterInput {
   width: 100%;
   height: 40px;
@@ -189,13 +189,7 @@
   color: var(--text-dark);
   font-size: 0.85rem;
   transition: border-color 0.25s, box-shadow 0.25s;
-  box-sizing: border-box;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
 }
-
-.filterInput::placeholder { color: #94a3b8; }
 
 .filterInput:focus {
   outline: none;
@@ -203,7 +197,6 @@
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
 }
 
-/* ── Date overlay placeholder (VendorList pattern) ── */
 .dateWrapper {
   position: relative;
   width: 100%;
@@ -212,13 +205,8 @@
 .dateWrapper .filterInput {
   width: 100%;
   color: var(--text-dark);
-  /* Restore date picker appearance */
-  appearance: auto;
-  -webkit-appearance: auto;
-  -moz-appearance: auto;
 }
 
-/* When no date selected — hide browser's date format hint */
 .dateEmpty::-webkit-datetime-edit-text,
 .dateEmpty::-webkit-datetime-edit-month-field,
 .dateEmpty::-webkit-datetime-edit-day-field,
@@ -226,7 +214,6 @@
   color: transparent;
 }
 
-/* Custom placeholder shown on top of the empty date input */
 .datePlaceholder {
   position: absolute;
   left: 12px;
@@ -238,29 +225,33 @@
   z-index: 1;
 }
 
-/* ── Actions: Search + Clear + Add ── */
 .filterActions {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
-.searchButton {
+.searchButton,
+.clearButton,
+.addBtn {
   display: flex;
   align-items: center;
   gap: 6px;
   height: 40px;
   padding: 0 18px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
   font-weight: 600;
   font-size: 0.85rem;
   border: none;
   border-radius: 10px;
   cursor: pointer;
+  transition: all 0.3s ease;
   white-space: nowrap;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.28);
-  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.searchButton {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
 }
 
 .searchButton:hover {
@@ -268,23 +259,9 @@
   box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
 }
 
-.searchButton:active { transform: translateY(0); }
-
 .clearButton {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 40px;
-  padding: 0 14px;
   background: #e2e8f0;
   color: #475569;
-  font-weight: 600;
-  font-size: 0.85rem;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.25s, transform 0.25s;
 }
 
 .clearButton:hover {
@@ -292,25 +269,10 @@
   transform: translateY(-2px);
 }
 
-.clearButton:active { transform: translateY(0); }
-
-/* Add button inside filter actions */
 .addBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 40px;
-  padding: 0 16px;
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: var(--text-light);
-  font-weight: 700;
-  font-size: 0.85rem;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.28);
-  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
 }
 
 .addBtn:hover {
@@ -318,14 +280,21 @@
   box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
 }
 
-.addBtn:active { transform: translateY(0); }
+/* ==================== TABLE SECTION (new) ==================== */
+.tableSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 
-/* ==================== TABLE ==================== */
+/* ==================== TABLE CONTAINER ==================== */
 .tableContainer {
   background: white;
   border-radius: 17px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  max-height: calc(100vh - 220px);
   box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
   border: 1px solid rgba(34, 43, 108, 0.1);
 }
@@ -346,8 +315,8 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   border: none;
-  position: sticky;   /* ← new */
-  top: 0;             /* ← new */
+  position: sticky;
+  top: 0;
   z-index: 2;
 }
 
@@ -491,6 +460,99 @@
 
 .error { color: #ef4444; }
 
+/* ==================== PAGINATION BAR ==================== */
+.paginationBar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 14px;
+  padding: 10px 20px;
+  margin-top: 14px;
+  box-shadow: 0 4px 14px rgba(34,43,108,0.08);
+  border: 1px solid rgba(34,43,108,0.1);
+  gap: 16px;
+}
+
+.paginationInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.paginationLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.pageBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: var(--primary-start);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-color: var(--accent-end);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(32,125,156,0.3);
+}
+
+.pageBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pageIndicator {
+  min-width: 36px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0 8px;
+  box-shadow: 0 3px 8px rgba(32,125,156,0.25);
+}
+
+.pageSizeInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pageSizeInfo strong {
+  color: var(--primary-start);
+  font-weight: 700;
+}
+
 /* ==================== MODAL STYLES ==================== */
 .modalOverlay {
   position: fixed;
@@ -524,36 +586,32 @@
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
   display: flex;
-  flex: 1;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255,255,255,0.18);
-  gap: 20px;;
+  gap: 20px;
 }
 
 .modalHeader h2 {
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  display: flex;
-  flex: 1;
 }
 
 .clinicNameone {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.05rem;           
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-light);
   line-height: 1.2;
-  white-space: nowrap;          
-  text-overflow: ellipsis;      
-  max-width: 220px;             
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
 
 .modalClose {
- background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.22);
   border: none;
   color: white;
   width: 42px;
@@ -590,20 +648,6 @@
   display: flex;
   align-items: center;
   gap: 15px;
-}
-
-
-.clinicNameone {
-  display: flex;
-  align-items: center;
-  font-size: 1.05rem;           /* a bit smaller than patient name */
-  font-weight: 600;
-  color: var(--text-light);
-  line-height: 1.2;
-  white-space: nowrap;          /* ← prevents wrapping to next line */
-  overflow: hidden;
-  text-overflow: ellipsis;      /* cuts off very long names nicely */
-  max-width: 220px;             /* adjust depending on your design */
 }
 
 /* ==================== TEST SELECTION MODAL ==================== */
@@ -697,8 +741,6 @@
 }
 
 .formGroup.fullWidth { grid-column: 1 / -1; }
-
-.fullWidth { grid-column: 1 / -1; }
 
 .formGroup label {
   display: block;
@@ -833,20 +875,9 @@
   z-index: -1;
 }
 
-.btnCancel::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
-  background-size: 200% 100%;
-  background-position: -100% 0;
-  transition: background-position 0.5s ease;
-  z-index: -1;
-}
-
 .btnCancel:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45); }
 .btnCancel:hover::before { opacity: 1; }
-.btnCancel:hover::after { background-position: 200% 0; }
+.btnCancel:active { transform: translateY(-1px); }
 
 .btnIcon { margin-right: 6px; }
 
@@ -1021,6 +1052,17 @@
   .modalFooter { padding-left: 20px; padding-right: 20px; }
 
   .modalFooter { flex-direction: column; gap: 14px; }
+
+  .paginationBar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  .paginationControls {
+    align-self: center;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1034,4 +1076,20 @@
 
   .btnSubmit,
   .btnCancel { width: 100%; }
+
+  .paginationInfo,
+  .pageSizeInfo {
+    font-size: 0.75rem;
+  }
+
+  .pageBtn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.95rem;
+  }
+
+  .pageIndicator {
+    min-width: 32px;
+    font-size: 0.78rem;
+  }
 }

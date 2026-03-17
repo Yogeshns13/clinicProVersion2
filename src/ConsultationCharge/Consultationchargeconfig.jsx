@@ -14,6 +14,8 @@ import styles from './ConsultationChargeConfig.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
+const PAGE_SIZE = 20;
+
 const codeRegex = /^[A-Za-z0-9\-_]+$/;
 
 const getLiveValidationMessage = (fieldName, value) => {
@@ -90,11 +92,10 @@ const filterInput = (fieldName, value) => {
   }
 };
 
-// Helper: map status string from API → numeric value for the dropdown
 const toStatusNumber = (status) => {
   if (status === 1 || status === 2) return status;
   if (typeof status === 'string' && status.toLowerCase() === 'active') return 1;
-  return 2; // anything else → Deleted
+  return 2;
 };
 
 const ConsultationChargeConfig = () => {
@@ -102,13 +103,15 @@ const ConsultationChargeConfig = () => {
   const [allChargeConfigs, setAllChargeConfigs] = useState([]);
   const [clinics, setClinics] = useState([]);
 
-  // Filter inputs (not applied until Search is clicked)
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+
   const [filterInputs, setFilterInputs] = useState({
     searchType: 'chargeName',
     searchValue: '',
   });
 
-  // Applied filters
   const [appliedFilters, setAppliedFilters] = useState({
     searchType: 'chargeName',
     searchValue: '',
@@ -117,10 +120,8 @@ const ConsultationChargeConfig = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // View Details Modal
   const [selectedConfig, setSelectedConfig] = useState(null);
 
-  // Add / Edit Form Modal
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingConfig, setEditingConfig] = useState(null);
@@ -136,20 +137,24 @@ const ConsultationChargeConfig = () => {
     gstNo: '',
     cgstPercentage: '',
     sgstPercentage: '',
-    status: 1   // ← NEW: default Active
+    status: 1
   });
 
   const [validationMessages, setValidationMessages] = useState({});
 
-  // ── Data fetching ──
-  const fetchChargeConfigs = async () => {
+  const fetchChargeConfigs = async (pageNum = page) => {
     try {
       setLoading(true);
       setError(null);
       const clinicId = await getStoredClinicId();
-      const data = await getConsultingChargeConfigList(clinicId, { PageSize: 100 });
+      const options = {
+        Page: pageNum,
+        PageSize: PAGE_SIZE
+      };
+      const data = await getConsultingChargeConfigList(clinicId, options);
       setChargeConfigs(data);
       setAllChargeConfigs(data);
+      setHasNext(data.length === PAGE_SIZE);
     } catch (err) {
       setError(err?.status >= 400 || err?.code >= 400 ? err : {
         message: err.message || 'Failed to load charge configurations'
@@ -170,51 +175,54 @@ const ConsultationChargeConfig = () => {
   };
 
   useEffect(() => {
-    fetchChargeConfigs();
+    fetchChargeConfigs(1);
+    setPage(1);
     fetchClinics();
-  }, []);
+  }, [appliedFilters]);
 
-  // ── Filtered list ──
   const filteredConfigs = useMemo(() => {
-    if (!appliedFilters.searchValue.trim()) return allChargeConfigs;
+    if (!appliedFilters.searchValue.trim()) return chargeConfigs;
     const term = appliedFilters.searchValue.toLowerCase();
     switch (appliedFilters.searchType) {
       case 'chargeName':
-        return allChargeConfigs.filter(c => c.chargeName?.toLowerCase().includes(term));
+        return chargeConfigs.filter(c => c.chargeName?.toLowerCase().includes(term));
       case 'chargeCode':
-        return allChargeConfigs.filter(c => c.chargeCode?.toLowerCase().includes(term));
+        return chargeConfigs.filter(c => c.chargeCode?.toLowerCase().includes(term));
       default:
-        return allChargeConfigs.filter(c =>
+        return chargeConfigs.filter(c =>
           c.chargeName?.toLowerCase().includes(term) ||
           c.chargeCode?.toLowerCase().includes(term)
         );
     }
-  }, [allChargeConfigs, appliedFilters]);
+  }, [chargeConfigs, appliedFilters]);
 
-  // ── Filter handlers ──
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = () => setAppliedFilters({ ...filterInputs });
+  const handleSearch = () => {
+    setAppliedFilters({ ...filterInputs });
+    setPage(1);
+  };
 
   const handleClearFilters = () => {
     const empty = { searchType: 'chargeName', searchValue: '' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
+    setPage(1);
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') handleSearch();
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+    fetchChargeConfigs(newPage);
   };
 
-  // ── View Details Modal handlers ──
   const openDetails = (config) => setSelectedConfig(config);
   const closeDetails = () => setSelectedConfig(null);
 
-  // ── Add Form ──
-  const openAddForm = async() => {
+  const openAddForm = async () => {
     setIsEditMode(false);
     setEditingConfig(null);
     const clinicId = await getStoredClinicId();
@@ -235,9 +243,7 @@ const ConsultationChargeConfig = () => {
     setIsFormOpen(true);
   };
 
-  // ── Edit Form — opened from View Details popup ──
   const openEditForm = (config) => {
-    // Close the view details modal first
     setSelectedConfig(null);
     setIsEditMode(true);
     setEditingConfig(config);
@@ -246,10 +252,10 @@ const ConsultationChargeConfig = () => {
       chargeCode: config.chargeCode,
       chargeName: config.chargeName,
       defaultAmount: config.defaultAmount || '',
-      gstNo: '',                          // ← NOT used in edit
+      gstNo: '',
       cgstPercentage: config.cgstPercentage || '',
       sgstPercentage: config.sgstPercentage || '',
-      status: toStatusNumber(config.status)  // ← map to 1 / 2
+      status: toStatusNumber(config.status)
     });
     setFormError(null);
     setFormSuccess(null);
@@ -274,12 +280,10 @@ const ConsultationChargeConfig = () => {
     setValidationMessages(prev => ({ ...prev, [name]: validationMessage }));
   };
 
-  // ── Status dropdown change (no text filtering needed) ──
   const handleStatusChange = (e) => {
     setFormData(prev => ({ ...prev, status: Number(e.target.value) }));
   };
 
-  // ── Validate all fields at once and populate messages ──
   const validateAllFields = () => {
     const fieldsToValidate = ['chargeCode', 'chargeName', 'defaultAmount', 'cgstPercentage', 'sgstPercentage'];
     const messages = {};
@@ -290,7 +294,6 @@ const ConsultationChargeConfig = () => {
     return Object.values(messages).every(msg => !msg);
   };
 
-  // ── Submit button disabled state ──
   const hasValidationErrors = Object.values(validationMessages).some(msg => msg && msg !== '');
   const requiredFieldsFilled =
     formData.chargeCode.trim() !== '' &&
@@ -300,8 +303,6 @@ const ConsultationChargeConfig = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Run full validation before submit
     const isValid = validateAllFields();
     if (!isValid) return;
 
@@ -316,7 +317,7 @@ const ConsultationChargeConfig = () => {
         defaultAmount: Number(formData.defaultAmount),
         cgstPercentage: Number(formData.cgstPercentage) || 0,
         sgstPercentage: Number(formData.sgstPercentage) || 0,
-        status: Number(formData.status)   // ← 1 or 2 sent to API
+        status: Number(formData.status)
       };
 
       if (isEditMode) {
@@ -330,7 +331,7 @@ const ConsultationChargeConfig = () => {
 
       setTimeout(() => {
         closeForm();
-        fetchChargeConfigs();
+        fetchChargeConfigs(page);
       }, 1500);
     } catch (err) {
       setFormError(err.message?.split(':')[1]?.trim() || 'Failed to save charge configuration');
@@ -339,14 +340,12 @@ const ConsultationChargeConfig = () => {
     }
   };
 
-  // ── Delete — called from View Details popup ──
   const handleDelete = async (config) => {
     if (!window.confirm(`Are you sure you want to delete "${config.chargeName}"?`)) return;
     try {
-      // Close details modal before deleting
       setSelectedConfig(null);
       await deleteConsultationChargeConfig(config.id);
-      fetchChargeConfigs();
+      fetchChargeConfigs(page);
     } catch (err) {
       setError({ message: err.message || 'Failed to delete' });
     }
@@ -357,7 +356,6 @@ const ConsultationChargeConfig = () => {
     return `₹${Number(amount).toFixed(2)}`;
   };
 
-  // ── Early returns ──
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
@@ -365,6 +363,9 @@ const ConsultationChargeConfig = () => {
   if (loading) return <div className={styles.chargeConfigLoading}>Loading...</div>;
 
   const hasActiveSearch = !!appliedFilters.searchValue.trim();
+
+  const startRecord = chargeConfigs.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const endRecord   = startRecord + chargeConfigs.length - 1;
 
   return (
     <div className={styles.chargeConfigWrapper}>
@@ -375,10 +376,9 @@ const ConsultationChargeConfig = () => {
         <div className={styles.formSuccess}>{formSuccess}</div>
       )}
 
-      {/* ── Filters + Add button bar ── */}
+      {/* Filters + Add button bar */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
-
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -396,7 +396,7 @@ const ConsultationChargeConfig = () => {
               placeholder={`Search by ${filterInputs.searchType === 'chargeCode' ? 'Charge Code' : 'Charge Name'}`}
               value={filterInputs.searchValue}
               onChange={handleFilterChange}
-              onKeyPress={handleKeyPress}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               className={styles.searchInput}
             />
           </div>
@@ -419,104 +419,146 @@ const ConsultationChargeConfig = () => {
               Add Charge Config
             </button>
           </div>
-
         </div>
       </div>
 
-      {/* ── Table ── */}
-      <div className={styles.chargeConfigTableContainer}>
-        <table className={styles.chargeConfigTable}>
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Charge Name</th>
-              <th>Default Amount</th>
-              <th>CGST %</th>
-              <th>SGST %</th>
-              <th>Total with Tax</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredConfigs.length === 0 ? (
+      {/* Table + Pagination */}
+      <div className={styles.tableSection}>
+        <div className={styles.chargeConfigTableContainer}>
+          <table className={styles.chargeConfigTable}>
+            <thead>
               <tr>
-                <td colSpan={8} className={styles.chargeConfigNoData}>
-                  {hasActiveSearch ? 'No configurations found.' : 'No configurations yet.'}
-                </td>
+                <th>Code</th>
+                <th>Charge Name</th>
+                <th>Default Amount</th>
+                <th>CGST %</th>
+                <th>SGST %</th>
+                <th>Total with Tax</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              filteredConfigs.map((config) => (
-                <tr key={config.id}>
-                  <td>
-                    <div className={styles.chargeCodeBadge}>{config.chargeCode}</div>
-                  </td>
-                  <td>
-                    <div className={styles.chargeNameCell}>
-                      <FiDollarSign size={16} className={styles.chargeIcon} />
-                      <span className={styles.chargeName}>{config.chargeName}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={styles.amountText}>{formatCurrency(config.defaultAmount)}</span>
-                  </td>
-                  <td>
-                    <span className={`${styles.taxBadge} ${styles.cgst}`}>
-                      {config.cgstPercentage ? `${config.cgstPercentage}%` : '—'}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`${styles.taxBadge} ${styles.sgst}`}>
-                      {config.sgstPercentage ? `${config.sgstPercentage}%` : '—'}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`${styles.amountText} ${styles.total}`}>
-                      {formatCurrency(config.amountInclusiveTax || config.defaultAmount)}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${styles[config.status]}`}>
-                      {config.status}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => openDetails(config)}
-                      className={styles.chargeConfigDetailsBtn}
-                    >
-                      View Details
-                    </button>
+            </thead>
+            <tbody>
+              {filteredConfigs.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className={styles.chargeConfigNoData}>
+                    {hasActiveSearch ? 'No configurations found.' : 'No configurations yet.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredConfigs.map((config) => (
+                  <tr key={config.id}>
+                    <td>
+                      <div className={styles.chargeCodeBadge}>{config.chargeCode}</div>
+                    </td>
+                    <td>
+                      <div className={styles.chargeNameCell}>
+                        <FiDollarSign size={16} className={styles.chargeIcon} />
+                        <span className={styles.chargeName}>{config.chargeName}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={styles.amountText}>{formatCurrency(config.defaultAmount)}</span>
+                    </td>
+                    <td>
+                      <span className={`${styles.taxBadge} ${styles.cgst}`}>
+                        {config.cgstPercentage ? `${config.cgstPercentage}%` : '—'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`${styles.taxBadge} ${styles.sgst}`}>
+                        {config.sgstPercentage ? `${config.sgstPercentage}%` : '—'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`${styles.amountText} ${styles.total}`}>
+                        {formatCurrency(config.amountInclusiveTax || config.defaultAmount)}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${styles[config.status]}`}>
+                        {config.status}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => openDetails(config)}
+                        className={styles.chargeConfigDetailsBtn}
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Bar */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {chargeConfigs.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={!hasNext}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{PAGE_SIZE}</strong>
+          </div>
+        </div>
       </div>
 
-      {/* ──────────────── View Details Modal ──────────────── */}
+      {/* View Details Modal */}
       {selectedConfig && (
         <div className={styles.detailModalOverlay} onClick={closeDetails}>
           <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
-
-            {/* Gradient Header */}
             <div className={styles.detailModalHeader}>
               <div className={styles.detailHeaderContent}>
                 <h2>{selectedConfig.chargeName}</h2>
               </div>
               <div className={styles.clinicNameone}>
-                 <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-                  {localStorage.getItem('clinicName') || '—'}
-                  </div>
+                <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
+                {localStorage.getItem('clinicName') || '—'}
+              </div>
               <button onClick={closeDetails} className={styles.detailCloseBtn}>✕</button>
             </div>
 
-            {/* Info Cards Grid */}
             <div className={styles.detailModalBody}>
               <div className={styles.infoSection}>
-
-                {/* Charge Information */}
                 <div className={styles.infoCard}>
                   <div className={styles.infoHeader}>
                     <h3>Charge Information</h3>
@@ -545,7 +587,6 @@ const ConsultationChargeConfig = () => {
                   </div>
                 </div>
 
-                {/* Tax & Amount Information */}
                 <div className={styles.infoCard}>
                   <div className={styles.infoHeader}>
                     <h3>Tax & Amount Information</h3>
@@ -593,52 +634,40 @@ const ConsultationChargeConfig = () => {
                     </div>
                   </div>
                 </div>
-
               </div>
 
-              {/* Footer Actions */}
               <div className={styles.detailModalFooter}>
-                <button
-                  onClick={() => handleDelete(selectedConfig)}
-                  className={styles.btnDelete}
-                >
+                <button onClick={() => handleDelete(selectedConfig)} className={styles.btnDelete}>
                   Delete
                 </button>
-                <button
-                  onClick={() => openEditForm(selectedConfig)}
-                  className={styles.btnUpdate}
-                >
+                <button onClick={() => openEditForm(selectedConfig)} className={styles.btnUpdate}>
                   Update
                 </button>
               </div>
             </div>
-
           </div>
         </div>
       )}
 
-      {/* ──────────────── Add / Edit Form Modal ──────────────── */}
+      {/* Add / Edit Form Modal */}
       {isFormOpen && (
         <div className={styles.chargeConfigModalOverlay}>
           <div className={styles.chargeConfigModal}>
             <div className={styles.chargeConfigModalHeader}>
               <h2>{isEditMode ? 'Edit' : 'Add'} Charge Configuration</h2>
               <div className={styles.headerRight}>
-              <div className={styles.clinicNameone}>
-                             <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-                               {localStorage.getItem('clinicName') || '—'}
-                          </div>
-              
-              <button onClick={closeForm} className={styles.chargeConfigModalClose}>×</button>
-            </div>
+                <div className={styles.clinicNameone}>
+                  <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
+                  {localStorage.getItem('clinicName') || '—'}
+                </div>
+                <button onClick={closeForm} className={styles.chargeConfigModalClose}>×</button>
+              </div>
             </div>
             <form onSubmit={handleSubmit}>
               <div className={styles.chargeConfigModalBody}>
                 {formError && <div className={styles.formError}>{formError}</div>}
                 {formSuccess && <div className={styles.formSuccess}>{formSuccess}</div>}
                 <div className={styles.formGrid}>
-
-                  {/* Charge Code — Required */}
                   <div className={styles.formGroup}>
                     <label>Charge Code <span className={styles.required}>*</span></label>
                     <input
@@ -656,7 +685,6 @@ const ConsultationChargeConfig = () => {
                     )}
                   </div>
 
-                  {/* Charge Name — Required */}
                   <div className={styles.formGroup}>
                     <label>Charge Name <span className={styles.required}>*</span></label>
                     <input
@@ -674,7 +702,6 @@ const ConsultationChargeConfig = () => {
                     )}
                   </div>
 
-                  {/* Default Amount — Required */}
                   <div className={styles.formGroup}>
                     <label>Default Amount (₹) <span className={styles.required}>*</span></label>
                     <input
@@ -691,7 +718,6 @@ const ConsultationChargeConfig = () => {
                     )}
                   </div>
 
-                  {/* GST Number — shown only in Add mode */}
                   {!isEditMode && (
                     <div className={styles.formGroup}>
                       <label>GST Number</label>
@@ -710,7 +736,6 @@ const ConsultationChargeConfig = () => {
                     </div>
                   )}
 
-                  {/* CGST Percentage — Optional */}
                   <div className={styles.formGroup}>
                     <label>CGST Percentage (%)</label>
                     <input
@@ -726,7 +751,6 @@ const ConsultationChargeConfig = () => {
                     )}
                   </div>
 
-                  {/* SGST Percentage — Optional */}
                   <div className={styles.formGroup}>
                     <label>SGST Percentage (%)</label>
                     <input
@@ -742,7 +766,6 @@ const ConsultationChargeConfig = () => {
                     )}
                   </div>
 
-                  {/* Status Dropdown — shown only in Edit mode */}
                   {isEditMode && (
                     <div className={styles.formGroup}>
                       <label>Status <span className={styles.required}>*</span></label>
@@ -757,7 +780,6 @@ const ConsultationChargeConfig = () => {
                       </select>
                     </div>
                   )}
-
                 </div>
               </div>
               <div className={styles.chargeConfigModalFooter}>

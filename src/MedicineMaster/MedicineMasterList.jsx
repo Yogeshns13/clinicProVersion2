@@ -1,16 +1,12 @@
 // src/components/MedicineMasterList.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  FiSearch, 
-  FiPlus, 
+import {
+  FiSearch,
+  FiPlus,
   FiX,
-  FiPackage,
-  FiAlertCircle,
-  FiCheckCircle,
-  FiEdit,
+  FiLayers,
   FiEye,
-  FiLayers
 } from 'react-icons/fi';
 import { getMedicineMasterList } from '../Api/ApiPharmacy.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
@@ -51,16 +47,21 @@ const MedicineMasterList = () => {
   // Data
   const [medicines, setMedicines] = useState([]);
 
-  // Filter inputs (staged — not applied until Search clicked)
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [totalRecords, setTotalRecords] = useState(0);
+
+  // Filter inputs (staged)
   const [filterInputs, setFilterInputs] = useState({
     searchType:   'Name',
     searchValue:  '',
-    type:         '',   // '' = All Types (sends 0)
-    status:       '',   // '' = All Status (sends -1)
-    lowStockOnly: '',   // '' = All (sends 0), '1' = Low Stock Only
+    type:         '',
+    status:       '',
+    lowStockOnly: '',
   });
 
-  // Applied filters (drive the API call)
+  // Applied filters
   const [appliedFilters, setAppliedFilters] = useState({
     searchType:   'Name',
     searchValue:  '',
@@ -74,20 +75,17 @@ const MedicineMasterList = () => {
   const [error, setError]                 = useState(null);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
 
-  // View detail modal state
   const [viewModal, setViewModal] = useState({
     isOpen:     false,
     medicineId: null,
   });
 
-  // ── Update modal state (managed here so view popup can be closed first) ──
   const [updateModal, setUpdateModal] = useState({
     isOpen:     false,
     medicineId: null,
   });
 
   // ──────────────────────────────────────────────────
-  // Derived: are any filters active?
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.type               !== '' ||
@@ -95,8 +93,7 @@ const MedicineMasterList = () => {
     appliedFilters.lowStockOnly       !== '';
 
   // ──────────────────────────────────────────────────
-  // Data fetching — driven by appliedFilters
-  const fetchMedicines = async (filters = appliedFilters) => {
+  const fetchMedicines = async (filters = appliedFilters, currentPage = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -105,28 +102,29 @@ const MedicineMasterList = () => {
       const branchId = await getStoredBranchId();
 
       const options = {
-        Page:         1,
-        PageSize:     100,
+        Page:         currentPage,
+        PageSize:     pageSize,
         BranchID:     branchId,
-        Name:         filters.searchType === 'Name'         ? filters.searchValue : '',
-        Manufacturer: filters.searchType === 'Manufacturer' ? filters.searchValue : '',
-        HSNCode:      filters.searchType === 'HSNCode'      ? filters.searchValue : '',
-        Barcode:      filters.searchType === 'Barcode'      ? filters.searchValue : '',
+        Name:         filters.searchType === 'Name'         ? filters.searchValue.trim() : '',
+        Manufacturer: filters.searchType === 'Manufacturer' ? filters.searchValue.trim() : '',
+        HSNCode:      filters.searchType === 'HSNCode'      ? filters.searchValue.trim() : '',
+        Barcode:      filters.searchType === 'Barcode'      ? filters.searchValue.trim() : '',
         Type:         filters.type         !== '' ? Number(filters.type)         : 0,
         Status:       filters.status       !== '' ? Number(filters.status)       : -1,
         LowStockOnly: filters.lowStockOnly !== '' ? Number(filters.lowStockOnly) : 0,
       };
 
-      console.log('Fetching medicines with options:', options);
+      const response = await getMedicineMasterList(clinicId, options);
 
-      const data = await getMedicineMasterList(clinicId, options);
+      const medicineList = Array.isArray(response) ? response : response?.data || [];
+      const total = response?.total || medicineList.length;
 
-      // Sort by name
-      const sortedData = data.sort((a, b) =>
+      const sorted = medicineList.sort((a, b) =>
         (a.name || '').localeCompare(b.name || '')
       );
 
-      setMedicines(sortedData);
+      setMedicines(sorted);
+      setTotalRecords(total);
     } catch (err) {
       console.error('fetchMedicines error:', err);
       setError(
@@ -140,25 +138,10 @@ const MedicineMasterList = () => {
   };
 
   useEffect(() => {
-    fetchMedicines(appliedFilters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appliedFilters]);
+    fetchMedicines(appliedFilters, page);
+  }, [appliedFilters, page]);
 
   // ──────────────────────────────────────────────────
-  // Statistics
-  const getStatistics = () => ({
-    totalMedicines: medicines.length,
-    activeCount:    medicines.filter(m => m.status === 1).length,
-    lowStockCount:  medicines.filter(m => m.isLowStock).length,
-    totalValue:     medicines
-      .reduce((sum, m) => sum + parseFloat(m.mrp) * m.stockQuantity, 0)
-      .toFixed(2),
-  });
-
-  const statistics = getStatistics();
-
-  // ──────────────────────────────────────────────────
-  // Filter handlers
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
@@ -166,6 +149,7 @@ const MedicineMasterList = () => {
 
   const handleSearch = () => {
     setAppliedFilters({ ...filterInputs });
+    setPage(1);
   };
 
   const handleClearFilters = () => {
@@ -178,14 +162,15 @@ const MedicineMasterList = () => {
     };
     setFilterInputs(empty);
     setAppliedFilters(empty);
+    setPage(1);
   };
 
-  // ──────────────────────────────────────────────────
-  const handleEditClick = (medicine) => {
-    navigate(`/update-medicinemaster/${medicine.id}`);
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    if (newPage > Math.ceil(totalRecords / pageSize)) return;
+    setPage(newPage);
   };
 
-  // ── CHANGED: navigate to /medicinestock-list with medicineId in state ──
   const handleViewStock = (medicine) => {
     navigate('/medicinestock-list', {
       state: {
@@ -195,51 +180,49 @@ const MedicineMasterList = () => {
     });
   };
 
-  const closeModals = () => setIsAddFormOpen(false);
-
-  const handleAddSuccess = () => {
-    fetchMedicines(appliedFilters);
-  };
-
-  const formatCurrency = (value) =>
-    `₹${parseFloat(value || 0).toFixed(2)}`;
-
-  // Open view modal
   const handleViewDetails = (medicine) => {
     setViewModal({ isOpen: true, medicineId: medicine.id });
   };
 
-  // Close view modal
   const handleCloseViewModal = () => {
     setViewModal({ isOpen: false, medicineId: null });
   };
 
-  // Called by ViewMedicineMaster when "Update Medicine" is clicked
   const handleUpdateRequest = (medicineId) => {
     setViewModal({ isOpen: false, medicineId: null });
     setUpdateModal({ isOpen: true, medicineId });
   };
 
-  // Close update modal
   const handleCloseUpdateModal = () => {
     setUpdateModal({ isOpen: false, medicineId: null });
   };
 
-  // Called after a successful update — refresh list and close update modal
   const handleUpdateSuccess = () => {
     setUpdateModal({ isOpen: false, medicineId: null });
-    fetchMedicines(appliedFilters);
+    fetchMedicines(appliedFilters, page);
   };
 
+  const handleAddSuccess = () => {
+    fetchMedicines(appliedFilters, page);
+  };
+
+  const formatCurrency = (value) =>
+    `₹${parseFloat(value || 0).toFixed(2)}`;
+
   // ──────────────────────────────────────────────────
-  // Early returns
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.loading}>Loading...</div>;
+  if (loading) return <div className={styles.loading}>Loading medicines...</div>;
 
   if (error) return <div className={styles.error}>Error: {error.message || error}</div>;
+
+  const totalPages = Math.ceil(totalRecords / pageSize);
+  const startRecord = totalRecords === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = Math.min(page * pageSize, totalRecords);
+
+  const hasActiveFilter = hasActiveFilters; // just alias for consistency with ClinicList naming
 
   // ──────────────────────────────────────────────────
   return (
@@ -247,11 +230,9 @@ const MedicineMasterList = () => {
       <ErrorHandler error={error} />
       <Header title="Medicine Master" />
 
-      {/* ── Single-line Filter Bar ── */}
+      {/* Filters */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
-
-          {/* Search type + value */}
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -267,9 +248,7 @@ const MedicineMasterList = () => {
             <input
               type="text"
               name="searchValue"
-              placeholder={`Search by ${
-                SEARCH_TYPE_OPTIONS.find(o => o.value === filterInputs.searchType)?.label || ''
-              }`}
+              placeholder={`Search by ${filterInputs.searchType}`}
               value={filterInputs.searchValue}
               onChange={handleFilterChange}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
@@ -277,7 +256,6 @@ const MedicineMasterList = () => {
             />
           </div>
 
-          {/* Medicine Type */}
           <div className={styles.filterGroup}>
             <select
               name="type"
@@ -292,7 +270,6 @@ const MedicineMasterList = () => {
             </select>
           </div>
 
-          {/* Status */}
           <div className={styles.filterGroup}>
             <select
               name="status"
@@ -308,7 +285,6 @@ const MedicineMasterList = () => {
             </select>
           </div>
 
-          {/* Low Stock */}
           <div className={styles.filterGroup}>
             <select
               name="lowStockOnly"
@@ -321,140 +297,184 @@ const MedicineMasterList = () => {
             </select>
           </div>
 
-          {/* Actions */}
           <div className={styles.filterActions}>
             <button onClick={handleSearch} className={styles.searchButton}>
-              <FiSearch size={16} />
-              Search
+              <FiSearch size={16} /> Search
             </button>
 
             {hasActiveFilters && (
               <button onClick={handleClearFilters} className={styles.clearButton}>
-                <FiX size={16} />
-                Clear
+                <FiX size={16} /> Clear
               </button>
             )}
 
             <button onClick={() => setIsAddFormOpen(true)} className={styles.addBtn}>
-              <FiPlus size={18} />
-              Add Medicine
+              <FiPlus size={18} /> Add Medicine
             </button>
           </div>
-
         </div>
       </div>
 
-      {/* Table */}
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Medicine</th>
-              <th>Type &amp; Unit</th>
-              <th>Manufacturer</th>
-              <th>Pricing</th>
-              <th>Stock</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {medicines.length === 0 ? (
+      {/* Table + Pagination wrapper — same structure as ClinicList */}
+      <div className={styles.tableSection}>
+
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead>
               <tr>
-                <td colSpan={7} className={styles.noData}>
-                  {hasActiveFilters ? 'No medicines found.' : 'No medicines available yet.'}
-                </td>
+                <th>Medicine</th>
+                <th>Type & Unit</th>
+                <th>Manufacturer</th>
+                <th>Pricing</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              medicines.map((medicine) => (
-                <tr key={medicine.id}>
-                  <td>
-                    <div className={styles.nameCell}>
-                      <div className={styles.avatar}>
-                        {medicine.name?.charAt(0).toUpperCase() || 'M'}
-                      </div>
-                      <div>
-                        <div className={styles.name}>{medicine.name}</div>
-                        <div className={styles.type}>
-                          {medicine.genericName && `${medicine.genericName}`}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div>
-                      <div className={styles.name}>{medicine.typeDesc}</div>
-                      <div className={styles.type}>{medicine.unitDesc}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.type}>{medicine.manufacturer || '—'}</div>
-                  </td>
-                  <td>
-                    <div className={styles.pricingCell}>
-                      <span className={styles.priceBadge}>
-                        MRP: {formatCurrency(medicine.mrp)}
-                        <span>  |  </span>
-                        Sell: {formatCurrency(medicine.sellPrice)}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <div>
-                      <div className={styles.name}>
-                        {medicine.stockQuantity} {medicine.unitDesc}
-                      </div>
-                      {medicine.isLowStock ? (
-                        <span className={styles.lowStockBadge}>
-                          <FiAlertCircle size={12} /> Low Stock
-                        </span>
-                      ) : (
-                        <div className={styles.type}>
-                          Reorder at: {medicine.reorderLevelQty}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${
-                      medicine.status === 1 ? styles.statusActive : styles.statusInactive
-                    }`}>
-                      {medicine.statusDesc}
-                    </span>
-                  </td>
-                  <td>
-                    <div className={styles.actionsCell}>
-                      <button
-                        onClick={() => handleViewStock(medicine)}
-                        className={styles.stockBtn}
-                        title="View Stock"
-                      >
-                        <FiLayers size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleViewDetails(medicine)}
-                        className={styles.detailsBtn}
-                        title="View Details"
-                      >
-                        <FiEye size={16} />
-                      </button>
-                    </div>
+            </thead>
+            <tbody>
+              {medicines.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className={styles.noData}>
+                    {hasActiveFilter ? 'No medicines found.' : 'No medicines available yet.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                medicines.map((medicine) => (
+                  <tr key={medicine.id}>
+                    <td>
+                      <div className={styles.nameCell}>
+                        <div className={styles.avatar}>
+                          {medicine.name?.charAt(0).toUpperCase() || 'M'}
+                        </div>
+                        <div>
+                          <div className={styles.name}>{medicine.name}</div>
+                          <div className={styles.type}>
+                            {medicine.genericName || '—'}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div>
+                        <div className={styles.name}>{medicine.typeDesc || '—'}</div>
+                        <div className={styles.type}>{medicine.unitDesc || '—'}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.type}>{medicine.manufacturer || '—'}</div>
+                    </td>
+                    <td>
+                      <div className={styles.pricingCell}>
+                        <span className={styles.priceBadge}>
+                          MRP: {formatCurrency(medicine.mrp)}
+                          <span> | </span>
+                          Sell: {formatCurrency(medicine.sellPrice)}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <div>
+                        <div className={styles.name}>
+                          {medicine.stockQuantity || 0} {medicine.unitDesc || ''}
+                        </div>
+                        {medicine.isLowStock ? (
+                          <span className={styles.lowStockBadge}>
+                            Low Stock
+                          </span>
+                        ) : (
+                          <div className={styles.type}>
+                            Reorder at: {medicine.reorderLevelQty || 0}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${
+                        medicine.status === 1 ? styles.statusActive : styles.statusInactive
+                      }`}>
+                        {medicine.statusDesc || 'Unknown'}
+                      </span>
+                    </td>
+                    <td>
+                      <div className={styles.actionsCell}>
+                        <button
+                          onClick={() => handleViewStock(medicine)}
+                          className={styles.stockBtn}
+                          title="View Stock History"
+                        >
+                          <FiLayers size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleViewDetails(medicine)}
+                          className={styles.detailsBtn}
+                          title="View Details"
+                        >
+                          <FiEye size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Pagination Bar ── same as ClinicList */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {totalRecords > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page >= totalPages}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{pageSize}</strong>
+          </div>
+        </div>
+
       </div>
 
-      {/* Add Medicine Modal */}
+      {/* Modals */}
       <AddMedicineMaster
         isOpen={isAddFormOpen}
-        onClose={closeModals}
+        onClose={() => setIsAddFormOpen(false)}
         onSuccess={handleAddSuccess}
       />
 
-      {/* View Medicine Detail Modal */}
       {viewModal.isOpen && (
         <ViewMedicineMaster
           isModal={true}
@@ -464,7 +484,6 @@ const MedicineMasterList = () => {
         />
       )}
 
-      {/* Update Medicine Modal */}
       {updateModal.isOpen && (
         <UpdateMedicineMaster
           isModal={true}

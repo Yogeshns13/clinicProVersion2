@@ -46,9 +46,13 @@
 .wrapper {
   padding: 20px;
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   color: var(--text-dark);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 /* ==================== LOADING STATE ==================== */
@@ -141,6 +145,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
 }
 
 .filtersGrid {
@@ -277,15 +282,23 @@
   transform: translateY(-2px);
 }
 
-/* ==================== TABLE ==================== */
+/* ==================== TABLE SECTION ==================== */
+.tableSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== TABLE CONTAINER ==================== */
 .tableContainer {
   background: white;
   border-radius: 17px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  max-height: calc(100vh - 220px);
   box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
   border: 1px solid rgba(34, 43, 108, 0.1);
-  
 }
 
 .table {
@@ -304,8 +317,8 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   border: none;
-  position: sticky;   /* ← new */
-  top: 0;             /* ← new */
+  position: sticky;
+  top: 0;
   z-index: 2;
 }
 
@@ -560,8 +573,6 @@
   gap: 20px;
 }
 
-
-
 .detailHeaderAvatar {
   width: 42px;
   height: 42px;
@@ -595,9 +606,9 @@
 .detailHeaderContent {
   flex: 1;
   display: flex;
-  align-items: center;          /* ← key change: vertical center everything */
+  align-items: center;
   justify-content: space-between;
-  gap: 24px;                    /* space between left and right groups */
+  gap: 24px;
   width: 100%;
 }
 
@@ -605,7 +616,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  flex-shrink: 0;               /* prevent shrinking too much */
+  flex-shrink: 0;
 }
 
 .headerRight {
@@ -614,32 +625,29 @@
   gap: 15px;
 }
 
-
 .clinicInfo {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;        /* text aligns right */
+  align-items: flex-end;
   text-align: right;
-  gap: 2px;                     /* very small gap between clinic & branch */
-  flex-shrink: 0;               /* important: don't let it shrink */
-  min-width: 0;                 /* helps with long names */
-  margin-left: auto;            /* push to right (extra safety) */
+  gap: 2px;
+  flex-shrink: 0;
+  min-width: 0;
+  margin-left: auto;
 }
 
-/* Optional: control text wrapping & size */
 .clinicNameone {
   display: flex;
   align-items: center;
-  font-size: 1.05rem;           /* a bit smaller than patient name */
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-light);
   line-height: 1.2;
-  white-space: nowrap;          /* ← prevents wrapping to next line */
+  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;      /* cuts off very long names nicely */
-  max-width: 220px;             /* adjust depending on your design */
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
-
 
 .detailBadge {
   display: inline-block;
@@ -1283,6 +1291,103 @@
 /* ==================== UTILITY STATES ==================== */
 .noData { text-align: center; padding: 68px 17px; color: #64748b; font-size: 1.1rem; }
 
+/* ==================== PAGINATION BAR ==================== */
+/*
+  flex-shrink: 0  → never compressed, always pinned to the bottom of tableSection
+  margin-top: 14px → gap between scrollable table and this bar
+*/
+.paginationBar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 14px;
+  padding: 10px 20px;
+  margin-top: 14px;
+  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  gap: 16px;
+}
+
+.paginationInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.paginationLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.pageBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: var(--primary-start);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-color: var(--accent-end);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.3);
+}
+
+.pageBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pageIndicator {
+  min-width: 36px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0 8px;
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
+}
+
+.pageSizeInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pageSizeInfo strong {
+  color: var(--primary-start);
+  font-weight: 700;
+}
+
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 1200px) {
   .filtersGrid {
@@ -1332,6 +1437,16 @@
   .formGrid { grid-template-columns: 1fr; }
   .modalContent, .confirmModal, .reportModal { width: 95%; max-height: 90vh; }
   .infoGrid { grid-template-columns: 1fr; }
+
+  .paginationBar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .paginationControls {
+    align-self: center;
+  }
 }
 
 @media (max-width: 480px) {

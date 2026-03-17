@@ -40,6 +40,10 @@ const InvoicePaymentList = () => {
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState(null);
 
+  // ── Pagination ──
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
   // Modal
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment]     = useState(null);
@@ -74,7 +78,7 @@ const InvoicePaymentList = () => {
     appliedFilters.dateTo             !== today;
 
   // ── Data fetching ──
-  const fetchPayments = async (filters = appliedFilters) => {
+  const fetchPayments = async (filters = appliedFilters, currentPage = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -82,8 +86,8 @@ const InvoicePaymentList = () => {
       const branchId = await getStoredBranchId();
 
       const options = {
-        Page:      1,
-        PageSize:  100,
+        Page:      currentPage,
+        PageSize:  pageSize,
         BranchID:  branchId,
         FromDate:  filters.dateFrom || '',
         ToDate:    filters.dateTo   || '',
@@ -107,7 +111,7 @@ const InvoicePaymentList = () => {
   };
 
   useEffect(() => {
-    fetchPayments(appliedFilters);
+    fetchPayments(appliedFilters, page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedFilters]);
 
@@ -121,6 +125,16 @@ const InvoicePaymentList = () => {
     return { total, count: filteredPayments.length };
   }, [filteredPayments]);
 
+  // ── Pagination helpers ──
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+    fetchPayments(appliedFilters, newPage);
+  };
+
+  const startRecord = filteredPayments.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = (page - 1) * pageSize + filteredPayments.length;
+
   // ── Handlers ──
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -128,6 +142,7 @@ const InvoicePaymentList = () => {
   };
 
   const handleSearch = () => {
+    setPage(1);
     setAppliedFilters({ ...filterInputs });
   };
 
@@ -139,6 +154,7 @@ const InvoicePaymentList = () => {
       dateFrom:    today,
       dateTo:      today,
     };
+    setPage(1);
     setFilterInputs(defaults);
     setAppliedFilters(defaults);
   };
@@ -308,78 +324,117 @@ const InvoicePaymentList = () => {
         </div>
       </div>
 
-      {/* Statistics */}
-      <div className={styles.paymentStatsGrid}>
-        <div className={`${styles.paymentStatCard} ${styles.statTotal} ${styles.smallStat}`}>
-          <div className={styles.statIconWrapper}><FiDollarSign size={20} /></div>
-          <div className={styles.statContent}>
-            <div className={styles.statLabel}>Total Payments</div>
-            <div className={styles.statValueSmall}>{formatCurrency(statistics.total)}</div>
-          </div>
-        </div>
-      </div>
+      {/* ── Table + Pagination wrapper ── */}
+      <div className={styles.tableSection}>
 
-      {/* Table */}
-      <div className={styles.paymentListTableContainer}>
-        <table className={styles.paymentListTable}>
-          <thead>
-            <tr>
-              <th>Invoice No</th>
-              <th>Patient</th>
-              <th>Payment Date</th>
-              <th>Mode</th>
-              <th>Amount</th>
-              <th>Reference</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredPayments.length === 0 ? (
+        <div className={styles.paymentListTableContainer}>
+          <table className={styles.paymentListTable}>
+            <thead>
               <tr>
-                <td colSpan={8} className={styles.paymentListNoData}>
-                  {hasActiveFilters ? 'No payments found.' : 'No payments recorded yet.'}
-                </td>
+                <th>Invoice No</th>
+                <th>Patient</th>
+                <th>Payment Date</th>
+                <th>Mode</th>
+                <th>Amount</th>
+                <th>Reference</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              filteredPayments.map((payment) => (
-                <tr key={payment.id}>
-                  <td><div className={styles.invoiceNoBadge}>{payment.invoiceNo}</div></td>
-                  <td>
-                    <div className={styles.patientCell}>
-                      <div>
-                        <div className={styles.patientName}>{payment.patientName}</div>
-                        <div className={styles.patientInfo}>{payment.patientFileNo}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td><span className={styles.dateText}>{formatDate(payment.paymentDate)}</span></td>
-                  <td>
-                    <div className={styles.paymentModeCell}>
-                      <FiCreditCard size={16} style={{ color: '#9333ea', marginRight: '6px' }} />
-                      <span className={styles.paymentModeText}>{getPaymentModeLabel(payment.paymentMode)}</span>
-                    </div>
-                  </td>
-                  <td><span className={`${styles.amountText} ${styles.total}`}>{formatCurrency(payment.amount)}</span></td>
-                  <td><span className={styles.paymentRefBadge}>{payment.referenceNo || '—'}</span></td>
-                  <td><span className={getStatusBadgeClass(payment.status)}>{getStatusLabel(payment.status)}</span></td>
-                  <td>
-                    <div className={styles.paymentActionsCell}>
-                      <button
-                        onClick={() => openUpdateModal(payment)}
-                        className={styles.paymentUpdateBtn}
-                        title="Update Payment"
-                      >
-                        Update Status
-                      </button>
-                    </div>
+            </thead>
+            <tbody>
+              {filteredPayments.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className={styles.paymentListNoData}>
+                    {hasActiveFilters ? 'No payments found.' : 'No payments recorded yet.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                filteredPayments.map((payment) => (
+                  <tr key={payment.id}>
+                    <td><div className={styles.invoiceNoBadge}>{payment.invoiceNo}</div></td>
+                    <td>
+                      <div className={styles.patientCell}>
+                        <div>
+                          <div className={styles.patientName}>{payment.patientName}</div>
+                          <div className={styles.patientInfo}>{payment.patientFileNo}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><span className={styles.dateText}>{formatDate(payment.paymentDate)}</span></td>
+                    <td>
+                      <div className={styles.paymentModeCell}>
+                        <FiCreditCard size={16} style={{ color: '#9333ea', marginRight: '6px' }} />
+                        <span className={styles.paymentModeText}>{getPaymentModeLabel(payment.paymentMode)}</span>
+                      </div>
+                    </td>
+                    <td><span className={`${styles.amountText} ${styles.total}`}>{formatCurrency(payment.amount)}</span></td>
+                    <td><span className={styles.paymentRefBadge}>{payment.referenceNo || '—'}</span></td>
+                    <td><span className={getStatusBadgeClass(payment.status)}>{getStatusLabel(payment.status)}</span></td>
+                    <td>
+                      <div className={styles.paymentActionsCell}>
+                        <button
+                          onClick={() => openUpdateModal(payment)}
+                          className={styles.paymentUpdateBtn}
+                          title="Update Payment"
+                        >
+                          Update Status
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Pagination Bar — pinned to bottom of tableSection ── */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {filteredPayments.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={filteredPayments.length < pageSize}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Total: <strong>{formatCurrency(statistics.total)}</strong>
+          </div>
+        </div>
+
+      </div>{/* end tableSection */}
 
       {/* Update Payment Modal */}
       {isUpdateModalOpen && (
@@ -389,12 +444,12 @@ const InvoicePaymentList = () => {
               <h2>Update Payment Status</h2>
               
               <div className={styles.headerRight}>
-              <div className={styles.clinicNameone}>
-                             <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-                               {localStorage.getItem('clinicName') || '—'}
-                          </div>
-              <button onClick={closeModal} className={styles.paymentModalClose}>×</button>
-            </div>
+                <div className={styles.clinicNameone}>
+                  <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
+                  {localStorage.getItem('clinicName') || '—'}
+                </div>
+                <button onClick={closeModal} className={styles.paymentModalClose}>×</button>
+              </div>
             </div>
             <form onSubmit={handleUpdatePayment}>
               <div className={styles.paymentModalBody}>
@@ -403,26 +458,26 @@ const InvoicePaymentList = () => {
                 <div className={styles.invoiceHeader}>
                   <div className={styles.detailsGrid}>
                     <div className={styles.detailItem}>
-                                                        <label>Invoice:</label>
-                                                        <span>{selectedPayment?.invoiceNo}</span>
-                                                      </div>
+                      <label>Invoice:</label>
+                      <span>{selectedPayment?.invoiceNo}</span>
+                    </div>
                     <div className={styles.detailItem}>
-                                                        <label>Patient:</label>
-                                                        <span>{selectedPayment?.patientName}</span>
-                                                      </div>
+                      <label>Patient:</label>
+                      <span>{selectedPayment?.patientName}</span>
+                    </div>
                     <div className={styles.detailItem}>
-                                                        <label>Amount:</label>
-                                                        <span>{formatCurrency(selectedPayment?.amount)}</span>
-                                                      </div>
+                      <label>Amount:</label>
+                      <span>{formatCurrency(selectedPayment?.amount)}</span>
+                    </div>
                     <div className={styles.detailItem}>
-                                                        <label>Mode:</label>
-                                                        <span>{getPaymentModeLabel(selectedPayment?.paymentMode)}</span>
-                                                      </div>
+                      <label>Mode:</label>
+                      <span>{getPaymentModeLabel(selectedPayment?.paymentMode)}</span>
+                    </div>
                     <div className={styles.detailItem}>
-                                                        <label>Date:</label>
-                                                        <span>{formatDate(selectedPayment?.paymentDate)}</span>
-                                                      </div>
-                </div>
+                      <label>Date:</label>
+                      <span>{formatDate(selectedPayment?.paymentDate)}</span>
+                    </div>
+                  </div>
                 </div>
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>

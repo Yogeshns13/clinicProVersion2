@@ -32,7 +32,8 @@ const SEARCH_TYPE_OPTIONS = [
   { value: 'ShiftName',  label: 'Shift' },
 ];
 
-// ────────────────────────────────────────────────
+const PAGE_SIZE = 20;
+
 const SlotConfigList = () => {
   const navigate = useNavigate();
 
@@ -41,6 +42,10 @@ const SlotConfigList = () => {
   const [doctors,      setDoctors]      = useState([]);
   const [shifts,       setShifts]       = useState([]);
   const [doctorShifts, setDoctorShifts] = useState([]);
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
@@ -118,9 +123,6 @@ const SlotConfigList = () => {
   }, [fetchAutoTaskStatus]);
 
   // ── Toggle area click inside the compound button ──
-  // Clicking the toggle area:
-  //   OFF → open add popup
-  //   ON  → show disable confirm
   const handleToggleAreaClick = (e) => {
     e.stopPropagation();
     if (autoTaskExists) {
@@ -130,7 +132,6 @@ const SlotConfigList = () => {
     }
   };
 
-  // ── Label/icon area click: open edit if ON, add if OFF ──
   const handleLabelAreaClick = () => {
     if (autoTaskExists) {
       setIsAutoEditOpen(true);
@@ -139,7 +140,6 @@ const SlotConfigList = () => {
     }
   };
 
-  // ── Confirm disable ──
   const handleDisableConfirm = async () => {
     setDisabling(true);
     try {
@@ -156,14 +156,12 @@ const SlotConfigList = () => {
     }
   };
 
-  // ── After add-task success ──
   const handleAutoGenSuccess = () => {
     setIsAutoGenOpen(false);
     fetchAutoTaskStatus();
     showToast('Auto generation enabled successfully!');
   };
 
-  // ── After edit-task success ──
   const handleAutoEditSuccess = () => {
     setIsAutoEditOpen(false);
     fetchAutoTaskStatus();
@@ -212,8 +210,8 @@ const SlotConfigList = () => {
     fetchDoctorShifts();
   }, []);
 
-  // ── Fetch configs ──
-  const fetchConfigs = async (filters = appliedFilters) => {
+  // ── Fetch configs with pagination ──
+  const fetchConfigs = async (filters = appliedFilters, pageNum = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -226,9 +224,12 @@ const SlotConfigList = () => {
         ShiftID:    0,
         Duration:   filters.duration  !== '' ? Number(filters.duration) : 0,
         Status:     filters.status    !== '' ? Number(filters.status)   : -1,
+        Page:       pageNum,
+        PageSize:   PAGE_SIZE,
       };
       const data = await getSlotConfigList(clinicId, options);
       setConfigs(data);
+      setHasNext(data.length === PAGE_SIZE);
     } catch (err) {
       console.error('fetchConfigs error:', err);
       setError(
@@ -242,11 +243,11 @@ const SlotConfigList = () => {
   };
 
   useEffect(() => {
-    fetchConfigs(appliedFilters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchConfigs(appliedFilters, 1);
+    setPage(1);
   }, [appliedFilters]);
 
-  // ── Client-side ShiftName filter ──
+  // ── Client-side ShiftName filter (applied after server fetch) ──
   const filteredConfigs = useMemo(() => {
     if (appliedFilters.searchType !== 'ShiftName' || !appliedFilters.searchValue.trim()) {
       return configs;
@@ -266,12 +267,22 @@ const SlotConfigList = () => {
     setFilterInputs((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = () => setAppliedFilters({ ...filterInputs });
+  const handleSearch = () => {
+    setAppliedFilters({ ...filterInputs });
+    setPage(1);
+  };
 
   const handleClearFilters = () => {
     const empty = { doctorId: 'all', searchType: 'DoctorName', searchValue: '', duration: '', status: '' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
+    setPage(1);
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+    fetchConfigs(appliedFilters, newPage);
   };
 
   const handleDeleteClick  = (config) => setDeleteConfirm(config);
@@ -282,7 +293,7 @@ const SlotConfigList = () => {
     try {
       await deleteSlotConfig(deleteConfirm.id);
       setDeleteConfirm(null);
-      fetchConfigs(appliedFilters);
+      fetchConfigs(appliedFilters, page);
     } catch (err) {
       console.error('Delete failed:', err);
       setError(err);
@@ -295,6 +306,9 @@ const SlotConfigList = () => {
   }
   if (loading) return <div className={styles.loading}>Loading slot configurations...</div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
+
+  const startRecord = configs.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const endRecord   = startRecord + configs.length - 1;
 
   return (
     <div className={styles.listWrapper}>
@@ -372,7 +386,6 @@ const SlotConfigList = () => {
             <div
               className={`${styles.autoGenCompound} ${autoTaskExists ? styles.autoGenCompoundOn : ''} ${autoTaskLoading ? styles.autoGenCompoundDisabled : ''}`}
             >
-              {/* Left clickable area: label + icon → opens add/edit popup */}
               <button
                 className={styles.autoGenLabel}
                 onClick={handleLabelAreaClick}
@@ -383,10 +396,8 @@ const SlotConfigList = () => {
                 <span>Auto Generate Slots</span>
               </button>
 
-              {/* Divider */}
               <span className={styles.autoGenDivider} />
 
-              {/* Right clickable area: toggle switch → turns ON/OFF */}
               <button
                 className={styles.autoGenToggleArea}
                 onClick={handleToggleAreaClick}
@@ -407,66 +418,114 @@ const SlotConfigList = () => {
         </div>
       </div>
 
-      {/* ── Table ── */}
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Doctor</th>
-              <th>Shift</th>
-              <th>Duration</th>
-              <th>Slot Interval</th>
-              <th>Create Days</th>
-              <th>Slot Date</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredConfigs.length === 0 ? (
+      {/* ── Table + Pagination ── */}
+      <div className={styles.tableSection}>
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead>
               <tr>
-                <td colSpan={8} className={styles.noData}>
-                  {hasActiveFilters ? 'No configurations found.' : 'No slot configurations yet.'}
-                </td>
+                <th>Doctor</th>
+                <th>Shift</th>
+                <th>Duration</th>
+                <th>Slot Interval</th>
+                <th>Create Days</th>
+                <th>Slot Date</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              filteredConfigs.map((config) => (
-                <tr key={config.id}>
-                  <td>
-                    <div className={styles.nameCell}>
-                      <div className={styles.avatar}>
-                        {config.doctorName?.charAt(0).toUpperCase() || 'D'}
-                      </div>
-                      <div>
-                        <div className={styles.name}>{config.doctorFullName}</div>
-                        <div className={styles.subInfo}>{config.doctorCode || '—'}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td><span className={styles.shiftBadge}>{config.shiftName || '—'}</span></td>
-                  <td>{getDurationLabel(config.duration)}</td>
-                  <td>{config.slotInterval} mins</td>
-                  <td>{config.createSlotDays} days</td>
-                  <td>
-                    {config.slotDate
-                      ? new Date(config.slotDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })
-                      : '—'}
-                  </td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${getStatusClass(config.status)}`}>
-                      {config.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td>
-                    <button onClick={() => handleDeleteClick(config)} className={styles.btnDelete} title="Delete Configuration">
-                      <FiTrash2 size={16} />
-                    </button>
+            </thead>
+            <tbody>
+              {filteredConfigs.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className={styles.noData}>
+                    {hasActiveFilters ? 'No configurations found.' : 'No slot configurations yet.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredConfigs.map((config) => (
+                  <tr key={config.id}>
+                    <td>
+                      <div className={styles.nameCell}>
+                        <div className={styles.avatar}>
+                          {config.doctorName?.charAt(0).toUpperCase() || 'D'}
+                        </div>
+                        <div>
+                          <div className={styles.name}>{config.doctorFullName}</div>
+                          <div className={styles.subInfo}>{config.doctorCode || '—'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><span className={styles.shiftBadge}>{config.shiftName || '—'}</span></td>
+                    <td>{getDurationLabel(config.duration)}</td>
+                    <td>{config.slotInterval} mins</td>
+                    <td>{config.createSlotDays} days</td>
+                    <td>
+                      {config.slotDate
+                        ? new Date(config.slotDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })
+                        : '—'}
+                    </td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${getStatusClass(config.status)}`}>
+                        {config.status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td>
+                      <button onClick={() => handleDeleteClick(config)} className={styles.btnDelete} title="Delete Configuration">
+                        <FiTrash2 size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Bar */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {configs.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={!hasNext}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{PAGE_SIZE}</strong>
+          </div>
+        </div>
       </div>
 
       {/* ── Modals ── */}
@@ -476,7 +535,7 @@ const SlotConfigList = () => {
         doctors={doctors}
         shifts={shifts}
         doctorShifts={doctorShifts}
-        onSuccess={() => fetchConfigs(appliedFilters)}
+        onSuccess={() => fetchConfigs(appliedFilters, page)}
       />
 
       <GenerateSlots
@@ -485,7 +544,6 @@ const SlotConfigList = () => {
         onSuccess={() => console.log('Slots generated')}
       />
 
-      {/* ADD mode */}
       <AutoSlotGeneration
         isOpen={isAutoGenOpen}
         onClose={() => setIsAutoGenOpen(false)}
@@ -494,7 +552,6 @@ const SlotConfigList = () => {
         existingTaskData={null}
       />
 
-      {/* EDIT mode */}
       <AutoSlotGeneration
         isOpen={isAutoEditOpen}
         onClose={() => setIsAutoEditOpen(false)}
@@ -503,7 +560,7 @@ const SlotConfigList = () => {
         existingTaskData={autoTaskData}
       />
 
-      {/* ── Disable Auto Generation Confirm Popup ── */}
+      {/* Disable Auto Generation Confirm */}
       {showDisableConfirm && (
         <div className={styles.modalOverlay}>
           <div className={styles.confirmModal}>
@@ -545,7 +602,7 @@ const SlotConfigList = () => {
         </div>
       )}
 
-      {/* ── Delete Config Confirmation Modal ── */}
+      {/* Delete Config Confirmation */}
       {deleteConfirm && (
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>

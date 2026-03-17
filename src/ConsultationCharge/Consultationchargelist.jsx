@@ -20,6 +20,10 @@ const ConsultationChargeList = () => {
 
   const today = new Date().toISOString().split('T')[0];
 
+  // ── Pagination ──
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
   // Filter inputs (not applied until Search is clicked)
   const [filterInputs, setFilterInputs] = useState({
     searchType: 'patientName',
@@ -57,7 +61,7 @@ const ConsultationChargeList = () => {
     appliedFilters.dateTo             !== today;
 
   // ────────────────────────────────────────────────
-  const fetchConsultations = async (filters = appliedFilters) => {
+  const fetchConsultations = async (filters = appliedFilters, currentPage = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -66,7 +70,8 @@ const ConsultationChargeList = () => {
 
       const options = {
         BranchID: branchId,
-        PageSize: 100,
+        Page: currentPage,
+        PageSize: pageSize,
         ...(filters.dateFrom && { FromDate: filters.dateFrom }),
         ...(filters.dateTo   && { ToDate:   filters.dateTo   }),
       };
@@ -95,7 +100,7 @@ const ConsultationChargeList = () => {
 
   useEffect(() => { fetchChargeConfigs(); }, []);
 
-  useEffect(() => { fetchConsultations(appliedFilters); }, [appliedFilters]);
+  useEffect(() => { fetchConsultations(appliedFilters, page); }, [appliedFilters]);
 
   // ── Client-side filtering by search type/value
   const filteredConsultations = useMemo(() => {
@@ -124,16 +129,30 @@ const ConsultationChargeList = () => {
     return filtered;
   }, [allConsultations, appliedFilters]);
 
+  // ── Pagination helpers ──
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+    fetchConsultations(appliedFilters, newPage);
+  };
+
+  const startRecord = filteredConsultations.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = (page - 1) * pageSize + filteredConsultations.length;
+
   // ────────────────────────────────────────────────
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = () => setAppliedFilters({ ...filterInputs });
+  const handleSearch = () => {
+    setPage(1);
+    setAppliedFilters({ ...filterInputs });
+  };
 
   const handleClearFilters = () => {
     const defaultFilters = { searchType: 'patientName', searchValue: '', dateFrom: today, dateTo: today };
+    setPage(1);
     setFilterInputs(defaultFilters);
     setAppliedFilters(defaultFilters);
   };
@@ -335,75 +354,125 @@ const ConsultationChargeList = () => {
         </div>
       </div>
 
-      {/* ── Table ── */}
-      <div className={styles.chargeListTableContainer}>
-        <table className={styles.chargeListTable}>
-          <thead>
-            <tr>
-              <th>Patient</th>
-              <th>Doctor</th>
-              <th>Visit Date</th>
-              <th>Reason</th>
-              <th>Symptoms</th>
-              <th>Vitals</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredConsultations.length === 0 ? (
+      {/* ── Table + Pagination wrapper ── */}
+      <div className={styles.tableSection}>
+
+        <div className={styles.chargeListTableContainer}>
+          <table className={styles.chargeListTable}>
+            <thead>
               <tr>
-                <td colSpan={7} className={styles.chargeListNoData}>
-                  {hasActiveFilters
-                    ? 'No consultations found.'
-                    : 'No consultations available yet.'}
-                </td>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Visit Date</th>
+                <th>Reason</th>
+                <th>Symptoms</th>
+                <th>Vitals</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              filteredConsultations.map((consult) => (
-                <tr key={consult.id}>
-                  <td>
-                    <div className={styles.patientCell}>
-                      <div>
-                        <div className={styles.patientName}>{consult.patientName}</div>
-                        {consult.patientMobile && (
-                          <div className={styles.patientInfo}>{consult.patientMobile}</div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={styles.doctorName}>{consult.doctorFullName}</span>
-                    {consult.doctorCode && (
-                      <div className={styles.chargeCode}>{consult.doctorCode}</div>
-                    )}
-                  </td>
-                  <td><span className={styles.dateText}>{formatDate(consult.dateCreated)}</span></td>
-                  <td><span className={styles.reasonText}>{consult.reason || '—'}</span></td>
-                  <td><span className={styles.symptomsText}>{consult.symptoms || '—'}</span></td>
-                  <td>
-                    <div className={styles.vitalsCell}>
-                      {consult.bpReading  && <span className={styles.vitalItem}>BP: {consult.bpReading}</span>} |
-                      {consult.temperature && <span className={styles.vitalItem}>Temp: {consult.temperature}°</span>} |
-                      {consult.weight     && <span className={styles.vitalItem}>Wt: {consult.weight} kg</span>}
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.chargeListActionsCell}>
-                      <button
-                        onClick={() => openInvoiceForm(consult)}
-                        className={styles.invoiceBtn}
-                        title="Make Invoice"
-                      >
-                        <FiFileText size={16} /> Make Invoice
-                      </button>
-                    </div>
+            </thead>
+            <tbody>
+              {filteredConsultations.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className={styles.chargeListNoData}>
+                    {hasActiveFilters
+                      ? 'No consultations found.'
+                      : 'No consultations available yet.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                filteredConsultations.map((consult) => (
+                  <tr key={consult.id}>
+                    <td>
+                      <div className={styles.patientCell}>
+                        <div>
+                          <div className={styles.patientName}>{consult.patientName}</div>
+                          {consult.patientMobile && (
+                            <div className={styles.patientInfo}>{consult.patientMobile}</div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={styles.doctorName}>{consult.doctorFullName}</span>
+                      {consult.doctorCode && (
+                        <div className={styles.chargeCode}>{consult.doctorCode}</div>
+                      )}
+                    </td>
+                    <td><span className={styles.dateText}>{formatDate(consult.dateCreated)}</span></td>
+                    <td><span className={styles.reasonText}>{consult.reason || '—'}</span></td>
+                    <td><span className={styles.symptomsText}>{consult.symptoms || '—'}</span></td>
+                    <td>
+                      <div className={styles.vitalsCell}>
+                        {consult.bpReading  && <span className={styles.vitalItem}>BP: {consult.bpReading}</span>} |
+                        {consult.temperature && <span className={styles.vitalItem}>Temp: {consult.temperature}°</span>} |
+                        {consult.weight     && <span className={styles.vitalItem}>Wt: {consult.weight} kg</span>}
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.chargeListActionsCell}>
+                        <button
+                          onClick={() => openInvoiceForm(consult)}
+                          className={styles.invoiceBtn}
+                          title="Make Invoice"
+                        >
+                          <FiFileText size={16} /> Make Invoice
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Pagination Bar — pinned to bottom of tableSection ── */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {filteredConsultations.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={filteredConsultations.length < pageSize}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{pageSize}</strong>
+          </div>
+        </div>
+
+      </div>{/* end tableSection */}
 
       {/* ── Generate Invoice Modal ── */}
       {isInvoiceFormOpen && (

@@ -8,7 +8,6 @@ import styles from './SlotList.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
-
 // ────────────────────────────────────────────────
 // CONSTANTS
 // ────────────────────────────────────────────────
@@ -23,6 +22,8 @@ const BOOKED_OPTIONS = [
   { value: 'booked',    label: 'Booked' },
 ];
 
+const PAGE_SIZE = 20;
+
 const getTodayDate = () => new Date().toISOString().split('T')[0];
 
 // ────────────────────────────────────────────────
@@ -32,6 +33,10 @@ const SlotList = () => {
   const [doctors,  setDoctors] = useState([]);
   const [loading,  setLoading] = useState(true);
   const [error,    setError]   = useState(null);
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
 
   // Filter inputs (staged)
   const [filterInputs, setFilterInputs] = useState({
@@ -120,8 +125,8 @@ const SlotList = () => {
   }, []);
 
   // ────────────────────────────────────────────────
-  // Fetch slots driven by appliedFilters
-  const fetchSlots = async (filters = appliedFilters) => {
+  // Fetch slots driven by appliedFilters + page
+  const fetchSlots = async (filters = appliedFilters, pageNum = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -134,7 +139,8 @@ const SlotList = () => {
         DoctorID:     filters.doctorId !== 'all' ? Number(filters.doctorId) : 0,
         FromSlotDate: filters.fromDate || '',
         ToSlotDate:   filters.toDate   || '',
-        PageSize: 60,
+        Page:         pageNum,
+        PageSize:     PAGE_SIZE,
         IsBooked:
           filters.bookedFilter === 'booked'
             ? 1
@@ -150,6 +156,7 @@ const SlotList = () => {
       const data = await getSlotList(clinicId, options);
       setSlots(data);
       setAllSlots(data);
+      setHasNext(data.length === PAGE_SIZE);
     } catch (err) {
       console.error('fetchSlots error:', err);
       setError(
@@ -163,15 +170,15 @@ const SlotList = () => {
   };
 
   useEffect(() => {
-    fetchSlots(appliedFilters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchSlots(appliedFilters, 1);
+    setPage(1);
   }, [appliedFilters]);
 
   // ────────────────────────────────────────────────
   // Computed values
   const groupedSlots = useMemo(() => {
     const groups = {};
-    allSlots.forEach((slot) => {
+    slots.forEach((slot) => {
       const date = slot.slotDate || 'Unknown';
       if (!groups[date]) groups[date] = [];
       groups[date].push(slot);
@@ -184,7 +191,7 @@ const SlotList = () => {
         );
         return acc;
       }, {});
-  }, [allSlots]);
+  }, [slots]);
 
   // ────────────────────────────────────────────────
   // Helpers
@@ -219,12 +226,20 @@ const SlotList = () => {
 
   const handleSearch = () => {
     setAppliedFilters({ ...filterInputs });
+    setPage(1);
   };
 
   const handleClearFilters = () => {
     const empty = { ...defaultFilters };
     setFilterInputs(empty);
     setAppliedFilters(empty);
+    setPage(1);
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+    fetchSlots(appliedFilters, newPage);
   };
 
   // ────────────────────────────────────────────────
@@ -263,7 +278,7 @@ const SlotList = () => {
       setShowAddModal(false);
       setFormData({ doctorId: '', slotDate: '', slotTime: '' });
       setAddValidationMessages({});
-      fetchSlots(appliedFilters);
+      fetchSlots(appliedFilters, page);
     } catch (err) {
       console.error('Add slot error:', err);
       setError(err);
@@ -307,7 +322,7 @@ const SlotList = () => {
       setSelectedSlot(null);
       setUpdateFormData({ appointmentId: 0, isBooked: 0 });
       setUpdateValidationMessages({});
-      fetchSlots(appliedFilters);
+      fetchSlots(appliedFilters, page);
     } catch (err) {
       console.error('Update slot error:', err);
       setError(err);
@@ -321,7 +336,7 @@ const SlotList = () => {
     try {
       setLoading(true);
       await deleteSlot(slotId);
-      fetchSlots(appliedFilters);
+      fetchSlots(appliedFilters, page);
     } catch (err) {
       console.error('Delete slot error:', err);
       setError(err);
@@ -350,6 +365,9 @@ const SlotList = () => {
   if (loading) return <div className={styles.loading}>Loading slots...</div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
+  const startRecord = slots.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const endRecord   = startRecord + slots.length - 1;
+
   // ────────────────────────────────────────────────
   return (
     <div className={styles.listWrapper}>
@@ -374,8 +392,6 @@ const SlotList = () => {
               </option>
             ))}
           </select>
-
-         
 
           {/* Booked filter */}
           <select
@@ -402,7 +418,7 @@ const SlotList = () => {
             ))}
           </select>
 
-           {/* From Date */}
+          {/* From Date */}
           <input
             type="date"
             name="fromDate"
@@ -442,94 +458,142 @@ const SlotList = () => {
         </div>
       </div>
 
-      {/* ── Slots Grouped by Date ── */}
-      <div className={styles.slotsTimeline}>
-        {Object.keys(groupedSlots).length === 0 ? (
-          <div className={styles.noData}>
-            No slots found for the selected filters.
-          </div>
-        ) : (
-          Object.entries(groupedSlots).map(([date, dateSlots]) => (
-            <div key={date} className={styles.dateGroup}>
-              <div className={styles.dateHeader}>
-                <FiCalendar size={18} />
-                <h3>{formatDate(date)}</h3>
-                <span className={styles.slotCount}>
-                  {dateSlots.length} slot{dateSlots.length !== 1 ? 's' : ''}
-                </span>
-              </div>
+      {/* ── Slots Timeline + Pagination ── */}
+      <div className={styles.tableSection}>
+        <div className={styles.slotsTimeline}>
+          {Object.keys(groupedSlots).length === 0 ? (
+            <div className={styles.noData}>
+              No slots found for the selected filters.
+            </div>
+          ) : (
+            Object.entries(groupedSlots).map(([date, dateSlots]) => (
+              <div key={date} className={styles.dateGroup}>
+                <div className={styles.dateHeader}>
+                  <FiCalendar size={18} />
+                  <h3>{formatDate(date)}</h3>
+                  <span className={styles.slotCount}>
+                    {dateSlots.length} slot{dateSlots.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
 
-              <div className={styles.slotsGrid}>
-                {dateSlots.map((slot) => {
-                  const slotStatus = getSlotStatus(slot);
-                  return (
-                    <div
-                      key={slot.id}
-                      className={`${styles.slotCard} ${styles[slotStatus]}`}
-                      onMouseEnter={() => setHoveredSlotId(slot.id)}
-                      onMouseLeave={() => setHoveredSlotId(null)}
-                    >
-                      <div className={styles.slotTime}>
-                        <FiClock size={14} />
-                        {formatTime(slot.slotTime)}
-                      </div>
-
-                      <div className={styles.slotDoctor}>
-                        <div className={styles.doctorAvatar}>
-                          {slot.doctorName?.charAt(0).toUpperCase() || 'D'}
+                <div className={styles.slotsGrid}>
+                  {dateSlots.map((slot) => {
+                    const slotStatus = getSlotStatus(slot);
+                    return (
+                      <div
+                        key={slot.id}
+                        className={`${styles.slotCard} ${styles[slotStatus]}`}
+                        onMouseEnter={() => setHoveredSlotId(slot.id)}
+                        onMouseLeave={() => setHoveredSlotId(null)}
+                      >
+                        <div className={styles.slotTime}>
+                          <FiClock size={14} />
+                          {formatTime(slot.slotTime)}
                         </div>
-                        <div className={styles.doctorInfo}>
-                          <div className={styles.doctorName}>{slot.doctorName}</div>
-                          <div className={styles.doctorCode}>{slot.doctorCode}</div>
-                        </div>
-                      </div>
 
-                      <div className={styles.slotStatus}>
-                        {slotStatus === 'deleted' ? (
-                          <>
-                            <FiTrash2 size={14} className={`${styles.statusIcon} ${styles.deleted}`} />
-                            <span className={`${styles.statusText} ${styles.deleted}`}>Deleted</span>
-                          </>
-                        ) : slotStatus === 'booked' ? (
-                          <>
-                            <FiCheckCircle size={14} className={`${styles.statusIcon} ${styles.booked}`} />
-                            <span className={`${styles.statusText} ${styles.booked}`}>Booked</span>
-                          </>
-                        ) : (
-                          <>
-                            <FiXCircle size={14} className={`${styles.statusIcon} ${styles.available}`} />
-                            <span className={`${styles.statusText} ${styles.available}`}>Available</span>
-                          </>
+                        <div className={styles.slotDoctor}>
+                          <div className={styles.doctorAvatar}>
+                            {slot.doctorName?.charAt(0).toUpperCase() || 'D'}
+                          </div>
+                          <div className={styles.doctorInfo}>
+                            <div className={styles.doctorName}>{slot.doctorName}</div>
+                            <div className={styles.doctorCode}>{slot.doctorCode}</div>
+                          </div>
+                        </div>
+
+                        <div className={styles.slotStatus}>
+                          {slotStatus === 'deleted' ? (
+                            <>
+                              <FiTrash2 size={14} className={`${styles.statusIcon} ${styles.deleted}`} />
+                              <span className={`${styles.statusText} ${styles.deleted}`}>Deleted</span>
+                            </>
+                          ) : slotStatus === 'booked' ? (
+                            <>
+                              <FiCheckCircle size={14} className={`${styles.statusIcon} ${styles.booked}`} />
+                              <span className={`${styles.statusText} ${styles.booked}`}>Booked</span>
+                            </>
+                          ) : (
+                            <>
+                              <FiXCircle size={14} className={`${styles.statusIcon} ${styles.available}`} />
+                              <span className={`${styles.statusText} ${styles.available}`}>Available</span>
+                            </>
+                          )}
+                        </div>
+
+                        {slotStatus !== 'deleted' && (
+                          <div className={`${styles.slotActions} ${hoveredSlotId === slot.id ? styles.visible : ''}`}>
+                            {slot.isBooked && (
+                              <button
+                                onClick={() => openUpdateModal(slot)}
+                                className={styles.btnEdit}
+                                title="Update Slot"
+                              >
+                                <FiEdit size={14} />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDeleteSlot(slot.id)}
+                              className={styles.btnDelete}
+                              title="Delete Slot"
+                            >
+                              <FiTrash2 size={14} />
+                            </button>
+                          </div>
                         )}
                       </div>
-
-                      {slotStatus !== 'deleted' && (
-                        <div className={`${styles.slotActions} ${hoveredSlotId === slot.id ? styles.visible : ''}`}>
-                          {slot.isBooked && (
-                            <button
-                              onClick={() => openUpdateModal(slot)}
-                              className={styles.btnEdit}
-                              title="Update Slot"
-                            >
-                              <FiEdit size={14} />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDeleteSlot(slot.id)}
-                            className={styles.btnDelete}
-                            title="Delete Slot"
-                          >
-                            <FiTrash2 size={14} />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
+
+        {/* Pagination Bar */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {slots.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={!hasNext}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{PAGE_SIZE}</strong>
+          </div>
+        </div>
       </div>
 
       {/* ── Add Slot Modal ── */}
@@ -538,18 +602,16 @@ const SlotList = () => {
           <div className={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Add New Slot</h2>
-             <div className={styles.headerRight}>
-                 <div className={styles.clinicNameone}>
-                   <FaClinicMedical
+              <div className={styles.headerRight}>
+                <div className={styles.clinicNameone}>
+                  <FaClinicMedical
                     size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
-                   {localStorage.getItem("clinicName") || "—"}
-                 </div>
-
-              <button onClick={() => setShowAddModal(false)} className={styles.modalCloseBtn}>×</button>
+                  {localStorage.getItem("clinicName") || "—"}
+                </div>
+                <button onClick={() => setShowAddModal(false)} className={styles.modalCloseBtn}>×</button>
+              </div>
             </div>
-           </div> 
             <form onSubmit={handleAddSlot} className={styles.modalForm}>
-
               <div className={styles.formGroup}>
                 <label>Doctor *</label>
                 <select
@@ -624,7 +686,6 @@ const SlotList = () => {
               <button onClick={() => setShowUpdateModal(false)} className={styles.modalCloseBtn}>×</button>
             </div>
             <form onSubmit={handleUpdateSlot} className={styles.modalForm}>
-
               <div className={styles.slotDetailsInfo}>
                 <p><strong>Doctor:</strong> {selectedSlot.doctorName}</p>
                 <p><strong>Date:</strong> {formatDate(selectedSlot.slotDate)}</p>

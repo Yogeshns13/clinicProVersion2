@@ -32,6 +32,11 @@ const PurchaseOrderList = () => {
   const [loading, setLoading]                     = useState(true);
   const [error,   setError]                       = useState(null);
 
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [totalRecords, setTotalRecords] = useState(0);
+
   const [filterInputs, setFilterInputs] = useState({
     searchType:  'VendorName',
     searchValue: '',
@@ -60,6 +65,8 @@ const PurchaseOrderList = () => {
       const branchId = await getStoredBranchId();
 
       const data = await getPurchaseOrderList(clinicId, {
+        Page:       page,
+        PageSize:   pageSize,
         BranchID:   branchId,
         POID:       0,
         Status:     filters.status !== '' ? Number(filters.status) : -1,
@@ -68,8 +75,13 @@ const PurchaseOrderList = () => {
         FromDate:   filters.dateFrom || '',
         ToDate:     filters.dateTo   || '',
       });
-      
-      setAllPurchaseOrders(data);
+
+      // Assuming backend returns array or { data: [], total: number }
+      const orders = Array.isArray(data) ? data : data?.data || [];
+      const total  = data?.total || orders.length;
+
+      setAllPurchaseOrders(orders);
+      setTotalRecords(total);
     } catch (err) {
       setError(
         err?.status >= 400 || err?.code >= 400
@@ -83,12 +95,9 @@ const PurchaseOrderList = () => {
 
   useEffect(() => {
     fetchPurchaseOrders(appliedFilters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appliedFilters]);
+  }, [appliedFilters, page]);
 
   // ── Computed ───────────────────────────────────
-  const filteredPurchaseOrders = useMemo(() => allPurchaseOrders, [allPurchaseOrders]);
-
   const isFiltersActive =
     appliedFilters.searchValue !== '' ||
     appliedFilters.status      !== '' ||
@@ -134,11 +143,22 @@ const PurchaseOrderList = () => {
     setFilterInputs((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch      = () => setAppliedFilters({ ...filterInputs });
+  const handleSearch = () => {
+    setAppliedFilters({ ...filterInputs });
+    setPage(1);
+  };
+
   const handleClearFilters = () => {
     const empty = { searchType: 'VendorName', searchValue: '', status: '', dateFrom: '', dateTo: '' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
+    setPage(1);
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    if (newPage > Math.ceil(totalRecords / pageSize)) return;
+    setPage(newPage);
   };
 
   const handleViewDetails = (po) => navigate(`/purchaseorderitem/${po.id}`);
@@ -150,6 +170,11 @@ const PurchaseOrderList = () => {
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
+
+  // ── Pagination calc ────────────────────────────
+  const totalPages   = Math.ceil(totalRecords / pageSize);
+  const startRecord  = totalRecords === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord    = Math.min(page * pageSize, totalRecords);
 
   // ── Render ─────────────────────────────────────
   return (
@@ -238,79 +263,129 @@ const PurchaseOrderList = () => {
         </div>
       </div>
 
-      {/* ══ TABLE ══ */}
-      {loading ? (
-        <div className={styles.loading}>Loading purchase orders...</div>
-      ) : error ? (
-        <div className={styles.error}>Error: {error.message || error}</div>
-      ) : (
-        <div className={styles.tableContainer}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>PO Number</th>
-                <th>PO Date</th>
-                <th>Vendor</th>
-                <th>Contact Person</th>
-                <th>Total Amount</th>
-                <th>Net Amount</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPurchaseOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className={styles.noData}>
-                    {isFiltersActive
-                      ? 'No purchase orders match the filters.'
-                      : 'No purchase orders registered yet.'}
-                  </td>
-                </tr>
-              ) : (
-                filteredPurchaseOrders.map((po) => (
-                  <tr key={po.id}>
-                    <td>
-                      <div className={styles.nameCell}>
-                        <div className={styles.avatar}>
-                          {po.poNumber?.charAt(0).toUpperCase() ?? 'P'}
-                        </div>
-                        <div>
-                          <div className={styles.name}>{po.poNumber || '—'}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>{formatDate(po.poDate)}</td>
-                    <td>{po.vendorName || '—'}</td>
-                    <td>{po.contactPerson || '—'}</td>
-                    <td>
-                      <span className={styles.amountBadge}>{formatAmount(po.totalAmount)}</span>
-                    </td>
-                    <td>
-                      <span className={styles.amountBadge}>{formatAmount(po.netAmount)}</span>
-                    </td>
-                    <td>
-                      <span className={`${styles.statusBadge} ${getStatusClass(po.status)}`}>
-                        {getStatusLabel(po.status)}
-                      </span>
-                    </td>
-                    <td>
-                      <div className={styles.actionsCell}>
-                        <button
-                          onClick={() => handleViewDetails(po)}
-                          className={styles.viewBtn}
-                        >
-                          View Details
-                        </button>
-                      </div>
-                    </td>
+      {/* ══ TABLE + PAGINATION ══ */}
+      <div className={styles.tableSection}>
+        {loading ? (
+          <div className={styles.loading}>Loading purchase orders...</div>
+        ) : error ? (
+          <div className={styles.error}>Error: {error.message || error}</div>
+        ) : (
+          <>
+            <div className={styles.tableContainer}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>PO Number</th>
+                    <th>PO Date</th>
+                    <th>Vendor</th>
+                    <th>Contact Person</th>
+                    <th>Total Amount</th>
+                    <th>Net Amount</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+                </thead>
+                <tbody>
+                  {allPurchaseOrders.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className={styles.noData}>
+                        {isFiltersActive
+                          ? 'No purchase orders match the filters.'
+                          : 'No purchase orders registered yet.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    allPurchaseOrders.map((po) => (
+                      <tr key={po.id}>
+                        <td>
+                          <div className={styles.nameCell}>
+                            <div className={styles.avatar}>
+                              {po.poNumber?.charAt(0).toUpperCase() ?? 'P'}
+                            </div>
+                            <div>
+                              <div className={styles.name}>{po.poNumber || '—'}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>{formatDate(po.poDate)}</td>
+                        <td>{po.vendorName || '—'}</td>
+                        <td>{po.contactPerson || '—'}</td>
+                        <td>
+                          <span className={styles.amountBadge}>{formatAmount(po.totalAmount)}</span>
+                        </td>
+                        <td>
+                          <span className={styles.amountBadge}>{formatAmount(po.netAmount)}</span>
+                        </td>
+                        <td>
+                          <span className={`${styles.statusBadge} ${getStatusClass(po.status)}`}>
+                            {getStatusLabel(po.status)}
+                          </span>
+                        </td>
+                        <td>
+                          <div className={styles.actionsCell}>
+                            <button
+                              onClick={() => handleViewDetails(po)}
+                              className={styles.viewBtn}
+                            >
+                              View Details
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* ── Pagination Bar ── */}
+            <div className={styles.paginationBar}>
+              <div className={styles.paginationInfo}>
+                {totalRecords > 0
+                  ? `Showing ${startRecord}–${endRecord} records`
+                  : 'No records'}
+              </div>
+
+              <div className={styles.paginationControls}>
+                <span className={styles.paginationLabel}>Page</span>
+
+                <button
+                  className={styles.pageBtn}
+                  onClick={() => handlePageChange(1)}
+                  disabled={page === 1}
+                  title="First page"
+                >
+                  «
+                </button>
+
+                <button
+                  className={styles.pageBtn}
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1}
+                  title="Previous page"
+                >
+                  ‹
+                </button>
+
+                <span className={styles.pageIndicator}>{page}</span>
+
+                <button
+                  className={styles.pageBtn}
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page >= totalPages}
+                  title="Next page"
+                >
+                  ›
+                </button>
+              </div>
+
+              <div className={styles.pageSizeInfo}>
+                Page Size: <strong>{pageSize}</strong>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* ══ ADD PURCHASE ORDER MODAL ══ */}
       <AddPurchaseOrder

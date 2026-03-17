@@ -28,6 +28,10 @@ const LabOrderList = () => {
   const [allOrders, setAllOrders] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [orderReports, setOrderReports] = useState({}); // Map of orderId -> reportId
+
+  // ── Pagination ──
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
   
   // Filter inputs (not applied until search)
   const [filterInputs, setFilterInputs] = useState({
@@ -157,13 +161,13 @@ const LabOrderList = () => {
   };
 
   // Fetch Lab Test Orders
-  const fetchOrders = async () => {
+  const fetchOrders = async (currentPage = page) => {
     try {
       setLoading(true);
       setError(null);
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-      const options = { Page: 1, PageSize: 100, BranchID: branchId };
+      const options = { Page: currentPage, PageSize: pageSize, BranchID: branchId };
       const data = await getLabTestOrderList(clinicId, options);
       const sortedData = data.sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated));
       setOrders(sortedData);
@@ -182,7 +186,7 @@ const LabOrderList = () => {
   };
 
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(page);
     fetchDoctors();
   }, []);
 
@@ -223,18 +227,32 @@ const LabOrderList = () => {
     return filtered;
   }, [allOrders, appliedFilters]);
 
+  // ── Pagination helpers ──
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+    fetchOrders(newPage);
+  };
+
+  const startRecord = filteredOrders.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = (page - 1) * pageSize + filteredOrders.length;
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = () => setAppliedFilters({ ...filterInputs });
+  const handleSearch = () => {
+    setPage(1);
+    setAppliedFilters({ ...filterInputs });
+  };
 
   const handleClearFilters = () => {
     const emptyFilters = {
       searchType: 'patientName', searchValue: '',
       status: -1, priority: 0, dateFrom: '', dateTo: ''
     };
+    setPage(1);
     setFilterInputs(emptyFilters);
     setAppliedFilters(emptyFilters);
   };
@@ -289,7 +307,7 @@ const LabOrderList = () => {
       await createWorkItemsForOrder(selectedOrder.id, clinicId);
       setIsConfirmWorkOpen(false);
       setSelectedOrder(null);
-      await fetchOrders();
+      await fetchOrders(page);
       alert('Work items created successfully! Navigate to Work Queue to process them.');
     } catch (err) {
       console.error('Error creating work items:', err);
@@ -305,7 +323,7 @@ const LabOrderList = () => {
       await generateLabInvoice(invoiceData);
       setIsMakeInvoiceOpen(false);
       setSelectedOrder(null);
-      await fetchOrders();
+      await fetchOrders(page);
       alert('Invoice generated successfully!');
     } catch (err) {
       console.error('Error generating invoice:', err);
@@ -321,7 +339,7 @@ const LabOrderList = () => {
       await updateLabTestOrder(orderData);
       setIsUpdateOrderOpen(false);
       setSelectedOrder(null);
-      await fetchOrders();
+      await fetchOrders(page);
       alert('Order updated successfully!');
     } catch (err) {
       console.error('Error updating order:', err);
@@ -408,7 +426,7 @@ const LabOrderList = () => {
         setCurrentReportId(null);
         setReportForm({ verifiedBy: 0, verifiedDateTime: '', remarks: '', status: 1 });
         setReportMessage({ type: '', text: '' });
-        fetchOrders();
+        fetchOrders(page);
       };
       if (isUpdateMode) {
         const result = await updateLabTestReport({
@@ -560,104 +578,154 @@ const LabOrderList = () => {
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Patient Details</th>
-              <th>Doctor</th>
-              <th>Status</th>
-              <th>Priority</th>
-              <th>Date Created</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredOrders.length === 0 ? (
+      {/* ── Table + Pagination wrapper ── */}
+      <div className={styles.tableSection}>
+
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead>
               <tr>
-                <td colSpan={6} className={styles.noData}>
-                  {hasActiveFilters ? 'No orders found matching your search.' : 'No lab test orders found.'}
-                </td>
+                <th>Patient Details</th>
+                <th>Doctor</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Date Created</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              filteredOrders.map((order) => {
-                const hasReport = orderReports[order.id];
-                return (
-                  <tr key={order.id} className={styles.tableRow}>
-                    <td>
-                      <div className={styles.nameCell}>
-                        <div className={styles.avatar}>{order.patientName?.charAt(0).toUpperCase() || 'P'}</div>
-                        <div>
-                          <div className={styles.name}>{order.patientName}</div>
-                          <div className={styles.subText}>{order.patientFileNo} • {order.patientMobile}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className={styles.name}>{order.doctorFullName}</div>
-                      <div className={styles.subText}>{order.doctorCode || '—'}</div>
-                    </td>
-                    <td>
-                      <span className={`${styles.badge} ${getStatusBadgeClass(order.status)}`}>{order.statusDesc}</span>
-                    </td>
-                    <td>
-                      <span className={`${styles.badge} ${getPriorityBadgeClass(order.priority)}`}>{order.priorityDesc}</span>
-                    </td>
-                    <td>
-                      <div className={styles.dateCell}>
-                        <div className={styles.name}>{formatDate(order.dateCreated)}</div>
-                        <div className={styles.subText}>
-                          {new Date(order.dateCreated).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className={styles.actionsCell}>
-                        <button onClick={() => handleViewOrderDetails(order)} className={styles.viewBtn} title="View Details">
-                          <FiEye size={16} />
-                        </button>
-                        <button onClick={() => handlePrintClick(order)} className={styles.printBtn} title="Print Order">
-                          <FiPrinter size={16} />
-                        </button>
-                        <div className={styles.actionDropdownWrapper}>
-                          <button className={styles.actionBtn}>Actions</button>
-                          <div className={styles.actionDropdown}>
-                            <button onClick={() => handleMakeWorkClick(order)} className={styles.dropdownItem}
-                              disabled={order.status === 5 || order.status === 2 || order.status === 3 || order.status === 6}>
-                              {order.status === 5 ? 'In Progress' : 'Make Work'}
-                            </button>
-                            {order.status === 2 && !hasReport && (
-                              <button onClick={() => handleAddReportClick(order)} className={styles.dropdownItem}>
-                                <FiFileText size={14} /> Add Report
-                              </button>
-                            )}
-                            {order.status === 2 && hasReport && (
-                              <button onClick={() => handleUpdateReportClick(order)} className={styles.dropdownItem}>
-                                <FiEdit size={14} /> Update Report
-                              </button>
-                            )}
-                            {(order.status === 1 || order.status === 5) && (
-                              <button onClick={() => handleMakeInvoiceClick(order)} className={styles.dropdownItem}>
-                                <FiFileText size={14} /> Make Invoice
-                              </button>
-                            )}
-                            {order.status === 4 && (
-                              <button className={`${styles.dropdownItem} ${styles.invoicedItem}`} disabled>
-                                <FiCheckCircle size={14} /> Invoiced!
-                              </button>
-                            )}
+            </thead>
+            <tbody>
+              {filteredOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className={styles.noData}>
+                    {hasActiveFilters ? 'No orders found matching your search.' : 'No lab test orders found.'}
+                  </td>
+                </tr>
+              ) : (
+                filteredOrders.map((order) => {
+                  const hasReport = orderReports[order.id];
+                  return (
+                    <tr key={order.id} className={styles.tableRow}>
+                      <td>
+                        <div className={styles.nameCell}>
+                          <div className={styles.avatar}>{order.patientName?.charAt(0).toUpperCase() || 'P'}</div>
+                          <div>
+                            <div className={styles.name}>{order.patientName}</div>
+                            <div className={styles.subText}>{order.patientFileNo} • {order.patientMobile}</div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                      </td>
+                      <td>
+                        <div className={styles.name}>{order.doctorFullName}</div>
+                        <div className={styles.subText}>{order.doctorCode || '—'}</div>
+                      </td>
+                      <td>
+                        <span className={`${styles.badge} ${getStatusBadgeClass(order.status)}`}>{order.statusDesc}</span>
+                      </td>
+                      <td>
+                        <span className={`${styles.badge} ${getPriorityBadgeClass(order.priority)}`}>{order.priorityDesc}</span>
+                      </td>
+                      <td>
+                        <div className={styles.dateCell}>
+                          <div className={styles.name}>{formatDate(order.dateCreated)}</div>
+                          <div className={styles.subText}>
+                            {new Date(order.dateCreated).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className={styles.actionsCell}>
+                          <button onClick={() => handleViewOrderDetails(order)} className={styles.viewBtn} title="View Details">
+                            <FiEye size={16} />
+                          </button>
+                          <button onClick={() => handlePrintClick(order)} className={styles.printBtn} title="Print Order">
+                            <FiPrinter size={16} />
+                          </button>
+                          <div className={styles.actionDropdownWrapper}>
+                            <button className={styles.actionBtn}>Actions</button>
+                            <div className={styles.actionDropdown}>
+                              <button onClick={() => handleMakeWorkClick(order)} className={styles.dropdownItem}
+                                disabled={order.status === 5 || order.status === 2 || order.status === 3 || order.status === 6}>
+                                {order.status === 5 ? 'In Progress' : 'Make Work'}
+                              </button>
+                              {order.status === 2 && !hasReport && (
+                                <button onClick={() => handleAddReportClick(order)} className={styles.dropdownItem}>
+                                  <FiFileText size={14} /> Add Report
+                                </button>
+                              )}
+                              {order.status === 2 && hasReport && (
+                                <button onClick={() => handleUpdateReportClick(order)} className={styles.dropdownItem}>
+                                  <FiEdit size={14} /> Update Report
+                                </button>
+                              )}
+                              {(order.status === 1 || order.status === 5) && (
+                                <button onClick={() => handleMakeInvoiceClick(order)} className={styles.dropdownItem}>
+                                  <FiFileText size={14} /> Make Invoice
+                                </button>
+                              )}
+                              {order.status === 4 && (
+                                <button className={`${styles.dropdownItem} ${styles.invoicedItem}`} disabled>
+                                  <FiCheckCircle size={14} /> Invoiced!
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Pagination Bar — pinned to bottom of tableSection ── */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {filteredOrders.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={filteredOrders.length < pageSize}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{pageSize}</strong>
+          </div>
+        </div>
+
+      </div>{/* end tableSection */}
 
       {/* Modals */}
       {isOrderDetailsOpen && selectedOrder && (
@@ -1001,13 +1069,13 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
           <h2>Update Order</h2>
 
           <div className={styles.headerRight}>
-                        <div className={styles.clinicNameone}>
-                                       <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-                                         {localStorage.getItem('clinicName') || '—'}
-                                    </div>
+            <div className={styles.clinicNameone}>
+              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
+              {localStorage.getItem('clinicName') || '—'}
+            </div>
 
-          <button onClick={onClose} className={styles.closeBtn}>×</button>
-        </div>
+            <button onClick={onClose} className={styles.closeBtn}>×</button>
+          </div>
         </div>
         <form onSubmit={handleSubmit}>
           <div className={styles.modalBody}>
@@ -1041,7 +1109,7 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
             </div>
           </div>
           <div className={styles.modalFooter}>
-             <button type="button" onClick={onClose} className={styles.cancelBtn}>Cancel</button>
+            <button type="button" onClick={onClose} className={styles.cancelBtn}>Cancel</button>
             <button type="submit" className={styles.updateBtn}>Update Order</button>
           </div>
         </form>
@@ -1119,7 +1187,6 @@ const MakeInvoiceModal = ({ order, onClose, onSubmit }) => {
                 <span className={styles.confirmLabel}>ClinicName:</span>
                 <span className={styles.confirmValue}>{localStorage.getItem('clinicName') || '—'}</span>
               </div>
-
             </div>
             <div className={styles.invoiceFormGrid}>
               <div className={styles.formGroup}>

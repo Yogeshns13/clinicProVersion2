@@ -165,20 +165,32 @@ export const renewToken = async () => {
     RefreshToken: "",
   };
   const getReadableTime = () => new Date().toLocaleString();
+
   try {
-    const response = await API.post("/RenewToken", payload);
+    const response = await API.post("/RenewToken", payload, {
+      validateStatus: (status) => status < 500,
+    });
     const responseTime = getReadableTime();
-    console.log(`[Renew
-    Token] Response at: ${responseTime}`, response.data);
+
+    if (response.status === 422) {
+      console.log("TokenRenewal Failed! Please Login Again");
+      return { success: false, responseTime };
+    }
+
+    console.log(`[Renew Token] Response at: ${responseTime}`, response.data);
+
     const result = response.data?.result;
-    if (result?.OUT_OK === 1 && result?.USER_ID) { 
+    if (result?.OUT_OK === 1 && result?.USER_ID) {
       const profileName = result?.PROFILE_NAME || result?.profileName || localStorage.getItem("profile_name");
       return { success: true, userId: result.USER_ID, profileName, responseTime };
     }
+
+    console.log("TokenRenewal Failed! Please Login Again");
     return { success: false, responseTime };
+
   } catch (error) {
     const responseTime = getReadableTime();
-    console.error(`[RenewToken] Failed at: ${responseTime}`, error);
+    console.log("TokenRenewal Failed! Please Login Again");
     return { success: false, responseTime };
   }
 };
@@ -4150,13 +4162,25 @@ export const logout = async () => {
     const result = response.data.result;
 
     if (result?.OUT_OK === 1) {
-      localStorage.clear();  
+      localStorage.removeItem("SESSION_REF");
+      localStorage.removeItem("sessionRef");
+      localStorage.removeItem("userID");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("profileName");
+      localStorage.removeItem("login_time"); 
+      localStorage.removeItem("branchID"); 
+      localStorage.removeItem("clinicID");
+      localStorage.removeItem("clinicName");
+      localStorage.removeItem("isLoggedIn");
 
       return { success: true, message: result.OUT_ERROR || "Logged out successfully" };
     } else {
       throw new Error(result?.OUT_ERROR || "Logout failed");
     }
   } catch (err) {
+    localStorage.removeItem("SESSION_REF");
+    localStorage.removeItem("sessionRef");
+    localStorage.removeItem("login_time");
     throw new Error(
       err.response?.data?.message || 
       err.response?.data?.result?.OUT_ERROR || 

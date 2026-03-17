@@ -21,12 +21,23 @@
 }
 
 /* ==================== MAIN WRAPPER ==================== */
+/*
+  KEY CHANGE (mirrors ClinicList):
+  height: 100vh + overflow: hidden clamps wrapper to viewport.
+  display: flex + flex-direction: column lets children fill remaining space.
+  The tableSection gets flex:1 + min-height:0 so only the table scrolls.
+  The paginationBar is flex-shrink:0, always pinned to the bottom.
+*/
 .wrapper {
   padding: 20px;
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   color: var(--cl-text-dark);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 /* ==================== TAB NAVIGATION — UNCHANGED ==================== */
@@ -38,6 +49,7 @@
   padding: 8px;
   border-radius: 14px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  flex-shrink: 0;
 }
 
 .tab {
@@ -81,11 +93,10 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-
+  flex-shrink: 0;
 }
 
-/* grid: search-group | fromDate | toDate | actions
-   Date columns fixed at 140px so they don't stretch */
+/* grid: search-group | fromDate | toDate | actions */
 .filtersGrid {
   display: grid;
   grid-template-columns: 1fr 140px 140px auto;
@@ -238,16 +249,36 @@
   transform: translateY(-2px);
 }
 
-/* ==================== TABLE — UNCHANGED ==================== */
+/* ==================== TABLE SECTION ==================== */
+/*
+  flex: 1        → fills ALL remaining height after tabs + filter bar
+  min-height: 0  → allows shrinking below content (required for nested scroll)
+  display: flex + flex-direction: column → so tableContainer can flex:1 inside it
+*/
+.tableSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== TABLE CONTAINER ==================== */
+/*
+  flex: 1        → fills all space between filter bar and pagination bar
+  min-height: 0  → allows shrinking (critical for scroll to work)
+  overflow-y: auto → table scrolls here, not the page
+*/
 .tableContainer {
   background: white;
   border-radius: 17px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  max-height: calc(100vh - 220px);
   box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
   border: 1px solid rgba(34, 43, 108, 0.1);
 }
 
+/* ==================== TABLE — UNCHANGED ==================== */
 .table {
   width: 100%;
   table-layout: auto;
@@ -265,8 +296,8 @@
   letter-spacing: 1px;
   border: none;
   white-space: nowrap;
-  position: sticky;   /* ← new */
-  top: 0;             /* ← new */
+  position: sticky;
+  top: 0;
   z-index: 2;
 }
 
@@ -442,6 +473,103 @@
 
 .error { color: #ef4444; }
 
+/* ==================== PAGINATION BAR ==================== */
+/*
+  flex-shrink: 0  → never compressed, always pinned to the bottom of tableSection
+  margin-top: 14px → gap between scrollable table and this bar
+*/
+.paginationBar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 14px;
+  padding: 10px 20px;
+  margin-top: 14px;
+  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  gap: 16px;
+}
+
+.paginationInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.paginationLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--cl-primary-start);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.pageBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: var(--cl-primary-start);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--cl-accent-start), var(--cl-accent-end));
+  border-color: var(--cl-accent-end);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.3);
+}
+
+.pageBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pageIndicator {
+  min-width: 36px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--cl-primary-end), var(--cl-accent-end));
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0 8px;
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
+}
+
+.pageSizeInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pageSizeInfo strong {
+  color: var(--cl-primary-start);
+  font-weight: 700;
+}
+
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .wrapper {
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -513,6 +641,32 @@
 :global(.dark-mode) .name    { color: #e2e8f0; }
 :global(.dark-mode) .subText { color: #94a3b8; }
 
+:global(.dark-mode) .paginationBar {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .paginationInfo,
+:global(.dark-mode) .pageSizeInfo {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .paginationLabel {
+  color: var(--cl-accent-end);
+}
+
+:global(.dark-mode) .pageBtn {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--cl-accent-start), var(--cl-accent-end));
+  border-color: var(--cl-accent-end);
+  color: white;
+}
+
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 1024px) {
   .filtersGrid {
@@ -578,6 +732,16 @@
   .viewBtn {
     width: 100%;
     justify-content: center;
+  }
+
+  .paginationBar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .paginationControls {
+    align-self: center;
   }
 }
 

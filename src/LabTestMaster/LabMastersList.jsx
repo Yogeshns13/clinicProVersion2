@@ -28,6 +28,8 @@ import UpdateLabTestPackage from './UpdateLabTestPackage.jsx';
 import { FaClinicMedical } from 'react-icons/fa'; 
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
+const PAGE_SIZE = 20;
+
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
     case 'TestName':
@@ -74,7 +76,6 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (testFee > 1000000) return 'Fees cannot exceed ₹10,00,000';
       return '';
 
-    // ── fees (package) — required ──────────────────────────────────────────
     case 'fees':
       if (value === '' || value === null || value === undefined) return 'Fees is required';
       const fee = Number(value);
@@ -134,9 +135,6 @@ const filterInput = (fieldName, value) => {
   }
 };
 
-// ────────────────────────────────────────────────
-// CONSTANTS
-// ────────────────────────────────────────────────
 const TEST_TYPES = [
   { id: 1, label: 'Blood' },
   { id: 2, label: 'Urine' },
@@ -158,7 +156,6 @@ const PACKAGE_STATUS_OPTIONS = [
   { id: 2, label: 'Inactive' },
 ];
 
-// ── Search type options for each tab ──
 const MASTER_SEARCH_TYPE_OPTIONS = [
   { value: 'testName', label: 'Test Name' },
 ];
@@ -167,19 +164,17 @@ const PACKAGE_SEARCH_TYPE_OPTIONS = [
   { value: 'packName', label: 'Package Name' },
 ];
 
-// ────────────────────────────────────────────────
 const LabMasterList = () => {
   const today = new Date().toISOString().split('T')[0];
 
-  // Tab State
   const [activeTab, setActiveTab] = useState('master');
 
-  // ===== LAB TEST MASTER DATA =====
+  // ===== LAB TEST MASTER =====
   const [tests, setTests] = useState([]);
   const [allTests, setAllTests] = useState([]);
   const [selectedTest, setSelectedTest] = useState(null);
   const [isAddTestFormOpen, setIsAddTestFormOpen] = useState(false);
-  const [updateTest, setUpdateTest] = useState(null); // for update modal
+  const [updateTest, setUpdateTest] = useState(null);
   const [testFormData, setTestFormData] = useState({
     TestName: '',
     ShortName: '',
@@ -193,7 +188,6 @@ const LabMasterList = () => {
     SGSTPercentage: '9',
   });
 
-  // ── Master filter inputs (not applied until Search) ──
   const [masterFilterInputs, setMasterFilterInputs] = useState({
     searchType: 'testName',
     searchValue: '',
@@ -203,7 +197,6 @@ const LabMasterList = () => {
     dateTo: '',
   });
 
-  // ── Master applied filters (drive fetch + client filter) ──
   const [masterAppliedFilters, setMasterAppliedFilters] = useState({
     searchType: 'testName',
     searchValue: '',
@@ -213,12 +206,12 @@ const LabMasterList = () => {
     dateTo: '',
   });
 
-  // ===== LAB TEST PACKAGE DATA =====
+  // ===== LAB TEST PACKAGE =====
   const [packages, setPackages] = useState([]);
   const [allPackages, setAllPackages] = useState([]);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [isAddPackageFormOpen, setIsAddPackageFormOpen] = useState(false);
-  const [updatePackage, setUpdatePackage] = useState(null); // for update modal
+  const [updatePackage, setUpdatePackage] = useState(null);
   const [packageFormData, setPackageFormData] = useState({
     packName: '',
     packShortName: '',
@@ -228,7 +221,6 @@ const LabMasterList = () => {
     sgstPercentage: '9',
   });
 
-  // ── Package filter inputs ──
   const [packageFilterInputs, setPackageFilterInputs] = useState({
     searchType: 'packName',
     searchValue: '',
@@ -237,7 +229,6 @@ const LabMasterList = () => {
     dateTo: '',
   });
 
-  // ── Package applied filters ──
   const [packageAppliedFilters, setPackageAppliedFilters] = useState({
     searchType: 'packName',
     searchValue: '',
@@ -246,13 +237,13 @@ const LabMasterList = () => {
     dateTo: '',
   });
 
-  // ===== PACKAGE ITEMS DATA =====
+  // ===== PACKAGE ITEMS =====
   const [packageItems, setPackageItems] = useState([]);
   const [isAddItemFormOpen, setIsAddItemFormOpen] = useState(false);
   const [availableTests, setAvailableTests] = useState([]);
   const [selectedTestIds, setSelectedTestIds] = useState([]);
 
-  // ===== SHARED STATES =====
+  // ===== SHARED =====
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
@@ -261,7 +252,10 @@ const LabMasterList = () => {
   const [testValidationMessages, setTestValidationMessages] = useState({});
   const [packageValidationMessages, setPackageValidationMessages] = useState({});
 
-  // ── Derived: are any master filters active? ──
+  // Pagination (shared for both tabs)
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+
   const hasMasterActiveFilters =
     !!masterAppliedFilters.searchValue ||
     !!masterAppliedFilters.testType ||
@@ -269,17 +263,14 @@ const LabMasterList = () => {
     !!masterAppliedFilters.dateFrom ||
     !!masterAppliedFilters.dateTo;
 
-  // ── Derived: are any package filters active? ──
   const hasPackageActiveFilters =
     !!packageAppliedFilters.searchValue ||
     !!packageAppliedFilters.status ||
     !!packageAppliedFilters.dateFrom ||
     !!packageAppliedFilters.dateTo;
 
-  // ────────────────────────────────────────────────
-  // FETCH FUNCTIONS
-  // ────────────────────────────────────────────────
-  const fetchTests = async (filters = masterAppliedFilters) => {
+  // ── FETCH ──
+  const fetchTests = async (filters = masterAppliedFilters, pageNum = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -287,7 +278,11 @@ const LabMasterList = () => {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
 
-      const options = { BranchID: branchId };
+      const options = { 
+        BranchID: branchId,
+        Page: pageNum,
+        PageSize: PAGE_SIZE
+      };
       if (filters.searchValue) options.TestName = filters.searchValue;
       if (filters.testType !== '') options.TestType = Number(filters.testType);
       if (filters.status !== '') options.Status = Number(filters.status);
@@ -296,6 +291,7 @@ const LabMasterList = () => {
       
       setTests(data);
       setAllTests(data);
+      setHasNext(data.length === PAGE_SIZE);
     } catch (err) {
       console.error('fetchTests error:', err);
       setError(
@@ -308,7 +304,7 @@ const LabMasterList = () => {
     }
   };
 
-  const fetchPackages = async (filters = packageAppliedFilters) => {
+  const fetchPackages = async (filters = packageAppliedFilters, pageNum = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -316,7 +312,11 @@ const LabMasterList = () => {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
 
-      const options = { BranchID: branchId };
+      const options = { 
+        BranchID: branchId,
+        Page: pageNum,
+        PageSize: PAGE_SIZE
+      };
       if (filters.searchValue) options.PackNameSearch = filters.searchValue;
       if (filters.status !== '') options.Status = Number(filters.status);
       
@@ -324,6 +324,7 @@ const LabMasterList = () => {
       
       setPackages(data);
       setAllPackages(data);
+      setHasNext(data.length === PAGE_SIZE);
     } catch (err) {
       console.error('fetchPackages error:', err);
       setError(
@@ -347,7 +348,6 @@ const LabMasterList = () => {
         BranchID: branchId
       });
       
-      console.log('Fetched package items:', data);
       setPackageItems(data);
     } catch (err) {
       console.error('fetchPackageItems error:', err);
@@ -367,24 +367,19 @@ const LabMasterList = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // INITIAL LOAD
-  // ────────────────────────────────────────────────
   useEffect(() => {
     if (activeTab === 'master') {
-      fetchTests();
+      fetchTests(masterAppliedFilters, 1);
+      setPage(1);
     } else {
-      fetchPackages();
+      fetchPackages(packageAppliedFilters, 1);
+      setPage(1);
     }
-  }, [activeTab]);
+  }, [activeTab, masterAppliedFilters, packageAppliedFilters]);
 
-  // ────────────────────────────────────────────────
-  // COMPUTED VALUES
-  // ────────────────────────────────────────────────
-
-  // Client-side date filtering for master
+  // ── CLIENT FILTERS ──
   const filteredTests = useMemo(() => {
-    let filtered = allTests;
+    let filtered = tests;
 
     if (masterAppliedFilters.dateFrom) {
       const fromDate = new Date(masterAppliedFilters.dateFrom);
@@ -404,11 +399,10 @@ const LabMasterList = () => {
     }
 
     return filtered;
-  }, [allTests, masterAppliedFilters]);
+  }, [tests, masterAppliedFilters]);
 
-  // Client-side date filtering for packages
   const filteredPackages = useMemo(() => {
-    let filtered = allPackages;
+    let filtered = packages;
 
     if (packageAppliedFilters.dateFrom) {
       const fromDate = new Date(packageAppliedFilters.dateFrom);
@@ -428,53 +422,54 @@ const LabMasterList = () => {
     }
 
     return filtered;
-  }, [allPackages, packageAppliedFilters]);
+  }, [packages, packageAppliedFilters]);
 
-  // ────────────────────────────────────────────────
-  // MASTER FILTER HANDLERS
-  // ────────────────────────────────────────────────
+  // ── FILTER HANDLERS ──
   const handleMasterFilterChange = (e) => {
     const { name, value } = e.target;
     setMasterFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
   const handleMasterSearch = () => {
-    const newFilters = { ...masterFilterInputs };
-    setMasterAppliedFilters(newFilters);
-    fetchTests(newFilters);
+    setMasterAppliedFilters({ ...masterFilterInputs });
+    setPage(1);
   };
 
   const handleMasterClear = () => {
     const empty = { searchType: 'testName', searchValue: '', testType: '', status: '', dateFrom: '', dateTo: '' };
     setMasterFilterInputs(empty);
     setMasterAppliedFilters(empty);
-    fetchTests(empty);
+    setPage(1);
   };
 
-  // ────────────────────────────────────────────────
-  // PACKAGE FILTER HANDLERS
-  // ────────────────────────────────────────────────
   const handlePackageFilterChange = (e) => {
     const { name, value } = e.target;
     setPackageFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
   const handlePackageSearch = () => {
-    const newFilters = { ...packageFilterInputs };
-    setPackageAppliedFilters(newFilters);
-    fetchPackages(newFilters);
+    setPackageAppliedFilters({ ...packageFilterInputs });
+    setPage(1);
   };
 
   const handlePackageClear = () => {
     const empty = { searchType: 'packName', searchValue: '', status: '', dateFrom: '', dateTo: '' };
     setPackageFilterInputs(empty);
     setPackageAppliedFilters(empty);
-    fetchPackages(empty);
+    setPage(1);
   };
 
-  // ────────────────────────────────────────────────
-  // HELPER FUNCTIONS
-  // ────────────────────────────────────────────────
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+    if (activeTab === 'master') {
+      fetchTests(masterAppliedFilters, newPage);
+    } else {
+      fetchPackages(packageAppliedFilters, newPage);
+    }
+  };
+
+  // ── HELPERS ──
   const getTestTypeLabel = (testTypeId) => {
     return TEST_TYPES.find((t) => t.id === testTypeId)?.label || 'Unknown';
   };
@@ -494,11 +489,8 @@ const LabMasterList = () => {
     return styles.inactive;
   };
 
-  // ────────────────────────────────────────────────
-  // TEST HANDLERS
-  // ────────────────────────────────────────────────
+  // ── TEST HANDLERS ──
   const openTestDetails = (test) => setSelectedTest(test);
-  
   const closeTestModal = () => setSelectedTest(null);
 
   const openAddTestForm = () => {
@@ -516,7 +508,7 @@ const LabMasterList = () => {
     });
     setFormError('');
     setFormSuccess(false);
-    setTestValidationMessages({}); 
+    setTestValidationMessages({});
     setIsAddTestFormOpen(true);
   };
 
@@ -525,7 +517,7 @@ const LabMasterList = () => {
     setFormLoading(false);
     setFormError('');
     setFormSuccess(false);
-    setTestValidationMessages({}); 
+    setTestValidationMessages({});
   };
 
   const handleTestInputChange = (e) => {
@@ -570,7 +562,7 @@ const LabMasterList = () => {
       setFormSuccess(true);
       setTimeout(async () => {
         closeAddTestForm();
-        await fetchTests();
+        await fetchTests(masterAppliedFilters, page);
       }, 1500);
     } catch (err) {
       console.error('Add lab test failed:', err);
@@ -580,10 +572,9 @@ const LabMasterList = () => {
     }
   };
 
-  // Opens the update modal inline (no routing)
   const handleTestUpdateClick = (test) => {
-    setSelectedTest(null); // close view modal
-    setUpdateTest(test);   // open update modal
+    setSelectedTest(null);
+    setUpdateTest(test);
   };
 
   const handleTestDelete = async (test) => {
@@ -597,7 +588,7 @@ const LabMasterList = () => {
     try {
       await deleteLabTestMaster(test.id);
       closeTestModal();
-      await fetchTests();
+      await fetchTests(masterAppliedFilters, page);
       alert('Lab test deleted successfully!');
     } catch (err) {
       console.error('Delete lab test failed:', err);
@@ -608,14 +599,11 @@ const LabMasterList = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // PACKAGE HANDLERS
-  // ────────────────────────────────────────────────
+  // ── PACKAGE HANDLERS ──
   const openPackageDetails = async (pkg) => {
     setSelectedPackage(pkg);
     setFormError('');
     setPackageItems([]);
-    console.log('Opening package details for:', pkg.id); 
     await fetchPackageItems(pkg.id);
   };
   
@@ -636,7 +624,7 @@ const LabMasterList = () => {
     });
     setFormError('');
     setFormSuccess(false);
-    setPackageValidationMessages({}); 
+    setPackageValidationMessages({});
     setIsAddPackageFormOpen(true);
   };
 
@@ -645,7 +633,7 @@ const LabMasterList = () => {
     setFormLoading(false);
     setFormError('');
     setFormSuccess(false);
-    setPackageValidationMessages({}); 
+    setPackageValidationMessages({});
   };
 
   const handlePackageInputChange = (e) => {
@@ -664,7 +652,6 @@ const LabMasterList = () => {
   const handlePackageSubmit = async (e) => {
     e.preventDefault();
 
-    // ── Validate fees before submitting ──────────────────────────────────────
     const feesMsg = getLiveValidationMessage('fees', packageFormData.fees);
     if (feesMsg) {
       setPackageValidationMessages((prev) => ({ ...prev, fees: feesMsg }));
@@ -694,7 +681,7 @@ const LabMasterList = () => {
       setFormSuccess(true);
       setTimeout(async () => {
         closeAddPackageForm();
-        await fetchPackages();
+        await fetchPackages(packageAppliedFilters, page);
       }, 1500);
     } catch (err) {
       console.error('Add lab test package failed:', err);
@@ -704,15 +691,12 @@ const LabMasterList = () => {
     }
   };
 
-  // Opens the update modal inline (no routing)
   const handlePackageUpdateClick = (pkg) => {
-    setSelectedPackage(null); // close view modal
-    setUpdatePackage(pkg);    // open update modal
+    setSelectedPackage(null);
+    setUpdatePackage(pkg);
   };
 
-  // ────────────────────────────────────────────────
-  // PACKAGE ITEM HANDLERS
-  // ────────────────────────────────────────────────
+  // ── PACKAGE ITEM HANDLERS ──
   const openAddItemForm = async () => {
     setFormError('');
     setFormSuccess(false);
@@ -803,7 +787,7 @@ const LabMasterList = () => {
 
       alert(`Package fees rebuilt successfully! New Fees: ${result.formattedNewFees || result.newPackageFees}`);
       
-      await fetchPackages();
+      await fetchPackages(packageAppliedFilters, page);
       const updatedPkg = await getLabTestPackageList(clinicId, { BranchID: branchId });
       const updated = updatedPkg.find(p => p.id === selectedPackage.id);
       if (updated) {
@@ -817,9 +801,7 @@ const LabMasterList = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
-  // EARLY RETURNS
-  // ────────────────────────────────────────────────
+  // ── EARLY RETURNS ──
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
@@ -828,9 +810,11 @@ const LabMasterList = () => {
 
   if (error) return <div className={styles.error}>Error: {error.message || error}</div>;
 
-  // ────────────────────────────────────────────────
-  // RENDER
-  // ────────────────────────────────────────────────
+  const startRecord = (activeTab === 'master' ? tests : packages).length === 0 
+    ? 0 
+    : (page - 1) * PAGE_SIZE + 1;
+  const endRecord = startRecord + (activeTab === 'master' ? tests : packages).length - 1;
+
   return (
     <div className={styles.wrapper}>
       <ErrorHandler error={error} />
@@ -854,14 +838,12 @@ const LabMasterList = () => {
         </button>
       </div>
 
-      {/* ═══════════════ LAB TEST MASTER TAB ═══════════════ */}
+      {/* LAB TEST MASTER TAB */}
       {activeTab === 'master' && (
         <>
-          {/* ── Filter Bar ── */}
+          {/* Filter Bar */}
           <div className={styles.filtersContainer}>
             <div className={styles.masterFiltersGrid}>
-
-              {/* Fused search type + value */}
               <div className={styles.searchGroup}>
                 <select
                   name="searchType"
@@ -886,7 +868,6 @@ const LabMasterList = () => {
                 />
               </div>
 
-              {/* Test Type */}
               <div className={styles.filterGroup}>
                 <select
                   name="testType"
@@ -901,7 +882,6 @@ const LabMasterList = () => {
                 </select>
               </div>
 
-              {/* Status */}
               <div className={styles.filterGroup}>
                 <select
                   name="status"
@@ -916,7 +896,6 @@ const LabMasterList = () => {
                 </select>
               </div>
 
-              {/* Date From */}
               <div className={styles.filterGroup}>
                 <div className={styles.dateWrapper}>
                   {!masterFilterInputs.dateFrom && (
@@ -932,7 +911,6 @@ const LabMasterList = () => {
                 </div>
               </div>
 
-              {/* Date To */}
               <div className={styles.filterGroup}>
                 <div className={styles.dateWrapper}>
                   {!masterFilterInputs.dateTo && (
@@ -948,7 +926,6 @@ const LabMasterList = () => {
                 </div>
               </div>
 
-              {/* Actions */}
               <div className={styles.filterActions}>
                 <button onClick={handleMasterSearch} className={styles.searchButton}>
                   <FiSearch size={16} />
@@ -965,82 +942,127 @@ const LabMasterList = () => {
                   Add Test
                 </button>
               </div>
-
             </div>
           </div>
 
-          {/* Table */}
-          <div className={styles.tableContainer}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Test Name</th>
-                  <th>Short Name</th>
-                  <th>Type</th>
-                  <th>Fees</th>
-                  <th>Units</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTests.length === 0 ? (
+          {/* Table + Pagination */}
+          <div className={styles.tableSection}>
+            <div className={styles.tableContainer}>
+              <table className={styles.table}>
+                <thead>
                   <tr>
-                    <td colSpan={7} className={styles.noData}>
-                      {hasMasterActiveFilters ? 'No lab tests found for the applied filters.' : 'No lab tests registered yet.'}
-                    </td>
+                    <th>Test Name</th>
+                    <th>Short Name</th>
+                    <th>Type</th>
+                    <th>Fees</th>
+                    <th>Units</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
-                ) : (
-                  filteredTests.map((test) => (
-                    <tr key={test.id}>
-                      <td>
-                        <div className={styles.nameCell}>
-                          <div className={styles.avatar}>
-                            {test.testName?.charAt(0).toUpperCase() || 'T'}
-                          </div>
-                          <div>
-                            <div className={styles.name}>{test.testName}</div>
-                            <div className={styles.type}>
-                              {getTestTypeLabel(test.testType)}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>{test.shortName || '—'}</td>
-                      <td>
-                        <span className={styles.testTypeBadge}>
-                          {getTestTypeLabel(test.testType)}
-                        </span>
-                      </td>
-                      <td>₹{parseFloat(test.fees || 0).toFixed(2)}</td>
-                      <td>{test.units || '—'}</td>
-                      <td>
-                        <span className={`${styles.statusBadge} ${getStatusClass(test.status)}`}>
-                          {getTestStatusLabel(test.status)}
-                        </span>
-                      </td>
-                      <td>
-                        <button onClick={() => openTestDetails(test)} className={styles.detailsBtn}>
-                          View Details
-                        </button>
+                </thead>
+                <tbody>
+                  {filteredTests.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className={styles.noData}>
+                        {hasMasterActiveFilters ? 'No lab tests found for the applied filters.' : 'No lab tests registered yet.'}
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    filteredTests.map((test) => (
+                      <tr key={test.id}>
+                        <td>
+                          <div className={styles.nameCell}>
+                            <div className={styles.avatar}>
+                              {test.testName?.charAt(0).toUpperCase() || 'T'}
+                            </div>
+                            <div>
+                              <div className={styles.name}>{test.testName}</div>
+                              <div className={styles.type}>
+                                {getTestTypeLabel(test.testType)}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>{test.shortName || '—'}</td>
+                        <td>
+                          <span className={styles.testTypeBadge}>
+                            {getTestTypeLabel(test.testType)}
+                          </span>
+                        </td>
+                        <td>₹{parseFloat(test.fees || 0).toFixed(2)}</td>
+                        <td>{test.units || '—'}</td>
+                        <td>
+                          <span className={`${styles.statusBadge} ${getStatusClass(test.status)}`}>
+                            {getTestStatusLabel(test.status)}
+                          </span>
+                        </td>
+                        <td>
+                          <button onClick={() => openTestDetails(test)} className={styles.detailsBtn}>
+                            View Details
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Bar */}
+            <div className={styles.paginationBar}>
+              <div className={styles.paginationInfo}>
+                {tests.length > 0
+                  ? `Showing ${startRecord}–${endRecord} records`
+                  : 'No records'}
+              </div>
+
+              <div className={styles.paginationControls}>
+                <span className={styles.paginationLabel}>Page</span>
+
+                <button
+                  className={styles.pageBtn}
+                  onClick={() => handlePageChange(1)}
+                  disabled={page === 1}
+                  title="First page"
+                >
+                  «
+                </button>
+
+                <button
+                  className={styles.pageBtn}
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1}
+                  title="Previous page"
+                >
+                  ‹
+                </button>
+
+                <span className={styles.pageIndicator}>{page}</span>
+
+                <button
+                  className={styles.pageBtn}
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={!hasNext}
+                  title="Next page"
+                >
+                  ›
+                </button>
+              </div>
+
+              <div className={styles.pageSizeInfo}>
+                Page Size: <strong>{PAGE_SIZE}</strong>
+              </div>
+            </div>
           </div>
         </>
       )}
 
-      {/* ═══════════════ LAB TEST PACKAGES TAB ═══════════════ */}
+      {/* LAB TEST PACKAGES TAB */}
       {activeTab === 'packages' && (
         <>
-          {/* ── Filter Bar ── */}
+          {/* Filter Bar */}
           <div className={styles.filtersContainer}>
             <div className={styles.packageFiltersGrid}>
-
-              {/* Fused search type + value */}
               <div className={styles.searchGroup}>
                 <select
                   name="searchType"
@@ -1065,7 +1087,6 @@ const LabMasterList = () => {
                 />
               </div>
 
-              {/* Status */}
               <div className={styles.filterGroup}>
                 <select
                   name="status"
@@ -1080,7 +1101,6 @@ const LabMasterList = () => {
                 </select>
               </div>
 
-              {/* Date From */}
               <div className={styles.filterGroup}>
                 <div className={styles.dateWrapper}>
                   {!packageFilterInputs.dateFrom && (
@@ -1096,7 +1116,6 @@ const LabMasterList = () => {
                 </div>
               </div>
 
-              {/* Date To */}
               <div className={styles.filterGroup}>
                 <div className={styles.dateWrapper}>
                   {!packageFilterInputs.dateTo && (
@@ -1112,7 +1131,6 @@ const LabMasterList = () => {
                 </div>
               </div>
 
-              {/* Actions */}
               <div className={styles.filterActions}>
                 <button onClick={handlePackageSearch} className={styles.searchButton}>
                   <FiSearch size={16} />
@@ -1129,71 +1147,118 @@ const LabMasterList = () => {
                   Add Package
                 </button>
               </div>
-
             </div>
           </div>
 
-          {/* Table */}
-          <div className={styles.tableContainer}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Package Name</th>
-                  <th>Short Name</th>
-                  <th>Fees</th>
-                  <th>CGST %</th>
-                  <th>SGST %</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPackages.length === 0 ? (
+          {/* Table + Pagination */}
+          <div className={styles.tableSection}>
+            <div className={styles.tableContainer}>
+              <table className={styles.table}>
+                <thead>
                   <tr>
-                    <td colSpan={7} className={styles.noData}>
-                      {hasPackageActiveFilters ? 'No packages found for the applied filters.' : 'No packages registered yet.'}
-                    </td>
+                    <th>Package Name</th>
+                    <th>Short Name</th>
+                    <th>Fees</th>
+                    <th>CGST %</th>
+                    <th>SGST %</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
-                ) : (
-                  filteredPackages.map((pkg) => (
-                    <tr key={pkg.id}>
-                      <td>
-                        <div className={styles.nameCell}>
-                          <div className={styles.avatar}>
-                            {pkg.packName?.charAt(0).toUpperCase() || 'P'}
-                          </div>
-                          <div>
-                            <div className={styles.name}>{pkg.packName}</div>
-                            {pkg.description && (
-                              <div className={styles.type}>{pkg.description.substring(0, 30)}...</div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td>{pkg.packShortName || '—'}</td>
-                      <td>₹{parseFloat(pkg.fees || 0).toFixed(2)}</td>
-                      <td>{pkg.cgstPercentage || '0'}%</td>
-                      <td>{pkg.sgstPercentage || '0'}%</td>
-                      <td>
-                        <span className={`${styles.statusBadge} ${getStatusClass(pkg.status)}`}>
-                          {getPackageStatusLabel(pkg.status)}
-                        </span>
-                      </td>
-                      <td>
-                        <button onClick={() => openPackageDetails(pkg)} className={styles.detailsBtn}>
-                          View Details
-                        </button>
+                </thead>
+                <tbody>
+                  {filteredPackages.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className={styles.noData}>
+                        {hasPackageActiveFilters ? 'No packages found for the applied filters.' : 'No packages registered yet.'}
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    filteredPackages.map((pkg) => (
+                      <tr key={pkg.id}>
+                        <td>
+                          <div className={styles.nameCell}>
+                            <div className={styles.avatar}>
+                              {pkg.packName?.charAt(0).toUpperCase() || 'P'}
+                            </div>
+                            <div>
+                              <div className={styles.name}>{pkg.packName}</div>
+                              {pkg.description && (
+                                <div className={styles.type}>{pkg.description.substring(0, 30)}...</div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td>{pkg.packShortName || '—'}</td>
+                        <td>₹{parseFloat(pkg.fees || 0).toFixed(2)}</td>
+                        <td>{pkg.cgstPercentage || '0'}%</td>
+                        <td>{pkg.sgstPercentage || '0'}%</td>
+                        <td>
+                          <span className={`${styles.statusBadge} ${getStatusClass(pkg.status)}`}>
+                            {getPackageStatusLabel(pkg.status)}
+                          </span>
+                        </td>
+                        <td>
+                          <button onClick={() => openPackageDetails(pkg)} className={styles.detailsBtn}>
+                            View Details
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Bar */}
+            <div className={styles.paginationBar}>
+              <div className={styles.paginationInfo}>
+                {packages.length > 0
+                  ? `Showing ${startRecord}–${endRecord} records`
+                  : 'No records'}
+              </div>
+
+              <div className={styles.paginationControls}>
+                <span className={styles.paginationLabel}>Page</span>
+
+                <button
+                  className={styles.pageBtn}
+                  onClick={() => handlePageChange(1)}
+                  disabled={page === 1}
+                  title="First page"
+                >
+                  «
+                </button>
+
+                <button
+                  className={styles.pageBtn}
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1}
+                  title="Previous page"
+                >
+                  ‹
+                </button>
+
+                <span className={styles.pageIndicator}>{page}</span>
+
+                <button
+                  className={styles.pageBtn}
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={!hasNext}
+                  title="Next page"
+                >
+                  ›
+                </button>
+              </div>
+
+              <div className={styles.pageSizeInfo}>
+                Page Size: <strong>{PAGE_SIZE}</strong>
+              </div>
+            </div>
           </div>
         </>
       )}
 
-      {/* ──────────────── VIEW LAB TEST MODAL ──────────────── */}
+      {/* Modals remain unchanged */}
       {selectedTest && (
         <ViewLabMaster
           test={selectedTest}
@@ -1203,7 +1268,6 @@ const LabMasterList = () => {
         />
       )}
 
-      {/* ──────────────── VIEW LAB PACKAGE MODAL ──────────────── */}
       {selectedPackage && (
         <ViewLabPackage
           package={selectedPackage}
@@ -1218,40 +1282,36 @@ const LabMasterList = () => {
         />
       )}
 
-      {/* ──────────────── UPDATE LAB TEST MODAL ──────────────── */}
       {updateTest && (
         <UpdateLabTestMaster
           test={updateTest}
           onClose={() => setUpdateTest(null)}
-          onUpdateSuccess={() => fetchTests()}
+          onUpdateSuccess={() => fetchTests(masterAppliedFilters, page)}
         />
       )}
 
-      {/* ──────────────── UPDATE LAB PACKAGE MODAL ──────────────── */}
       {updatePackage && (
         <UpdateLabTestPackage
           pkg={updatePackage}
           onClose={() => setUpdatePackage(null)}
-          onUpdateSuccess={() => fetchPackages()}
+          onUpdateSuccess={() => fetchPackages(packageAppliedFilters, page)}
         />
       )}
 
-      {/* ──────────────── ADD TEST FORM MODAL ──────────────── */}
       {isAddTestFormOpen && (
         <div className={styles.modalOverlay} onClick={closeAddTestForm}>
           <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Add New Lab Test</h2>
-
               <div className={styles.headerRight}>
-              <div className={styles.clinicNameone}>
-                 <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-                   {localStorage.getItem('clinicName') || '—'}
-               </div>
-              <button onClick={closeAddTestForm} className={styles.modalClose}>
-                <FiX />
-              </button>
-             </div>
+                <div className={styles.clinicNameone}>
+                  <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
+                  {localStorage.getItem('clinicName') || '—'}
+                </div>
+                <button onClick={closeAddTestForm} className={styles.modalClose}>
+                  <FiX />
+                </button>
+              </div>
             </div>
 
             <form onSubmit={handleTestSubmit} className={styles.modalBody}>
@@ -1354,22 +1414,20 @@ const LabMasterList = () => {
         </div>
       )}
 
-      {/* ──────────────── ADD PACKAGE FORM MODAL ──────────────── */}
       {isAddPackageFormOpen && (
         <div className={styles.modalOverlay} onClick={closeAddPackageForm}>
           <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Add New Lab Test Package</h2>
-
               <div className={styles.headerRight}>
-              <div className={styles.clinicNameone}>
-                 <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-                   {localStorage.getItem('clinicName') || '—'}
-               </div>
-              <button onClick={closeAddPackageForm} className={styles.modalClose}>
-                <FiX />
-              </button>
-            </div>
+                <div className={styles.clinicNameone}>
+                  <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
+                  {localStorage.getItem('clinicName') || '—'}
+                </div>
+                <button onClick={closeAddPackageForm} className={styles.modalClose}>
+                  <FiX />
+                </button>
+              </div>
             </div>
 
             <form onSubmit={handlePackageSubmit} className={styles.modalBody}>
@@ -1439,7 +1497,6 @@ const LabMasterList = () => {
         </div>
       )}
 
-      {/* ──────────────── ADD PACKAGE ITEMS MODAL ──────────────── */}
       {isAddItemFormOpen && (
         <div className={styles.modalOverlay} onClick={closeAddItemForm}>
           <div className={`${styles.modal} ${styles.testSelectionModal}`} onClick={(e) => e.stopPropagation()}>

@@ -11,17 +11,18 @@ import UpdatePatientVisit from './UpdatePatientVisit.jsx';
 import styles from './PatientVisitList.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
-
 const STATUS_OPTIONS = [
   { id: 0, label: 'Initiated' },
   { id: 1, label: 'Ready to Consult' },
-  { id: 2, label: 'Consulted'}
+  { id: 2, label: 'Consulted' }
 ];
 
 const SEARCH_TYPE_OPTIONS = [
   { value: 'PatientName', label: 'Patient Name' },
   { value: 'DoctorName',  label: 'Doctor Name' },
 ];
+
+const PAGE_SIZE = 20;
 
 const todayDate = new Date().toISOString().split('T')[0];
 
@@ -31,6 +32,10 @@ const PatientVisitList = () => {
   const [visits, setVisits]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
+
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
 
   const [filterInputs, setFilterInputs] = useState({
     searchType:  'PatientName',
@@ -79,7 +84,7 @@ const PatientVisitList = () => {
     appliedFilters.dateTo             !== '' ||
     appliedFilters.visitDate          !== todayDate;
 
-  const fetchVisits = async (filters = appliedFilters) => {
+  const fetchVisits = async (filters = appliedFilters, pageNum = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -88,12 +93,12 @@ const PatientVisitList = () => {
       const branchId = await getStoredBranchId();
 
       const options = {
-        Page:     1,
-        PageSize: 100,
-        BranchID: branchId,
-        Status:   filters.status !== '' ? Number(filters.status) : undefined,
-        PatientName: filters.searchType === 'PatientName' ? filters.searchValue : '',
-        DoctorName:  filters.searchType === 'DoctorName'  ? filters.searchValue : '',
+        Page:         pageNum,
+        PageSize:     PAGE_SIZE,
+        BranchID:     branchId,
+        Status:       filters.status !== '' ? Number(filters.status) : undefined,
+        PatientName:  filters.searchType === 'PatientName' ? filters.searchValue : '',
+        DoctorName:   filters.searchType === 'DoctorName'  ? filters.searchValue : '',
       };
 
       if (filters.dateFrom && filters.dateTo) {
@@ -115,6 +120,7 @@ const PatientVisitList = () => {
       });
 
       setVisits(sorted);
+      setHasNext(sorted.length === PAGE_SIZE);
     } catch (err) {
       console.error('fetchVisits error:', err);
       setError(
@@ -128,8 +134,8 @@ const PatientVisitList = () => {
   };
 
   useEffect(() => {
-    fetchVisits(appliedFilters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchVisits(appliedFilters, 1);
+    setPage(1);
   }, [appliedFilters]);
 
   const formatDate = (dateStr) => {
@@ -191,6 +197,7 @@ const PatientVisitList = () => {
 
   const handleSearch = () => {
     setAppliedFilters({ ...filterInputs });
+    setPage(1);
   };
 
   const handleClearFilters = () => {
@@ -204,6 +211,7 @@ const PatientVisitList = () => {
     };
     setFilterInputs(defaults);
     setAppliedFilters(defaults);
+    setPage(1);
   };
 
   const handleViewDetails = (visit) => {
@@ -218,9 +226,8 @@ const PatientVisitList = () => {
 
   const openAddForm      = () => setIsAddFormOpen(true);
   const closeAddForm     = () => setIsAddFormOpen(false);
-  const handleAddSuccess = () => fetchVisits(appliedFilters);
+  const handleAddSuccess = () => fetchVisits(appliedFilters, page);
 
-  // Opens the full UpdatePatientVisit modal instead of navigating
   const handleEditFromModal = (visitId) => {
     setIsDetailsModalOpen(false);
     setSelectedVisit(null);
@@ -234,7 +241,7 @@ const PatientVisitList = () => {
   };
 
   const handleUpdateSuccess = () => {
-    fetchVisits(appliedFilters);
+    fetchVisits(appliedFilters, page);
   };
 
   const handleInitializeVisit = (visit) => {
@@ -292,7 +299,7 @@ const PatientVisitList = () => {
 
       await updatePatientVisit(visitData);
       closeInitializeModal();
-      await fetchVisits(appliedFilters);
+      await fetchVisits(appliedFilters, page);
     } catch (err) {
       console.error('Failed to update visit:', err);
       const apiErrors = err?.response?.data?.errors || err?.data?.errors || err?.errors;
@@ -306,12 +313,21 @@ const PatientVisitList = () => {
     }
   };
 
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+    fetchVisits(appliedFilters, newPage);
+  };
+
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
   if (loading) return <div className={styles.loading}>Loading visits...</div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
+
+  const startRecord = visits.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const endRecord   = startRecord + visits.length - 1;
 
   return (
     <div className={styles.listWrapper}>
@@ -391,7 +407,7 @@ const PatientVisitList = () => {
               </button>
             )}
 
-            <button onClick={openAddForm} className={styles.addBtn}>
+            <button onClick={() => setIsAddFormOpen(true)} className={styles.addBtn}>
               <FiPlus size={18} />
               Add Visit
             </button>
@@ -400,109 +416,157 @@ const PatientVisitList = () => {
         </div>
       </div>
 
-      {/* ── Table ── */}
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Patient</th>
-              <th>Doctor</th>
-              <th>Visit Date &amp; Time</th>
-              <th>Vitals</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visits.length === 0 ? (
+      {/* ── Table + Pagination ── */}
+      <div className={styles.tableSection}>
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead>
               <tr>
-                <td colSpan="6" className={styles.noData}>
-                  {hasActiveFilters ? 'No visits found.' : 'No patient visits recorded yet.'}
-                </td>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Visit Date & Time</th>
+                <th>Vitals</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              visits.map((visit) => (
-                <tr key={visit.id}>
-                  <td>
-                    <div className={styles.nameCell}>
-                      <div className={styles.avatar}>
-                        {visit.patientName?.charAt(0).toUpperCase() || 'P'}
-                      </div>
-                      <div>
-                        <div className={styles.name}>{visit.patientName}</div>
-                        <div className={styles.subInfo}>
-                          {visit.patientFileNo} • {visit.patientMobile}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div>
-                      <div className={styles.name}>{visit.doctorFullName}</div>
-                      <div className={styles.subInfo}>{visit.doctorCode || '—'}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div>
-                      <div className={styles.name}>{formatDate(visit.visitDate)}</div>
-                      <div className={styles.subInfo}>
-                        <span className={styles.timeBadge}>{formatTime(visit.visitTime)}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.vitalsCell}>
-                      {visit.bpReading && (
-                        <span className={`${styles.vitalBadge} ${styles.bp}`}>{visit.bpReading}</span>
-                      )}
-                      {visit.temperature && (
-                        <span className={`${styles.vitalBadge} ${styles.temp}`}>{visit.temperature}°F</span>
-                      )}
-                      {visit.weight && (
-                        <span className={`${styles.vitalBadge} ${styles.weight}`}>{visit.weight}kg</span>
-                      )}
-                      {!visit.bpReading && !visit.temperature && !visit.weight && '—'}
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${getStatusClass(visit.status)}`}>
-                      {getStatusLabel(visit.status)}
-                    </span>
-                  </td>
-                  <td>
-                    <div className={styles.actionsCell}>
-                      {visit.status === 0 ? (
-                        <button
-                          onClick={() => handleInitializeVisit(visit)}
-                          className={styles.initializeBtn}
-                          title="Initialize Visit"
-                        >
-                          <FiCheckCircle size={16} />
-                          Initialize
-                        </button>
-                      ) : (
-                        <button
-                          className={`${styles.readyBtn} ${styles.disabled}`}
-                          disabled
-                          title="Visit is Ready to Consult"
-                        >
-                          <FiCheckCircle size={16} />
-                          Ready
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleViewDetails(visit)}
-                        className={styles.detailsBtn}
-                      >
-                        View Details
-                      </button>
-                    </div>
+            </thead>
+            <tbody>
+              {visits.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className={styles.noData}>
+                    {hasActiveFilters ? 'No visits found.' : 'No patient visits recorded yet.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                visits.map((visit) => (
+                  <tr key={visit.id}>
+                    <td>
+                      <div className={styles.nameCell}>
+                        <div className={styles.avatar}>
+                          {visit.patientName?.charAt(0).toUpperCase() || 'P'}
+                        </div>
+                        <div>
+                          <div className={styles.name}>{visit.patientName}</div>
+                          <div className={styles.subInfo}>
+                            {visit.patientFileNo} • {visit.patientMobile}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div>
+                        <div className={styles.name}>{visit.doctorFullName}</div>
+                        <div className={styles.subInfo}>{visit.doctorCode || '—'}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <div>
+                        <div className={styles.name}>{formatDate(visit.visitDate)}</div>
+                        <div className={styles.subInfo}>
+                          <span className={styles.timeBadge}>{formatTime(visit.visitTime)}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.vitalsCell}>
+                        {visit.bpReading && (
+                          <span className={`${styles.vitalBadge} ${styles.bp}`}>{visit.bpReading}</span>
+                        )}
+                        {visit.temperature && (
+                          <span className={`${styles.vitalBadge} ${styles.temp}`}>{visit.temperature}°F</span>
+                        )}
+                        {visit.weight && (
+                          <span className={`${styles.vitalBadge} ${styles.weight}`}>{visit.weight}kg</span>
+                        )}
+                        {!visit.bpReading && !visit.temperature && !visit.weight && '—'}
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${getStatusClass(visit.status)}`}>
+                        {getStatusLabel(visit.status)}
+                      </span>
+                    </td>
+                    <td>
+                      <div className={styles.actionsCell}>
+                        {visit.status === 0 ? (
+                          <button
+                            onClick={() => handleInitializeVisit(visit)}
+                            className={styles.initializeBtn}
+                            title="Initialize Visit"
+                          >
+                            <FiCheckCircle size={16} />
+                            Initialize
+                          </button>
+                        ) : (
+                          <button
+                            className={`${styles.readyBtn} ${styles.disabled}`}
+                            disabled
+                            title="Visit is Ready to Consult"
+                          >
+                            <FiCheckCircle size={16} />
+                            Ready
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleViewDetails(visit)}
+                          className={styles.detailsBtn}
+                        >
+                          View Details
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Bar */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {visits.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={!hasNext}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{PAGE_SIZE}</strong>
+          </div>
+        </div>
       </div>
 
       {/* ── Add Visit Modal ── */}

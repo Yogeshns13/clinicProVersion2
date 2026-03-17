@@ -41,6 +41,10 @@ const AppointmentList = () => {
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState(null);
 
+  // ── Pagination ──
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
   // Filter inputs (staged — not applied until Search is clicked)
   const [filterInputs, setFilterInputs] = useState({
     searchType:      'PatientName',
@@ -78,7 +82,7 @@ const AppointmentList = () => {
 
   // ──────────────────────────────────────────────────
   // Data fetching — driven by appliedFilters
-  const fetchAppointments = async (filters = appliedFilters) => {
+  const fetchAppointments = async (filters = appliedFilters, currentPage = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -88,8 +92,8 @@ const AppointmentList = () => {
 
       const options = {
         BranchID:  branchId,
-        Page:      1,
-        PageSize:  100,
+        Page:      currentPage,
+        PageSize:  pageSize,
         Status:    filters.status !== '' ? Number(filters.status) : -1,
       };
 
@@ -124,7 +128,7 @@ const AppointmentList = () => {
   };
 
   useEffect(() => {
-    fetchAppointments(appliedFilters);
+    fetchAppointments(appliedFilters, page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedFilters]);
 
@@ -162,6 +166,17 @@ const AppointmentList = () => {
   };
 
   // ──────────────────────────────────────────────────
+  // Pagination helpers
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+    fetchAppointments(appliedFilters, newPage);
+  };
+
+  const startRecord = sortedAppointments => sortedAppointments.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = sortedAppointments => (page - 1) * pageSize + sortedAppointments.length;
+
+  // ──────────────────────────────────────────────────
   // Handlers
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -180,6 +195,7 @@ const AppointmentList = () => {
   };
 
   const handleSearch = () => {
+    setPage(1);
     setAppliedFilters({ ...filterInputs });
   };
 
@@ -192,6 +208,7 @@ const AppointmentList = () => {
       dateFrom:        '',
       dateTo:          '',
     };
+    setPage(1);
     setFilterInputs(reset);
     setAppliedFilters(reset);
   };
@@ -241,6 +258,10 @@ const AppointmentList = () => {
 
   if (loading) return <div className={styles.clinicLoading}>Loading appointments...</div>;
   if (error)   return <div className={styles.clinicError}>Error: {error.message || error}</div>;
+
+  // Pagination computed values (after sortedAppointments is available)
+  const start = sortedAppointments.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const end   = (page - 1) * pageSize + sortedAppointments.length;
 
   // ──────────────────────────────────────────────────
   return (
@@ -295,8 +316,6 @@ const AppointmentList = () => {
               ))}
             </select>
           </div>
-
-        
 
           {/* From Date */}
           <div className={styles.filterGroup}>
@@ -353,85 +372,135 @@ const AppointmentList = () => {
         </div>
       </div>
 
-      {/* ── Table ── */}
-      <div className={styles.clinicTableContainer}>
-        <table className={styles.clinicTable}>
-          <thead>
-            <tr>
-              <th>Patient</th>
-              <th>Doctor</th>
-              <th>Date &amp; Time</th>
-              <th>Reason</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedAppointments.length === 0 ? (
+      {/* ── Table + Pagination wrapper ── */}
+      <div className={styles.tableSection}>
+
+        <div className={styles.clinicTableContainer}>
+          <table className={styles.clinicTable}>
+            <thead>
               <tr>
-                <td colSpan="6" className={styles.clinicEmptyMessage}>
-                  {hasActiveFilters
-                    ? 'No appointments found matching your filters.'
-                    : 'No appointments found for today.'}
-                </td>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Date &amp; Time</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              sortedAppointments.map((appt) => (
-                <tr key={appt.id}>
-                  <td>
-                    <div className={styles.clinicPatientInfo}>
-                      <div className={styles.clinicAvatar}>
-                        {appt.patientName?.charAt(0).toUpperCase() || 'P'}
-                      </div>
-                      <div>
-                        <div className={styles.clinicPatientName}>{appt.patientName}</div>
-                        <div className={styles.clinicPatientDetails}>
-                          {appt.patientFileNo} • {appt.patientMobile}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.clinicDoctorName}>{appt.doctorFullName}</div>
-                    <div className={styles.clinicDoctorCode}>{appt.doctorCode || '—'}</div>
-                  </td>
-                  <td>
-                    <div className={styles.clinicDate}>{formatDate(appt.appointmentDate)}</div>
-                    <div className={styles.clinicTime}>
-                      <FiCalendar /> {formatTime(appt.appointmentTime)}
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.clinicReason}>{appt.reason || '—'}</div>
-                  </td>
-                  <td>
-                    <span className={`${styles.clinicStatusBadge} ${getStatusClass(appt.status)}`}>
-                      {getStatusLabel(appt.status).toUpperCase()}
-                    </span>
-                  </td>
-                  <td>
-                    <div className={styles.clinicActions}>
-                      <button
-                        onClick={() => handleViewDetails(appt)}
-                        className={styles.clinicDetailsBtn}
-                      >
-                        View Details
-                      </button>
-                      <button
-                        onClick={() => handleAddVisitClick(appt)}
-                        className={`${styles.clinicDetailsBtn} ${styles.addVisitBtn} ${appt.status !== 1 ? styles.disabled : ''}`}
-                        disabled={appt.status !== 1}
-                      >
-                        <FiActivity size={14} /> Add Visit
-                      </button>
-                    </div>
+            </thead>
+            <tbody>
+              {sortedAppointments.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className={styles.clinicEmptyMessage}>
+                    {hasActiveFilters
+                      ? 'No appointments found matching your filters.'
+                      : 'No appointments found for today.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                sortedAppointments.map((appt) => (
+                  <tr key={appt.id}>
+                    <td>
+                      <div className={styles.clinicPatientInfo}>
+                        <div className={styles.clinicAvatar}>
+                          {appt.patientName?.charAt(0).toUpperCase() || 'P'}
+                        </div>
+                        <div>
+                          <div className={styles.clinicPatientName}>{appt.patientName}</div>
+                          <div className={styles.clinicPatientDetails}>
+                            {appt.patientFileNo} • {appt.patientMobile}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.clinicDoctorName}>{appt.doctorFullName}</div>
+                      <div className={styles.clinicDoctorCode}>{appt.doctorCode || '—'}</div>
+                    </td>
+                    <td>
+                      <div className={styles.clinicDate}>{formatDate(appt.appointmentDate)}</div>
+                      <div className={styles.clinicTime}>
+                        <FiCalendar /> {formatTime(appt.appointmentTime)}
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.clinicReason}>{appt.reason || '—'}</div>
+                    </td>
+                    <td>
+                      <span className={`${styles.clinicStatusBadge} ${getStatusClass(appt.status)}`}>
+                        {getStatusLabel(appt.status).toUpperCase()}
+                      </span>
+                    </td>
+                    <td>
+                      <div className={styles.clinicActions}>
+                        <button
+                          onClick={() => handleViewDetails(appt)}
+                          className={styles.clinicDetailsBtn}
+                        >
+                          View Details
+                        </button>
+                        <button
+                          onClick={() => handleAddVisitClick(appt)}
+                          className={`${styles.clinicDetailsBtn} ${styles.addVisitBtn} ${appt.status !== 1 ? styles.disabled : ''}`}
+                          disabled={appt.status !== 1}
+                        >
+                          <FiActivity size={14} /> Add Visit
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Pagination Bar — pinned to bottom of tableSection ── */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {sortedAppointments.length > 0
+              ? `Showing ${start}–${end} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={sortedAppointments.length < pageSize}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{pageSize}</strong>
+          </div>
+        </div>
+
+      </div>{/* end tableSection */}
 
       {/* ── Add Appointment Modal ── */}
       <AddAppointment

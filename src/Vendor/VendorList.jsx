@@ -1,6 +1,5 @@
 // src/components/VendorList.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiX } from 'react-icons/fi';
 import { getVendorList } from '../Api/ApiPharmacy.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
@@ -26,14 +25,14 @@ const SEARCH_TYPE_OPTIONS = [
 
 // ──────────────────────────────────────────────────
 const VendorList = () => {
-  const navigate = useNavigate();
-
   // Data
-  const [vendors, setVendors]   = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(null);
+  const [vendors, setVendors] = useState([]);
 
-  // Filter inputs (staged — not applied until Search is clicked)
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+
+  // Filter inputs (staged)
   const [filterInputs, setFilterInputs] = useState({
     searchType:  'Name',
     searchValue: '',
@@ -42,7 +41,7 @@ const VendorList = () => {
     dateTo:      '',
   });
 
-  // Applied filters (drive the API call)
+  // Applied filters
   const [appliedFilters, setAppliedFilters] = useState({
     searchType:  'Name',
     searchValue: '',
@@ -51,14 +50,13 @@ const VendorList = () => {
     dateTo:      '',
   });
 
-  // Add Form Modal
+  // UI states
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState(null);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-
-  // View Details Modal
   const [selectedVendor, setSelectedVendor] = useState(null);
 
   // ──────────────────────────────────────────────────
-  // Derived: are any filters actually active?
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.status             !== '' ||
@@ -66,8 +64,7 @@ const VendorList = () => {
     appliedFilters.dateTo             !== '';
 
   // ──────────────────────────────────────────────────
-  // Data fetching — driven by appliedFilters
-  const fetchVendors = async (filters = appliedFilters) => {
+  const fetchVendors = async (filters = appliedFilters, currentPage = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -85,10 +82,12 @@ const VendorList = () => {
         GSTNo:         filters.searchType === 'GSTNo'         ? filters.searchValue : '',
         FromDate:      filters.dateFrom || '',
         ToDate:        filters.dateTo   || '',
+        Page:          currentPage,
+        PageSize:      pageSize,
       };
 
       const data = await getVendorList(clinicId, options);
-      setVendors(data);
+      setVendors(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('fetchVendors error:', err);
       setError(
@@ -102,12 +101,10 @@ const VendorList = () => {
   };
 
   useEffect(() => {
-    fetchVendors(appliedFilters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appliedFilters]);
+    fetchVendors(appliedFilters, page);
+  }, [page, appliedFilters]);
 
   // ──────────────────────────────────────────────────
-  // Helper functions
   const getStatusLabel = (status) => {
     const found = STATUS_OPTIONS.find((s) => s.id === status);
     return found ? found.label : 'Unknown';
@@ -122,7 +119,6 @@ const VendorList = () => {
   };
 
   // ──────────────────────────────────────────────────
-  // Handlers
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs((prev) => ({ ...prev, [name]: value }));
@@ -130,37 +126,30 @@ const VendorList = () => {
 
   const handleSearch = () => {
     setAppliedFilters({ ...filterInputs });
+    setPage(1);          
   };
 
   const handleClearFilters = () => {
     const empty = { searchType: 'Name', searchValue: '', status: '', dateFrom: '', dateTo: '' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
+    setPage(1);
   };
 
-  const handleViewDetails = (vendor) => {
-    setSelectedVendor(vendor);
-    console.log("Hi", vendor)
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
   };
 
-  const handleViewClose = () => {
-    setSelectedVendor(null);
-  };
-
-  const handleDeleteSuccess = () => {
-    setSelectedVendor(null);
-    fetchVendors(appliedFilters);
-  };
-
+  const handleViewDetails = (vendor) => setSelectedVendor(vendor);
+  const handleViewClose   = () => setSelectedVendor(null);
   const openAddForm  = () => setIsAddFormOpen(true);
   const closeAddForm = () => setIsAddFormOpen(false);
-
   const handleAddSuccess = () => {
-    fetchVendors(appliedFilters);
+    fetchVendors(appliedFilters, page);
   };
 
   // ──────────────────────────────────────────────────
-  // Early returns
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
@@ -168,16 +157,18 @@ const VendorList = () => {
   if (loading) return <div className={styles.loading}>Loading vendors...</div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
+  const startRecord = vendors.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = (page - 1) * pageSize + vendors.length;
+
   // ──────────────────────────────────────────────────
   return (
     <div className={styles.listWrapper}>
       <Header title="Vendor List" />
 
-      {/* ── Filter Bar ── */}
+      {/* Filter Bar */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
 
-          {/* Search type + value */}
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -205,7 +196,6 @@ const VendorList = () => {
             />
           </div>
 
-          {/* Status */}
           <div className={styles.filterGroup}>
             <select
               name="status"
@@ -222,7 +212,6 @@ const VendorList = () => {
             </select>
           </div>
 
-          {/* From Date */}
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
               {!filterInputs.dateFrom && (
@@ -238,7 +227,6 @@ const VendorList = () => {
             </div>
           </div>
 
-          {/* To Date */}
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
               {!filterInputs.dateTo && (
@@ -254,7 +242,6 @@ const VendorList = () => {
             </div>
           </div>
 
-          {/* Actions */}
           <div className={styles.filterActions}>
             <button onClick={handleSearch} className={styles.searchButton}>
               <FiSearch size={16} />
@@ -277,81 +264,130 @@ const VendorList = () => {
         </div>
       </div>
 
-      {/* ── Table ── */}
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Vendor</th>
-              <th>Contact Person</th>
-              <th>Mobile</th>
-              <th>Email</th>
-              <th>GST No</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {vendors.length === 0 ? (
+      {/* Table + Pagination wrapper */}
+      <div className={styles.tableSection}>
+
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead>
               <tr>
-                <td colSpan="7" className={styles.noData}>
-                  {hasActiveFilters ? 'No vendors found.' : 'No vendors registered yet.'}
-                </td>
+                <th>Vendor</th>
+                <th>Contact Person</th>
+                <th>Mobile</th>
+                <th>Email</th>
+                <th>GST No</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              vendors.map((vendor) => (
-                <tr key={vendor.id}>
-                  <td>
-                    <div className={styles.nameCell}>
-                      <div className={styles.avatar}>
-                        {vendor.name?.charAt(0).toUpperCase() || 'V'}
-                      </div>
-                      <div>
-                        <div className={styles.name}>{vendor.name}</div>
-                        <div className={styles.subInfo}>{vendor.branchName || '—'}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{vendor.contactPerson || '—'}</td>
-                  <td>{vendor.mobile || '—'}</td>
-                  <td>{vendor.email || '—'}</td>
-                  <td>
-                    {vendor.gstNo ? (
-                      <span className={styles.gstBadge}>{vendor.gstNo}</span>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${getStatusClass(vendor.status)}`}>
-                      {getStatusLabel(vendor.status)}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => handleViewDetails(vendor)}
-                      className={styles.detailsBtn}
-                    >
-                      View Details
-                    </button>
+            </thead>
+            <tbody>
+              {vendors.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className={styles.noData}>
+                    {hasActiveFilters ? 'No vendors found.' : 'No vendors registered yet.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                vendors.map((vendor) => (
+                  <tr key={vendor.id}>
+                    <td>
+                      <div className={styles.nameCell}>
+                        <div className={styles.avatar}>
+                          {vendor.name?.charAt(0).toUpperCase() || 'V'}
+                        </div>
+                        <div>
+                          <div className={styles.name}>{vendor.name}</div>
+                          <div className={styles.subInfo}>{vendor.branchName || '—'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{vendor.contactPerson || '—'}</td>
+                    <td>{vendor.mobile || '—'}</td>
+                    <td>{vendor.email || '—'}</td>
+                    <td>
+                      {vendor.gstNo ? (
+                        <span className={styles.gstBadge}>{vendor.gstNo}</span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${getStatusClass(vendor.status)}`}>
+                        {getStatusLabel(vendor.status)}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => handleViewDetails(vendor)}
+                        className={styles.detailsBtn}
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Bar ── same style as ClinicList */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {vendors.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={vendors.length < pageSize}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{pageSize}</strong>
+          </div>
+        </div>
+
       </div>
 
-      {/* ── View Vendor Modal ── */}
+      {/* Modals */}
       {selectedVendor && (
         <ViewVendor
           vendor={selectedVendor}
           onClose={handleViewClose}
-          onDeleteSuccess={handleDeleteSuccess}
+          onDeleteSuccess={() => fetchVendors(appliedFilters, page)}
         />
       )}
 
-      {/* ── Add Vendor Modal ── */}
       <AddVendor
         isOpen={isAddFormOpen}
         onClose={closeAddForm}

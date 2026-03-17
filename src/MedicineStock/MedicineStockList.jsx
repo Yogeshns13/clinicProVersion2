@@ -47,13 +47,18 @@ const MedicineStockList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [totalRecords, setTotalRecords] = useState(0);
+
   // Clinic Name
   const [clinicName, setClinicName] = useState("");
 
   useEffect(() => {
-  const name = localStorage.getItem("clinicName");
-  setClinicName(name || "");
-}, []);
+    const name = localStorage.getItem("clinicName");
+    setClinicName(name || "");
+  }, []);
 
   // Filter inputs (staged, not applied until Search)
   const [filterInputs, setFilterInputs] = useState({
@@ -112,11 +117,13 @@ const MedicineStockList = () => {
 
   // ────────────────────────────────────────────────
   // Build API options from filters
-  const buildApiOptions = async(filters) => {
+  const buildApiOptions = async (filters) => {
     const clinicId = await getStoredClinicId();
     const branchId = await getStoredBranchId();
 
     const options = {
+      Page: page,
+      PageSize: pageSize,
       BranchID: branchId,
       MedicineID: filters.medicineId ? Number(filters.medicineId) : 0,
       MedicineName: filters.medicineId
@@ -144,7 +151,13 @@ const MedicineStockList = () => {
       setError(null);
       const { clinicId, options } = await buildApiOptions(filters);
       const data = await getMedicineStockList(clinicId, options);
-      setAllStockList(data);
+
+      // Assuming backend returns array or { data: [], total: number }
+      const stockList = Array.isArray(data) ? data : data?.data || [];
+      const total = data?.total || stockList.length;
+
+      setAllStockList(stockList);
+      setTotalRecords(total);
     } catch (err) {
       console.error("fetchStockList error:", err);
       setError(
@@ -163,9 +176,10 @@ const MedicineStockList = () => {
       medicineId: locationMedicineId,
       searchValue: locationMedicineName ?? "",
     };
+    setAppliedFilters(initialFilters);
     fetchStockList(initialFilters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [page]);
 
   // ────────────────────────────────────────────────
   const isFilterActive = useMemo(() => {
@@ -247,6 +261,7 @@ const MedicineStockList = () => {
     const updatedFilters = { ...filterInputs, medicineId: null };
     setFilterInputs(updatedFilters);
     setAppliedFilters(updatedFilters);
+    setPage(1);
     fetchStockList(updatedFilters);
   };
 
@@ -257,7 +272,14 @@ const MedicineStockList = () => {
   const handleClearFilters = () => {
     setFilterInputs({ ...DEFAULT_FILTERS });
     setAppliedFilters({ ...DEFAULT_FILTERS });
+    setPage(1);
     fetchStockList(DEFAULT_FILTERS);
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    if (newPage > Math.ceil(totalRecords / pageSize)) return;
+    setPage(newPage);
   };
 
   const handleBackToMasterList = () => {
@@ -383,6 +405,13 @@ const MedicineStockList = () => {
     return <div className={styles.error}>Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
+  const totalPages = Math.ceil(totalRecords / pageSize);
+  const startRecord = totalRecords === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = Math.min(page * pageSize, totalRecords);
+
+  const hasActiveFilter = isFilterActive;
+
+  // ────────────────────────────────────────────────
   return (
     <div className={styles.wrapper}>
       <ErrorHandler error={error} />
@@ -496,86 +525,134 @@ const MedicineStockList = () => {
         </div>
       )}
 
-      {/* ── Table ── */}
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Medicine</th>
-              <th>Batch No</th>
-              <th>Expiry Date</th>
-              <th>Qty In</th>
-              <th>Qty Out</th>
-              <th>Balance</th>
-              <th>Purchase Price</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {allStockList.length === 0 ? (
+      {/* ── Table + Pagination wrapper ── */}
+      <div className={styles.tableSection}>
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead>
               <tr>
-                <td colSpan={9} className={styles.noData}>
-                  {isFilterActive ? "No stock found." : "No stock records yet."}
-                </td>
+                <th>Medicine</th>
+                <th>Batch No</th>
+                <th>Expiry Date</th>
+                <th>Qty In</th>
+                <th>Qty Out</th>
+                <th>Balance</th>
+                <th>Purchase Price</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              allStockList.map((stock) => (
-                <tr key={stock.id}>
-                  <td>
-                    <div className={styles.nameCell}>
-                      <div className={styles.avatar}>
-                        {stock.medicineName?.charAt(0).toUpperCase() || "M"}
-                      </div>
-                      <div>
-                        <div className={styles.name}>{stock.medicineName}</div>
-                        <div className={styles.subInfo}>
-                          {stock.genericName || "—"}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{stock.batchNo || "—"}</td>
-                  <td>
-                    <div>{formatDate(stock.expiryDate)}</div>
-                    {stock.daysToExpiry != null && (
-                      <div className={styles.daysToExpiry}>
-                        {stock.daysToExpiry >= 0
-                          ? `${stock.daysToExpiry} days left`
-                          : `Expired ${Math.abs(stock.daysToExpiry)} days ago`}
-                      </div>
-                    )}
-                  </td>
-                  <td>{stock.quantityIn ?? 0}</td>
-                  <td>{stock.quantityOut ?? 0}</td>
-                  <td>
-                    <span
-                      className={`${styles.balanceBadge} ${stock.balanceQuantity <= 0 ? styles.lowBalance : ""}`}
-                    >
-                      {stock.balanceQuantity ?? 0}
-                    </span>
-                  </td>
-                  <td>{formatCurrency(stock.purchasePrice)}</td>
-                  <td>
-                    <span
-                      className={`${styles.statusBadge} ${getStatusClass(stock.stockStatusDesc)}`}
-                    >
-                      {stock.stockStatusDesc?.toUpperCase() || "NORMAL"}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => openDetails(stock)}
-                      className={styles.detailsBtn}
-                    >
-                      View Details
-                    </button>
+            </thead>
+            <tbody>
+              {allStockList.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className={styles.noData}>
+                    {hasActiveFilter ? "No stock found." : "No stock records yet."}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                allStockList.map((stock) => (
+                  <tr key={stock.id}>
+                    <td>
+                      <div className={styles.nameCell}>
+                        <div className={styles.avatar}>
+                          {stock.medicineName?.charAt(0).toUpperCase() || "M"}
+                        </div>
+                        <div>
+                          <div className={styles.name}>{stock.medicineName}</div>
+                          <div className={styles.subInfo}>
+                            {stock.genericName || "—"}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{stock.batchNo || "—"}</td>
+                    <td>
+                      <div>{formatDate(stock.expiryDate)}</div>
+                      {stock.daysToExpiry != null && (
+                        <div className={styles.daysToExpiry}>
+                          {stock.daysToExpiry >= 0
+                            ? `${stock.daysToExpiry} days left`
+                            : `Expired ${Math.abs(stock.daysToExpiry)} days ago`}
+                        </div>
+                      )}
+                    </td>
+                    <td>{stock.quantityIn ?? 0}</td>
+                    <td>{stock.quantityOut ?? 0}</td>
+                    <td>
+                      <span
+                        className={`${styles.balanceBadge} ${stock.balanceQuantity <= 0 ? styles.lowBalance : ""}`}
+                      >
+                        {stock.balanceQuantity ?? 0}
+                      </span>
+                    </td>
+                    <td>{formatCurrency(stock.purchasePrice)}</td>
+                    <td>
+                      <span
+                        className={`${styles.statusBadge} ${getStatusClass(stock.stockStatusDesc)}`}
+                      >
+                        {stock.stockStatusDesc?.toUpperCase() || "NORMAL"}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => openDetails(stock)}
+                        className={styles.detailsBtn}
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Pagination Bar ── */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {totalRecords > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page >= totalPages}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{pageSize}</strong>
+          </div>
+        </div>
       </div>
 
       {/* ──────────────── View Details Modal ──────────────── */}

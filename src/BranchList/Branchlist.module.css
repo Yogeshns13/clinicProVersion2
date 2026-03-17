@@ -237,11 +237,6 @@
 }
 
 /* ==================== TABLE CONTAINER ==================== */
-/*
-  flex: 1        → fills all space between filter bar and pagination bar
-  min-height: 0  → allows shrinking (critical for scroll to work)
-  overflow-y: auto → table scrolls here, not the page
-*/
 .clinicTableContainer {
   background: white;
   border-radius: 17px;

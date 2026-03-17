@@ -10,16 +10,19 @@ import styles from './LabReportList.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
-// ────────────────────────────────────────────────
+const PAGE_SIZE = 20;
+
 const LabReportList = () => {
   const navigate = useNavigate();
 
-  // Data & Filter
   const [reports, setReports] = useState([]);
   const [allReports, setAllReports] = useState([]);
   const [clinicName, setClinicName] = useState('—');
-  
-  // Filter inputs (not applied until search)
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+
   const [filterInputs, setFilterInputs] = useState({
     searchType: 'patientName',
     searchValue: '',
@@ -28,7 +31,6 @@ const LabReportList = () => {
     dateTo: ''
   });
 
-  // Applied filters
   const [appliedFilters, setAppliedFilters] = useState({
     searchType: 'patientName',
     searchValue: '',
@@ -37,48 +39,40 @@ const LabReportList = () => {
     dateTo: ''
   });
 
-  // Selected / Modal
   const [selectedReport, setSelectedReport] = useState(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [reportToUpdate, setReportToUpdate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  // ── Derived: are any filters actually active?
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.status             !== '' ||
     appliedFilters.dateFrom           !== '' ||
     appliedFilters.dateTo             !== '';
 
-  // ────────────────────────────────────────────────
-  useEffect(() => {
-    fetchReports();
-  }, []);
-
-  const fetchReports = async () => {
-    try {
-            // Get clinic name from encrypted storage
-            const clinicName = String(await getStoredClinicName());
-            setClinicName(clinicName || '—');
-          } catch (err) {
-            console.error('Failed to fetch clinic name:', err);
-            setClinicName('—');
-          }
-
+  const fetchReports = async (filters = appliedFilters, pageNum = page) => {
     try {
       setLoading(true);
       setError(null);
+
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-      const options = { BranchID: branchId };
+
+      const options = { 
+        BranchID: branchId,
+        Page: pageNum,
+        PageSize: PAGE_SIZE
+      };
+
       const data = await getLabTestReportList(clinicId, options);
+
       setReports(data);
       setAllReports(data);
+      setHasNext(data.length === PAGE_SIZE);
     } catch (err) {
       console.error('fetchReports error:', err);
       setError(
@@ -91,9 +85,13 @@ const LabReportList = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
+  useEffect(() => {
+    fetchReports(appliedFilters, 1);
+    setPage(1);
+  }, [appliedFilters]);
+
   const filteredReports = useMemo(() => {
-    let filtered = allReports;
+    let filtered = reports;
 
     if (appliedFilters.searchValue) {
       const term = appliedFilters.searchValue.toLowerCase();
@@ -137,9 +135,8 @@ const LabReportList = () => {
     }
 
     return filtered;
-  }, [allReports, appliedFilters]);
+  }, [reports, appliedFilters]);
 
-  // ────────────────────────────────────────────────
   const getStatusClass = (status) => {
     if (status === 1) return styles.created;
     if (status === 2) return styles.cancelled;
@@ -147,7 +144,6 @@ const LabReportList = () => {
     return styles.created;
   };
 
-  // Returns the header badge colour variant class
   const getStatusBadgeVariant = (status) => {
     if (status === 1) return styles.detailBadgeInfo;
     if (status === 2) return styles.detailBadgeDanger;
@@ -167,18 +163,21 @@ const LabReportList = () => {
     }
   };
 
-  // ────────────────────────────────────────────────
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = () => setAppliedFilters({ ...filterInputs });
+  const handleSearch = () => {
+    setAppliedFilters({ ...filterInputs });
+    setPage(1);
+  };
 
   const handleClearFilters = () => {
     const emptyFilters = { searchType: 'patientName', searchValue: '', status: '', dateFrom: '', dateTo: '' };
     setFilterInputs(emptyFilters);
     setAppliedFilters(emptyFilters);
+    setPage(1);
   };
 
   const openDetails  = (report) => setSelectedReport(report);
@@ -190,12 +189,15 @@ const LabReportList = () => {
     setSelectedReport(null);
   };
 
-  const handleCloseUpdateModal = () => { setShowUpdateModal(false); setReportToUpdate(null); };
+  const handleCloseUpdateModal = () => { 
+    setShowUpdateModal(false); 
+    setReportToUpdate(null); 
+  };
 
   const handleUpdateSuccess = () => {
     setShowUpdateModal(false);
     setReportToUpdate(null);
-    fetchReports();
+    fetchReports(appliedFilters, page);
   };
 
   const handleDeleteClick = (report) => setDeleteConfirm(report);
@@ -219,21 +221,27 @@ const LabReportList = () => {
 
   const cancelDelete = () => setDeleteConfirm(null);
 
-  // ────────────────────────────────────────────────
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+    fetchReports(appliedFilters, newPage);
+  };
+
   if (error && (error?.status >= 400 || error?.code >= 400)) return <ErrorHandler error={error} />;
   if (loading) return <div className={styles.clinicLoading}>Loading lab reports...</div>;
   if (error)   return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
-  // ────────────────────────────────────────────────
+  const startRecord = reports.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const endRecord   = startRecord + reports.length - 1;
+
   return (
     <div className={styles.clinicListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Lab Report Management" />
 
-      {/* ── Filters ── */}
+      {/* Filters */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
-
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -304,100 +312,140 @@ const LabReportList = () => {
         </div>
       </div>
 
-      {/* ── Table ── */}
-      <div className={styles.clinicTableContainer}>
-        <table className={styles.clinicTable}>
-          <thead>
-            <tr>
-              <th>File Code</th>
-              <th>Patient</th>
-              <th>Doctor</th>
-              <th>Clinic</th>
-              <th>Verified By</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredReports.length === 0 ? (
+      {/* Table + Pagination */}
+      <div className={styles.tableSection}>
+        <div className={styles.clinicTableContainer}>
+          <table className={styles.clinicTable}>
+            <thead>
               <tr>
-                <td colSpan={7} className={styles.clinicNoData}>
-                  {Object.values(appliedFilters).some(v => v)
-                    ? 'No lab reports found.'
-                    : 'No lab reports available yet.'}
-                </td>
+                <th>File Code</th>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Clinic</th>
+                <th>Verified By</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              filteredReports.map((report) => (
-                <tr key={report.id}>
-                  <td>
-                    <div className={styles.clinicNameCell}>
-                      <div className={styles.clinicAvatar}>
-                        {report.patientFileNo ? String(report.patientFileNo).charAt(0).toUpperCase() : 'F'}
-                      </div>
-                      <div>
-                        <div className={styles.clinicName}>{report.patientFileNo || '—'}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div>
-                      <div className={styles.clinicName}>{report.patientName || '—'}</div>
-                      <div className={styles.clinicType}>{report.patientMobile || '—'}</div>
-                    </div>
-                  </td>
-                  <td>{report.doctorFullName || '—'}</td>
-                  <td>{report.clinicName || '—'}</td>
-                  <td>{report.verifiedByName || '—'}</td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${getStatusClass(report.status)}`}>
-                      {report.statusDesc?.toUpperCase() || 'UNKNOWN'}
-                    </span>
-                  </td>
-                  <td>
-                    <button onClick={() => openDetails(report)} className={styles.clinicDetailsBtn}>
-                      View Details
-                    </button>
+            </thead>
+            <tbody>
+              {filteredReports.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className={styles.clinicNoData}>
+                    {Object.values(appliedFilters).some(v => v)
+                      ? 'No lab reports found.'
+                      : 'No lab reports available yet.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredReports.map((report) => (
+                  <tr key={report.id}>
+                    <td>
+                      <div className={styles.clinicNameCell}>
+                        <div className={styles.clinicAvatar}>
+                          {report.patientFileNo ? String(report.patientFileNo).charAt(0).toUpperCase() : 'F'}
+                        </div>
+                        <div>
+                          <div className={styles.clinicName}>{report.patientFileNo || '—'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div>
+                        <div className={styles.clinicName}>{report.patientName || '—'}</div>
+                        <div className={styles.clinicType}>{report.patientMobile || '—'}</div>
+                      </div>
+                    </td>
+                    <td>{report.doctorFullName || '—'}</td>
+                    <td>{report.clinicName || '—'}</td>
+                    <td>{report.verifiedByName || '—'}</td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${getStatusClass(report.status)}`}>
+                        {report.statusDesc?.toUpperCase() || 'UNKNOWN'}
+                      </span>
+                    </td>
+                    <td>
+                      <button onClick={() => openDetails(report)} className={styles.clinicDetailsBtn}>
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Bar */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {reports.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={!hasNext}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{PAGE_SIZE}</strong>
+          </div>
+        </div>
       </div>
 
-      {/* ══════════════ CLINIC-STYLE DETAILS MODAL ══════════════ */}
+      {/* Details Modal */}
       {selectedReport && (
         <div className={styles.detailModalOverlay} onClick={closeModal}>
           <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
-
-            {/* ── Gradient Header ── */}
             <div className={styles.detailModalHeader}>
-  <div className={styles.detailHeaderContent}>
-    {/* Left: Avatar + Patient name */}
-    <div className={styles.detailHeaderTop}>
-      <div className={styles.detailHeaderAvatar}>
-        {selectedReport.patientFileNo
-          ? String(selectedReport.patientFileNo).charAt(0).toUpperCase()
-          : 'F'}
-      </div>
-      <h2 className={styles.detailHeaderTitle}>{selectedReport.patientName || '—'}</h2>
-    </div>
-    <div className={styles.clinicNameone}>
-        <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-        {localStorage.getItem('clinicName') || '—'}
-      </div>
-     
-  </div>
+              <div className={styles.detailHeaderContent}>
+                <div className={styles.detailHeaderTop}>
+                  <div className={styles.detailHeaderAvatar}>
+                    {selectedReport.patientFileNo
+                      ? String(selectedReport.patientFileNo).charAt(0).toUpperCase()
+                      : 'F'}
+                  </div>
+                  <h2 className={styles.detailHeaderTitle}>{selectedReport.patientName || '—'}</h2>
+                </div>
+                <div className={styles.clinicNameone}>
+                  <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
+                  {localStorage.getItem('clinicName') || '—'}
+                </div>
+              </div>
+              <button onClick={closeModal} className={styles.detailCloseBtn}>✕</button>
+            </div>
 
-  <button onClick={closeModal} className={styles.detailCloseBtn}>✕</button>
-</div>
-
-            {/* ── Scrollable Body ── */}
             <div className={styles.detailModalBody}>
               <div className={styles.detailInfoSection}>
-
-                {/* Card 1 — Patient Information (left) */}
                 <div className={styles.detailInfoCard}>
                   <div className={styles.detailInfoHeader}>
                     <h3>Patient Information</h3>
@@ -426,7 +474,6 @@ const LabReportList = () => {
                   </div>
                 </div>
 
-                {/* Card 2 — Report Details (right) */}
                 <div className={styles.detailInfoCard}>
                   <div className={styles.detailInfoHeader}>
                     <h3>Report Details</h3>
@@ -457,10 +504,9 @@ const LabReportList = () => {
                   </div>
                 </div>
 
-                {/* Card 3 — Clinic & Timeline (full width bottom) */}
                 <div className={styles.detailInfoCard}>
                   <div className={styles.detailInfoHeader}>
-                    <h3>Clinic &amp; Timeline</h3>
+                    <h3>Clinic & Timeline</h3>
                   </div>
                   <div className={styles.detailInfoContent}>
                     <div className={styles.detailInfoRow}>
@@ -489,11 +535,9 @@ const LabReportList = () => {
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
 
-            {/* ── Footer ── */}
             <div className={styles.detailModalFooter}>
               <button onClick={() => handleDeleteClick(selectedReport)} className={styles.btnDelete}>
                 <FiTrash2 size={15} /> Delete Report
@@ -502,12 +546,11 @@ const LabReportList = () => {
                 <FiEdit size={15} /> Update Report
               </button>
             </div>
-
           </div>
         </div>
       )}
 
-      {/* ──────────────── Delete Confirmation Modal ──────────────── */}
+      {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className={styles.clinicModalOverlay} onClick={cancelDelete}>
           <div className={styles.clinicModal} onClick={(e) => e.stopPropagation()}>
@@ -534,7 +577,7 @@ const LabReportList = () => {
         </div>
       )}
 
-      {/* ──────────────── Update Modal ──────────────── */}
+      {/* Update Modal */}
       {showUpdateModal && reportToUpdate && (
         <UpdateLabReport
           report={reportToUpdate}

@@ -32,6 +32,10 @@ const LabInvoiceList = () => {
     dateTo: ''
   });
 
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+
   // UI States
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -174,6 +178,12 @@ const LabInvoiceList = () => {
     });
   }, [filteredInvoiceDetails]);
 
+  // Paginated slice of groupedInvoices
+  const paginatedInvoices = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return groupedInvoices.slice(start, start + pageSize);
+  }, [groupedInvoices, page, pageSize]);
+
   // Calculate summary statistics
   const summaryStats = useMemo(() => {
     const uniqueInvoices = new Set(allInvoiceDetails.map(d => d.invoiceId)).size;
@@ -197,6 +207,7 @@ const LabInvoiceList = () => {
 
   const handleSearch = () => {
     setAppliedFilters({ ...filterInputs });
+    setPage(1);
   };
 
   const handleClearFilters = () => {
@@ -208,12 +219,18 @@ const LabInvoiceList = () => {
     };
     setFilterInputs(emptyFilters);
     setAppliedFilters(emptyFilters);
+    setPage(1);
   };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
   };
 
   const handleViewInvoiceDetails = (invoice) => {
@@ -260,6 +277,10 @@ const LabInvoiceList = () => {
       </div>
     );
   }
+
+  // Pagination display values
+  const startRecord = paginatedInvoices.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = (page - 1) * pageSize + paginatedInvoices.length;
 
   return (
     <div className={styles.wrapper}>
@@ -347,104 +368,154 @@ const LabInvoiceList = () => {
         </div>
       </div>
 
-      {/* Invoices Table */}
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Invoice Details</th>
-              <th>Patient Details</th>
-              <th>Tests Count</th>
-              <th>Amount</th>
-              <th>Tax (CGST + SGST)</th>
-              <th>Net Amount</th>
-              <th>Invoice Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {groupedInvoices.length === 0 ? (
+      {/* ── Table + Pagination wrapper ── */}
+      <div className={styles.tableSection}>
+
+        {/* Invoices Table */}
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead>
               <tr>
-                <td colSpan={8} className={styles.noData}>
-                  {Object.values(appliedFilters).some(v => v && v !== 'patientName') 
-                    ? 'No invoices found matching your search.'
-                    : 'No lab invoices found.'}
-                </td>
+                <th>Invoice Details</th>
+                <th>Patient Details</th>
+                <th>Tests Count</th>
+                <th>Amount</th>
+                <th>Tax (CGST + SGST)</th>
+                <th>Net Amount</th>
+                <th>Invoice Date</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              groupedInvoices.map((invoice) => (
-                <tr key={invoice.invoiceId} className={styles.tableRow}>
-                  <td>
-                    <div>
-                      <div className={styles.name}>{invoice.invoiceNo}</div>
-                      <div className={styles.subText}>ID: {invoice.invoiceId}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.nameCell}>
-                      <div className={styles.avatar}>
-                        {invoice.patientName?.charAt(0).toUpperCase() || 'P'}
-                      </div>
-                      <div>
-                        <div className={styles.name}>{invoice.patientName}</div>
-                        <div className={styles.subText}>
-                          {invoice.patientFileNo} • {invoice.patientMobile}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.testCount}>
-                      <span className={styles.badge}>{invoice.details.length}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.amountCell}>
-                      <div className={styles.name}>{formatCurrency(invoice.totalAmount)}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.taxCell}>
-                      <div className={styles.name}>{formatCurrency(invoice.totalCgst + invoice.totalSgst)}</div>
-                      <div className={styles.subText}>
-                        CGST: {formatCurrency(invoice.totalCgst)} | SGST: {formatCurrency(invoice.totalSgst)}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.netAmountCell}>
-                      <div className={styles.name}>{formatCurrency(invoice.totalNetAmount)}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.dateCell}>
-                      <div className={styles.name}>{formatDate(invoice.invoiceDate)}</div>
-                      <div className={styles.subText}>
-                        {invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleTimeString('en-US', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        }) : '—'}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.actionsCell}>
-                      <div className={styles.actionDropdownWrapper}>
-                        <button 
-                         onClick={() => handleViewInvoiceDetails(invoice)}
-                         className={styles.actionBtn}
-                         title="View Details">
-                          View Details
-                        </button>
-                      </div>
-                    </div>
+            </thead>
+            <tbody>
+              {paginatedInvoices.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className={styles.noData}>
+                    {Object.values(appliedFilters).some(v => v && v !== 'patientName') 
+                      ? 'No invoices found matching your search.'
+                      : 'No lab invoices found.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                paginatedInvoices.map((invoice) => (
+                  <tr key={invoice.invoiceId} className={styles.tableRow}>
+                    <td>
+                      <div>
+                        <div className={styles.name}>{invoice.invoiceNo}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.nameCell}>
+                        <div className={styles.avatar}>
+                          {invoice.patientName?.charAt(0).toUpperCase() || 'P'}
+                        </div>
+                        <div>
+                          <div className={styles.name}>{invoice.patientName}</div>
+                          <div className={styles.subText}>
+                            {invoice.patientFileNo} • {invoice.patientMobile}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.testCount}>
+                        <span className={styles.badge}>{invoice.details.length}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.amountCell}>
+                        <div className={styles.name}>{formatCurrency(invoice.totalAmount)}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.taxCell}>
+                        <div className={styles.name}>{formatCurrency(invoice.totalCgst + invoice.totalSgst)}</div>
+                        <div className={styles.subText}>
+                          CGST: {formatCurrency(invoice.totalCgst)} | SGST: {formatCurrency(invoice.totalSgst)}
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.netAmountCell}>
+                        <div className={styles.name}>{formatCurrency(invoice.totalNetAmount)}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.dateCell}>
+                        <div className={styles.name}>{formatDate(invoice.invoiceDate)}</div>
+                        <div className={styles.subText}>
+                          {invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleTimeString('en-US', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          }) : '—'}
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.actionsCell}>
+                        <div className={styles.actionDropdownWrapper}>
+                          <button 
+                           onClick={() => handleViewInvoiceDetails(invoice)}
+                           className={styles.actionBtn}
+                           title="View Details">
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Pagination Bar ── */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {paginatedInvoices.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={paginatedInvoices.length < pageSize}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{pageSize}</strong>
+          </div>
+        </div>
+
+      </div>{/* end tableSection */}
 
       {/* Invoice Details Modal */}
       {isInvoiceDetailsOpen && selectedInvoiceDetail && (

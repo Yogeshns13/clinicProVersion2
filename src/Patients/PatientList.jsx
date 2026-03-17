@@ -6,11 +6,10 @@ import { getPatientsList, deletePatient } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddPatient from './AddPatient.jsx';
-import UpdatePatient from './UpdatePatient.jsx';  // ← Added
+import UpdatePatient from './UpdatePatient.jsx';
 import styles from './PatientList.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
-
 
 // ────────────────────────────────────────────────
 // CONSTANTS (shared)
@@ -90,17 +89,25 @@ const PatientList = () => {
     searchType: 'Name', searchValue: '', gender: '', bloodGroup: '', status: '',
   });
 
+  // ── Pagination states ──
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-  const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);  // ← Added
+  const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);
 
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [familyPatientName, setFamilyPatientName] = useState('—');
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError]     = useState(null);
 
+  const [updatePatientId, setUpdatePatientId] = useState(null);
+
   // ────────────────────────────────────────────────
-  // Derived
-  // ────────────────────────────────────────────────
+  // Derived: pagination display values
+  const startRecord = patients.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = (page - 1) * pageSize + patients.length;
+
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.gender             !== '' ||
@@ -108,9 +115,9 @@ const PatientList = () => {
     appliedFilters.status             !== '';
 
   // ────────────────────────────────────────────────
-  // Fetch patients list
+  // Fetch patients list (now with pagination)
   // ────────────────────────────────────────────────
-  const fetchPatients = async (filters = appliedFilters) => {
+  const fetchPatients = async (filters = appliedFilters, currentPage = page) => {
     try {
       setListLoading(true);
       setListError(null);
@@ -127,10 +134,12 @@ const PatientList = () => {
         Gender:     filters.gender     !== '' ? Number(filters.gender)     : 0,
         BloodGroup: filters.bloodGroup !== '' ? Number(filters.bloodGroup) : 0,
         Status:     filters.status     !== '' ? Number(filters.status)     : -1,
+        Page:       currentPage,
+        PageSize:   pageSize,
       };
 
       const data = await getPatientsList(clinicId, options);
-      setPatients(data);
+      setPatients(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('fetchPatients error:', err);
       setListError(
@@ -144,8 +153,8 @@ const PatientList = () => {
   };
 
   useEffect(() => {
-    fetchPatients(appliedFilters);
-  }, [appliedFilters]);
+    fetchPatients(appliedFilters, page);
+  }, [appliedFilters, page]);
 
   // ────────────────────────────────────────────────
   // Fetch single patient details
@@ -211,12 +220,21 @@ const PatientList = () => {
     setFilterInputs((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = () => setAppliedFilters({ ...filterInputs });
+  const handleSearch = () => {
+    setAppliedFilters({ ...filterInputs });
+    setPage(1);
+  };
 
   const handleClearFilters = () => {
     const empty = { searchType: 'Name', searchValue: '', gender: '', bloodGroup: '', status: '' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
+    setPage(1);
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
   };
 
   const handleViewDetails = (patient) => {
@@ -230,21 +248,21 @@ const PatientList = () => {
   };
 
   const openAddForm  = () => setIsAddFormOpen(true);
-  const closeAddForm = () => setIsAddFormOpen(false);
+  const closeAddForm = () => {
+    setIsAddFormOpen(false);
+    fetchPatients(appliedFilters);
+  };
 
   const handleAddSuccess = () => fetchPatients(appliedFilters);
 
-  const [updatePatientId, setUpdatePatientId] = useState(null);  
-
   const handleUpdateClick = () => {
     if (selectedPatient?.id) {
-      setUpdatePatientId(selectedPatient.id); 
+      setUpdatePatientId(selectedPatient.id);
       closeDetailModal();
       setIsUpdateFormOpen(true);
     }
   };
 
-  // ← Added: close update modal and refresh list
   const handleUpdateClose = () => {
     setIsUpdateFormOpen(false);
     setUpdatePatientId(null);
@@ -353,66 +371,114 @@ const PatientList = () => {
         </div>
       </div>
 
-      {/* Table */}
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Patient</th>
-              <th>File No</th>
-              <th>Gender</th>
-              <th>Age</th>
-              <th>Blood Group</th>
-              <th>Mobile</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {patients.length === 0 ? (
+      {/* Table + Pagination wrapper */}
+      <div className={styles.tableSection}>
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead>
               <tr>
-                <td colSpan={8} className={styles.noData}>
-                  {hasActiveFilters ? 'No patients found.' : 'No patients registered yet.'}
-                </td>
+                <th>Patient</th>
+                <th>File No</th>
+                <th>Gender</th>
+                <th>Age</th>
+                <th>Blood Group</th>
+                <th>Mobile</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              patients.map((patient) => (
-                <tr key={patient.id}>
-                  <td>
-                    <div className={styles.nameCell}>
-                      <div className={styles.avatar}>
-                        {patient.firstName?.charAt(0).toUpperCase() || 'P'}
-                      </div>
-                      <div>
-                        <div className={styles.name}>{patient.firstName} {patient.lastName}</div>
-                        <div className={styles.subInfo}>{patient.email || '—'}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{patient.fileNo || '—'}</td>
-                  <td>{getGenderLabel(patient.gender)}</td>
-                  <td>{patient.age || '—'}</td>
-                  <td>
-                    <span className={styles.bloodGroupBadge}>
-                      {getBloodGroupLabel(patient.bloodGroup)}
-                    </span>
-                  </td>
-                  <td>{patient.mobile || '—'}</td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${getStatusClass(patient.status)}`}>
-                      {patient.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td>
-                    <button onClick={() => handleViewDetails(patient)} className={styles.detailsBtn}>
-                      View Details
-                    </button>
+            </thead>
+            <tbody>
+              {patients.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className={styles.noData}>
+                    {hasActiveFilters ? 'No patients found.' : 'No patients registered yet.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                patients.map((patient) => (
+                  <tr key={patient.id}>
+                    <td>
+                      <div className={styles.nameCell}>
+                        <div className={styles.avatar}>
+                          {patient.firstName?.charAt(0).toUpperCase() || 'P'}
+                        </div>
+                        <div>
+                          <div className={styles.name}>{patient.firstName} {patient.lastName}</div>
+                          <div className={styles.subInfo}>{patient.email || '—'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{patient.fileNo || '—'}</td>
+                    <td>{getGenderLabel(patient.gender)}</td>
+                    <td>{patient.age || '—'}</td>
+                    <td>
+                      <span className={styles.bloodGroupBadge}>
+                        {getBloodGroupLabel(patient.bloodGroup)}
+                      </span>
+                    </td>
+                    <td>{patient.mobile || '—'}</td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${getStatusClass(patient.status)}`}>
+                        {patient.status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td>
+                      <button onClick={() => handleViewDetails(patient)} className={styles.detailsBtn}>
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Bar */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {patients.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={patients.length < pageSize}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{pageSize}</strong>
+          </div>
+        </div>
       </div>
 
       {/* Add Patient Modal */}
@@ -422,7 +488,7 @@ const PatientList = () => {
         onSuccess={handleAddSuccess}
       />
 
-      {/* Update Patient Modal */}  {/* ← Added */}
+      {/* Update Patient Modal */}
       {isUpdateFormOpen && updatePatientId && (
         <UpdatePatient
           patientId={updatePatientId}
@@ -447,9 +513,9 @@ const PatientList = () => {
                 </div>
               </div>
               <div className={styles.clinicNameone}>
-               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-                 {localStorage.getItem('clinicName') || '—'}
-                </div>
+                <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
+                {localStorage.getItem('clinicName') || '—'}
+              </div>
 
               <button onClick={closeDetailModal} className={styles.detailCloseBtn}>✕</button>
             </div>

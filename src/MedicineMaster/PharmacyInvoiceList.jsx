@@ -9,13 +9,14 @@ import styles from './PharmacyInvoiceList.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
-
 const SEARCH_TYPE_OPTIONS = [
   { value: 'customerName', label: 'Customer Name' },
   { value: 'invoiceNo',    label: 'Invoice No'    },
   { value: 'medicineName', label: 'Medicine Name' },
   { value: 'batchNo',      label: 'Batch No'      },
 ];
+
+const PAGE_SIZE = 20;
 
 const PharmacyInvoiceList = () => {
   const navigate = useNavigate();
@@ -24,6 +25,10 @@ const PharmacyInvoiceList = () => {
   const [invoiceDetails, setInvoiceDetails] = useState([]);
   const [allInvoiceDetails, setAllInvoiceDetails] = useState([]);
   
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+
   // Filter inputs (staged — not applied until Search is clicked)
   const [filterInputs, setFilterInputs] = useState({
     searchType:  'customerName',
@@ -49,7 +54,7 @@ const PharmacyInvoiceList = () => {
   const [selectedInvoiceDetail, setSelectedInvoiceDetail] = useState(null);
 
   // Fetch Pharmacy Invoice Details
-  const fetchInvoiceDetails = async () => {
+  const fetchInvoiceDetails = async (pageNum = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -57,9 +62,15 @@ const PharmacyInvoiceList = () => {
       const branchId = await getStoredBranchId();
 
       const options = {
-        Page: 1,
-        PageSize: 100,
-        BranchID: branchId
+        Page: pageNum,
+        PageSize: PAGE_SIZE,
+        BranchID: branchId,
+        CustomerName: appliedFilters.searchType === 'customerName' ? appliedFilters.searchValue.trim() : '',
+        InvoiceNo:    appliedFilters.searchType === 'invoiceNo'    ? appliedFilters.searchValue.trim() : '',
+        MedicineName: appliedFilters.searchType === 'medicineName' ? appliedFilters.searchValue.trim() : '',
+        BatchNo:      appliedFilters.searchType === 'batchNo'      ? appliedFilters.searchValue.trim() : '',
+        FromDate:     appliedFilters.dateFrom || '',
+        ToDate:       appliedFilters.dateTo   || '',
       };
 
       const data = await getPharmacyInvoiceDetailList(clinicId, options);
@@ -71,7 +82,8 @@ const PharmacyInvoiceList = () => {
       });
 
       setInvoiceDetails(sortedData);
-      setAllInvoiceDetails(sortedData);
+      setHasNext(sortedData.length === PAGE_SIZE);
+      setAllInvoiceDetails(sortedData); // still keep full list for client-side filtering if needed
     } catch (err) {
       console.error('fetchInvoiceDetails error:', err);
       setError(
@@ -85,61 +97,22 @@ const PharmacyInvoiceList = () => {
   };
 
   useEffect(() => {
-    fetchInvoiceDetails();
-  }, []);
+    fetchInvoiceDetails(1);
+    setPage(1);
+  }, [appliedFilters]);
 
-  // Computed filtered invoice details based on applied filters
-  const filteredInvoiceDetails = useMemo(() => {
-    let filtered = allInvoiceDetails;
+  // ── Pagination Handlers ──────────────────────────
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    setPage(newPage);
+    fetchInvoiceDetails(newPage);
+  };
 
-    if (appliedFilters.searchValue) {
-      const term = appliedFilters.searchValue.toLowerCase();
-      
-      switch (appliedFilters.searchType) {
-        case 'customerName':
-          filtered = filtered.filter(inv => inv.customerName?.toLowerCase().includes(term));
-          break;
-        case 'invoiceNo':
-          filtered = filtered.filter(inv => inv.invoiceNo?.toLowerCase().includes(term));
-          break;
-        case 'medicineName':
-          filtered = filtered.filter(inv => inv.medicineName?.toLowerCase().includes(term));
-          break;
-        case 'batchNo':
-          filtered = filtered.filter(inv => inv.batchNo?.toLowerCase().includes(term));
-          break;
-        default:
-          break;
-      }
-    }
-
-    if (appliedFilters.dateFrom) {
-      const fromDate = new Date(appliedFilters.dateFrom);
-      filtered = filtered.filter(inv => {
-        if (!inv.invoiceDate) return false;
-        const invoiceDate = new Date(inv.invoiceDate);
-        return invoiceDate >= fromDate;
-      });
-    }
-
-    if (appliedFilters.dateTo) {
-      const toDate = new Date(appliedFilters.dateTo);
-      toDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(inv => {
-        if (!inv.invoiceDate) return false;
-        const invoiceDate = new Date(inv.invoiceDate);
-        return invoiceDate <= toDate;
-      });
-    }
-
-    return filtered;
-  }, [allInvoiceDetails, appliedFilters]);
-
-  // Group invoice details by invoice
+  // Group invoice details by invoice (still used)
   const groupedInvoices = useMemo(() => {
     const groups = {};
     
-    filteredInvoiceDetails.forEach(detail => {
+    invoiceDetails.forEach(detail => {
       const invoiceId = detail.invoiceId;
       if (!groups[invoiceId]) {
         groups[invoiceId] = {
@@ -170,23 +143,18 @@ const PharmacyInvoiceList = () => {
       groups[invoiceId].totalNetAmount += detail.totalLineAmount || 0;
     });
     
-    return Object.values(groups).sort((a, b) => {
-      const dateA = new Date(a.dateCreated);
-      const dateB = new Date(b.dateCreated);
-      return dateB - dateA;
-    });
-  }, [filteredInvoiceDetails]);
+    return Object.values(groups);
+  }, [invoiceDetails]);
 
-  // Summary statistics
+  // Summary statistics (based on current page)
   const summaryStats = useMemo(() => {
-    const uniqueInvoices = new Set(allInvoiceDetails.map(d => d.invoiceId)).size;
-    const totalRevenue   = allInvoiceDetails.reduce((sum, d) => sum + (d.totalLineAmount || 0), 0);
-    const totalMedicines = allInvoiceDetails.reduce((sum, d) => sum + (d.quantity || 0), 0);
+    const uniqueInvoices = new Set(invoiceDetails.map(d => d.invoiceId)).size;
+    const totalRevenue   = invoiceDetails.reduce((sum, d) => sum + (d.totalLineAmount || 0), 0);
+    const totalMedicines = invoiceDetails.reduce((sum, d) => sum + (d.quantity || 0), 0);
     const avgInvoiceValue = uniqueInvoices > 0 ? totalRevenue / uniqueInvoices : 0;
     return { uniqueInvoices, totalRevenue, totalMedicines, avgInvoiceValue };
-  }, [allInvoiceDetails]);
+  }, [invoiceDetails]);
 
-  // ── Derived: are any filters active?
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.dateFrom            !== '' ||
@@ -200,12 +168,14 @@ const PharmacyInvoiceList = () => {
 
   const handleSearch = () => {
     setAppliedFilters({ ...filterInputs });
+    setPage(1);
   };
 
   const handleClearFilters = () => {
     const empty = { searchType: 'customerName', searchValue: '', dateFrom: '', dateTo: '' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
+    setPage(1);
   };
 
   const handleViewInvoiceDetails = (invoice) => {
@@ -247,11 +217,13 @@ const PharmacyInvoiceList = () => {
     );
   }
 
+  const startRecord = invoiceDetails.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const endRecord   = startRecord + invoiceDetails.length - 1;
+
   return (
     <div className={styles.wrapper}>
       <ErrorHandler error={error} />
       <Header title="Pharmacy Invoice Management" />
-
 
       {/* ── Filter Bar — VendorList style ── */}
       <div className={styles.filtersContainer}>
@@ -327,111 +299,158 @@ const PharmacyInvoiceList = () => {
         </div>
       </div>
 
-      {/* Invoices Table */}
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Invoice Details</th>
-              <th>Customer Details</th>
-              <th>Items Count</th>
-              <th>Quantity</th>
-              <th>Amount</th>
-              <th>Tax (CGST + SGST)</th>
-              <th>Net Amount</th>
-              <th>Invoice Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {groupedInvoices.length === 0 ? (
+      {/* Invoices Table + Pagination */}
+      <div className={styles.tableSection}>
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead>
               <tr>
-                <td colSpan={9} className={styles.noData}>
-                  {hasActiveFilters
-                    ? 'No invoices found matching your search.'
-                    : 'No pharmacy invoices found.'}
-                </td>
+                <th>Invoice Details</th>
+                <th>Customer Details</th>
+                <th>Items Count</th>
+                <th>Quantity</th>
+                <th>Amount</th>
+                <th>Tax (CGST + SGST)</th>
+                <th>Net Amount</th>
+                <th>Invoice Date</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              groupedInvoices.map((invoice) => (
-                <tr key={invoice.invoiceId} className={styles.tableRow}>
-                  <td>
-                    <div>
-                      <div className={styles.name}>{invoice.invoiceNo}</div>
-                      <div className={styles.subText}>ID: {invoice.invoiceId}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.nameCell}>
-                      <div className={styles.avatar}>
-                        {invoice.customerName?.charAt(0).toUpperCase() || 'C'}
-                      </div>
-                      <div>
-                        <div className={styles.name}>{invoice.customerName}</div>
-                        <div className={styles.subText}>
-                          {invoice.patientFileNo} • {invoice.patientMobile}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.itemCount}>
-                      <span className={styles.badge}>{invoice.details.length}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.quantityCell}>
-                      <div className={styles.name}>{invoice.totalQuantity}</div>
-                      <div className={styles.subText}>units</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.amountCell}>
-                      <div className={styles.name}>{formatCurrency(invoice.totalAmount)}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.taxCell}>
-                      <div className={styles.name}>{formatCurrency(invoice.totalCgst + invoice.totalSgst)}</div>
-                      <div className={styles.subText}>
-                        CGST: {formatCurrency(invoice.totalCgst)} | SGST: {formatCurrency(invoice.totalSgst)}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.netAmountCell}>
-                      <div className={styles.name}>{formatCurrency(invoice.totalNetAmount)}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.dateCell}>
-                      <div className={styles.name}>{formatDate(invoice.invoiceDate)}</div>
-                      <div className={styles.subText}>
-                        {invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleTimeString('en-US', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        }) : '—'}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.actionsCell}>
-                      <div className={styles.actionDropdownWrapper}>
-                        <button
-                          className={styles.actionBtn}
-                          onClick={() => handleViewInvoiceDetails(invoice)}
-                          title="View Details"
-                        >
-                          View Details
-                        </button>
-                      </div>
-                    </div>
+            </thead>
+            <tbody>
+              {groupedInvoices.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className={styles.noData}>
+                    {hasActiveFilters
+                      ? 'No invoices found matching your search.'
+                      : 'No pharmacy invoices found.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                groupedInvoices.map((invoice) => (
+                  <tr key={invoice.invoiceId} className={styles.tableRow}>
+                    <td>
+                      <div>
+                        <div className={styles.name}>{invoice.invoiceNo}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.nameCell}>
+                        <div className={styles.avatar}>
+                          {invoice.customerName?.charAt(0).toUpperCase() || 'C'}
+                        </div>
+                        <div>
+                          <div className={styles.name}>{invoice.customerName}</div>
+                          <div className={styles.subText}>
+                            {invoice.patientFileNo} • {invoice.patientMobile}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.itemCount}>
+                        <span className={styles.badge}>{invoice.details.length}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.quantityCell}>
+                        <div className={styles.name}>{invoice.totalQuantity}</div>
+                        <div className={styles.subText}>units</div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.amountCell}>
+                        <div className={styles.name}>{formatCurrency(invoice.totalAmount)}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.taxCell}>
+                        <div className={styles.name}>{formatCurrency(invoice.totalCgst + invoice.totalSgst)}</div>
+                        <div className={styles.subText}>
+                          CGST: {formatCurrency(invoice.totalCgst)} | SGST: {formatCurrency(invoice.totalSgst)}
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.netAmountCell}>
+                        <div className={styles.name}>{formatCurrency(invoice.totalNetAmount)}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.dateCell}>
+                        <div className={styles.name}>{formatDate(invoice.invoiceDate)}</div>
+                        <div className={styles.subText}>
+                          {invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleTimeString('en-US', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          }) : '—'}
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.actionsCell}>
+                        <div className={styles.actionDropdownWrapper}>
+                          <button
+                            className={styles.actionBtn}
+                            onClick={() => handleViewInvoiceDetails(invoice)}
+                            title="View Details"
+                          >
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Bar */}
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            {invoiceDetails.length > 0
+              ? `Showing ${startRecord}–${endRecord} records`
+              : 'No records'}
+          </div>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationLabel}>Page</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(1)}
+              disabled={page === 1}
+              title="First page"
+            >
+              «
+            </button>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              title="Previous page"
+            >
+              ‹
+            </button>
+
+            <span className={styles.pageIndicator}>{page}</span>
+
+            <button
+              className={styles.pageBtn}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={!hasNext}
+              title="Next page"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className={styles.pageSizeInfo}>
+            Page Size: <strong>{PAGE_SIZE}</strong>
+          </div>
+        </div>
       </div>
 
       {/* Invoice Details Modal */}
@@ -451,7 +470,7 @@ const PharmacyInvoiceList = () => {
 };
 
 // ──────────────────────────────────────────────────
-// Invoice Details Modal Component
+// Invoice Details Modal Component (unchanged)
 // ──────────────────────────────────────────────────
 const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) => {
   return (
@@ -461,12 +480,12 @@ const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) =
           <h2>Invoice Details - {invoice.invoiceNo}</h2>
 
           <div className={styles.headerRight}>
-           <div className={styles.clinicNameone}>
-             <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
+            <div className={styles.clinicNameone}>
+              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
               {localStorage.getItem('clinicName') || '—'}
-               </div>
-          <button onClick={onClose} className={styles.closeBtn}>×</button>
-        </div>
+            </div>
+            <button onClick={onClose} className={styles.closeBtn}>×</button>
+          </div>
         </div>
         <div className={styles.modalBody}>
           {/* Invoice Header Info */}

@@ -27,9 +27,13 @@
 .chargeConfigWrapper {
   padding: 20px;
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   color: var(--text-dark);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-sizing: border-box;
 }
 
 .chargeConfigLoading {
@@ -52,6 +56,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
 }
 
 .filtersGrid {
@@ -188,12 +193,21 @@
   box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
 }
 
-/* ==================== TABLE ==================== */
+/* ==================== TABLE SECTION ==================== */
+.tableSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== TABLE CONTAINER ==================== */
 .chargeConfigTableContainer {
   background: white;
   border-radius: 17px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-   max-height: calc(100vh - 220px); 
   box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
   border: 1px solid rgba(34, 43, 108, 0.1);
 }
@@ -214,9 +228,9 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   border: none;
-  position: sticky;   /* ← new */
-  top: 0;             /* ← new */
-  z-index: 2; 
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .chargeConfigTable td {
@@ -426,46 +440,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.05rem;           
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-light);
   line-height: 1.2;
-  white-space: nowrap;          
-  text-overflow: ellipsis;      
-  max-width: 220px;             
-}
-
-.detailHeaderMeta {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.workIdBadge {
-  display: inline-block;
-  padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  backdrop-filter: blur(10px);
-  color: var(--text-light);
-}
-
-.activeBadge {
-  background: rgba(22, 163, 74, 0.35) !important;
-  border: 1px solid rgba(22, 163, 74, 0.5);
-}
-
-.inactiveBadge {
-  background: rgba(220, 38, 38, 0.35) !important;
-  border: 1px solid rgba(220, 38, 38, 0.5);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
 
 .detailCloseBtn {
   background: rgba(255, 255, 255, 0.2);
   border: none;
-  color: var(--text-light);
+  color: white;
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -572,6 +559,99 @@
   background: #f8fafc;
 }
 
+/* ==================== PAGINATION BAR ==================== */
+.paginationBar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 14px;
+  padding: 10px 20px;
+  margin-top: 14px;
+  box-shadow: 0 4px 14px rgba(34,43,108,0.08);
+  border: 1px solid rgba(34,43,108,0.1);
+  gap: 16px;
+}
+
+.paginationInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.paginationLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.pageBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: var(--primary-start);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-color: var(--accent-end);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(32,125,156,0.3);
+}
+
+.pageBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pageIndicator {
+  min-width: 36px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0 8px;
+  box-shadow: 0 3px 8px rgba(32,125,156,0.25);
+}
+
+.pageSizeInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pageSizeInfo strong {
+  color: var(--primary-start);
+  font-weight: 700;
+}
+
 /* ==================== ADD / EDIT FORM MODAL ==================== */
 .chargeConfigModalOverlay {
   position: fixed;
@@ -615,6 +695,7 @@
   letter-spacing: -0.01em;
   color: var(--text-light);
 }
+
 .headerRight {
   display: flex;
   align-items: center;
@@ -625,13 +706,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.05rem;           
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-light);
   line-height: 1.2;
-  white-space: nowrap;          
-  text-overflow: ellipsis;      
-  max-width: 220px;             
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
 
 .chargeConfigModalClose {
@@ -657,7 +738,6 @@
 
 .chargeConfigModalBody { padding: 24px 27px; }
 
-/* ==================== FORM ==================== */
 .formGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -756,8 +836,6 @@
 }
 
 /* ==================== BUTTONS ==================== */
-
-/* ── Close / Cancel ── */
 .btnCancel {
   background: linear-gradient(135deg, #016183, var(--primary-end));
   color: var(--text-light);
@@ -801,7 +879,7 @@
   transform: none;
 }
 
-/* ── Delete ── */
+/* Delete */
 .btnDelete {
   height: 40px;
   padding: 0 20px;
@@ -847,7 +925,7 @@
 
 .btnDelete:active { transform: translateY(-1px); }
 
-/* ── Update (view-popup) ── */
+/* Update (from view popup) */
 .btnUpdate {
   height: 40px;
   padding: 0 20px;
@@ -893,7 +971,7 @@
 
 .btnUpdate:active { transform: translateY(-1px); }
 
-/* ── Submit (form modal Add / Update) ── */
+/* Submit (Add / Edit form) */
 .btnSubmit {
   height: 40px;
   padding: 0 28px;
@@ -1082,6 +1160,17 @@
     flex: 1 1 auto;
     text-align: center;
   }
+
+  .paginationBar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  .paginationControls {
+    align-self: center;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1119,5 +1208,21 @@
   .chargeConfigModalFooter .btnCancel {
     width: 100%;
     text-align: center;
+  }
+
+  .paginationInfo,
+  .pageSizeInfo {
+    font-size: 0.75rem;
+  }
+
+  .pageBtn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.95rem;
+  }
+
+  .pageIndicator {
+    min-width: 32px;
+    font-size: 0.78rem;
   }
 }

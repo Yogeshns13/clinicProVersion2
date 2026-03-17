@@ -36,6 +36,11 @@ const ConsultationList = () => {
   const [filteredVisits, setFilteredVisits]               = useState([]);
   const [filteredConsultations, setFilteredConsultations] = useState([]);
 
+  // ── Pagination ──
+  const [visitPage, setVisitPage]       = useState(1);
+  const [consultPage, setConsultPage]   = useState(1);
+  const pageSize = 20;
+
   const [visitFilterInputs, setVisitFilterInputs] = useState({
     searchType:  'PatientName',
     searchValue: '',
@@ -79,13 +84,13 @@ const ConsultationList = () => {
     consultAppliedFilters.fromDate            !== today ||
     consultAppliedFilters.toDate              !== today;
 
-  const fetchPatientVisits = async (filters = visitAppliedFilters) => {
+  const fetchPatientVisits = async (filters = visitAppliedFilters, currentPage = visitPage) => {
     try {
       setLoading(true);
       setError(null);
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-      const options = { Page: 1, PageSize: 100, BranchID: branchId };
+      const options = { Page: currentPage, PageSize: pageSize, BranchID: branchId };
 
       if (filters.searchValue.trim()) {
         if (filters.searchType === 'PatientName') options.PatientName = filters.searchValue.trim();
@@ -128,13 +133,13 @@ const ConsultationList = () => {
     }
   };
 
-  const fetchConsultations = async (filters = consultAppliedFilters) => {
+  const fetchConsultations = async (filters = consultAppliedFilters, currentPage = consultPage) => {
     try {
       setLoading(true);
       setError(null);
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-      const options = { Page: 1, PageSize: 100, BranchID: branchId };
+      const options = { Page: currentPage, PageSize: pageSize, BranchID: branchId };
 
       if (filters.searchValue.trim()) {
         if (filters.searchType === 'PatientName') options.PatientName = filters.searchValue.trim();
@@ -171,22 +176,21 @@ const ConsultationList = () => {
   useEffect(() => {
     sessionStorage.setItem('consultationListActiveTab', activeTab);
     if (activeTab === 'visited') {
-      fetchConsultations(consultAppliedFilters);
+      fetchConsultations(consultAppliedFilters, consultPage);
     } else {
-      fetchPatientVisits(visitAppliedFilters);
+      fetchPatientVisits(visitAppliedFilters, visitPage);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   // CHANGE 1: Refresh list whenever this page becomes visible again
-  // (handles the ViewConsultation route-page closing and navigating back)
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         if (activeTab === 'visited') {
-          fetchConsultations(consultAppliedFilters);
+          fetchConsultations(consultAppliedFilters, consultPage);
         } else {
-          fetchPatientVisits(visitAppliedFilters);
+          fetchPatientVisits(visitAppliedFilters, visitPage);
         }
       }
     };
@@ -195,21 +199,36 @@ const ConsultationList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, visitAppliedFilters, consultAppliedFilters]);
 
+  // ── Pagination handlers ──
+  const handleVisitPageChange = (newPage) => {
+    if (newPage < 1) return;
+    setVisitPage(newPage);
+    fetchPatientVisits(visitAppliedFilters, newPage);
+  };
+
+  const handleConsultPageChange = (newPage) => {
+    if (newPage < 1) return;
+    setConsultPage(newPage);
+    fetchConsultations(consultAppliedFilters, newPage);
+  };
+
   const handleVisitFilterChange = (e) => {
     const { name, value } = e.target;
     setVisitFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
   const handleVisitSearch = () => {
+    setVisitPage(1);
     setVisitAppliedFilters({ ...visitFilterInputs });
-    fetchPatientVisits(visitFilterInputs);
+    fetchPatientVisits(visitFilterInputs, 1);
   };
 
   const handleVisitClear = () => {
     const empty = { searchType: 'PatientName', searchValue: '', fromDate: today, toDate: today };
+    setVisitPage(1);
     setVisitFilterInputs(empty);
     setVisitAppliedFilters(empty);
-    fetchPatientVisits(empty);
+    fetchPatientVisits(empty, 1);
   };
 
   const handleConsultFilterChange = (e) => {
@@ -218,15 +237,17 @@ const ConsultationList = () => {
   };
 
   const handleConsultSearch = () => {
+    setConsultPage(1);
     setConsultAppliedFilters({ ...consultFilterInputs });
-    fetchConsultations(consultFilterInputs);
+    fetchConsultations(consultFilterInputs, 1);
   };
 
   const handleConsultClear = () => {
     const empty = { searchType: 'PatientName', searchValue: '', fromDate: today, toDate: today };
+    setConsultPage(1);
     setConsultFilterInputs(empty);
     setConsultAppliedFilters(empty);
-    fetchConsultations(empty);
+    fetchConsultations(empty, 1);
   };
 
   const handleViewDetails = (consultation) => {
@@ -240,17 +261,17 @@ const ConsultationList = () => {
     setIsAddFormOpen(false);
     setConsultingVisitId(null);
     if (activeTab === 'visited') {
-      fetchConsultations(consultAppliedFilters);
+      fetchConsultations(consultAppliedFilters, consultPage);
     } else {
-      fetchPatientVisits(visitAppliedFilters);
+      fetchPatientVisits(visitAppliedFilters, visitPage);
     }
   };
 
   const handleAddSuccess = () => {
     if (activeTab === 'visited') {
-      fetchConsultations(consultAppliedFilters);
+      fetchConsultations(consultAppliedFilters, consultPage);
     } else {
-      fetchPatientVisits(visitAppliedFilters);
+      fetchPatientVisits(visitAppliedFilters, visitPage);
     }
     setConsultingVisitId(null);
   };
@@ -280,6 +301,13 @@ const ConsultationList = () => {
   }
   if (loading) return <div className={styles.loading}>Loading...</div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
+
+  // ── Pagination computed values ──
+  const visitStart = filteredVisits.length === 0 ? 0 : (visitPage - 1) * pageSize + 1;
+  const visitEnd   = (visitPage - 1) * pageSize + filteredVisits.length;
+
+  const consultStart = filteredConsultations.length === 0 ? 0 : (consultPage - 1) * pageSize + 1;
+  const consultEnd   = (consultPage - 1) * pageSize + filteredConsultations.length;
 
   return (
     <div className={styles.wrapper}>
@@ -331,7 +359,6 @@ const ConsultationList = () => {
               />
             </div>
 
-            {/* ── From Date — SalesCartList style ── */}
             <div className={styles.dateWrapper}>
               <input
                 type="date"
@@ -342,7 +369,6 @@ const ConsultationList = () => {
               />
             </div>
 
-            {/* ── To Date — SalesCartList style ── */}
             <div className={styles.dateWrapper}>
               <input
                 type="date"
@@ -397,7 +423,6 @@ const ConsultationList = () => {
               />
             </div>
 
-            {/* ── From Date — SalesCartList style ── */}
             <div className={styles.dateWrapper}>
               <input
                 type="date"
@@ -408,7 +433,6 @@ const ConsultationList = () => {
               />
             </div>
 
-            {/* ── To Date — SalesCartList style ── */}
             <div className={styles.dateWrapper}>
               <input
                 type="date"
@@ -436,164 +460,262 @@ const ConsultationList = () => {
         </div>
       )}
 
-      {/* Table - Patient Visits — UNCHANGED */}
+      {/* ── Table + Pagination wrapper — Patient Visits ── */}
       {activeTab === 'pending' && (
-        <div className={styles.tableContainer}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Doctor</th>
-                <th>Visit Date &amp; Time</th>
-                <th>Reason &amp; Symptoms</th>
-                <th>Vitals</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredVisits.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className={styles.noData}>
-                    {visitHasActiveFilters ? 'No patient visits found.' : 'No patient visits for this date.'}
-                  </td>
-                </tr>
-              ) : (
-                filteredVisits.map((visit) => (
-                  <tr key={visit.id}>
-                    <td>
-                      <div className={styles.nameCell}>
-                        <div className={styles.avatar}>
-                          {visit.patientName?.charAt(0).toUpperCase() || 'P'}
-                        </div>
-                        <div>
-                          <div className={styles.name}>{visit.patientName}</div>
-                          <div className={styles.subText}>{visit.patientFileNo} • {visit.patientMobile}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className={styles.name}>{visit.doctorFullName}</div>
-                      <div className={styles.subText}>{visit.doctorCode || '—'}</div>
-                    </td>
-                    <td>
-                      <div className={styles.name}>{formatDate(visit.visitDate)}</div>
-                      <div className={styles.subText}>{formatTime(visit.visitTime)}</div>
-                    </td>
-                    <td>
-                      <div className={styles.reasonCell}>
-                        {visit.reason && <div className={styles.reasonBadge}>{visit.reason}</div>}
-                        {visit.symptoms && <div className={styles.subText}>{visit.symptoms}</div>}
-                        {!visit.reason && !visit.symptoms && '—'}
-                      </div>
-                    </td>
-                    <td>
-                      <div className={styles.vitalsCell}>
-                        {visit.bpReading  && <span className={`${styles.vitalBadge} ${styles.bp}`}>{visit.bpReading}</span>}
-                        {visit.temperature && <span className={`${styles.vitalBadge} ${styles.temp}`}>{visit.temperature}°F</span>}
-                        {visit.weight      && <span className={`${styles.vitalBadge} ${styles.weight}`}>{visit.weight}kg</span>}
-                        {!visit.bpReading && !visit.temperature && !visit.weight && '—'}
-                      </div>
-                    </td>
-                    <td>
-                      <div className={styles.actionsCell}>
-                        <button onClick={() => handleConsultClick(visit)} className={styles.consultBtn}>
-                          <FiPlus size={16} />
-                          Consult
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+        <div className={styles.tableSection}>
 
-      {/* Table - Consulted Patients — UNCHANGED */}
-      {activeTab === 'visited' && (
-        <div className={styles.tableContainer}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Doctor</th>
-                <th>Reason &amp; Symptoms</th>
-                <th>Vitals</th>
-                <th>Next Follow-up</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredConsultations.length === 0 ? (
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
                 <tr>
-                  <td colSpan={7} className={styles.noData}>
-                    {consultHasActiveFilters ? 'No consultations found.' : 'No consultations available yet.'}
-                  </td>
+                  <th>Patient</th>
+                  <th>Doctor</th>
+                  <th>Visit Date &amp; Time</th>
+                  <th>Reason &amp; Symptoms</th>
+                  <th>Vitals</th>
+                  <th>Actions</th>
                 </tr>
-              ) : (
-                filteredConsultations.map((consultation) => (
-                  <tr key={consultation.id}>
-                    <td>
-                      <div className={styles.nameCell}>
-                        <div className={styles.avatar}>
-                          {consultation.patientName?.charAt(0).toUpperCase() || 'P'}
-                        </div>
-                        <div>
-                          <div className={styles.name}>{consultation.patientName}</div>
-                          <div className={styles.subText}>{consultation.patientFileNo} • {consultation.patientMobile}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className={styles.name}>{consultation.doctorFullName}</div>
-                      <div className={styles.subText}>{consultation.doctorCode || '—'}</div>
-                    </td>
-                    <td>
-                      <div className={styles.reasonCell}>
-                        {consultation.reason && <div className={styles.reasonBadge}>{consultation.reason}</div>}
-                        {consultation.symptoms && <div className={styles.subText}>{consultation.symptoms}</div>}
-                        {!consultation.reason && !consultation.symptoms && '—'}
-                      </div>
-                    </td>
-                    <td>
-                      <div className={styles.vitalsCell}>
-                        {consultation.bpReading   && <span className={`${styles.vitalBadge} ${styles.bp}`}>{consultation.bpReading}</span>}
-                        {consultation.temperature  && <span className={`${styles.vitalBadge} ${styles.temp}`}>{consultation.temperature}°F</span>}
-                        {consultation.weight       && <span className={`${styles.vitalBadge} ${styles.weight}`}>{consultation.weight}kg</span>}
-                        {!consultation.bpReading && !consultation.temperature && !consultation.weight && '—'}
-                      </div>
-                    </td>
-                    <td>
-                      {consultation.nextConsultationDate ? (
-                        <span className={styles.followupBadge}>{formatDate(consultation.nextConsultationDate)}</span>
-                      ) : (
-                        <span className={styles.subText}>No follow-up</span>
-                      )}
-                    </td>
-                    <td>
-                      <div className={styles.subText}>{formatDate(consultation.dateCreated)}</div>
-                    </td>
-                    <td>
-                      <div className={styles.actionsCell}>
-                        {/* CHANGE 3: pass state flag so ViewConsultation route-page
-                            can navigate back and trigger visibilitychange refresh */}
-                        <button
-                          onClick={() => handleViewDetails(consultation)}
-                          className={styles.viewBtn}
-                        >
-                          Edit Details
-                        </button>
-                      </div>
+              </thead>
+              <tbody>
+                {filteredVisits.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className={styles.noData}>
+                      {visitHasActiveFilters ? 'No patient visits found.' : 'No patient visits for this date.'}
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredVisits.map((visit) => (
+                    <tr key={visit.id}>
+                      <td>
+                        <div className={styles.nameCell}>
+                          <div className={styles.avatar}>
+                            {visit.patientName?.charAt(0).toUpperCase() || 'P'}
+                          </div>
+                          <div>
+                            <div className={styles.name}>{visit.patientName}</div>
+                            <div className={styles.subText}>{visit.patientFileNo} • {visit.patientMobile}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className={styles.name}>{visit.doctorFullName}</div>
+                        <div className={styles.subText}>{visit.doctorCode || '—'}</div>
+                      </td>
+                      <td>
+                        <div className={styles.name}>{formatDate(visit.visitDate)}</div>
+                        <div className={styles.subText}>{formatTime(visit.visitTime)}</div>
+                      </td>
+                      <td>
+                        <div className={styles.reasonCell}>
+                          {visit.reason && <div className={styles.reasonBadge}>{visit.reason}</div>}
+                          {visit.symptoms && <div className={styles.subText}>{visit.symptoms}</div>}
+                          {!visit.reason && !visit.symptoms && '—'}
+                        </div>
+                      </td>
+                      <td>
+                        <div className={styles.vitalsCell}>
+                          {visit.bpReading  && <span className={`${styles.vitalBadge} ${styles.bp}`}>{visit.bpReading}</span>}
+                          {visit.temperature && <span className={`${styles.vitalBadge} ${styles.temp}`}>{visit.temperature}°F</span>}
+                          {visit.weight      && <span className={`${styles.vitalBadge} ${styles.weight}`}>{visit.weight}kg</span>}
+                          {!visit.bpReading && !visit.temperature && !visit.weight && '—'}
+                        </div>
+                      </td>
+                      <td>
+                        <div className={styles.actionsCell}>
+                          <button onClick={() => handleConsultClick(visit)} className={styles.consultBtn}>
+                            <FiPlus size={16} />
+                            Consult
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── Pagination Bar — Patient Visits ── */}
+          <div className={styles.paginationBar}>
+            <div className={styles.paginationInfo}>
+              {filteredVisits.length > 0
+                ? `Showing ${visitStart}–${visitEnd} records`
+                : 'No records'}
+            </div>
+
+            <div className={styles.paginationControls}>
+              <span className={styles.paginationLabel}>Page</span>
+
+              <button
+                className={styles.pageBtn}
+                onClick={() => handleVisitPageChange(1)}
+                disabled={visitPage === 1}
+                title="First page"
+              >
+                «
+              </button>
+
+              <button
+                className={styles.pageBtn}
+                onClick={() => handleVisitPageChange(visitPage - 1)}
+                disabled={visitPage === 1}
+                title="Previous page"
+              >
+                ‹
+              </button>
+
+              <span className={styles.pageIndicator}>{visitPage}</span>
+
+              <button
+                className={styles.pageBtn}
+                onClick={() => handleVisitPageChange(visitPage + 1)}
+                disabled={filteredVisits.length < pageSize}
+                title="Next page"
+              >
+                ›
+              </button>
+            </div>
+
+            <div className={styles.pageSizeInfo}>
+              Page Size: <strong>{pageSize}</strong>
+            </div>
+          </div>
+
         </div>
-      )}
+      )}{/* end tableSection — pending */}
+
+      {/* ── Table + Pagination wrapper — Consulted Patients ── */}
+      {activeTab === 'visited' && (
+        <div className={styles.tableSection}>
+
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Doctor</th>
+                  <th>Reason &amp; Symptoms</th>
+                  <th>Vitals</th>
+                  <th>Next Follow-up</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredConsultations.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className={styles.noData}>
+                      {consultHasActiveFilters ? 'No consultations found.' : 'No consultations available yet.'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredConsultations.map((consultation) => (
+                    <tr key={consultation.id}>
+                      <td>
+                        <div className={styles.nameCell}>
+                          <div className={styles.avatar}>
+                            {consultation.patientName?.charAt(0).toUpperCase() || 'P'}
+                          </div>
+                          <div>
+                            <div className={styles.name}>{consultation.patientName}</div>
+                            <div className={styles.subText}>{consultation.patientFileNo} • {consultation.patientMobile}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className={styles.name}>{consultation.doctorFullName}</div>
+                        <div className={styles.subText}>{consultation.doctorCode || '—'}</div>
+                      </td>
+                      <td>
+                        <div className={styles.reasonCell}>
+                          {consultation.reason && <div className={styles.reasonBadge}>{consultation.reason}</div>}
+                          {consultation.symptoms && <div className={styles.subText}>{consultation.symptoms}</div>}
+                          {!consultation.reason && !consultation.symptoms && '—'}
+                        </div>
+                      </td>
+                      <td>
+                        <div className={styles.vitalsCell}>
+                          {consultation.bpReading   && <span className={`${styles.vitalBadge} ${styles.bp}`}>{consultation.bpReading}</span>}
+                          {consultation.temperature  && <span className={`${styles.vitalBadge} ${styles.temp}`}>{consultation.temperature}°F</span>}
+                          {consultation.weight       && <span className={`${styles.vitalBadge} ${styles.weight}`}>{consultation.weight}kg</span>}
+                          {!consultation.bpReading && !consultation.temperature && !consultation.weight && '—'}
+                        </div>
+                      </td>
+                      <td>
+                        {consultation.nextConsultationDate ? (
+                          <span className={styles.followupBadge}>{formatDate(consultation.nextConsultationDate)}</span>
+                        ) : (
+                          <span className={styles.subText}>No follow-up</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className={styles.subText}>{formatDate(consultation.dateCreated)}</div>
+                      </td>
+                      <td>
+                        <div className={styles.actionsCell}>
+                          <button
+                            onClick={() => handleViewDetails(consultation)}
+                            className={styles.viewBtn}
+                          >
+                            Edit Details
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── Pagination Bar — Consulted Patients ── */}
+          <div className={styles.paginationBar}>
+            <div className={styles.paginationInfo}>
+              {filteredConsultations.length > 0
+                ? `Showing ${consultStart}–${consultEnd} records`
+                : 'No records'}
+            </div>
+
+            <div className={styles.paginationControls}>
+              <span className={styles.paginationLabel}>Page</span>
+
+              <button
+                className={styles.pageBtn}
+                onClick={() => handleConsultPageChange(1)}
+                disabled={consultPage === 1}
+                title="First page"
+              >
+                «
+              </button>
+
+              <button
+                className={styles.pageBtn}
+                onClick={() => handleConsultPageChange(consultPage - 1)}
+                disabled={consultPage === 1}
+                title="Previous page"
+              >
+                ‹
+              </button>
+
+              <span className={styles.pageIndicator}>{consultPage}</span>
+
+              <button
+                className={styles.pageBtn}
+                onClick={() => handleConsultPageChange(consultPage + 1)}
+                disabled={filteredConsultations.length < pageSize}
+                title="Next page"
+              >
+                ›
+              </button>
+            </div>
+
+            <div className={styles.pageSizeInfo}>
+              Page Size: <strong>{pageSize}</strong>
+            </div>
+          </div>
+
+        </div>
+      )}{/* end tableSection — visited */}
 
       {/* Modal - Add Consultation — UNCHANGED */}
       <AddConsultation
