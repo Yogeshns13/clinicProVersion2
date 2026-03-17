@@ -84,19 +84,6 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (isNaN(Number(value))) return 'SgstPercentage should be a decimal';
       return '';
 
-    case 'fileNoPrefix':
-      if (trimmed.length > 10) return 'FileNoPrefix should not exceed 10 characters';
-      return '';
-
-    case 'invoicePrefix':
-      if (trimmed.length > 10) return 'InvoicePrefix should not exceed 10 characters';
-      return '';
-
-    case 'lastFileSeq':
-      if (value === '' || value === null || value === undefined) return 'LastFileSeq is required';
-      if (!Number.isInteger(Number(value)) || isNaN(Number(value))) return 'LastFileSeq should be a number';
-      return '';
-
     default:
       return '';
   }
@@ -116,14 +103,8 @@ const filterInput = (fieldName, value) => {
     case 'gstNo':
       return value.toUpperCase().replace(/[^0-9A-Z]/g, '').substring(0, 50);
 
-    case 'fileNoPrefix':
-    case 'invoicePrefix':
-      return value.replace(/[^A-Za-z0-9_-]/g, '');
-
     case 'cgstPercentage':
     case 'sgstPercentage':
-    case 'lastFileSeq':
-      return value.replace(/[^0-9.]/g, '');
 
     default:
       return value;
@@ -148,12 +129,7 @@ const VALIDATED_FIELDS = [
   'mobile',
   'altMobile',
   'email',
-  'status',
-  // fileNoPrefix, invoicePrefix, lastFileSeq are NOT in backend update validator
-  // but we still check the optional length rules for UX
-  'fileNoPrefix',
-  'invoicePrefix',
-  'lastFileSeq',
+  'status'
 ];
 
 const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
@@ -169,9 +145,6 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
     mobile:         clinic.mobile         || '',
     altMobile:      clinic.altMobile      || '',
     email:          clinic.email          || '',
-    fileNoPrefix:   clinic.fileNoPrefix   || '',
-    invoicePrefix:  clinic.invoicePrefix  || '',
-    lastFileSeq:    clinic.lastFileSeq    || '',
     status:         clinic.status === 'active' ? 1 : 2,
   });
 
@@ -232,8 +205,6 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
         Mobile:         formData.mobile.trim(),
         AltMobile:      formData.altMobile.trim(),
         Email:          formData.email.trim(),
-        FileNoPrefix:   formData.fileNoPrefix.trim(),
-        InvoicePrefix:  formData.invoicePrefix.trim(),
         Status:         Number(formData.status),
       });
 
@@ -498,60 +469,6 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
                 />
                 {validationMessages.sgstPercentage && (
                   <span className={styles.validationMsg}>{validationMessages.sgstPercentage}</span>
-                )}
-              </div>
-
-            </div>
-          </div>
-
-          {/* ── Billing Configuration ─────────────────────────────────────── */}
-          {/* fileNoPrefix, lastFileSeq, invoicePrefix are NOT in backend update validator */}
-          <div className={styles.addSection}>
-            <div className={styles.addSectionHeader}><h3>Billing Configuration</h3></div>
-            <div className={styles.addFormGrid}>
-
-              <div className={styles.addFormGroup}>
-                <label>File No Prefix</label>
-                <input
-                  name="fileNoPrefix"
-                  value={formData.fileNoPrefix}
-                  onChange={handleInputChange}
-                  onKeyDown={prefixKeyDown}
-                  onPaste={prefixPaste}
-                  placeholder="e.g. FILE-2026_DOC"
-                />
-                {validationMessages.fileNoPrefix && (
-                  <span className={styles.validationMsg}>{validationMessages.fileNoPrefix}</span>
-                )}
-              </div>
-
-              <div className={styles.addFormGroup}>
-                <label>Last File Sequence</label>
-                <input
-                  type="number"
-                  name="lastFileSeq"
-                  value={formData.lastFileSeq}
-                  onChange={handleInputChange}
-                  min="0"
-                  placeholder="0"
-                />
-                {validationMessages.lastFileSeq && (
-                  <span className={styles.validationMsg}>{validationMessages.lastFileSeq}</span>
-                )}
-              </div>
-
-              <div className={styles.addFormGroup}>
-                <label>Invoice Prefix</label>
-                <input
-                  name="invoicePrefix"
-                  value={formData.invoicePrefix || ''}
-                  onChange={handleInputChange}
-                  onKeyDown={prefixKeyDown}
-                  onPaste={prefixPaste}
-                  placeholder="e.g. INV-2026_ABC"
-                />
-                {validationMessages.invoicePrefix && (
-                  <span className={styles.validationMsg}>{validationMessages.invoicePrefix}</span>
                 )}
               </div>
 

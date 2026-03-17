@@ -562,7 +562,7 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Purchase Price (₹)</label>
+                  <label>Purchase Price (₹) <span className={styles.required}>*</span></label>
                   <input
                     type="number"
                     name="purchasePrice"
@@ -572,6 +572,7 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                     min="0"
                     step="0.01"
                     disabled={loading}
+                    required
                   />
                   {fieldErrors.purchasePrice && (
                     <span className={styles.validationMsg}>
@@ -581,7 +582,7 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Sell Price (₹)</label>
+                  <label>Sell Price (₹) <span className={styles.required}>*</span></label>
                   <input
                     type="number"
                     name="sellPrice"
@@ -591,6 +592,7 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
                     min="0"
                     step="0.01"
                     disabled={loading}
+                    required
                   />
                   {fieldErrors.sellPrice && (
                     <span className={styles.validationMsg}>

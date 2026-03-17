@@ -60,11 +60,6 @@ const formatDate      = (ds) => { if (!ds) return '—'; return new Date(ds).toL
 const formatTime      = (ts) => { if (!ts) return '—'; const [h, m] = ts.split(':').map(Number); return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`; };
 const today           = () => new Date().toISOString().split('T')[0];
 const thirtyDaysLater = () => new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
-const getIds = async () => {
-  const clinicId = await getStoredClinicId();
-  const branchId = await getStoredBranchId();
-  return { clinicId, branchId };
-};
 
 const createContainer = (medicine = null) => {
   const timings       = parseTimings(medicine?.timing);
@@ -214,7 +209,8 @@ const MedicineContainer = ({ container, onUpdate, onRemove, readOnly = false }) 
 };
 
 /* ─── SavedMedicineCard ─────────────────────────── */
-const SavedMedicineCard = ({ item, clinicId, branchId, onUpdated, onDeleted, onError }) => {
+// clinicId / branchId props removed — component fetches its own fresh IDs
+const SavedMedicineCard = ({ item, onUpdated, onDeleted, onError }) => {
   const [expanded, setExpanded]       = useState(true);
   const [editing, setEditing]         = useState(false);
   const [saving, setSaving]           = useState(false);
@@ -255,6 +251,9 @@ const SavedMedicineCard = ({ item, clinicId, branchId, onUpdated, onDeleted, onE
 
   const handleSave = async () => {
     if (!local) return;
+    // Always fetch fresh IDs to guarantee correct values
+    const clinicId = await getStoredClinicId();
+    const branchId = await getStoredBranchId();
     try {
       setSaving(true);
       await updatePrescriptionDetail({
@@ -387,12 +386,16 @@ const SavedMedicineCard = ({ item, clinicId, branchId, onUpdated, onDeleted, onE
 };
 
 /* ─── SavedLabSection (inside Lab Modal) ────────── */
-const SavedLabSection = ({ labItems, labPriorityDesc, clinicId, branchId, onItemStatusChange, onError }) => {
+// clinicId / branchId props removed — component fetches its own fresh IDs
+const SavedLabSection = ({ labItems, labPriorityDesc, onItemStatusChange, onError }) => {
   const [togglingId, setTogglingId] = useState(null);
 
   const handleToggleItem = async (itemId, currentStatus) => {
     try {
       setTogglingId(itemId);
+      // Always fetch fresh IDs to guarantee correct values
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const newStatus = currentStatus === 1 ? 2 : 1;
       await updateLabTestOrderItem({ itemId, clinicId, branchId, status: newStatus });
       onItemStatusChange(itemId, newStatus);
@@ -559,6 +562,32 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
   const [submitProgress, setSubmitProgress]   = useState(null);
   const [isFinished, setIsFinished]           = useState(false);
   const [error, setError]                     = useState(null);
+
+  // ── Clinic / Branch IDs — loaded once when the view opens ──
+  // Stored in state so every render has the correct resolved values
+  // (avoids passing a Promise or 0 to child components / API calls).
+  const [clinicId, setClinicId] = useState(null);
+  const [branchId, setBranchId] = useState(null);
+
+  // Load IDs as soon as the view becomes active
+  useEffect(() => {
+    if (!activeIsOpen) return;
+    (async () => {
+      const cId = await getStoredClinicId();
+      const bId = await getStoredBranchId();
+      setClinicId(cId);
+      setBranchId(bId);
+    })();
+  }, [activeIsOpen]);
+
+  // ── Central helper: always returns fresh, resolved IDs and keeps state in sync ──
+  const getIds = async () => {
+    const cId = await getStoredClinicId();
+    const bId = await getStoredBranchId();
+    setClinicId(cId);
+    setBranchId(bId);
+    return { clinicId: cId, branchId: bId };
+  };
 
   /* ─────────────────────────────────────────────── */
 
@@ -1093,8 +1122,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
 
   const footerBtnIsFinish = isFinished && !hasAnythingNew && !consultDataChanged;
 
-  const { clinicId, branchId } = getIds();
-
   const shell = (
     <div className="ac-overlay">
       <div className="ac-shell">
@@ -1184,8 +1211,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                 </div>
               )}
 
-              {/* ── errors shown as popup below — no inline banner ── */}
-
               <div className={`panels ${isDragOver ? 'panels--dragover' : ''}`}>
 
                 {/* Panel 1 — Consultation Notes */}
@@ -1267,8 +1292,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                           <SavedMedicineCard
                             key={item.id}
                             item={item}
-                            clinicId={clinicId}
-                            branchId={branchId}
                             onUpdated={handlePrescItemUpdated}
                             onDeleted={handlePrescItemDeleted}
                             onError={setError}
@@ -1734,8 +1757,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                   <SavedLabSection
                     labItems={savedLabItems}
                     labPriorityDesc={savedLabPriorityDesc}
-                    clinicId={clinicId}
-                    branchId={branchId}
                     onItemStatusChange={handleLabItemStatusChange}
                     onError={setError}
                   />
@@ -1808,4 +1829,4 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     : ReactDOM.createPortal(shell, document.body);
 };
 
-export default ViewConsultation; 
+export default ViewConsultation;

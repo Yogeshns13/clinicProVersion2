@@ -784,10 +784,6 @@ const LabOrderList = () => {
                   <h4>Order Information</h4>
                   <div className={styles.infoGrid}>
                     <div className={styles.infoItem}>
-                      <span className={styles.infoLabel}>Order ID:</span>
-                      <span className={styles.infoValue}>#{orderDetails?.id}</span>
-                    </div>
-                    <div className={styles.infoItem}>
                       <span className={styles.infoLabel}>Patient:</span>
                       <span className={styles.infoValue}>{orderDetails?.patientName}</span>
                     </div>
