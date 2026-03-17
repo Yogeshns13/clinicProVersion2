@@ -497,8 +497,6 @@ export const updateClinic = async (clinicData) => {
     GstNo: clinicData.GstNo?.trim() || "",
     CgstPercentage: Number(clinicData.CgstPercentage) || 0,
     SgstPercentage: Number(clinicData.SgstPercentage) || 0,
-    FileNoPrefix: clinicData.FileNoPrefix?.trim() || "",
-    InvoicePrefix: clinicData.InvoicePrefix?.trim() || "",
     Status: Number(clinicData.Status) || 1,
   };
   console.log("Update Clinic:",payload)

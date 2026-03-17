@@ -209,7 +209,7 @@ const MedicineContainer = ({ container, onUpdate, onRemove, readOnly = false }) 
 };
 
 /* ─── SavedMedicineCard ─────────────────────────── */
-const SavedMedicineCard = ({ item, clinicId, branchId, onUpdated, onDeleted, onError }) => {
+const SavedMedicineCard = ({ item, onUpdated, onDeleted, onError }) => {
   const [expanded, setExpanded]       = useState(true);
   const [editing, setEditing]         = useState(false);
   const [saving, setSaving]           = useState(false);
@@ -250,6 +250,9 @@ const SavedMedicineCard = ({ item, clinicId, branchId, onUpdated, onDeleted, onE
 
   const handleSave = async () => {
     if (!local) return;
+    // Always fetch fresh IDs to guarantee correct values
+    const clinicId = await getStoredClinicId();
+    const branchId = await getStoredBranchId();
     try {
       setSaving(true);
       await updatePrescriptionDetail({
@@ -390,12 +393,15 @@ const SavedMedicineCard = ({ item, clinicId, branchId, onUpdated, onDeleted, onE
 };
 
 /* ─── SavedLabSection (only used inside Lab Modal) ────────── */
-const SavedLabSection = ({ labItems, labPriorityDesc, clinicId, branchId, onItemStatusChange, onError }) => {
+const SavedLabSection = ({ labItems, labPriorityDesc, onItemStatusChange, onError }) => {
   const [togglingId, setTogglingId] = useState(null);
 
   const handleToggleItem = async (itemId, currentStatus) => {
     try {
       setTogglingId(itemId);
+      // Always fetch fresh IDs to guarantee correct values
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
       const newStatus = currentStatus === 1 ? 2 : 1;
       await updateLabTestOrderItem({ itemId, clinicId, branchId, status: newStatus });
       onItemStatusChange(itemId, newStatus);
@@ -567,6 +573,23 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   // ── Error as popup instead of banner ──
   const [error, setError] = useState(null);
 
+  // ── Clinic / Branch IDs — loaded once when the modal opens ──
+  // Stored in state so every render has the correct resolved values
+  // (avoids passing a Promise or 0 to child components / API calls).
+  const [clinicId, setClinicId] = useState(null);
+  const [branchId, setBranchId] = useState(null);
+
+  // Load IDs as soon as the modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+    (async () => {
+      const cId = await getStoredClinicId();
+      const bId = await getStoredBranchId();
+      setClinicId(cId);
+      setBranchId(bId);
+    })();
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen) document.body.classList.add('consultation-open');
     else document.body.classList.remove('consultation-open');
@@ -605,7 +628,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const hasAnythingNew  = pendingContainerCount > 0 || stagedLabCount > 0;
 
   // ── Submit enabled only when there is actual input ──
-  // Notes typed, or medicines added, or lab items staged
   const hasNotes        = consultationNotes.trim().length > 0;
   const submitEnabled   = hasNotes || pendingContainerCount > 0 || stagedLabCount > 0;
 
@@ -615,11 +637,15 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     }
   }, [hasAnythingNew]);
 
+  // ── Central helper: always returns fresh, resolved IDs ──
   const getIds = async () => {
-  const clinicId = await getStoredClinicId();
-  const branchId = await getStoredBranchId();
-  return { clinicId, branchId };
-};
+    const cId = await getStoredClinicId();
+    const bId = await getStoredBranchId();
+    // Keep state in sync so child-component props stay current
+    setClinicId(cId);
+    setBranchId(bId);
+    return { clinicId: cId, branchId: bId };
+  };
 
   const fetchTodayVisits = async () => {
     try {
@@ -763,9 +789,11 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     if (!consultationNotes.trim()) { setError({ message: 'Consultation Notes are required.' }); return; }
     try {
       setUpdatingConsult(true); setError(null);
+      // Properly await getIds() before destructuring
+      const { clinicId } = await getIds();
       await updateConsultation({
         consultationId,
-        clinicId: await getIds().clinicId,
+        clinicId,
         reason: selectedVisit?.reason || '',
         symptoms: selectedVisit?.symptoms || '',
         bpSystolic:  selectedVisit?.bpSystolic  ?? 0,
@@ -811,7 +839,7 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
       return;
     }
 
-    const { clinicId, branchId } = getIds();
+    const { clinicId, branchId } = await getIds();
     setShowLabModal(false);
     setError(null);
 
@@ -1194,8 +1222,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
   const showSubmitInFooter  = visitStep === 2;
   const footerBtnIsFinish   = isFinished && !hasAnythingNew && !consultDataChanged;
 
-  const { clinicId, branchId } = getIds();
-
   return ReactDOM.createPortal(
     <div className="ac-overlay">
       <div className="ac-shell">
@@ -1340,8 +1366,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                 </div>
               )}
 
-              {/* ── NO error-banner here — errors shown as popup ── */}
-
               <div className={`panels ${isDragOver ? 'panels--dragover' : ''}`}>
 
                 {/* Panel 1 */}
@@ -1426,8 +1450,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                           <SavedMedicineCard
                             key={item.id}
                             item={item}
-                            clinicId={clinicId}
-                            branchId={branchId}
                             onUpdated={handlePrescItemUpdated}
                             onDeleted={handlePrescItemDeleted}
                             onError={setError}
@@ -1930,8 +1952,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
                   <SavedLabSection
                     labItems={savedLabItems}
                     labPriorityDesc={savedLabPriorityDesc}
-                    clinicId={clinicId}
-                    branchId={branchId}
                     onItemStatusChange={handleLabItemStatusChange}
                     onError={setError}
                   />
