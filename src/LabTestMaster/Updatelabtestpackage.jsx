@@ -206,7 +206,7 @@ const UpdateLabTestPackage = ({ pkg, onClose, onUpdateSuccess }) => {
   // ────────────────────────────────────────────────
   return (
     <>
-      <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalOverlay} >
         <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
 
           <div className={styles.modalHeader}>

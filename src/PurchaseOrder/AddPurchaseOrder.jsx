@@ -127,7 +127,7 @@ const AddPurchaseOrder = ({ isOpen, onClose, onAddSuccess }) => {
 
   return (
     <>
-      <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalOverlay} >
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
           <div className={styles.modalHeader}>
             <h2>Add New Purchase Order</h2>

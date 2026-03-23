@@ -714,7 +714,7 @@ const SlotList = () => {
 
       {/* ── Add Slot Modal ── */}
       {showAddModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowAddModal(false)}>
+        <div className={styles.modalOverlay} >
           <div className={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Add New Slot</h2>

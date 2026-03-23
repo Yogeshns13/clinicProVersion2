@@ -987,7 +987,7 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees, s
   };
 
   return (
-    <div className={styles.detailModalOverlay} onClick={() => onClose(orderData.orderId)}>
+    <div className={styles.detailModalOverlay} >
       <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
         <ErrorHandler error={error} />
         
