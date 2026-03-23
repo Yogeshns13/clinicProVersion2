@@ -1,6 +1,7 @@
 // src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from "react";
-import { logout as apiLogout } from "../Api/Api"; 
+import { logout as apiLogout } from "../Api/Api";
+import { setLogoutHandler } from "../Api/ApiConfiguration";
 
 const AuthContext = createContext();
 
@@ -24,13 +25,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await apiLogout();       
+      await apiLogout();
     } catch (err) {
       console.warn("Backend logout failed, still clearing local state", err);
     } finally {
-      localStorage.removeItem("isLoggedIn");
-      localStorage.removeItem("profileName");
-      localStorage.removeItem("sessionRef");
+      // Clear all session keys so no stale data persists into the next login
+      localStorage.clear();
       setIsAuthenticated(false);
       setProfileName(null);
     }
@@ -40,6 +40,19 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(isAuthenticated);
     setProfileName(profileName);
   };
+
+  // Wire the axios interceptor to React auth state.
+  // When the interceptor exhausts renewal retries it calls this to trigger logout
+  // without needing access to React context itself.
+  useEffect(() => {
+    setLogoutHandler(() => {
+      localStorage.clear();
+      setIsAuthenticated(false);
+      setProfileName(null);
+      // Navigation is handled by PrivateRoute reacting to isAuthenticated = false
+    });
+    return () => setLogoutHandler(null);
+  }, []);
 
   useEffect(() => {
     const handleStorageChange = () => {

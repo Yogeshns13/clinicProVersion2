@@ -137,44 +137,42 @@ export const forgetPassword = async (username, email) => {
 
 export const renewToken = async () => {
   const userId = getUserId();
+  // RefreshToken is sent automatically via the httpOnly cookie (withCredentials: true)
+  // USER_ID is not duplicated — only UserId (the actual value) is sent
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
-    USER_ID: 0,
-    UserId: parseInt(userId),
-    RefreshToken: "",
+    UserId: parseInt(userId, 10),
   };
-  const getReadableTime = () => new Date().toLocaleString();
 
   try {
     const response = await API.post("/RenewToken", payload, {
       validateStatus: (status) => status < 500,
     });
-    const responseTime = getReadableTime();
 
     if (response.status === 422) {
-      console.log("TokenRenewal Failed! Please Login Again");
-      return { success: false, responseTime };
+      console.warn("[renewToken] Renewal rejected (422). Session expired.");
+      return { success: false };
     }
-
-    console.log(`[Renew Token] Response at: ${responseTime}`, response.data);
 
     const result = response.data?.result;
     if (result?.OUT_OK === 1 && result?.USER_ID) {
-      const profileName = result?.PROFILE_NAME || result?.profileName || localStorage.getItem("profile_name");
-      return { success: true, userId: result.USER_ID, profileName, responseTime };
+      const profileName =
+        result?.PROFILE_NAME ||
+        result?.profileName ||
+        localStorage.getItem("profile_name");
+      return { success: true, userId: result.USER_ID, profileName };
     }
 
-    console.log("TokenRenewal Failed! Please Login Again");
-    return { success: false, responseTime };
-
-  } catch (error) {
-    const responseTime = getReadableTime();
-    console.log("TokenRenewal Failed! Please Login Again");
-    return { success: false, responseTime };
+    console.warn("[renewToken] Renewal failed. Unexpected response.");
+    return { success: false };
+  } catch {
+    console.warn("[renewToken] Renewal failed. Network or server error.");
+    return { success: false };
   }
 };
+
 
 export const uploadPhoto = async (clinicId, file, fileAccessToken) => {
   try {
