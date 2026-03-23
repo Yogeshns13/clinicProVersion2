@@ -36,27 +36,27 @@ const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
     case 'TestName':
       if (!value || !value.trim()) return 'Test name is required';
-      if (value.trim().length < 3)   return 'Test name must be at least 3 characters';
+      if (value.trim().length < 3) return 'Test name must be at least 3 characters';
       if (value.trim().length > 100) return 'Test name must not exceed 100 characters';
       return '';
 
     case 'packName':
       if (!value || !value.trim()) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name is required`;
       if (/\d/.test(value)) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name cannot contain numbers`;
-      if (value.trim().length < 2)   return `${fieldName === 'TestName' ? 'Test' : 'Package'} name must be at least 2 characters`;
+      if (value.trim().length < 2) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name must be at least 2 characters`;
       if (value.trim().length > 100) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name must not exceed 100 characters`;
       return '';
 
     case 'ShortName':
       if (!value || !value.trim()) return 'Short name is required';
-      if (value.trim().length < 2)  return 'Short name must be at least 2 characters';
+      if (value.trim().length < 2) return 'Short name must be at least 2 characters';
       if (value.trim().length > 20) return 'Short name must not exceed 20 characters';
       return '';
 
     case 'packShortName':
       if (!value || !value.trim()) return 'Short name is required';
-      if (/\d/.test(value))        return 'Short name cannot contain numbers';
-      if (value.trim().length < 2)  return 'Short name must be at least 2 characters';
+      if (/\d/.test(value)) return 'Short name cannot contain numbers';
+      if (value.trim().length < 2) return 'Short name must be at least 2 characters';
       if (value.trim().length > 20) return 'Short name must not exceed 20 characters';
       return '';
 
@@ -70,13 +70,13 @@ const getLiveValidationMessage = (fieldName, value) => {
 
     case 'NormalRange':
       if (value && /[a-zA-Z]/.test(value)) return 'Normal range cannot contain letters';
-      if (value && value.length > 50)       return 'Normal range must not exceed 50 characters';
+      if (value && value.length > 50) return 'Normal range must not exceed 50 characters';
       return '';
 
     case 'Units':
-      if (value && /[0-9]/.test(value))       return 'Units cannot contain numbers';
-      if (value && /[^a-zA-Z\s]/.test(value)) return 'Units cannot contain special characters';
-      if (value && value.length > 30)          return 'Units must not exceed 30 characters';
+      if (value && /[0-9]/.test(value)) return 'Units cannot contain numbers';
+      if (value && /[^a-zA-Z\s/]/.test(value)) return 'Units can only contain letters, spaces, and "/"';
+      if (value && value.length > 30) return 'Units must not exceed 30 characters';
       return '';
 
     case 'Remarks':
@@ -85,15 +85,15 @@ const getLiveValidationMessage = (fieldName, value) => {
 
     case 'Fees':
       if (!value || value.trim() === '') return 'Fees is required';
-  if (!/^\d+(\.\d{1,2})?$/.test(value)) return 'Enter a valid amount (e.g., 100 or 100.50)';
-  if (Number(value) <= 0) return 'Fees must be greater than 0';
-  return '';
+      if (!/^\d+(\.\d{1,2})?$/.test(value)) return 'Enter a valid amount (e.g., 100 or 100.50)';
+      if (Number(value) <= 0) return 'Fees must be greater than 0';
+      return '';
 
     case 'fees':
-    if (!value || value.trim() === '') return 'Fees is required';
-  if (!/^\d+(\.\d{1,2})?$/.test(value)) return 'Enter a valid amount (e.g., 100 or 100.50)';
-  if (Number(value) <= 0) return 'Fees must be greater than 0';
-  return '';
+      if (!value || value.trim() === '') return 'Fees is required';
+      if (!/^\d+(\.\d{1,2})?$/.test(value)) return 'Enter a valid amount (e.g., 100 or 100.50)';
+      if (Number(value) <= 0) return 'Fees must be greater than 0';
+      return '';
 
     case 'CGSTPercentage':
     case 'SGSTPercentage':
@@ -101,9 +101,9 @@ const getLiveValidationMessage = (fieldName, value) => {
     case 'sgstPercentage':
       if (value === '' || value === null || value === undefined) return '';
       const percentage = Number(value);
-      if (isNaN(percentage))  return 'Must be a valid number';
-      if (percentage < 0)     return 'Percentage cannot be negative';
-      if (percentage > 100)   return 'Percentage cannot exceed 100';
+      if (isNaN(percentage)) return 'Must be a valid number';
+      if (percentage < 0) return 'Percentage cannot be negative';
+      if (percentage > 100) return 'Percentage cannot exceed 100';
       return '';
 
     default:
@@ -136,7 +136,7 @@ const filterInput = (fieldName, value) => {
       return filtered;
 
     case 'Units':
-      return value.replace(/[^a-zA-Z\s]/g, '');
+      return value.replace(/[^a-zA-Z\s/]/g, '');
 
     case 'NormalRange':
       return value.replace(/[a-zA-Z]/g, '');
@@ -147,28 +147,28 @@ const filterInput = (fieldName, value) => {
 };
 
 const TEST_TYPES = [
-  { id: 1, label: 'Blood'  },
-  { id: 2, label: 'Urine'  },
+  { id: 1, label: 'Blood' },
+  { id: 2, label: 'Urine' },
   { id: 3, label: 'Saliva' },
-  { id: 4, label: 'Stool'  },
-  { id: 5, label: 'CSF'    },
+  { id: 4, label: 'Stool' },
+  { id: 5, label: 'CSF' },
   { id: 6, label: 'Tissue' },
-  { id: 7, label: 'Other'  },
+  { id: 7, label: 'Other' },
 ];
 
 const TEST_STATUS_OPTIONS = [
-  { id: 1, label: 'Active'     },
-  { id: 2, label: 'Inactive'   },
+  { id: 1, label: 'Active' },
+  { id: 2, label: 'Inactive' },
   { id: 3, label: 'Deprecated' },
 ];
 
 const PACKAGE_STATUS_OPTIONS = [
-  { id: 1, label: 'Active'   },
+  { id: 1, label: 'Active' },
   { id: 2, label: 'Inactive' },
 ];
 
-const MASTER_SEARCH_TYPE_OPTIONS  = [{ value: 'testName',  label: 'Test Name'    }];
-const PACKAGE_SEARCH_TYPE_OPTIONS = [{ value: 'packName',  label: 'Package Name' }];
+const MASTER_SEARCH_TYPE_OPTIONS = [{ value: 'testName', label: 'Test Name' }];
+const PACKAGE_SEARCH_TYPE_OPTIONS = [{ value: 'packName', label: 'Package Name' }];
 
 // ──────────────────────────────────────────────────
 const LabMasterList = () => {
@@ -177,88 +177,88 @@ const LabMasterList = () => {
   const [activeTab, setActiveTab] = useState('master');
 
   // ===== LAB TEST MASTER =====
-  const [tests, setTests]           = useState([]);
-  const [allTests, setAllTests]     = useState([]);
-  const [selectedTest, setSelectedTest]       = useState(null);
+  const [tests, setTests] = useState([]);
+  const [allTests, setAllTests] = useState([]);
+  const [selectedTest, setSelectedTest] = useState(null);
   const [isAddTestFormOpen, setIsAddTestFormOpen] = useState(false);
   const [updateTest, setUpdateTest] = useState(null);
   const [testFormData, setTestFormData] = useState({
-    TestName:       '',
-    ShortName:      '',
-    Description:    '',
-    TestType:       1,
-    NormalRange:    '',
-    Units:          '',
-    Remarks:        '',
-    Fees:           '',
+    TestName: '',
+    ShortName: '',
+    Description: '',
+    TestType: 1,
+    NormalRange: '',
+    Units: '',
+    Remarks: '',
+    Fees: '',
     CGSTPercentage: '9',
     SGSTPercentage: '9',
   });
 
   const [masterFilterInputs, setMasterFilterInputs] = useState({
-    searchType:  'testName',
+    searchType: 'testName',
     searchValue: '',
-    testType:    '',
-    status:      '',
-    dateFrom:    '',
-    dateTo:      '',
+    testType: '',
+    status: '',
+    dateFrom: '',
+    dateTo: '',
   });
 
   const [masterAppliedFilters, setMasterAppliedFilters] = useState({
-    searchType:  'testName',
+    searchType: 'testName',
     searchValue: '',
-    testType:    '',
-    status:      '',
-    dateFrom:    '',
-    dateTo:      '',
+    testType: '',
+    status: '',
+    dateFrom: '',
+    dateTo: '',
   });
 
   // ===== LAB TEST PACKAGE =====
-  const [packages, setPackages]         = useState([]);
-  const [allPackages, setAllPackages]   = useState([]);
-  const [selectedPackage, setSelectedPackage]       = useState(null);
+  const [packages, setPackages] = useState([]);
+  const [allPackages, setAllPackages] = useState([]);
+  const [selectedPackage, setSelectedPackage] = useState(null);
   const [isAddPackageFormOpen, setIsAddPackageFormOpen] = useState(false);
   const [updatePackage, setUpdatePackage] = useState(null);
   const [packageFormData, setPackageFormData] = useState({
-    packName:       '',
-    packShortName:  '',
-    description:    '',
-    fees:           '',
+    packName: '',
+    packShortName: '',
+    description: '',
+    fees: '',
     cgstPercentage: '9',
     sgstPercentage: '9',
   });
 
   const [packageFilterInputs, setPackageFilterInputs] = useState({
-    searchType:  'packName',
+    searchType: 'packName',
     searchValue: '',
-    status:      '',
-    dateFrom:    '',
-    dateTo:      '',
+    status: '',
+    dateFrom: '',
+    dateTo: '',
   });
 
   const [packageAppliedFilters, setPackageAppliedFilters] = useState({
-    searchType:  'packName',
+    searchType: 'packName',
     searchValue: '',
-    status:      '',
-    dateFrom:    '',
-    dateTo:      '',
+    status: '',
+    dateFrom: '',
+    dateTo: '',
   });
 
   // ===== PACKAGE ITEMS =====
-  const [packageItems, setPackageItems]       = useState([]);
+  const [packageItems, setPackageItems] = useState([]);
   const [isAddItemFormOpen, setIsAddItemFormOpen] = useState(false);
-  const [availableTests, setAvailableTests]   = useState([]);
+  const [availableTests, setAvailableTests] = useState([]);
   const [selectedTestIds, setSelectedTestIds] = useState([]);
 
   // ===== SHARED =====
-  const [loading, setLoading]       = useState(true);
-  const [error,   setError]         = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
-  const [testValidationMessages,    setTestValidationMessages]    = useState({});
+  const [testValidationMessages, setTestValidationMessages] = useState({});
   const [packageValidationMessages, setPackageValidationMessages] = useState({});
 
   // Pagination
-  const [page, setPage]       = useState(1);
+  const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(false);
 
   // ── Button cooldown state (2-sec disable after click) ──────────────────────
@@ -270,7 +270,7 @@ const LabMasterList = () => {
 
   // ── MessagePopup state ──────────────────────────────────────────────────────
   const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
-  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const showPopup = (message, type = 'success') => setPopup({ visible: true, message, type });
   const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
 
   // ── Submit button gating ────────────────────────────────────────────────────
@@ -288,15 +288,15 @@ const LabMasterList = () => {
 
   const hasMasterActiveFilters =
     !!masterAppliedFilters.searchValue ||
-    !!masterAppliedFilters.testType    ||
-    !!masterAppliedFilters.status      ||
-    !!masterAppliedFilters.dateFrom    ||
+    !!masterAppliedFilters.testType ||
+    !!masterAppliedFilters.status ||
+    !!masterAppliedFilters.dateFrom ||
     !!masterAppliedFilters.dateTo;
 
   const hasPackageActiveFilters =
     !!packageAppliedFilters.searchValue ||
-    !!packageAppliedFilters.status      ||
-    !!packageAppliedFilters.dateFrom    ||
+    !!packageAppliedFilters.status ||
+    !!packageAppliedFilters.dateFrom ||
     !!packageAppliedFilters.dateTo;
 
   // ── FETCH ──────────────────────────────────────────────────────────────────
@@ -311,7 +311,7 @@ const LabMasterList = () => {
       const options = { BranchID: branchId, Page: pageNum, PageSize: PAGE_SIZE };
       if (filters.searchValue) options.TestName = filters.searchValue;
       if (filters.testType !== '') options.TestType = Number(filters.testType);
-      if (filters.status   !== '') options.Status   = Number(filters.status);
+      if (filters.status !== '') options.Status = Number(filters.status);
 
       const data = await getLabTestMasterList(clinicId, options);
 
@@ -366,8 +366,8 @@ const LabMasterList = () => {
 
       const data = await getLabTestPackageItemList({
         packageId: PackageId,
-        ClinicID:  clinicId,
-        BranchID:  branchId,
+        ClinicID: clinicId,
+        BranchID: branchId,
       });
 
       setPackageItems(data);
@@ -479,10 +479,10 @@ const LabMasterList = () => {
   };
 
   // ── HELPERS ────────────────────────────────────────────────────────────────
-  const getTestTypeLabel    = (id) => TEST_TYPES.find((t) => t.id === id)?.label || 'Unknown';
-  const getTestStatusLabel  = (id) => TEST_STATUS_OPTIONS.find((s) => s.id === id)?.label || 'Unknown';
+  const getTestTypeLabel = (id) => TEST_TYPES.find((t) => t.id === id)?.label || 'Unknown';
+  const getTestStatusLabel = (id) => TEST_STATUS_OPTIONS.find((s) => s.id === id)?.label || 'Unknown';
   const getPackageStatusLabel = (id) => PACKAGE_STATUS_OPTIONS.find((s) => s.id === id)?.label || 'Unknown';
-  const getStatusClass      = (id) => {
+  const getStatusClass = (id) => {
     if (id === 1) return styles.active;
     if (id === 2) return styles.inactive;
     if (id === 3) return styles.deprecated;
@@ -494,7 +494,7 @@ const LabMasterList = () => {
     triggerCooldown(`view-test-${test.id}`);
     setSelectedTest(test);
   };
-  const closeTestModal  = () => setSelectedTest(null);
+  const closeTestModal = () => setSelectedTest(null);
 
   const openAddTestForm = () => {
     triggerCooldown('add-test');
@@ -527,7 +527,7 @@ const LabMasterList = () => {
     // Guard: show warning popup if required fields missing
     if (!testAllRequiredFilled) {
       const missing = [];
-      if (!testFormData.TestName.trim())  missing.push('Test Name');
+      if (!testFormData.TestName.trim()) missing.push('Test Name');
       if (!testFormData.ShortName.trim()) missing.push('Short Name');
       if (!testFormData.Fees.trim() || Number(testFormData.Fees) <= 0) missing.push('Fees');
       showPopup(`Please fill all required fields: ${missing.join(', ')}.`, 'warning');
@@ -543,14 +543,14 @@ const LabMasterList = () => {
       await addLabTestMaster({
         clinicId,
         branchId,
-        TestName:       testFormData.TestName.trim(),
-        ShortName:      testFormData.ShortName.trim(),
-        Description:    testFormData.Description.trim(),
-        TestType:       Number(testFormData.TestType),
-        NormalRange:    testFormData.NormalRange.trim(),
-        Units:          testFormData.Units.trim(),
-        Remarks:        testFormData.Remarks.trim(),
-        Fees:           Number(testFormData.Fees) || 0,
+        TestName: testFormData.TestName.trim(),
+        ShortName: testFormData.ShortName.trim(),
+        Description: testFormData.Description.trim(),
+        TestType: Number(testFormData.TestType),
+        NormalRange: testFormData.NormalRange.trim(),
+        Units: testFormData.Units.trim(),
+        Remarks: testFormData.Remarks.trim(),
+        Fees: Number(testFormData.Fees) || 0,
         CGSTPercentage: Number(testFormData.CGSTPercentage) || 9,
         SGSTPercentage: Number(testFormData.SGSTPercentage) || 9,
       });
@@ -633,7 +633,7 @@ const LabMasterList = () => {
     // Guard: show warning popup if required fields missing
     if (!packageAllRequiredFilled) {
       const missing = [];
-      if (!packageFormData.packName.trim())      missing.push('Package Name');
+      if (!packageFormData.packName.trim()) missing.push('Package Name');
       if (!packageFormData.packShortName.trim()) missing.push('Short Name');
       if (!packageFormData.fees || packageFormData.fees === '0') missing.push('Fees');
       showPopup(`Please fill all required fields: ${missing.join(', ')}.`, 'warning');
@@ -656,10 +656,10 @@ const LabMasterList = () => {
       await addLabTestPackage({
         clinicId,
         branchId,
-        packName:       packageFormData.packName.trim(),
-        packShortName:  packageFormData.packShortName.trim(),
-        description:    packageFormData.description.trim(),
-        fees:           Number(packageFormData.fees),
+        packName: packageFormData.packName.trim(),
+        packShortName: packageFormData.packShortName.trim(),
+        description: packageFormData.description.trim(),
+        fees: Number(packageFormData.fees),
         cgstPercentage: Number(packageFormData.cgstPercentage) || 9,
         sgstPercentage: Number(packageFormData.sgstPercentage) || 9,
       });
@@ -718,7 +718,7 @@ const LabMasterList = () => {
           clinicId,
           branchId,
           packageId: selectedPackage.id,
-          testId:    testId,
+          testId: testId,
         });
       }
 
@@ -757,8 +757,8 @@ const LabMasterList = () => {
 
       const result = await rebuildPackageFees({
         packageId: selectedPackage.id,
-        clinicId:  clinicId,
-        branchId:  branchId,
+        clinicId: clinicId,
+        branchId: branchId,
       });
 
       showPopup(
@@ -768,7 +768,7 @@ const LabMasterList = () => {
 
       await fetchPackages(packageAppliedFilters, page);
       const updatedPkg = await getLabTestPackageList(clinicId, { BranchID: branchId });
-      const updated    = updatedPkg.find(p => p.id === selectedPackage.id);
+      const updated = updatedPkg.find(p => p.id === selectedPackage.id);
       if (updated) setSelectedPackage(updated);
     } catch (err) {
       console.error('Rebuild fees failed:', err);
@@ -783,8 +783,8 @@ const LabMasterList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.loading}><LoadingPage/></div>;
-  if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
+  if (loading) return <div className={styles.loading}><LoadingPage /></div>;
+  if (error) return <div className={styles.error}>Error: {error.message || error}</div>;
 
   const startRecord = (activeTab === 'master' ? tests : packages).length === 0
     ? 0
@@ -1168,7 +1168,7 @@ const LabMasterList = () => {
 
       {/* ── Add Test Form Modal ── */}
       {isAddTestFormOpen && (
-        <div className={styles.modalOverlay} onClick={closeAddTestForm}>
+        <div className={styles.modalOverlay} >
           <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Add New Lab Test</h2>
@@ -1269,7 +1269,7 @@ const LabMasterList = () => {
 
       {/* ── Add Package Form Modal ── */}
       {isAddPackageFormOpen && (
-        <div className={styles.modalOverlay} onClick={closeAddPackageForm}>
+        <div className={styles.modalOverlay} >
           <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Add New Lab Test Package</h2>
@@ -1343,7 +1343,7 @@ const LabMasterList = () => {
 
       {/* ── Add Items Form Modal ── */}
       {isAddItemFormOpen && (
-        <div className={styles.modalOverlay} onClick={closeAddItemForm}>
+        <div className={styles.modalOverlay} >
           <div className={`${styles.modal} ${styles.testSelectionModal}`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Add Tests to Package</h2>

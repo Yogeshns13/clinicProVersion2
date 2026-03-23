@@ -167,7 +167,7 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
 
   return (
     <>
-      <div className={styles.clinicModalOverlay} onClick={onClose}>
+      <div className={styles.clinicModalOverlay} >
         <div
           className={`${styles.clinicModal} ${styles.updateModal}`}
           onClick={(e) => e.stopPropagation()}

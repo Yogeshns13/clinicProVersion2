@@ -1145,7 +1145,7 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
   };
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
+    <div className={styles.modalOverlay} >
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h2>Update Order</h2>
@@ -1217,7 +1217,7 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
 
 // ─── Confirm Make Work Modal ───────────────────────────────────────────────────
 const ConfirmMakeWorkModal = ({ order, onClose, onConfirm, cooldown }) => (
-  <div className={styles.modalOverlay} onClick={onClose}>
+  <div className={styles.modalOverlay} >
     <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
       <div className={styles.modalHeader}>
         <h2>Confirm Create Work Items</h2>

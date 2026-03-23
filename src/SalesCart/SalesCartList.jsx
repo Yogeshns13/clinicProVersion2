@@ -898,7 +898,7 @@ const SalesCartList = () => {
       {confirm.isOpen && (
         <div
           className={styles.modalOverlay}
-          onClick={!confirm.submitting ? closeConfirm : undefined}
+          
         >
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>

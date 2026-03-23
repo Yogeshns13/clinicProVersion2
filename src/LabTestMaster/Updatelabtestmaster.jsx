@@ -8,18 +8,18 @@ import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const TEST_TYPES = [
-  { id: 1, label: 'Blood'  },
-  { id: 2, label: 'Urine'  },
+  { id: 1, label: 'Blood' },
+  { id: 2, label: 'Urine' },
   { id: 3, label: 'Saliva' },
-  { id: 4, label: 'Stool'  },
-  { id: 5, label: 'CSF'    },
+  { id: 4, label: 'Stool' },
+  { id: 5, label: 'CSF' },
   { id: 6, label: 'Tissue' },
-  { id: 7, label: 'Other'  },
+  { id: 7, label: 'Other' },
 ];
 
 const STATUS_OPTIONS = [
-  { id: 1, label: 'Active'     },
-  { id: 2, label: 'Inactive'   },
+  { id: 1, label: 'Active' },
+  { id: 2, label: 'Inactive' },
   { id: 3, label: 'Deprecated' },
 ];
 
@@ -27,13 +27,13 @@ const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
     case 'TestName':
       if (!value || !value.trim()) return 'Test name is required';
-      if (value.trim().length < 3)   return 'Test name must be at least 3 characters';
+      if (value.trim().length < 3) return 'Test name must be at least 3 characters';
       if (value.trim().length > 100) return 'Test name must not exceed 100 characters';
       return '';
 
     case 'ShortName':
       if (!value || !value.trim()) return 'Short name is required';
-      if (value.trim().length < 2)  return 'Short name must be at least 2 characters';
+      if (value.trim().length < 2) return 'Short name must be at least 2 characters';
       if (value.trim().length > 20) return 'Short name must not exceed 20 characters';
       return '';
 
@@ -42,29 +42,29 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
 
     case 'Fees':
-       if (!value || value.trim() === '') return 'Fees is required';
-  if (!/^\d+(\.\d{1,2})?$/.test(value)) return 'Enter a valid amount (e.g., 100 or 100.50)';
-  if (Number(value) <= 0) return 'Fees must be greater than 0';
-  return '';
+      if (!value || value.trim() === '') return 'Fees is required';
+      if (!/^\d+(\.\d{1,2})?$/.test(value)) return 'Enter a valid amount (e.g., 100 or 100.50)';
+      if (Number(value) <= 0) return 'Fees must be greater than 0';
+      return '';
 
     case 'NormalRange':
       if (value && /[a-zA-Z]/.test(value)) return 'Normal range cannot contain letters';
-      if (value && value.length > 50)      return 'Normal range must not exceed 50 characters';
+      if (value && value.length > 50) return 'Normal range must not exceed 50 characters';
       return '';
 
     case 'Units':
-      if (value && /[0-9]/.test(value))      return 'Units cannot contain numbers';
-      if (value && /[^a-zA-Z\s]/.test(value)) return 'Units cannot contain special characters';
-      if (value && value.length > 30)         return 'Units must not exceed 30 characters';
+      if (value && /[0-9]/.test(value)) return 'Units cannot contain numbers';
+      if (value && /[^a-zA-Z\s/]/.test(value)) return 'Units can only contain letters, spaces, and "/"';
+      if (value && value.length > 30) return 'Units must not exceed 30 characters';
       return '';
 
     case 'CGSTPercentage':
     case 'SGSTPercentage':
       if (value === '' || value === null || value === undefined) return '';
       const percent = Number(value);
-      if (isNaN(percent))  return 'Must be a valid number';
-      if (percent < 0)     return 'Cannot be negative';
-      if (percent > 100)   return 'Cannot exceed 100%';
+      if (isNaN(percent)) return 'Must be a valid number';
+      if (percent < 0) return 'Cannot be negative';
+      if (percent > 100) return 'Cannot exceed 100%';
       return '';
 
     case 'Remarks':
@@ -86,7 +86,7 @@ const filterInput = (fieldName, value) => {
     case 'SGSTPercentage':
       return value.replace(/[^0-9.]/g, '');
     case 'Units':
-      return value.replace(/[^a-zA-Z\s]/g, '');
+      return value.replace(/[^a-zA-Z\s/]/g, '');
     case 'NormalRange':
       return value.replace(/[a-zA-Z]/g, '');
     default:
@@ -100,23 +100,23 @@ const UpdateLabTestMaster = ({ test, onClose, onUpdateSuccess }) => {
 
   const testId = test.id;
 
-  const [loading, setLoading]     = useState(true);
-  const [error,   setError]       = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
 
   const [formData, setFormData] = useState({
-    TestName:       '',
-    ShortName:      '',
-    Description:    '',
-    TestType:       1,
-    NormalRange:    '',
-    Units:          '',
-    Remarks:        '',
-    Fees:           '',
+    TestName: '',
+    ShortName: '',
+    Description: '',
+    TestType: 1,
+    NormalRange: '',
+    Units: '',
+    Remarks: '',
+    Fees: '',
     CGSTPercentage: '9',
     SGSTPercentage: '9',
-    Status:         1,
+    Status: 1,
   });
 
   // ── Button cooldown state (2-sec disable after click) ──────────────────────
@@ -128,7 +128,7 @@ const UpdateLabTestMaster = ({ test, onClose, onUpdateSuccess }) => {
 
   // ── MessagePopup state ──────────────────────────────────────────────────────
   const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
-  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const showPopup = (message, type = 'success') => setPopup({ visible: true, message, type });
   const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
 
   // ── Submit button gating ────────────────────────────────────────────────────
@@ -149,7 +149,7 @@ const UpdateLabTestMaster = ({ test, onClose, onUpdateSuccess }) => {
         const clinicId = await getStoredClinicId();
         const branchId = await getStoredBranchId();
 
-        const testList    = await getLabTestMasterList(clinicId, { BranchID: branchId });
+        const testList = await getLabTestMasterList(clinicId, { BranchID: branchId });
         const fetchedTest = testList.find((t) => t.id === Number(testId));
 
         if (!fetchedTest) {
@@ -157,22 +157,22 @@ const UpdateLabTestMaster = ({ test, onClose, onUpdateSuccess }) => {
         }
 
         setFormData({
-          TestName:       fetchedTest.testName       || '',
-          ShortName:      fetchedTest.shortName      || '',
-          Description:    fetchedTest.description    || '',
-          TestType:       fetchedTest.testType       || 1,
-          NormalRange:    fetchedTest.normalRange    || '',
-          Units:          fetchedTest.units          || '',
-          Remarks:        fetchedTest.remarks        || '',
-          Fees:           fetchedTest.fees           || '',
+          TestName: fetchedTest.testName || '',
+          ShortName: fetchedTest.shortName || '',
+          Description: fetchedTest.description || '',
+          TestType: fetchedTest.testType || 1,
+          NormalRange: fetchedTest.normalRange || '',
+          Units: fetchedTest.units || '',
+          Remarks: fetchedTest.remarks || '',
+          Fees: fetchedTest.fees || '',
           CGSTPercentage: fetchedTest.cgstPercentage || '9',
           SGSTPercentage: fetchedTest.sgstPercentage || '9',
-          Status:         fetchedTest.status         || 1,
+          Status: fetchedTest.status || 1,
         });
       } catch (err) {
         setError({
           message: err.message || 'Failed to load lab test data',
-          status:  err.status  || 500,
+          status: err.status || 500,
         });
       } finally {
         setLoading(false);
@@ -198,7 +198,7 @@ const UpdateLabTestMaster = ({ test, onClose, onUpdateSuccess }) => {
     // Guard: show warning popup if required fields missing
     if (!allRequiredFilled) {
       const missing = [];
-      if (!formData.TestName.trim())  missing.push('Test Name');
+      if (!formData.TestName.trim()) missing.push('Test Name');
       if (!formData.ShortName.trim()) missing.push('Short Name');
       if (!formData.Fees || String(formData.Fees).trim() === '' || Number(formData.Fees) <= 0) missing.push('Fees');
       showPopup(`Please fill all required fields: ${missing.join(', ')}.`, 'warning');
@@ -213,20 +213,20 @@ const UpdateLabTestMaster = ({ test, onClose, onUpdateSuccess }) => {
       const branchId = await getStoredBranchId();
 
       await updateLabTestMaster({
-        TestID:         Number(testId),
-        ClinicID:       clinicId,
-        BranchID:       branchId,
-        TestName:       formData.TestName.trim(),
-        ShortName:      formData.ShortName.trim(),
-        Description:    formData.Description.trim(),
-        TestType:       Number(formData.TestType),
-        NormalRange:    formData.NormalRange.trim(),
-        Units:          formData.Units.trim(),
-        Remarks:        formData.Remarks.trim(),
-        Fees:           Number(formData.Fees) || 0,
+        TestID: Number(testId),
+        ClinicID: clinicId,
+        BranchID: branchId,
+        TestName: formData.TestName.trim(),
+        ShortName: formData.ShortName.trim(),
+        Description: formData.Description.trim(),
+        TestType: Number(formData.TestType),
+        NormalRange: formData.NormalRange.trim(),
+        Units: formData.Units.trim(),
+        Remarks: formData.Remarks.trim(),
+        Fees: Number(formData.Fees) || 0,
         CGSTPercentage: Number(formData.CGSTPercentage) || 9,
         SGSTPercentage: Number(formData.SGSTPercentage) || 9,
-        Status:         Number(formData.Status),
+        Status: Number(formData.Status),
       });
 
       showPopup('Lab test updated successfully!', 'success');
@@ -244,7 +244,7 @@ const UpdateLabTestMaster = ({ test, onClose, onUpdateSuccess }) => {
   // ────────────────────────────────────────────────
   return (
     <>
-      <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalOverlay} >
         <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
 
           <div className={styles.modalHeader}>

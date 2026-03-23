@@ -699,7 +699,7 @@ const SalesCartDetailList = () => {
       {invoice.isOpen && (
         <div
           className={styles.modalOverlay}
-          onClick={!invoice.submitting ? closeInvoiceModal : undefined}
+          
         >
           <div className={styles.ivModal} onClick={(e) => e.stopPropagation()}>
 
@@ -844,7 +844,7 @@ const SalesCartDetailList = () => {
       {updateQty.isOpen && updateQty.item && (
         <div
           className={styles.modalOverlay}
-          onClick={!updateQty.submitting ? closeUpdateQtyModal : undefined}
+          
         >
           <div className={styles.uqModal} onClick={(e) => e.stopPropagation()}>
 

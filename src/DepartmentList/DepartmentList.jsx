@@ -713,7 +713,7 @@ const DepartmentList = () => {
 
       {/* ──────────────── Add Form Modal ──────────────── */}
       {isAddFormOpen && (
-        <div className={styles.detailModalOverlay} onClick={closeAddForm}>
+        <div className={styles.detailModalOverlay} >
           <div
             className={styles.addModalContent}
             onClick={(e) => e.stopPropagation()}

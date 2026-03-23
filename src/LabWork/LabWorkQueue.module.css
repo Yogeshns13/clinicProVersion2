@@ -782,18 +782,20 @@
 }
 
 .confirmHeader {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.18);
 }
 
 .confirmHeader h3 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: var(--text-dark);
+  letter-spacing: -0.01em;
 }
 
 .confirmBody { padding: 24px; }
@@ -850,23 +852,23 @@
 }
 
 .closeBtn {
-  background: none;
+  background: rgba(255, 255, 255, 0.22);
   border: none;
-  color: #6b7280;
+  color: white;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  font-size: 1.5rem;
   cursor: pointer;
-  padding: 6px;
-  border-radius: 8px;
-  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  transition: all 0.25s ease;
 }
 
-.closeBtn:hover:not(:disabled) {
-  background: rgba(34, 43, 108, 0.1);
-  color: var(--primary-start);
+.closeBtn:hover {
+  background: rgba(255, 255, 255, 0.38);
+  transform: scale(1.08);
 }
 
 .closeBtn:disabled { opacity: 0.5; cursor: not-allowed; }

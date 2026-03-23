@@ -1006,7 +1006,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
 
   // ────────────────────────────────────────────────
   return (
-    <div className={styles.overlay} onClick={handleOverlayClick}>
+    <div className={styles.overlay} >
       <div className={styles.modal}>
 
         {/* ── Gradient Header ── */}

@@ -844,7 +844,7 @@ const MedicineStockList = () => {
 
       {/* ──────────────── Add Stock Form Modal ──────────────── */}
       {isAddFormOpen && (
-        <div className={styles.addModalOverlay} onClick={closeAddForm}>
+        <div className={styles.addModalOverlay} >
           <div
             className={styles.addModalContent}
             onClick={(e) => e.stopPropagation()}

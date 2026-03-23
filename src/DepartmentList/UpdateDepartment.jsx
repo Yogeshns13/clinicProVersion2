@@ -163,7 +163,7 @@ const UpdateDepartment = ({ department, clinics, onClose, onSuccess, onError }) 
 
   // ────────────────────────────────────────────────
   return (
-    <div className={styles.detailModalOverlay} onClick={onClose}>
+    <div className={styles.detailModalOverlay} >
 
       {/* Own MessagePopup — floats above the modal at z-index 9999 */}
       <MessagePopup

@@ -470,7 +470,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
         onClose={closePopup}
       />
 
-      <div className={styles.detailModalOverlay} onClick={onClose}>
+      <div className={styles.detailModalOverlay} >
         <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
 
           {/* ── Static Header (does not scroll) ── */}

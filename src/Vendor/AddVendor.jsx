@@ -9,6 +9,7 @@ import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 const REQUIRED_FIELDS = ['name', 'mobile', 'altMobile', 'email', 'gstNo'];
 
+const allowedCharactersRegex = /^[a-zA-Z\s]+$/;
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
@@ -244,7 +245,7 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
 
   return (
     <>
-      <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalOverlay} >
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
 
           {/* ── Static Header (does not scroll) ── */}

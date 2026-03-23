@@ -108,7 +108,7 @@ const UpdateMedicineStock = ({ stock, onClose, onUpdateSuccess }) => {
   // ────────────────────────────────────────────────
   return (
     <>
-      <div className={styles.updateModalOverlay} onClick={onClose}>
+      <div className={styles.updateModalOverlay} >
         <div className={styles.updateModalContent} onClick={(e) => e.stopPropagation()}>
 
           {/* ── Gradient Header ── */}
