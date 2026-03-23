@@ -7,6 +7,10 @@ import Header from '../Header/Header.jsx';
 import styles from './SlotList.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
+import TimePicker from '../Hooks/TimePicker.jsx';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -38,6 +42,26 @@ const SlotList = () => {
   const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(false);
 
+  // ── MessagePopup state ──
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── ConfirmPopup state (slot delete) ──
+  const [deleteConfirm,  setDeleteConfirm]  = useState(null); // holds slot object or null
+  const [deleteLoading,  setDeleteLoading]  = useState(false);
+
+  // ── Button cooldown states ──
+  const [searchCooldown, setSearchCooldown] = useState(false);
+  const [clearCooldown,  setClearCooldown]  = useState(false);
+  const [addCooldown,    setAddCooldown]    = useState(false);
+  const [editCooldown,   setEditCooldown]   = useState(false);
+
+  const startCooldown = (setter) => {
+    setter(true);
+    setTimeout(() => setter(false), 2000);
+  };
+
   // Filter inputs (staged)
   const [filterInputs, setFilterInputs] = useState({
     doctorId:   'all',
@@ -67,6 +91,10 @@ const SlotList = () => {
   const [addValidationMessages,    setAddValidationMessages]    = useState({});
   const [updateValidationMessages, setUpdateValidationMessages] = useState({});
 
+  // ── Submit attempted flags (to show "fill required" message on blur/submit) ──
+  const [addSubmitAttempted,    setAddSubmitAttempted]    = useState(false);
+  const [updateSubmitAttempted, setUpdateSubmitAttempted] = useState(false);
+
   // ────────────────────────────────────────────────
   // Derived: are any filters changed from defaults?
   const defaultFilters = { doctorId: 'all', fromDate: getTodayDate(), toDate: getTodayDate(), bookedFilter: 'all', status: '' };
@@ -77,6 +105,19 @@ const SlotList = () => {
     appliedFilters.toDate       !== defaultFilters.toDate       ||
     appliedFilters.bookedFilter !== defaultFilters.bookedFilter ||
     appliedFilters.status       !== defaultFilters.status;
+
+  // ────────────────────────────────────────────────
+  // Add form completeness check (enable submit only when all required filled)
+  const isAddFormComplete =
+    !!formData.doctorId &&
+    !!formData.slotDate &&
+    !!formData.slotTime;
+
+  // Update form completeness check
+  const isUpdateFormComplete =
+    formData.isBooked !== '' && formData.isBooked !== undefined
+      ? true
+      : updateFormData.isBooked !== '' && updateFormData.isBooked !== undefined;
 
   // ────────────────────────────────────────────────
   // Validation
@@ -225,11 +266,15 @@ const SlotList = () => {
   };
 
   const handleSearch = () => {
+    if (searchCooldown) return;
+    startCooldown(setSearchCooldown);
     setAppliedFilters({ ...filterInputs });
     setPage(1);
   };
 
   const handleClearFilters = () => {
+    if (clearCooldown) return;
+    startCooldown(setClearCooldown);
     const empty = { ...defaultFilters };
     setFilterInputs(empty);
     setAppliedFilters(empty);
@@ -263,7 +308,17 @@ const SlotList = () => {
 
   const handleAddSlot = async (e) => {
     e.preventDefault();
+    setAddSubmitAttempted(true);
+
+    if (!isAddFormComplete) {
+      showPopup('Please fill all required fields before submitting.', 'error');
+      return;
+    }
     if (!validateAddForm()) return;
+
+    if (addCooldown) return;
+    startCooldown(setAddCooldown);
+
     try {
       setLoading(true);
       const clinicId = await getStoredClinicId();
@@ -278,10 +333,12 @@ const SlotList = () => {
       setShowAddModal(false);
       setFormData({ doctorId: '', slotDate: '', slotTime: '' });
       setAddValidationMessages({});
+      setAddSubmitAttempted(false);
+      showPopup('Slot added successfully!', 'success');
       fetchSlots(appliedFilters, page);
     } catch (err) {
       console.error('Add slot error:', err);
-      setError(err);
+      showPopup(err.message || 'Failed to add slot.', 'error');
     } finally {
       setLoading(false);
     }
@@ -310,7 +367,17 @@ const SlotList = () => {
 
   const handleUpdateSlot = async (e) => {
     e.preventDefault();
+    setUpdateSubmitAttempted(true);
+
+    if (!isUpdateFormComplete) {
+      showPopup('Please fill all required fields before submitting.', 'error');
+      return;
+    }
     if (!validateUpdateForm()) return;
+
+    if (editCooldown) return;
+    startCooldown(setEditCooldown);
+
     try {
       setLoading(true);
       await updateSlot({
@@ -322,25 +389,37 @@ const SlotList = () => {
       setSelectedSlot(null);
       setUpdateFormData({ appointmentId: 0, isBooked: 0 });
       setUpdateValidationMessages({});
+      setUpdateSubmitAttempted(false);
+      showPopup('Slot updated successfully!', 'success');
       fetchSlots(appliedFilters, page);
     } catch (err) {
       console.error('Update slot error:', err);
-      setError(err);
+      showPopup(err.message || 'Failed to update slot.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteSlot = async (slotId) => {
-    if (!window.confirm('Are you sure you want to delete this slot?')) return;
+  // ────────────────────────────────────────────────
+  // Delete slot — open ConfirmPopup
+  const handleDeleteClick  = (slot) => setDeleteConfirm(slot);
+  const handleDeleteCancel = ()     => setDeleteConfirm(null);
+
+  // Delete slot — perform after confirmation
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
+    setDeleteLoading(true);
+    setDeleteConfirm(null);
     try {
       setLoading(true);
-      await deleteSlot(slotId);
+      await deleteSlot(deleteConfirm.id);
+      showPopup('Slot deleted successfully!', 'success');
       fetchSlots(appliedFilters, page);
     } catch (err) {
       console.error('Delete slot error:', err);
-      setError(err);
+      showPopup(err.message || 'Failed to delete slot.', 'error');
     } finally {
+      setDeleteLoading(false);
       setLoading(false);
     }
   };
@@ -352,8 +431,14 @@ const SlotList = () => {
   };
 
   useEffect(() => {
-    if (!showAddModal)    setAddValidationMessages({});
-    if (!showUpdateModal) setUpdateValidationMessages({});
+    if (!showAddModal) {
+      setAddValidationMessages({});
+      setAddSubmitAttempted(false);
+    }
+    if (!showUpdateModal) {
+      setUpdateValidationMessages({});
+      setUpdateSubmitAttempted(false);
+    }
   }, [showAddModal, showUpdateModal]);
 
   // ────────────────────────────────────────────────
@@ -362,7 +447,7 @@ const SlotList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.loading}>Loading slots...</div>;
+  if (loading) return <div className={styles.loading}><LoadingPage/></div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
   const startRecord = slots.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
@@ -373,6 +458,25 @@ const SlotList = () => {
     <div className={styles.listWrapper}>
       <ErrorHandler error={error} />
       <Header title="Appointment Slots" />
+
+      {/* ── MessagePopup ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
+
+      {/* ── ConfirmPopup for slot delete ── */}
+      <ConfirmPopup
+        visible={!!deleteConfirm}
+        message={`Delete slot for ${deleteConfirm?.doctorName || 'this doctor'}?`}
+        subMessage="This action cannot be undone. The slot will be permanently removed."
+        confirmLabel={deleteLoading ? 'Deleting...' : 'Yes, Delete'}
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
 
       {/* ── Filter Bar (single line) ── */}
       <div className={styles.toolbar}>
@@ -438,19 +542,30 @@ const SlotList = () => {
 
           {/* Actions */}
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              disabled={searchCooldown}
+              className={styles.searchButton}
+            >
               <FiSearch size={16} />
               Search
             </button>
 
             {hasActiveFilters && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
+              <button
+                onClick={handleClearFilters}
+                disabled={clearCooldown}
+                className={styles.clearButton}
+              >
                 <FiX size={16} />
                 Clear
               </button>
             )}
 
-            <button onClick={() => setShowAddModal(true)} className={styles.addBtn}>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className={styles.addBtn}
+            >
               <FiPlus size={18} />
               Add Slot
             </button>
@@ -532,7 +647,8 @@ const SlotList = () => {
                               </button>
                             )}
                             <button
-                              onClick={() => handleDeleteSlot(slot.id)}
+                              onClick={() => handleDeleteClick(slot)}
+                              disabled={deleteLoading}
                               className={styles.btnDelete}
                               title="Delete Slot"
                             >
@@ -612,13 +728,14 @@ const SlotList = () => {
               </div>
             </div>
             <form onSubmit={handleAddSlot} className={styles.modalForm}>
+
+              {/* Doctor */}
               <div className={styles.formGroup}>
                 <label>Doctor *</label>
                 <select
                   name="doctorId"
                   value={formData.doctorId}
                   onChange={handleAddChange}
-                  required
                   className={styles.formInput}
                 >
                   <option value="">Select Doctor</option>
@@ -633,6 +750,7 @@ const SlotList = () => {
                 )}
               </div>
 
+              {/* Slot Date */}
               <div className={styles.formGroup}>
                 <label>Slot Date *</label>
                 <input
@@ -640,7 +758,6 @@ const SlotList = () => {
                   name="slotDate"
                   value={formData.slotDate}
                   onChange={handleAddChange}
-                  required
                   className={styles.formInput}
                   min={new Date().toISOString().split('T')[0]}
                 />
@@ -649,26 +766,40 @@ const SlotList = () => {
                 )}
               </div>
 
+              {/* Slot Time — TimePicker */}
               <div className={styles.formGroup}>
                 <label>Slot Time *</label>
-                <input
-                  type="time"
+                <TimePicker
                   name="slotTime"
                   value={formData.slotTime}
                   onChange={handleAddChange}
-                  required
-                  className={styles.formInput}
                 />
                 {addValidationMessages.slotTime && (
                   <span className={styles.validationMsg}>{addValidationMessages.slotTime}</span>
                 )}
               </div>
 
+              {/* Incomplete hint */}
+              {addSubmitAttempted && !isAddFormComplete && (
+                <div className={styles.formIncompleteHint}>
+                  Please fill all required fields to enable submission.
+                </div>
+              )}
+
               <div className={styles.modalActions}>
-                <button type="button" onClick={() => setShowAddModal(false)} className={styles.btnCancel}>
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className={styles.btnCancel}
+                >
                   Cancel
                 </button>
-                <button type="submit" className={styles.btnSubmit}>
+                <button
+                  type="submit"
+                  className={styles.btnSubmit}
+                  disabled={!isAddFormComplete || addCooldown}
+                  title={!isAddFormComplete ? 'Please fill all required fields' : ''}
+                >
                   Add Slot
                 </button>
               </div>
@@ -692,6 +823,7 @@ const SlotList = () => {
                 <p><strong>Time:</strong> {formatTime(selectedSlot.slotTime)}</p>
               </div>
 
+              {/* Appointment ID */}
               <div className={styles.formGroup}>
                 <label>Appointment ID</label>
                 <input
@@ -707,13 +839,13 @@ const SlotList = () => {
                 )}
               </div>
 
+              {/* Booking Status */}
               <div className={styles.formGroup}>
                 <label>Booking Status *</label>
                 <select
                   name="isBooked"
                   value={updateFormData.isBooked}
                   onChange={handleUpdateChange}
-                  required
                   className={styles.formInput}
                 >
                   <option value={0}>Available</option>
@@ -724,11 +856,27 @@ const SlotList = () => {
                 )}
               </div>
 
+              {/* Incomplete hint */}
+              {updateSubmitAttempted && !isUpdateFormComplete && (
+                <div className={styles.formIncompleteHint}>
+                  Please fill all required fields to enable submission.
+                </div>
+              )}
+
               <div className={styles.modalActions}>
-                <button type="button" onClick={() => setShowUpdateModal(false)} className={styles.btnCancel}>
+                <button
+                  type="button"
+                  onClick={() => setShowUpdateModal(false)}
+                  className={styles.btnCancel}
+                >
                   Cancel
                 </button>
-                <button type="submit" className={styles.btnSubmit}>
+                <button
+                  type="submit"
+                  className={styles.btnSubmit}
+                  disabled={!isUpdateFormComplete || editCooldown}
+                  title={!isUpdateFormComplete ? 'Please fill all required fields' : ''}
+                >
                   Update Slot
                 </button>
               </div>

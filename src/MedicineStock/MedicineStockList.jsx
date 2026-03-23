@@ -17,9 +17,11 @@ import {
 import ErrorHandler from "../Hooks/ErrorHandler.jsx";
 import Header from "../Header/Header.jsx";
 import UpdateMedicineStock from "./UpdateMedicineStock.jsx";
+import MessagePopup from "../Hooks/MessagePopup.jsx";
 import styles from "./MedicineStockList.module.css";
 import { FaClinicMedical } from "react-icons/fa";
 import { getStoredClinicId, getStoredBranchId, getStoredClinicName } from '../Utils/Cryptoutils.js';
+import LoadingPage from "../Hooks/LoadingPage.jsx";
 
 // ────────────────────────────────────────────────
 // HELPERS
@@ -27,11 +29,11 @@ import { getStoredClinicId, getStoredBranchId, getStoredClinicName } from '../Ut
 const getTodayDate = () => new Date().toISOString().split("T")[0];
 
 const DEFAULT_FILTERS = {
-  searchType: "medicineName",
+  searchType:  "medicineName",
   searchValue: "",
-  expiryFrom: "",
-  expiryTo: "",
-  medicineId: null,
+  expiryFrom:  "",
+  expiryTo:    "",
+  medicineId:  null,
 };
 
 // ────────────────────────────────────────────────
@@ -39,22 +41,21 @@ const MedicineStockList = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const locationMedicineId = location.state?.medicineId ?? null;
+  const locationMedicineId   = location.state?.medicineId   ?? null;
   const locationMedicineName = location.state?.medicineName ?? null;
 
   // Data
   const [allStockList, setAllStockList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState(null);
 
   // Pagination
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [page, setPage]         = useState(1);
+  const [pageSize]              = useState(20);
   const [totalRecords, setTotalRecords] = useState(0);
 
   // Clinic Name
   const [clinicName, setClinicName] = useState("");
-
   useEffect(() => {
     const name = localStorage.getItem("clinicName");
     setClinicName(name || "");
@@ -63,13 +64,13 @@ const MedicineStockList = () => {
   // Filter inputs (staged, not applied until Search)
   const [filterInputs, setFilterInputs] = useState({
     ...DEFAULT_FILTERS,
-    medicineId: locationMedicineId,
+    medicineId:  locationMedicineId,
     searchValue: locationMedicineName ?? "",
   });
 
   const [appliedFilters, setAppliedFilters] = useState({
     ...DEFAULT_FILTERS,
-    medicineId: locationMedicineId,
+    medicineId:  locationMedicineId,
     searchValue: locationMedicineName ?? "",
   });
 
@@ -82,23 +83,42 @@ const MedicineStockList = () => {
   // Add Form Modal
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [formData, setFormData] = useState({
-    MedicineID: "",
-    BatchNo: "",
-    ExpiryDate: "",
-    QuantityIn: "",
+    MedicineID:    "",
+    BatchNo:       "",
+    ExpiryDate:    "",
+    QuantityIn:    "",
     PurchasePrice: "",
   });
   const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState("");
-  const [formSuccess, setFormSuccess] = useState(false);
 
   // Medicine dropdown (for Add Form)
-  const [medicineList, setMedicineList] = useState([]);
+  const [medicineList, setMedicineList]           = useState([]);
   const [medicineListLoading, setMedicineListLoading] = useState(false);
-  const [medicineSearch, setMedicineSearch] = useState("");
+  const [medicineSearch, setMedicineSearch]       = useState("");
   const [showMedicineDropdown, setShowMedicineDropdown] = useState(false);
   const [selectedMedicineName, setSelectedMedicineName] = useState("");
   const medicineDropdownRef = useRef(null);
+
+  // ── Button cooldown state (2-sec disable after click) ──────────────────────
+  const [btnCooldown, setBtnCooldown] = useState({});
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
+
+  // ── MessagePopup state ──────────────────────────────────────────────────────
+  const [popup, setPopup] = useState({ visible: false, message: "", type: "success" });
+  const showPopup  = (message, type = "success") => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: "", type: "success" });
+
+  // ── Submit button gating ────────────────────────────────────────────────────
+  // Enabled only when all required fields are filled
+  const allRequiredFilled =
+    !!formData.MedicineID &&
+    formData.BatchNo.trim().length > 0 &&
+    formData.ExpiryDate.trim().length > 0 &&
+    String(formData.QuantityIn).trim().length > 0 &&
+    String(formData.PurchasePrice).trim().length > 0;
 
   // ────────────────────────────────────────────────
   // Close medicine dropdown on outside click
@@ -122,22 +142,21 @@ const MedicineStockList = () => {
     const branchId = await getStoredBranchId();
 
     const options = {
-      Page: page,
-      PageSize: pageSize,
-      BranchID: branchId,
-      MedicineID: filters.medicineId ? Number(filters.medicineId) : 0,
-      MedicineName: filters.medicineId
+      Page:           page,
+      PageSize:       pageSize,
+      BranchID:       branchId,
+      MedicineID:     filters.medicineId ? Number(filters.medicineId) : 0,
+      MedicineName:   filters.medicineId
         ? ""
         : filters.searchType === "medicineName"
           ? filters.searchValue || ""
           : "",
-      BatchNo:
-        filters.searchType === "batchNo" ? filters.searchValue || "" : "",
-      ExpiryFrom: filters.expiryFrom || "",
-      ExpiryTo: filters.expiryTo || "",
+      BatchNo:        filters.searchType === "batchNo" ? filters.searchValue || "" : "",
+      ExpiryFrom:     filters.expiryFrom || "",
+      ExpiryTo:       filters.expiryTo   || "",
       NearExpiryDays: 0,
-      ZeroStock: -1,
-      NegativeStock: 0,
+      ZeroStock:      -1,
+      NegativeStock:  0,
     };
 
     return { clinicId, options };
@@ -152,9 +171,8 @@ const MedicineStockList = () => {
       const { clinicId, options } = await buildApiOptions(filters);
       const data = await getMedicineStockList(clinicId, options);
 
-      // Assuming backend returns array or { data: [], total: number }
       const stockList = Array.isArray(data) ? data : data?.data || [];
-      const total = data?.total || stockList.length;
+      const total     = data?.total || stockList.length;
 
       setAllStockList(stockList);
       setTotalRecords(total);
@@ -173,7 +191,7 @@ const MedicineStockList = () => {
   useEffect(() => {
     const initialFilters = {
       ...DEFAULT_FILTERS,
-      medicineId: locationMedicineId,
+      medicineId:  locationMedicineId,
       searchValue: locationMedicineName ?? "",
     };
     setAppliedFilters(initialFilters);
@@ -185,10 +203,10 @@ const MedicineStockList = () => {
   const isFilterActive = useMemo(() => {
     return (
       appliedFilters.searchValue !== DEFAULT_FILTERS.searchValue ||
-      appliedFilters.searchType !== DEFAULT_FILTERS.searchType ||
-      appliedFilters.expiryFrom !== DEFAULT_FILTERS.expiryFrom ||
-      appliedFilters.expiryTo !== DEFAULT_FILTERS.expiryTo ||
-      appliedFilters.medicineId !== DEFAULT_FILTERS.medicineId
+      appliedFilters.searchType  !== DEFAULT_FILTERS.searchType  ||
+      appliedFilters.expiryFrom  !== DEFAULT_FILTERS.expiryFrom  ||
+      appliedFilters.expiryTo    !== DEFAULT_FILTERS.expiryTo    ||
+      appliedFilters.medicineId  !== DEFAULT_FILTERS.medicineId
     );
   }, [appliedFilters]);
 
@@ -202,7 +220,7 @@ const MedicineStockList = () => {
       const data = await getMedicineMasterList(clinicId, {
         BranchID: branchId,
         PageSize: 50,
-        Status: 1,
+        Status:   1,
       });
       setMedicineList(data);
     } catch (err) {
@@ -218,8 +236,8 @@ const MedicineStockList = () => {
     const term = medicineSearch.toLowerCase();
     return medicineList.filter(
       (med) =>
-        med.name?.toLowerCase().includes(term) ||
-        med.genericName?.toLowerCase().includes(term) ||
+        med.name?.toLowerCase().includes(term)         ||
+        med.genericName?.toLowerCase().includes(term)  ||
         med.manufacturer?.toLowerCase().includes(term),
     );
   }, [medicineList, medicineSearch]);
@@ -227,12 +245,9 @@ const MedicineStockList = () => {
   // ────────────────────────────────────────────────
   // Helper functions
   const getStatusClass = (stockStatusDesc) => {
-    if (stockStatusDesc?.toLowerCase().includes("expir"))
-      return styles.nearExpiry;
-    if (stockStatusDesc?.toLowerCase().includes("zero"))
-      return styles.zeroStock;
-    if (stockStatusDesc?.toLowerCase().includes("negative"))
-      return styles.negativeStock;
+    if (stockStatusDesc?.toLowerCase().includes("expir"))    return styles.nearExpiry;
+    if (stockStatusDesc?.toLowerCase().includes("zero"))     return styles.zeroStock;
+    if (stockStatusDesc?.toLowerCase().includes("negative")) return styles.negativeStock;
     return styles.normal;
   };
 
@@ -258,6 +273,7 @@ const MedicineStockList = () => {
   };
 
   const handleSearch = () => {
+    triggerCooldown("search");
     const updatedFilters = { ...filterInputs, medicineId: null };
     setFilterInputs(updatedFilters);
     setAppliedFilters(updatedFilters);
@@ -270,6 +286,7 @@ const MedicineStockList = () => {
   };
 
   const handleClearFilters = () => {
+    triggerCooldown("clear");
     setFilterInputs({ ...DEFAULT_FILTERS });
     setAppliedFilters({ ...DEFAULT_FILTERS });
     setPage(1);
@@ -279,19 +296,25 @@ const MedicineStockList = () => {
   const handlePageChange = (newPage) => {
     if (newPage < 1) return;
     if (newPage > Math.ceil(totalRecords / pageSize)) return;
+    triggerCooldown(`page-${newPage}`);
     setPage(newPage);
   };
 
   const handleBackToMasterList = () => {
+    triggerCooldown("back");
     navigate("/medicinemaster-list");
   };
 
   // View details modal
-  const openDetails = (stock) => setSelectedStock(stock);
+  const openDetails = (stock) => {
+    triggerCooldown(`view-${stock.id}`);
+    setSelectedStock(stock);
+  };
   const closeModal = () => setSelectedStock(null);
 
   // Update modal (opens on top of details modal)
   const handleUpdateClick = (stock) => {
+    triggerCooldown("update");
     setSelectedStock(null);
     setUpdatingStock(stock);
   };
@@ -308,18 +331,18 @@ const MedicineStockList = () => {
 
   // Add form
   const openAddForm = () => {
+    triggerCooldown("add");
     setFormData({
-      MedicineID: "",
-      BatchNo: "",
-      ExpiryDate: "",
-      QuantityIn: "",
+      MedicineID:    "",
+      BatchNo:       "",
+      ExpiryDate:    "",
+      QuantityIn:    "",
       PurchasePrice: "",
     });
     setSelectedMedicineName("");
     setMedicineSearch("");
     setShowMedicineDropdown(false);
-    setFormError("");
-    setFormSuccess(false);
+    setPopup({ visible: false, message: "", type: "success" });
     setIsAddFormOpen(true);
     fetchMedicineList();
   };
@@ -327,11 +350,10 @@ const MedicineStockList = () => {
   const closeAddForm = () => {
     setIsAddFormOpen(false);
     setFormLoading(false);
-    setFormError("");
-    setFormSuccess(false);
     setSelectedMedicineName("");
     setMedicineSearch("");
     setShowMedicineDropdown(false);
+    setPopup({ visible: false, message: "", type: "success" });
   };
 
   const handleInputChange = (e) => {
@@ -360,10 +382,23 @@ const MedicineStockList = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Guard: show warning popup if any required field is missing
+    if (!allRequiredFilled) {
+      const missing = [];
+      if (!formData.MedicineID)                         missing.push("Medicine Name");
+      if (!formData.BatchNo.trim())                     missing.push("Batch Number");
+      if (!formData.ExpiryDate.trim())                  missing.push("Expiry Date");
+      if (!String(formData.QuantityIn).trim())          missing.push("Quantity In");
+      if (!String(formData.PurchasePrice).trim())       missing.push("Purchase Price");
+      showPopup(
+        `Please fill all required fields: ${missing.join(", ")}.`,
+        "warning"
+      );
+      return;
+    }
+
     setFormLoading(true);
-    setFormError("");
-    setFormSuccess(false);
-    setError(null);
 
     try {
       const clinicId = await getStoredClinicId();
@@ -372,21 +407,22 @@ const MedicineStockList = () => {
       await addMedicineStock({
         clinicId,
         branchId,
-        MedicineID: Number(formData.MedicineID),
-        BatchNo: formData.BatchNo.trim(),
-        ExpiryDate: formData.ExpiryDate.trim(),
-        QuantityIn: Number(formData.QuantityIn),
+        MedicineID:    Number(formData.MedicineID),
+        BatchNo:       formData.BatchNo.trim(),
+        ExpiryDate:    formData.ExpiryDate.trim(),
+        QuantityIn:    Number(formData.QuantityIn),
         PurchasePrice: Number(formData.PurchasePrice),
       });
 
-      setFormSuccess(true);
+      // Success popup (auto-closes in 1s), then close form and refresh
+      showPopup("Medicine stock added successfully!", "success");
       setTimeout(() => {
         closeAddForm();
         fetchStockList(appliedFilters);
       }, 1500);
     } catch (err) {
       console.error("Add medicine stock failed:", err);
-      setFormError(err.message || "Failed to add medicine stock.");
+      showPopup(err.message || "Failed to add medicine stock.", "error");
     } finally {
       setFormLoading(false);
     }
@@ -399,16 +435,15 @@ const MedicineStockList = () => {
   }
 
   if (loading)
-    return <div className={styles.loading}>Loading medicine stock...</div>;
+    return <div className={styles.loading}><LoadingPage/></div>;
 
   if (error)
     return <div className={styles.error}>Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
-  const totalPages = Math.ceil(totalRecords / pageSize);
+  const totalPages  = Math.ceil(totalRecords / pageSize);
   const startRecord = totalRecords === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord   = Math.min(page * pageSize, totalRecords);
-
   const hasActiveFilter = isFilterActive;
 
   // ────────────────────────────────────────────────
@@ -425,20 +460,24 @@ const MedicineStockList = () => {
               <FiPackage size={18} />
             </div>
             <div className={styles.contextBannerText}>
-              <span className={styles.contextBannerLabel}>
-                Viewing stock for
-              </span>
-              <span className={styles.contextBannerName}>
-                {locationMedicineName}
-              </span>
+              <span className={styles.contextBannerLabel}>Viewing stock for</span>
+              <span className={styles.contextBannerName}>{locationMedicineName}</span>
             </div>
           </div>
           <div className={styles.contextBannerActions}>
-            <button onClick={handleBackToMasterList} className={styles.backBtn}>
+            <button
+              onClick={handleBackToMasterList}
+              className={styles.backBtn}
+              disabled={!!btnCooldown["back"]}
+            >
               <FiArrowLeft size={14} />
               Back to Master List
             </button>
-            <button onClick={handleClearFilters} className={styles.showAllBtn}>
+            <button
+              onClick={handleClearFilters}
+              className={styles.showAllBtn}
+              disabled={!!btnCooldown["clear"]}
+            >
               <FiX size={13} />
               Show All Stock
             </button>
@@ -502,7 +541,11 @@ const MedicineStockList = () => {
             </div>
 
             <div className={styles.filterActions}>
-              <button onClick={handleSearch} className={styles.searchButton}>
+              <button
+                onClick={handleSearch}
+                className={styles.searchButton}
+                disabled={!!btnCooldown["search"]}
+              >
                 <FiSearch size={15} />
                 Search
               </button>
@@ -510,6 +553,7 @@ const MedicineStockList = () => {
                 <button
                   onClick={handleClearFilters}
                   className={styles.clearButton}
+                  disabled={!!btnCooldown["clear"]}
                 >
                   <FiX size={15} />
                   Clear
@@ -517,7 +561,11 @@ const MedicineStockList = () => {
               )}
             </div>
 
-            <button onClick={openAddForm} className={styles.addBtn}>
+            <button
+              onClick={openAddForm}
+              className={styles.addBtn}
+              disabled={!!btnCooldown["add"]}
+            >
               <FiPlus size={17} />
               Add Stock
             </button>
@@ -559,9 +607,7 @@ const MedicineStockList = () => {
                         </div>
                         <div>
                           <div className={styles.name}>{stock.medicineName}</div>
-                          <div className={styles.subInfo}>
-                            {stock.genericName || "—"}
-                          </div>
+                          <div className={styles.subInfo}>{stock.genericName || "—"}</div>
                         </div>
                       </div>
                     </td>
@@ -579,17 +625,13 @@ const MedicineStockList = () => {
                     <td>{stock.quantityIn ?? 0}</td>
                     <td>{stock.quantityOut ?? 0}</td>
                     <td>
-                      <span
-                        className={`${styles.balanceBadge} ${stock.balanceQuantity <= 0 ? styles.lowBalance : ""}`}
-                      >
+                      <span className={`${styles.balanceBadge} ${stock.balanceQuantity <= 0 ? styles.lowBalance : ""}`}>
                         {stock.balanceQuantity ?? 0}
                       </span>
                     </td>
                     <td>{formatCurrency(stock.purchasePrice)}</td>
                     <td>
-                      <span
-                        className={`${styles.statusBadge} ${getStatusClass(stock.stockStatusDesc)}`}
-                      >
+                      <span className={`${styles.statusBadge} ${getStatusClass(stock.stockStatusDesc)}`}>
                         {stock.stockStatusDesc?.toUpperCase() || "NORMAL"}
                       </span>
                     </td>
@@ -597,6 +639,7 @@ const MedicineStockList = () => {
                       <button
                         onClick={() => openDetails(stock)}
                         className={styles.detailsBtn}
+                        disabled={!!btnCooldown[`view-${stock.id}`]}
                       >
                         View Details
                       </button>
@@ -613,7 +656,7 @@ const MedicineStockList = () => {
           <div className={styles.paginationInfo}>
             {totalRecords > 0
               ? `Showing ${startRecord}–${endRecord} records`
-              : 'No records'}
+              : "No records"}
           </div>
 
           <div className={styles.paginationControls}>
@@ -622,7 +665,7 @@ const MedicineStockList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(1)}
-              disabled={page === 1}
+              disabled={page === 1 || !!btnCooldown["page-1"]}
               title="First page"
             >
               «
@@ -631,7 +674,7 @@ const MedicineStockList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
+              disabled={page === 1 || !!btnCooldown[`page-${page - 1}`]}
               title="Previous page"
             >
               ‹
@@ -642,7 +685,7 @@ const MedicineStockList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(page + 1)}
-              disabled={page >= totalPages}
+              disabled={page >= totalPages || !!btnCooldown[`page-${page + 1}`]}
               title="Next page"
             >
               ›
@@ -676,7 +719,7 @@ const MedicineStockList = () => {
                   size={20}
                   style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
                 />
-                { clinicName || "—"}
+                {clinicName || "—"}
               </div>
               <button onClick={closeModal} className={styles.detailCloseBtn}>
                 ✕
@@ -686,53 +729,37 @@ const MedicineStockList = () => {
             <div className={styles.detailModalBody}>
               <div className={styles.infoSection}>
                 <div className={styles.infoCard}>
-                  <div className={styles.infoHeader}>
-                    <h3>Medicine Information</h3>
-                  </div>
+                  <div className={styles.infoHeader}><h3>Medicine Information</h3></div>
                   <div className={styles.infoContent}>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Clinic</span>
-                      <span className={styles.infoValue}>
-                        {selectedStock.clinicName || "—"}
-                      </span>
+                      <span className={styles.infoValue}>{selectedStock.clinicName || "—"}</span>
                     </div>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Branch</span>
-                      <span className={styles.infoValue}>
-                        {selectedStock.branchName || "—"}
-                      </span>
+                      <span className={styles.infoValue}>{selectedStock.branchName || "—"}</span>
                     </div>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Manufacturer</span>
-                      <span className={styles.infoValue}>
-                        {selectedStock.manufacturer || "—"}
-                      </span>
+                      <span className={styles.infoValue}>{selectedStock.manufacturer || "—"}</span>
                     </div>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>HSN Code</span>
-                      <span className={styles.infoValue}>
-                        {selectedStock.hsnCode || "—"}
-                      </span>
+                      <span className={styles.infoValue}>{selectedStock.hsnCode || "—"}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className={styles.infoCard}>
-                  <div className={styles.infoHeader}>
-                    <h3>Batch & Expiry</h3>
-                  </div>
+                  <div className={styles.infoHeader}><h3>Batch & Expiry</h3></div>
                   <div className={styles.infoContent}>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Batch No</span>
-                      <span className={styles.infoValue}>
-                        {selectedStock.batchNo || "—"}
-                      </span>
+                      <span className={styles.infoValue}>{selectedStock.batchNo || "—"}</span>
                     </div>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Expiry Date</span>
-                      <span className={styles.infoValue}>
-                        {formatDate(selectedStock.expiryDate)}
-                      </span>
+                      <span className={styles.infoValue}>{formatDate(selectedStock.expiryDate)}</span>
                     </div>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Days to Expiry</span>
@@ -748,27 +775,19 @@ const MedicineStockList = () => {
                 </div>
 
                 <div className={styles.infoCard}>
-                  <div className={styles.infoHeader}>
-                    <h3>Stock Quantities</h3>
-                  </div>
+                  <div className={styles.infoHeader}><h3>Stock Quantities</h3></div>
                   <div className={styles.infoContent}>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Quantity In</span>
-                      <span className={styles.infoValue}>
-                        {selectedStock.quantityIn ?? 0}
-                      </span>
+                      <span className={styles.infoValue}>{selectedStock.quantityIn ?? 0}</span>
                     </div>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Quantity Out</span>
-                      <span className={styles.infoValue}>
-                        {selectedStock.quantityOut ?? 0}
-                      </span>
+                      <span className={styles.infoValue}>{selectedStock.quantityOut ?? 0}</span>
                     </div>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Balance Quantity</span>
-                      <span
-                        className={`${styles.infoValue} ${styles.infoAmountGreen}`}
-                      >
+                      <span className={`${styles.infoValue} ${styles.infoAmountGreen}`}>
                         {selectedStock.balanceQuantity ?? 0}
                       </span>
                     </div>
@@ -776,23 +795,17 @@ const MedicineStockList = () => {
                 </div>
 
                 <div className={styles.infoCard}>
-                  <div className={styles.infoHeader}>
-                    <h3>Pricing</h3>
-                  </div>
+                  <div className={styles.infoHeader}><h3>Pricing</h3></div>
                   <div className={styles.infoContent}>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Purchase Price</span>
-                      <span
-                        className={`${styles.infoValue} ${styles.infoAmountGreen}`}
-                      >
+                      <span className={`${styles.infoValue} ${styles.infoAmountGreen}`}>
                         {formatCurrency(selectedStock.purchasePrice)}
                       </span>
                     </div>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Average Price</span>
-                      <span
-                        className={`${styles.infoValue} ${styles.infoAmountTotal}`}
-                      >
+                      <span className={`${styles.infoValue} ${styles.infoAmountTotal}`}>
                         {formatCurrency(selectedStock.averagePrice)}
                       </span>
                     </div>
@@ -801,12 +814,16 @@ const MedicineStockList = () => {
               </div>
 
               <div className={styles.detailModalFooter}>
-                <button onClick={closeModal} className={styles.btnCancel}>
+                <button
+                  onClick={closeModal}
+                  className={styles.btnCancel}
+                >
                   Close
                 </button>
                 <button
                   onClick={() => handleUpdateClick(selectedStock)}
                   className={styles.btnUpdate}
+                  disabled={!!btnCooldown["update"]}
                 >
                   Update Stock
                 </button>
@@ -841,30 +858,22 @@ const MedicineStockList = () => {
                   size={20}
                   style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
                 />
-                { clinicName || "—"}
+                {clinicName || "—"}
               </div>
-
               <button onClick={closeAddForm} className={styles.detailCloseBtn}>
                 <FiX size={18} />
               </button>
             </div>
 
-            <form className={styles.addForm} onSubmit={handleSubmit}>
+            <form className={styles.addForm} onSubmit={handleSubmit} noValidate>
               <div className={styles.addModalBody}>
-                {formError && (
-                  <div className={styles.formError}>{formError}</div>
-                )}
-                {formSuccess && (
-                  <div className={styles.formSuccess}>
-                    Medicine stock added successfully!
-                  </div>
-                )}
-
                 <div className={styles.formSection}>
                   <div className={styles.formSectionHeader}>
                     <h3>Stock Information</h3>
                   </div>
                   <div className={styles.formGrid}>
+
+                    {/* Medicine dropdown */}
                     <div
                       className={`${styles.formGroup} ${styles.fullWidth}`}
                       ref={medicineDropdownRef}
@@ -876,7 +885,6 @@ const MedicineStockList = () => {
                         type="hidden"
                         name="MedicineID"
                         value={formData.MedicineID}
-                        required
                       />
                       <div className={styles.medicineDropdownWrapper}>
                         {!showMedicineDropdown && (
@@ -903,10 +911,7 @@ const MedicineStockList = () => {
                                   <FiX size={14} />
                                 </button>
                               )}
-                              <FiChevronDown
-                                size={16}
-                                className={styles.medicineChevron}
-                              />
+                              <FiChevronDown size={16} className={styles.medicineChevron} />
                             </div>
                           </div>
                         )}
@@ -919,10 +924,7 @@ const MedicineStockList = () => {
                             value={medicineSearch}
                             onChange={(e) => setMedicineSearch(e.target.value)}
                             onBlur={() =>
-                              setTimeout(
-                                () => setShowMedicineDropdown(false),
-                                150,
-                              )
+                              setTimeout(() => setShowMedicineDropdown(false), 150)
                             }
                           />
                         )}
@@ -943,14 +945,10 @@ const MedicineStockList = () => {
                                   className={`${styles.medicineDropdownItem} ${formData.MedicineID === med.id ? styles.medicineDropdownItemActive : ""}`}
                                   onMouseDown={() => handleMedicineSelect(med)}
                                 >
-                                  <div
-                                    className={styles.medicineDropdownItemName}
-                                  >
+                                  <div className={styles.medicineDropdownItemName}>
                                     {med.name}
                                   </div>
-                                  <div
-                                    className={styles.medicineDropdownItemMeta}
-                                  ></div>
+                                  <div className={styles.medicineDropdownItemMeta}></div>
                                 </div>
                               ))
                             )}
@@ -964,7 +962,6 @@ const MedicineStockList = () => {
                         Batch Number <span className={styles.required}>*</span>
                       </label>
                       <input
-                        required
                         name="BatchNo"
                         value={formData.BatchNo}
                         onChange={handleInputChange}
@@ -978,7 +975,6 @@ const MedicineStockList = () => {
                         Expiry Date <span className={styles.required}>*</span>
                       </label>
                       <input
-                        required
                         type="date"
                         name="ExpiryDate"
                         value={formData.ExpiryDate}
@@ -992,7 +988,6 @@ const MedicineStockList = () => {
                         Quantity In <span className={styles.required}>*</span>
                       </label>
                       <input
-                        required
                         type="number"
                         name="QuantityIn"
                         value={formData.QuantityIn}
@@ -1005,11 +1000,9 @@ const MedicineStockList = () => {
 
                     <div className={styles.formGroup}>
                       <label>
-                        Purchase Price{" "}
-                        <span className={styles.required}>*</span>
+                        Purchase Price <span className={styles.required}>*</span>
                       </label>
                       <input
-                        required
                         type="number"
                         step="0.01"
                         name="PurchasePrice"
@@ -1020,6 +1013,7 @@ const MedicineStockList = () => {
                         disabled={formLoading}
                       />
                     </div>
+
                   </div>
                 </div>
               </div>
@@ -1035,8 +1029,9 @@ const MedicineStockList = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={formLoading || !formData.MedicineID}
+                  disabled={formLoading}
                   className={styles.btnSubmit}
+                  title={!allRequiredFilled ? "Please fill all required fields to enable this button" : ""}
                 >
                   {formLoading ? "Adding..." : "Add Stock"}
                 </button>
@@ -1045,6 +1040,14 @@ const MedicineStockList = () => {
           </div>
         </div>
       )}
+
+      {/* ── MessagePopup (always at root level so z-index is never blocked) ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
     </div>
   );
 };

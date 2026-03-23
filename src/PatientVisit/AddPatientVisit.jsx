@@ -5,6 +5,8 @@ import { addPatientVisit, getPatientsList, getEmployeeList, getAppointmentList }
 import styles from './AddPatientVisit.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import TimePicker from '../Hooks/TimePicker.jsx';
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
@@ -221,35 +223,58 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
 
   const [formData, setFormData] = useState({
     appointmentId: 0,
-    PatientID: '',
-    DoctorID: '',
-    VisitDate: new Date().toISOString().split('T')[0],
-    VisitTime: new Date().toTimeString().split(' ')[0].substring(0, 5),
-    reason: '',
-    symptoms: '',
-    bpSystolic: '',
-    bpDiastolic: '',
-    temperature: '',
-    weight: ''
+    PatientID:    '',
+    DoctorID:     '',
+    VisitDate:    new Date().toISOString().split('T')[0],
+    VisitTime:    new Date().toTimeString().split(' ')[0].substring(0, 5),
+    reason:       '',
+    symptoms:     '',
+    bpSystolic:   '',
+    bpDiastolic:  '',
+    temperature:  '',
+    weight:       '',
   });
 
-  const [patients, setPatients] = useState([]);
-  const [doctors, setDoctors] = useState([]);
-  const [appointments, setAppointments] = useState([]);
+  const [patients,            setPatients]            = useState([]);
+  const [doctors,             setDoctors]             = useState([]);
+  const [appointments,        setAppointments]        = useState([]);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [loading,             setLoading]             = useState(false);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
 
-  const [validationMessages, setValidationMessages] = useState({});
+  const [validationMessages,  setValidationMessages]  = useState({});
+
+  // ── MessagePopup ──
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Submit attempted flag ──
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  // ── Button cooldowns ──
+  const [submitCooldown, setSubmitCooldown] = useState(false);
+  const startCooldown = (setter) => {
+    setter(true);
+    setTimeout(() => setter(false), 2000);
+  };
+
+  // ── Form completeness ──
+  // Required: PatientID + DoctorID (when not pre-selected), VisitDate, VisitTime
+  const isFormComplete = (() => {
+    if (!formData.VisitDate || !formData.VisitTime) return false;
+    if (preSelectedAppointmentId) return true; // patient+doctor come from appointment
+    if (visitMode === 'with' && selectedAppointment) return true;
+    return !!formData.PatientID && !!formData.DoctorID;
+  })();
 
   const formatDateForInput = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    const year = date.getFullYear();
+    const year  = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const day   = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
 
@@ -271,9 +296,9 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       const data = await getAppointmentList(clinicId, {
-        BranchID: branchId,
+        BranchID:      branchId,
         AppointmentID: appointmentId,
-        PageSize: 1
+        PageSize:      1,
       });
       if (data && data.length > 0) {
         const appointment = data[0];
@@ -281,21 +306,21 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
         setVisitMode('with');
         setFormData({
           appointmentId: appointment.id,
-          PatientID: appointment.patientId,
-          DoctorID: appointment.doctorId,
-          VisitDate: formatDateForInput(appointment.appointmentDate),
-          VisitTime: appointment.appointmentTime.substring(0, 5),
-          reason: appointment.reason || '',
-          symptoms: '',
-          bpSystolic: '',
-          bpDiastolic: '',
-          temperature: '',
-          weight: ''
+          PatientID:     appointment.patientId,
+          DoctorID:      appointment.doctorId,
+          VisitDate:     formatDateForInput(appointment.appointmentDate),
+          VisitTime:     appointment.appointmentTime.substring(0, 5),
+          reason:        appointment.reason || '',
+          symptoms:      '',
+          bpSystolic:    '',
+          bpDiastolic:   '',
+          temperature:   '',
+          weight:        '',
         });
       }
     } catch (err) {
       console.error('Failed to fetch appointment:', err);
-      setError('Failed to load appointment details');
+      showPopup('Failed to load appointment details.', 'error');
     } finally {
       setLoadingAppointments(false);
     }
@@ -303,12 +328,16 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
 
   const fetchPatients = async () => {
     try {
+      setLoading(true);
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       const data = await getPatientsList(clinicId, { BranchID: branchId, Status: 1, PageSize: 100 });
       setPatients(data);
     } catch (err) {
       console.error('Failed to fetch patients:', err);
+      showPopup('Failed to load patients.', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -317,34 +346,35 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       const data = await getEmployeeList(clinicId, {
-        BranchID: branchId,
+        BranchID:    branchId,
         Designation: 1,
-        Status: 1,
-        PageSize: 100
+        Status:      1,
+        PageSize:    100,
       });
       setDoctors(data);
     } catch (err) {
       console.error('Failed to fetch doctors:', err);
+      showPopup('Failed to load doctors.', 'error');
     }
   };
 
   const handleModeChange = (mode) => {
     setVisitMode(mode);
     setSelectedAppointment(null);
-    setError(null);
     setValidationMessages({});
+    setSubmitAttempted(false);
     setFormData({
       appointmentId: 0,
-      PatientID: '',
-      DoctorID: '',
-      VisitDate: new Date().toISOString().split('T')[0],
-      VisitTime: new Date().toTimeString().split(' ')[0].substring(0, 5),
-      reason: '',
-      symptoms: '',
-      bpSystolic: '',
-      bpDiastolic: '',
-      temperature: '',
-      weight: ''
+      PatientID:     '',
+      DoctorID:      '',
+      VisitDate:     new Date().toISOString().split('T')[0],
+      VisitTime:     new Date().toTimeString().split(' ')[0].substring(0, 5),
+      reason:        '',
+      symptoms:      '',
+      bpSystolic:    '',
+      bpDiastolic:   '',
+      temperature:   '',
+      weight:        '',
     });
   };
 
@@ -352,16 +382,16 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
     setSelectedAppointment(appointment);
     setFormData({
       appointmentId: appointment.id,
-      PatientID: appointment.patientId,
-      DoctorID: appointment.doctorId,
-      VisitDate: formatDateForInput(appointment.appointmentDate),
-      VisitTime: appointment.appointmentTime.substring(0, 5),
-      reason: appointment.reason || '',
-      symptoms: '',
-      bpSystolic: '',
-      bpDiastolic: '',
-      temperature: '',
-      weight: ''
+      PatientID:     appointment.patientId,
+      DoctorID:      appointment.doctorId,
+      VisitDate:     formatDateForInput(appointment.appointmentDate),
+      VisitTime:     appointment.appointmentTime.substring(0, 5),
+      reason:        appointment.reason || '',
+      symptoms:      '',
+      bpSystolic:    '',
+      bpDiastolic:   '',
+      temperature:   '',
+      weight:        '',
     });
   };
 
@@ -387,8 +417,14 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitAttempted(true);
 
-    // Validate all required fields before submitting
+    if (!isFormComplete) {
+      showPopup('Please fill all required fields before submitting.', 'error');
+      return;
+    }
+
+    // Validate all required fields
     const newMessages = {};
     let hasError = false;
 
@@ -414,44 +450,50 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
       return;
     }
 
+    if (submitCooldown) return;
+    startCooldown(setSubmitCooldown);
+
     setLoading(true);
-    setError(null);
     try {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       const formattedDate = formatDateForInput(formData.VisitDate);
       const visitData = {
         ...formData,
-        VisitDate: formattedDate,
-        clinicId: parseInt(clinicId),
-        branchId: parseInt(branchId),
-        bpSystolic: formData.bpSystolic ? parseInt(formData.bpSystolic) : 0,
-        bpDiastolic: formData.bpDiastolic ? parseInt(formData.bpDiastolic) : 0,
-        temperature: formData.temperature ? parseFloat(formData.temperature) : 0,
-        weight: formData.weight ? parseFloat(formData.weight) : 0
+        VisitDate:   formattedDate,
+        clinicId:    parseInt(clinicId),
+        branchId:    parseInt(branchId),
+        bpSystolic:  formData.bpSystolic  ? parseInt(formData.bpSystolic)   : 0,
+        bpDiastolic: formData.bpDiastolic ? parseInt(formData.bpDiastolic)  : 0,
+        temperature: formData.temperature ? parseFloat(formData.temperature): 0,
+        weight:      formData.weight      ? parseFloat(formData.weight)     : 0,
       };
       await addPatientVisit(visitData);
-      setFormData({
-        appointmentId: 0,
-        PatientID: '',
-        DoctorID: '',
-        VisitDate: new Date().toISOString().split('T')[0],
-        VisitTime: new Date().toTimeString().split(' ')[0].substring(0, 5),
-        reason: '',
-        symptoms: '',
-        bpSystolic: '',
-        bpDiastolic: '',
-        temperature: '',
-        weight: ''
-      });
-      setVisitMode('without');
-      setSelectedAppointment(null);
-      setValidationMessages({});
-      onSuccess();
-      onClose();
+      showPopup('Patient visit booked successfully!', 'success');
+      setTimeout(() => {
+        setFormData({
+          appointmentId: 0,
+          PatientID:     '',
+          DoctorID:      '',
+          VisitDate:     new Date().toISOString().split('T')[0],
+          VisitTime:     new Date().toTimeString().split(' ')[0].substring(0, 5),
+          reason:        '',
+          symptoms:      '',
+          bpSystolic:    '',
+          bpDiastolic:   '',
+          temperature:   '',
+          weight:        '',
+        });
+        setVisitMode('without');
+        setSelectedAppointment(null);
+        setValidationMessages({});
+        setSubmitAttempted(false);
+        onSuccess();
+        onClose();
+      }, 1200);
     } catch (err) {
       console.error('Failed to add visit:', err);
-      setError(err.message || 'Failed to add patient visit');
+      showPopup(err.message || 'Failed to add patient visit.', 'error');
     } finally {
       setLoading(false);
     }
@@ -470,6 +512,15 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
   return (
     <div className={styles.addVisitOverlay}>
       <div className={styles.addVisitModal}>
+
+        {/* ── MessagePopup ── */}
+        <MessagePopup
+          visible={popup.visible}
+          message={popup.message}
+          type={popup.type}
+          onClose={closePopup}
+        />
+
         <div className={styles.addVisitHeader}>
           <div className={styles.addVisitHeaderContent}>
             <FiActivity className={styles.addVisitHeaderIcon} size={20} />
@@ -478,10 +529,9 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
             </h2>
           </div>
           <div className={styles.clinicNameone}>
-                <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
-                {localStorage.getItem("clinicName") || "—"}
-              </div>
-
+            <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
+            {localStorage.getItem("clinicName") || "—"}
+          </div>
           <button onClick={onClose} className={styles.addVisitClose}>
             <FiX size={20} />
           </button>
@@ -489,7 +539,6 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
 
         <form onSubmit={handleSubmit} className={styles.addVisitForm}>
           <div className={styles.addVisitBody}>
-            {error && <div className={styles.addVisitError}>{error}</div>}
 
             {loadingAppointments && (
               <div className={styles.appointmentsLoading}>
@@ -654,13 +703,10 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
                       <label className={styles.formLabel}>
                         Visit Time <span className={styles.required}>*</span>
                       </label>
-                      <input
-                        type="time"
+                      <TimePicker
                         name="VisitTime"
                         value={formData.VisitTime}
                         onChange={handleChange}
-                        required
-                        className={styles.formInput}
                       />
                       {validationMessages.VisitTime && (
                         <span className={styles.validationMsg}>{validationMessages.VisitTime}</span>
@@ -670,8 +716,9 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
 
                   <div className={`${styles.formRow} ${styles.reasonSymptomsRow}`}>
                     <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>Reason for Visit</label>
+                      <label className={styles.formLabel}>Reason for Visit <span className={styles.required}>*</span></label>
                       <textarea
+                        required
                         name="reason"
                         value={formData.reason}
                         onChange={handleChange}
@@ -773,6 +820,14 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
                 </div>
               </>
             )}
+
+            {/* Incomplete hint */}
+            {submitAttempted && !isFormComplete && (
+              <div className={styles.formIncompleteHint}>
+                Please fill all required fields to enable submission.
+              </div>
+            )}
+
           </div>
 
           <div className={styles.addVisitFooter}>
@@ -787,7 +842,8 @@ const AddPatientVisit = ({ isOpen, onClose, onSuccess, preSelectedAppointmentId 
             <button
               type="submit"
               className={styles.btnSubmit}
-              disabled={loading || loadingAppointments}
+              disabled={loading || loadingAppointments || submitCooldown}
+              title={!isFormComplete ? 'Please fill all required fields' : ''}
             >
               {loading ? 'Booking Visit...' : 'Book Visit'}
             </button>

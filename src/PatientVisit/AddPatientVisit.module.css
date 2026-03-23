@@ -252,7 +252,9 @@
   border: 2px solid var(--border-light);
   border-radius: 8px;
   font-size: 0.875rem;
+  font-weight: 500;
   outline: none;
+  font-family: inherit;
   transition: all 0.2s ease;
   background: white;
   color: var(--text-dark);

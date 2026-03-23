@@ -1,0 +1,712 @@
+:root {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+}
+
+/* ==================== MAIN WRAPPER ==================== */
+.listWrapper {
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  height: 100vh;
+  overflow: hidden;
+  color: var(--text-dark);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* ==================== FILTERS ==================== */
+.filtersContainer {
+  background: white;
+  border-radius: 17px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+/* Row 1: Search(type+value) | Clinic search | Branch | Department | Actions */
+/* Row 2: Designation | Status | (empty) | (empty) | (empty)               */
+.filtersGrid {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Search type + value joined input */
+.searchGroup {
+  display: flex;
+  align-items: stretch;
+}
+
+.searchTypeSelect {
+  min-width: 120px;
+  height: 40px;
+  padding: 0 12px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.searchTypeSelect:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+.searchInput {
+  flex: 1;
+  height: 40px;
+  padding: 0 15px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0 10px 10px 0;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.searchInput::placeholder { color: #94a3b8; }
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-left: 1px solid var(--accent-end);
+}
+
+/* ── Clinic search-input group (type-ahead text + dropdown) ── */
+.clinicSearchGroup {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.clinicSearchInput {
+  width: 100%;
+  height: 40px;
+  padding: 0 36px 0 36px;  /* left padding for search icon, right for clear × */
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.clinicSearchInput::placeholder { color: #94a3b8; }
+
+.clinicSearchInput:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+/* search icon on the left inside clinic input */
+.clinicSearchIcon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* small × clear button inside clinic input */
+.clinicClearBtn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.clinicClearBtn:hover { color: #ef4444; }
+
+/* dropdown list — position:fixed so it escapes overflow:hidden parents */
+.clinicDropdown {
+  position: fixed;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.12);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 9999;
+  padding: 4px 0;
+}
+
+.clinicDropdownItem {
+  padding: 9px 14px;
+  font-size: 0.83rem;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.clinicDropdownItem:hover {
+  background: rgba(48, 178, 181, 0.1);
+  color: var(--accent-start);
+}
+
+.clinicDropdownItem.selected {
+  background: rgba(34, 92, 160, 0.08);
+  font-weight: 600;
+  color: var(--primary-end);
+}
+
+.clinicDropdownEmpty {
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  text-align: center;
+}
+
+/* Filter selects */
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.filterInput {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filterInput:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+.filterInput:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #f8fafc;
+}
+
+/* Action buttons row */
+.filterActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.searchButton,
+.clearButton,
+.addBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 18px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.searchButton {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+}
+
+.searchButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+}
+
+.clearButton {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.clearButton:hover {
+  background: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.addBtn {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+}
+
+.addBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+}
+
+/* ==================== TABLE + PAGINATION WRAPPER ==================== */
+.tableSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ==================== TABLE ==================== */
+.tableContainer {
+  background: white;
+  border-radius: 17px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  padding: 12px 17px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+}
+
+.table td {
+  padding: 6px 17px;
+  border-bottom: 1px solid #e2e8f0;
+  color: var(--text-dark);
+  font-size: 0.75rem;
+  vertical-align: middle;
+}
+
+.table th:last-child,
+.table td:last-child {
+  text-align: right;
+  padding-right: 24px;
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #d5e6ec;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(48, 178, 181, 0.08) !important;
+  transition: background-color 0.25s ease;
+}
+
+/* ==================== TABLE CELLS ==================== */
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 33px;
+  height: 33px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  font-weight: bold;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 12px rgba(32, 125, 156, 0.35);
+  flex-shrink: 0;
+}
+
+.name {
+  font-weight: 700;
+  color: var(--text-dark);
+  font-size: 0.87rem;
+}
+
+.subInfo {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* ==================== BADGES ==================== */
+.designationBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba(34, 43, 108, 0.07);
+  color: var(--primary-start);
+  border: 1px solid rgba(34, 43, 108, 0.12);
+  letter-spacing: 0.4px;
+}
+
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ==================== BUTTONS ==================== */
+.detailsBtn {
+  position: relative;
+  overflow: hidden;
+  padding: 7px 15px;
+  font-size: 0.75rem;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.detailsBtn::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.detailsBtn:hover::before { width: 170px; height: 170px; }
+
+.detailsBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+.detailsBtn:active { transform: translateY(-1px); }
+
+/* ==================== PAGINATION BAR ==================== */
+.paginationBar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 14px;
+  padding: 10px 20px;
+  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  gap: 16px;
+}
+
+.paginationInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.paginationLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.pageBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: var(--primary-start);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-color: var(--accent-end);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.3);
+}
+
+.pageBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pageIndicator {
+  min-width: 36px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0 8px;
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
+}
+
+.pageSizeInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pageSizeInfo strong {
+  color: var(--primary-start);
+  font-weight: 700;
+}
+
+/* ==================== UTILITY STATES ==================== */
+.noData {
+  text-align: center;
+  padding: 68px 17px;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+.loading,
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  font-size: 1.3rem;
+  color: #64748b;
+}
+
+.error { color: #ef4444; }
+
+/* ==================== DARK MODE ==================== */
+:global(.dark-mode) .listWrapper {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .filtersContainer {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .searchTypeSelect,
+:global(.dark-mode) .searchInput,
+:global(.dark-mode) .filterInput,
+:global(.dark-mode) .clinicSearchInput {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .searchInput:focus {
+  border-left: 1px solid var(--accent-end);
+}
+
+:global(.dark-mode) .clearButton {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .clearButton:hover { background: #475569; }
+
+:global(.dark-mode) .tableContainer {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .table th {
+  background: linear-gradient(135deg, #334155, #475569);
+}
+
+:global(.dark-mode) .table td {
+  border-bottom-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .table tbody tr:nth-child(even) { background-color: #334155; }
+
+:global(.dark-mode) .table tbody tr:hover {
+  background-color: rgba(48, 178, 181, 0.12) !important;
+}
+
+:global(.dark-mode) .name    { color: #e2e8f0; }
+:global(.dark-mode) .subInfo { color: #94a3b8; }
+
+:global(.dark-mode) .designationBadge {
+  background: rgba(48, 178, 181, 0.12);
+  color: var(--accent-end);
+  border-color: rgba(48, 178, 181, 0.25);
+}
+
+:global(.dark-mode) .active {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+:global(.dark-mode) .inactive {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+:global(.dark-mode) .clinicDropdown {
+  background: #1e293b;
+  border-color: #475569;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+:global(.dark-mode) .clinicDropdownItem {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .clinicDropdownItem:hover {
+  background: rgba(48, 178, 181, 0.15);
+}
+
+:global(.dark-mode) .clinicDropdownItem.selected {
+  background: rgba(34, 92, 160, 0.2);
+  color: var(--accent-end);
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 1280px) {
+  .filtersGrid {
+    grid-template-columns: 2fr 1.5fr 1fr 1fr auto;
+  }
+}
+
+@media (max-width: 1024px) {
+  .filtersGrid {
+    grid-template-columns: 1fr 1fr auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .filtersGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .searchGroup   { grid-column: 1 / -1; }
+  .filterActions { grid-column: 1 / -1; }
+}
+
+@media (max-width: 768px) {
+  .filtersGrid {
+    grid-template-columns: 1fr;
+  }
+  .searchGroup {
+    flex-direction: column;
+  }
+  .searchTypeSelect {
+    border-radius: 10px;
+    border-right: 1px solid #cbd5e1;
+  }
+  .searchInput {
+    border-radius: 10px;
+    border-left: 1px solid #cbd5e1;
+  }
+  .filterActions { flex-wrap: wrap; }
+  .searchButton,
+  .clearButton,
+  .addBtn {
+    flex: 1;
+    justify-content: center;
+  }
+  .table th, .table td { padding: 12px 14px; }
+  .detailsBtn { padding: 7px 14px; font-size: 0.72rem; }
+  .tableContainer { overflow-x: auto; }
+  .table { min-width: 900px; }
+}
+
+@media (max-width: 480px) {
+  .listWrapper { padding: 14px; }
+  .table th, .table td { padding: 10px 12px; font-size: 0.7rem; }
+  .name    { font-size: 0.8rem; }
+  .subInfo { font-size: 0.68rem; }
+  .avatar  { width: 28px; height: 28px; font-size: 13px; }
+  .detailsBtn { padding: 6px 12px; font-size: 0.7rem; }
+  .statusBadge,
+  .designationBadge { padding: 4px 10px; font-size: 0.65rem; }
+}

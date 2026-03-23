@@ -605,7 +605,7 @@
 }
 
 .invoiceModalHeader {
-  padding: 22px 28px;
+  padding: 12px 18px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
   color: var(--text-light);
   display: flex;

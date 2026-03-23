@@ -1,33 +1,39 @@
 // src/components/UpdateClinic.jsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FiSave } from 'react-icons/fi';
 import { updateClinic } from '../Api/Api.js';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
 import styles from './ClinicList.module.css';
 
-// ─── matches backend allowedCharactersRegex exactly ───────────────────────────
 const allowedCharactersRegex = /^[A-Za-z0-9 ]+$/;
+const nameOnlyRegex           = /^[A-Za-z ]+$/;           // letters + spaces only (no numbers)
+const locationRegex           = /^[0-9.,\-+\s]+$/;        // digits . , - + spaces only
+const MOBILE_REGEX            = /^\d{10}$/;                // exactly 10 digits
 
-// ─── Validation messages match backend updateClinicValidatorRules word-for-word ─
 const getLiveValidationMessage = (fieldName, value) => {
   const strValue = value == null ? '' : String(value).trim();
-  const trimmed = strValue; // already trimmed
+  const trimmed  = strValue;
 
   switch (fieldName) {
     case 'clinicName':
       if (!trimmed) return 'ClinicName is required';
       if (trimmed.length > 100) return 'ClinicName should not exceed 100 characters';
-      if (!allowedCharactersRegex.test(trimmed)) return 'ClinicName should not contain special characters';
+      if (!nameOnlyRegex.test(trimmed))
+        return 'ClinicName should not contain numbers or special characters';
       return '';
 
     case 'clinicType':
       if (!trimmed) return 'ClinicType is required';
       if (trimmed.length > 500) return 'ClinicType should not exceed 500 characters';
+      if (!nameOnlyRegex.test(trimmed))
+        return 'ClinicType should not contain numbers or special characters';
       return '';
 
     case 'ownerName':
       if (!trimmed) return 'OwnerName is required';
       if (trimmed.length > 100) return 'OwnerName should not exceed 100 characters';
-      if (!allowedCharactersRegex.test(trimmed)) return 'OwnerName should not contain special characters';
+      if (!nameOnlyRegex.test(trimmed))
+        return 'OwnerName should not contain numbers or special characters';
       return '';
 
     case 'address':
@@ -38,6 +44,8 @@ const getLiveValidationMessage = (fieldName, value) => {
     case 'location':
       if (!trimmed) return 'Location is required';
       if (trimmed.length > 500) return 'Location should not exceed 500 characters';
+      if (!locationRegex.test(trimmed))
+        return 'Location must contain only numbers, commas, dots, and coordinate characters';
       return '';
 
     case 'status':
@@ -45,42 +53,45 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
 
     case 'mobile':
-      if (!trimmed) return 'Mobile is required';
-      if (trimmed.length > 20) return 'Mobile should not exceed 20 characters';
-      if (!allowedCharactersRegex.test(trimmed)) return 'Mobile should not contain special characters';
+      if (!value || !value.trim()) return 'Mobile is required';
+      if (value.trim().length < 10 || value.trim().length > 10) return 'Mobile length should be 10';
+      if (!MOBILE_REGEX.test(value.trim())) return 'Invalid mobile number';
       return '';
 
     case 'altMobile':
-      if (!trimmed) return 'AltMobile is required';
-      if (trimmed.length > 20) return 'AltMobile should not exceed 20 characters';
-      if (!allowedCharactersRegex.test(trimmed)) return 'AltMobile should not contain special characters';
+      if (!value || !value.trim()) return 'Alternate Mobile is required';
+      if (value.trim().length < 10 || value.trim().length > 10) return 'AltMobile length should be 10';
+      if (!MOBILE_REGEX.test(value.trim())) return 'Invalid alternate mobile number';
       return '';
 
     case 'email':
       if (!value || !value.trim()) return 'Email is required';
       if (value && value.trim()) {
         if (!value.includes('@')) return 'Email must contain @';
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()))
           return 'Please enter a valid email address';
-        }
         if (value.trim().length > 100) return 'Email must not exceed 100 characters';
       }
       return '';
 
-     case 'gstNo':
-       if (!value || !value.trim()) return 'GstNo is required';
-      if (value.trim().length < 15) return `GST number must be 15 characters (${value.trim().length}/15 entered)`;
+    case 'gstNo':
+      if (!value || !value.trim()) return 'GstNo is required';
+      if (value.trim().length < 15)
+        return `GST number must be 15 characters (${value.trim().length}/15 entered)`;
       if (value.trim().length > 15) return 'GST number must not exceed 15 characters';
-      if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value.trim())) return 'Invalid GST format (e.g. 29ABCDE1234F1Z5)';
+      if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value.trim()))
+        return 'Invalid GST format (e.g. 29ABCDE1234F1Z5)';
       return '';
 
     case 'cgstPercentage':
-      if (value === '' || value === null || value === undefined) return 'CgstPercentage is required';
+      if (value === '' || value === null || value === undefined)
+        return 'CgstPercentage is required';
       if (isNaN(Number(value))) return 'CgstPercentage should be a decimal';
       return '';
 
     case 'sgstPercentage':
-      if (value === '' || value === null || value === undefined) return 'SgstPercentage is required';
+      if (value === '' || value === null || value === undefined)
+        return 'SgstPercentage is required';
       if (isNaN(Number(value))) return 'SgstPercentage should be a decimal';
       return '';
 
@@ -94,7 +105,12 @@ const filterInput = (fieldName, value) => {
     case 'clinicName':
     case 'ownerName':
     case 'clinicType':
-      return value.replace(/[^A-Za-z0-9 ]/g, '');
+      // Allow letters and spaces only — strip numbers and special characters
+      return value.replace(/[^A-Za-z\s]/g, '');
+
+    case 'location':
+      // Allow digits, dot, comma, hyphen (minus), plus, spaces only
+      return value.replace(/[^0-9.,\-+\s]/g, '');
 
     case 'mobile':
     case 'altMobile':
@@ -105,7 +121,6 @@ const filterInput = (fieldName, value) => {
 
     case 'cgstPercentage':
     case 'sgstPercentage':
-
     default:
       return value;
   }
@@ -116,23 +131,23 @@ const STATUS_OPTIONS = [
   { id: 2, label: 'Inactive' },
 ];
 
-// ─── Fields that are validated by the backend update validator ────────────────
 const VALIDATED_FIELDS = [
-  'clinicName',
-  'address',
-  'location',
-  'clinicType',
-  'gstNo',
-  'cgstPercentage',
-  'sgstPercentage',
-  'ownerName',
-  'mobile',
-  'altMobile',
-  'email',
-  'status'
+  'clinicName', 'address', 'location', 'clinicType', 'gstNo',
+  'cgstPercentage', 'sgstPercentage', 'ownerName', 'mobile',
+  'altMobile', 'email', 'status',
 ];
 
-const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
+// ─────────────────────────────────────────────────────────────────────────────
+// UpdateClinic
+//
+// Double-popup fix
+// ─────────────────
+// UpdateClinic owns its OWN MessagePopup for ALL feedback (warning, error,
+// success).  It never passes a message to onSuccess / onError — those callbacks
+// only tell ClinicList to close the modal and refresh the list.
+// ClinicList must NOT call showPopup inside handleUpdateSuccess / handleUpdateError.
+// ─────────────────────────────────────────────────────────────────────────────
+const UpdateClinic = ({ clinic, onClose, onSuccess, onError }) => {
   const [formData, setFormData] = useState({
     clinicName:     clinic.name           || '',
     address:        clinic.address        || '',
@@ -149,47 +164,80 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
   });
 
   const [formLoading,        setFormLoading]        = useState(false);
-  const [formError,          setFormError]          = useState('');
-  const [formSuccess,        setFormSuccess]        = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
+  const [submitAttempted,    setSubmitAttempted]    = useState(false);
+  const [submitBtnDisabled,  setSubmitBtnDisabled]  = useState(false);
 
-  // ── Live validation on every keystroke ────────────────────────────────────
+  // ── Internal popup — this is the ONLY popup shown for UpdateClinic ──
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Is the form completely valid? ──
+  const isFormValid = useMemo(() => {
+    const requiredFields = [
+      'clinicName', 'address', 'location', 'clinicType', 'gstNo',
+      'cgstPercentage', 'sgstPercentage', 'ownerName', 'mobile',
+      'altMobile', 'email',
+    ];
+    const allFilled = requiredFields.every(
+      (f) =>
+        formData[f] !== '' &&
+        formData[f] !== null &&
+        formData[f] !== undefined &&
+        String(formData[f]).trim() !== ''
+    );
+    if (!allFilled) return false;
+    if (!formData.status) return false;
+    const hasErrors = Object.values(validationMessages).some((msg) => !!msg);
+    if (hasErrors) return false;
+    return true;
+  }, [formData, validationMessages]);
+
+  // ── Live validation on every keystroke ──
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     const filteredValue = filterInput(name, value);
     setFormData((prev) => ({ ...prev, [name]: filteredValue }));
-
     const msg = getLiveValidationMessage(name, filteredValue);
     setValidationMessages((prev) => ({ ...prev, [name]: msg }));
   };
 
-  // ── Run validation on all fields; returns true only if zero errors ─────────
+  // ── Validate all fields; returns true only if zero errors ──
   const validateAllFields = () => {
     const messages = {};
     let isValid = true;
-
     VALIDATED_FIELDS.forEach((field) => {
       const msg = getLiveValidationMessage(field, formData[field]);
       messages[field] = msg;
       if (msg) isValid = false;
     });
-
     setValidationMessages((prev) => ({ ...prev, ...messages }));
     return isValid;
   };
 
-  // ── Submit: blocked entirely until all validation messages are cleared ─────
+  // ── Submit ──
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateAllFields()) {
-      setFormError('Please correct all errors before submitting.');
+    // Guard: form not ready
+    if (!isFormValid) {
+      setSubmitAttempted(true);
+      validateAllFields();
+      showPopup('Please fill all required fields before submitting.', 'warning');
       return;
     }
 
+    if (!validateAllFields()) {
+      showPopup('Please fill all required fields before submitting.', 'warning');
+      return;
+    }
+
+    // 2-sec cooldown on the submit button
+    setSubmitBtnDisabled(true);
+    setTimeout(() => setSubmitBtnDisabled(false), 2000);
+
     setFormLoading(true);
-    setFormError('');
-    setFormSuccess(false);
 
     try {
       await updateClinic({
@@ -208,44 +256,56 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
         Status:         Number(formData.status),
       });
 
-      setFormSuccess(true);
+      // Show success popup here (inside UpdateClinic only)
+      showPopup('Clinic updated successfully!', 'success');
+
+      // After 1 s the popup auto-closes; then signal parent to close modal + refresh.
+      // onSuccess receives NO message — ClinicList must NOT show another popup.
       setTimeout(() => {
-        onSuccess();
-      }, 1500);
+        if (onSuccess) onSuccess();
+      }, 1000);
+
     } catch (err) {
-      setFormError(err.message?.split(':')[1]?.trim() || 'Failed to update clinic.');
+      const errMsg =
+        err.message || 'Failed to update clinic. Please try again.';
+
+      // Show error popup here (inside UpdateClinic only)
+      showPopup(errMsg, 'error');
+
+      // Signal parent with the message so it can log/handle if needed,
+      // but ClinicList must NOT call showPopup in handleUpdateError.
+      if (onError) onError(errMsg);
+
     } finally {
       setFormLoading(false);
     }
   };
 
-  // ── Shared handlers for prefix fields ─────────────────────────────────────
-  const prefixKeyDown = (e) => {
-    const char = e.key;
-    if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Enter'].includes(char) || e.ctrlKey || e.metaKey) return;
-    if (!/[A-Za-z0-9_-]/.test(char)) e.preventDefault();
-  };
-
-  const prefixPaste = (e) => {
-    e.preventDefault();
-    const pasted = (e.clipboardData || window.clipboardData).getData('text');
-    const clean  = pasted.replace(/[^A-Za-z0-9_-]/g, '');
-    const input  = e.target;
-    const newValue = input.value.substring(0, input.selectionStart) + clean + input.value.substring(input.selectionEnd);
-    setFormData((prev) => ({ ...prev, [input.name]: newValue }));
-  };
-
+  // ─────────────────────────────────────────────
   return (
     <div className={styles.detailModalOverlay} onClick={onClose}>
+
+      {/* Own MessagePopup — floats above the modal at z-index 9999 */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
+
       <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
 
-        {/* Gradient Header */}
+        {/* Header */}
         <div className={styles.detailModalHeader}>
           <div className={styles.detailHeaderContent}>
             <h2>Update Clinic</h2>
             <div className={styles.detailHeaderMeta}>
               <span className={styles.workIdBadge}>{formData.clinicName || 'Clinic'}</span>
-              <span className={`${styles.workIdBadge} ${formData.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}>
+              <span
+                className={`${styles.workIdBadge} ${
+                  formData.status === 1 ? styles.activeBadge : styles.inactiveBadge
+                }`}
+              >
                 {formData.status === 1 ? 'ACTIVE' : 'INACTIVE'}
               </span>
             </div>
@@ -254,15 +314,12 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
         </div>
 
         <form onSubmit={handleSubmit} className={styles.addModalBody}>
-          {formError   && <div className={styles.formError}>{formError}</div>}
-          {formSuccess && <div className={styles.formSuccess}>Clinic updated successfully!</div>}
 
-          {/* ── Basic Information ─────────────────────────────────────────── */}
+          {/* ── Basic Information ── */}
           <div className={styles.addSection}>
             <div className={styles.addSectionHeader}><h3>Basic Information</h3></div>
             <div className={styles.addFormGrid}>
 
-              {/* Clinic Name — required in backend */}
               <div className={styles.addFormGroup}>
                 <label>Clinic Name <span className={styles.required}>*</span></label>
                 <input
@@ -277,7 +334,6 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
                 )}
               </div>
 
-              {/* Clinic Type — required in backend */}
               <div className={styles.addFormGroup}>
                 <label>Clinic Type <span className={styles.required}>*</span></label>
                 <input
@@ -292,7 +348,6 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
                 )}
               </div>
 
-              {/* Owner Name — required in backend */}
               <div className={styles.addFormGroup}>
                 <label>Owner Name <span className={styles.required}>*</span></label>
                 <input
@@ -307,7 +362,6 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
                 )}
               </div>
 
-              {/* Address — required in backend */}
               <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                 <label>Address <span className={styles.required}>*</span></label>
                 <textarea
@@ -323,7 +377,6 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
                 )}
               </div>
 
-              {/* Location — required in backend */}
               <div className={styles.addFormGroup}>
                 <label>Location <span className={styles.required}>*</span></label>
                 <input
@@ -338,7 +391,6 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
                 )}
               </div>
 
-              {/* Status — required in backend */}
               <div className={styles.addFormGroup}>
                 <label>Status <span className={styles.required}>*</span></label>
                 <select
@@ -359,12 +411,11 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
             </div>
           </div>
 
-          {/* ── Contact Information ───────────────────────────────────────── */}
+          {/* ── Contact Information ── */}
           <div className={styles.addSection}>
             <div className={styles.addSectionHeader}><h3>Contact Information</h3></div>
             <div className={styles.addFormGridThreeCol}>
 
-              {/* Mobile — required in backend */}
               <div className={styles.addFormGroup}>
                 <label>Mobile <span className={styles.required}>*</span></label>
                 <input
@@ -380,7 +431,6 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
                 )}
               </div>
 
-              {/* Alternate Mobile — required in backend */}
               <div className={styles.addFormGroup}>
                 <label>Alternate Mobile <span className={styles.required}>*</span></label>
                 <input
@@ -396,11 +446,10 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
                 )}
               </div>
 
-              {/* Email — NOT required in backend (isEmail only, no notEmpty) */}
               <div className={styles.addFormGroup}>
                 <label>Email <span className={styles.required}>*</span></label>
                 <input
-                  required  
+                  required
                   type="email"
                   name="email"
                   value={formData.email}
@@ -415,12 +464,11 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
             </div>
           </div>
 
-          {/* ── Tax Information ───────────────────────────────────────────── */}
+          {/* ── Tax Information ── */}
           <div className={styles.addSection}>
             <div className={styles.addSectionHeader}><h3>Tax Information</h3></div>
             <div className={styles.addFormGridThreeCol}>
 
-              {/* GST Number — required in backend, max 50, no format rule in backend */}
               <div className={styles.addFormGroup}>
                 <label>GST Number <span className={styles.required}>*</span></label>
                 <input
@@ -436,7 +484,6 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
                 )}
               </div>
 
-              {/* CGST — required in backend */}
               <div className={styles.addFormGroup}>
                 <label>CGST Percentage <span className={styles.required}>*</span></label>
                 <input
@@ -444,6 +491,7 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
                   type="number"
                   step="0.01"
                   min="0"
+                  max="100"
                   name="cgstPercentage"
                   value={formData.cgstPercentage}
                   onChange={handleInputChange}
@@ -454,7 +502,6 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
                 )}
               </div>
 
-              {/* SGST — required in backend */}
               <div className={styles.addFormGroup}>
                 <label>SGST Percentage <span className={styles.required}>*</span></label>
                 <input
@@ -462,6 +509,7 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
                   type="number"
                   step="0.01"
                   min="0"
+                  max="100"
                   name="sgstPercentage"
                   value={formData.sgstPercentage}
                   onChange={handleInputChange}
@@ -482,11 +530,20 @@ const UpdateClinic = ({ clinic, onClose, onSuccess }) => {
             </button>
             <button
               type="submit"
-              disabled={formLoading}
-              className={styles.btnSubmit}
+              disabled={formLoading || submitBtnDisabled}
+              className={`${styles.btnSubmit} ${!isFormValid ? styles.btnSubmitDisabled : ''}`}
+              title={!isFormValid ? 'Please fill all required fields' : ''}
+              style={{
+                opacity: formLoading || submitBtnDisabled ? 0.6 : 1,
+                cursor:  formLoading || submitBtnDisabled ? 'not-allowed' : 'pointer',
+              }}
             >
               <FiSave className={styles.btnIcon} />
-              {formLoading ? 'Updating...' : 'Update Clinic'}
+              {formLoading
+                ? 'Updating...'
+                : submitBtnDisabled
+                ? 'Please wait...'
+                : 'Update Clinic'}
             </button>
           </div>
         </form>

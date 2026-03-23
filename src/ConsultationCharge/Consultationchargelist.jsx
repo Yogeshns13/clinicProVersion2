@@ -1,5 +1,3 @@
-// src/components/ConsultationChargeList.jsx
-// Simplified single-view consultation list with invoice generation
 import React, { useState, useEffect, useMemo } from 'react';
 import { FiSearch, FiFileText, FiX } from 'react-icons/fi';
 import {
@@ -12,53 +10,84 @@ import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import styles from './ConsultationChargeList.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 const ConsultationChargeList = () => {
-  const [consultations, setConsultations] = useState([]);
+  const [consultations,    setConsultations]    = useState([]);
   const [allConsultations, setAllConsultations] = useState([]);
-  const [chargeConfigs, setChargeConfigs] = useState([]);
+  const [chargeConfigs,    setChargeConfigs]    = useState([]);
 
   const today = new Date().toISOString().split('T')[0];
 
   // ── Pagination ──
-  const [page, setPage] = useState(1);
+  const [page,     setPage]     = useState(1);
   const pageSize = 20;
 
   // Filter inputs (not applied until Search is clicked)
   const [filterInputs, setFilterInputs] = useState({
-    searchType: 'patientName',
+    searchType:  'patientName',
     searchValue: '',
-    dateFrom: today,
-    dateTo: today
+    dateFrom:    today,
+    dateTo:      today,
   });
 
   // Applied filters (drive API call + client-side filter)
   const [appliedFilters, setAppliedFilters] = useState({
-    searchType: 'patientName',
+    searchType:  'patientName',
     searchValue: '',
-    dateFrom: today,
-    dateTo: today
+    dateFrom:    today,
+    dateTo:      today,
   });
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState(null);
   const [isInvoiceFormOpen, setIsInvoiceFormOpen] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState(null);
-  const [formSuccess, setFormSuccess] = useState(null);
 
   const [invoiceFormData, setInvoiceFormData] = useState({
     consultationId: null,
-    chargeId: '',
-    chargeAmount: '',
-    invoiceDate: today,
-    discount: '0'
+    chargeId:       '',
+    chargeAmount:   '',
+    invoiceDate:    today,
+    discount:       '0',
   });
 
+  // ── MessagePopup ──
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Submit attempted flag ──
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  // ── Button cooldowns ──
+  const [searchCooldown,  setSearchCooldown]  = useState(false);
+  const [clearCooldown,   setClearCooldown]   = useState(false);
+  const [submitCooldown,  setSubmitCooldown]  = useState(false);
+  const [invoiceCooldowns, setInvoiceCooldowns] = useState({}); // per-row
+
+  const startCooldown = (setter) => {
+    setter(true);
+    setTimeout(() => setter(false), 2000);
+  };
+  const startIdCooldown = (setter, id) => {
+    setter(prev => ({ ...prev, [id]: true }));
+    setTimeout(() => setter(prev => ({ ...prev, [id]: false })), 2000);
+  };
+
+  // ── Form completeness ──
+  // Required: chargeId, chargeAmount, invoiceDate
+  const isFormComplete =
+    !!invoiceFormData.chargeId &&
+    invoiceFormData.chargeAmount !== '' &&
+    !!invoiceFormData.invoiceDate;
+
+  // ────────────────────────────────────────────────
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
-    appliedFilters.dateFrom           !== today ||
-    appliedFilters.dateTo             !== today;
+    appliedFilters.dateFrom            !== today ||
+    appliedFilters.dateTo              !== today;
 
   // ────────────────────────────────────────────────
   const fetchConsultations = async (filters = appliedFilters, currentPage = page) => {
@@ -70,7 +99,7 @@ const ConsultationChargeList = () => {
 
       const options = {
         BranchID: branchId,
-        Page: currentPage,
+        Page:     currentPage,
         PageSize: pageSize,
         ...(filters.dateFrom && { FromDate: filters.dateFrom }),
         ...(filters.dateTo   && { ToDate:   filters.dateTo   }),
@@ -102,7 +131,7 @@ const ConsultationChargeList = () => {
 
   useEffect(() => { fetchConsultations(appliedFilters, page); }, [appliedFilters]);
 
-  // ── Client-side filtering by search type/value
+  // ── Client-side filtering by search type/value ──
   const filteredConsultations = useMemo(() => {
     let filtered = allConsultations;
 
@@ -146,11 +175,15 @@ const ConsultationChargeList = () => {
   };
 
   const handleSearch = () => {
+    if (searchCooldown) return;
+    startCooldown(setSearchCooldown);
     setPage(1);
     setAppliedFilters({ ...filterInputs });
   };
 
   const handleClearFilters = () => {
+    if (clearCooldown) return;
+    startCooldown(setClearCooldown);
     const defaultFilters = { searchType: 'patientName', searchValue: '', dateFrom: today, dateTo: today };
     setPage(1);
     setFilterInputs(defaultFilters);
@@ -159,22 +192,22 @@ const ConsultationChargeList = () => {
 
   // ────────────────────────────────────────────────
   const openInvoiceForm = (consultation) => {
+    if (invoiceCooldowns[consultation.id]) return;
+    startIdCooldown(setInvoiceCooldowns, consultation.id);
     setInvoiceFormData({
       consultationId: consultation.id,
-      chargeId: '',
-      chargeAmount: '',
-      invoiceDate: consultation.dateCreated?.split('T')[0] || today,
-      discount: '0'
+      chargeId:       '',
+      chargeAmount:   '',
+      invoiceDate:    consultation.dateCreated?.split('T')[0] || today,
+      discount:       '0',
     });
-    setFormError(null);
-    setFormSuccess(null);
+    setSubmitAttempted(false);
     setIsInvoiceFormOpen(true);
   };
 
   const closeForm = () => {
     setIsInvoiceFormOpen(false);
-    setFormError(null);
-    setFormSuccess(null);
+    setSubmitAttempted(false);
   };
 
   const handleInvoiceInputChange = (e) => {
@@ -186,7 +219,8 @@ const ConsultationChargeList = () => {
       if (config) {
         setInvoiceFormData(prev => ({
           ...prev,
-          chargeAmount: config.defaultAmount?.toString() || ''
+          chargeId:     value,
+          chargeAmount: config.defaultAmount?.toString() || '',
         }));
       }
     }
@@ -194,21 +228,21 @@ const ConsultationChargeList = () => {
 
   const validateForm = () => {
     if (!invoiceFormData.chargeId) {
-      setFormError('Please select a charge type');
+      showPopup('Please select a charge type.', 'error');
       return false;
     }
     const amount = Number(invoiceFormData.chargeAmount);
     if (isNaN(amount) || amount < 0) {
-      setFormError('Please enter a valid charge amount');
+      showPopup('Please enter a valid charge amount.', 'error');
       return false;
     }
     if (!invoiceFormData.invoiceDate) {
-      setFormError('Please select an invoice date');
+      showPopup('Please select an invoice date.', 'error');
       return false;
     }
     const discount = Number(invoiceFormData.discount);
     if (isNaN(discount) || discount < 0) {
-      setFormError('Please enter a valid discount amount');
+      showPopup('Please enter a valid discount amount.', 'error');
       return false;
     }
     return true;
@@ -216,11 +250,20 @@ const ConsultationChargeList = () => {
 
   const handleGenerateInvoice = async (e) => {
     e.preventDefault();
+    setSubmitAttempted(true);
+
+    if (!isFormComplete) {
+      showPopup('Please fill all required fields before submitting.', 'error');
+      return;
+    }
+
     if (!validateForm()) return;
+
+    if (submitCooldown) return;
+    startCooldown(setSubmitCooldown);
 
     try {
       setFormLoading(true);
-      setFormError(null);
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
 
@@ -228,8 +271,8 @@ const ConsultationChargeList = () => {
         clinicId,
         branchId,
         consultationId: Number(invoiceFormData.consultationId),
-        chargeId: Number(invoiceFormData.chargeId),
-        chargeAmount: Number(invoiceFormData.chargeAmount)
+        chargeId:       Number(invoiceFormData.chargeId),
+        chargeAmount:   Number(invoiceFormData.chargeAmount),
       });
 
       if (!chargeResult.success) throw new Error('Failed to add consultation charge');
@@ -238,19 +281,19 @@ const ConsultationChargeList = () => {
         clinicId,
         branchId,
         consultationId: Number(invoiceFormData.consultationId),
-        invoiceDate: invoiceFormData.invoiceDate,
-        discount: Number(invoiceFormData.discount)
+        invoiceDate:    invoiceFormData.invoiceDate,
+        discount:       Number(invoiceFormData.discount),
       });
 
       if (!invoiceResult.success) throw new Error('Failed to generate invoice');
 
-      setFormSuccess('Invoice generated successfully!');
+      showPopup('Invoice generated successfully!', 'success');
       setTimeout(() => {
         closeForm();
         fetchConsultations(appliedFilters);
-      }, 1500);
+      }, 1200);
     } catch (err) {
-      setFormError(err.message || 'Failed to generate invoice');
+      showPopup(err.message || 'Failed to generate invoice.', 'error');
     } finally {
       setFormLoading(false);
     }
@@ -261,13 +304,13 @@ const ConsultationChargeList = () => {
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric', month: 'short', day: 'numeric'
+      year: 'numeric', month: 'short', day: 'numeric',
     });
   };
 
   // ────────────────────────────────────────────────
   if (error && (error?.status >= 400 || error?.code >= 400)) return <ErrorHandler error={error} />;
-  if (loading) return <div className={styles.chargeListLoading}>Loading consultations...</div>;
+  if (loading) return <div className={styles.chargeListLoading}><LoadingPage/></div>;
   if (error)   return <div className={styles.chargeListError}>Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
@@ -275,6 +318,14 @@ const ConsultationChargeList = () => {
     <div className={styles.chargeListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Consultation Charges" />
+
+      {/* ── MessagePopup ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
 
       {/* ── Filters ── */}
       <div className={styles.filtersContainer}>
@@ -296,9 +347,9 @@ const ConsultationChargeList = () => {
               type="text"
               name="searchValue"
               placeholder={`Search by ${
-                filterInputs.searchType === 'patientName'   ? 'Name'        :
-                filterInputs.searchType === 'patientMobile' ? 'Mobile'      :
-                filterInputs.searchType === 'patientFileNo' ? 'File Code'   :
+                filterInputs.searchType === 'patientName'   ? 'Name'       :
+                filterInputs.searchType === 'patientMobile' ? 'Mobile'     :
+                filterInputs.searchType === 'patientFileNo' ? 'File Code'  :
                 'Doctor Name'
               }`}
               value={filterInputs.searchValue}
@@ -341,11 +392,19 @@ const ConsultationChargeList = () => {
           </div>
 
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              disabled={searchCooldown}
+              className={styles.searchButton}
+            >
               <FiSearch size={18} /> Search
             </button>
             {hasActiveFilters && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
+              <button
+                onClick={handleClearFilters}
+                disabled={clearCooldown}
+                className={styles.clearButton}
+              >
                 <FiX size={18} /> Clear
               </button>
             )}
@@ -403,15 +462,16 @@ const ConsultationChargeList = () => {
                     <td><span className={styles.symptomsText}>{consult.symptoms || '—'}</span></td>
                     <td>
                       <div className={styles.vitalsCell}>
-                        {consult.bpReading  && <span className={styles.vitalItem}>BP: {consult.bpReading}</span>} |
+                        {consult.bpReading   && <span className={styles.vitalItem}>BP: {consult.bpReading}</span>} |
                         {consult.temperature && <span className={styles.vitalItem}>Temp: {consult.temperature}°</span>} |
-                        {consult.weight     && <span className={styles.vitalItem}>Wt: {consult.weight} kg</span>}
+                        {consult.weight      && <span className={styles.vitalItem}>Wt: {consult.weight} kg</span>}
                       </div>
                     </td>
                     <td>
                       <div className={styles.chargeListActionsCell}>
                         <button
                           onClick={() => openInvoiceForm(consult)}
+                          disabled={!!invoiceCooldowns[consult.id]}
                           className={styles.invoiceBtn}
                           title="Make Invoice"
                         >
@@ -426,7 +486,7 @@ const ConsultationChargeList = () => {
           </table>
         </div>
 
-        {/* ── Pagination Bar — pinned to bottom of tableSection ── */}
+        {/* ── Pagination Bar ── */}
         <div className={styles.paginationBar}>
           <div className={styles.paginationInfo}>
             {filteredConsultations.length > 0
@@ -472,7 +532,7 @@ const ConsultationChargeList = () => {
           </div>
         </div>
 
-      </div>{/* end tableSection */}
+      </div>
 
       {/* ── Generate Invoice Modal ── */}
       {isInvoiceFormOpen && (
@@ -484,9 +544,8 @@ const ConsultationChargeList = () => {
             </div>
             <form onSubmit={handleGenerateInvoice}>
               <div className={styles.chargeListModalBody}>
-                {formError   && <div className={styles.formError}>{formError}</div>}
-                {formSuccess && <div className={styles.formSuccess}>{formSuccess}</div>}
                 <div className={styles.formGrid}>
+
                   <div className={styles.formGroup}>
                     <label>Charge Type <span className={styles.required}>*</span></label>
                     <select
@@ -504,6 +563,7 @@ const ConsultationChargeList = () => {
                       ))}
                     </select>
                   </div>
+
                   <div className={styles.formGroup}>
                     <label>Charge Amount (₹) <span className={styles.required}>*</span></label>
                     <input
@@ -518,6 +578,7 @@ const ConsultationChargeList = () => {
                       required
                     />
                   </div>
+
                   <div className={styles.formGroup}>
                     <label>Invoice Date <span className={styles.required}>*</span></label>
                     <input
@@ -530,6 +591,7 @@ const ConsultationChargeList = () => {
                       required
                     />
                   </div>
+
                   <div className={styles.formGroup}>
                     <label>Discount (₹)</label>
                     <input
@@ -544,7 +606,15 @@ const ConsultationChargeList = () => {
                     />
                   </div>
                 </div>
+
+                {/* Incomplete hint */}
+                {submitAttempted && !isFormComplete && (
+                  <div className={styles.formIncompleteHint}>
+                    Please fill all required fields to enable submission.
+                  </div>
+                )}
               </div>
+
               <div className={styles.chargeListModalFooter}>
                 <button
                   type="button"
@@ -557,7 +627,8 @@ const ConsultationChargeList = () => {
                 <button
                   type="submit"
                   className={styles.btnSubmit}
-                  disabled={formLoading}
+                  disabled={formLoading || submitCooldown}
+                  title={!isFormComplete ? 'Please fill all required fields' : ''}
                 >
                   {formLoading ? 'Processing...' : 'Generate Invoice'}
                 </button>

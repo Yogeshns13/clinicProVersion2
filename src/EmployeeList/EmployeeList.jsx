@@ -2,12 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { FiSearch, FiPlus, FiX } from 'react-icons/fi';
 import { getEmployeeList, getDepartmentList } from '../Api/Api.js';
-import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddEmployee from './AddEmployee.jsx';
 import ViewEmployee from './ViewEmployee.jsx';
 import styles from './EmployeeList.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -22,15 +22,15 @@ const STATUS_OPTIONS = [
 ];
 
 const DESIGNATION_OPTIONS = [
-  { id: 1, label: 'Doctor' },
-  { id: 2, label: 'Nurse' },
-  { id: 3, label: 'Receptionist' },
-  { id: 4, label: 'Pharmacist' },
-  { id: 5, label: 'Lab Technician' },
-  { id: 6, label: 'Billing Staff' },
-  { id: 7, label: 'Manager' },
-  { id: 8, label: 'Attendant' },
-  { id: 9, label: 'Cleaner' },
+  { id: 1,  label: 'Doctor' },
+  { id: 2,  label: 'Nurse' },
+  { id: 3,  label: 'Receptionist' },
+  { id: 4,  label: 'Pharmacist' },
+  { id: 5,  label: 'Lab Technician' },
+  { id: 6,  label: 'Billing Staff' },
+  { id: 7,  label: 'Manager' },
+  { id: 8,  label: 'Attendant' },
+  { id: 9,  label: 'Cleaner' },
   { id: 10, label: 'Others' },
 ];
 
@@ -40,35 +40,36 @@ const SEARCH_TYPE_OPTIONS = [
   { value: 'EmployeeCode', label: 'Emp Code' },
 ];
 
+// ── Default to status = 1 (Active) ───────────────
+const DEFAULT_FILTERS = {
+  searchType:   'Name',
+  searchValue:  '',
+  status:       '1',
+  departmentId: '',
+  designation:  '',
+};
+
 // ────────────────────────────────────────────────
 const EmployeeList = () => {
   // Data
-  const [employees, setEmployees] = useState([]);
+  const [employees,   setEmployees]   = useState([]);
   const [departments, setDepartments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState(null);
 
   // Filter inputs (staged — not applied until Search is clicked)
-  const [filterInputs, setFilterInputs] = useState({
-    searchType:    'Name',
-    searchValue:   '',
-    status:        '',
-    departmentId:  '',
-    designation:   '',
-  });
+  const [filterInputs, setFilterInputs] = useState(DEFAULT_FILTERS);
 
-  // Applied filters (drive the API call)
-  const [appliedFilters, setAppliedFilters] = useState({
-    searchType:    'Name',
-    searchValue:   '',
-    status:        '',
-    departmentId:  '',
-    designation:   '',
-  });
+  // Applied filters (drive the API call) — start with Active
+  const [appliedFilters, setAppliedFilters] = useState(DEFAULT_FILTERS);
 
   // Pagination
   const [page, setPage] = useState(1);
   const pageSize = 20;
+
+  // ── Button 2-sec cooldowns ──
+  const [searchBtnDisabled, setSearchBtnDisabled] = useState(false);
+  const [clearBtnDisabled,  setClearBtnDisabled]  = useState(false);
 
   // Add Form Modal
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
@@ -104,7 +105,7 @@ const EmployeeList = () => {
   }, []);
 
   // ────────────────────────────────────────────────
-  // Data fetching — now includes pagination
+  // Data fetching — includes pagination
   const fetchEmployees = async (filters = appliedFilters, currentPage = page) => {
     try {
       setLoading(true);
@@ -114,16 +115,16 @@ const EmployeeList = () => {
       const branchId = await getStoredBranchId();
 
       const options = {
-        BranchID:      branchId,
-        EmployeeID:    0,
-        Name:          filters.searchType === 'Name'         ? filters.searchValue : '',
-        Mobile:        filters.searchType === 'Mobile'       ? filters.searchValue : '',
-        EmployeeCode:  filters.searchType === 'EmployeeCode' ? filters.searchValue : '',
-        DepartmentID:  filters.departmentId !== '' ? Number(filters.departmentId) : 0,
-        Designation:   filters.designation  !== '' ? Number(filters.designation)  : 0,
-        Status:        filters.status       !== '' ? Number(filters.status)        : -1,
-        Page:          currentPage,
-        PageSize:      pageSize,
+        BranchID:     branchId,
+        EmployeeID:   0,
+        Name:         filters.searchType === 'Name'         ? filters.searchValue : '',
+        Mobile:       filters.searchType === 'Mobile'       ? filters.searchValue : '',
+        EmployeeCode: filters.searchType === 'EmployeeCode' ? filters.searchValue : '',
+        DepartmentID: filters.departmentId !== '' ? Number(filters.departmentId) : 0,
+        Designation:  filters.designation  !== '' ? Number(filters.designation)  : 0,
+        Status:       filters.status       !== '' ? Number(filters.status)        : -1,
+        Page:         currentPage,
+        PageSize:     pageSize,
       };
 
       const data = await getEmployeeList(clinicId, options);
@@ -162,16 +163,23 @@ const EmployeeList = () => {
     setFilterInputs((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Search button — 2-sec cooldown
   const handleSearch = () => {
+    if (searchBtnDisabled) return;
+    setSearchBtnDisabled(true);
     setAppliedFilters({ ...filterInputs });
-    setPage(1); // Reset to page 1 on new search
+    setPage(1);
+    setTimeout(() => setSearchBtnDisabled(false), 2000);
   };
 
+  // Clear button — resets to default (Active) filters
   const handleClearFilters = () => {
-    const empty = { searchType: 'Name', searchValue: '', status: '', departmentId: '', designation: '' };
-    setFilterInputs(empty);
-    setAppliedFilters(empty);
+    if (clearBtnDisabled) return;
+    setClearBtnDisabled(true);
+    setFilterInputs(DEFAULT_FILTERS);
+    setAppliedFilters(DEFAULT_FILTERS);
     setPage(1);
+    setTimeout(() => setClearBtnDisabled(false), 2000);
   };
 
   const handlePageChange = (newPage) => {
@@ -180,6 +188,7 @@ const EmployeeList = () => {
   };
 
   const handleViewDetails = (employee) => setViewEmployeeId(employee.id);
+
   const handleCloseViewEmployee = () => {
     setViewEmployeeId(null);
     fetchEmployees(appliedFilters);
@@ -191,6 +200,8 @@ const EmployeeList = () => {
     fetchEmployees(appliedFilters);
   };
 
+  // ── All callbacks just refresh the list ──────────────────────────────────
+  // ── Every popup (success AND error) is shown inside the child component ──
   const handleAddSuccess = () => fetchEmployees(appliedFilters);
 
   const handleEmployeeDeleted = () => {
@@ -198,19 +209,24 @@ const EmployeeList = () => {
     fetchEmployees(appliedFilters);
   };
 
+  const handleUpdateSuccess = () => fetchEmployees(appliedFilters);
+
+  const handleActionError = () => {
+    // intentionally empty — errors shown inside AddEmployee / ViewEmployee
+  };
+
   // ────────────────────────────────────────────────
   // Early returns
-  if (error && (error?.status >= 400 || error?.code >= 400)) {
-    return <ErrorHandler error={error} />;
-  }
 
-  if (loading) return <div className={styles.loading}>Loading employees...</div>;
+  if (loading) return <div className={styles.loading}><LoadingPage/></div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
   return (
     <div className={styles.listWrapper}>
       <Header title="Employee Management" />
+
+      {/* ── No MessagePopup here — all popups live inside AddEmployee / ViewEmployee ── */}
 
       {/* ── Filter Bar ── */}
       <div className={styles.filtersContainer}>
@@ -269,7 +285,7 @@ const EmployeeList = () => {
             </select>
           </div>
 
-          {/* Status */}
+          {/* Status — defaults to Active */}
           <div className={styles.filterGroup}>
             <select
               name="status"
@@ -286,13 +302,29 @@ const EmployeeList = () => {
 
           {/* Actions */}
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              className={styles.searchButton}
+              disabled={searchBtnDisabled}
+              style={{
+                opacity: searchBtnDisabled ? 0.6 : 1,
+                cursor:  searchBtnDisabled ? 'not-allowed' : 'pointer',
+              }}
+            >
               <FiSearch size={16} />
               Search
             </button>
 
             {hasActiveFilters && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
+              <button
+                onClick={handleClearFilters}
+                className={styles.clearButton}
+                disabled={clearBtnDisabled}
+                style={{
+                  opacity: clearBtnDisabled ? 0.6 : 1,
+                  cursor:  clearBtnDisabled ? 'not-allowed' : 'pointer',
+                }}
+              >
                 <FiX size={16} />
                 Clear
               </button>
@@ -316,6 +348,7 @@ const EmployeeList = () => {
               <tr>
                 <th>Employee</th>
                 <th>Code</th>
+                <th>Clinic</th>
                 <th>Department</th>
                 <th>Designation</th>
                 <th>Mobile</th>
@@ -347,6 +380,7 @@ const EmployeeList = () => {
                       </div>
                     </td>
                     <td>{employee.employeeCode || '—'}</td>
+                    <td>{employee.clinicName|| '—'}</td>
                     <td>{employee.departmentName || '—'}</td>
                     <td>
                       <span className={styles.designationBadge}>
@@ -428,6 +462,7 @@ const EmployeeList = () => {
         onClose={closeAddForm}
         departments={departments}
         onSuccess={handleAddSuccess}
+        onError={handleActionError}
       />
 
       {/* ── View Employee Modal ── */}
@@ -437,6 +472,8 @@ const EmployeeList = () => {
           employeeId={viewEmployeeId}
           onClose={handleCloseViewEmployee}
           onDeleted={handleEmployeeDeleted}
+          onSuccess={handleUpdateSuccess}
+          onError={handleActionError}
         />
       )}
     </div>

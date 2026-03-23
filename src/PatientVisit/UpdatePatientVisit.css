@@ -236,6 +236,7 @@
 
 .form-input::placeholder,
 .form-textarea::placeholder {
+  font-family: inherit;
   color: rgba(30, 41, 59, 0.4);
 }
 

@@ -1,5 +1,5 @@
 // src/components/LabWork/LabOrderList.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiX, FiCalendar, FiFilter, FiEye, FiCheckCircle, FiClock, FiAlertCircle, FiFileText, FiEdit, FiPrinter } from 'react-icons/fi';
 import { 
@@ -16,26 +16,57 @@ import { getEmployeeList } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import LabOrderPrintModal from './LabOrderPrintModal.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
 import styles from './LabOrderList.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
+// ─── Hook: 2-second button cooldown ───────────────────────────────────────────
+const useButtonCooldown = () => {
+  const [cooldowns, setCooldowns] = useState({});
+  const timers = useRef({});
+
+  const trigger = (key) => {
+    setCooldowns(prev => ({ ...prev, [key]: true }));
+    if (timers.current[key]) clearTimeout(timers.current[key]);
+    timers.current[key] = setTimeout(() => {
+      setCooldowns(prev => ({ ...prev, [key]: false }));
+    }, 2000);
+  };
+
+  const isDisabled = (key) => !!cooldowns[key];
+
+  useEffect(() => () => {
+    Object.values(timers.current).forEach(clearTimeout);
+  }, []);
+
+  return { trigger, isDisabled };
+};
+
+// ─── Main Component ────────────────────────────────────────────────────────────
 const LabOrderList = () => {
   const navigate = useNavigate();
-  
+  const cooldown = useButtonCooldown();
+
+  // MessagePopup state
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopupMsg = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
   // Data States
   const [orders, setOrders] = useState([]);
   const [allOrders, setAllOrders] = useState([]);
   const [doctors, setDoctors] = useState([]);
-  const [orderReports, setOrderReports] = useState({}); // Map of orderId -> reportId
+  const [orderReports, setOrderReports] = useState({});
 
-  // ── Pagination ──
+  // Pagination
   const [page, setPage] = useState(1);
   const pageSize = 20;
   
   // Filter inputs (not applied until search)
   const [filterInputs, setFilterInputs] = useState({
-    searchType: 'patientName', // patientName, doctorName, testName
+    searchType: 'patientName',
     searchValue: '',
     status: -1,
     priority: 0,
@@ -86,7 +117,8 @@ const LabOrderList = () => {
     verifiedBy: 0,
     verifiedDateTime: '',
     remarks: '',
-    status: 1 // Default to "Created" status
+    fileId: 0,
+    status: 1
   });
 
   // Status options for Lab Test Orders
@@ -116,7 +148,7 @@ const LabOrderList = () => {
     { id: 3, label: 'STAT' }
   ];
 
-  // ── Derived: are any filters active? ──
+  // Are any filters active?
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.status !== -1 ||
@@ -143,7 +175,7 @@ const LabOrderList = () => {
     }
   };
 
-  // Fetch Lab Test Reports to check if orders have reports
+  // Fetch Lab Test Reports
   const fetchLabTestReports = async () => {
     try {
       const clinicId = await getStoredClinicId();
@@ -190,7 +222,7 @@ const LabOrderList = () => {
     fetchDoctors();
   }, []);
 
-  // Computed filtered orders based on applied filters
+  // Computed filtered orders
   const filteredOrders = useMemo(() => {
     let filtered = allOrders;
     if (appliedFilters.searchValue) {
@@ -227,7 +259,7 @@ const LabOrderList = () => {
     return filtered;
   }, [allOrders, appliedFilters]);
 
-  // ── Pagination helpers ──
+  // Pagination helpers
   const handlePageChange = (newPage) => {
     if (newPage < 1) return;
     setPage(newPage);
@@ -301,6 +333,7 @@ const LabOrderList = () => {
 
   const handleConfirmMakeWork = async () => {
     if (!selectedOrder) return;
+    cooldown.trigger('makeWork');
     try {
       setLoading(true);
       const clinicId = await getStoredClinicId();
@@ -308,42 +341,44 @@ const LabOrderList = () => {
       setIsConfirmWorkOpen(false);
       setSelectedOrder(null);
       await fetchOrders(page);
-      alert('Work items created successfully! Navigate to Work Queue to process them.');
+      showPopupMsg('Work items created successfully! Navigate to Work Queue to process them.', 'success');
     } catch (err) {
       console.error('Error creating work items:', err);
-      alert(err.message || 'Failed to create work items');
+      showPopupMsg(err.message || 'Failed to create work items', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const handleGenerateInvoice = async (invoiceData) => {
+    cooldown.trigger('generateInvoice');
     try {
       setLoading(true);
       await generateLabInvoice(invoiceData);
       setIsMakeInvoiceOpen(false);
       setSelectedOrder(null);
       await fetchOrders(page);
-      alert('Invoice generated successfully!');
+      showPopupMsg('Invoice generated successfully!', 'success');
     } catch (err) {
       console.error('Error generating invoice:', err);
-      alert(err.message || 'Failed to generate invoice');
+      showPopupMsg(err.message || 'Failed to generate invoice', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const handleUpdateOrderSubmit = async (orderData) => {
+    cooldown.trigger('updateOrder');
     try {
       setLoading(true);
       await updateLabTestOrder(orderData);
       setIsUpdateOrderOpen(false);
       setSelectedOrder(null);
       await fetchOrders(page);
-      alert('Order updated successfully!');
+      showPopupMsg('Order updated successfully!', 'success');
     } catch (err) {
       console.error('Error updating order:', err);
-      alert(err.message || 'Failed to update order');
+      showPopupMsg(err.message || 'Failed to update order', 'error');
     } finally {
       setLoading(false);
     }
@@ -366,7 +401,7 @@ const LabOrderList = () => {
     } catch (err) {
       console.error('Error processing add report:', err);
       setError(err);
-      setReportMessage({ type: 'error', text: err.message || 'Failed to process report request' });
+      showPopupMsg(err.message || 'Failed to process report request', 'error');
     } finally {
       setSubmittingReport(false);
     }
@@ -393,31 +428,36 @@ const LabOrderList = () => {
         verifiedBy: existingReport.verifiedBy || 0,
         verifiedDateTime: formattedDateTime,
         remarks: existingReport.remarks || '',
+        fileId: existingReport.fileId|| 0,
         status: existingReport.status ?? 1
       });
       setShowReportModal(true);
     } catch (err) {
       console.error('Error loading report for update:', err);
       setError(err);
-      alert(err.message || 'Failed to load report details');
+      showPopupMsg(err.message || 'Failed to load report details', 'error');
     } finally {
       setSubmittingReport(false);
     }
   };
 
+  // ── Report form validation: required fields filled? ──
+  const isReportFormValid = reportForm.verifiedBy !== 0 && reportForm.verifiedDateTime !== '';
+
   const handleSubmitReport = async (e) => {
     e.preventDefault();
-    if (!reportForm.verifiedBy || reportForm.verifiedBy === 0) {
-      setReportMessage({ type: 'error', text: 'Please select a verified by doctor' });
+
+    // Guard: show message if required fields missing
+    if (!isReportFormValid) {
+      showPopupMsg('Please fill all required fields: Verified By and Verified Date & Time.', 'warning');
       return;
     }
-    if (!reportForm.verifiedDateTime) {
-      setReportMessage({ type: 'error', text: 'Please select verified date and time' });
-      return;
-    }
+
+    cooldown.trigger('submitReport');
     try {
       setSubmittingReport(true);
       setReportMessage({ type: '', text: '' });
+
       const resetForm = () => {
         setShowReportModal(false);
         setSelectedOrderForReport(null);
@@ -428,19 +468,20 @@ const LabOrderList = () => {
         setReportMessage({ type: '', text: '' });
         fetchOrders(page);
       };
+
       if (isUpdateMode) {
         const result = await updateLabTestReport({
           reportId: currentReportId,
           clinicId: orderDetails.clinicId,
           branchId: orderDetails.branchId,
-          fileId: orderDetails.fileId || 0,
+          fileId: reportForm.fileId || 0,
           verifiedBy: reportForm.verifiedBy,
           verifiedDateTime: reportForm.verifiedDateTime,
           remarks: reportForm.remarks,
           status: reportForm.status
         });
         if (result.success) {
-          setReportMessage({ type: 'success', text: 'Lab test report updated successfully!' });
+          showPopupMsg('Lab test report updated successfully!', 'success');
           setTimeout(resetForm, 1500);
         }
       } else {
@@ -458,13 +499,13 @@ const LabOrderList = () => {
           remarks: reportForm.remarks
         });
         if (result.success) {
-          setReportMessage({ type: 'success', text: 'Lab test report added successfully!' });
+          showPopupMsg('Lab test report added successfully!', 'success');
           setTimeout(resetForm, 1500);
         }
       }
     } catch (err) {
       console.error('Error submitting report:', err);
-      setReportMessage({ type: 'error', text: err.message || `Failed to ${isUpdateMode ? 'update' : 'add'} lab test report` });
+      showPopupMsg(err.message || `Failed to ${isUpdateMode ? 'update' : 'add'} lab test report`, 'error');
     } finally {
       setSubmittingReport(false);
     }
@@ -507,7 +548,7 @@ const LabOrderList = () => {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.spinner}></div>
-        <p>Loading lab orders...</p>
+        <LoadingPage/>
       </div>
     );
   }
@@ -516,6 +557,14 @@ const LabOrderList = () => {
     <div className={styles.wrapper}>
       <ErrorHandler error={error} />
       <Header title="Lab Order Management" />
+
+      {/* MessagePopup — replaces old showPopup */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
 
       {/* Filters Container */}
       <div className={styles.filtersContainer}>
@@ -578,9 +627,8 @@ const LabOrderList = () => {
         </div>
       </div>
 
-      {/* ── Table + Pagination wrapper ── */}
+      {/* Table + Pagination wrapper */}
       <div className={styles.tableSection}>
-
         <div className={styles.tableContainer}>
           <table className={styles.table}>
             <thead>
@@ -634,31 +682,60 @@ const LabOrderList = () => {
                       </td>
                       <td>
                         <div className={styles.actionsCell}>
-                          <button onClick={() => handleViewOrderDetails(order)} className={styles.viewBtn} title="View Details">
+                          <button
+                            onClick={() => { cooldown.trigger(`view_${order.id}`); handleViewOrderDetails(order); }}
+                            disabled={cooldown.isDisabled(`view_${order.id}`)}
+                            className={styles.viewBtn}
+                            title="View Details"
+                          >
                             <FiEye size={16} />
                           </button>
-                          <button onClick={() => handlePrintClick(order)} className={styles.printBtn} title="Print Order">
+                          <button
+                            onClick={() => { cooldown.trigger(`print_${order.id}`); handlePrintClick(order); }}
+                            disabled={cooldown.isDisabled(`print_${order.id}`)}
+                            className={styles.printBtn}
+                            title="Print Order"
+                          >
                             <FiPrinter size={16} />
                           </button>
                           <div className={styles.actionDropdownWrapper}>
                             <button className={styles.actionBtn}>Actions</button>
                             <div className={styles.actionDropdown}>
-                              <button onClick={() => handleMakeWorkClick(order)} className={styles.dropdownItem}
-                                disabled={order.status === 5 || order.status === 2 || order.status === 3 || order.status === 6}>
+                              <button
+                                onClick={() => { cooldown.trigger(`makeWork_${order.id}`); handleMakeWorkClick(order); }}
+                                disabled={
+                                  cooldown.isDisabled(`makeWork_${order.id}`) ||
+                                  order.status === 5 || order.status === 2 ||
+                                  order.status === 3 || order.status === 6
+                                }
+                                className={styles.dropdownItem}
+                              >
                                 {order.status === 5 ? 'In Progress' : 'Make Work'}
                               </button>
                               {order.status === 2 && !hasReport && (
-                                <button onClick={() => handleAddReportClick(order)} className={styles.dropdownItem}>
+                                <button
+                                  onClick={() => { cooldown.trigger(`addReport_${order.id}`); handleAddReportClick(order); }}
+                                  disabled={cooldown.isDisabled(`addReport_${order.id}`)}
+                                  className={styles.dropdownItem}
+                                >
                                   <FiFileText size={14} /> Add Report
                                 </button>
                               )}
                               {order.status === 2 && hasReport && (
-                                <button onClick={() => handleUpdateReportClick(order)} className={styles.dropdownItem}>
+                                <button
+                                  onClick={() => { cooldown.trigger(`updReport_${order.id}`); handleUpdateReportClick(order); }}
+                                  disabled={cooldown.isDisabled(`updReport_${order.id}`)}
+                                  className={styles.dropdownItem}
+                                >
                                   <FiEdit size={14} /> Update Report
                                 </button>
                               )}
                               {(order.status === 1 || order.status === 5) && (
-                                <button onClick={() => handleMakeInvoiceClick(order)} className={styles.dropdownItem}>
+                                <button
+                                  onClick={() => { cooldown.trigger(`invoice_${order.id}`); handleMakeInvoiceClick(order); }}
+                                  disabled={cooldown.isDisabled(`invoice_${order.id}`)}
+                                  className={styles.dropdownItem}
+                                >
                                   <FiFileText size={14} /> Make Invoice
                                 </button>
                               )}
@@ -679,7 +756,7 @@ const LabOrderList = () => {
           </table>
         </div>
 
-        {/* ── Pagination Bar — pinned to bottom of tableSection ── */}
+        {/* Pagination Bar */}
         <div className={styles.paginationBar}>
           <div className={styles.paginationInfo}>
             {filteredOrders.length > 0
@@ -689,43 +766,17 @@ const LabOrderList = () => {
 
           <div className={styles.paginationControls}>
             <span className={styles.paginationLabel}>Page</span>
-
-            <button
-              className={styles.pageBtn}
-              onClick={() => handlePageChange(1)}
-              disabled={page === 1}
-              title="First page"
-            >
-              «
-            </button>
-
-            <button
-              className={styles.pageBtn}
-              onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
-              title="Previous page"
-            >
-              ‹
-            </button>
-
+            <button className={styles.pageBtn} onClick={() => handlePageChange(1)} disabled={page === 1} title="First page">«</button>
+            <button className={styles.pageBtn} onClick={() => handlePageChange(page - 1)} disabled={page === 1} title="Previous page">‹</button>
             <span className={styles.pageIndicator}>{page}</span>
-
-            <button
-              className={styles.pageBtn}
-              onClick={() => handlePageChange(page + 1)}
-              disabled={filteredOrders.length < pageSize}
-              title="Next page"
-            >
-              ›
-            </button>
+            <button className={styles.pageBtn} onClick={() => handlePageChange(page + 1)} disabled={filteredOrders.length < pageSize} title="Next page">›</button>
           </div>
 
           <div className={styles.pageSizeInfo}>
             Page Size: <strong>{pageSize}</strong>
           </div>
         </div>
-
-      </div>{/* end tableSection */}
+      </div>
 
       {/* Modals */}
       {isOrderDetailsOpen && selectedOrder && (
@@ -736,6 +787,7 @@ const LabOrderList = () => {
           statusOptions={statusOptions}
           onClose={() => { setIsOrderDetailsOpen(false); setSelectedOrder(null); setSelectedOrderItems([]); }}
           onUpdate={() => { setIsOrderDetailsOpen(false); handleUpdateOrder(selectedOrder); }}
+          cooldown={cooldown}
         />
       )}
 
@@ -746,6 +798,8 @@ const LabOrderList = () => {
           priorityOptions={priorityOptions.filter(p => p.id !== 0)}
           onClose={() => { setIsUpdateOrderOpen(false); setSelectedOrder(null); }}
           onSubmit={handleUpdateOrderSubmit}
+          cooldown={cooldown}
+          showPopupMsg={showPopupMsg}
         />
       )}
 
@@ -754,6 +808,7 @@ const LabOrderList = () => {
           order={selectedOrder}
           onClose={() => { setIsConfirmWorkOpen(false); setSelectedOrder(null); }}
           onConfirm={handleConfirmMakeWork}
+          cooldown={cooldown}
         />
       )}
 
@@ -762,6 +817,8 @@ const LabOrderList = () => {
           order={selectedOrder}
           onClose={() => { setIsMakeInvoiceOpen(false); setSelectedOrder(null); }}
           onSubmit={handleGenerateInvoice}
+          cooldown={cooldown}
+          showPopupMsg={showPopupMsg}
         />
       )}
 
@@ -794,10 +851,16 @@ const LabOrderList = () => {
                   </div>
                 </div>
                 <div className={styles.reportFormGroup}>
-                  <label className={styles.reportFormLabel}>Verified By <span className={styles.reportRequired}>*</span></label>
-                  <select value={reportForm.verifiedBy}
+                  <label className={styles.reportFormLabel}>
+                    Verified By <span className={styles.reportRequired}>*</span>
+                  </label>
+                  <select
+                    value={reportForm.verifiedBy}
                     onChange={(e) => setReportForm({ ...reportForm, verifiedBy: Number(e.target.value) })}
-                    className={styles.reportFormSelect} required disabled={submittingReport}>
+                    className={styles.reportFormSelect}
+                    required
+                    disabled={submittingReport}
+                  >
                     <option value={0}>Select Doctor</option>
                     {doctors.map(doctor => (
                       <option key={doctor.id} value={doctor.id}>{doctor.name} ({doctor.employeeCode})</option>
@@ -805,40 +868,69 @@ const LabOrderList = () => {
                   </select>
                 </div>
                 <div className={styles.reportFormGroup}>
-                  <label className={styles.reportFormLabel}>Verified Date & Time <span className={styles.reportRequired}>*</span></label>
-                  <input type="datetime-local" value={reportForm.verifiedDateTime}
+                  <label className={styles.reportFormLabel}>
+                    Verified Date & Time <span className={styles.reportRequired}>*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={reportForm.verifiedDateTime}
                     onChange={(e) => setReportForm({ ...reportForm, verifiedDateTime: e.target.value })}
-                    className={styles.reportFormInput} required disabled={submittingReport} />
+                    className={styles.reportFormInput}
+                    required
+                    disabled={submittingReport}
+                  />
                 </div>
                 {isUpdateMode && (
                   <div className={styles.reportFormGroup}>
                     <label className={styles.reportFormLabel}>Status</label>
-                    <select value={reportForm.status}
+                    <select
+                      value={reportForm.status}
                       onChange={(e) => setReportForm({ ...reportForm, status: Number(e.target.value) })}
-                      className={styles.reportFormSelect} disabled={submittingReport}>
+                      className={styles.reportFormSelect}
+                      disabled={submittingReport}
+                    >
                       {reportStatusOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
                     </select>
                   </div>
                 )}
                 <div className={styles.reportFormGroup}>
                   <label className={styles.reportFormLabel}>Remarks</label>
-                  <textarea value={reportForm.remarks}
+                  <textarea
+                    value={reportForm.remarks}
                     onChange={(e) => setReportForm({ ...reportForm, remarks: e.target.value })}
-                    className={styles.reportFormTextarea} rows={4}
-                    placeholder="Enter any additional remarks..." disabled={submittingReport} />
+                    className={styles.reportFormTextarea}
+                    rows={4}
+                    placeholder="Enter any additional remarks..."
+                    disabled={submittingReport}
+                  />
                 </div>
               </div>
               <div className={styles.reportModalFooter}>
-                <button type="button" onClick={handleCloseReportModal} className={styles.reportCancelBtn} disabled={submittingReport}>Cancel</button>
-                <button type="submit" className={styles.reportSubmitBtn} disabled={submittingReport}>
-                  {submittingReport ? (isUpdateMode ? 'Updating...' : 'Submitting...') : (isUpdateMode ? 'Update Report' : 'Submit Report')}
+                <button
+                  type="button"
+                  onClick={handleCloseReportModal}
+                  className={styles.reportCancelBtn}
+                  disabled={submittingReport}
+                >
+                  Cancel
+                </button>
+                {/* Submit button: disabled until required fields filled */}
+                <button
+                  type="submit"
+                  className={styles.reportSubmitBtn}
+                  disabled={submittingReport || !isReportFormValid || cooldown.isDisabled('submitReport')}
+                  title={!isReportFormValid ? 'Please fill all required fields' : ''}
+                >
+                  {submittingReport
+                    ? (isUpdateMode ? 'Updating...' : 'Submitting...')
+                    : (isUpdateMode ? 'Update Report' : 'Submit Report')}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-      {/* Print Modal */}
+
       {isPrintModalOpen && printOrder && (
         <LabOrderPrintModal
           order={printOrder}
@@ -849,16 +941,13 @@ const LabOrderList = () => {
     </div>
   );
 };
-// ─────────────────────────────────────────────────────────────────────────────
-const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions, onClose, onUpdate }) => {
-  const isCompleted = order.status === 2;
-  const isCancelled = order.status === 3;
 
+// ─────────────────────────────────────────────────────────────────────────────
+const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions, onClose, onUpdate, cooldown }) => {
   return (
     <div className={styles.detailModalOverlay} onClick={onClose}>
       <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
 
-        {/* ── Gradient Header ── */}
         <div className={styles.detailModalHeader}>
           <div className={styles.detailHeaderContent}>
             <div className={styles.detailHeaderTop}>
@@ -868,25 +957,21 @@ const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions
               <div>
                 <h2 className={styles.detailHeaderTitle}>{order.patientName}</h2>
               </div>
-             </div>
-              <div className={styles.clinicNameone}>
-               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-                {localStorage.getItem('clinicName') || '—'}
-             </div>
             </div>
-          
+            <div className={styles.clinicNameone}>
+              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
+              {localStorage.getItem('clinicName') || '—'}
+            </div>
+          </div>
           <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
         </div>
 
-        {/* ── Scrollable Body with Info Cards + Order Items ── */}
         <div className={styles.detailModalBody}>
           <div className={styles.detailInfoSection}>
 
             {/* Card 1 — Patient Information */}
             <div className={styles.detailInfoCard}>
-              <div className={styles.detailInfoHeader}>
-                <h3>Patient Information</h3>
-              </div>
+              <div className={styles.detailInfoHeader}><h3>Patient Information</h3></div>
               <div className={styles.detailInfoContent}>
                 <div className={styles.detailInfoRow}>
                   <span className={styles.detailInfoLabel}>Full Name</span>
@@ -913,9 +998,7 @@ const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions
 
             {/* Card 2 — Order Information */}
             <div className={styles.detailInfoCard}>
-              <div className={styles.detailInfoHeader}>
-                <h3>Order Information</h3>
-              </div>
+              <div className={styles.detailInfoHeader}><h3>Order Information</h3></div>
               <div className={styles.detailInfoContent}>
                 <div className={styles.detailInfoRow}>
                   <span className={styles.detailInfoLabel}>Unique Seq.</span>
@@ -942,9 +1025,7 @@ const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions
 
             {/* Card 3 — Clinical Details */}
             <div className={styles.detailInfoCard}>
-              <div className={styles.detailInfoHeader}>
-                <h3>Clinical Details</h3>
-              </div>
+              <div className={styles.detailInfoHeader}><h3>Clinical Details</h3></div>
               <div className={styles.detailInfoContent}>
                 <div className={styles.detailInfoRow}>
                   <span className={styles.detailInfoLabel}>Doctor</span>
@@ -969,11 +1050,9 @@ const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions
               </div>
             </div>
 
-            {/* Card 4 — Order Items (full width) */}
+            {/* Card 4 — Order Items */}
             <div className={`${styles.detailInfoCard} ${styles.detailInfoCardFullWidth}`}>
-              <div className={styles.detailInfoHeader}>
-                <h3>Order Items</h3>
-              </div>
+              <div className={styles.detailInfoHeader}><h3>Order Items</h3></div>
               {loadingOrderItems ? (
                 <div className={styles.orderItemsLoading}>
                   <div className={styles.orderItemsSpinner}></div>
@@ -1020,24 +1099,24 @@ const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions
           </div>
         </div>
 
-        {/* ── Footer ── */}
         <div className={styles.detailModalFooter}>
-          <button onClick={onClose} className={styles.cancelBtn}>
-            Close
-          </button>
-          <button onClick={onUpdate} className={styles.updateBtn}>
+          <button onClick={onClose} className={styles.cancelBtn}>Close</button>
+          <button
+            onClick={() => { cooldown.trigger('detailUpdate'); onUpdate(); }}
+            disabled={cooldown.isDisabled('detailUpdate')}
+            className={styles.updateBtn}
+          >
             <FiEdit size={16} style={{ marginRight: 6 }} />
             Update Order
           </button>
         </div>
-
       </div>
     </div>
   );
 };
 
-// Update Order Modal Component
-const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSubmit }) => {
+// ─── Update Order Modal ────────────────────────────────────────────────────────
+const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSubmit, cooldown, showPopupMsg }) => {
   const [formData, setFormData] = useState({
     status: order.status,
     priority: order.priority,
@@ -1046,8 +1125,15 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
     testApprovedBy: order.doctorId
   });
 
-  const handleSubmit = async(e) => {
+  // Required: status and priority must be valid (non-zero for priority)
+  const isFormValid = formData.status !== '' && formData.priority !== '';
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isFormValid) {
+      showPopupMsg('Please fill all required fields: Status and Priority.', 'warning');
+      return;
+    }
     const clinicId = await getStoredClinicId();
     const branchId = await getStoredBranchId();
     onSubmit({
@@ -1063,13 +1149,11 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h2>Update Order</h2>
-
           <div className={styles.headerRight}>
             <div className={styles.clinicNameone}>
-              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
+              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
               {localStorage.getItem('clinicName') || '—'}
             </div>
-
             <button onClick={onClose} className={styles.closeBtn}>×</button>
           </div>
         </div>
@@ -1078,9 +1162,12 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
             <div className={styles.formGrid}>
               <div className={styles.formGroup}>
                 <label>Status <span className={styles.required}>*</span></label>
-                <select value={formData.status}
-                  onChange={(e) => setFormData({...formData, status: Number(e.target.value)})}
-                  className={styles.formInput} required>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: Number(e.target.value) })}
+                  className={styles.formInput}
+                  required
+                >
                   {statusOptions.filter(s => s.id !== -1).map(opt => (
                     <option key={opt.id} value={opt.id}>{opt.label}</option>
                   ))}
@@ -1088,9 +1175,12 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
               </div>
               <div className={styles.formGroup}>
                 <label>Priority <span className={styles.required}>*</span></label>
-                <select value={formData.priority}
-                  onChange={(e) => setFormData({...formData, priority: Number(e.target.value)})}
-                  className={styles.formInput} required>
+                <select
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: Number(e.target.value) })}
+                  className={styles.formInput}
+                  required
+                >
                   {priorityOptions.map(opt => (
                     <option key={opt.id} value={opt.id}>{opt.label}</option>
                   ))}
@@ -1098,15 +1188,26 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
               </div>
               <div className={styles.formGroupFull}>
                 <label>Notes</label>
-                <textarea value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  className={styles.formTextarea} rows={4} placeholder="Enter any notes..." />
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className={styles.formTextarea}
+                  rows={4}
+                  placeholder="Enter any notes..."
+                />
               </div>
             </div>
           </div>
           <div className={styles.modalFooter}>
             <button type="button" onClick={onClose} className={styles.cancelBtn}>Cancel</button>
-            <button type="submit" className={styles.updateBtn}>Update Order</button>
+            <button
+              type="submit"
+              className={styles.updateBtn}
+              disabled={!isFormValid || cooldown.isDisabled('updateOrder')}
+              title={!isFormValid ? 'Please fill all required fields' : ''}
+            >
+              Update Order
+            </button>
           </div>
         </form>
       </div>
@@ -1114,7 +1215,8 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
   );
 };
 
-const ConfirmMakeWorkModal = ({ order, onClose, onConfirm }) => (
+// ─── Confirm Make Work Modal ───────────────────────────────────────────────────
+const ConfirmMakeWorkModal = ({ order, onClose, onConfirm, cooldown }) => (
   <div className={styles.modalOverlay} onClick={onClose}>
     <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
       <div className={styles.modalHeader}>
@@ -1136,7 +1238,11 @@ const ConfirmMakeWorkModal = ({ order, onClose, onConfirm }) => (
         </div>
       </div>
       <div className={styles.modalFooter}>
-        <button onClick={onConfirm} className={styles.confirmBtn}>
+        <button
+          onClick={() => { cooldown.trigger('makeWork'); onConfirm(); }}
+          disabled={cooldown.isDisabled('makeWork')}
+          className={styles.confirmBtn}
+        >
           <FiCheckCircle size={18} /> Yes, Create Work Items
         </button>
         <button onClick={onClose} className={styles.cancelBtn}>Cancel</button>
@@ -1145,16 +1251,23 @@ const ConfirmMakeWorkModal = ({ order, onClose, onConfirm }) => (
   </div>
 );
 
-// Make Invoice Modal Component
-const MakeInvoiceModal = ({ order, onClose, onSubmit }) => {
+// ─── Make Invoice Modal ────────────────────────────────────────────────────────
+const MakeInvoiceModal = ({ order, onClose, onSubmit, cooldown, showPopupMsg }) => {
   const getTodayDate = () => {
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   };
   const [formData, setFormData] = useState({ invoiceDate: getTodayDate(), discount: 0 });
 
-  const handleSubmit = async(e) => {
+  // Required: invoiceDate must be filled
+  const isFormValid = formData.invoiceDate !== '';
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isFormValid) {
+      showPopupMsg('Please fill all required fields: Invoice Date.', 'warning');
+      return;
+    }
     const clinicId = await getStoredClinicId();
     const branchId = await getStoredBranchId();
     onSubmit({ orderId: order.id, clinicId, branchId, invoiceDate: formData.invoiceDate, discount: Number(formData.discount) });
@@ -1164,7 +1277,7 @@ const MakeInvoiceModal = ({ order, onClose, onSubmit }) => {
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2>Generate Invoice</h2>  
+          <h2>Generate Invoice</h2>
           <button onClick={onClose} className={styles.closeBtn}>×</button>
         </div>
         <form onSubmit={handleSubmit}>
@@ -1187,21 +1300,36 @@ const MakeInvoiceModal = ({ order, onClose, onSubmit }) => {
             <div className={styles.invoiceFormGrid}>
               <div className={styles.formGroup}>
                 <label>Invoice Date <span className={styles.required}>*</span></label>
-                <input type="date" value={formData.invoiceDate}
-                  onChange={(e) => setFormData({...formData, invoiceDate: e.target.value})}
-                  className={styles.formInput} required />
+                <input
+                  type="date"
+                  value={formData.invoiceDate}
+                  onChange={(e) => setFormData({ ...formData, invoiceDate: e.target.value })}
+                  className={styles.formInput}
+                  required
+                />
               </div>
               <div className={styles.formGroup}>
                 <label>Discount</label>
-                <input type="number" min="0" step="0.01" value={formData.discount}
-                  onChange={(e) => setFormData({...formData, discount: e.target.value})}
-                  className={styles.formInput} placeholder="Enter discount amount" />
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.discount}
+                  onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
+                  className={styles.formInput}
+                  placeholder="Enter discount amount"
+                />
               </div>
             </div>
           </div>
           <div className={styles.modalFooter}>
             <button type="button" onClick={onClose} className={styles.cancelBtn}>Cancel</button>
-            <button type="submit" className={styles.confirmBtn}>
+            <button
+              type="submit"
+              className={styles.confirmBtn}
+              disabled={!isFormValid || cooldown.isDisabled('generateInvoice')}
+              title={!isFormValid ? 'Please fill all required fields' : ''}
+            >
               <FiFileText size={18} /> Generate Invoice
             </button>
           </div>

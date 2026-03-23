@@ -1,5 +1,5 @@
 // src/components/AddEmployee.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { FiX, FiUpload, FiUser, FiShield, FiCreditCard, FiClock, FiPlus, FiTrash2, FiChevronDown, FiCheck } from 'react-icons/fi';
 import {
   addEmployee,
@@ -13,16 +13,16 @@ import {
   updateEmployee,
   updateEmployeeProof,
   updateEmployeeBeneficiaryAccount,
-  getClinicList,                           // ← NEW IMPORT
+  getClinicList,
 } from '../Api/Api.js';
-import ErrorHandler from '../Hooks/ErrorHandler.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
 import styles from './AddEmployee.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 // ────────────────────────────────────────────────
 // HELPER — fetch fileAccessToken for a given clinicId
-// via getClinicList (no localStorage token needed)
 // ────────────────────────────────────────────────
 const fetchFileAccessToken = async (clinicId) => {
   const clinicList = await getClinicList({ ClinicID: clinicId });
@@ -36,86 +36,70 @@ const fetchFileAccessToken = async (clinicId) => {
 // ────────────────────────────────────────────────
 // VALIDATION — mirrors backend rules exactly
 // ────────────────────────────────────────────────
-const NAME_REGEX   = /^[A-Za-z\s\.\-']+$/;
-const MOBILE_REGEX = /^[6-9]\d{9}$/;
-const IFSC_REGEX   = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+const NAME_REGEX       = /^[A-Za-z\s\.\-']+$/;
+const MOBILE_REGEX     = /^[6-9]\d{9}$/;
+const IFSC_REGEX       = /^[A-Z]{4}0[A-Z0-9]{6}$/;
 const ACCOUNT_NO_REGEX = /^\d{9,18}$/;
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
-
-    // ── Step 1 : Employee fields ──
     case 'employeeCode':
       if (value && value.trim()) {
         if (value.trim().length > 20) return 'EmployeeCode cannot exceed 20 characters';
         if (!/^[A-Za-z0-9\-_]+$/.test(value.trim())) return 'EmployeeCode contains invalid characters';
       }
       return '';
-
     case 'firstName':
       if (!value || !value.trim()) return 'FirstName is required';
       if (value.trim().length > 50) return 'FirstName too long';
       if (!NAME_REGEX.test(value.trim())) return 'FirstName contains invalid characters';
       return '';
-
     case 'lastName':
       if (!value || !value.trim()) return 'LastName is required';
       if (value.trim().length > 50) return 'LastName too long';
       if (!NAME_REGEX.test(value.trim())) return 'LastName contains invalid characters';
       return '';
-
     case 'department':
       if (!value || !value.trim()) return 'Department is required';
       return '';
-
     case 'designation':
       if (!value || !value.trim()) return 'Designation is required';
       return '';
-
     case 'gender':
       if (!value || Number(value) < 1) return 'Gender is required';
       return '';
-
     case 'birthDate':
       if (!value) return 'BirthDate is required';
       if (isNaN(new Date(value).getTime())) return 'BirthDate must be a valid date (YYYY-MM-DD)';
       return '';
-
     case 'address':
       if (!value || !value.trim()) return 'Address is required';
       if (value.length > 1000) return 'Address too long';
       return '';
-
     case 'mobile':
       if (!value || !value.trim()) return 'Mobile is required';
       if (value.trim().length < 10 || value.trim().length > 10) return 'Mobile length should be 10';
       if (!MOBILE_REGEX.test(value.trim())) return 'Invalid mobile number';
       return '';
-
     case 'altMobile':
       if (value && value.trim()) {
         if (value.trim().length < 10 || value.trim().length > 10) return 'AltMobile length should be 10';
         if (!MOBILE_REGEX.test(value.trim())) return 'Invalid alternate mobile number';
       }
       return '';
-
     case 'email':
       if (value && value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()))
         return 'Invalid email format';
       return '';
-
     case 'qualification':
     case 'specialization':
       return value && value.length > 100 ? 'Field must not exceed 100 characters' : '';
-
     case 'universityName':
       if (value && value.trim() && value.trim().length < 3) return 'University name must be at least 3 characters';
       if (value && value.length > 100) return 'University name must not exceed 100 characters';
       return '';
-
     case 'licenseNo': case 'pfNo': case 'esiNo':
       return value && value.length > 50 ? 'Field must not exceed 50 characters' : '';
-
     case 'licenseExpiryDate':
       if (value) {
         const expiry = new Date(value);
@@ -123,7 +107,6 @@ const getLiveValidationMessage = (fieldName, value) => {
         if (expiry < today) return 'Expiry date must be in the future';
       }
       return '';
-
     case 'experienceYears':
       if (value !== '' && value !== null && value !== undefined) {
         const y = Number(value);
@@ -132,52 +115,40 @@ const getLiveValidationMessage = (fieldName, value) => {
         if (y > 50) return 'Experience cannot exceed 50 years';
       }
       return '';
-
-    // ── Step 2 : Proof fields ──
     case 'proofType':
       if (!value || Number(value) < 1) return 'ProofType is required';
       return '';
-
     case 'idNumber':
       if (!value || !value.trim()) return 'IdNumber is required';
       if (value.trim().length > 20) return 'IdNumber cannot exceed 20 characters';
       if (!/^[ A-Za-z0-9\/\-]+$/.test(value.trim())) return 'Invalid characters in IdNumber';
       return '';
-
     case 'detail':
       if (value && value.length > 500) return 'Detail too long';
       return '';
-
     case 'expiryDate':
       if (value && isNaN(new Date(value).getTime())) return 'ExpiryDate must be valid date';
       return '';
-
-    // ── Step 3 : Beneficiary fields ──
     case 'AccountHolderName':
       if (!value || !value.trim()) return 'AccountHolderName is required';
       if (value.trim().length > 100) return 'AccountHolderName too long';
       if (!/^[A-Za-z\s\.\-']+$/.test(value.trim())) return 'Invalid characters in AccountHolderName';
       return '';
-
     case 'AccountNo':
       if (!value || !value.trim()) return 'AccountNo is required';
       if (!ACCOUNT_NO_REGEX.test(value.trim())) return 'AccountNo must be 9–18 digits';
       return '';
-
     case 'BankName':
       if (!value || !value.trim()) return 'BankName is required';
       if (value.trim().length > 100) return 'BankName too long';
       return '';
-
     case 'IFSCCode':
       if (value && value.trim() && !IFSC_REGEX.test(value.trim()))
         return 'Invalid IFSC code format (e.g., SBIN0001234)';
       return '';
-
     case 'BankAddress':
       if (value && value.length > 500) return 'BankAddress too long';
       return '';
-
     default:
       return '';
   }
@@ -200,9 +171,7 @@ const filterInput = (fieldName, value) => {
     case 'idNumber':
       return value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
     case 'IFSCCode':
-  return value
-    .replace(/[^a-zA-Z0-9]/g, '')  
-    .toUpperCase();               
+      return value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
     case 'experienceYears':
       return value.replace(/[^0-9]/g, '');
     default:
@@ -219,27 +188,22 @@ const getTodayDate = () => new Date().toISOString().split('T')[0];
 // ────────────────────────────────────────────────
 // CONSTANTS
 // ────────────────────────────────────────────────
-const GENDER_OPTIONS        = [{ id:1,label:'Male'},{id:2,label:'Female'},{id:3,label:'Other'}];
-const BLOOD_GROUP_OPTIONS   = [{id:1,label:'A+'},{id:2,label:'A-'},{id:3,label:'B+'},{id:4,label:'B-'},{id:5,label:'AB+'},{id:6,label:'AB-'},{id:7,label:'O+'},{id:8,label:'O-'},{id:9,label:'Others'}];
-const MARITAL_STATUS_OPTIONS= [{id:1,label:'Single'},{id:2,label:'Married'},{id:3,label:'Widowed'},{id:4,label:'Divorced'},{id:5,label:'Separated'}];
-const ID_PROOF_OPTIONS      = [{id:1,label:'Aadhar'},{id:2,label:'Passport'},{id:3,label:'Driving Licence'},{id:4,label:'Voter ID'},{id:5,label:'PAN Card'}];
-const DESIGNATION_OPTIONS   = [{id:1,label:'Doctor'},{id:2,label:'Nurse'},{id:3,label:'Receptionist'},{id:4,label:'Pharmacist'},{id:5,label:'Lab Technician'},{id:6,label:'Billing Staff'},{id:7,label:'Manager'},{id:8,label:'Attendant'},{id:9,label:'Cleaner'},{id:10,label:'Others'}];
-const WORK_DAYS             = [{id:1,label:'Sun'},{id:2,label:'Mon'},{id:3,label:'Tue'},{id:4,label:'Wed'},{id:5,label:'Thu'},{id:6,label:'Fri'},{id:7,label:'Sat'}];
+const GENDER_OPTIONS         = [{ id: 1, label: 'Male' }, { id: 2, label: 'Female' }, { id: 3, label: 'Other' }];
+const BLOOD_GROUP_OPTIONS    = [{ id: 1, label: 'A+' }, { id: 2, label: 'A-' }, { id: 3, label: 'B+' }, { id: 4, label: 'B-' }, { id: 5, label: 'AB+' }, { id: 6, label: 'AB-' }, { id: 7, label: 'O+' }, { id: 8, label: 'O-' }, { id: 9, label: 'Others' }];
+const MARITAL_STATUS_OPTIONS = [{ id: 1, label: 'Single' }, { id: 2, label: 'Married' }, { id: 3, label: 'Widowed' }, { id: 4, label: 'Divorced' }, { id: 5, label: 'Separated' }];
+const ID_PROOF_OPTIONS       = [{ id: 1, label: 'Aadhar' }, { id: 2, label: 'Passport' }, { id: 3, label: 'Driving Licence' }, { id: 4, label: 'Voter ID' }, { id: 5, label: 'PAN Card' }];
+const DESIGNATION_OPTIONS    = [{ id: 1, label: 'Doctor' }, { id: 2, label: 'Nurse' }, { id: 3, label: 'Receptionist' }, { id: 4, label: 'Pharmacist' }, { id: 5, label: 'Lab Technician' }, { id: 6, label: 'Billing Staff' }, { id: 7, label: 'Manager' }, { id: 8, label: 'Attendant' }, { id: 9, label: 'Cleaner' }, { id: 10, label: 'Others' }];
+const WORK_DAYS              = [{ id: 1, label: 'Sun' }, { id: 2, label: 'Mon' }, { id: 3, label: 'Tue' }, { id: 4, label: 'Wed' }, { id: 5, label: 'Thu' }, { id: 6, label: 'Fri' }, { id: 7, label: 'Sat' }];
 
 const BLANK_PROOF = () => ({ proofType: 0, idNumber: '', detail: '', expiryDate: '', fileId: 0 });
 
-// ── Step 1 required fields (backend) ──
 const STEP1_FIELDS = [
-  'employeeCode','firstName','lastName','gender','birthDate','address',
-  'mobile','altMobile','email','qualification','specialization','licenseNo',
-  'licenseExpiryDate','experienceYears','universityName','pfNo','esiNo',
+  'employeeCode', 'firstName', 'lastName', 'gender', 'birthDate', 'address',
+  'mobile', 'altMobile', 'email', 'qualification', 'specialization', 'licenseNo',
+  'licenseExpiryDate', 'experienceYears', 'universityName', 'pfNo', 'esiNo',
 ];
-
-// ── Step 2 proof fields ──
-const STEP2_PROOF_FIELDS = ['proofType','idNumber','detail','expiryDate'];
-
-// ── Step 3 beneficiary fields ──
-const STEP3_FIELDS = ['AccountHolderName','AccountNo','BankName','IFSCCode','BankAddress'];
+const STEP2_PROOF_FIELDS = ['proofType', 'idNumber', 'detail', 'expiryDate'];
+const STEP3_FIELDS       = ['AccountHolderName', 'AccountNo', 'BankName', 'IFSCCode', 'BankAddress'];
 
 // ────────────────────────────────────────────────
 // SHIFT DROPDOWN COMPONENT
@@ -250,9 +214,7 @@ const ShiftDropdown = ({ shifts, selectedShifts, onToggle, disabled }) => {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setIsOpen(false);
-      }
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -310,9 +272,7 @@ const ShiftDropdown = ({ shifts, selectedShifts, onToggle, disabled }) => {
             </span>
             <span className={styles.shiftDropdownItemLabel}>Select All</span>
           </div>
-
           <div className={styles.shiftDropdownDivider} />
-
           {shifts.map(shift => {
             const isChecked = selectedShifts.includes(shift.id);
             return (
@@ -335,53 +295,63 @@ const ShiftDropdown = ({ shifts, selectedShifts, onToggle, disabled }) => {
 };
 
 // ────────────────────────────────────────────────
-const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
-  const [currentStep, setCurrentStep]              = useState(1);
-  const [createdEmployeeId, setCreatedEmployeeId]  = useState(null);
-  const [savedProofIds, setSavedProofIds]          = useState([]);
+// AddEmployee
+//
+// Double-popup contract:
+//   • This component owns its OWN MessagePopup for step feedback.
+//   • On final success (Step 4), calls onSuccess() — EmployeeList shows its popup.
+//   • onError() is called for errors the parent needs to know about.
+//   • EmployeeList must NOT call showPopup inside closeAddForm.
+// ────────────────────────────────────────────────
+const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
+  const [currentStep,        setCurrentStep]        = useState(1);
+  const [createdEmployeeId,  setCreatedEmployeeId]  = useState(null);
+  const [savedProofIds,      setSavedProofIds]      = useState([]);
   const [savedBeneficiaryId, setSavedBeneficiaryId] = useState(null);
-  const [shifts, setShifts]                        = useState([]);
-  const [shiftsLoading, setShiftsLoading]          = useState(false);
-  const [loading, setLoading]                      = useState(false);
-  const [error, setError]                          = useState(null);
-  const [stepSuccess, setStepSuccess]              = useState('');
+  const [shifts,             setShifts]             = useState([]);
+  const [shiftsLoading,      setShiftsLoading]      = useState(false);
+  const [loading,            setLoading]            = useState(false);
+  const [error,              setError]              = useState(null);
+  const [stepSuccess,        setStepSuccess]        = useState('');
 
-  // ── Submit-attempt flag (reset on step navigation) ──
+  // ── Internal popup ──
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
   const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const [formData, setFormData] = useState({
-    employeeCode:'', firstName:'', lastName:'', gender:0, birthDate:'',
-    bloodGroup:0, maritalStatus:0, address:'', mobile:'', altMobile:'',
-    email:'', idProofType:0, idNumber:'', idExpiry:'', departmentId:0,
-    designation:0, qualification:'', specialization:'', licenseNo:'',
-    licenseExpiryDate:'', experienceYears:0, universityName:'',
-    pfNo:'', esiNo:'', shiftId:0, photoFileId:0,
+    employeeCode: '', firstName: '', lastName: '', gender: 0, birthDate: '',
+    bloodGroup: 0, maritalStatus: 0, address: '', mobile: '', altMobile: '',
+    email: '', idProofType: 0, idNumber: '', idExpiry: '', departmentId: 0,
+    designation: 0, qualification: '', specialization: '', licenseNo: '',
+    licenseExpiryDate: '', experienceYears: 0, universityName: '',
+    pfNo: '', esiNo: '', shiftId: 0, photoFileId: 0,
   });
 
-  const [photo, setPhoto]                           = useState(null);
-  const [photoUrl, setPhotoUrl]                     = useState(null);
-  const [photoUploaded, setPhotoUploaded]           = useState(false);
-  const [photoUploadStatus, setPhotoUploadStatus]   = useState('');
-  const [isPhotoUploading, setIsPhotoUploading]     = useState(false);
+  const [photo,             setPhoto]             = useState(null);
+  const [photoUrl,          setPhotoUrl]          = useState(null);
+  const [photoUploaded,     setPhotoUploaded]     = useState(false);
+  const [photoUploadStatus, setPhotoUploadStatus] = useState('');
+  const [isPhotoUploading,  setIsPhotoUploading]  = useState(false);
 
-  // ── Multi-proof state ──
-  const [proofList, setProofList]                                 = useState([BLANK_PROOF()]);
-  const [proofFiles, setProofFiles]                               = useState([null]);
-  const [proofFileUrls, setProofFileUrls]                         = useState([null]);
-  const [proofFilesUploaded, setProofFilesUploaded]               = useState([false]);
-  const [proofUploadStatuses, setProofUploadStatuses]             = useState(['']);
-  const [isProofUploading, setIsProofUploading]                   = useState([false]);
-  const [proofValidationMessages, setProofValidationMessages]     = useState([{}]);
+  const [proofList,              setProofList]              = useState([BLANK_PROOF()]);
+  const [proofFiles,             setProofFiles]             = useState([null]);
+  const [proofFileUrls,          setProofFileUrls]          = useState([null]);
+  const [proofFilesUploaded,     setProofFilesUploaded]     = useState([false]);
+  const [proofUploadStatuses,    setProofUploadStatuses]    = useState(['']);
+  const [isProofUploading,       setIsProofUploading]       = useState([false]);
+  const [proofValidationMessages, setProofValidationMessages] = useState([{}]);
 
   const [beneficiaryData, setBeneficiaryData] = useState({
-    AccountHolderName:'', AccountNo:'', IFSCCode:'', BankName:'', BankAddress:'', IsDefault:0,
+    AccountHolderName: '', AccountNo: '', IFSCCode: '', BankName: '', BankAddress: '', IsDefault: 0,
   });
 
-  // ── Multi-shift state ──
-  const [selectedShifts, setSelectedShifts]       = useState([]);
-  const [selectedWorkDays, setSelectedWorkDays]   = useState([]);
-  const [validationMessages, setValidationMessages]                         = useState({});
-  const [beneficiaryValidationMessages, setBeneficiaryValidationMessages]   = useState({});
+  const [selectedShifts,   setSelectedShifts]   = useState([]);
+  const [selectedWorkDays, setSelectedWorkDays] = useState([]);
+  const [validationMessages,         setValidationMessages]         = useState({});
+  const [beneficiaryValidationMessages, setBeneficiaryValidationMessages] = useState({});
 
   useEffect(() => { if (isOpen) fetchShifts(); }, [isOpen]);
   useEffect(() => { if (!isOpen) resetForm(); }, [isOpen]);
@@ -399,42 +369,75 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
   const resetForm = () => {
     setCurrentStep(1); setCreatedEmployeeId(null);
     setSavedProofIds([]); setSavedBeneficiaryId(null);
-    setFormData({ employeeCode:'',firstName:'',lastName:'',gender:0,birthDate:'',bloodGroup:0,maritalStatus:0,address:'',mobile:'',altMobile:'',email:'',idProofType:0,idNumber:'',idExpiry:'',departmentId:0,designation:0,qualification:'',specialization:'',licenseNo:'',licenseExpiryDate:'',experienceYears:0,universityName:'',pfNo:'',esiNo:'',shiftId:0,photoFileId:0 });
+    setFormData({ employeeCode: '', firstName: '', lastName: '', gender: 0, birthDate: '', bloodGroup: 0, maritalStatus: 0, address: '', mobile: '', altMobile: '', email: '', idProofType: 0, idNumber: '', idExpiry: '', departmentId: 0, designation: 0, qualification: '', specialization: '', licenseNo: '', licenseExpiryDate: '', experienceYears: 0, universityName: '', pfNo: '', esiNo: '', shiftId: 0, photoFileId: 0 });
     setPhoto(null); setPhotoUrl(null); setPhotoUploaded(false); setPhotoUploadStatus('');
     setProofList([BLANK_PROOF()]);
     setProofFiles([null]); setProofFileUrls([null]);
     setProofFilesUploaded([false]); setProofUploadStatuses(['']);
     setIsProofUploading([false]); setProofValidationMessages([{}]);
-    setBeneficiaryData({ AccountHolderName:'',AccountNo:'',IFSCCode:'',BankName:'',BankAddress:'',IsDefault:false });
+    setBeneficiaryData({ AccountHolderName: '', AccountNo: '', IFSCCode: '', BankName: '', BankAddress: '', IsDefault: false });
     setSelectedShifts([]); setSelectedWorkDays([]);
     setError(null); setStepSuccess('');
     setValidationMessages({}); setBeneficiaryValidationMessages({});
     setSubmitAttempted(false);
+    setPopup({ visible: false, message: '', type: 'success' });
   };
+
+  // ── Step 1 isFormValid ──
+  const isStep1Valid = useMemo(() => {
+    const required = ['firstName', 'lastName', 'birthDate', 'address', 'mobile'];
+    const allFilled = required.every(f => {
+      const v = formData[f];
+      return v !== '' && v !== null && v !== undefined && String(v).trim() !== '';
+    });
+    if (!allFilled) return false;
+    if (!formData.gender || Number(formData.gender) < 1) return false;
+    const hasErrors = Object.values(validationMessages).some(m => !!m);
+    if (hasErrors) return false;
+    return true;
+  }, [formData, validationMessages]);
+
+  // ── Step 2 isFormValid ──
+  const isStep2Valid = useMemo(() => {
+    return proofList.every(proof => {
+      if (!proof.proofType || Number(proof.proofType) < 1) return false;
+      if (!proof.idNumber || !proof.idNumber.trim()) return false;
+      if (!proof.expiryDate) return false;
+      return true;
+    });
+  }, [proofList]);
+
+  // ── Step 3 isFormValid ──
+  const isStep3Valid = useMemo(() => {
+    const required = ['AccountHolderName', 'AccountNo', 'BankName'];
+    const allFilled = required.every(f => {
+      const v = beneficiaryData[f];
+      return v !== '' && v !== null && v !== undefined && String(v).trim() !== '';
+    });
+    if (!allFilled) return false;
+    const hasErrors = Object.values(beneficiaryValidationMessages).some(m => !!m);
+    if (hasErrors) return false;
+    return true;
+  }, [beneficiaryData, beneficiaryValidationMessages]);
 
   // ── Photo ──
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
     if (!file) { setPhotoUploadStatus('No file selected.'); return; }
-    if (!['image/jpeg','image/jpg','image/png'].includes(file.type)) { setPhotoUploadStatus('Please upload JPG, JPEG, or PNG.'); return; }
-    if (file.size > 4*1024*1024) { setPhotoUploadStatus('File size exceeds 4MB limit.'); return; }
+    if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) { setPhotoUploadStatus('Please upload JPG, JPEG, or PNG.'); return; }
+    if (file.size > 4 * 1024 * 1024) { setPhotoUploadStatus('File size exceeds 4MB limit.'); return; }
     setPhoto(file); setPhotoUrl(URL.createObjectURL(file));
     setPhotoUploadStatus('File selected. Click "Upload Photo" to submit.'); setPhotoUploaded(false);
-    setFormData(prev => ({ ...prev, photoFileId:0 }));
+    setFormData(prev => ({ ...prev, photoFileId: 0 }));
   };
 
-  // ── MODIFIED: fetch fileAccessToken via getClinicList before uploading photo ──
   const handlePhotoUploadSubmit = async () => {
     if (!photo) { setPhotoUploadStatus('Please select a photo first.'); return; }
     setIsPhotoUploading(true); setPhotoUploadStatus('Uploading photo...');
     try {
       const clinicId = await getStoredClinicId();
-
-      // Fetch the fileAccessToken for this clinic dynamically
       const fileAccessToken = await fetchFileAccessToken(clinicId);
-
       const res = await uploadPhoto(clinicId, photo, fileAccessToken);
-
       setFormData(prev => ({ ...prev, photoFileId: res.fileId }));
       setPhotoUploadStatus('Photo uploaded successfully!'); setPhotoUploaded(true);
     } catch (err) { setPhotoUploaded(false); setPhotoUploadStatus(`Failed: ${err.message}`); }
@@ -443,7 +446,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
 
   const handleRemovePhoto = () => {
     setPhoto(null); setPhotoUrl(null); setPhotoUploaded(false); setPhotoUploadStatus('');
-    setFormData(prev => ({ ...prev, photoFileId:0 }));
+    setFormData(prev => ({ ...prev, photoFileId: 0 }));
   };
 
   // ── Multi-Proof Helpers ──
@@ -471,9 +474,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
   const handleProofFileUpload = (index, e) => {
     const file = e.target.files[0];
     if (!file) { updateProofUploadStatus(index, 'No file selected.'); return; }
-    const validTypes = ['image/jpeg','image/jpg','image/png','application/pdf'];
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
     if (!validTypes.includes(file.type)) { updateProofUploadStatus(index, 'Please upload JPG, JPEG, PNG, or PDF.'); return; }
-    if (file.size > 5*1024*1024) { updateProofUploadStatus(index, 'File size exceeds 5MB limit.'); return; }
+    if (file.size > 5 * 1024 * 1024) { updateProofUploadStatus(index, 'File size exceeds 5MB limit.'); return; }
     setProofFiles(prev => prev.map((f, i) => i === index ? file : f));
     setProofFileUrls(prev => prev.map((u, i) => i === index ? (file.type.startsWith('image/') ? URL.createObjectURL(file) : null) : u));
     updateProofUploadStatus(index, 'File selected. Click "Upload ID Proof" to submit.');
@@ -481,7 +484,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     setProofList(prev => prev.map((p, i) => i === index ? { ...p, fileId: 0 } : p));
   };
 
-  // ── MODIFIED: fetch fileAccessToken via getClinicList before uploading ID proof ──
   const handleProofFileUploadSubmit = async (index) => {
     const file = proofFiles[index];
     if (!file) { updateProofUploadStatus(index, 'Please select a file first.'); return; }
@@ -489,11 +491,8 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     updateProofUploadStatus(index, 'Uploading ID proof...');
     try {
       const clinicId = await getStoredClinicId();
-
       const fileAccessToken = await fetchFileAccessToken(clinicId);
-
       const res = await uploadIDProof(clinicId, file, fileAccessToken);
-
       setProofList(prev => prev.map((p, i) => i === index ? { ...p, fileId: res.fileId } : p));
       updateProofUploadStatus(index, 'ID proof uploaded successfully!');
       setProofFilesUploaded(prev => prev.map((v, i) => i === index ? true : v));
@@ -545,7 +544,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     }
   };
 
-  // ── Multi-shift toggle ──
   const handleShiftToggle = (shiftId) => {
     setSelectedShifts(prev =>
       prev.includes(shiftId) ? prev.filter(id => id !== shiftId) : [...prev, shiftId]
@@ -553,12 +551,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
   };
 
   const handleWorkDayToggle = (dayId) => {
-    setSelectedWorkDays(prev => prev.includes(dayId) ? prev.filter(id => id !== dayId) : [...prev, dayId]);
+    setSelectedWorkDays(prev =>
+      prev.includes(dayId) ? prev.filter(id => id !== dayId) : [...prev, dayId]
+    );
   };
 
-  // ────────────────────────────────────────────────
-  // VALIDATE-ALL HELPERS (called on submit attempt)
-  // ────────────────────────────────────────────────
+  // ── Validate-all helpers ──
   const validateAllStep1 = () => {
     const errors = {};
     STEP1_FIELDS.forEach(field => {
@@ -566,7 +564,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
       const msg = getLiveValidationMessage(field, val);
       if (msg) errors[field] = msg;
     });
-    // gender is a number — validate separately
     const genderMsg = getLiveValidationMessage('gender', formData.gender);
     if (genderMsg) errors.gender = genderMsg;
     return errors;
@@ -594,18 +591,28 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     return errors;
   };
 
-  const hasStep1Errors  = (msgs) => Object.values(msgs).some(m => m);
-  const hasStep2Errors  = (msgs) => msgs.some(m => Object.values(m).some(v => v));
-  const hasStep3Errors  = (msgs) => Object.values(msgs).some(m => m);
+  const hasStep1Errors = (msgs) => Object.values(msgs).some(m => m);
+  const hasStep2Errors = (msgs) => msgs.some(m => Object.values(m).some(v => v));
+  const hasStep3Errors = (msgs) => Object.values(msgs).some(m => m);
 
   // ── Step Submissions ──
   const handleStep1Submit = async (e) => {
     e.preventDefault();
     setSubmitAttempted(true);
 
+    if (!isStep1Valid) {
+      const errors = validateAllStep1();
+      setValidationMessages(errors);
+      showPopup('Please fill all required fields before submitting.', 'warning');
+      return;
+    }
+
     const errors = validateAllStep1();
     setValidationMessages(errors);
-    if (hasStep1Errors(errors)) return;
+    if (hasStep1Errors(errors)) {
+      showPopup('Please fill all required fields before submitting.', 'warning');
+      return;
+    }
 
     setLoading(true); setError(null); setStepSuccess('');
     try {
@@ -635,19 +642,37 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
         setCreatedEmployeeId(result.employeeId);
       }
 
-      setStepSuccess('Employee information saved successfully!');
-      setTimeout(() => { setStepSuccess(''); setSubmitAttempted(false); setCurrentStep(2); }, 1000);
-    } catch (err) { setError(err); }
-    finally { setLoading(false); }
+      showPopup('Employee information saved successfully!', 'success');
+      setTimeout(() => {
+        setStepSuccess('');
+        setSubmitAttempted(false);
+        setCurrentStep(2);
+      }, 1000);
+    } catch (err) {
+      setError(err);
+      showPopup(err?.message || 'Failed to save employee information.', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleStep2Submit = async (e) => {
     e.preventDefault();
     setSubmitAttempted(true);
 
+    if (!isStep2Valid) {
+      const proofErrors = validateAllStep2();
+      setProofValidationMessages(proofErrors);
+      showPopup('Please fill all required fields before submitting.', 'warning');
+      return;
+    }
+
     const proofErrors = validateAllStep2();
     setProofValidationMessages(proofErrors);
-    if (hasStep2Errors(proofErrors)) return;
+    if (hasStep2Errors(proofErrors)) {
+      showPopup('Please fill all required fields before submitting.', 'warning');
+      return;
+    }
 
     setLoading(true); setError(null); setStepSuccess('');
     try {
@@ -665,7 +690,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
           expiryDate: proof.expiryDate,
           fileId: Number(proof.fileId),
         };
-
         if (updatedSavedIds[i]) {
           await updateEmployeeProof({ ...payload, proofId: updatedSavedIds[i] });
         } else {
@@ -675,19 +699,37 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
       }
 
       setSavedProofIds(updatedSavedIds);
-      setStepSuccess(`${proofList.length} ID proof(s) saved successfully!`);
-      setTimeout(() => { setStepSuccess(''); setSubmitAttempted(false); setCurrentStep(3); }, 1000);
-    } catch (err) { setError(err); }
-    finally { setLoading(false); }
+      showPopup(`${proofList.length} ID proof(s) saved successfully!`, 'success');
+      setTimeout(() => {
+        setStepSuccess('');
+        setSubmitAttempted(false);
+        setCurrentStep(3);
+      }, 1000);
+    } catch (err) {
+      setError(err);
+      showPopup(err?.message || 'Failed to save ID proof.', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleStep3Submit = async (e) => {
     e.preventDefault();
     setSubmitAttempted(true);
 
+    if (!isStep3Valid) {
+      const errors = validateAllStep3();
+      setBeneficiaryValidationMessages(errors);
+      showPopup('Please fill all required fields before submitting.', 'warning');
+      return;
+    }
+
     const errors = validateAllStep3();
     setBeneficiaryValidationMessages(errors);
-    if (hasStep3Errors(errors)) return;
+    if (hasStep3Errors(errors)) {
+      showPopup('Please fill all required fields before submitting.', 'warning');
+      return;
+    }
 
     setLoading(true); setError(null); setStepSuccess('');
     try {
@@ -708,10 +750,18 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
         if (result?.beneficiaryId) setSavedBeneficiaryId(result.beneficiaryId);
       }
 
-      setStepSuccess('Bank account saved successfully!');
-      setTimeout(() => { setStepSuccess(''); setSubmitAttempted(false); setCurrentStep(4); }, 1000);
-    } catch (err) { setError(err); }
-    finally { setLoading(false); }
+      showPopup('Bank account saved successfully!', 'success');
+      setTimeout(() => {
+        setStepSuccess('');
+        setSubmitAttempted(false);
+        setCurrentStep(4);
+      }, 1000);
+    } catch (err) {
+      setError(err);
+      showPopup(err?.message || 'Failed to save bank account.', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleStep4Submit = async (e) => {
@@ -725,10 +775,18 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
       for (const dayId of selectedWorkDays) {
         await addWorkDays({ ClinicID: clinicId, EmployeeID: createdEmployeeId, WorkDay: dayId });
       }
-      setStepSuccess('Shift & workdays assigned successfully!');
-      setTimeout(() => { onSuccess?.(); onClose(); }, 1500);
-    } catch (err) { setError(err); }
-    finally { setLoading(false); }
+      showPopup('Shift & workdays assigned successfully!', 'success');
+      setTimeout(() => {
+        // onSuccess triggers EmployeeList's showPopup — no popup here after this
+        onSuccess?.();
+        onClose();
+      }, 1000);
+    } catch (err) {
+      setError(err);
+      showPopup(err?.message || 'Failed to assign shift & workdays.', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePrevious = () => {
@@ -738,6 +796,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
       setSubmitAttempted(false);
     }
   };
+
   const handleSkipStep = () => {
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
@@ -748,16 +807,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
 
   if (!isOpen) return null;
 
-  // ── Inline validation message component ──
   const ValidationMsg = ({ field, msgs }) =>
     msgs[field] ? <span className={styles.validationMsg}>{msgs[field]}</span> : null;
 
-  // ── Derived disabled flags per step ──
-  const step1SubmitDisabled = submitAttempted && hasStep1Errors(validationMessages);
-  const step2SubmitDisabled = submitAttempted && hasStep2Errors(proofValidationMessages);
-  const step3SubmitDisabled = submitAttempted && hasStep3Errors(beneficiaryValidationMessages);
-
-  // ── Step Configs ──
   const STEPS = [
     { label: 'Basic Info',       icon: <FiUser size={14} /> },
     { label: 'ID Proof',         icon: <FiShield size={14} /> },
@@ -765,8 +817,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
     { label: 'Shift & Workdays', icon: <FiClock size={14} /> },
   ];
 
-  // ── Footer ──
-  const renderFooter = (submitLabel, isFirst = false, isLast = false, submitDisabled = false) => (
+  const renderFooter = (submitLabel, isFirst = false, isLast = false, isFormValidFlag = true) => (
     <div className={styles.footer}>
       {!isFirst && (
         <button type="button" onClick={handlePrevious} className={styles.btnSecondary} disabled={loading}>
@@ -783,7 +834,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
           {isLast ? 'Skip & Finish' : 'Skip'}
         </button>
       )}
-      <button type="submit" className={styles.btnSubmit} disabled={loading || submitDisabled}>
+      <button
+        type="submit"
+        className={`${styles.btnSubmit} ${!isFormValidFlag ? styles.btnSubmitDisabled || '' : ''}`}
+        disabled={loading}
+        title={!isFormValidFlag ? 'Please fill all required fields' : ''}
+      >
         {loading ? 'Saving...' : submitLabel}
       </button>
     </div>
@@ -793,6 +849,15 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
 
   return (
     <div className={styles.overlay}>
+
+      {/* Own MessagePopup — floats above the modal */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
+
       <div className={styles.modal}>
 
         {/* ── Header ── */}
@@ -801,26 +866,25 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
             <h2>Add New Employee</h2>
           </div>
           <div className={styles.clinicNameone}>
-                <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
-                {localStorage.getItem("clinicName") || "—"}
-              </div>
+            <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
+            {localStorage.getItem("clinicName") || "—"}
+          </div>
           <button onClick={handleClose} className={styles.closeBtn}><FiX size={22} /></button>
         </div>
 
         {/* ── Step Indicator ── */}
         <div className={styles.stepBar}>
           {STEPS.map((s, i) => (
-            <div key={i} className={`${styles.stepItem} ${currentStep === i+1 ? styles.stepActive : ''} ${currentStep > i+1 ? styles.stepDone : ''}`}>
+            <div key={i} className={`${styles.stepItem} ${currentStep === i + 1 ? styles.stepActive : ''} ${currentStep > i + 1 ? styles.stepDone : ''}`}>
               <div className={styles.stepCircle}>
-                {currentStep > i+1 ? '✓' : i+1}
+                {currentStep > i + 1 ? '✓' : i + 1}
               </div>
               <span className={styles.stepLabel}>{s.label}</span>
-              {i < STEPS.length - 1 && <div className={`${styles.stepConnector} ${currentStep > i+1 ? styles.stepConnectorDone : ''}`} />}
+              {i < STEPS.length - 1 && <div className={`${styles.stepConnector} ${currentStep > i + 1 ? styles.stepConnectorDone : ''}`} />}
             </div>
           ))}
         </div>
 
-        <ErrorHandler error={error} />
         {stepSuccess && <div className={styles.successBanner}>{stepSuccess}</div>}
 
         {/* ────────── STEP 1 ────────── */}
@@ -830,23 +894,23 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
 
               {/* Photo Upload */}
               <div className={styles.formSection}>
-                <div className={styles.formSectionHeader}><h3><FiUpload size={15}/> Photo Upload</h3></div>
+                <div className={styles.formSectionHeader}><h3><FiUpload size={15} /> Photo Upload</h3></div>
                 <div className={styles.photoUploadContainer}>
                   <div className={styles.photoPreviewSection}>
                     {photoUrl ? (
                       <div className={styles.photoPreview}>
                         <img src={photoUrl} alt="Preview" />
-                        <button type="button" onClick={handleRemovePhoto} className={styles.removePhotoBtn}><FiX size={14}/></button>
+                        <button type="button" onClick={handleRemovePhoto} className={styles.removePhotoBtn}><FiX size={14} /></button>
                       </div>
                     ) : (
                       <div className={styles.photoPlaceholder}>
-                        <FiUpload size={36}/>
+                        <FiUpload size={36} />
                         <p>No photo selected</p>
                       </div>
                     )}
                   </div>
                   <div className={styles.photoUploadControls}>
-                    <input type="file" id="photoInput" accept="image/jpeg,image/jpg,image/png" onChange={handlePhotoUpload} style={{display:'none'}}/>
+                    <input type="file" id="photoInput" accept="image/jpeg,image/jpg,image/png" onChange={handlePhotoUpload} style={{ display: 'none' }} />
                     <label htmlFor="photoInput" className={styles.btnSelectFile}>Select Photo</label>
                     {photo && !photoUploaded && (
                       <button type="button" onClick={handlePhotoUploadSubmit} disabled={isPhotoUploading} className={styles.btnUploadFile}>
@@ -863,62 +927,55 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
 
               {/* Basic Information */}
               <div className={styles.formSection}>
-                <div className={styles.formSectionHeader}><h3><FiUser size={15}/> Basic Information</h3></div>
+                <div className={styles.formSectionHeader}><h3><FiUser size={15} /> Basic Information</h3></div>
                 <div className={styles.formGrid}>
 
-                  {/* EmployeeCode — optional in backend */}
                   <div className={styles.formGroup}>
                     <label>Employee Code</label>
-                    <input name="employeeCode" value={formData.employeeCode} onChange={handleInputChange} placeholder="e.g. EMP001" disabled={loading}/>
-                    <ValidationMsg field="employeeCode" msgs={validationMessages}/>
+                    <input name="employeeCode" value={formData.employeeCode} onChange={handleInputChange} placeholder="e.g. EMP001" disabled={loading} />
+                    <ValidationMsg field="employeeCode" msgs={validationMessages} />
                   </div>
 
-                  {/* FirstName — required */}
                   <div className={styles.formGroup}>
                     <label>First Name <span className={styles.required}>*</span></label>
-                    <input required name="firstName" value={formData.firstName} onChange={handleInputChange} placeholder="Enter first name" disabled={loading}/>
-                    <ValidationMsg field="firstName" msgs={validationMessages}/>
+                    <input required name="firstName" value={formData.firstName} onChange={handleInputChange} placeholder="Enter first name" disabled={loading} />
+                    <ValidationMsg field="firstName" msgs={validationMessages} />
                   </div>
 
-                  {/* LastName — optional in backend */}
                   <div className={styles.formGroup}>
                     <label>Last Name <span className={styles.required}>*</span></label>
-                    <input required name="lastName" value={formData.lastName} onChange={handleInputChange} placeholder="Enter last name" disabled={loading}/>
-                    <ValidationMsg field="lastName" msgs={validationMessages}/>
+                    <input required name="lastName" value={formData.lastName} onChange={handleInputChange} placeholder="Enter last name" disabled={loading} />
+                    <ValidationMsg field="lastName" msgs={validationMessages} />
                   </div>
 
-                  {/* Gender — required */}
                   <div className={styles.formGroup}>
                     <label>Gender <span className={styles.required}>*</span></label>
                     <select required name="gender" value={formData.gender} onChange={handleInputChange} disabled={loading}>
-                      <option value={0}>Select Gender</option>
-                      {GENDER_OPTIONS.map(g=><option key={g.id} value={g.id}>{g.label}</option>)}
+                      <option value="">Select Gender</option>
+                      {GENDER_OPTIONS.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
                     </select>
-                    <ValidationMsg field="gender" msgs={validationMessages}/>
+                    <ValidationMsg field="gender" msgs={validationMessages} />
                   </div>
 
-                  {/* BirthDate — required */}
                   <div className={styles.formGroup}>
                     <label>Birth Date <span className={styles.required}>*</span></label>
-                    <input required type="date" name="birthDate" value={formData.birthDate} onChange={handleInputChange} max={getMaxBirthDate()} disabled={loading}/>
-                    <ValidationMsg field="birthDate" msgs={validationMessages}/>
+                    <input required type="date" name="birthDate" value={formData.birthDate} onChange={handleInputChange} max={getMaxBirthDate()} disabled={loading} />
+                    <ValidationMsg field="birthDate" msgs={validationMessages} />
                   </div>
 
-                  {/* BloodGroup — optional */}
                   <div className={styles.formGroup}>
                     <label>Blood Group</label>
                     <select name="bloodGroup" value={formData.bloodGroup} onChange={handleInputChange} disabled={loading}>
                       <option value={0}>Select Blood Group</option>
-                      {BLOOD_GROUP_OPTIONS.map(bg=><option key={bg.id} value={bg.id}>{bg.label}</option>)}
+                      {BLOOD_GROUP_OPTIONS.map(bg => <option key={bg.id} value={bg.id}>{bg.label}</option>)}
                     </select>
                   </div>
 
-                  {/* MaritalStatus — optional */}
                   <div className={styles.formGroup}>
                     <label>Marital Status</label>
                     <select name="maritalStatus" value={formData.maritalStatus} onChange={handleInputChange} disabled={loading}>
                       <option value={0}>Select Status</option>
-                      {MARITAL_STATUS_OPTIONS.map(ms=><option key={ms.id} value={ms.id}>{ms.label}</option>)}
+                      {MARITAL_STATUS_OPTIONS.map(ms => <option key={ms.id} value={ms.id}>{ms.label}</option>)}
                     </select>
                   </div>
 
@@ -930,32 +987,28 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 <div className={styles.formSectionHeader}><h3>📞 Contact Information</h3></div>
                 <div className={styles.formGrid}>
 
-                  {/* Address — required */}
                   <div className={`${styles.formGroup} ${styles.colSpan2}`}>
                     <label>Address <span className={styles.required}>*</span></label>
-                    <textarea required name="address" rows={2} value={formData.address} onChange={handleInputChange} placeholder="Enter address" disabled={loading}/>
-                    <ValidationMsg field="address" msgs={validationMessages}/>
+                    <textarea required name="address" rows={2} value={formData.address} onChange={handleInputChange} placeholder="Enter address" disabled={loading} />
+                    <ValidationMsg field="address" msgs={validationMessages} />
                   </div>
 
-                  {/* Mobile — required */}
                   <div className={styles.formGroup}>
                     <label>Mobile <span className={styles.required}>*</span></label>
-                    <input required name="mobile" value={formData.mobile} onChange={handleInputChange} maxLength="10" placeholder="10-digit number" disabled={loading}/>
-                    <ValidationMsg field="mobile" msgs={validationMessages}/>
+                    <input required name="mobile" value={formData.mobile} onChange={handleInputChange} maxLength="10" placeholder="10-digit number" disabled={loading} />
+                    <ValidationMsg field="mobile" msgs={validationMessages} />
                   </div>
 
-                  {/* AltMobile — optional */}
                   <div className={styles.formGroup}>
                     <label>Alternate Mobile <span className={styles.required}>*</span></label>
-                    <input required name="altMobile" value={formData.altMobile} onChange={handleInputChange} maxLength="10" placeholder="10-digit number" disabled={loading}/>
-                    <ValidationMsg field="altMobile" msgs={validationMessages}/>
+                    <input required name="altMobile" value={formData.altMobile} onChange={handleInputChange} maxLength="10" placeholder="10-digit number" disabled={loading} />
+                    <ValidationMsg field="altMobile" msgs={validationMessages} />
                   </div>
 
-                  {/* Email — optional */}
                   <div className={`${styles.formGroup} ${styles.colSpan2}`}>
                     <label>Email <span className={styles.required}>*</span></label>
-                    <input required type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Enter email address" disabled={loading}/>
-                    <ValidationMsg field="email" msgs={validationMessages}/>
+                    <input required type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Enter email address" disabled={loading} />
+                    <ValidationMsg field="email" msgs={validationMessages} />
                   </div>
 
                 </div>
@@ -966,79 +1019,77 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 <div className={styles.formSectionHeader}><h3>🏥 Professional Information</h3></div>
                 <div className={styles.formGrid}>
 
-                  {/* DepartmentID — optional in backend */}
                   <div className={styles.formGroup}>
                     <label>Department <span className={styles.required}>*</span></label>
                     <select name="departmentId" value={formData.departmentId} onChange={handleInputChange} disabled={loading} required>
-                      <ValidationMsg field="department" msgs={validationMessages}/>
+                      <ValidationMsg field="department" msgs={validationMessages} />
                       <option value="">Select Department</option>
-                      {departments.map(d=><option key={d.id} value={d.id}>{d.name}</option>)}
+                      {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                     </select>
                   </div>
 
-                  {/* Designation — optional in backend */}
                   <div className={styles.formGroup}>
                     <label>Designation <span className={styles.required}>*</span></label>
-                    <select required name="designation" value={formData.designation} onChange={handleInputChange} disabled={loading} >
-                      <ValidationMsg field="designation" msgs={validationMessages}/>
+                    <select required name="designation" value={formData.designation} onChange={handleInputChange} disabled={loading}>
+                      <ValidationMsg field="designation" msgs={validationMessages} />
                       <option value="">Select Designation</option>
-                      {DESIGNATION_OPTIONS.map(d=><option key={d.id} value={d.id}>{d.label}</option>)}
+                      {DESIGNATION_OPTIONS.map(d => <option key={d.id} value={d.id}>{d.label}</option>)}
                     </select>
                   </div>
 
                   <div className={styles.formGroup}>
                     <label>Qualification</label>
-                    <input name="qualification" value={formData.qualification} onChange={handleInputChange} placeholder="e.g. MBBS, B.Pharm" disabled={loading}/>
-                    <ValidationMsg field="qualification" msgs={validationMessages}/>
+                    <input name="qualification" value={formData.qualification} onChange={handleInputChange} placeholder="e.g. MBBS, B.Pharm" disabled={loading} />
+                    <ValidationMsg field="qualification" msgs={validationMessages} />
                   </div>
 
                   <div className={styles.formGroup}>
                     <label>Specialization</label>
-                    <input name="specialization" value={formData.specialization} onChange={handleInputChange} placeholder="Area of specialization" disabled={loading}/>
-                    <ValidationMsg field="specialization" msgs={validationMessages}/>
+                    <input name="specialization" value={formData.specialization} onChange={handleInputChange} placeholder="Area of specialization" disabled={loading} />
+                    <ValidationMsg field="specialization" msgs={validationMessages} />
                   </div>
 
                   <div className={styles.formGroup}>
                     <label>License Number</label>
-                    <input name="licenseNo" value={formData.licenseNo} onChange={handleInputChange} placeholder="Enter license no." disabled={loading}/>
-                    <ValidationMsg field="licenseNo" msgs={validationMessages}/>
+                    <input name="licenseNo" value={formData.licenseNo} onChange={handleInputChange} placeholder="Enter license no." disabled={loading} />
+                    <ValidationMsg field="licenseNo" msgs={validationMessages} />
                   </div>
 
                   <div className={styles.formGroup}>
                     <label>License Expiry</label>
-                    <input type="date" name="licenseExpiryDate" value={formData.licenseExpiryDate} onChange={handleInputChange} min={getTodayDate()} disabled={loading}/>
-                    <ValidationMsg field="licenseExpiryDate" msgs={validationMessages}/>
+                    <input type="date" name="licenseExpiryDate" value={formData.licenseExpiryDate} onChange={handleInputChange} min={getTodayDate()} disabled={loading} />
+                    <ValidationMsg field="licenseExpiryDate" msgs={validationMessages} />
                   </div>
 
                   <div className={styles.formGroup}>
                     <label>Experience (Years)</label>
-                    <input type="number" name="experienceYears" value={formData.experienceYears} onChange={handleInputChange} min="0" disabled={loading}/>
-                    <ValidationMsg field="experienceYears" msgs={validationMessages}/>
+                    <input type="number" name="experienceYears" value={formData.experienceYears} onChange={handleInputChange} min="0" disabled={loading} />
+                    <ValidationMsg field="experienceYears" msgs={validationMessages} />
                   </div>
 
                   <div className={styles.formGroup}>
                     <label>University Name</label>
-                    <input name="universityName" value={formData.universityName} onChange={handleInputChange} placeholder="Enter university name" disabled={loading}/>
-                    <ValidationMsg field="universityName" msgs={validationMessages}/>
+                    <input name="universityName" value={formData.universityName} onChange={handleInputChange} placeholder="Enter university name" disabled={loading} />
+                    <ValidationMsg field="universityName" msgs={validationMessages} />
                   </div>
 
                   <div className={styles.formGroup}>
                     <label>PF Number</label>
-                    <input name="pfNo" value={formData.pfNo} onChange={handleInputChange} placeholder="Enter PF number" disabled={loading}/>
-                    <ValidationMsg field="pfNo" msgs={validationMessages}/>
+                    <input name="pfNo" value={formData.pfNo} onChange={handleInputChange} placeholder="Enter PF number" disabled={loading} />
+                    <ValidationMsg field="pfNo" msgs={validationMessages} />
                   </div>
 
                   <div className={styles.formGroup}>
                     <label>ESI Number</label>
-                    <input name="esiNo" value={formData.esiNo} onChange={handleInputChange} placeholder="Enter ESI number" disabled={loading}/>
-                    <ValidationMsg field="esiNo" msgs={validationMessages}/>
+                    <input name="esiNo" value={formData.esiNo} onChange={handleInputChange} placeholder="Enter ESI number" disabled={loading} />
+                    <ValidationMsg field="esiNo" msgs={validationMessages} />
                   </div>
 
                 </div>
               </div>
 
             </div>
-            {renderFooter('Save & Next', true, false, step1SubmitDisabled)}
+            {renderFooter('Save & Next', true, false, isStep1Valid)}
           </form>
         )}
 
@@ -1047,17 +1098,11 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
           <form className={styles.form} onSubmit={handleStep2Submit}>
             <div className={styles.body}>
               <div className={styles.formSection}>
-
                 <div className={styles.formSectionHeader}>
                   <div className={styles.sectionHeaderRow}>
-                    <h3><FiShield size={15}/> Employee ID Proof</h3>
-                    <button
-                      type="button"
-                      className={styles.btnAddProof}
-                      onClick={handleAddProof}
-                      disabled={loading}
-                    >
-                      <FiPlus size={14}/> Add Proof
+                    <h3><FiShield size={15} /> Employee ID Proof</h3>
+                    <button type="button" className={styles.btnAddProof} onClick={handleAddProof} disabled={loading}>
+                      <FiPlus size={14} /> Add Proof
                     </button>
                   </div>
                 </div>
@@ -1066,58 +1111,40 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                   <div key={index} className={styles.proofCard}>
                     <div className={styles.proofCardHeader}>
                       <span className={styles.proofCardTitle}>
-                        <FiShield size={13}/> Proof {index + 1}
+                        <FiShield size={13} /> Proof {index + 1}
                       </span>
                       {proofList.length > 1 && (
-                        <button
-                          type="button"
-                          className={styles.btnRemoveProof}
-                          onClick={() => handleRemoveProof(index)}
-                          disabled={loading}
-                          title="Remove this proof"
-                        >
-                          <FiTrash2 size={14}/>
+                        <button type="button" className={styles.btnRemoveProof} onClick={() => handleRemoveProof(index)} disabled={loading} title="Remove this proof">
+                          <FiTrash2 size={14} />
                         </button>
                       )}
                     </div>
 
-                    {/* File Upload */}
                     <div className={styles.photoUploadContainer}>
                       <div className={styles.photoPreviewSection}>
                         {proofFileUrls[index] ? (
                           <div className={styles.photoPreview}>
-                            <img src={proofFileUrls[index]} alt={`ID Proof ${index + 1} Preview`}/>
-                            <button type="button" onClick={() => handleRemoveProofFile(index)} className={styles.removePhotoBtn}><FiX size={14}/></button>
+                            <img src={proofFileUrls[index]} alt={`ID Proof ${index + 1} Preview`} />
+                            <button type="button" onClick={() => handleRemoveProofFile(index)} className={styles.removePhotoBtn}><FiX size={14} /></button>
                           </div>
                         ) : proofFiles[index] && proofFiles[index].type === 'application/pdf' ? (
                           <div className={styles.photoPlaceholder}>
-                            <FiUpload size={36}/>
-                            <p style={{fontSize:'0.78rem', marginTop:8}}>PDF: {proofFiles[index].name}</p>
-                            <button type="button" onClick={() => handleRemoveProofFile(index)} className={styles.removePhotoBtn} style={{position:'relative',marginTop:8}}><FiX size={14}/></button>
+                            <FiUpload size={36} />
+                            <p style={{ fontSize: '0.78rem', marginTop: 8 }}>PDF: {proofFiles[index].name}</p>
+                            <button type="button" onClick={() => handleRemoveProofFile(index)} className={styles.removePhotoBtn} style={{ position: 'relative', marginTop: 8 }}><FiX size={14} /></button>
                           </div>
                         ) : (
                           <div className={styles.photoPlaceholder}>
-                            <FiUpload size={36}/>
+                            <FiUpload size={36} />
                             <p>No file selected</p>
                           </div>
                         )}
                       </div>
                       <div className={styles.photoUploadControls}>
-                        <input
-                          type="file"
-                          id={`proofFileInput_${index}`}
-                          accept="image/jpeg,image/jpg,image/png,application/pdf"
-                          onChange={(e) => handleProofFileUpload(index, e)}
-                          style={{display:'none'}}
-                        />
+                        <input type="file" id={`proofFileInput_${index}`} accept="image/jpeg,image/jpg,image/png,application/pdf" onChange={(e) => handleProofFileUpload(index, e)} style={{ display: 'none' }} />
                         <label htmlFor={`proofFileInput_${index}`} className={styles.btnSelectFile}>Select ID Proof File</label>
                         {proofFiles[index] && !proofFilesUploaded[index] && (
-                          <button
-                            type="button"
-                            onClick={() => handleProofFileUploadSubmit(index)}
-                            disabled={isProofUploading[index]}
-                            className={styles.btnUploadFile}
-                          >
+                          <button type="button" onClick={() => handleProofFileUploadSubmit(index)} disabled={isProofUploading[index]} className={styles.btnUploadFile}>
                             {isProofUploading[index] ? 'Uploading...' : 'Upload ID Proof'}
                           </button>
                         )}
@@ -1130,26 +1157,16 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                       </div>
                     </div>
 
-                    {/* Proof fields */}
                     <div className={styles.formGrid}>
-
-                      {/* ProofType — required */}
                       <div className={styles.formGroup}>
                         <label>Proof Type <span className={styles.required}>*</span></label>
-                        <select
-                          required
-                          name="proofType"
-                          value={proof.proofType}
-                          onChange={(e) => handleProofInputChange(index, e)}
-                          disabled={loading}
-                        >
-                          <option value={0}>Select Proof Type</option>
-                          {ID_PROOF_OPTIONS.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}
+                        <select required name="proofType" value={proof.proofType} onChange={(e) => handleProofInputChange(index, e)} disabled={loading}>
+                          <option value="">Select Proof Type</option>
+                          {ID_PROOF_OPTIONS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                         </select>
-                        <ValidationMsg field="proofType" msgs={proofValidationMessages[index] || {}}/>
+                        <ValidationMsg field="proofType" msgs={proofValidationMessages[index] || {}} />
                       </div>
 
-                      {/* IdNumber — required */}
                       <div className={styles.formGroup}>
                         <label>ID Number <span className={styles.required}>*</span></label>
                         <input
@@ -1159,57 +1176,39 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                           onChange={(e) => handleProofInputChange(index, e)}
                           onKeyDown={(e) => {
                             const char = e.key;
-                            if (['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Enter'].includes(char) || e.ctrlKey || e.metaKey) return;
+                            if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].includes(char) || e.ctrlKey || e.metaKey) return;
                             if (!/^[A-Za-z0-9]$/.test(char)) e.preventDefault();
                           }}
                           onPaste={(e) => {
                             e.preventDefault();
-                            const clean = (e.clipboardData||window.clipboardData).getData('text').toUpperCase().replace(/[^A-Z0-9]/g,'');
+                            const clean = (e.clipboardData || window.clipboardData).getData('text').toUpperCase().replace(/[^A-Z0-9]/g, '');
                             const start = e.target.selectionStart; const end = e.target.selectionEnd;
-                            const newVal = proof.idNumber.substring(0,start)+clean+proof.idNumber.substring(end);
-                            handleProofInputChange(index, { target:{ name:'idNumber', value:newVal }});
+                            const newVal = proof.idNumber.substring(0, start) + clean + proof.idNumber.substring(end);
+                            handleProofInputChange(index, { target: { name: 'idNumber', value: newVal } });
                           }}
                           placeholder="Enter ID number"
                           disabled={loading}
                         />
-                        <ValidationMsg field="idNumber" msgs={proofValidationMessages[index] || {}}/>
+                        <ValidationMsg field="idNumber" msgs={proofValidationMessages[index] || {}} />
                       </div>
 
-                      {/* Detail — optional */}
                       <div className={styles.formGroup}>
                         <label>Detail</label>
-                        <input
-                          name="detail"
-                          value={proof.detail}
-                          onChange={(e) => handleProofInputChange(index, e)}
-                          placeholder="Additional details (optional)"
-                          disabled={loading}
-                        />
-                        <ValidationMsg field="detail" msgs={proofValidationMessages[index] || {}}/>
+                        <input name="detail" value={proof.detail} onChange={(e) => handleProofInputChange(index, e)} placeholder="Additional details (optional)" disabled={loading} />
+                        <ValidationMsg field="detail" msgs={proofValidationMessages[index] || {}} />
                       </div>
 
-                      {/* ExpiryDate — optional */}
                       <div className={styles.formGroup}>
                         <label>Expiry Date <span className={styles.required}>*</span></label>
-                        <input
-                          required
-                          type="date"
-                          name="expiryDate"
-                          value={proof.expiryDate}
-                          onChange={(e) => handleProofInputChange(index, e)}
-                          min={getTodayDate()}
-                          disabled={loading}
-                        />
-                        <ValidationMsg field="expiryDate" msgs={proofValidationMessages[index] || {}}/>
+                        <input required type="date" name="expiryDate" value={proof.expiryDate} onChange={(e) => handleProofInputChange(index, e)} min={getTodayDate()} disabled={loading} />
+                        <ValidationMsg field="expiryDate" msgs={proofValidationMessages[index] || {}} />
                       </div>
-
                     </div>
                   </div>
                 ))}
-
               </div>
             </div>
-            {renderFooter(savedProofIds.length > 0 ? 'Update & Next' : 'Save & Next', false, false, step2SubmitDisabled)}
+            {renderFooter(savedProofIds.length > 0 ? 'Update & Next' : 'Save & Next', false, false, isStep2Valid)}
           </form>
         )}
 
@@ -1218,48 +1217,42 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
           <form className={styles.form} onSubmit={handleStep3Submit}>
             <div className={styles.body}>
               <div className={styles.formSection}>
-                <div className={styles.formSectionHeader}><h3><FiCreditCard size={15}/> Beneficiary Account Details</h3></div>
+                <div className={styles.formSectionHeader}><h3><FiCreditCard size={15} /> Beneficiary Account Details</h3></div>
                 <div className={styles.formGrid}>
 
-                  {/* AccountHolderName — required */}
                   <div className={styles.formGroup}>
                     <label>Account Holder Name <span className={styles.required}>*</span></label>
-                    <input required name="AccountHolderName" value={beneficiaryData.AccountHolderName} onChange={handleBeneficiaryInputChange} placeholder="Full account holder name" disabled={loading}/>
-                    <ValidationMsg field="AccountHolderName" msgs={beneficiaryValidationMessages}/>
+                    <input required name="AccountHolderName" value={beneficiaryData.AccountHolderName} onChange={handleBeneficiaryInputChange} placeholder="Full account holder name" disabled={loading} />
+                    <ValidationMsg field="AccountHolderName" msgs={beneficiaryValidationMessages} />
                   </div>
 
-                  {/* AccountNo — required */}
                   <div className={styles.formGroup}>
                     <label>Account Number <span className={styles.required}>*</span></label>
-                    <input required name="AccountNo" value={beneficiaryData.AccountNo} onChange={handleBeneficiaryInputChange} placeholder="Enter account number" disabled={loading}/>
-                    <ValidationMsg field="AccountNo" msgs={beneficiaryValidationMessages}/>
+                    <input required name="AccountNo" value={beneficiaryData.AccountNo} onChange={handleBeneficiaryInputChange} placeholder="Enter account number" disabled={loading} />
+                    <ValidationMsg field="AccountNo" msgs={beneficiaryValidationMessages} />
                   </div>
 
-                  {/* IFSCCode — optional in backend */}
                   <div className={styles.formGroup}>
                     <label>IFSC Code <span className={styles.required}>*</span></label>
-                    <input required name="IFSCCode" value={beneficiaryData.IFSCCode} onChange={handleBeneficiaryInputChange} placeholder="e.g. SBIN0001234" maxLength="11" disabled={loading}/>
-                    <ValidationMsg field="IFSCCode" msgs={beneficiaryValidationMessages}/>
+                    <input required name="IFSCCode" value={beneficiaryData.IFSCCode} onChange={handleBeneficiaryInputChange} placeholder="e.g. SBIN0001234" maxLength="11" disabled={loading} />
+                    <ValidationMsg field="IFSCCode" msgs={beneficiaryValidationMessages} />
                   </div>
 
-                  {/* BankName — required */}
                   <div className={styles.formGroup}>
                     <label>Bank Name <span className={styles.required}>*</span></label>
-                    <input required name="BankName" value={beneficiaryData.BankName} onChange={handleBeneficiaryInputChange} placeholder="Enter bank name" disabled={loading}/>
-                    <ValidationMsg field="BankName" msgs={beneficiaryValidationMessages}/>
+                    <input required name="BankName" value={beneficiaryData.BankName} onChange={handleBeneficiaryInputChange} placeholder="Enter bank name" disabled={loading} />
+                    <ValidationMsg field="BankName" msgs={beneficiaryValidationMessages} />
                   </div>
 
-                  {/* BankAddress — optional */}
                   <div className={`${styles.formGroup} ${styles.colSpan2}`}>
                     <label>Bank Address</label>
-                    <textarea name="BankAddress" rows={2} value={beneficiaryData.BankAddress} onChange={handleBeneficiaryInputChange} placeholder="Enter bank address (optional)" disabled={loading}/>
-                    <ValidationMsg field="BankAddress" msgs={beneficiaryValidationMessages}/>
+                    <textarea name="BankAddress" rows={2} value={beneficiaryData.BankAddress} onChange={handleBeneficiaryInputChange} placeholder="Enter bank address (optional)" disabled={loading} />
+                    <ValidationMsg field="BankAddress" msgs={beneficiaryValidationMessages} />
                   </div>
 
-                  {/* IsDefault — required (0 or 1) */}
                   <div className={`${styles.formGroup} ${styles.colSpan2}`}>
                     <label className={styles.checkboxLabel}>
-                      <input type="checkbox" name="IsDefault" checked={beneficiaryData.IsDefault} onChange={handleBeneficiaryInputChange} disabled={loading}/>
+                      <input type="checkbox" name="IsDefault" checked={beneficiaryData.IsDefault} onChange={handleBeneficiaryInputChange} disabled={loading} />
                       <span>Set as default account</span>
                     </label>
                   </div>
@@ -1267,7 +1260,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 </div>
               </div>
             </div>
-            {renderFooter(savedBeneficiaryId ? 'Update & Next' : 'Save & Next', false, false, step3SubmitDisabled)}
+            {renderFooter(savedBeneficiaryId ? 'Update & Next' : 'Save & Next', false, false, isStep3Valid)}
           </form>
         )}
 
@@ -1276,13 +1269,10 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
           <form className={styles.form} onSubmit={handleStep4Submit}>
             <div className={styles.body}>
 
-              {/* Shift Dropdown */}
               <div className={styles.formSection}>
-                <div className={styles.formSectionHeader}>
-                  <h3><FiClock size={15}/> Shift Assignment</h3>
-                </div>
+                <div className={styles.formSectionHeader}><h3><FiClock size={15} /> Shift Assignment</h3></div>
                 {shiftsLoading ? (
-                  <p className={styles.formHint}>Loading shifts...</p>
+                  <LoadingPage/>
                 ) : shifts.length === 0 ? (
                   <p className={styles.formHint}>No shifts available.</p>
                 ) : (
@@ -1303,13 +1293,8 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                           return shift ? (
                             <span key={id} className={styles.selectedShiftTag}>
                               {shift.shiftName}
-                              <button
-                                type="button"
-                                className={styles.selectedShiftTagRemove}
-                                onClick={() => handleShiftToggle(id)}
-                                disabled={loading}
-                              >
-                                <FiX size={11}/>
+                              <button type="button" className={styles.selectedShiftTagRemove} onClick={() => handleShiftToggle(id)} disabled={loading}>
+                                <FiX size={11} />
                               </button>
                             </span>
                           ) : null;
@@ -1321,11 +1306,10 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                 )}
               </div>
 
-              {/* Work Days */}
               <div className={styles.formSection}>
                 <div className={styles.formSectionHeader}><h3>📅 Work Days</h3></div>
                 <div className={styles.workDaysGroup}>
-                  {WORK_DAYS.map(day=>(
+                  {WORK_DAYS.map(day => (
                     <button
                       key={day.id} type="button"
                       onClick={() => handleWorkDayToggle(day.id)}
@@ -1336,11 +1320,11 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess }) => {
                     </button>
                   ))}
                 </div>
-                <p className={styles.formHint} style={{marginTop:8}}>Select the working days for this employee</p>
+                <p className={styles.formHint} style={{ marginTop: 8 }}>Select the working days for this employee</p>
               </div>
 
             </div>
-            {renderFooter('Save & Finish', false, true)}
+            {renderFooter('Save & Finish', false, true, true)}
           </form>
         )}
 

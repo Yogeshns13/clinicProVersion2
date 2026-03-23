@@ -5,9 +5,11 @@ import { FiSearch, FiX, FiCalendar, FiFilter, FiEye, FiFileText, FiDollarSign, F
 import { getPharmacyInvoiceDetailList } from '../Api/ApiPharmacy.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
 import styles from './PharmacyInvoiceList.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 const SEARCH_TYPE_OPTIONS = [
   { value: 'customerName', label: 'Customer Name' },
@@ -20,13 +22,13 @@ const PAGE_SIZE = 20;
 
 const PharmacyInvoiceList = () => {
   const navigate = useNavigate();
-  
+
   // Data States
-  const [invoiceDetails, setInvoiceDetails] = useState([]);
+  const [invoiceDetails, setInvoiceDetails]       = useState([]);
   const [allInvoiceDetails, setAllInvoiceDetails] = useState([]);
-  
+
   // Pagination
-  const [page, setPage] = useState(1);
+  const [page, setPage]       = useState(1);
   const [hasNext, setHasNext] = useState(false);
 
   // Filter inputs (staged — not applied until Search is clicked)
@@ -47,13 +49,25 @@ const PharmacyInvoiceList = () => {
 
   // UI States
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  // Modal States
-  const [isInvoiceDetailsOpen, setIsInvoiceDetailsOpen] = useState(false);
-  const [selectedInvoiceDetail, setSelectedInvoiceDetail] = useState(null);
+  const [error,   setError]   = useState(null);
 
-  // Fetch Pharmacy Invoice Details
+  // Modal States
+  const [isInvoiceDetailsOpen,   setIsInvoiceDetailsOpen]   = useState(false);
+  const [selectedInvoiceDetail,  setSelectedInvoiceDetail]  = useState(null);
+
+  // ── Button cooldown state (2-sec disable after click) ──────────────────────
+  const [btnCooldown, setBtnCooldown] = useState({});
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
+
+  // ── MessagePopup state ──────────────────────────────────────────────────────
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Fetch Pharmacy Invoice Details ─────────────────────────────────────────
   const fetchInvoiceDetails = async (pageNum = page) => {
     try {
       setLoading(true);
@@ -62,9 +76,9 @@ const PharmacyInvoiceList = () => {
       const branchId = await getStoredBranchId();
 
       const options = {
-        Page: pageNum,
-        PageSize: PAGE_SIZE,
-        BranchID: branchId,
+        Page:         pageNum,
+        PageSize:     PAGE_SIZE,
+        BranchID:     branchId,
         CustomerName: appliedFilters.searchType === 'customerName' ? appliedFilters.searchValue.trim() : '',
         InvoiceNo:    appliedFilters.searchType === 'invoiceNo'    ? appliedFilters.searchValue.trim() : '',
         MedicineName: appliedFilters.searchType === 'medicineName' ? appliedFilters.searchValue.trim() : '',
@@ -83,7 +97,7 @@ const PharmacyInvoiceList = () => {
 
       setInvoiceDetails(sortedData);
       setHasNext(sortedData.length === PAGE_SIZE);
-      setAllInvoiceDetails(sortedData); // still keep full list for client-side filtering if needed
+      setAllInvoiceDetails(sortedData);
     } catch (err) {
       console.error('fetchInvoiceDetails error:', err);
       setError(
@@ -101,56 +115,57 @@ const PharmacyInvoiceList = () => {
     setPage(1);
   }, [appliedFilters]);
 
-  // ── Pagination Handlers ──────────────────────────
+  // ── Pagination Handlers ────────────────────────────────────────────────────
   const handlePageChange = (newPage) => {
     if (newPage < 1) return;
+    triggerCooldown(`page-${newPage}`);
     setPage(newPage);
     fetchInvoiceDetails(newPage);
   };
 
-  // Group invoice details by invoice (still used)
+  // ── Group invoice details by invoice ──────────────────────────────────────
   const groupedInvoices = useMemo(() => {
     const groups = {};
-    
+
     invoiceDetails.forEach(detail => {
       const invoiceId = detail.invoiceId;
       if (!groups[invoiceId]) {
         groups[invoiceId] = {
-          invoiceId: detail.invoiceId,
-          invoiceNo: detail.invoiceNo,
-          invoiceDate: detail.invoiceDate,
-          patientId: detail.patientId,
-          customerName: detail.customerName,
+          invoiceId:     detail.invoiceId,
+          invoiceNo:     detail.invoiceNo,
+          invoiceDate:   detail.invoiceDate,
+          patientId:     detail.patientId,
+          customerName:  detail.customerName,
           patientMobile: detail.patientMobile,
           patientFileNo: detail.patientFileNo,
-          clinicName: detail.clinicName,
-          branchName: detail.branchName,
-          dateCreated: detail.dateCreated,
-          details: [],
-          totalQuantity: 0,
-          totalAmount: 0,
-          totalCgst: 0,
-          totalSgst: 0,
-          totalNetAmount: 0
+          clinicName:    detail.clinicName,
+          branchName:    detail.branchName,
+          dateCreated:   detail.dateCreated,
+          details:          [],
+          totalQuantity:    0,
+          totalAmount:      0,
+          totalCgst:        0,
+          totalSgst:        0,
+          totalNetAmount:   0,
         };
       }
-      
+
       groups[invoiceId].details.push(detail);
-      groups[invoiceId].totalQuantity  += detail.quantity       || 0;
-      groups[invoiceId].totalAmount    += detail.amount         || 0;
-      groups[invoiceId].totalCgst      += detail.cgstAmount     || 0;
-      groups[invoiceId].totalSgst      += detail.sgstAmount     || 0;
+      groups[invoiceId].totalQuantity  += detail.quantity        || 0;
+      groups[invoiceId].totalAmount    += detail.amount          || 0;
+      groups[invoiceId].totalCgst      += detail.cgstAmount      || 0;
+      groups[invoiceId].totalSgst      += detail.sgstAmount      || 0;
       groups[invoiceId].totalNetAmount += detail.totalLineAmount || 0;
     });
-    
+
     return Object.values(groups);
   }, [invoiceDetails]);
 
-  // Summary statistics (based on current page)
+  // ── Summary statistics ─────────────────────────────────────────────────────
   const summaryStats = useMemo(() => {
-    const uniqueInvoices = new Set(invoiceDetails.map(d => d.invoiceId)).size;
-    const totalRevenue   = invoiceDetails.reduce((sum, d) => sum + (d.totalLineAmount || 0), 0);
-    const totalMedicines = invoiceDetails.reduce((sum, d) => sum + (d.quantity || 0), 0);
+    const uniqueInvoices  = new Set(invoiceDetails.map(d => d.invoiceId)).size;
+    const totalRevenue    = invoiceDetails.reduce((sum, d) => sum + (d.totalLineAmount || 0), 0);
+    const totalMedicines  = invoiceDetails.reduce((sum, d) => sum + (d.quantity || 0), 0);
     const avgInvoiceValue = uniqueInvoices > 0 ? totalRevenue / uniqueInvoices : 0;
     return { uniqueInvoices, totalRevenue, totalMedicines, avgInvoiceValue };
   }, [invoiceDetails]);
@@ -160,18 +175,20 @@ const PharmacyInvoiceList = () => {
     appliedFilters.dateFrom            !== '' ||
     appliedFilters.dateTo              !== '';
 
-  // Filter handlers
+  // ── Filter handlers ────────────────────────────────────────────────────────
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSearch = () => {
+    triggerCooldown('search');
     setAppliedFilters({ ...filterInputs });
     setPage(1);
   };
 
   const handleClearFilters = () => {
+    triggerCooldown('clear');
     const empty = { searchType: 'customerName', searchValue: '', dateFrom: '', dateTo: '' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
@@ -179,18 +196,21 @@ const PharmacyInvoiceList = () => {
   };
 
   const handleViewInvoiceDetails = (invoice) => {
+    triggerCooldown(`view-${invoice.invoiceId}`);
     setSelectedInvoiceDetail(invoice);
     setIsInvoiceDetailsOpen(true);
   };
 
   const handlePrintInvoice = (invoice) => {
+    triggerCooldown(`print-${invoice.invoiceId}`);
     console.log('Print invoice:', invoice.invoiceNo);
-    alert(`Print functionality for Invoice ${invoice.invoiceNo} will be implemented.`);
+    showPopup(`Print functionality for Invoice ${invoice.invoiceNo} will be implemented.`, 'warning');
   };
 
   const handleDownloadInvoice = (invoice) => {
+    triggerCooldown(`download-${invoice.invoiceId}`);
     console.log('Download invoice:', invoice.invoiceNo);
-    alert(`Download functionality for Invoice ${invoice.invoiceNo} will be implemented.`);
+    showPopup(`Download functionality for Invoice ${invoice.invoiceNo} will be implemented.`, 'warning');
   };
 
   const formatDate = (dateStr) => {
@@ -212,7 +232,7 @@ const PharmacyInvoiceList = () => {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.spinner}></div>
-        <p>Loading pharmacy invoices...</p>
+        <LoadingPage/>
       </div>
     );
   }
@@ -220,16 +240,16 @@ const PharmacyInvoiceList = () => {
   const startRecord = invoiceDetails.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const endRecord   = startRecord + invoiceDetails.length - 1;
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className={styles.wrapper}>
       <ErrorHandler error={error} />
       <Header title="Pharmacy Invoice Management" />
 
-      {/* ── Filter Bar — VendorList style ── */}
+      {/* ── Filter Bar ── */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
 
-          {/* VendorList-style fused search type + value */}
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -285,12 +305,20 @@ const PharmacyInvoiceList = () => {
           </div>
 
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              className={styles.searchButton}
+              disabled={!!btnCooldown['search']}
+            >
               <FiSearch size={16} />
               Search
             </button>
             {hasActiveFilters && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
+              <button
+                onClick={handleClearFilters}
+                className={styles.clearButton}
+                disabled={!!btnCooldown['clear']}
+              >
                 <FiX size={16} />
                 Clear
               </button>
@@ -299,7 +327,7 @@ const PharmacyInvoiceList = () => {
         </div>
       </div>
 
-      {/* Invoices Table + Pagination */}
+      {/* ── Invoices Table + Pagination ── */}
       <div className={styles.tableSection}>
         <div className={styles.tableContainer}>
           <table className={styles.table}>
@@ -379,10 +407,12 @@ const PharmacyInvoiceList = () => {
                       <div className={styles.dateCell}>
                         <div className={styles.name}>{formatDate(invoice.invoiceDate)}</div>
                         <div className={styles.subText}>
-                          {invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleTimeString('en-US', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          }) : '—'}
+                          {invoice.invoiceDate
+                            ? new Date(invoice.invoiceDate).toLocaleTimeString('en-US', {
+                                hour:   '2-digit',
+                                minute: '2-digit',
+                              })
+                            : '—'}
                         </div>
                       </div>
                     </td>
@@ -393,6 +423,7 @@ const PharmacyInvoiceList = () => {
                             className={styles.actionBtn}
                             onClick={() => handleViewInvoiceDetails(invoice)}
                             title="View Details"
+                            disabled={!!btnCooldown[`view-${invoice.invoiceId}`]}
                           >
                             View Details
                           </button>
@@ -406,7 +437,7 @@ const PharmacyInvoiceList = () => {
           </table>
         </div>
 
-        {/* Pagination Bar */}
+        {/* ── Pagination Bar ── */}
         <div className={styles.paginationBar}>
           <div className={styles.paginationInfo}>
             {invoiceDetails.length > 0
@@ -420,7 +451,7 @@ const PharmacyInvoiceList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(1)}
-              disabled={page === 1}
+              disabled={page === 1 || !!btnCooldown['page-1']}
               title="First page"
             >
               «
@@ -429,7 +460,7 @@ const PharmacyInvoiceList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
+              disabled={page === 1 || !!btnCooldown[`page-${page - 1}`]}
               title="Previous page"
             >
               ‹
@@ -440,7 +471,7 @@ const PharmacyInvoiceList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(page + 1)}
-              disabled={!hasNext}
+              disabled={!hasNext || !!btnCooldown[`page-${page + 1}`]}
               title="Next page"
             >
               ›
@@ -453,7 +484,7 @@ const PharmacyInvoiceList = () => {
         </div>
       </div>
 
-      {/* Invoice Details Modal */}
+      {/* ── Invoice Details Modal ── */}
       {isInvoiceDetailsOpen && selectedInvoiceDetail && (
         <InvoiceDetailsModal
           invoice={selectedInvoiceDetail}
@@ -465,14 +496,29 @@ const PharmacyInvoiceList = () => {
           formatDate={formatDate}
         />
       )}
+
+      {/* ── MessagePopup (at root level so z-index is never blocked) ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
     </div>
   );
 };
 
 // ──────────────────────────────────────────────────
-// Invoice Details Modal Component (unchanged)
+// Invoice Details Modal Component
 // ──────────────────────────────────────────────────
 const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) => {
+  // ── Button cooldown state (2-sec disable) ──
+  const [btnCooldown, setBtnCooldown] = useState({});
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
+
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -481,12 +527,19 @@ const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) =
 
           <div className={styles.headerRight}>
             <div className={styles.clinicNameone}>
-              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
+              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
               {localStorage.getItem('clinicName') || '—'}
             </div>
-            <button onClick={onClose} className={styles.closeBtn}>×</button>
+            <button
+              onClick={() => { triggerCooldown('close'); onClose(); }}
+              className={styles.closeBtn}
+              disabled={!!btnCooldown['close']}
+            >
+              ×
+            </button>
           </div>
         </div>
+
         <div className={styles.modalBody}>
           {/* Invoice Header Info */}
           <div className={styles.invoiceHeader}>
@@ -588,8 +641,13 @@ const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) =
             </table>
           </div>
         </div>
+
         <div className={styles.modalFooter}>
-          <button onClick={onClose} className={styles.cancelBtn}>
+          <button
+            onClick={() => { triggerCooldown('modal-close'); onClose(); }}
+            className={styles.cancelBtn}
+            disabled={!!btnCooldown['modal-close']}
+          >
             Close
           </button>
         </div>

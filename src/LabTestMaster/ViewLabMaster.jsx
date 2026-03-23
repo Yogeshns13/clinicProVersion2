@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FiX, FiEdit, FiTrash2 } from 'react-icons/fi';
 import styles from './ViewLabMaster.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
-import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import ConfirmPopup from '../Hooks/ConfirmPopup';
 
 const TEST_TYPES = [
   { id: 1, label: 'Blood' },
@@ -21,6 +21,8 @@ const TEST_STATUS_OPTIONS = [
 ];
 
 const ViewLabMaster = ({ test, onClose, onUpdate, onDelete }) => {
+  const [confirmVisible, setConfirmVisible] = useState(false);
+
   if (!test) return null;
 
   const getTestTypeLabel = (testTypeId) => {
@@ -38,87 +40,111 @@ const ViewLabMaster = ({ test, onClose, onUpdate, onDelete }) => {
     return styles.inactive;
   };
 
+  const handleDeleteClick = () => {
+    setConfirmVisible(true);
+  };
+
+  const handleConfirmDelete = () => {
+    setConfirmVisible(false);
+    onDelete(test, { skipConfirm: true }); // flag to tell parent to skip any confirm
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmVisible(false);
+  };
+
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={`${styles.modal} ${styles.detailsModal}`} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.detailsModalHeader}>
-          <div className={styles.detailsHeaderContent}>
-            <div className={styles.avatarLarge}>
-              {test.testName?.charAt(0).toUpperCase() || 'T'}
+    <>
+      <div className={styles.modalOverlay} onClick={onClose}>
+        <div className={`${styles.modal} ${styles.detailsModal}`} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.detailsModalHeader}>
+            <div className={styles.detailsHeaderContent}>
+              <div className={styles.avatarLarge}>
+                {test.testName?.charAt(0).toUpperCase() || 'T'}
+              </div>
+              <div>
+                <h2>{test.testName}</h2>
+              </div>
             </div>
-            <div>
-              <h2>{test.testName}</h2>
-              
+            <div className={styles.clinicNameone}>
+              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
+              {localStorage.getItem('clinicName') || '—'}
             </div>
+            <button onClick={onClose} className={styles.modalClose}>
+              ×
+            </button>
           </div>
-          <div className={styles.clinicNameone}>
-              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-                {localStorage.getItem('clinicName') || '—'}
+
+          <div className={styles.detailsModalBody}>
+            <table className={styles.detailsTable}>
+              <tbody>
+                <tr>
+                  <td className={styles.label}>Test Name</td>
+                  <td className={styles.value}>{test.testName || '—'}</td>
+                </tr>
+                <tr>
+                  <td className={styles.label}>Short Name</td>
+                  <td className={styles.value}>{test.shortName || '—'}</td>
+                </tr>
+                <tr>
+                  <td className={styles.label}>Test Type</td>
+                  <td className={styles.value}>
+                    {getTestTypeLabel(test.testType)}
+                  </td>
+                </tr>
+                <tr>
+                  <td className={styles.label}>Description</td>
+                  <td className={styles.value}>{test.description || '—'}</td>
+                </tr>
+                <tr>
+                  <td className={styles.label}>Normal Range</td>
+                  <td className={styles.value}>{test.normalRange || '—'}</td>
+                </tr>
+                <tr>
+                  <td className={styles.label}>Units</td>
+                  <td className={styles.value}>{test.units || '—'}</td>
+                </tr>
+                <tr>
+                  <td className={styles.label}>Fees</td>
+                  <td className={styles.value}>₹{parseFloat(test.fees || 0).toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td className={styles.label}>CGST %</td>
+                  <td className={styles.value}>{test.cgstPercentage || '0'}%</td>
+                </tr>
+                <tr>
+                  <td className={styles.label}>SGST %</td>
+                  <td className={styles.value}>{test.sgstPercentage || '0'}%</td>
+                </tr>
+                <tr>
+                  <td className={styles.label}>Remarks</td>
+                  <td className={styles.value}>{test.remarks || '—'}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <button onClick={onClose} className={styles.modalClose}>
-            ×
-          </button>
-        </div>
 
-        <div className={styles.detailsModalBody}>
-          <table className={styles.detailsTable}>
-            <tbody>
-              <tr>
-                <td className={styles.label}>Test Name</td>
-                <td className={styles.value}>{test.testName || '—'}</td>
-              </tr>
-              <tr>
-                <td className={styles.label}>Short Name</td>
-                <td className={styles.value}>{test.shortName || '—'}</td>
-              </tr>
-              <tr>
-                <td className={styles.label}>Test Type</td>
-                <td className={styles.value}>
-                  {getTestTypeLabel(test.testType)}
-                </td>
-              </tr>
-              <tr>
-                <td className={styles.label}>Description</td>
-                <td className={styles.value}>{test.description || '—'}</td>
-              </tr>
-              <tr>
-                <td className={styles.label}>Normal Range</td>
-                <td className={styles.value}>{test.normalRange || '—'}</td>
-              </tr>
-              <tr>
-                <td className={styles.label}>Units</td>
-                <td className={styles.value}>{test.units || '—'}</td>
-              </tr>
-              <tr>
-                <td className={styles.label}>Fees</td>
-                <td className={styles.value}>₹{parseFloat(test.fees || 0).toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td className={styles.label}>CGST %</td>
-                <td className={styles.value}>{test.cgstPercentage || '0'}%</td>
-              </tr>
-              <tr>
-                <td className={styles.label}>SGST %</td>
-                <td className={styles.value}>{test.sgstPercentage || '0'}%</td>
-              </tr>
-              <tr>
-                <td className={styles.label}>Remarks</td>
-                <td className={styles.value}>{test.remarks || '—'}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div className={styles.modalFooter}>
-          <button onClick={() => onDelete(test)} className={styles.btnDelete}>
-            <FiTrash2 size={16} /> Delete Test
-          </button>
-          <button onClick={() => onUpdate(test)} className={styles.btnUpdate}>
-            <FiEdit size={16} /> Update Test
-          </button>
+          <div className={styles.modalFooter}>
+            <button onClick={handleDeleteClick} className={styles.btnDelete}>
+              <FiTrash2 size={16} /> Delete Test
+            </button>
+            <button onClick={() => onUpdate(test)} className={styles.btnUpdate}>
+              <FiEdit size={16} /> Update Test
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      <ConfirmPopup
+        visible={confirmVisible}
+        message="Delete this test?"
+        subMessage={`"${test.testName}" will be permanently removed and cannot be recovered.`}
+        confirmLabel="Yes, Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
+    </>
   );
 };
 

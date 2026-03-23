@@ -5,55 +5,76 @@ import { FiSearch, FiX, FiTrash2, FiEdit } from 'react-icons/fi';
 import { getLabTestReportList, deleteLabTestReport } from '../Api/ApiLabTests.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 import UpdateLabReport from './UpdateLabReport.jsx';
 import styles from './LabReportList.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 const PAGE_SIZE = 20;
 
 const LabReportList = () => {
   const navigate = useNavigate();
 
-  const [reports, setReports] = useState([]);
+  const [reports, setReports]       = useState([]);
   const [allReports, setAllReports] = useState([]);
   const [clinicName, setClinicName] = useState('—');
 
   // Pagination
-  const [page, setPage] = useState(1);
+  const [page, setPage]       = useState(1);
   const [hasNext, setHasNext] = useState(false);
 
   const [filterInputs, setFilterInputs] = useState({
-    searchType: 'patientName',
+    searchType:  'patientName',
     searchValue: '',
-    status: '',
-    dateFrom: '',
-    dateTo: ''
+    status:      '',
+    dateFrom:    '',
+    dateTo:      '',
   });
 
   const [appliedFilters, setAppliedFilters] = useState({
-    searchType: 'patientName',
+    searchType:  'patientName',
     searchValue: '',
-    status: '',
-    dateFrom: '',
-    dateTo: ''
+    status:      '',
+    dateFrom:    '',
+    dateTo:      '',
   });
 
-  const [selectedReport, setSelectedReport] = useState(null);
+  const [selectedReport, setSelectedReport]   = useState(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [reportToUpdate, setReportToUpdate] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [reportToUpdate, setReportToUpdate]   = useState(null);
+  const [loading, setLoading]                 = useState(true);
+  const [error,   setError]                   = useState(null);
 
-  const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [deleting, setDeleting] = useState(false);
+  // ── ConfirmPopup state ──────────────────────────
+  const [confirmPopup, setConfirmPopup] = useState({ visible: false, report: null });
+  const [deleting, setDeleting]         = useState(false);
 
+  const openConfirmPopup  = (report) => setConfirmPopup({ visible: true, report });
+  const closeConfirmPopup = () => { if (!deleting) setConfirmPopup({ visible: false, report: null }); };
+
+  // ── Button cooldown state (2-sec disable after click) ──────────────────────
+  const [btnCooldown, setBtnCooldown] = useState({});
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
+
+  // ── MessagePopup state ──────────────────────────────────────────────────────
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Derived ────────────────────────────────────────────────────────────────
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.status             !== '' ||
     appliedFilters.dateFrom           !== '' ||
     appliedFilters.dateTo             !== '';
 
+  // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchReports = async (filters = appliedFilters, pageNum = page) => {
     try {
       setLoading(true);
@@ -62,10 +83,10 @@ const LabReportList = () => {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
 
-      const options = { 
+      const options = {
         BranchID: branchId,
-        Page: pageNum,
-        PageSize: PAGE_SIZE
+        Page:     pageNum,
+        PageSize: PAGE_SIZE,
       };
 
       const data = await getLabTestReportList(clinicId, options);
@@ -90,6 +111,7 @@ const LabReportList = () => {
     setPage(1);
   }, [appliedFilters]);
 
+  // ── Client-side filtering ──────────────────────────────────────────────────
   const filteredReports = useMemo(() => {
     let filtered = reports;
 
@@ -119,24 +141,19 @@ const LabReportList = () => {
 
     if (appliedFilters.dateFrom) {
       const fromDate = new Date(appliedFilters.dateFrom);
-      filtered = filtered.filter(r => {
-        if (!r.dateCreated) return false;
-        return new Date(r.dateCreated) >= fromDate;
-      });
+      filtered = filtered.filter(r => r.dateCreated && new Date(r.dateCreated) >= fromDate);
     }
 
     if (appliedFilters.dateTo) {
       const toDate = new Date(appliedFilters.dateTo);
       toDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(r => {
-        if (!r.dateCreated) return false;
-        return new Date(r.dateCreated) <= toDate;
-      });
+      filtered = filtered.filter(r => r.dateCreated && new Date(r.dateCreated) <= toDate);
     }
 
     return filtered;
   }, [reports, appliedFilters]);
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
   const getStatusClass = (status) => {
     if (status === 1) return styles.created;
     if (status === 2) return styles.cancelled;
@@ -163,83 +180,98 @@ const LabReportList = () => {
     }
   };
 
+  // ── Filter handlers ────────────────────────────────────────────────────────
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSearch = () => {
+    triggerCooldown('search');
     setAppliedFilters({ ...filterInputs });
     setPage(1);
   };
 
   const handleClearFilters = () => {
+    triggerCooldown('clear');
     const emptyFilters = { searchType: 'patientName', searchValue: '', status: '', dateFrom: '', dateTo: '' };
     setFilterInputs(emptyFilters);
     setAppliedFilters(emptyFilters);
     setPage(1);
   };
 
-  const openDetails  = (report) => setSelectedReport(report);
-  const closeModal   = ()       => setSelectedReport(null);
+  // ── Modal handlers ─────────────────────────────────────────────────────────
+  const openDetails = (report) => {
+    triggerCooldown(`view-${report.id}`);
+    setSelectedReport(report);
+  };
+  const closeModal = () => setSelectedReport(null);
 
   const handleUpdateClick = (report) => {
+    triggerCooldown('update');
     setReportToUpdate(report);
     setShowUpdateModal(true);
     setSelectedReport(null);
   };
 
-  const handleCloseUpdateModal = () => { 
-    setShowUpdateModal(false); 
-    setReportToUpdate(null); 
+  const handleCloseUpdateModal = () => {
+    setShowUpdateModal(false);
+    setReportToUpdate(null);
   };
 
   const handleUpdateSuccess = () => {
     setShowUpdateModal(false);
     setReportToUpdate(null);
+    showPopup('Lab report updated successfully!', 'success');
     fetchReports(appliedFilters, page);
   };
 
-  const handleDeleteClick = (report) => setDeleteConfirm(report);
+  const handleDeleteClick = (report) => {
+    triggerCooldown('delete');
+    openConfirmPopup(report);
+  };
 
-  const confirmDelete = async () => {
-    if (!deleteConfirm) return;
+  const handleDeleteConfirm = async () => {
+    if (!confirmPopup.report) return;
+    const report = confirmPopup.report;
+    closeConfirmPopup();
     try {
       setDeleting(true);
-      await deleteLabTestReport(deleteConfirm.id);
-      setAllReports(prev => prev.filter(r => r.id !== deleteConfirm.id));
-      setReports(prev => prev.filter(r => r.id !== deleteConfirm.id));
-      setDeleteConfirm(null);
+      await deleteLabTestReport(report.id);
+      setAllReports(prev => prev.filter(r => r.id !== report.id));
+      setReports(prev => prev.filter(r => r.id !== report.id));
       setSelectedReport(null);
+      showPopup('Lab report deleted successfully!', 'success');
     } catch (err) {
       console.error('Delete error:', err);
-      setError({ message: err.message || 'Failed to delete report', status: err.status || 500 });
+      showPopup(err.message || 'Failed to delete report.', 'error');
     } finally {
       setDeleting(false);
     }
   };
 
-  const cancelDelete = () => setDeleteConfirm(null);
-
   const handlePageChange = (newPage) => {
     if (newPage < 1) return;
+    triggerCooldown(`page-${newPage}`);
     setPage(newPage);
     fetchReports(appliedFilters, newPage);
   };
 
+  // ── Early returns ──────────────────────────────────────────────────────────
   if (error && (error?.status >= 400 || error?.code >= 400)) return <ErrorHandler error={error} />;
-  if (loading) return <div className={styles.clinicLoading}>Loading lab reports...</div>;
+  if (loading) return <div className={styles.clinicLoading}><LoadingPage/></div>;
   if (error)   return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
   const startRecord = reports.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const endRecord   = startRecord + reports.length - 1;
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className={styles.clinicListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Lab Report Management" />
 
-      {/* Filters */}
+      {/* ── Filters ── */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
           <div className={styles.searchGroup}>
@@ -258,9 +290,9 @@ const LabReportList = () => {
               type="text"
               name="searchValue"
               placeholder={`Search by ${
-                filterInputs.searchType === 'patientName'   ? 'Name'        :
-                filterInputs.searchType === 'patientMobile' ? 'Mobile'      :
-                filterInputs.searchType === 'patientFileNo' ? 'File Code'   :
+                filterInputs.searchType === 'patientName'   ? 'Name'      :
+                filterInputs.searchType === 'patientMobile' ? 'Mobile'    :
+                filterInputs.searchType === 'patientFileNo' ? 'File Code' :
                 'Doctor Name'
               }`}
               value={filterInputs.searchValue}
@@ -300,11 +332,19 @@ const LabReportList = () => {
           </div>
 
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              className={styles.searchButton}
+              disabled={!!btnCooldown['search']}
+            >
               <FiSearch size={18} /> Search
             </button>
             {hasActiveFilters && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
+              <button
+                onClick={handleClearFilters}
+                className={styles.clearButton}
+                disabled={!!btnCooldown['clear']}
+              >
                 <FiX size={18} /> Clear
               </button>
             )}
@@ -312,7 +352,7 @@ const LabReportList = () => {
         </div>
       </div>
 
-      {/* Table + Pagination */}
+      {/* ── Table + Pagination ── */}
       <div className={styles.tableSection}>
         <div className={styles.clinicTableContainer}>
           <table className={styles.clinicTable}>
@@ -364,7 +404,11 @@ const LabReportList = () => {
                       </span>
                     </td>
                     <td>
-                      <button onClick={() => openDetails(report)} className={styles.clinicDetailsBtn}>
+                      <button
+                        onClick={() => openDetails(report)}
+                        className={styles.clinicDetailsBtn}
+                        disabled={!!btnCooldown[`view-${report.id}`]}
+                      >
                         View Details
                       </button>
                     </td>
@@ -375,7 +419,7 @@ const LabReportList = () => {
           </table>
         </div>
 
-        {/* Pagination Bar */}
+        {/* ── Pagination Bar ── */}
         <div className={styles.paginationBar}>
           <div className={styles.paginationInfo}>
             {reports.length > 0
@@ -389,7 +433,7 @@ const LabReportList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(1)}
-              disabled={page === 1}
+              disabled={page === 1 || !!btnCooldown['page-1']}
               title="First page"
             >
               «
@@ -398,7 +442,7 @@ const LabReportList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
+              disabled={page === 1 || !!btnCooldown[`page-${page - 1}`]}
               title="Previous page"
             >
               ‹
@@ -409,7 +453,7 @@ const LabReportList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(page + 1)}
-              disabled={!hasNext}
+              disabled={!hasNext || !!btnCooldown[`page-${page + 1}`]}
               title="Next page"
             >
               ›
@@ -422,7 +466,7 @@ const LabReportList = () => {
         </div>
       </div>
 
-      {/* Details Modal */}
+      {/* ── Details Modal ── */}
       {selectedReport && (
         <div className={styles.detailModalOverlay} onClick={closeModal}>
           <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
@@ -437,7 +481,7 @@ const LabReportList = () => {
                   <h2 className={styles.detailHeaderTitle}>{selectedReport.patientName || '—'}</h2>
                 </div>
                 <div className={styles.clinicNameone}>
-                  <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
+                  <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
                   {localStorage.getItem('clinicName') || '—'}
                 </div>
               </div>
@@ -446,10 +490,9 @@ const LabReportList = () => {
 
             <div className={styles.detailModalBody}>
               <div className={styles.detailInfoSection}>
+
                 <div className={styles.detailInfoCard}>
-                  <div className={styles.detailInfoHeader}>
-                    <h3>Patient Information</h3>
-                  </div>
+                  <div className={styles.detailInfoHeader}><h3>Patient Information</h3></div>
                   <div className={styles.detailInfoContent}>
                     <div className={styles.detailInfoRow}>
                       <span className={styles.detailInfoLabel}>Full Name</span>
@@ -475,9 +518,7 @@ const LabReportList = () => {
                 </div>
 
                 <div className={styles.detailInfoCard}>
-                  <div className={styles.detailInfoHeader}>
-                    <h3>Report Details</h3>
-                  </div>
+                  <div className={styles.detailInfoHeader}><h3>Report Details</h3></div>
                   <div className={styles.detailInfoContent}>
                     <div className={styles.detailInfoRow}>
                       <span className={styles.detailInfoLabel}>File ID</span>
@@ -505,9 +546,7 @@ const LabReportList = () => {
                 </div>
 
                 <div className={styles.detailInfoCard}>
-                  <div className={styles.detailInfoHeader}>
-                    <h3>Clinic & Timeline</h3>
-                  </div>
+                  <div className={styles.detailInfoHeader}><h3>Clinic & Timeline</h3></div>
                   <div className={styles.detailInfoContent}>
                     <div className={styles.detailInfoRow}>
                       <span className={styles.detailInfoLabel}>Doctor</span>
@@ -539,10 +578,18 @@ const LabReportList = () => {
             </div>
 
             <div className={styles.detailModalFooter}>
-              <button onClick={() => handleDeleteClick(selectedReport)} className={styles.btnDelete}>
+              <button
+                onClick={() => handleDeleteClick(selectedReport)}
+                className={styles.btnDelete}
+                disabled={!!btnCooldown['delete']}
+              >
                 <FiTrash2 size={15} /> Delete Report
               </button>
-              <button onClick={() => handleUpdateClick(selectedReport)} className={styles.btnUpdate}>
+              <button
+                onClick={() => handleUpdateClick(selectedReport)}
+                className={styles.btnUpdate}
+                disabled={!!btnCooldown['update']}
+              >
                 <FiEdit size={15} /> Update Report
               </button>
             </div>
@@ -550,34 +597,18 @@ const LabReportList = () => {
         </div>
       )}
 
-      {/* Delete Confirmation */}
-      {deleteConfirm && (
-        <div className={styles.clinicModalOverlay} onClick={cancelDelete}>
-          <div className={styles.clinicModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.clinicModalHeader}>
-              <h2>Confirm Delete</h2>
-              <button onClick={cancelDelete} className={styles.clinicModalClose}>×</button>
-            </div>
-            <div className={styles.clinicModalBody}>
-              <p>Are you sure you want to delete this lab report?</p>
-              <p><strong>File Code:</strong> {deleteConfirm.patientFileNo || '—'}</p>
-              <p><strong>Patient:</strong> {deleteConfirm.patientName || '—'}</p>
-              <p className={styles.warningText}>This action cannot be undone.</p>
-            </div>
-            <div className={styles.clinicModalFooter}>
-              <button onClick={cancelDelete} className={styles.btnCancel} disabled={deleting}>
-                Cancel
-              </button>
-              <button onClick={confirmDelete} className={styles.btnDeleteConfirm} disabled={deleting}>
-                <FiTrash2 className={styles.btnIcon} />
-                {deleting ? 'Deleting...' : 'Yes, Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ── ConfirmPopup ── */}
+      <ConfirmPopup
+        visible={confirmPopup.visible}
+        message={`Delete report for "${confirmPopup.report?.patientName || '—'}"?`}
+        subMessage={`File Code: ${confirmPopup.report?.patientFileNo || '—'}. This action cannot be undone.`}
+        confirmLabel="Yes, Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteConfirm}
+        onCancel={closeConfirmPopup}
+      />
 
-      {/* Update Modal */}
+      {/* ── Update Modal ── */}
       {showUpdateModal && reportToUpdate && (
         <UpdateLabReport
           report={reportToUpdate}
@@ -585,6 +616,14 @@ const LabReportList = () => {
           onSuccess={handleUpdateSuccess}
         />
       )}
+
+      {/* ── MessagePopup (at root level so z-index is never blocked) ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
     </div>
   );
 };

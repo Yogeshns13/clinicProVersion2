@@ -1,18 +1,8 @@
 
 import {getSessionRef, generateRefKey, getUserId, getClinicId, getBranchId} from "./Api.js"
-import { API } from "./ApiConfiguration";
+import { API, checkDbError, extractBackendError } from "./ApiConfiguration";
 const CHANNEL_ID = 1;
 const PRODUCTION_MODE = 0;
-/* const API = axios.create({
-  baseURL: "/api",
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
-}); */
-
-
-
 
 export const getConsultationList = async (clinicId = 0, options = {}) => {
   const userId = getUserId();
@@ -45,7 +35,9 @@ export const getConsultationList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetConsultationList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+checkDbError(result);
+const results = Array.isArray(result) ? result : [];
     console.log("Consultation result:",results)
 
     return results.map((consult) => ({
@@ -85,7 +77,7 @@ export const getConsultationList = async (clinicId = 0, options = {}) => {
     throw {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || "Failed to fetch consultations",
+      message: extractBackendError(error) || error.response?.data?.message || "Failed to fetch consultations",
     };
   }
 };
@@ -130,7 +122,7 @@ export const addConsultation = async (consultationData) => {
   try {
     const response = await API.post("/AddConsultation", payload);
     const result = response.data?.result;
-
+    checkDbError(result);
     if (result?.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to create consultation");
     }
@@ -145,7 +137,7 @@ export const addConsultation = async (consultationData) => {
     throw {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.result?.OUT_ERROR || "Failed to add consultation",
+      message: extractBackendError(error) || error.response?.data?.result?.OUT_ERROR || "Failed to add consultation",
     };
   }
 };
@@ -186,7 +178,7 @@ export const updateConsultation = async (consultationData) => {
   try {
     const response = await API.post("/UpdateConsultation", payload);
     const result = response.data?.result;
-
+    checkDbError(result);
     if (result?.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Update failed");
     }
@@ -199,6 +191,7 @@ export const updateConsultation = async (consultationData) => {
   } catch (error) {
     console.error("updateConsultation failed:", error);
     throw new Error(
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       "Failed to update consultation"
@@ -246,7 +239,9 @@ export const getConsultingChargeConfigList = async (clinicId = 0, options = {}) 
   try {
     const response = await API.post("/GetConsultationChargeConfigList", payload);
 
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+   const result = response.data?.result;
+checkDbError(result);
+const results = Array.isArray(result) ? result : [];
     console.log("GetConsultationChargeConfigList response:", results);
 
     return results.map((charge) => ({
@@ -281,7 +276,7 @@ export const getConsultingChargeConfigList = async (clinicId = 0, options = {}) 
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch consultation charge configurations"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch consultation charge configurations"
     };
 
     throw err;
@@ -351,7 +346,7 @@ export const addConsultationChargeConfig = async (chargeData) => {
     console.log("AddConsultationChargeConfig response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -376,6 +371,7 @@ export const addConsultationChargeConfig = async (chargeData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -445,7 +441,7 @@ export const updateConsultationChargeConfig = async (chargeData) => {
     console.log("UpdateConsultationChargeConfig response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update consultation charge configuration");
     }
@@ -460,6 +456,7 @@ export const updateConsultationChargeConfig = async (chargeData) => {
     console.error("updateConsultationChargeConfig error:", error);
 
     const errorMessage =
+    extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -503,7 +500,7 @@ export const deleteConsultationChargeConfig = async (chargeId) => {
   try {
     const response = await API.post("/DeleteConsultationChargeConfig", payload);
     const result = response.data?.result;
-
+    checkDbError(result); 
     // Validate backend response
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete consultation charge configuration");
@@ -519,6 +516,7 @@ export const deleteConsultationChargeConfig = async (chargeId) => {
     console.error("deleteConsultationChargeConfig error:", error);
 
     const errorMsg =
+      extractBackendError(error) || 
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -580,7 +578,10 @@ export const getConsultationChargeList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetConsultationChargeList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
+
     console.log("GetConsultationChargeList response:", results);
 
     return results.map((item) => ({
@@ -627,7 +628,7 @@ export const getConsultationChargeList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch consultation charges"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch consultation charges"
     };
 
     throw err;
@@ -696,7 +697,7 @@ export const addConsultationCharge = async (chargeData) => {
     console.log("AddConsultationCharge response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -721,6 +722,7 @@ export const addConsultationCharge = async (chargeData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -764,7 +766,7 @@ export const cancelConsultationCharge = async (consChargeId) => {
 
     // Your sample shows result as an ARRAY containing one object
     const result = Array.isArray(resultArray) && resultArray.length > 0 ? resultArray[0] : null;
-
+    checkDbError(result); 
     // Validate backend response
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to cancel consultation charge");
@@ -780,6 +782,7 @@ export const cancelConsultationCharge = async (consChargeId) => {
     console.error("cancelConsultationCharge error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.[0]?.OUT_ERROR ||    // account for array response
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
@@ -843,7 +846,9 @@ export const getConsultationInvoiceDetailsList = async (clinicId = 0, options = 
 
   try {
     const response = await API.post("/GetConsultationInvoiceDetailList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetConsultationInvoiceDetailList response:", results);
 
     return results.map((detail) => ({
@@ -882,7 +887,7 @@ export const getConsultationInvoiceDetailsList = async (clinicId = 0, options = 
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch consultation invoice details"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch consultation invoice details"
     };
 
     throw err;
@@ -954,7 +959,7 @@ export const generateConsultationInvoice = async (invoiceData = {}) => {
     console.log("GenerateConsultationInvoice response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result); 
     if (!result || result.OUT_OK !== 1) {
       const errorMsg = result?.OUT_ERROR || "Failed to generate consultation invoice";
       throw new Error(errorMsg);
@@ -970,6 +975,7 @@ export const generateConsultationInvoice = async (invoiceData = {}) => {
     console.error("generateConsultationInvoice error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1028,7 +1034,9 @@ export const getLabInvoiceDetailList = async (clinicId = 0, options = {}) => {
     const response = await API.post("/GetLabInvoiceDetailList", payload);
 
     // Safely handle result array
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetLabInvoiceDetailList response:", results);
 
     return results.map((detail) => ({
@@ -1066,7 +1074,7 @@ export const getLabInvoiceDetailList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch lab invoice details",
+      message:extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch lab invoice details",
     };
 
     throw err;

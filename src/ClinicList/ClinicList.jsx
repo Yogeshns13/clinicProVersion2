@@ -1,20 +1,18 @@
 // src/components/ClinicList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  FiSearch,
-  FiPlus,
-  FiX,
-} from 'react-icons/fi';
-import { 
-  getClinicList, 
-  addClinic, 
-} from '../Api/Api.js';
+import { FiSearch, FiPlus, FiX } from 'react-icons/fi';
+import { getClinicList, addClinic, deleteClinic } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import UpdateClinic from './UpdateClinic.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 import styles from './ClinicList.module.css';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
-// ── Matches backend allowedCharactersRegex ──
+// ─────────────────────────────────────────────────────────────────────────────
+// Validation helpers  (unchanged from original)
+// ─────────────────────────────────────────────────────────────────────────────
 const allowedCharactersRegex = /^[A-Za-z0-9 ]+$/;
 
 const getLiveValidationMessage = (fieldName, value) => {
@@ -22,7 +20,8 @@ const getLiveValidationMessage = (fieldName, value) => {
     case 'clinicName':
       if (!value || !value.trim()) return 'ClinicName is required';
       if (value.trim().length > 100) return 'ClinicName should not exceed 100 characters';
-      if (!allowedCharactersRegex.test(value.trim())) return 'ClinicName should not contain special characters';
+      if (!allowedCharactersRegex.test(value.trim()))
+        return 'ClinicName should not contain special characters';
       return '';
 
     case 'address':
@@ -42,25 +41,30 @@ const getLiveValidationMessage = (fieldName, value) => {
 
     case 'gstNo':
       if (!value || !value.trim()) return 'GstNo is required';
-      if (value.trim().length < 15) return `GST number must be 15 characters (${value.trim().length}/15 entered)`;
+      if (value.trim().length < 15)
+        return `GST number must be 15 characters (${value.trim().length}/15 entered)`;
       if (value.trim().length > 15) return 'GST number must not exceed 15 characters';
-      if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value.trim())) return 'Invalid GST format (e.g. 29ABCDE1234F1Z5)';
+      if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value.trim()))
+        return 'Invalid GST format (e.g. 29ABCDE1234F1Z5)';
       return '';
 
     case 'cgstPercentage':
-      if (value === '' || value === null || value === undefined) return 'CgstPercentage is required';
+      if (value === '' || value === null || value === undefined)
+        return 'CgstPercentage is required';
       if (isNaN(Number(value))) return 'CgstPercentage should be a decimal';
       return '';
 
     case 'sgstPercentage':
-      if (value === '' || value === null || value === undefined) return 'SgstPercentage is required';
+      if (value === '' || value === null || value === undefined)
+        return 'SgstPercentage is required';
       if (isNaN(Number(value))) return 'SgstPercentage should be a decimal';
       return '';
 
     case 'ownerName':
       if (!value || !value.trim()) return 'OwnerName is required';
       if (value.trim().length > 100) return 'OwnerName should not exceed 100 characters';
-      if (!allowedCharactersRegex.test(value.trim())) return 'OwnerName should not contain special characters';
+      if (!allowedCharactersRegex.test(value.trim()))
+        return 'OwnerName should not contain special characters';
       return '';
 
     case 'mobile':
@@ -81,9 +85,8 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (!value || !value.trim()) return 'Email is required';
       if (value && value.trim()) {
         if (!value.includes('@')) return 'Email must contain @';
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()))
           return 'Please enter a valid email address';
-        }
         if (value.trim().length > 100) return 'Email must not exceed 100 characters';
       }
       return '';
@@ -95,8 +98,10 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
 
     case 'lastFileSeq':
-      if (value === '' || value === null || value === undefined) return 'LastFileSeq is required';
-      if (!Number.isInteger(Number(value)) || isNaN(Number(value))) return 'LastFileSeq should be a number';
+      if (value === '' || value === null || value === undefined)
+        return 'LastFileSeq is required';
+      if (!Number.isInteger(Number(value)) || isNaN(Number(value)))
+        return 'LastFileSeq should be a number';
       return '';
 
     case 'invoicePrefix':
@@ -107,6 +112,7 @@ const getLiveValidationMessage = (fieldName, value) => {
 
     case 'latitude':
       if (value === '') return '';
+      // eslint-disable-next-line no-case-declarations
       const lat = Number(value);
       if (isNaN(lat)) return 'Please enter a valid number';
       if (lat < -90 || lat > 90) return 'Latitude must be between -90 and +90';
@@ -114,6 +120,7 @@ const getLiveValidationMessage = (fieldName, value) => {
 
     case 'longitude':
       if (value === '') return '';
+      // eslint-disable-next-line no-case-declarations
       const lng = Number(value);
       if (isNaN(lng)) return 'Please enter a valid number';
       if (lng < -180 || lng > 180) return 'Longitude must be between -180 and +180';
@@ -130,7 +137,7 @@ const filterInput = (fieldName, value) => {
     case 'ownerName':
     case 'clinicType':
       return value.replace(/[^a-zA-Z\s]/g, '');
-    
+
     case 'latitude':
     case 'longitude':
       return value
@@ -141,20 +148,21 @@ const filterInput = (fieldName, value) => {
     case 'mobile':
     case 'altMobile':
       return value.replace(/[^0-9]/g, '');
-    
+
     case 'gstNo':
+      // eslint-disable-next-line no-case-declarations
       const filtered = value.replace(/[^A-Z0-9]/g, '');
-      return filtered.substring(0, 15),value.toUpperCase();
-      
+      return filtered.substring(0, 15), value.toUpperCase();
+
     case 'fileNoPrefix':
     case 'invoicePrefix':
-      return value.replace(/[^A-Za-z0-9_-]/g, ''),value.toUpperCase();
-    
+      return value.replace(/[^A-Za-z0-9_-]/g, ''), value.toUpperCase();
+
     case 'cgstPercentage':
     case 'sgstPercentage':
     case 'lastFileSeq':
       return value.replace(/[^0-9.]/g, '');
-    
+
     default:
       return value;
   }
@@ -178,71 +186,76 @@ const buildStatusParam = (statusFilter) => {
   return -1;
 };
 
-// ────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// ClinicList
+// ─────────────────────────────────────────────────────────────────────────────
 const ClinicList = () => {
-  // Data
+  // ── Data ──
   const [clinics, setClinics] = useState([]);
 
-  // Filter inputs (not applied until Search is clicked)
+  // ── Central popup — used for ClinicList's own actions (fetch, addClinic, deleteClinic) ──
+  // NOTE: Update success/error popups are shown by UpdateClinic itself.
+  //       handleUpdateSuccess and handleUpdateError must NOT call showPopup.
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── ConfirmPopup for delete ──
+  const [deleteConfirm,  setDeleteConfirm]  = useState(null); // holds clinic object or null
+  const [deleteLoading,  setDeleteLoading]  = useState(false);
+
+  // ── Filter inputs (not applied until Search is clicked) ──
   const [filterInputs, setFilterInputs] = useState({
-    searchType: 'name',
-    searchValue: '',
+    searchType:   'name',
+    searchValue:  '',
     statusFilter: '1',
   });
 
-  // Applied filters (only set when Search is clicked)
+  // ── Applied filters (only set when Search is clicked) ──
   const [appliedFilters, setAppliedFilters] = useState({
-    searchType: 'name',
-    searchValue: '',
+    searchType:   'name',
+    searchValue:  '',
     statusFilter: '1',
   });
 
-  // Pagination
+  // ── Pagination ──
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize]      = useState(20);
 
-  // Selected / Modal
+  // ── Table state ──
   const [selectedClinic, setSelectedClinic] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading,        setLoading]        = useState(true);
+  const [error,          setError]          = useState(null);
 
-  // Add Form Modal
+  // ── Button 2-sec cooldowns ──
+  const [searchBtnDisabled, setSearchBtnDisabled] = useState(false);
+  const [clearBtnDisabled,  setClearBtnDisabled]  = useState(false);
+  const [deleteBtnCooldown, setDeleteBtnCooldown] = useState(false);
+
+  // ── Add Form Modal ──
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [formData, setFormData] = useState({
-    clinicName: '',
-    address: '',
-    location: '',
-    latitude: '',
-    longitude: '',
-    clinicType: '',
-    gstNo: '',
-    cgstPercentage: '',
-    sgstPercentage: '',
-    ownerName: '',
-    mobile: '',
-    altMobile: '',
-    email: '',
-    fileNoPrefix: '',
-    lastFileSeq: '',
-    invoicePrefix: '',
+    clinicName: '',  address: '',      location: '',  latitude: '',
+    longitude: '',   clinicType: '',   gstNo: '',     cgstPercentage: '',
+    sgstPercentage: '', ownerName: '', mobile: '',    altMobile: '',
+    email: '',       fileNoPrefix: '', lastFileSeq: '', invoicePrefix: '',
   });
-  const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState('');
-  const [formSuccess, setFormSuccess] = useState(false);
+  const [formLoading,        setFormLoading]        = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
+  const [submitAttempted,    setSubmitAttempted]    = useState(false);
 
-  // Update Modal
+  // ── Update Modal ──
   const [updateClinicData, setUpdateClinicData] = useState(null);
   const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);
 
-  // ────────────────────────────────────────────────
+  // ─────────────────────────────────────────────
   const fetchClinics = async (filters, currentPage) => {
     try {
       setLoading(true);
       setError(null);
       const searchPayload = buildSearchPayload(filters.searchType, filters.searchValue);
       const data = await getClinicList({
-        Page: currentPage,
+        Page:     currentPage,
         PageSize: pageSize,
         ...searchPayload,
         Status: buildStatusParam(filters.statusFilter),
@@ -250,11 +263,7 @@ const ClinicList = () => {
       setClinics(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('fetchClinics error:', err);
-      setError(
-        err?.status >= 400 || err?.code >= 400
-          ? err
-          : { message: err.message || 'Failed to load clinics' }
-      );
+      showPopup('Failed to fetch clinics. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -265,7 +274,7 @@ const ClinicList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ────────────────────────────────────────────────
+  // ─────────────────────────────────────────────
   const isFormValid = useMemo(() => {
     const requiredStringFields = [
       'clinicName', 'address', 'clinicType', 'gstNo',
@@ -281,73 +290,70 @@ const ClinicList = () => {
     return true;
   }, [formData, validationMessages]);
 
-  // ────────────────────────────────────────────────
+  // ─────────────────────────────────────────────
   const getStatusClass = (status) => {
-    if (status === 'active') return styles.active;
+    if (status === 'active')   return styles.active;
     if (status === 'inactive') return styles.inactive;
     return styles.inactive;
   };
 
-  const refreshClinics = () => {
-    fetchClinics(appliedFilters, page);
-  };
+  const refreshClinics = () => fetchClinics(appliedFilters, page);
 
   const validateAllFields = () => {
     const fieldsToValidate = {
-      clinicName: formData.clinicName,
-      address: formData.address,
-      location: formData.location,
-      clinicType: formData.clinicType,
-      gstNo: formData.gstNo,
+      clinicName:     formData.clinicName,
+      address:        formData.address,
+      location:       formData.location,
+      clinicType:     formData.clinicType,
+      gstNo:          formData.gstNo,
       cgstPercentage: formData.cgstPercentage,
       sgstPercentage: formData.sgstPercentage,
-      ownerName: formData.ownerName,
-      mobile: formData.mobile,
-      altMobile: formData.altMobile,
-      email: formData.email,
-      fileNoPrefix: formData.fileNoPrefix,
-      lastFileSeq: formData.lastFileSeq,
-      invoicePrefix: formData.invoicePrefix,
-      latitude: formData.latitude,
-      longitude: formData.longitude,
+      ownerName:      formData.ownerName,
+      mobile:         formData.mobile,
+      altMobile:      formData.altMobile,
+      email:          formData.email,
+      fileNoPrefix:   formData.fileNoPrefix,
+      lastFileSeq:    formData.lastFileSeq,
+      invoicePrefix:  formData.invoicePrefix,
+      latitude:       formData.latitude,
+      longitude:      formData.longitude,
     };
-
     const messages = {};
     let hasErrors = false;
-
     for (const [field, value] of Object.entries(fieldsToValidate)) {
       const msg = getLiveValidationMessage(field, value);
       messages[field] = msg;
       if (msg) hasErrors = true;
     }
-
     setValidationMessages(messages);
     return !hasErrors;
   };
 
-  // ────────────────────────────────────────────────
+  // ─────────────────────────────────────────────
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilterInputs(prev => ({ ...prev, [name]: value }));
+    setFilterInputs((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
+    if (searchBtnDisabled) return;
+    setSearchBtnDisabled(true);
     const newFilters = { ...filterInputs };
     setAppliedFilters(newFilters);
     setPage(1);
-    fetchClinics(newFilters, 1);
+    await fetchClinics(newFilters, 1);
+    setTimeout(() => setSearchBtnDisabled(false), 2000);
   };
 
-  const handleClearFilters = () => {
-    const defaultState = {
-      searchType: 'name',
-      searchValue: '',
-      statusFilter: '1',
-    };
+  const handleClearFilters = async () => {
+    if (clearBtnDisabled) return;
+    setClearBtnDisabled(true);
+    const defaultState = { searchType: 'name', searchValue: '', statusFilter: '1' };
     setFilterInputs(defaultState);
     setAppliedFilters(defaultState);
     setPage(1);
-    fetchClinics(defaultState, 1);
+    await fetchClinics(defaultState, 1);
+    setTimeout(() => setClearBtnDisabled(false), 2000);
   };
 
   const handleKeyPress = (e) => {
@@ -361,39 +367,25 @@ const ClinicList = () => {
   };
 
   const openDetails = (clinic) => setSelectedClinic(clinic);
-  const closeModal = () => setSelectedClinic(null);
+  const closeModal  = ()       => setSelectedClinic(null);
 
   const openAddForm = () => {
     setFormData({
-      clinicName: '',
-      address: '',
-      location: '',
-      latitude: '',
-      longitude: '',
-      clinicType: '',
-      gstNo: '',
-      cgstPercentage: '',
-      sgstPercentage: '',
-      ownerName: '',
-      mobile: '',
-      altMobile: '',
-      email: '',
-      fileNoPrefix: '',
-      lastFileSeq: '',
-      invoicePrefix: '',
+      clinicName: '',  address: '',      location: '',  latitude: '',
+      longitude: '',   clinicType: '',   gstNo: '',     cgstPercentage: '',
+      sgstPercentage: '', ownerName: '', mobile: '',    altMobile: '',
+      email: '',       fileNoPrefix: '', lastFileSeq: '', invoicePrefix: '',
     });
-    setFormError('');
-    setFormSuccess(false);
     setValidationMessages({});
+    setSubmitAttempted(false);
     setIsAddFormOpen(true);
   };
 
   const closeAddForm = () => {
     setIsAddFormOpen(false);
     setFormLoading(false);
-    setFormError('');
-    setFormSuccess(false);
     setValidationMessages({});
+    setSubmitAttempted(false);
   };
 
   const handleInputChange = (e) => {
@@ -403,7 +395,7 @@ const ClinicList = () => {
     if (name === 'latitude' || name === 'longitude') {
       setFormData((prev) => {
         const updated = { ...prev, [name]: filteredValue };
-        const lat = name === 'latitude' ? filteredValue : prev.latitude || '';
+        const lat = name === 'latitude'  ? filteredValue : prev.latitude  || '';
         const lng = name === 'longitude' ? filteredValue : prev.longitude || '';
         updated.location = [lat, lng].filter(Boolean).join(',');
         const locationMsg = getLiveValidationMessage('location', updated.location);
@@ -421,40 +413,48 @@ const ClinicList = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!isFormValid) {
+      setSubmitAttempted(true);
+      validateAllFields();
+      showPopup('Please fill all required fields before submitting.', 'warning');
+      return;
+    }
+
     const isValid = validateAllFields();
-    if (!isValid) return;
+    if (!isValid) {
+      showPopup('Please fill all required fields before submitting.', 'warning');
+      return;
+    }
 
     setFormLoading(true);
-    setFormError('');
-    setFormSuccess(false);
     setError(null);
 
     try {
       await addClinic({
-        clinicName: formData.clinicName.trim(),
-        address: formData.address.trim(),
-        location: formData.location.trim(),
-        clinicType: formData.clinicType.trim(),
-        gstNo: formData.gstNo.trim(),
+        clinicName:     formData.clinicName.trim(),
+        address:        formData.address.trim(),
+        location:       formData.location.trim(),
+        clinicType:     formData.clinicType.trim(),
+        gstNo:          formData.gstNo.trim(),
         cgstPercentage: Number(formData.cgstPercentage),
         sgstPercentage: Number(formData.sgstPercentage),
-        ownerName: formData.ownerName.trim(),
-        mobile: formData.mobile.trim(),
-        altMobile: formData.altMobile.trim(),
-        email: formData.email.trim(),
-        fileNoPrefix: formData.fileNoPrefix.trim(),
-        lastFileSeq: Number(formData.lastFileSeq),
-        invoicePrefix: formData.invoicePrefix.trim(),
+        ownerName:      formData.ownerName.trim(),
+        mobile:         formData.mobile.trim(),
+        altMobile:      formData.altMobile.trim(),
+        email:          formData.email.trim(),
+        fileNoPrefix:   formData.fileNoPrefix.trim(),
+        lastFileSeq:    Number(formData.lastFileSeq),
+        invoicePrefix:  formData.invoicePrefix.trim(),
       });
 
-      setFormSuccess(true);
-      setTimeout(() => {
-        closeAddForm();
-        refreshClinics();
-      }, 1500);
+      // ── FIX: Close the modal first, then show the popup once in the main view ──
+      closeAddForm();
+      refreshClinics();
+      showPopup('Clinic added successfully!', 'success');
     } catch (err) {
       console.error('Add clinic failed:', err);
-      setFormError(err.message?.split(':')[1]?.trim() || 'Failed to add clinic.');
+      const errMsg = err.message || 'Failed to add clinic. Please try again.';
+      showPopup(errMsg, 'error');
     } finally {
       setFormLoading(false);
     }
@@ -471,18 +471,55 @@ const ClinicList = () => {
     setUpdateClinicData(null);
   };
 
+  // ── onSuccess: close modal + refresh ONLY — no showPopup here ──
+  // UpdateClinic already showed its own success popup.
   const handleUpdateSuccess = () => {
     setIsUpdateFormOpen(false);
     setUpdateClinicData(null);
     refreshClinics();
   };
 
-  // ────────────────────────────────────────────────
+  // ── onError: log if needed — no showPopup here ──
+  // UpdateClinic already showed its own error popup.
+  const handleUpdateError = (message) => {
+    console.error('Update clinic error (handled by UpdateClinic popup):', message);
+  };
+
+  // ── Delete: open ConfirmPopup ──
+  const handleDeleteClick = (clinic) => {
+    if (deleteBtnCooldown) return;
+    setDeleteBtnCooldown(true);
+    setTimeout(() => setDeleteBtnCooldown(false), 2000);
+    setDeleteConfirm(clinic);
+  };
+  const handleDeleteCancel = () => setDeleteConfirm(null);
+
+  // ── Delete: perform after confirmation ──
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
+    setDeleteLoading(true);
+    setDeleteConfirm(null);
+    setSelectedClinic(null);
+    try {
+      setLoading(true);
+      await deleteClinic(deleteConfirm.id);
+      showPopup('Clinic deleted successfully!', 'success');
+      refreshClinics();
+    } catch (err) {
+      console.error('Delete clinic failed:', err);
+      showPopup(err.message || 'Failed to delete clinic.', 'error');
+    } finally {
+      setDeleteLoading(false);
+      setLoading(false);
+    }
+  };
+
+  // ─────────────────────────────────────────────
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.clinicLoading}>Loading clinics...</div>;
+  if (loading) return <div className={styles.clinicLoading}><LoadingPage/></div>;
 
   if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
@@ -493,11 +530,30 @@ const ClinicList = () => {
   const startRecord = clinics.length === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord   = (page - 1) * pageSize + clinics.length;
 
-  // ────────────────────────────────────────────────
+  // ─────────────────────────────────────────────
   return (
     <div className={styles.clinicListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Clinic Management" />
+
+      {/* ── ClinicList's own MessagePopup (fetch errors, addClinic, deleteClinic feedback) ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
+
+      {/* ── ConfirmPopup for delete clinic ── */}
+      <ConfirmPopup
+        visible={!!deleteConfirm}
+        message={`Delete clinic "${deleteConfirm?.name || 'this clinic'}"?`}
+        subMessage="This action cannot be undone. The clinic will be permanently removed."
+        confirmLabel={deleteLoading ? 'Deleting...' : 'Yes, Delete'}
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
 
       {/* ── Filters + Add Clinic bar ── */}
       <div className={styles.filtersContainer}>
@@ -544,13 +600,29 @@ const ClinicList = () => {
           </div>
 
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              className={styles.searchButton}
+              disabled={searchBtnDisabled}
+              style={{
+                opacity: searchBtnDisabled ? 0.6 : 1,
+                cursor:  searchBtnDisabled ? 'not-allowed' : 'pointer',
+              }}
+            >
               <FiSearch size={18} />
               Search
             </button>
 
             {hasActiveFilter && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
+              <button
+                onClick={handleClearFilters}
+                className={styles.clearButton}
+                disabled={clearBtnDisabled}
+                style={{
+                  opacity: clearBtnDisabled ? 0.6 : 1,
+                  cursor:  clearBtnDisabled ? 'not-allowed' : 'pointer',
+                }}
+              >
                 <FiX size={18} />
                 Clear
               </button>
@@ -607,12 +679,17 @@ const ClinicList = () => {
                     <td>{clinic.mobile || '—'}</td>
                     <td>{clinic.gstNo || '—'}</td>
                     <td>
-                      <span className={`${styles.statusBadge} ${getStatusClass(clinic.status)}`}>
+                      <span
+                        className={`${styles.statusBadge} ${getStatusClass(clinic.status)}`}
+                      >
                         {clinic.status.toUpperCase()}
                       </span>
                     </td>
                     <td>
-                      <button onClick={() => openDetails(clinic)} className={styles.clinicDetailsBtn}>
+                      <button
+                        onClick={() => openDetails(clinic)}
+                        className={styles.clinicDetailsBtn}
+                      >
                         View Details
                       </button>
                     </td>
@@ -623,7 +700,7 @@ const ClinicList = () => {
           </table>
         </div>
 
-        {/* ── Pagination Bar — pinned to bottom of tableSection ── */}
+        {/* ── Pagination Bar ── */}
         <div className={styles.paginationBar}>
           <div className={styles.paginationInfo}>
             {clinics.length > 0
@@ -669,19 +746,29 @@ const ClinicList = () => {
           </div>
         </div>
 
-      </div>{/* end tableSection */}
+      </div>
 
       {/* ──────────────── Details Modal ──────────────── */}
       {selectedClinic && (
         <div className={styles.detailModalOverlay} onClick={closeModal}>
-          <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
-
+          <div
+            className={styles.detailModalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className={styles.detailModalHeader}>
               <div className={styles.detailHeaderContent}>
                 <h2>{selectedClinic.name}</h2>
                 <div className={styles.detailHeaderMeta}>
-                  <span className={styles.workIdBadge}>{selectedClinic.clinicType || 'Clinic'}</span>
-                  <span className={`${styles.workIdBadge} ${selectedClinic.status === 'active' ? styles.activeBadge : styles.inactiveBadge}`}>
+                  <span className={styles.workIdBadge}>
+                    {selectedClinic.clinicType || 'Clinic'}
+                  </span>
+                  <span
+                    className={`${styles.workIdBadge} ${
+                      selectedClinic.status === 'active'
+                        ? styles.activeBadge
+                        : styles.inactiveBadge
+                    }`}
+                  >
                     {selectedClinic.status?.toUpperCase()}
                   </span>
                 </div>
@@ -693,9 +780,7 @@ const ClinicList = () => {
               <div className={styles.infoSection}>
 
                 <div className={styles.infoCard}>
-                  <div className={styles.infoHeader}>
-                    <h3>Contact Information</h3>
-                  </div>
+                  <div className={styles.infoHeader}><h3>Contact Information</h3></div>
                   <div className={styles.infoContent}>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Owner Name</span>
@@ -725,9 +810,7 @@ const ClinicList = () => {
                 </div>
 
                 <div className={styles.infoCard}>
-                  <div className={styles.infoHeader}>
-                    <h3>Tax & Billing Information</h3>
-                  </div>
+                  <div className={styles.infoHeader}><h3>Tax &amp; Billing Information</h3></div>
                   <div className={styles.infoContent}>
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>GST No</span>
@@ -754,16 +837,23 @@ const ClinicList = () => {
 
               </div>
 
+              {/* Footer — Delete Clinic (left) | Update Clinic (right) */}
               <div className={styles.detailModalFooter}>
-                <button onClick={closeModal} className={styles.btnCancel}>
-                  Close
+                <button
+                  onClick={() => handleDeleteClick(selectedClinic)}
+                  disabled={deleteBtnCooldown || deleteLoading}
+                  className={styles.btnCancel}
+                >
+                  Delete Clinic
                 </button>
-                <button onClick={() => handleUpdateClick(selectedClinic)} className={styles.btnUpdate}>
+                <button
+                  onClick={() => handleUpdateClick(selectedClinic)}
+                  className={styles.btnUpdate}
+                >
                   Update Clinic
                 </button>
               </div>
             </div>
-
           </div>
         </div>
       )}
@@ -771,8 +861,10 @@ const ClinicList = () => {
       {/* ──────────────── Add Form Modal ──────────────── */}
       {isAddFormOpen && (
         <div className={styles.detailModalOverlay}>
-          <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
-
+          <div
+            className={styles.addModalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className={styles.detailModalHeader}>
               <div className={styles.detailHeaderContent}>
                 <h2>Add New Clinic</h2>
@@ -781,13 +873,10 @@ const ClinicList = () => {
             </div>
 
             <form onSubmit={handleSubmit} className={styles.addModalBody}>
-              {formError && <div className={styles.formError}>{formError}</div>}
-              {formSuccess && <div className={styles.formSuccess}>Clinic added successfully!</div>}
 
+              {/* ── Basic Information ── */}
               <div className={styles.addSection}>
-                <div className={styles.addSectionHeader}>
-                  <h3>Basic Information</h3>
-                </div>
+                <div className={styles.addSectionHeader}><h3>Basic Information</h3></div>
                 <div className={styles.addFormGrid}>
 
                   <div className={styles.addFormGroup}>
@@ -862,6 +951,7 @@ const ClinicList = () => {
                           placeholder="Latitude"
                           value={formData.latitude || ''}
                           onChange={handleInputChange}
+                          required
                         />
                         {validationMessages.latitude && (
                           <span className={styles.validationMsg}>{validationMessages.latitude}</span>
@@ -877,6 +967,7 @@ const ClinicList = () => {
                           placeholder="Longitude"
                           value={formData.longitude || ''}
                           onChange={handleInputChange}
+                          required
                         />
                         {validationMessages.longitude && (
                           <span className={styles.validationMsg}>{validationMessages.longitude}</span>
@@ -886,15 +977,17 @@ const ClinicList = () => {
                     {validationMessages.location && (
                       <span className={styles.validationMsg}>{validationMessages.location}</span>
                     )}
-                    <small className={styles.coordHint}>Example: 9.9252, 78.1198 (Madurai city center)</small>
+                    <small className={styles.coordHint}>
+                      Example: 9.9252, 78.1198 (Madurai city center)
+                    </small>
                   </div>
+
                 </div>
               </div>
 
+              {/* ── Contact Information ── */}
               <div className={styles.addSection}>
-                <div className={styles.addSectionHeader}>
-                  <h3>Contact Information</h3>
-                </div>
+                <div className={styles.addSectionHeader}><h3>Contact Information</h3></div>
                 <div className={styles.addFormGridThreeCol}>
 
                   <div className={styles.addFormGroup}>
@@ -945,10 +1038,9 @@ const ClinicList = () => {
                 </div>
               </div>
 
+              {/* ── Tax Information ── */}
               <div className={styles.addSection}>
-                <div className={styles.addSectionHeader}>
-                  <h3>Tax Information</h3>
-                </div>
+                <div className={styles.addSectionHeader}><h3>Tax Information</h3></div>
                 <div className={styles.addFormGridThreeCol}>
 
                   <div className={styles.addFormGroup}>
@@ -974,6 +1066,7 @@ const ClinicList = () => {
                       value={formData.cgstPercentage}
                       onChange={handleInputChange}
                       min="0"
+                      max={100}
                       step="0.01"
                       placeholder="0.00"
                     />
@@ -991,6 +1084,7 @@ const ClinicList = () => {
                       value={formData.sgstPercentage}
                       onChange={handleInputChange}
                       min="0"
+                      max={100}
                       step="0.01"
                       placeholder="0.00"
                     />
@@ -1002,10 +1096,9 @@ const ClinicList = () => {
                 </div>
               </div>
 
+              {/* ── Billing Configuration ── */}
               <div className={styles.addSection}>
-                <div className={styles.addSectionHeader}>
-                  <h3>Billing Configuration</h3>
-                </div>
+                <div className={styles.addSectionHeader}><h3>Billing Configuration</h3></div>
                 <div className={styles.addFormGrid}>
 
                   <div className={styles.addFormGroup}>
@@ -1016,15 +1109,21 @@ const ClinicList = () => {
                       onChange={handleInputChange}
                       onKeyDown={(e) => {
                         const char = e.key;
-                        if (['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Enter'].includes(char) || e.ctrlKey || e.metaKey) return;
+                        if (
+                          ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Enter'].includes(char) ||
+                          e.ctrlKey || e.metaKey
+                        ) return;
                         if (!/[A-Za-z0-9_-]/.test(char)) e.preventDefault();
                       }}
                       onPaste={(e) => {
                         e.preventDefault();
                         const pasted = (e.clipboardData || window.clipboardData).getData('text');
-                        const clean = pasted.replace(/[^A-Za-z0-9_-]/g, '');
-                        const input = e.target;
-                        const newValue = input.value.substring(0, input.selectionStart) + clean + input.value.substring(input.selectionEnd);
+                        const clean  = pasted.replace(/[^A-Za-z0-9_-]/g, '');
+                        const input  = e.target;
+                        const newValue =
+                          input.value.substring(0, input.selectionStart) +
+                          clean +
+                          input.value.substring(input.selectionEnd);
                         setFormData((prev) => ({ ...prev, [input.name]: newValue }));
                       }}
                       placeholder="e.g. CPT"
@@ -1059,15 +1158,21 @@ const ClinicList = () => {
                       onChange={handleInputChange}
                       onKeyDown={(e) => {
                         const char = e.key;
-                        if (['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Enter'].includes(char) || e.ctrlKey || e.metaKey) return;
+                        if (
+                          ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Enter'].includes(char) ||
+                          e.ctrlKey || e.metaKey
+                        ) return;
                         if (!/[A-Za-z0-9_-]/.test(char)) e.preventDefault();
                       }}
                       onPaste={(e) => {
                         e.preventDefault();
                         const pasted = (e.clipboardData || window.clipboardData).getData('text');
-                        const clean = pasted.replace(/[^A-Za-z0-9_-]/g, '');
-                        const input = e.target;
-                        const newValue = input.value.substring(0, input.selectionStart) + clean + input.value.substring(input.selectionEnd);
+                        const clean  = pasted.replace(/[^A-Za-z0-9_-]/g, '');
+                        const input  = e.target;
+                        const newValue =
+                          input.value.substring(0, input.selectionStart) +
+                          clean +
+                          input.value.substring(input.selectionEnd);
                         setFormData((prev) => ({ ...prev, [input.name]: newValue }));
                       }}
                       placeholder="e.g. CPT-INV"
@@ -1088,6 +1193,7 @@ const ClinicList = () => {
                   type="submit"
                   disabled={formLoading}
                   className={`${styles.btnSubmit} ${!isFormValid ? styles.btnSubmitDisabled : ''}`}
+                  title={!isFormValid ? 'Please fill all required fields' : ''}
                 >
                   {formLoading ? 'Adding...' : 'Add Clinic'}
                 </button>
@@ -1103,6 +1209,7 @@ const ClinicList = () => {
           clinic={updateClinicData}
           onClose={handleUpdateClose}
           onSuccess={handleUpdateSuccess}
+          onError={handleUpdateError}
         />
       )}
     </div>

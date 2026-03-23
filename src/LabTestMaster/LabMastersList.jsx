@@ -7,7 +7,7 @@ import {
   FiPackage,
   FiFileText,
 } from 'react-icons/fi';
-import { 
+import {
   getLabTestMasterList,
   addLabTestMaster,
   deleteLabTestMaster,
@@ -16,52 +16,67 @@ import {
   getLabTestPackageItemList,
   addLabPackageItem,
   deleteLabPackageItem,
-  rebuildPackageFees
+  rebuildPackageFees,
 } from '../Api/ApiLabTests.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
 import ViewLabMaster from './ViewLabMaster.jsx';
 import ViewLabPackage from './ViewLabPackage.jsx';
 import styles from './LabMaster.module.css';
 import UpdateLabTestMaster from './UpdateLabTestMaster.jsx';
 import UpdateLabTestPackage from './UpdateLabTestPackage.jsx';
-import { FaClinicMedical } from 'react-icons/fa'; 
+import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 const PAGE_SIZE = 20;
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
     case 'TestName':
+      if (!value || !value.trim()) return 'Test name is required';
+      if (value.trim().length < 3)   return 'Test name must be at least 3 characters';
+      if (value.trim().length > 100) return 'Test name must not exceed 100 characters';
+      return '';
+
     case 'packName':
       if (!value || !value.trim()) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name is required`;
       if (/\d/.test(value)) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name cannot contain numbers`;
-      if (value.trim().length < 2) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name must be at least 2 characters`;
+      if (value.trim().length < 2)   return `${fieldName === 'TestName' ? 'Test' : 'Package'} name must be at least 2 characters`;
       if (value.trim().length > 100) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name must not exceed 100 characters`;
       return '';
 
     case 'ShortName':
+      if (!value || !value.trim()) return 'Short name is required';
+      if (value.trim().length < 2)  return 'Short name must be at least 2 characters';
+      if (value.trim().length > 20) return 'Short name must not exceed 20 characters';
+      return '';
+
     case 'packShortName':
       if (!value || !value.trim()) return 'Short name is required';
-      if (/\d/.test(value)) return 'Short name cannot contain numbers';
-      if (value.trim().length < 2) return 'Short name must be at least 2 characters';
+      if (/\d/.test(value))        return 'Short name cannot contain numbers';
+      if (value.trim().length < 2)  return 'Short name must be at least 2 characters';
       if (value.trim().length > 20) return 'Short name must not exceed 20 characters';
       return '';
 
     case 'Description':
+      if (value && value.length > 500) return 'Description must not exceed 500 characters';
+      return '';
+
     case 'description':
       if (value && value.length > 500) return 'Description must not exceed 500 characters';
       return '';
 
     case 'NormalRange':
       if (value && /[a-zA-Z]/.test(value)) return 'Normal range cannot contain letters';
-      if (value && value.length > 50) return 'Normal range must not exceed 50 characters';
+      if (value && value.length > 50)       return 'Normal range must not exceed 50 characters';
       return '';
 
     case 'Units':
-      if (value && /[0-9]/.test(value)) return 'Units cannot contain numbers';
+      if (value && /[0-9]/.test(value))       return 'Units cannot contain numbers';
       if (value && /[^a-zA-Z\s]/.test(value)) return 'Units cannot contain special characters';
-      if (value && value.length > 30) return 'Units must not exceed 30 characters';
+      if (value && value.length > 30)          return 'Units must not exceed 30 characters';
       return '';
 
     case 'Remarks':
@@ -69,20 +84,16 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
 
     case 'Fees':
-      if (value === '' || value === null || value === undefined) return '';
-      const testFee = Number(value);
-      if (isNaN(testFee)) return 'Must be a valid number';
-      if (testFee < 0) return 'Fees cannot be negative';
-      if (testFee > 1000000) return 'Fees cannot exceed ₹10,00,000';
-      return '';
+      if (!value || value.trim() === '') return 'Fees is required';
+  if (!/^\d+(\.\d{1,2})?$/.test(value)) return 'Enter a valid amount (e.g., 100 or 100.50)';
+  if (Number(value) <= 0) return 'Fees must be greater than 0';
+  return '';
 
     case 'fees':
-      if (value === '' || value === null || value === undefined) return 'Fees is required';
-      const fee = Number(value);
-      if (isNaN(fee)) return 'Must be a valid number';
-      if (fee < 0) return 'Fees cannot be negative';
-      if (fee > 1000000) return 'Fees cannot exceed ₹10,00,000';
-      return '';
+    if (!value || value.trim() === '') return 'Fees is required';
+  if (!/^\d+(\.\d{1,2})?$/.test(value)) return 'Enter a valid amount (e.g., 100 or 100.50)';
+  if (Number(value) <= 0) return 'Fees must be greater than 0';
+  return '';
 
     case 'CGSTPercentage':
     case 'SGSTPercentage':
@@ -90,9 +101,9 @@ const getLiveValidationMessage = (fieldName, value) => {
     case 'sgstPercentage':
       if (value === '' || value === null || value === undefined) return '';
       const percentage = Number(value);
-      if (isNaN(percentage)) return 'Must be a valid number';
-      if (percentage < 0) return 'Percentage cannot be negative';
-      if (percentage > 100) return 'Percentage cannot exceed 100';
+      if (isNaN(percentage))  return 'Must be a valid number';
+      if (percentage < 0)     return 'Percentage cannot be negative';
+      if (percentage > 100)   return 'Percentage cannot exceed 100';
       return '';
 
     default:
@@ -105,7 +116,7 @@ const filterInput = (fieldName, value) => {
     case 'TestName':
     case 'packName':
       return value.replace(/[^a-zA-Z\s\-().,&]/g, '');
-    
+
     case 'ShortName':
     case 'packShortName':
       return value.replace(/[^A-Za-z-]/g, '');
@@ -126,169 +137,184 @@ const filterInput = (fieldName, value) => {
 
     case 'Units':
       return value.replace(/[^a-zA-Z\s]/g, '');
-    
+
     case 'NormalRange':
       return value.replace(/[a-zA-Z]/g, '');
-    
+
     default:
       return value;
   }
 };
 
 const TEST_TYPES = [
-  { id: 1, label: 'Blood' },
-  { id: 2, label: 'Urine' },
+  { id: 1, label: 'Blood'  },
+  { id: 2, label: 'Urine'  },
   { id: 3, label: 'Saliva' },
-  { id: 4, label: 'Stool' },
-  { id: 5, label: 'CSF' },
+  { id: 4, label: 'Stool'  },
+  { id: 5, label: 'CSF'    },
   { id: 6, label: 'Tissue' },
-  { id: 7, label: 'Other' },
+  { id: 7, label: 'Other'  },
 ];
 
 const TEST_STATUS_OPTIONS = [
-  { id: 1, label: 'Active' },
-  { id: 2, label: 'Inactive' },
+  { id: 1, label: 'Active'     },
+  { id: 2, label: 'Inactive'   },
   { id: 3, label: 'Deprecated' },
 ];
 
 const PACKAGE_STATUS_OPTIONS = [
-  { id: 1, label: 'Active' },
+  { id: 1, label: 'Active'   },
   { id: 2, label: 'Inactive' },
 ];
 
-const MASTER_SEARCH_TYPE_OPTIONS = [
-  { value: 'testName', label: 'Test Name' },
-];
+const MASTER_SEARCH_TYPE_OPTIONS  = [{ value: 'testName',  label: 'Test Name'    }];
+const PACKAGE_SEARCH_TYPE_OPTIONS = [{ value: 'packName',  label: 'Package Name' }];
 
-const PACKAGE_SEARCH_TYPE_OPTIONS = [
-  { value: 'packName', label: 'Package Name' },
-];
-
+// ──────────────────────────────────────────────────
 const LabMasterList = () => {
   const today = new Date().toISOString().split('T')[0];
 
   const [activeTab, setActiveTab] = useState('master');
 
   // ===== LAB TEST MASTER =====
-  const [tests, setTests] = useState([]);
-  const [allTests, setAllTests] = useState([]);
-  const [selectedTest, setSelectedTest] = useState(null);
+  const [tests, setTests]           = useState([]);
+  const [allTests, setAllTests]     = useState([]);
+  const [selectedTest, setSelectedTest]       = useState(null);
   const [isAddTestFormOpen, setIsAddTestFormOpen] = useState(false);
   const [updateTest, setUpdateTest] = useState(null);
   const [testFormData, setTestFormData] = useState({
-    TestName: '',
-    ShortName: '',
-    Description: '',
-    TestType: 1,
-    NormalRange: '',
-    Units: '',
-    Remarks: '',
-    Fees: '',
+    TestName:       '',
+    ShortName:      '',
+    Description:    '',
+    TestType:       1,
+    NormalRange:    '',
+    Units:          '',
+    Remarks:        '',
+    Fees:           '',
     CGSTPercentage: '9',
     SGSTPercentage: '9',
   });
 
   const [masterFilterInputs, setMasterFilterInputs] = useState({
-    searchType: 'testName',
+    searchType:  'testName',
     searchValue: '',
-    testType: '',
-    status: '',
-    dateFrom: '',
-    dateTo: '',
+    testType:    '',
+    status:      '',
+    dateFrom:    '',
+    dateTo:      '',
   });
 
   const [masterAppliedFilters, setMasterAppliedFilters] = useState({
-    searchType: 'testName',
+    searchType:  'testName',
     searchValue: '',
-    testType: '',
-    status: '',
-    dateFrom: '',
-    dateTo: '',
+    testType:    '',
+    status:      '',
+    dateFrom:    '',
+    dateTo:      '',
   });
 
   // ===== LAB TEST PACKAGE =====
-  const [packages, setPackages] = useState([]);
-  const [allPackages, setAllPackages] = useState([]);
-  const [selectedPackage, setSelectedPackage] = useState(null);
+  const [packages, setPackages]         = useState([]);
+  const [allPackages, setAllPackages]   = useState([]);
+  const [selectedPackage, setSelectedPackage]       = useState(null);
   const [isAddPackageFormOpen, setIsAddPackageFormOpen] = useState(false);
   const [updatePackage, setUpdatePackage] = useState(null);
   const [packageFormData, setPackageFormData] = useState({
-    packName: '',
-    packShortName: '',
-    description: '',
-    fees: '',
+    packName:       '',
+    packShortName:  '',
+    description:    '',
+    fees:           '',
     cgstPercentage: '9',
     sgstPercentage: '9',
   });
 
   const [packageFilterInputs, setPackageFilterInputs] = useState({
-    searchType: 'packName',
+    searchType:  'packName',
     searchValue: '',
-    status: '',
-    dateFrom: '',
-    dateTo: '',
+    status:      '',
+    dateFrom:    '',
+    dateTo:      '',
   });
 
   const [packageAppliedFilters, setPackageAppliedFilters] = useState({
-    searchType: 'packName',
+    searchType:  'packName',
     searchValue: '',
-    status: '',
-    dateFrom: '',
-    dateTo: '',
+    status:      '',
+    dateFrom:    '',
+    dateTo:      '',
   });
 
   // ===== PACKAGE ITEMS =====
-  const [packageItems, setPackageItems] = useState([]);
+  const [packageItems, setPackageItems]       = useState([]);
   const [isAddItemFormOpen, setIsAddItemFormOpen] = useState(false);
-  const [availableTests, setAvailableTests] = useState([]);
+  const [availableTests, setAvailableTests]   = useState([]);
   const [selectedTestIds, setSelectedTestIds] = useState([]);
 
   // ===== SHARED =====
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading]       = useState(true);
+  const [error,   setError]         = useState(null);
   const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState('');
-  const [formSuccess, setFormSuccess] = useState(false);
-  const [testValidationMessages, setTestValidationMessages] = useState({});
+  const [testValidationMessages,    setTestValidationMessages]    = useState({});
   const [packageValidationMessages, setPackageValidationMessages] = useState({});
 
-  // Pagination (shared for both tabs)
-  const [page, setPage] = useState(1);
+  // Pagination
+  const [page, setPage]       = useState(1);
   const [hasNext, setHasNext] = useState(false);
+
+  // ── Button cooldown state (2-sec disable after click) ──────────────────────
+  const [btnCooldown, setBtnCooldown] = useState({});
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
+
+  // ── MessagePopup state ──────────────────────────────────────────────────────
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Submit button gating ────────────────────────────────────────────────────
+  const testAllRequiredFilled =
+    testFormData.TestName.trim().length > 0 &&
+    testFormData.ShortName.trim().length > 0 &&
+    testFormData.Fees !== '' &&
+    Number(testFormData.Fees) > 0 &&
+    /^\d+(\.\d{1,2})?$/.test(testFormData.Fees);
+
+  const packageAllRequiredFilled =
+    packageFormData.packName.trim().length > 0 &&
+    packageFormData.packShortName.trim().length > 0 &&
+    packageFormData.fees !== '' && packageFormData.fees !== 0;
 
   const hasMasterActiveFilters =
     !!masterAppliedFilters.searchValue ||
-    !!masterAppliedFilters.testType ||
-    !!masterAppliedFilters.status ||
-    !!masterAppliedFilters.dateFrom ||
+    !!masterAppliedFilters.testType    ||
+    !!masterAppliedFilters.status      ||
+    !!masterAppliedFilters.dateFrom    ||
     !!masterAppliedFilters.dateTo;
 
   const hasPackageActiveFilters =
     !!packageAppliedFilters.searchValue ||
-    !!packageAppliedFilters.status ||
-    !!packageAppliedFilters.dateFrom ||
+    !!packageAppliedFilters.status      ||
+    !!packageAppliedFilters.dateFrom    ||
     !!packageAppliedFilters.dateTo;
 
-  // ── FETCH ──
+  // ── FETCH ──────────────────────────────────────────────────────────────────
   const fetchTests = async (filters = masterAppliedFilters, pageNum = page) => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
 
-      const options = { 
-        BranchID: branchId,
-        Page: pageNum,
-        PageSize: PAGE_SIZE
-      };
+      const options = { BranchID: branchId, Page: pageNum, PageSize: PAGE_SIZE };
       if (filters.searchValue) options.TestName = filters.searchValue;
       if (filters.testType !== '') options.TestType = Number(filters.testType);
-      if (filters.status !== '') options.Status = Number(filters.status);
-      
+      if (filters.status   !== '') options.Status   = Number(filters.status);
+
       const data = await getLabTestMasterList(clinicId, options);
-      
+
       setTests(data);
       setAllTests(data);
       setHasNext(data.length === PAGE_SIZE);
@@ -308,20 +334,16 @@ const LabMasterList = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
 
-      const options = { 
-        BranchID: branchId,
-        Page: pageNum,
-        PageSize: PAGE_SIZE
-      };
+      const options = { BranchID: branchId, Page: pageNum, PageSize: PAGE_SIZE };
       if (filters.searchValue) options.PackNameSearch = filters.searchValue;
       if (filters.status !== '') options.Status = Number(filters.status);
-      
+
       const data = await getLabTestPackageList(clinicId, options);
-      
+
       setPackages(data);
       setAllPackages(data);
       setHasNext(data.length === PAGE_SIZE);
@@ -341,17 +363,17 @@ const LabMasterList = () => {
     try {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-      
+
       const data = await getLabTestPackageItemList({
         packageId: PackageId,
-        ClinicID: clinicId,
-        BranchID: branchId
+        ClinicID:  clinicId,
+        BranchID:  branchId,
       });
-      
+
       setPackageItems(data);
     } catch (err) {
       console.error('fetchPackageItems error:', err);
-      setFormError(err.message || 'Failed to load package items');
+      showPopup(err.message || 'Failed to load package items', 'error');
     }
   };
 
@@ -359,7 +381,7 @@ const LabMasterList = () => {
     try {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-      
+
       const data = await getLabTestMasterList(clinicId, { BranchID: branchId, Status: 1 });
       setAvailableTests(data);
     } catch (err) {
@@ -377,65 +399,49 @@ const LabMasterList = () => {
     }
   }, [activeTab, masterAppliedFilters, packageAppliedFilters]);
 
-  // ── CLIENT FILTERS ──
+  // ── CLIENT FILTERS ─────────────────────────────────────────────────────────
   const filteredTests = useMemo(() => {
     let filtered = tests;
-
     if (masterAppliedFilters.dateFrom) {
       const fromDate = new Date(masterAppliedFilters.dateFrom);
-      filtered = filtered.filter(t => {
-        if (!t.dateCreated) return false;
-        return new Date(t.dateCreated) >= fromDate;
-      });
+      filtered = filtered.filter(t => t.dateCreated && new Date(t.dateCreated) >= fromDate);
     }
-
     if (masterAppliedFilters.dateTo) {
       const toDate = new Date(masterAppliedFilters.dateTo);
       toDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(t => {
-        if (!t.dateCreated) return false;
-        return new Date(t.dateCreated) <= toDate;
-      });
+      filtered = filtered.filter(t => t.dateCreated && new Date(t.dateCreated) <= toDate);
     }
-
     return filtered;
   }, [tests, masterAppliedFilters]);
 
   const filteredPackages = useMemo(() => {
     let filtered = packages;
-
     if (packageAppliedFilters.dateFrom) {
       const fromDate = new Date(packageAppliedFilters.dateFrom);
-      filtered = filtered.filter(p => {
-        if (!p.dateCreated) return false;
-        return new Date(p.dateCreated) >= fromDate;
-      });
+      filtered = filtered.filter(p => p.dateCreated && new Date(p.dateCreated) >= fromDate);
     }
-
     if (packageAppliedFilters.dateTo) {
       const toDate = new Date(packageAppliedFilters.dateTo);
       toDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(p => {
-        if (!p.dateCreated) return false;
-        return new Date(p.dateCreated) <= toDate;
-      });
+      filtered = filtered.filter(p => p.dateCreated && new Date(p.dateCreated) <= toDate);
     }
-
     return filtered;
   }, [packages, packageAppliedFilters]);
 
-  // ── FILTER HANDLERS ──
+  // ── FILTER HANDLERS ────────────────────────────────────────────────────────
   const handleMasterFilterChange = (e) => {
     const { name, value } = e.target;
     setMasterFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
   const handleMasterSearch = () => {
+    triggerCooldown('master-search');
     setMasterAppliedFilters({ ...masterFilterInputs });
     setPage(1);
   };
 
   const handleMasterClear = () => {
+    triggerCooldown('master-clear');
     const empty = { searchType: 'testName', searchValue: '', testType: '', status: '', dateFrom: '', dateTo: '' };
     setMasterFilterInputs(empty);
     setMasterAppliedFilters(empty);
@@ -448,11 +454,13 @@ const LabMasterList = () => {
   };
 
   const handlePackageSearch = () => {
+    triggerCooldown('package-search');
     setPackageAppliedFilters({ ...packageFilterInputs });
     setPage(1);
   };
 
   const handlePackageClear = () => {
+    triggerCooldown('package-clear');
     const empty = { searchType: 'packName', searchValue: '', status: '', dateFrom: '', dateTo: '' };
     setPackageFilterInputs(empty);
     setPackageAppliedFilters(empty);
@@ -461,6 +469,7 @@ const LabMasterList = () => {
 
   const handlePageChange = (newPage) => {
     if (newPage < 1) return;
+    triggerCooldown(`page-${newPage}`);
     setPage(newPage);
     if (activeTab === 'master') {
       fetchTests(masterAppliedFilters, newPage);
@@ -469,45 +478,31 @@ const LabMasterList = () => {
     }
   };
 
-  // ── HELPERS ──
-  const getTestTypeLabel = (testTypeId) => {
-    return TEST_TYPES.find((t) => t.id === testTypeId)?.label || 'Unknown';
-  };
-
-  const getTestStatusLabel = (statusId) => {
-    return TEST_STATUS_OPTIONS.find((s) => s.id === statusId)?.label || 'Unknown';
-  };
-
-  const getPackageStatusLabel = (statusId) => {
-    return PACKAGE_STATUS_OPTIONS.find((s) => s.id === statusId)?.label || 'Unknown';
-  };
-
-  const getStatusClass = (statusId) => {
-    if (statusId === 1) return styles.active;
-    if (statusId === 2) return styles.inactive;
-    if (statusId === 3) return styles.deprecated;
+  // ── HELPERS ────────────────────────────────────────────────────────────────
+  const getTestTypeLabel    = (id) => TEST_TYPES.find((t) => t.id === id)?.label || 'Unknown';
+  const getTestStatusLabel  = (id) => TEST_STATUS_OPTIONS.find((s) => s.id === id)?.label || 'Unknown';
+  const getPackageStatusLabel = (id) => PACKAGE_STATUS_OPTIONS.find((s) => s.id === id)?.label || 'Unknown';
+  const getStatusClass      = (id) => {
+    if (id === 1) return styles.active;
+    if (id === 2) return styles.inactive;
+    if (id === 3) return styles.deprecated;
     return styles.inactive;
   };
 
-  // ── TEST HANDLERS ──
-  const openTestDetails = (test) => setSelectedTest(test);
-  const closeTestModal = () => setSelectedTest(null);
+  // ── TEST HANDLERS ──────────────────────────────────────────────────────────
+  const openTestDetails = (test) => {
+    triggerCooldown(`view-test-${test.id}`);
+    setSelectedTest(test);
+  };
+  const closeTestModal  = () => setSelectedTest(null);
 
   const openAddTestForm = () => {
+    triggerCooldown('add-test');
     setTestFormData({
-      TestName: '',
-      ShortName: '',
-      Description: '',
-      TestType: 1,
-      NormalRange: '',
-      Units: '',
-      Remarks: '',
-      Fees: '',
-      CGSTPercentage: '9',
-      SGSTPercentage: '9',
+      TestName: '', ShortName: '', Description: '', TestType: 1,
+      NormalRange: '', Units: '', Remarks: '', Fees: '',
+      CGSTPercentage: '9', SGSTPercentage: '9',
     });
-    setFormError('');
-    setFormSuccess(false);
     setTestValidationMessages({});
     setIsAddTestFormOpen(true);
   };
@@ -515,30 +510,31 @@ const LabMasterList = () => {
   const closeAddTestForm = () => {
     setIsAddTestFormOpen(false);
     setFormLoading(false);
-    setFormError('');
-    setFormSuccess(false);
     setTestValidationMessages({});
   };
 
   const handleTestInputChange = (e) => {
     const { name, value } = e.target;
     const filteredValue = filterInput(name, value);
-    
     setTestFormData((prev) => ({ ...prev, [name]: filteredValue }));
-
     const validationMessage = getLiveValidationMessage(name, filteredValue);
-    setTestValidationMessages((prev) => ({
-      ...prev,
-      [name]: validationMessage,
-    }));
+    setTestValidationMessages((prev) => ({ ...prev, [name]: validationMessage }));
   };
 
   const handleTestSubmit = async (e) => {
     e.preventDefault();
+
+    // Guard: show warning popup if required fields missing
+    if (!testAllRequiredFilled) {
+      const missing = [];
+      if (!testFormData.TestName.trim())  missing.push('Test Name');
+      if (!testFormData.ShortName.trim()) missing.push('Short Name');
+      if (!testFormData.Fees.trim() || Number(testFormData.Fees) <= 0) missing.push('Fees');
+      showPopup(`Please fill all required fields: ${missing.join(', ')}.`, 'warning');
+      return;
+    }
+
     setFormLoading(true);
-    setFormError('');
-    setFormSuccess(false);
-    setError(null);
 
     try {
       const clinicId = await getStoredClinicId();
@@ -547,26 +543,26 @@ const LabMasterList = () => {
       await addLabTestMaster({
         clinicId,
         branchId,
-        TestName: testFormData.TestName.trim(),
-        ShortName: testFormData.ShortName.trim(),
-        Description: testFormData.Description.trim(),
-        TestType: Number(testFormData.TestType),
-        NormalRange: testFormData.NormalRange.trim(),
-        Units: testFormData.Units.trim(),
-        Remarks: testFormData.Remarks.trim(),
-        Fees: Number(testFormData.Fees) || 0,
+        TestName:       testFormData.TestName.trim(),
+        ShortName:      testFormData.ShortName.trim(),
+        Description:    testFormData.Description.trim(),
+        TestType:       Number(testFormData.TestType),
+        NormalRange:    testFormData.NormalRange.trim(),
+        Units:          testFormData.Units.trim(),
+        Remarks:        testFormData.Remarks.trim(),
+        Fees:           Number(testFormData.Fees) || 0,
         CGSTPercentage: Number(testFormData.CGSTPercentage) || 9,
         SGSTPercentage: Number(testFormData.SGSTPercentage) || 9,
       });
 
-      setFormSuccess(true);
+      showPopup('Lab test added successfully!', 'success');
       setTimeout(async () => {
         closeAddTestForm();
         await fetchTests(masterAppliedFilters, page);
       }, 1500);
     } catch (err) {
       console.error('Add lab test failed:', err);
-      setFormError(err.message || 'Failed to add lab test.');
+      showPopup(err.message || 'Failed to add lab test.', 'error');
     } finally {
       setFormLoading(false);
     }
@@ -578,52 +574,41 @@ const LabMasterList = () => {
   };
 
   const handleTestDelete = async (test) => {
-    if (!window.confirm(`Are you sure you want to delete the lab test "${test.testName}"? This action cannot be undone.`)) {
-      return;
-    }
 
     setFormLoading(true);
-    setFormError('');
 
     try {
       await deleteLabTestMaster(test.id);
       closeTestModal();
       await fetchTests(masterAppliedFilters, page);
-      alert('Lab test deleted successfully!');
+      showPopup('Lab test deleted successfully!', 'success');
     } catch (err) {
       console.error('Delete lab test failed:', err);
-      setFormError(err.message || 'Failed to delete lab test.');
-      alert(`Failed to delete lab test: ${err.message || 'Unknown error'}`);
+      showPopup(err.message || 'Failed to delete lab test.', 'error');
     } finally {
       setFormLoading(false);
     }
   };
 
-  // ── PACKAGE HANDLERS ──
+  // ── PACKAGE HANDLERS ───────────────────────────────────────────────────────
   const openPackageDetails = async (pkg) => {
+    triggerCooldown(`view-pkg-${pkg.id}`);
     setSelectedPackage(pkg);
-    setFormError('');
     setPackageItems([]);
     await fetchPackageItems(pkg.id);
   };
-  
+
   const closePackageModal = () => {
     setSelectedPackage(null);
     setPackageItems([]);
-    setFormError('');
   };
 
   const openAddPackageForm = () => {
+    triggerCooldown('add-package');
     setPackageFormData({
-      packName: '',
-      packShortName: '',
-      description: '',
-      fees: '',
-      cgstPercentage: '9',
-      sgstPercentage: '9',
+      packName: '', packShortName: '', description: '',
+      fees: '', cgstPercentage: '9', sgstPercentage: '9',
     });
-    setFormError('');
-    setFormSuccess(false);
     setPackageValidationMessages({});
     setIsAddPackageFormOpen(true);
   };
@@ -631,37 +616,38 @@ const LabMasterList = () => {
   const closeAddPackageForm = () => {
     setIsAddPackageFormOpen(false);
     setFormLoading(false);
-    setFormError('');
-    setFormSuccess(false);
     setPackageValidationMessages({});
   };
 
   const handlePackageInputChange = (e) => {
     const { name, value } = e.target;
     const filteredValue = filterInput(name, value);
-    
     setPackageFormData((prev) => ({ ...prev, [name]: filteredValue }));
-
     const validationMessage = getLiveValidationMessage(name, filteredValue);
-    setPackageValidationMessages((prev) => ({
-      ...prev,
-      [name]: validationMessage,
-    }));
+    setPackageValidationMessages((prev) => ({ ...prev, [name]: validationMessage }));
   };
 
   const handlePackageSubmit = async (e) => {
     e.preventDefault();
 
+    // Guard: show warning popup if required fields missing
+    if (!packageAllRequiredFilled) {
+      const missing = [];
+      if (!packageFormData.packName.trim())      missing.push('Package Name');
+      if (!packageFormData.packShortName.trim()) missing.push('Short Name');
+      if (!packageFormData.fees || packageFormData.fees === '0') missing.push('Fees');
+      showPopup(`Please fill all required fields: ${missing.join(', ')}.`, 'warning');
+      return;
+    }
+
     const feesMsg = getLiveValidationMessage('fees', packageFormData.fees);
     if (feesMsg) {
       setPackageValidationMessages((prev) => ({ ...prev, fees: feesMsg }));
+      showPopup(`Fees: ${feesMsg}`, 'warning');
       return;
     }
 
     setFormLoading(true);
-    setFormError('');
-    setFormSuccess(false);
-    setError(null);
 
     try {
       const clinicId = await getStoredClinicId();
@@ -670,22 +656,22 @@ const LabMasterList = () => {
       await addLabTestPackage({
         clinicId,
         branchId,
-        packName: packageFormData.packName.trim(),
-        packShortName: packageFormData.packShortName.trim(),
-        description: packageFormData.description.trim(),
-        fees: Number(packageFormData.fees),
+        packName:       packageFormData.packName.trim(),
+        packShortName:  packageFormData.packShortName.trim(),
+        description:    packageFormData.description.trim(),
+        fees:           Number(packageFormData.fees),
         cgstPercentage: Number(packageFormData.cgstPercentage) || 9,
         sgstPercentage: Number(packageFormData.sgstPercentage) || 9,
       });
 
-      setFormSuccess(true);
+      showPopup('Lab test package added successfully!', 'success');
       setTimeout(async () => {
         closeAddPackageForm();
         await fetchPackages(packageAppliedFilters, page);
       }, 1500);
     } catch (err) {
       console.error('Add lab test package failed:', err);
-      setFormError(err.message || 'Failed to add lab test package.');
+      showPopup(err.message || 'Failed to add lab test package.', 'error');
     } finally {
       setFormLoading(false);
     }
@@ -696,10 +682,9 @@ const LabMasterList = () => {
     setUpdatePackage(pkg);
   };
 
-  // ── PACKAGE ITEM HANDLERS ──
+  // ── PACKAGE ITEM HANDLERS ──────────────────────────────────────────────────
   const openAddItemForm = async () => {
-    setFormError('');
-    setFormSuccess(false);
+    triggerCooldown('add-items');
     setSelectedTestIds([]);
     await fetchAvailableTests();
     setIsAddItemFormOpen(true);
@@ -708,28 +693,21 @@ const LabMasterList = () => {
   const closeAddItemForm = () => {
     setIsAddItemFormOpen(false);
     setSelectedTestIds([]);
-    setFormError('');
-    setFormSuccess(false);
   };
 
   const handleTestSelection = (testId) => {
-    setSelectedTestIds((prev) => {
-      if (prev.includes(testId)) {
-        return prev.filter((id) => id !== testId);
-      } else {
-        return [...prev, testId];
-      }
-    });
+    setSelectedTestIds((prev) =>
+      prev.includes(testId) ? prev.filter((id) => id !== testId) : [...prev, testId]
+    );
   };
 
   const handleAddPackageItems = async () => {
     if (selectedTestIds.length === 0) {
-      setFormError('Please select at least one test');
+      showPopup('Please select at least one test.', 'warning');
       return;
     }
 
     setFormLoading(true);
-    setFormError('');
 
     try {
       const clinicId = await getStoredClinicId();
@@ -740,40 +718,38 @@ const LabMasterList = () => {
           clinicId,
           branchId,
           packageId: selectedPackage.id,
-          testId: testId
+          testId:    testId,
         });
       }
 
-      setFormSuccess(true);
+      showPopup(`${selectedTestIds.length} test(s) added to package successfully!`, 'success');
       setTimeout(async () => {
         closeAddItemForm();
         await fetchPackageItems(selectedPackage.id);
       }, 1000);
     } catch (err) {
       console.error('Add package items failed:', err);
-      setFormError(err.message || 'Failed to add package items.');
+      showPopup(err.message || 'Failed to add package items.', 'error');
     } finally {
       setFormLoading(false);
     }
   };
 
   const handleDeletePackageItem = async (packageItemId) => {
-    if (!window.confirm('Are you sure you want to delete this test from the package?')) {
-      return;
-    }
 
     try {
       await deleteLabPackageItem(packageItemId);
       await fetchPackageItems(selectedPackage.id);
+      showPopup('Test removed from package.', 'success');
     } catch (err) {
       console.error('Delete package item failed:', err);
-      setFormError(err.message || 'Failed to delete package item.');
+      showPopup(err.message || 'Failed to delete package item.', 'error');
     }
   };
 
   const handleRebuildFees = async () => {
+    triggerCooldown('rebuild-fees');
     setFormLoading(true);
-    setFormError('');
 
     try {
       const clinicId = await getStoredClinicId();
@@ -781,67 +757,69 @@ const LabMasterList = () => {
 
       const result = await rebuildPackageFees({
         packageId: selectedPackage.id,
-        clinicId: clinicId,
-        branchId: branchId
+        clinicId:  clinicId,
+        branchId:  branchId,
       });
 
-      alert(`Package fees rebuilt successfully! New Fees: ${result.formattedNewFees || result.newPackageFees}`);
-      
+      showPopup(
+        `Package fees rebuilt! New Fees: ${result.formattedNewFees || result.newPackageFees}`,
+        'success'
+      );
+
       await fetchPackages(packageAppliedFilters, page);
       const updatedPkg = await getLabTestPackageList(clinicId, { BranchID: branchId });
-      const updated = updatedPkg.find(p => p.id === selectedPackage.id);
-      if (updated) {
-        setSelectedPackage(updated);
-      }
+      const updated    = updatedPkg.find(p => p.id === selectedPackage.id);
+      if (updated) setSelectedPackage(updated);
     } catch (err) {
       console.error('Rebuild fees failed:', err);
-      setFormError(err.message || 'Failed to rebuild package fees.');
+      showPopup(err.message || 'Failed to rebuild package fees.', 'error');
     } finally {
       setFormLoading(false);
     }
   };
 
-  // ── EARLY RETURNS ──
+  // ── EARLY RETURNS ──────────────────────────────────────────────────────────
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.loading}>Loading...</div>;
+  if (loading) return <div className={styles.loading}><LoadingPage/></div>;
+  if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
-  if (error) return <div className={styles.error}>Error: {error.message || error}</div>;
-
-  const startRecord = (activeTab === 'master' ? tests : packages).length === 0 
-    ? 0 
+  const startRecord = (activeTab === 'master' ? tests : packages).length === 0
+    ? 0
     : (page - 1) * PAGE_SIZE + 1;
   const endRecord = startRecord + (activeTab === 'master' ? tests : packages).length - 1;
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className={styles.wrapper}>
       <ErrorHandler error={error} />
       <Header title="Lab Test Management" />
 
-      {/* Tab Navigation */}
+      {/* ── Tab Navigation ── */}
       <div className={styles.tabs}>
         <button
           className={`${styles.tab} ${activeTab === 'master' ? styles.tabActive : ''}`}
-          onClick={() => setActiveTab('master')}
+          onClick={() => { triggerCooldown('tab-master'); setActiveTab('master'); }}
+          disabled={!!btnCooldown['tab-master']}
         >
           <FiFileText size={18} />
           Lab Test Master
         </button>
         <button
           className={`${styles.tab} ${activeTab === 'packages' ? styles.tabActive : ''}`}
-          onClick={() => setActiveTab('packages')}
+          onClick={() => { triggerCooldown('tab-packages'); setActiveTab('packages'); }}
+          disabled={!!btnCooldown['tab-packages']}
         >
           <FiPackage size={18} />
           Lab Test Packages
         </button>
       </div>
 
-      {/* LAB TEST MASTER TAB */}
+      {/* ══ LAB TEST MASTER TAB ══ */}
       {activeTab === 'master' && (
         <>
-          {/* Filter Bar */}
           <div className={styles.filtersContainer}>
             <div className={styles.masterFiltersGrid}>
               <div className={styles.searchGroup}>
@@ -858,9 +836,7 @@ const LabMasterList = () => {
                 <input
                   type="text"
                   name="searchValue"
-                  placeholder={`Search by ${
-                    MASTER_SEARCH_TYPE_OPTIONS.find(o => o.value === masterFilterInputs.searchType)?.label || ''
-                  }`}
+                  placeholder={`Search by ${MASTER_SEARCH_TYPE_OPTIONS.find(o => o.value === masterFilterInputs.searchType)?.label || ''}`}
                   value={masterFilterInputs.searchValue}
                   onChange={handleMasterFilterChange}
                   onKeyDown={(e) => e.key === 'Enter' && handleMasterSearch()}
@@ -869,12 +845,7 @@ const LabMasterList = () => {
               </div>
 
               <div className={styles.filterGroup}>
-                <select
-                  name="testType"
-                  value={masterFilterInputs.testType}
-                  onChange={handleMasterFilterChange}
-                  className={styles.filterInput}
-                >
+                <select name="testType" value={masterFilterInputs.testType} onChange={handleMasterFilterChange} className={styles.filterInput}>
                   <option value="">All Types</option>
                   {TEST_TYPES.map(t => (
                     <option key={t.id} value={t.id}>{t.label}</option>
@@ -883,12 +854,7 @@ const LabMasterList = () => {
               </div>
 
               <div className={styles.filterGroup}>
-                <select
-                  name="status"
-                  value={masterFilterInputs.status}
-                  onChange={handleMasterFilterChange}
-                  className={styles.filterInput}
-                >
+                <select name="status" value={masterFilterInputs.status} onChange={handleMasterFilterChange} className={styles.filterInput}>
                   <option value="">All Status</option>
                   {TEST_STATUS_OPTIONS.map(s => (
                     <option key={s.id} value={s.id}>{s.label}</option>
@@ -898,13 +864,9 @@ const LabMasterList = () => {
 
               <div className={styles.filterGroup}>
                 <div className={styles.dateWrapper}>
-                  {!masterFilterInputs.dateFrom && (
-                    <span className={styles.datePlaceholder}>From Date</span>
-                  )}
+                  {!masterFilterInputs.dateFrom && <span className={styles.datePlaceholder}>From Date</span>}
                   <input
-                    type="date"
-                    name="dateFrom"
-                    value={masterFilterInputs.dateFrom}
+                    type="date" name="dateFrom" value={masterFilterInputs.dateFrom}
                     onChange={handleMasterFilterChange}
                     className={`${styles.filterInput} ${!masterFilterInputs.dateFrom ? styles.dateEmpty : ''}`}
                   />
@@ -913,13 +875,9 @@ const LabMasterList = () => {
 
               <div className={styles.filterGroup}>
                 <div className={styles.dateWrapper}>
-                  {!masterFilterInputs.dateTo && (
-                    <span className={styles.datePlaceholder}>To Date</span>
-                  )}
+                  {!masterFilterInputs.dateTo && <span className={styles.datePlaceholder}>To Date</span>}
                   <input
-                    type="date"
-                    name="dateTo"
-                    value={masterFilterInputs.dateTo}
+                    type="date" name="dateTo" value={masterFilterInputs.dateTo}
                     onChange={handleMasterFilterChange}
                     className={`${styles.filterInput} ${!masterFilterInputs.dateTo ? styles.dateEmpty : ''}`}
                   />
@@ -927,25 +885,21 @@ const LabMasterList = () => {
               </div>
 
               <div className={styles.filterActions}>
-                <button onClick={handleMasterSearch} className={styles.searchButton}>
-                  <FiSearch size={16} />
-                  Search
+                <button onClick={handleMasterSearch} className={styles.searchButton} disabled={!!btnCooldown['master-search']}>
+                  <FiSearch size={16} /> Search
                 </button>
                 {hasMasterActiveFilters && (
-                  <button onClick={handleMasterClear} className={styles.clearButton}>
-                    <FiX size={16} />
-                    Clear
+                  <button onClick={handleMasterClear} className={styles.clearButton} disabled={!!btnCooldown['master-clear']}>
+                    <FiX size={16} /> Clear
                   </button>
                 )}
-                <button onClick={openAddTestForm} className={styles.addBtn}>
-                  <FiPlus size={18} />
-                  Add Test
+                <button onClick={openAddTestForm} className={styles.addBtn} disabled={!!btnCooldown['add-test']}>
+                  <FiPlus size={18} /> Add Test
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Table + Pagination */}
           <div className={styles.tableSection}>
             <div className={styles.tableContainer}>
               <table className={styles.table}>
@@ -972,23 +926,15 @@ const LabMasterList = () => {
                       <tr key={test.id}>
                         <td>
                           <div className={styles.nameCell}>
-                            <div className={styles.avatar}>
-                              {test.testName?.charAt(0).toUpperCase() || 'T'}
-                            </div>
+                            <div className={styles.avatar}>{test.testName?.charAt(0).toUpperCase() || 'T'}</div>
                             <div>
                               <div className={styles.name}>{test.testName}</div>
-                              <div className={styles.type}>
-                                {getTestTypeLabel(test.testType)}
-                              </div>
+                              <div className={styles.type}>{getTestTypeLabel(test.testType)}</div>
                             </div>
                           </div>
                         </td>
                         <td>{test.shortName || '—'}</td>
-                        <td>
-                          <span className={styles.testTypeBadge}>
-                            {getTestTypeLabel(test.testType)}
-                          </span>
-                        </td>
+                        <td><span className={styles.testTypeBadge}>{getTestTypeLabel(test.testType)}</span></td>
                         <td>₹{parseFloat(test.fees || 0).toFixed(2)}</td>
                         <td>{test.units || '—'}</td>
                         <td>
@@ -997,7 +943,11 @@ const LabMasterList = () => {
                           </span>
                         </td>
                         <td>
-                          <button onClick={() => openTestDetails(test)} className={styles.detailsBtn}>
+                          <button
+                            onClick={() => openTestDetails(test)}
+                            className={styles.detailsBtn}
+                            disabled={!!btnCooldown[`view-test-${test.id}`]}
+                          >
                             View Details
                           </button>
                         </td>
@@ -1008,59 +958,26 @@ const LabMasterList = () => {
               </table>
             </div>
 
-            {/* Pagination Bar */}
             <div className={styles.paginationBar}>
               <div className={styles.paginationInfo}>
-                {tests.length > 0
-                  ? `Showing ${startRecord}–${endRecord} records`
-                  : 'No records'}
+                {tests.length > 0 ? `Showing ${startRecord}–${endRecord} records` : 'No records'}
               </div>
-
               <div className={styles.paginationControls}>
                 <span className={styles.paginationLabel}>Page</span>
-
-                <button
-                  className={styles.pageBtn}
-                  onClick={() => handlePageChange(1)}
-                  disabled={page === 1}
-                  title="First page"
-                >
-                  «
-                </button>
-
-                <button
-                  className={styles.pageBtn}
-                  onClick={() => handlePageChange(page - 1)}
-                  disabled={page === 1}
-                  title="Previous page"
-                >
-                  ‹
-                </button>
-
+                <button className={styles.pageBtn} onClick={() => handlePageChange(1)} disabled={page === 1 || !!btnCooldown['page-1']} title="First page">«</button>
+                <button className={styles.pageBtn} onClick={() => handlePageChange(page - 1)} disabled={page === 1 || !!btnCooldown[`page-${page - 1}`]} title="Previous page">‹</button>
                 <span className={styles.pageIndicator}>{page}</span>
-
-                <button
-                  className={styles.pageBtn}
-                  onClick={() => handlePageChange(page + 1)}
-                  disabled={!hasNext}
-                  title="Next page"
-                >
-                  ›
-                </button>
+                <button className={styles.pageBtn} onClick={() => handlePageChange(page + 1)} disabled={!hasNext || !!btnCooldown[`page-${page + 1}`]} title="Next page">›</button>
               </div>
-
-              <div className={styles.pageSizeInfo}>
-                Page Size: <strong>{PAGE_SIZE}</strong>
-              </div>
+              <div className={styles.pageSizeInfo}>Page Size: <strong>{PAGE_SIZE}</strong></div>
             </div>
           </div>
         </>
       )}
 
-      {/* LAB TEST PACKAGES TAB */}
+      {/* ══ LAB TEST PACKAGES TAB ══ */}
       {activeTab === 'packages' && (
         <>
-          {/* Filter Bar */}
           <div className={styles.filtersContainer}>
             <div className={styles.packageFiltersGrid}>
               <div className={styles.searchGroup}>
@@ -1077,9 +994,7 @@ const LabMasterList = () => {
                 <input
                   type="text"
                   name="searchValue"
-                  placeholder={`Search by ${
-                    PACKAGE_SEARCH_TYPE_OPTIONS.find(o => o.value === packageFilterInputs.searchType)?.label || ''
-                  }`}
+                  placeholder={`Search by ${PACKAGE_SEARCH_TYPE_OPTIONS.find(o => o.value === packageFilterInputs.searchType)?.label || ''}`}
                   value={packageFilterInputs.searchValue}
                   onChange={handlePackageFilterChange}
                   onKeyDown={(e) => e.key === 'Enter' && handlePackageSearch()}
@@ -1088,12 +1003,7 @@ const LabMasterList = () => {
               </div>
 
               <div className={styles.filterGroup}>
-                <select
-                  name="status"
-                  value={packageFilterInputs.status}
-                  onChange={handlePackageFilterChange}
-                  className={styles.filterInput}
-                >
+                <select name="status" value={packageFilterInputs.status} onChange={handlePackageFilterChange} className={styles.filterInput}>
                   <option value="">All Status</option>
                   {PACKAGE_STATUS_OPTIONS.map(s => (
                     <option key={s.id} value={s.id}>{s.label}</option>
@@ -1103,13 +1013,9 @@ const LabMasterList = () => {
 
               <div className={styles.filterGroup}>
                 <div className={styles.dateWrapper}>
-                  {!packageFilterInputs.dateFrom && (
-                    <span className={styles.datePlaceholder}>From Date</span>
-                  )}
+                  {!packageFilterInputs.dateFrom && <span className={styles.datePlaceholder}>From Date</span>}
                   <input
-                    type="date"
-                    name="dateFrom"
-                    value={packageFilterInputs.dateFrom}
+                    type="date" name="dateFrom" value={packageFilterInputs.dateFrom}
                     onChange={handlePackageFilterChange}
                     className={`${styles.filterInput} ${!packageFilterInputs.dateFrom ? styles.dateEmpty : ''}`}
                   />
@@ -1118,13 +1024,9 @@ const LabMasterList = () => {
 
               <div className={styles.filterGroup}>
                 <div className={styles.dateWrapper}>
-                  {!packageFilterInputs.dateTo && (
-                    <span className={styles.datePlaceholder}>To Date</span>
-                  )}
+                  {!packageFilterInputs.dateTo && <span className={styles.datePlaceholder}>To Date</span>}
                   <input
-                    type="date"
-                    name="dateTo"
-                    value={packageFilterInputs.dateTo}
+                    type="date" name="dateTo" value={packageFilterInputs.dateTo}
                     onChange={handlePackageFilterChange}
                     className={`${styles.filterInput} ${!packageFilterInputs.dateTo ? styles.dateEmpty : ''}`}
                   />
@@ -1132,25 +1034,21 @@ const LabMasterList = () => {
               </div>
 
               <div className={styles.filterActions}>
-                <button onClick={handlePackageSearch} className={styles.searchButton}>
-                  <FiSearch size={16} />
-                  Search
+                <button onClick={handlePackageSearch} className={styles.searchButton} disabled={!!btnCooldown['package-search']}>
+                  <FiSearch size={16} /> Search
                 </button>
                 {hasPackageActiveFilters && (
-                  <button onClick={handlePackageClear} className={styles.clearButton}>
-                    <FiX size={16} />
-                    Clear
+                  <button onClick={handlePackageClear} className={styles.clearButton} disabled={!!btnCooldown['package-clear']}>
+                    <FiX size={16} /> Clear
                   </button>
                 )}
-                <button onClick={openAddPackageForm} className={styles.addBtn}>
-                  <FiPlus size={18} />
-                  Add Package
+                <button onClick={openAddPackageForm} className={styles.addBtn} disabled={!!btnCooldown['add-package']}>
+                  <FiPlus size={18} /> Add Package
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Table + Pagination */}
           <div className={styles.tableSection}>
             <div className={styles.tableContainer}>
               <table className={styles.table}>
@@ -1177,9 +1075,7 @@ const LabMasterList = () => {
                       <tr key={pkg.id}>
                         <td>
                           <div className={styles.nameCell}>
-                            <div className={styles.avatar}>
-                              {pkg.packName?.charAt(0).toUpperCase() || 'P'}
-                            </div>
+                            <div className={styles.avatar}>{pkg.packName?.charAt(0).toUpperCase() || 'P'}</div>
                             <div>
                               <div className={styles.name}>{pkg.packName}</div>
                               {pkg.description && (
@@ -1198,7 +1094,11 @@ const LabMasterList = () => {
                           </span>
                         </td>
                         <td>
-                          <button onClick={() => openPackageDetails(pkg)} className={styles.detailsBtn}>
+                          <button
+                            onClick={() => openPackageDetails(pkg)}
+                            className={styles.detailsBtn}
+                            disabled={!!btnCooldown[`view-pkg-${pkg.id}`]}
+                          >
                             View Details
                           </button>
                         </td>
@@ -1209,56 +1109,24 @@ const LabMasterList = () => {
               </table>
             </div>
 
-            {/* Pagination Bar */}
             <div className={styles.paginationBar}>
               <div className={styles.paginationInfo}>
-                {packages.length > 0
-                  ? `Showing ${startRecord}–${endRecord} records`
-                  : 'No records'}
+                {packages.length > 0 ? `Showing ${startRecord}–${endRecord} records` : 'No records'}
               </div>
-
               <div className={styles.paginationControls}>
                 <span className={styles.paginationLabel}>Page</span>
-
-                <button
-                  className={styles.pageBtn}
-                  onClick={() => handlePageChange(1)}
-                  disabled={page === 1}
-                  title="First page"
-                >
-                  «
-                </button>
-
-                <button
-                  className={styles.pageBtn}
-                  onClick={() => handlePageChange(page - 1)}
-                  disabled={page === 1}
-                  title="Previous page"
-                >
-                  ‹
-                </button>
-
+                <button className={styles.pageBtn} onClick={() => handlePageChange(1)} disabled={page === 1 || !!btnCooldown['page-1']} title="First page">«</button>
+                <button className={styles.pageBtn} onClick={() => handlePageChange(page - 1)} disabled={page === 1 || !!btnCooldown[`page-${page - 1}`]} title="Previous page">‹</button>
                 <span className={styles.pageIndicator}>{page}</span>
-
-                <button
-                  className={styles.pageBtn}
-                  onClick={() => handlePageChange(page + 1)}
-                  disabled={!hasNext}
-                  title="Next page"
-                >
-                  ›
-                </button>
+                <button className={styles.pageBtn} onClick={() => handlePageChange(page + 1)} disabled={!hasNext || !!btnCooldown[`page-${page + 1}`]} title="Next page">›</button>
               </div>
-
-              <div className={styles.pageSizeInfo}>
-                Page Size: <strong>{PAGE_SIZE}</strong>
-              </div>
+              <div className={styles.pageSizeInfo}>Page Size: <strong>{PAGE_SIZE}</strong></div>
             </div>
           </div>
         </>
       )}
 
-      {/* Modals remain unchanged */}
+      {/* ══ MODALS ══ */}
       {selectedTest && (
         <ViewLabMaster
           test={selectedTest}
@@ -1277,7 +1145,7 @@ const LabMasterList = () => {
           onAddItems={openAddItemForm}
           onRebuildFees={handleRebuildFees}
           onDeleteItem={handleDeletePackageItem}
-          formError={formError}
+          formError=""
           formLoading={formLoading}
         />
       )}
@@ -1298,6 +1166,7 @@ const LabMasterList = () => {
         />
       )}
 
+      {/* ── Add Test Form Modal ── */}
       {isAddTestFormOpen && (
         <div className={styles.modalOverlay} onClick={closeAddTestForm}>
           <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
@@ -1308,38 +1177,31 @@ const LabMasterList = () => {
                   <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
                   {localStorage.getItem('clinicName') || '—'}
                 </div>
-                <button onClick={closeAddTestForm} className={styles.modalClose}>
+                <button onClick={closeAddTestForm} className={styles.modalClose} disabled={formLoading}>
                   <FiX />
                 </button>
               </div>
             </div>
 
-            <form onSubmit={handleTestSubmit} className={styles.modalBody}>
-              {formError && <div className={styles.formError}>{formError}</div>}
-              {formSuccess && <div className={styles.formSuccess}>Lab test added successfully!</div>}
-
+            <form onSubmit={handleTestSubmit} className={styles.modalBody} noValidate>
               <div className={styles.formGrid}>
                 <h3 className={styles.formSectionTitle}>Test Information</h3>
 
                 <div className={styles.formGroup}>
                   <label>Test Name <span className={styles.required}>*</span></label>
-                  <input required name="TestName" value={testFormData.TestName} onChange={handleTestInputChange} placeholder="e.g., Complete Blood Count" />
-                  {testValidationMessages.TestName && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{testValidationMessages.TestName}</span>
-                  )}
+                  <input required name="TestName" value={testFormData.TestName} onChange={handleTestInputChange} placeholder="e.g., Complete Blood Count" disabled={formLoading} />
+                  {testValidationMessages.TestName && <span className={styles.validationMessage}>{testValidationMessages.TestName}</span>}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>Short Name <span className={styles.required}>*</span></label>
-                  <input required name="ShortName" value={testFormData.ShortName} onChange={handleTestInputChange} placeholder="e.g., CBC" maxLength="20" />
-                  {testValidationMessages.ShortName && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{testValidationMessages.ShortName}</span>
-                  )}
+                  <input name="ShortName" value={testFormData.ShortName} onChange={handleTestInputChange} placeholder="e.g., CBC" maxLength="20" disabled={formLoading} />
+                  {testValidationMessages.ShortName && <span className={styles.validationMessage}>{testValidationMessages.ShortName}</span>}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>Test Type <span className={styles.required}>*</span></label>
-                  <select required name="TestType" value={testFormData.TestType} onChange={handleTestInputChange}>
+                  <select name="TestType" value={testFormData.TestType} onChange={handleTestInputChange} disabled={formLoading}>
                     {TEST_TYPES.map((type) => (
                       <option key={type.id} value={type.id}>{type.label}</option>
                     ))}
@@ -1347,65 +1209,56 @@ const LabMasterList = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Fees (₹)</label>
-                  <input type="text" name="Fees" value={testFormData.Fees} onChange={handleTestInputChange} placeholder="0.00" />
-                  {testValidationMessages.Fees && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{testValidationMessages.Fees}</span>
-                  )}
+                  <label>Fees (₹) <span className={styles.required}>*</span></label>
+                  <input required type="text" name="Fees" value={testFormData.Fees} onChange={handleTestInputChange} placeholder="0.00" disabled={formLoading} />
+                  {testValidationMessages.Fees && <span className={styles.validationMessage}>{testValidationMessages.Fees}</span>}
                 </div>
 
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>Description</label>
-                  <textarea name="Description" rows={2} value={testFormData.Description} onChange={handleTestInputChange} placeholder="Brief description of the test" />
-                  {testValidationMessages.Description && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{testValidationMessages.Description}</span>
-                  )}
+                  <textarea name="Description" rows={2} value={testFormData.Description} onChange={handleTestInputChange} placeholder="Brief description of the test" disabled={formLoading} />
+                  {testValidationMessages.Description && <span className={styles.validationMessage}>{testValidationMessages.Description}</span>}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>Normal Range</label>
-                  <input name="NormalRange" value={testFormData.NormalRange} onChange={handleTestInputChange} placeholder="e.g., 4.5-11.0" maxLength="50" />
-                  {testValidationMessages.NormalRange && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{testValidationMessages.NormalRange}</span>
-                  )}
+                  <input name="NormalRange" value={testFormData.NormalRange} onChange={handleTestInputChange} placeholder="e.g., 4.5-11.0" maxLength="50" disabled={formLoading} />
+                  {testValidationMessages.NormalRange && <span className={styles.validationMessage}>{testValidationMessages.NormalRange}</span>}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>Units</label>
-                  <input name="Units" value={testFormData.Units} onChange={handleTestInputChange} placeholder="e.g., cells/mcL" maxLength="30" />
-                  {testValidationMessages.Units && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{testValidationMessages.Units}</span>
-                  )}
+                  <input name="Units" value={testFormData.Units} onChange={handleTestInputChange} placeholder="e.g., cells/mcL" maxLength="30" disabled={formLoading} />
+                  {testValidationMessages.Units && <span className={styles.validationMessage}>{testValidationMessages.Units}</span>}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>CGST %</label>
-                  <input type="text" name="CGSTPercentage" value={testFormData.CGSTPercentage} onChange={handleTestInputChange} />
-                  {testValidationMessages.CGSTPercentage && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{testValidationMessages.CGSTPercentage}</span>
-                  )}
+                  <input type="text" name="CGSTPercentage" value={testFormData.CGSTPercentage} onChange={handleTestInputChange} disabled={formLoading} />
+                  {testValidationMessages.CGSTPercentage && <span className={styles.validationMessage}>{testValidationMessages.CGSTPercentage}</span>}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>SGST %</label>
-                  <input type="text" name="SGSTPercentage" value={testFormData.SGSTPercentage} onChange={handleTestInputChange} />
-                  {testValidationMessages.SGSTPercentage && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{testValidationMessages.SGSTPercentage}</span>
-                  )}
+                  <input type="text" name="SGSTPercentage" value={testFormData.SGSTPercentage} onChange={handleTestInputChange} disabled={formLoading} />
+                  {testValidationMessages.SGSTPercentage && <span className={styles.validationMessage}>{testValidationMessages.SGSTPercentage}</span>}
                 </div>
 
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>Remarks</label>
-                  <textarea name="Remarks" rows={2} value={testFormData.Remarks} onChange={handleTestInputChange} placeholder="Additional notes" />
-                  {testValidationMessages.Remarks && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{testValidationMessages.Remarks}</span>
-                  )}
+                  <textarea name="Remarks" rows={2} value={testFormData.Remarks} onChange={handleTestInputChange} placeholder="Additional notes" disabled={formLoading} />
+                  {testValidationMessages.Remarks && <span className={styles.validationMessage}>{testValidationMessages.Remarks}</span>}
                 </div>
               </div>
 
               <div className={styles.modalFooter}>
-                <button type="button" onClick={closeAddTestForm} className={styles.btnCancel}>Cancel</button>
-                <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
+                <button type="button" onClick={closeAddTestForm} className={styles.btnCancel} disabled={formLoading}>Cancel</button>
+                <button
+                  type="submit"
+                  disabled={formLoading}
+                  className={styles.btnSubmit}
+                  title={!testAllRequiredFilled ? 'Please fill all required fields to enable this button' : ''}
+                >
                   {formLoading ? 'Adding...' : 'Add Lab Test'}
                 </button>
               </div>
@@ -1414,6 +1267,7 @@ const LabMasterList = () => {
         </div>
       )}
 
+      {/* ── Add Package Form Modal ── */}
       {isAddPackageFormOpen && (
         <div className={styles.modalOverlay} onClick={closeAddPackageForm}>
           <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
@@ -1424,71 +1278,61 @@ const LabMasterList = () => {
                   <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
                   {localStorage.getItem('clinicName') || '—'}
                 </div>
-                <button onClick={closeAddPackageForm} className={styles.modalClose}>
+                <button onClick={closeAddPackageForm} className={styles.modalClose} disabled={formLoading}>
                   <FiX />
                 </button>
               </div>
             </div>
 
-            <form onSubmit={handlePackageSubmit} className={styles.modalBody}>
-              {formError && <div className={styles.formError}>{formError}</div>}
-              {formSuccess && <div className={styles.formSuccess}>Package added successfully!</div>}
-
+            <form onSubmit={handlePackageSubmit} className={styles.modalBody} noValidate>
               <div className={styles.formGrid}>
                 <h3 className={styles.formSectionTitle}>Package Information</h3>
 
                 <div className={styles.formGroup}>
                   <label>Package Name <span className={styles.required}>*</span></label>
-                  <input required name="packName" value={packageFormData.packName} onChange={handlePackageInputChange} placeholder="e.g., Full Body Checkup" />
-                  {packageValidationMessages.packName && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{packageValidationMessages.packName}</span>
-                  )}
+                  <input name="packName" value={packageFormData.packName} onChange={handlePackageInputChange} placeholder="e.g., Full Body Checkup" disabled={formLoading} />
+                  {packageValidationMessages.packName && <span className={styles.validationMessage}>{packageValidationMessages.packName}</span>}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>Short Name <span className={styles.required}>*</span></label>
-                  <input required name="packShortName" value={packageFormData.packShortName} onChange={handlePackageInputChange} placeholder="e.g., FBC" maxLength="20" />
-                  {packageValidationMessages.packShortName && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{packageValidationMessages.packShortName}</span>
-                  )}
+                  <input name="packShortName" value={packageFormData.packShortName} onChange={handlePackageInputChange} placeholder="e.g., FBC" maxLength="20" disabled={formLoading} />
+                  {packageValidationMessages.packShortName && <span className={styles.validationMessage}>{packageValidationMessages.packShortName}</span>}
                 </div>
 
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>Description</label>
-                  <textarea name="description" rows={2} value={packageFormData.description} onChange={handlePackageInputChange} placeholder="Brief description of the package" />
-                  {packageValidationMessages.description && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{packageValidationMessages.description}</span>
-                  )}
+                  <textarea name="description" rows={2} value={packageFormData.description} onChange={handlePackageInputChange} placeholder="Brief description of the package" disabled={formLoading} />
+                  {packageValidationMessages.description && <span className={styles.validationMessage}>{packageValidationMessages.description}</span>}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>Fees (₹) <span className={styles.required}>*</span></label>
-                  <input required type="text" name="fees" value={packageFormData.fees} onChange={handlePackageInputChange} placeholder="0.00" />
-                  {packageValidationMessages.fees && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{packageValidationMessages.fees}</span>
-                  )}
+                  <input type="text" name="fees" value={packageFormData.fees} onChange={handlePackageInputChange} placeholder="0.00" disabled={formLoading} />
+                  {packageValidationMessages.fees && <span className={styles.validationMessage}>{packageValidationMessages.fees}</span>}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>CGST %</label>
-                  <input type="text" name="cgstPercentage" value={packageFormData.cgstPercentage} onChange={handlePackageInputChange} />
-                  {packageValidationMessages.cgstPercentage && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{packageValidationMessages.cgstPercentage}</span>
-                  )}
+                  <input type="text" name="cgstPercentage" value={packageFormData.cgstPercentage} onChange={handlePackageInputChange} disabled={formLoading} />
+                  {packageValidationMessages.cgstPercentage && <span className={styles.validationMessage}>{packageValidationMessages.cgstPercentage}</span>}
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>SGST %</label>
-                  <input type="text" name="sgstPercentage" value={packageFormData.sgstPercentage} onChange={handlePackageInputChange} />
-                  {packageValidationMessages.sgstPercentage && (
-                    <span style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>{packageValidationMessages.sgstPercentage}</span>
-                  )}
+                  <input type="text" name="sgstPercentage" value={packageFormData.sgstPercentage} onChange={handlePackageInputChange} disabled={formLoading} />
+                  {packageValidationMessages.sgstPercentage && <span className={styles.validationMessage}>{packageValidationMessages.sgstPercentage}</span>}
                 </div>
               </div>
 
               <div className={styles.modalFooter}>
-                <button type="button" onClick={closeAddPackageForm} className={styles.btnCancel}>Cancel</button>
-                <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
+                <button type="button" onClick={closeAddPackageForm} className={styles.btnCancel} disabled={formLoading}>Cancel</button>
+                <button
+                  type="submit"
+                  disabled={formLoading}
+                  className={styles.btnSubmit}
+                  title={!packageAllRequiredFilled ? 'Please fill all required fields to enable this button' : ''}
+                >
                   {formLoading ? 'Adding...' : 'Add Package'}
                 </button>
               </div>
@@ -1497,28 +1341,24 @@ const LabMasterList = () => {
         </div>
       )}
 
+      {/* ── Add Items Form Modal ── */}
       {isAddItemFormOpen && (
         <div className={styles.modalOverlay} onClick={closeAddItemForm}>
           <div className={`${styles.modal} ${styles.testSelectionModal}`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Add Tests to Package</h2>
-              <button onClick={closeAddItemForm} className={styles.modalClose}>
+              <button onClick={closeAddItemForm} className={styles.modalClose} disabled={formLoading}>
                 <FiX />
               </button>
             </div>
 
             <div className={styles.modalBody}>
-              {formError && <div className={styles.formError}>{formError}</div>}
-              {formSuccess && <div className={styles.formSuccess}>Tests added successfully!</div>}
-
               <div className={styles.testSelectionContainer}>
                 <div className={styles.testSelectionList}>
                   {availableTests.map((test) => (
                     <div
                       key={test.id}
-                      className={`${styles.testSelectionItem} ${
-                        selectedTestIds.includes(test.id) ? styles.testSelectionItemSelected : ''
-                      }`}
+                      className={`${styles.testSelectionItem} ${selectedTestIds.includes(test.id) ? styles.testSelectionItemSelected : ''}`}
                       onClick={() => handleTestSelection(test.id)}
                     >
                       <input
@@ -1543,12 +1383,13 @@ const LabMasterList = () => {
               </div>
 
               <div className={styles.modalFooter}>
-                <button type="button" onClick={closeAddItemForm} className={styles.btnCancel}>Cancel</button>
+                <button type="button" onClick={closeAddItemForm} className={styles.btnCancel} disabled={formLoading}>Cancel</button>
                 <button
                   type="button"
                   onClick={handleAddPackageItems}
                   disabled={formLoading || selectedTestIds.length === 0}
                   className={styles.btnSubmit}
+                  title={selectedTestIds.length === 0 ? 'Please select at least one test' : ''}
                 >
                   {formLoading ? 'Adding...' : `Add ${selectedTestIds.length} Test(s)`}
                 </button>
@@ -1557,6 +1398,14 @@ const LabMasterList = () => {
           </div>
         </div>
       )}
+
+      {/* ── MessagePopup (at root level so z-index is never blocked) ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
     </div>
   );
 };

@@ -5,6 +5,8 @@ import { FiPackage, FiArrowLeft, FiAlertTriangle, FiX } from 'react-icons/fi';
 import { getMedicineMasterList, deleteMedicineMaster } from '../Api/ApiPharmacy.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 import styles from './ViewMedicineMaster.module.css';
 import UpdateMedicineMaster from './UpdateMedicineMaster.jsx';
 import { FaClinicMedical } from 'react-icons/fa';
@@ -23,7 +25,7 @@ const MEDICINE_TYPES = [
   { id: 7,  label: 'Powder' },
   { id: 8,  label: 'Gel' },
   { id: 9,  label: 'Cream' },
-  { id: 10, label: 'Inhaler' }
+  { id: 10, label: 'Inhaler' },
 ];
 
 const MEDICINE_UNITS = [
@@ -36,7 +38,7 @@ const MEDICINE_UNITS = [
   { id: 7,  label: 'Sachet' },
   { id: 8,  label: 'Blister Pack' },
   { id: 9,  label: 'Jar' },
-  { id: 10, label: 'Roll' }
+  { id: 10, label: 'Roll' },
 ];
 
 const TIMING_LABELS = { M: 'Morning', A: 'Afternoon', E: 'Evening', N: 'Night' };
@@ -51,20 +53,38 @@ const parseTimingPills = (str) =>
 //   isModal         (bool) — when true renders as a popup
 //   onClose         (func) — called to close the popup
 //   medicineId      (any)  — pass id directly when used as popup
-//   onUpdateRequest (func) — called with medicineId when Update is clicked in modal mode;
-//                            parent is responsible for closing this popup and opening update
+//   onUpdateRequest (func) — called with medicineId when Update is clicked in modal mode
+//   onDeleteSuccess (func) — called after successful delete in modal mode (refreshes list)
 // ────────────────────────────────────────────────
-const ViewMedicineMaster = ({ isModal = false, onClose, medicineId, onUpdateRequest }) => {
+const ViewMedicineMaster = ({ isModal = false, onClose, medicineId, onUpdateRequest, onDeleteSuccess }) => {
   const params   = useParams();
   const navigate = useNavigate();
 
   const id = isModal ? medicineId : params.id;
 
-  const [medicine, setMedicine] = useState(null);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(null);
+  const [medicine, setMedicine]       = useState(null);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Only used in PAGE mode (not modal mode)
+  // ── Button cooldown state (2-sec disable after click) ──
+  const [btnCooldown, setBtnCooldown] = useState({});
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
+
+  // ── MessagePopup state ──────────────────────────
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── ConfirmPopup state ──────────────────────────
+  const [confirmPopup, setConfirmPopup] = useState({ visible: false });
+  const openConfirmPopup  = () => setConfirmPopup({ visible: true });
+  const closeConfirmPopup = () => setConfirmPopup({ visible: false });
+
+  // Only used in PAGE mode
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
 
   // ────────────────────────────────────────────────
@@ -137,20 +157,34 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId, onUpdateRequ
   const getStatusClass = (status) => STATUS_MAP[status]?.cls  || 'inactive';
 
   // ────────────────────────────────────────────────
-  // Handlers — UNCHANGED
-  const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this medicine?')) return;
+  // Handlers
+  const handleDeleteClick = () => {
+    triggerCooldown('delete');
+    openConfirmPopup();
+  };
+
+  const handleDeleteConfirm = async () => {
+    closeConfirmPopup();
+    setDeleteLoading(true);
+
     try {
-      setError(null);
       await deleteMedicineMaster(medicine.id);
-      if (isModal && onClose) {
-        onClose();
-      } else {
-        navigate('/medicinemaster-list');
-      }
+      showPopup('Medicine deleted successfully!', 'success');
+      // Give the success popup 1s to show before closing
+      setTimeout(() => {
+        if (isModal && onDeleteSuccess) {
+          onDeleteSuccess();
+        } else if (isModal && onClose) {
+          onClose();
+        } else {
+          navigate('/medicinemaster-list');
+        }
+      }, 1500);
     } catch (err) {
       console.error('Delete medicine failed:', err);
-      setError({ message: err.message || 'Failed to delete medicine.' });
+      showPopup(err?.message || 'Failed to delete medicine.', 'error');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -162,17 +196,15 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId, onUpdateRequ
     }
   };
 
-  // ── CHANGED: in modal mode — delegate to parent via onUpdateRequest
-  //             in page mode  — open the update popup internally as before
   const handleUpdateClick = () => {
+    triggerCooldown('update');
     if (isModal && onUpdateRequest) {
-      onUpdateRequest(id);   // parent closes this popup and opens the update popup
+      onUpdateRequest(id);
     } else {
-      setIsUpdateOpen(true); // page mode: open update popup on top
+      setIsUpdateOpen(true);
     }
   };
 
-  // ── Called when UpdateMedicineMaster saves successfully (page mode only) ──
   const handleUpdateSuccess = () => {
     setIsUpdateOpen(false);
     fetchMedicineDetails();
@@ -204,9 +236,9 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId, onUpdateRequ
             </div>
           </div>
           <div className={styles.clinicNameone}>
-                         <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-                           {localStorage.getItem('clinicName') || '—'}
-                      </div>
+            <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
+            {localStorage.getItem('clinicName') || '—'}
+          </div>
           {isModal && onClose && (
             <button onClick={onClose} className={styles.headerCloseBtn} title="Close">
               <FiX size={20} />
@@ -356,10 +388,18 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId, onUpdateRequ
 
         {/* ── Footer Actions ── */}
         <div className={styles.cardFooter}>
-          <button onClick={handleDelete} className={`${styles.btnHold} ${styles.btnDelete}`}>
-            Delete Medicine
+          <button
+            onClick={handleDeleteClick}
+            className={`${styles.btnHold} ${styles.btnDelete}`}
+            disabled={deleteLoading || !!btnCooldown['delete']}
+          >
+            {deleteLoading ? 'Deleting...' : 'Delete Medicine'}
           </button>
-          <button onClick={handleUpdateClick} className={styles.btnUpdate}>
+          <button
+            onClick={handleUpdateClick}
+            className={styles.btnUpdate}
+            disabled={!!btnCooldown['update']}
+          >
             Update Medicine
           </button>
         </div>
@@ -369,46 +409,87 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId, onUpdateRequ
   };
 
   // ────────────────────────────────────────────────
-  // MODAL MODE — no stacked UpdateMedicineMaster here;
-  // the parent (MedicineMasterList) handles it via onUpdateRequest
+  // MODAL MODE
   // ────────────────────────────────────────────────
   if (isModal) {
     return (
-      <div className={styles.modalOverlay}>
-        <div className={styles.modalContainer}>
-          <ErrorHandler error={error} />
-          {renderContent()}
+      <>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContainer}>
+            <ErrorHandler error={error} />
+            {renderContent()}
+          </div>
         </div>
-      </div>
+
+        {/* ── ConfirmPopup ── */}
+        <ConfirmPopup
+          visible={confirmPopup.visible}
+          message="Delete this medicine?"
+          subMessage="This action cannot be undone. The medicine will be permanently removed."
+          confirmLabel="Yes, Delete"
+          cancelLabel="Cancel"
+          onConfirm={handleDeleteConfirm}
+          onCancel={closeConfirmPopup}
+        />
+
+        {/* ── MessagePopup ── */}
+        <MessagePopup
+          visible={popup.visible}
+          message={popup.message}
+          type={popup.type}
+          onClose={closePopup}
+        />
+      </>
     );
   }
 
   // ────────────────────────────────────────────────
-  // PAGE MODE — UNCHANGED (update popup still stacks on top)
+  // PAGE MODE — UNCHANGED
   // ────────────────────────────────────────────────
   return (
-    <div className={styles.wrapper}>
-      <ErrorHandler error={error} />
-      <Header title="Medicine Master Details" />
+    <>
+      <div className={styles.wrapper}>
+        <ErrorHandler error={error} />
+        <Header title="Medicine Master Details" />
 
-      <div className={styles.toolbar}>
-        <button onClick={handleBack} className={styles.backBtn}>
-          <FiArrowLeft size={20} /> Back to List
-        </button>
+        <div className={styles.toolbar}>
+          <button onClick={handleBack} className={styles.backBtn}>
+            <FiArrowLeft size={20} /> Back to List
+          </button>
+        </div>
+
+        {renderContent()}
+
+        {/* Update popup for page mode */}
+        {isUpdateOpen && (
+          <UpdateMedicineMaster
+            isModal={true}
+            medicineId={id}
+            onClose={() => setIsUpdateOpen(false)}
+            onSuccess={handleUpdateSuccess}
+          />
+        )}
       </div>
 
-      {renderContent()}
+      {/* ── ConfirmPopup ── */}
+      <ConfirmPopup
+        visible={confirmPopup.visible}
+        message="Delete this medicine?"
+        subMessage="This action cannot be undone. The medicine will be permanently removed."
+        confirmLabel="Yes, Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteConfirm}
+        onCancel={closeConfirmPopup}
+      />
 
-      {/* Update popup for page mode */}
-      {isUpdateOpen && (
-        <UpdateMedicineMaster
-          isModal={true}
-          medicineId={id}
-          onClose={() => setIsUpdateOpen(false)}
-          onSuccess={handleUpdateSuccess}
-        />
-      )}
-    </div>
+      {/* ── MessagePopup ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
+    </>
   );
 };
 

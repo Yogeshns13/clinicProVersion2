@@ -1,15 +1,8 @@
 
 import {getSessionRef, generateRefKey, getUserId, getClinicId, getBranchId} from "./Api.js"
-import { API } from "./ApiConfiguration";
+import { API,checkDbError,extractBackendError} from "./ApiConfiguration";
 const CHANNEL_ID = 1;
 const PRODUCTION_MODE = 0;
-/* const API = axios.create({
-  baseURL: "/api",
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
-}); */
 
 export const getVendorList = async (clinicId = 0, options = {}) => {
   const userId = getUserId();
@@ -20,7 +13,6 @@ export const getVendorList = async (clinicId = 0, options = {}) => {
     throw authError;
   }
 
-  // Optional: stricter validation in non-production
   if (PRODUCTION_MODE !== true) {
     if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
       const error = new Error("Invalid Clinic ID");
@@ -29,7 +21,6 @@ export const getVendorList = async (clinicId = 0, options = {}) => {
     }
   }
 
-  // Determine final IDs based on environment
   const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
   const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
 
@@ -54,7 +45,9 @@ export const getVendorList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetVendorList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+   const results = Array.isArray(result) ? result : [];
     console.log("GetVendorList response:", results);
 
     return results.map((vendor) => ({
@@ -83,7 +76,7 @@ export const getVendorList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch vendors"
+      message:extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch vendors"
     };
 
     throw err;
@@ -142,7 +135,7 @@ export const addVendor = async (vendorData) => {
     console.log("AddVendor response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -167,6 +160,7 @@ export const addVendor = async (vendorData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -239,7 +233,7 @@ export const updateVendor = async (vendorData) => {
     console.log("UpdateVendor response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update vendor");
     }
@@ -254,6 +248,7 @@ export const updateVendor = async (vendorData) => {
     console.error("updateVendor error:", error);
 
     const errorMessage =
+    extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -299,7 +294,7 @@ export const deleteVendor = async (vendorId) => {
     console.log("DeleteVendor response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result); 
     // Validate backend response
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete vendor");
@@ -315,6 +310,7 @@ export const deleteVendor = async (vendorId) => {
     console.error("deleteVendor error:", error);
 
     const errorMsg =
+      extractBackendError(error) || 
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -374,7 +370,9 @@ export const getMedicineMasterList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetMedicineMasterList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetMedicineMasterList response:", results);
 
     return results.map((med) => ({
@@ -417,7 +415,7 @@ export const getMedicineMasterList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch medicine master list"
+      message:extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch medicine master list"
     };
 
     throw err;
@@ -488,7 +486,7 @@ export const addMedicineMaster = async (medicineData) => {
     console.log("AddMedicineMaster response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -513,6 +511,7 @@ export const addMedicineMaster = async (medicineData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -596,7 +595,7 @@ export const updateMedicineMaster = async (medicineData) => {
     console.log("UpdateMedicineMaster response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update medicine master");
     }
@@ -611,6 +610,7 @@ export const updateMedicineMaster = async (medicineData) => {
     console.error("updateMedicineMaster error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -654,7 +654,7 @@ export const deleteMedicineMaster = async (medicineId) => {
   try {
     const response = await API.post("/DeleteMedicineMaster", payload);
     const result = response.data?.result;
-
+    checkDbError(result); 
     // Validate backend response
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete medicine master entry");
@@ -670,6 +670,7 @@ export const deleteMedicineMaster = async (medicineId) => {
     console.error("deleteMedicineMaster error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -727,7 +728,9 @@ export const getPurchaseOrderList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetPurchaseOrderList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetPurchaseOrderList response:", results);
 
     return results.map((po) => ({
@@ -759,7 +762,7 @@ export const getPurchaseOrderList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch purchase orders"
+      message:extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch purchase orders"
     };
 
     throw err;
@@ -819,7 +822,7 @@ export const addPurchaseOrder = async (purchaseOrderData) => {
     console.log("AddPurchaseOrder response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -844,6 +847,7 @@ export const addPurchaseOrder = async (purchaseOrderData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -884,7 +888,7 @@ export const deletePurchaseOrder = async (poId) => {
   try {
     const response = await API.post("/DeletePurchaseOrder", payload);
     const result = response.data?.result;
-
+    checkDbError(result); 
     // Validate backend response
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete purchase order");
@@ -900,6 +904,7 @@ export const deletePurchaseOrder = async (poId) => {
     console.error("deletePurchaseOrder error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -957,7 +962,9 @@ export const getPurchaseOrderDetailList = async (clinicId = 0, options = {}) => 
 
   try {
     const response = await API.post("/GetPurchaseOrderDetailList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetPurchaseOrderDetailList response:", results);
 
     return results.map((detail) => ({
@@ -995,7 +1002,7 @@ export const getPurchaseOrderDetailList = async (clinicId = 0, options = {}) => 
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch purchase order details"
+      message: extractBackendError(error) ||error.response?.data?.message || error.message || "Failed to fetch purchase order details"
     };
 
     throw err;
@@ -1063,7 +1070,7 @@ export const addPurchaseOrderDetail = async (detailData) => {
     console.log("AddPurchaseOrderDetail response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -1088,6 +1095,7 @@ export const addPurchaseOrderDetail = async (detailData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -1154,7 +1162,7 @@ export const updatePurchaseOrderDetail = async (detailData) => {
     console.log("UpdatePurchaseOrderDetail response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update purchase order detail");
     }
@@ -1169,6 +1177,7 @@ export const updatePurchaseOrderDetail = async (detailData) => {
     console.error("updatePurchaseOrderDetail error:", error);
 
     const errorMessage =
+      extractBackendError(error) || 
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1212,6 +1221,7 @@ export const deletePurchaseOrderDetail = async (poDetailId) => {
   try {
     const response = await API.post("/DeletePurchaseOrderDetail", payload);
     const result = response.data?.result;
+    checkDbError(result);
 
     // Validate backend response
     if (!result || result.OUT_OK !== 1) {
@@ -1228,6 +1238,7 @@ export const deletePurchaseOrderDetail = async (poDetailId) => {
     console.error("deletePurchaseOrderDetail error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1287,7 +1298,9 @@ export const getMedicineStockList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetMedicineStockList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetMedicineStockList response:", results);
 
     return results.map((stock) => ({
@@ -1320,7 +1333,7 @@ export const getMedicineStockList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch medicine stock list"
+      message:extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch medicine stock list"
     };
 
     throw err;
@@ -1395,7 +1408,7 @@ export const addMedicineStock = async (stockData) => {
     console.log("AddMedicineStock response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result); 
     // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -1420,6 +1433,7 @@ export const addMedicineStock = async (stockData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -1488,7 +1502,7 @@ export const updateMedicineStock = async (stockData) => {
     console.log("UpdateMedicineStock response:", response.data);
 
     const result = response.data?.result;
-
+      checkDbError(result);
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update medicine stock");
     }
@@ -1503,6 +1517,7 @@ export const updateMedicineStock = async (stockData) => {
     console.error("updateMedicineStock error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1565,7 +1580,9 @@ export const getPrescriptionList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetPrescriptionList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetPrescriptionList response:", results);
 
     return results.map((pres) => ({
@@ -1604,7 +1621,7 @@ export const getPrescriptionList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch prescriptions"
+      message:extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch prescriptions"
     };
 
     throw err;
@@ -1679,7 +1696,7 @@ export const addPrescription = async (prescriptionData) => {
     console.log("AddPrescription response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -1704,6 +1721,7 @@ export const addPrescription = async (prescriptionData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+          extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -1774,7 +1792,7 @@ export const updatePrescription = async (prescriptionData) => {
     console.log("UpdatePrescription response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result); 
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update prescription");
     }
@@ -1789,6 +1807,7 @@ export const updatePrescription = async (prescriptionData) => {
     console.error("updatePrescription error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1832,7 +1851,7 @@ export const deletePrescription = async (prescriptionId) => {
   try {
     const response = await API.post("/DeletePrescription", payload);
     const result = response.data?.result;
-
+    checkDbError(result); 
     // Validate backend response
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete prescription");
@@ -1848,6 +1867,7 @@ export const deletePrescription = async (prescriptionId) => {
     console.error("deletePrescription error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1913,7 +1933,9 @@ export const getPrescriptionDetailList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetPrescriptionDetailList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetPrescriptionDetailList response:", results);
 
     return results.map((detail) => ({
@@ -1965,7 +1987,7 @@ export const getPrescriptionDetailList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch prescription details"
+      message: extractBackendError(error) ||error.response?.data?.message || error.message || "Failed to fetch prescription details"
     };
 
     throw err;
@@ -2051,7 +2073,7 @@ export const addPrescriptionDetail = async (detailData) => {
     console.log("AddPrescriptionDetail response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -2076,6 +2098,7 @@ export const addPrescriptionDetail = async (detailData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -2154,7 +2177,7 @@ export const updatePrescriptionDetail = async (prescriptionDetailData) => {
     console.log("UpdatePrescriptionDetail response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result); 
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update prescription detail");
     }
@@ -2169,6 +2192,7 @@ export const updatePrescriptionDetail = async (prescriptionDetailData) => {
     console.error("updatePrescriptionDetail error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -2212,7 +2236,7 @@ export const deletePrescriptionDetail = async (prescriptionDetailId) => {
   try {
     const response = await API.post("/DeletePrescriptionDetail", payload);
     const result = response.data?.result;
-
+    checkDbError(result); 
     // Validate backend response
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete prescription detail");
@@ -2228,6 +2252,7 @@ export const deletePrescriptionDetail = async (prescriptionDetailId) => {
     console.error("deletePrescriptionDetail error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -2282,7 +2307,9 @@ export const getSalesCartList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetSalesCartList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetSalesCartList response:", results);
 
     return results.map((cart) => ({
@@ -2313,7 +2340,7 @@ export const getSalesCartList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch sales carts"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch sales carts"
     };
 
     throw err;
@@ -2366,7 +2393,7 @@ export const addSalesCart = async (cartData) => {
     console.log("AddSalesCart response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -2391,6 +2418,7 @@ export const addSalesCart = async (cartData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -2431,7 +2459,7 @@ export const deleteSalesCart = async (cartId) => {
   try {
     const response = await API.post("/DeleteSalesCart", payload);
     const result = response.data?.result;
-
+    checkDbError(result); 
     // Validate backend response
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete sales cart");
@@ -2447,6 +2475,7 @@ export const deleteSalesCart = async (cartId) => {
     console.error("deleteSalesCart error:", error);
 
     const errorMsg =
+      extractBackendError(error) || 
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -2503,7 +2532,9 @@ export const getSalesCartDetailList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetSalesCartDetailList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetSalesCartDetailList response:", results);
 
     return results.map((item) => ({
@@ -2545,7 +2576,7 @@ export const getSalesCartDetailList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch sales cart details"
+      message:extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch sales cart details"
     };
 
     throw err;
@@ -2613,7 +2644,7 @@ export const addSalesCartDetail = async (detailData) => {
     console.log("AddSalesCartDetail response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -2638,6 +2669,7 @@ export const addSalesCartDetail = async (detailData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+          extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -2678,7 +2710,7 @@ export const deleteSalesCartDetail = async (cartDetailId) => {
   try {
     const response = await API.post("/DeleteSalesCartDetail", payload);
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate backend response
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete sales cart detail");
@@ -2694,6 +2726,7 @@ export const deleteSalesCartDetail = async (cartDetailId) => {
     console.error("deleteSalesCartDetail error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -2754,7 +2787,7 @@ export const generatePharmacyInvoice = async (invoiceData) => {
     console.log("GeneratePharmacyInvoice response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result); 
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response format from server");
     }
@@ -2778,6 +2811,7 @@ export const generatePharmacyInvoice = async (invoiceData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) || 
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -2835,7 +2869,9 @@ export const getPharmacyInvoiceDetailList = async (clinicId = 0, options = {}) =
   try {
     const response = await API.post("/GetPharmacyInvoiceDetailList", payload);
     
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetPharmacyInvoiceDetailList response count:", results.length);
 
     return results.map((item) => ({
@@ -2877,6 +2913,7 @@ export const getPharmacyInvoiceDetailList = async (clinicId = 0, options = {}) =
       ...error,
       status: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.message ||
         "Failed to fetch pharmacy invoice details",
