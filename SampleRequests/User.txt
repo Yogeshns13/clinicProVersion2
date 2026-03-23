@@ -99,6 +99,25 @@ GetUser
    
 }
 
+// GetUserList
+
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "ClinicID": 0,
+    "BranchID":0,
+    "UserID":0,
+    "EmployeeID":0,
+    "UserName":"",
+    "Mobile":"",
+    "Email":"",
+    "Status":-1
+}
+
 ForgetPassword
 {
     "CHANNEL_ID":1,

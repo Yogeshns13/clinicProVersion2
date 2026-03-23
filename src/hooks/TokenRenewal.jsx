@@ -35,16 +35,12 @@ export const useTokenRenewal = () => {
     const elapsed = now - baseTimestamp;
     const intervalsPassed = Math.floor(elapsed / TOKEN_RENEWAL_INTERVAL);
     const nextTime = baseTimestamp + (intervalsPassed + 1) * TOKEN_RENEWAL_INTERVAL;
-    // Minimum 100ms delay to avoid tight loops
     const delay = Math.max(nextTime - now, 100);
     setNextRenewalTime(new Date(now + delay));
     timeoutRef.current = setTimeout(() => renewRef.current?.(), delay);
   };
 
   renewRef.current = async () => {
-    // If the axios interceptor is already handling a 401 renewal, skip this
-    // timer cycle — they would both call /RenewToken and the second would fail
-    // because the refresh token was already rotated by the first
     if (getIsRenewing() || isLocalRenewing.current) {
       scheduleRef.current?.(Date.now());
       return;

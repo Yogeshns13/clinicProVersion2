@@ -701,17 +701,15 @@ const LabOrderList = () => {
                           <div className={styles.actionDropdownWrapper}>
                             <button className={styles.actionBtn}>Actions</button>
                             <div className={styles.actionDropdown}>
-                              <button
-                                onClick={() => { cooldown.trigger(`makeWork_${order.id}`); handleMakeWorkClick(order); }}
-                                disabled={
-                                  cooldown.isDisabled(`makeWork_${order.id}`) ||
-                                  order.status === 5 || order.status === 2 ||
-                                  order.status === 3 || order.status === 6
-                                }
-                                className={styles.dropdownItem}
-                              >
-                                {order.status === 5 ? 'In Progress' : 'Make Work'}
-                              </button>
+                              {order.status === 1 && (
+                                <button
+                                  onClick={() => { cooldown.trigger(`makeWork_${order.id}`); handleMakeWorkClick(order); }}
+                                  disabled={cooldown.isDisabled(`makeWork_${order.id}`)}
+                                  className={styles.dropdownItem}
+                                >
+                                  Make Work
+                                </button>
+                              )}
                               {order.status === 2 && !hasReport && (
                                 <button
                                   onClick={() => { cooldown.trigger(`addReport_${order.id}`); handleAddReportClick(order); }}
@@ -730,7 +728,7 @@ const LabOrderList = () => {
                                   <FiEdit size={14} /> Update Report
                                 </button>
                               )}
-                              {(order.status === 1 || order.status === 5) && (
+                              {order.status === 5 && (
                                 <button
                                   onClick={() => { cooldown.trigger(`invoice_${order.id}`); handleMakeInvoiceClick(order); }}
                                   disabled={cooldown.isDisabled(`invoice_${order.id}`)}
