@@ -5,47 +5,53 @@ import { getAppointmentList, cancelAppointment } from '../Api/Api.js';
 import './ViewAppointment.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 
 
-// ────────────────────────────────────────────────
-// Helper function to convert status code to string
 // ────────────────────────────────────────────────
 const getStatusString = (status) => {
   switch (status) {
-    case 1:
-      return 'scheduled';
-    case 2:
-      return 'confirmed';
-    case 3:
-      return 'inprogress';
-    case 4:
-      return 'completed';
-    case 5:
-      return 'cancelled';
-    default:
-      return 'unknown';
+    case 1: return 'scheduled';
+    case 2: return 'confirmed';
+    case 3: return 'inprogress';
+    case 4: return 'completed';
+    case 5: return 'cancelled';
+    default: return 'unknown';
   }
 };
 
 // ────────────────────────────────────────────────
-const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRefresh }) => {
+const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRefresh, onCancelSuccess, onCancelError }) => {
   const [appointment, setAppointment] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading,       setLoading]       = useState(true);
+  const [error,         setError]         = useState(null);
   const [cancelLoading, setCancelLoading] = useState(false);
+
+  // ── ConfirmPopup for cancel ──
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
+  // ── MessagePopup state ──
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Button cooldown ──
+  const [cancelBtnCooldown, setCancelBtnCooldown] = useState(false);
+  const startCooldown = (setter) => {
+    setter(true);
+    setTimeout(() => setter(false), 2000);
+  };
 
   // ────────────────────────────────────────────────
   useEffect(() => {
     const fetchAppointmentDetails = async () => {
-      // If appointment is passed as prop, use it directly
       if (passedAppointment) {
         setAppointment(passedAppointment);
         setLoading(false);
         return;
       }
 
-      // Otherwise, fetch it (this handles the appointmentId prop case)
       if (!isOpen) return;
 
       try {
@@ -56,7 +62,7 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRe
         const branchId = await getStoredBranchId();
 
         const data = await getAppointmentList(clinicId, {
-          BranchID: branchId,
+          BranchID:      branchId,
           AppointmentID: Number(passedAppointment?.id || 0),
         });
 
@@ -67,9 +73,7 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRe
         }
       } catch (err) {
         console.error('fetchAppointmentDetails error:', err);
-        setError({
-          message: err.message || 'Failed to load appointment details',
-        });
+        setError({ message: err.message || 'Failed to load appointment details' });
       } finally {
         setLoading(false);
       }
@@ -82,16 +86,12 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRe
   }, [passedAppointment, isOpen]);
 
   // ────────────────────────────────────────────────
-  // Helper functions
   const formatDate = (dateString) => {
     if (!dateString) return '—';
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString('en-IN', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        weekday: 'long',
+        year: 'numeric', month: 'long', day: 'numeric', weekday: 'long',
       });
     } catch {
       return dateString;
@@ -100,66 +100,79 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRe
 
   const formatTime = (timeStr) => {
     if (!timeStr) return '—';
-
-    // Parse HH:MM format
     const [hours, minutes] = timeStr.split(':').map(Number);
-
-    // Convert to 12-hour format
     const period = hours >= 12 ? 'PM' : 'AM';
     const hour12 = hours % 12 || 12;
-
     return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
   const getStatusClass = (status) => {
     const statusStr = getStatusString(status);
-    if (statusStr === 'scheduled') return 'active';
-    if (statusStr === 'confirmed') return 'active';
+    if (statusStr === 'scheduled')  return 'active';
+    if (statusStr === 'confirmed')  return 'active';
     if (statusStr === 'inprogress') return 'active';
-    if (statusStr === 'completed') return 'completed';
-    if (statusStr === 'cancelled') return 'inactive';
+    if (statusStr === 'completed')  return 'completed';
+    if (statusStr === 'cancelled')  return 'inactive';
     return 'inactive';
   };
 
+  // ── Cancel handlers ──
   const handleCancelClick = () => {
+    if (cancelBtnCooldown) return;
+    startCooldown(setCancelBtnCooldown);
     setShowCancelConfirm(true);
   };
 
-  const handleCancelAppointment = async () => {
+  const handleCancelConfirm = async () => {
     if (!appointment) return;
-
+    setShowCancelConfirm(false);
     setCancelLoading(true);
     try {
       await cancelAppointment(appointment.id);
-      
-      // Refresh the parent list
-      if (onRefresh) {
-        onRefresh();
-      }
-      
-      // Close the modal
-      onClose();
+      showPopup('Appointment cancelled successfully.', 'success');
+      if (onRefresh) onRefresh();
+      if (onCancelSuccess) onCancelSuccess();
+      setTimeout(() => {
+        onClose();
+      }, 1200);
     } catch (err) {
       console.error('Failed to cancel appointment:', err);
-      setError({ message: err.message || 'Failed to cancel appointment' });
+      const msg = err.message || 'Failed to cancel appointment.';
+      showPopup(msg, 'error');
+      if (onCancelError) onCancelError(msg);
     } finally {
       setCancelLoading(false);
-      setShowCancelConfirm(false);
     }
   };
 
-  const handleCloseCancelConfirm = () => {
-    setShowCancelConfirm(false);
-  };
+  const handleCancelCancel = () => setShowCancelConfirm(false);
 
   // ────────────────────────────────────────────────
-  // Don't render if not open
   if (!isOpen) return null;
 
-  // ────────────────────────────────────────────────
   return (
     <div className="appointment-modal-overlay">
       <div className="appointment-modal">
+
+        {/* ── MessagePopup ── */}
+        <MessagePopup
+          visible={popup.visible}
+          message={popup.message}
+          type={popup.type}
+          onClose={closePopup}
+        />
+
+        {/* ── ConfirmPopup for cancel appointment ── */}
+        <ConfirmPopup
+          visible={showCancelConfirm}
+          message={`Cancel appointment for ${appointment?.patientName || 'this patient'}?`}
+          subMessage="This action cannot be undone. The appointment will be permanently cancelled."
+          confirmLabel={cancelLoading ? 'Cancelling...' : 'Yes, Cancel'}
+          cancelLabel="No, Keep It"
+          onConfirm={handleCancelConfirm}
+          onCancel={handleCancelCancel}
+        />
+
         {/* Header */}
         <div className="appointment-modal-header">
           <div className="appointment-header-content">
@@ -167,9 +180,9 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRe
             <h2>Appointment Details</h2>
           </div>
           <div className="clinicNameone">
-             <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-               {localStorage.getItem('clinicName') || '—'}
-                  </div>
+            <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
+            {localStorage.getItem('clinicName') || '—'}
+          </div>
           <button onClick={onClose} className="appointment-modal-close">
             <FiX size={20} />
           </button>
@@ -192,142 +205,96 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRe
 
           {!loading && !error && appointment && (
             <>
-              {/* Patient Information */}
               {/* Patient & Doctor Information */}
-<div className="appointment-details-section">
-  <h3 className="appointment-section-title">
-    <FiUser size={18} />
-    Patient & Doctor Information
-  </h3>
-  <div className="appointment-details-grid">
-    <div className="appointment-detail-item">
-      <span className="appointment-detail-label">Patient Name</span>
-      <span className="appointment-detail-value">{appointment.patientName || '—'}</span>
-    </div>
-
-    <div className="appointment-detail-item">
-      <span className="appointment-detail-label">File Number</span>
-      <span className="appointment-detail-value">{appointment.patientFileNo || '—'}</span>
-    </div>
-
-    <div className="appointment-detail-item">
-      <span className="appointment-detail-label">Mobile</span>
-      <span className="appointment-detail-value">{appointment.patientMobile || '—'}</span>
-    </div>
-
-    <div className="appointment-detail-item">
-      <span className="appointment-detail-label">Doctor Name</span>
-      <span className="appointment-detail-value">{appointment.doctorFullName || '—'}</span>
-    </div>
-
-    <div className="appointment-detail-item">
-      <span className="appointment-detail-label">Doctor Code</span>
-      <span className="appointment-detail-value">{appointment.doctorCode || '—'}</span>
-    </div>
-  </div>
-</div>
-
-
-{/* Appointment Details */}
-<div className="appointment-details-section">
-  <h3 className="appointment-section-title">
-    <FiCalendar size={18} />
-    Appointment Details
-  </h3>
-  <div className="appointment-details-grid">
-    <div className="appointment-detail-item">
-      <span className="appointment-detail-label">Date</span>
-      <span className="appointment-detail-value">
-        {formatDate(appointment.appointmentDate)}
-      </span>
-    </div>
-
-    <div className="appointment-detail-item">
-      <span className="appointment-detail-label">Time</span>
-      <span className="appointment-detail-value">
-        {formatTime(appointment.appointmentTime)}
-      </span>
-    </div>
-
-    <div className="appointment-detail-item appointment-full-width">
-      <span className="appointment-detail-label">Reason for Visit</span>
-      <span className="appointment-detail-value">
-        {appointment.reason || '—'}
-      </span>
-    </div>
-  </div>
-</div>
-
-
-{/* Clinic & Record Information */}
-<div className="appointment-details-section">
-  <h3 className="appointment-section-title">
-    <FiFileText size={18} />
-    Clinic & Record Information
-  </h3>
-  <div className="appointment-details-grid">
-    <div className="appointment-detail-item">
-      <span className="appointment-detail-label">Clinic Name</span>
-      <span className="appointment-detail-value">{appointment.clinicName || '—'}</span>
-    </div>
-
-    <div className="appointment-detail-item">
-      <span className="appointment-detail-label">Branch Name</span>
-      <span className="appointment-detail-value">{appointment.branchName || '—'}</span>
-    </div>
-
-    <div className="appointment-detail-item">
-      <span className="appointment-detail-label">Date Created</span>
-      <span className="appointment-detail-value">
-        {formatDate(appointment.dateCreated)}
-      </span>
-    </div>
-
-    <div className="appointment-detail-item">
-      <span className="appointment-detail-label">Last Modified</span>
-      <span className="appointment-detail-value">
-        {formatDate(appointment.dateModified)}
-      </span>
-    </div>
-  </div>
-</div>
-
-              {/* Cancel Confirmation */}
-              {showCancelConfirm && (
-                <div className="appointment-cancel-confirmation">
-                  <p className="cancel-warning">
-                    Are you sure you want to cancel this appointment? This action cannot be undone.
-                  </p>
-                  <div className="cancel-actions">
-                    <button 
-                      onClick={handleCloseCancelConfirm} 
-                      className="cancel-no-btn"
-                      disabled={cancelLoading}
-                    >
-                      No, Keep It
-                    </button>
-                    <button 
-                      onClick={handleCancelAppointment} 
-                      className="cancel-yes-btn"
-                      disabled={cancelLoading}
-                    >
-                      {cancelLoading ? 'Cancelling...' : 'Yes, Cancel'}
-                    </button>
+              <div className="appointment-details-section">
+                <h3 className="appointment-section-title">
+                  <FiUser size={18} />
+                  Patient &amp; Doctor Information
+                </h3>
+                <div className="appointment-details-grid">
+                  <div className="appointment-detail-item">
+                    <span className="appointment-detail-label">Patient Name</span>
+                    <span className="appointment-detail-value">{appointment.patientName || '—'}</span>
+                  </div>
+                  <div className="appointment-detail-item">
+                    <span className="appointment-detail-label">File Number</span>
+                    <span className="appointment-detail-value">{appointment.patientFileNo || '—'}</span>
+                  </div>
+                  <div className="appointment-detail-item">
+                    <span className="appointment-detail-label">Mobile</span>
+                    <span className="appointment-detail-value">{appointment.patientMobile || '—'}</span>
+                  </div>
+                  <div className="appointment-detail-item">
+                    <span className="appointment-detail-label">Doctor Name</span>
+                    <span className="appointment-detail-value">{appointment.doctorFullName || '—'}</span>
+                  </div>
+                  <div className="appointment-detail-item">
+                    <span className="appointment-detail-label">Doctor Code</span>
+                    <span className="appointment-detail-value">{appointment.doctorCode || '—'}</span>
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* Appointment Details */}
+              <div className="appointment-details-section">
+                <h3 className="appointment-section-title">
+                  <FiCalendar size={18} />
+                  Appointment Details
+                </h3>
+                <div className="appointment-details-grid">
+                  <div className="appointment-detail-item">
+                    <span className="appointment-detail-label">Date</span>
+                    <span className="appointment-detail-value">{formatDate(appointment.appointmentDate)}</span>
+                  </div>
+                  <div className="appointment-detail-item">
+                    <span className="appointment-detail-label">Time</span>
+                    <span className="appointment-detail-value">{formatTime(appointment.appointmentTime)}</span>
+                  </div>
+                  <div className="appointment-detail-item appointment-full-width">
+                    <span className="appointment-detail-label">Reason for Visit</span>
+                    <span className="appointment-detail-value">{appointment.reason || '—'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Clinic & Record Information */}
+              <div className="appointment-details-section">
+                <h3 className="appointment-section-title">
+                  <FiFileText size={18} />
+                  Clinic &amp; Record Information
+                </h3>
+                <div className="appointment-details-grid">
+                  <div className="appointment-detail-item">
+                    <span className="appointment-detail-label">Clinic Name</span>
+                    <span className="appointment-detail-value">{appointment.clinicName || '—'}</span>
+                  </div>
+                  <div className="appointment-detail-item">
+                    <span className="appointment-detail-label">Branch Name</span>
+                    <span className="appointment-detail-value">{appointment.branchName || '—'}</span>
+                  </div>
+                  <div className="appointment-detail-item">
+                    <span className="appointment-detail-label">Date Created</span>
+                    <span className="appointment-detail-value">{formatDate(appointment.dateCreated)}</span>
+                  </div>
+                  <div className="appointment-detail-item">
+                    <span className="appointment-detail-label">Last Modified</span>
+                    <span className="appointment-detail-value">{formatDate(appointment.dateModified)}</span>
+                  </div>
+                </div>
+              </div>
             </>
           )}
         </div>
 
         {/* Footer */}
         <div className="appointment-modal-footer">
-          {!showCancelConfirm && appointment && appointment.status === 1 && (
-            <button 
-              onClick={handleCancelClick} 
+          {appointment && appointment.status === 1 && (
+            <button
+              onClick={handleCancelClick}
+              disabled={cancelBtnCooldown || cancelLoading}
               className="appointment-cancel-appointment-btn"
             >
-              Cancel Appointment
+              {cancelLoading ? 'Cancelling...' : 'Cancel Appointment'}
             </button>
           )}
           <button onClick={onClose} className="appointment-close-btn">

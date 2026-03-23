@@ -13,6 +13,9 @@ import Header from '../Header/Header.jsx';
 import styles from './ConsultationChargeConfig.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 const PAGE_SIZE = 20;
 
@@ -99,66 +102,106 @@ const toStatusNumber = (status) => {
 };
 
 const ConsultationChargeConfig = () => {
-  const [chargeConfigs, setChargeConfigs] = useState([]);
+  const [chargeConfigs,    setChargeConfigs]    = useState([]);
   const [allChargeConfigs, setAllChargeConfigs] = useState([]);
-  const [clinics, setClinics] = useState([]);
+  const [clinics,          setClinics]          = useState([]);
 
   // Pagination
-  const [page, setPage] = useState(1);
+  const [page,    setPage]    = useState(1);
   const [hasNext, setHasNext] = useState(false);
 
   const [filterInputs, setFilterInputs] = useState({
-    searchType: 'chargeName',
+    searchType:  'chargeName',
     searchValue: '',
+    status:      'active',
   });
 
   const [appliedFilters, setAppliedFilters] = useState({
-    searchType: 'chargeName',
+    searchType:  'chargeName',
     searchValue: '',
+    status:      'active',
   });
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState(null);
 
   const [selectedConfig, setSelectedConfig] = useState(null);
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editingConfig, setEditingConfig] = useState(null);
-  const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState(null);
-  const [formSuccess, setFormSuccess] = useState(null);
+  const [isFormOpen,     setIsFormOpen]     = useState(false);
+  const [isEditMode,     setIsEditMode]     = useState(false);
+  const [editingConfig,  setEditingConfig]  = useState(null);
+  const [formLoading,    setFormLoading]    = useState(false);
 
   const [formData, setFormData] = useState({
-    clinicId: '',
-    chargeCode: '',
-    chargeName: '',
-    defaultAmount: '',
-    gstNo: '',
+    clinicId:       '',
+    chargeCode:     '',
+    chargeName:     '',
+    defaultAmount:  '',
+    gstNo:          '',
     cgstPercentage: '',
     sgstPercentage: '',
-    status: 1
+    status:         1,
   });
 
   const [validationMessages, setValidationMessages] = useState({});
 
+  // ── MessagePopup ──
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── ConfirmPopup for delete ──
+  const [deleteConfirm,  setDeleteConfirm]  = useState(null); // holds config or null
+  const [deleteLoading,  setDeleteLoading]  = useState(false);
+
+  // ── Button cooldowns ──
+  const [searchCooldown,  setSearchCooldown]  = useState(false);
+  const [clearCooldown,   setClearCooldown]   = useState(false);
+  const [addCooldown,     setAddCooldown]     = useState(false);
+  const [editCooldowns,   setEditCooldowns]   = useState({});
+  const [viewCooldowns,   setViewCooldowns]   = useState({});
+  const [submitCooldown,  setSubmitCooldown]  = useState(false);
+  const [deleteBtnCooldown, setDeleteBtnCooldown] = useState(false);
+
+  const startCooldown = (setter) => {
+    setter(true);
+    setTimeout(() => setter(false), 2000);
+  };
+  const startIdCooldown = (setter, id) => {
+    setter(prev => ({ ...prev, [id]: true }));
+    setTimeout(() => setter(prev => ({ ...prev, [id]: false })), 2000);
+  };
+
+  // ── Submit attempted flag ──
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  // ── Form completeness ──
+  const isFormComplete =
+    formData.chargeCode.trim() !== '' &&
+    formData.chargeName.trim() !== '' &&
+    formData.defaultAmount     !== '';
+
+  // ── Submit disabled logic (original + completeness) ──
+  const hasValidationErrors   = Object.values(validationMessages).some(msg => msg && msg !== '');
+  const isSubmitDisabled      = formLoading || submitCooldown;
+
+  // ────────────────────────────────────────────────
   const fetchChargeConfigs = async (pageNum = page) => {
     try {
       setLoading(true);
       setError(null);
       const clinicId = await getStoredClinicId();
-      const options = {
-        Page: pageNum,
-        PageSize: PAGE_SIZE
-      };
-      const data = await getConsultingChargeConfigList(clinicId, options);
+      const options  = { Page: pageNum, PageSize: PAGE_SIZE };
+      const data     = await getConsultingChargeConfigList(clinicId, options);
       setChargeConfigs(data);
       setAllChargeConfigs(data);
       setHasNext(data.length === PAGE_SIZE);
     } catch (err) {
-      setError(err?.status >= 400 || err?.code >= 400 ? err : {
-        message: err.message || 'Failed to load charge configurations'
-      });
+      setError(
+        err?.status >= 400 || err?.code >= 400
+          ? err
+          : { message: err.message || 'Failed to load charge configurations' }
+      );
     } finally {
       setLoading(false);
     }
@@ -167,7 +210,7 @@ const ConsultationChargeConfig = () => {
   const fetchClinics = async () => {
     try {
       const clinicId = await getStoredClinicId();
-      const data = await getClinicList(clinicId);
+      const data     = await getClinicList(clinicId);
       setClinics(data);
     } catch (err) {
       console.error('fetchClinics error:', err);
@@ -181,33 +224,51 @@ const ConsultationChargeConfig = () => {
   }, [appliedFilters]);
 
   const filteredConfigs = useMemo(() => {
-    if (!appliedFilters.searchValue.trim()) return chargeConfigs;
-    const term = appliedFilters.searchValue.toLowerCase();
-    switch (appliedFilters.searchType) {
-      case 'chargeName':
-        return chargeConfigs.filter(c => c.chargeName?.toLowerCase().includes(term));
-      case 'chargeCode':
-        return chargeConfigs.filter(c => c.chargeCode?.toLowerCase().includes(term));
-      default:
-        return chargeConfigs.filter(c =>
-          c.chargeName?.toLowerCase().includes(term) ||
-          c.chargeCode?.toLowerCase().includes(term)
-        );
+    let filtered = chargeConfigs;
+
+    if (appliedFilters.searchValue.trim()) {
+      const term = appliedFilters.searchValue.toLowerCase();
+      switch (appliedFilters.searchType) {
+        case 'chargeName':
+          filtered = filtered.filter(c => c.chargeName?.toLowerCase().includes(term));
+          break;
+        case 'chargeCode':
+          filtered = filtered.filter(c => c.chargeCode?.toLowerCase().includes(term));
+          break;
+        default:
+          filtered = filtered.filter(c =>
+            c.chargeName?.toLowerCase().includes(term) ||
+            c.chargeCode?.toLowerCase().includes(term)
+          );
+      }
     }
+
+    if (appliedFilters.status) {
+      filtered = filtered.filter(c =>
+        c.status?.toLowerCase() === appliedFilters.status.toLowerCase()
+      );
+    }
+
+    return filtered;
   }, [chargeConfigs, appliedFilters]);
 
+  // ── Filter handlers ──
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSearch = () => {
+    if (searchCooldown) return;
+    startCooldown(setSearchCooldown);
     setAppliedFilters({ ...filterInputs });
     setPage(1);
   };
 
   const handleClearFilters = () => {
-    const empty = { searchType: 'chargeName', searchValue: '' };
+    if (clearCooldown) return;
+    startCooldown(setClearCooldown);
+    const empty = { searchType: 'chargeName', searchValue: '', status: 'active' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
     setPage(1);
@@ -219,47 +280,56 @@ const ConsultationChargeConfig = () => {
     fetchChargeConfigs(newPage);
   };
 
-  const openDetails = (config) => setSelectedConfig(config);
+  // ── Details modal ──
+  const openDetails = (config) => {
+    if (viewCooldowns[config.id]) return;
+    startIdCooldown(setViewCooldowns, config.id);
+    setSelectedConfig(config);
+  };
   const closeDetails = () => setSelectedConfig(null);
 
+  // ── Add form ──
   const openAddForm = async () => {
+    if (addCooldown) return;
+    startCooldown(setAddCooldown);
     setIsEditMode(false);
     setEditingConfig(null);
     const clinicId = await getStoredClinicId();
-    const clinic = clinics.find(c => c.id === clinicId);
+    const clinic   = clinics.find(c => c.id === clinicId);
     setFormData({
-      clinicId: clinicId || '',
-      chargeCode: '',
-      chargeName: '',
-      defaultAmount: '',
-      gstNo: clinic?.gstNo || '',
+      clinicId:       clinicId || '',
+      chargeCode:     '',
+      chargeName:     '',
+      defaultAmount:  '',
+      gstNo:          clinic?.gstNo          || '',
       cgstPercentage: clinic?.cgstPercentage || '',
       sgstPercentage: clinic?.sgstPercentage || '',
-      status: 1
+      status:         1,
     });
-    setFormError(null);
-    setFormSuccess(null);
     setValidationMessages({});
+    setSubmitAttempted(false);
     setIsFormOpen(true);
   };
 
+  // ── Edit form ──
   const openEditForm = (config) => {
+    if (editCooldowns[config.id]) return;
+    startIdCooldown(setEditCooldowns, config.id);
     setSelectedConfig(null);
     setIsEditMode(true);
     setEditingConfig(config);
     setFormData({
-      clinicId: config.clinicId,
-      chargeCode: config.chargeCode,
-      chargeName: config.chargeName,
-      defaultAmount: config.defaultAmount || '',
-      gstNo: '',
+      clinicId:       config.clinicId,
+      chargeCode:     config.chargeCode,
+      chargeName:     config.chargeName,
+      defaultAmount:  config.defaultAmount  || '',
+      gstNo:          '',
       cgstPercentage: config.cgstPercentage || '',
       sgstPercentage: config.sgstPercentage || '',
-      status: toStatusNumber(config.status)
+      status:         toStatusNumber(config.status),
     });
-    setFormError(null);
-    setFormSuccess(null);
     setValidationMessages({});
+    setSubmitAttempted(false);
     setIsFormOpen(true);
   };
 
@@ -267,11 +337,11 @@ const ConsultationChargeConfig = () => {
     setIsFormOpen(false);
     setIsEditMode(false);
     setEditingConfig(null);
-    setFormError(null);
-    setFormSuccess(null);
     setValidationMessages({});
+    setSubmitAttempted(false);
   };
 
+  // ── Input handlers ──
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     const filteredValue = filterInput(name, value);
@@ -294,60 +364,81 @@ const ConsultationChargeConfig = () => {
     return Object.values(messages).every(msg => !msg);
   };
 
-  const hasValidationErrors = Object.values(validationMessages).some(msg => msg && msg !== '');
-  const requiredFieldsFilled =
-    formData.chargeCode.trim() !== '' &&
-    formData.chargeName.trim() !== '' &&
-    formData.defaultAmount !== '';
-  const isSubmitDisabled = formLoading || hasValidationErrors || !requiredFieldsFilled;
-
+  // ── Submit ──
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitAttempted(true);
+
+    if (!isFormComplete) {
+      showPopup('Please fill all required fields before submitting.', 'error');
+      return;
+    }
+
     const isValid = validateAllFields();
     if (!isValid) return;
 
+    if (submitCooldown) return;
+    startCooldown(setSubmitCooldown);
+
     try {
       setFormLoading(true);
-      setFormError(null);
-      setFormSuccess(null);
 
       const submitData = {
         ...formData,
-        clinicId: Number(formData.clinicId),
-        defaultAmount: Number(formData.defaultAmount),
+        clinicId:       Number(formData.clinicId),
+        defaultAmount:  Number(formData.defaultAmount),
         cgstPercentage: Number(formData.cgstPercentage) || 0,
         sgstPercentage: Number(formData.sgstPercentage) || 0,
-        status: Number(formData.status)
+        status:         Number(formData.status),
       };
 
       if (isEditMode) {
         submitData.chargeId = editingConfig.id;
         await updateConsultationChargeConfig(submitData);
-        setFormSuccess('Charge configuration updated successfully!');
+        showPopup('Charge configuration updated successfully!', 'success');
       } else {
         await addConsultationChargeConfig(submitData);
-        setFormSuccess('Charge configuration added successfully!');
+        showPopup('Charge configuration added successfully!', 'success');
       }
 
       setTimeout(() => {
         closeForm();
         fetchChargeConfigs(page);
-      }, 1500);
+      }, 1200);
     } catch (err) {
-      setFormError(err.message?.split(':')[1]?.trim() || 'Failed to save charge configuration');
+      showPopup(
+        err.message?.split(':')[1]?.trim() || 'Failed to save charge configuration.',
+        'error'
+      );
     } finally {
       setFormLoading(false);
     }
   };
 
-  const handleDelete = async (config) => {
-    if (!window.confirm(`Are you sure you want to delete "${config.chargeName}"?`)) return;
+  // ── Delete: open ConfirmPopup ──
+  const handleDeleteClick = (config) => {
+    if (deleteBtnCooldown) return;
+    startCooldown(setDeleteBtnCooldown);
+    setDeleteConfirm(config);
+  };
+  const handleDeleteCancel  = () => setDeleteConfirm(null);
+
+  // ── Delete: perform after confirmation ──
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
+    setDeleteLoading(true);
+    setDeleteConfirm(null);
     try {
+      setLoading(true);
       setSelectedConfig(null);
-      await deleteConsultationChargeConfig(config.id);
+      await deleteConsultationChargeConfig(deleteConfirm.id);
+      showPopup('Charge configuration deleted successfully!', 'success');
       fetchChargeConfigs(page);
     } catch (err) {
-      setError({ message: err.message || 'Failed to delete' });
+      showPopup(err.message || 'Failed to delete charge configuration.', 'error');
+    } finally {
+      setDeleteLoading(false);
+      setLoading(false);
     }
   };
 
@@ -356,13 +447,17 @@ const ConsultationChargeConfig = () => {
     return `₹${Number(amount).toFixed(2)}`;
   };
 
+  // ────────────────────────────────────────────────
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.chargeConfigLoading}>Loading...</div>;
+  if (loading) return <div className={styles.chargeConfigLoading}><LoadingPage/></div>;
 
-  const hasActiveSearch = !!appliedFilters.searchValue.trim();
+  // Clear button shows only when searchValue is non-empty OR status differs from default 'active'
+  const hasActiveFilters =
+    appliedFilters.searchValue.trim() !== '' ||
+    appliedFilters.status !== 'active';
 
   const startRecord = chargeConfigs.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const endRecord   = startRecord + chargeConfigs.length - 1;
@@ -372,11 +467,26 @@ const ConsultationChargeConfig = () => {
       <ErrorHandler error={error} />
       <Header title="Consultation Charge Configuration" />
 
-      {formSuccess && !isFormOpen && (
-        <div className={styles.formSuccess}>{formSuccess}</div>
-      )}
+      {/* ── MessagePopup ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
 
-      {/* Filters + Add button bar */}
+      {/* ── ConfirmPopup for delete ── */}
+      <ConfirmPopup
+        visible={!!deleteConfirm}
+        message={`Delete "${deleteConfirm?.chargeName || 'this charge'}"?`}
+        subMessage="This action cannot be undone. The charge configuration will be permanently removed."
+        confirmLabel={deleteLoading ? 'Deleting...' : 'Yes, Delete'}
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
+
+      {/* ── Filter Bar ── */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
           <div className={styles.searchGroup}>
@@ -401,20 +511,45 @@ const ConsultationChargeConfig = () => {
             />
           </div>
 
+          <div className={styles.filterGroup}>
+            <select
+              name="status"
+              value={filterInputs.status}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
+            >
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="deleted">Deleted</option>
+            </select>
+          </div>
+
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              disabled={searchCooldown}
+              className={styles.searchButton}
+            >
               <FiSearch size={18} />
               Search
             </button>
 
-            {hasActiveSearch && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
+            {hasActiveFilters && (
+              <button
+                onClick={handleClearFilters}
+                disabled={clearCooldown}
+                className={styles.clearButton}
+              >
                 <FiX size={18} />
                 Clear
               </button>
             )}
 
-            <button onClick={openAddForm} className={styles.addConfigBtn}>
+            <button
+              onClick={openAddForm}
+              disabled={addCooldown}
+              className={styles.addConfigBtn}
+            >
               <FiPlus size={18} />
               Add Charge Config
             </button>
@@ -422,7 +557,7 @@ const ConsultationChargeConfig = () => {
         </div>
       </div>
 
-      {/* Table + Pagination */}
+      {/* ── Table + Pagination ── */}
       <div className={styles.tableSection}>
         <div className={styles.chargeConfigTableContainer}>
           <table className={styles.chargeConfigTable}>
@@ -442,7 +577,7 @@ const ConsultationChargeConfig = () => {
               {filteredConfigs.length === 0 ? (
                 <tr>
                   <td colSpan={8} className={styles.chargeConfigNoData}>
-                    {hasActiveSearch ? 'No configurations found.' : 'No configurations yet.'}
+                    {hasActiveFilters ? 'No configurations found.' : 'No configurations yet.'}
                   </td>
                 </tr>
               ) : (
@@ -483,6 +618,7 @@ const ConsultationChargeConfig = () => {
                     <td>
                       <button
                         onClick={() => openDetails(config)}
+                        disabled={!!viewCooldowns[config.id]}
                         className={styles.chargeConfigDetailsBtn}
                       >
                         View Details
@@ -542,7 +678,7 @@ const ConsultationChargeConfig = () => {
         </div>
       </div>
 
-      {/* View Details Modal */}
+      {/* ── View Details Modal ── */}
       {selectedConfig && (
         <div className={styles.detailModalOverlay} onClick={closeDetails}>
           <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
@@ -589,7 +725,7 @@ const ConsultationChargeConfig = () => {
 
                 <div className={styles.infoCard}>
                   <div className={styles.infoHeader}>
-                    <h3>Tax & Amount Information</h3>
+                    <h3>Tax &amp; Amount Information</h3>
                   </div>
                   <div className={styles.infoContent}>
                     <div className={styles.infoRow}>
@@ -637,10 +773,18 @@ const ConsultationChargeConfig = () => {
               </div>
 
               <div className={styles.detailModalFooter}>
-                <button onClick={() => handleDelete(selectedConfig)} className={styles.btnDelete}>
+                <button
+                  onClick={() => handleDeleteClick(selectedConfig)}
+                  disabled={deleteBtnCooldown || deleteLoading}
+                  className={styles.btnDelete}
+                >
                   Delete
                 </button>
-                <button onClick={() => openEditForm(selectedConfig)} className={styles.btnUpdate}>
+                <button
+                  onClick={() => openEditForm(selectedConfig)}
+                  disabled={!!editCooldowns[selectedConfig.id]}
+                  className={styles.btnUpdate}
+                >
                   Update
                 </button>
               </div>
@@ -649,7 +793,7 @@ const ConsultationChargeConfig = () => {
         </div>
       )}
 
-      {/* Add / Edit Form Modal */}
+      {/* ── Add / Edit Form Modal ── */}
       {isFormOpen && (
         <div className={styles.chargeConfigModalOverlay}>
           <div className={styles.chargeConfigModal}>
@@ -665,9 +809,8 @@ const ConsultationChargeConfig = () => {
             </div>
             <form onSubmit={handleSubmit}>
               <div className={styles.chargeConfigModalBody}>
-                {formError && <div className={styles.formError}>{formError}</div>}
-                {formSuccess && <div className={styles.formSuccess}>{formSuccess}</div>}
                 <div className={styles.formGrid}>
+
                   <div className={styles.formGroup}>
                     <label>Charge Code <span className={styles.required}>*</span></label>
                     <input
@@ -781,7 +924,15 @@ const ConsultationChargeConfig = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Incomplete hint */}
+                {submitAttempted && !isFormComplete && (
+                  <div className={styles.formIncompleteHint}>
+                    Please fill all required fields to enable submission.
+                  </div>
+                )}
               </div>
+
               <div className={styles.chargeConfigModalFooter}>
                 <button
                   type="button"
@@ -795,6 +946,7 @@ const ConsultationChargeConfig = () => {
                   type="submit"
                   className={styles.btnSubmit}
                   disabled={isSubmitDisabled}
+                  title={!isFormComplete ? 'Please fill all required fields' : ''}
                 >
                   {formLoading ? 'Saving...' : isEditMode ? 'Update' : 'Add'}
                 </button>

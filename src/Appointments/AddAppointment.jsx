@@ -5,6 +5,7 @@ import { addAppointment, getPatientsList, getEmployeeList, getSlotList } from '.
 import styles from './AddAppointment.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
 
 
 const SearchableDropdown = ({
@@ -185,10 +186,30 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
+
+  // ── MessagePopup state ──
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Submit attempted flag ──
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  // ── Button cooldown ──
+  const [submitCooldown, setSubmitCooldown] = useState(false);
+  const startCooldown = (setter) => {
+    setter(true);
+    setTimeout(() => setter(false), 2000);
+  };
+
+  // ── Form completeness check ──
+  const isFormComplete =
+    !!formData.patientId &&
+    !!formData.doctorId  &&
+    !!selectedDate       &&
+    !!formData.slotId;
 
   /* fetch on open */
   useEffect(() => {
@@ -211,12 +232,16 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
 
   const fetchPatients = async () => {
     try {
+      setLoading(true);
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       const data = await getPatientsList(clinicId, { BranchID: branchId, Status: 1, PageSize: 100 });
       setPatients(data);
     } catch (err) {
       console.error('Failed to fetch patients:', err);
+      showPopup('Failed to load patients.', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -228,6 +253,7 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
       setDoctors(data);
     } catch (err) {
       console.error('Failed to fetch doctors:', err);
+      showPopup('Failed to load doctors.', 'error');
     }
   };
 
@@ -258,7 +284,6 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
     const id = patient ? String(patient.id) : '';
     setFormData(prev => ({ ...prev, patientId: id }));
     setValidationMessages(prev => ({ ...prev, patientId: getLiveValidationMessage('patientId', id) }));
-    setError(null);
   };
 
   const handleDoctorSelect = (doctor) => {
@@ -269,7 +294,6 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
       doctorId: getLiveValidationMessage('doctorId', id),
       slotId: '',
     }));
-    setError(null);
   };
 
   const handleDateChange = (e) => {
@@ -281,7 +305,6 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
       selectedDate: getLiveValidationMessage('selectedDate', dateValue),
       slotId: '',
     }));
-    setError(null);
   };
 
   const handleSlotSelect = (slotId) => {
@@ -298,27 +321,35 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitAttempted(true);
+
+    if (!isFormComplete) {
+      showPopup('Please fill all required fields before submitting.', 'error');
+      return;
+    }
+
+    if (submitCooldown) return;
+    startCooldown(setSubmitCooldown);
+
     setLoading(true);
-    setError(null);
-    setSuccess(null);
     try {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       await addAppointment({
-        clinicId: parseInt(clinicId),
-        branchId: parseInt(branchId),
+        clinicId:  parseInt(clinicId),
+        branchId:  parseInt(branchId),
         patientId: parseInt(formData.patientId),
-        doctorId: parseInt(formData.doctorId),
-        slotId: parseInt(formData.slotId),
-        reason: formData.reason.trim(),
+        doctorId:  parseInt(formData.doctorId),
+        slotId:    parseInt(formData.slotId),
+        reason:    formData.reason.trim(),
       });
-      setSuccess('Appointment booked successfully!');
+      showPopup('Appointment booked successfully!', 'success');
       setTimeout(() => {
         onSuccess();
         handleClose();
-      }, 1500);
+      }, 1200);
     } catch (err) {
-      setError(err.message || 'Failed to book appointment');
+      showPopup(err.message || 'Failed to book appointment.', 'error');
     } finally {
       setLoading(false);
     }
@@ -329,12 +360,12 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
     setSelectedDate(getTodayDate());
     setAvailableSlots([]);
     setValidationMessages({});
+    setSubmitAttempted(false);
   };
 
   const handleClose = () => {
     resetForm();
-    setError(null);
-    setSuccess(null);
+    closePopup();
     onClose();
   };
 
@@ -354,15 +385,22 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
     });
   };
 
-  const selectedSlot = availableSlots.find(s => s.id === parseInt(formData.slotId));
+  const selectedSlot    = availableSlots.find(s => s.id === parseInt(formData.slotId));
   const selectedPatient = patients.find(p => String(p.id) === String(formData.patientId));
-  const selectedDoctor = doctors.find(d => String(d.id) === String(formData.doctorId));
 
   if (!isOpen) return null;
 
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
+
+        {/* ── MessagePopup ── */}
+        <MessagePopup
+          visible={popup.visible}
+          message={popup.message}
+          type={popup.type}
+          onClose={closePopup}
+        />
 
         {/* Header */}
         <div className={styles.header}>
@@ -371,10 +409,9 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
             <h2>Book New Appointment</h2>
           </div>
           <div className={styles.clinicNameone}>
-                <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
-                {localStorage.getItem("clinicName") || "—"}
-              </div>
-
+            <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
+            {localStorage.getItem("clinicName") || "—"}
+          </div>
           <button onClick={handleClose} className={styles.closeBtn} disabled={loading}>
             <FiX size={20} />
           </button>
@@ -382,10 +419,6 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.body}>
-
-            {/* Alerts */}
-            {error && <div className={styles.alertError}>{error}</div>}
-            {success && <div className={styles.alertSuccess}>{success}</div>}
 
             {/* ── Patient Information ── */}
             <div className={styles.section}>
@@ -544,17 +577,31 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
                 )}
               </div>
             </div>
+
+            {/* Incomplete hint */}
+            {submitAttempted && !isFormComplete && (
+              <div className={styles.formIncompleteHint}>
+                Please fill all required fields to enable submission.
+              </div>
+            )}
+
           </div>
 
           {/* Footer */}
           <div className={styles.footer}>
-            <button type="button" onClick={handleClose} className={styles.btnCancel} disabled={loading}>
+            <button
+              type="button"
+              onClick={handleClose}
+              className={styles.btnCancel}
+              disabled={loading}
+            >
               Cancel
             </button>
             <button
               type="submit"
               className={styles.btnSubmit}
-              disabled={loading || !formData.slotId}
+              disabled={loading || submitCooldown}
+              title={!isFormComplete ? 'Please fill all required fields' : ''}
             >
               {loading ? 'Booking...' : 'Book Appointment'}
             </button>

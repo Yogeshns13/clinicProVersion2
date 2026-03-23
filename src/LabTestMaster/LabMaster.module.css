@@ -288,6 +288,12 @@
   flex-direction: column;
 }
 
+.validationMessage {
+  font-size: 0.75rem;
+  color: red;
+  margin-top: 2px;
+}
+
 /* ==================== TABLE CONTAINER ==================== */
 .tableContainer {
   background: white;
@@ -593,6 +599,8 @@
 }
 
 .modalHeader h2 {
+  display: flex;
+  flex: 1;
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -764,8 +772,9 @@
   border: 2px solid rgba(34, 43, 108, 0.2);
   border-radius: 9px;
   color: var(--text-dark);
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 500;
+  font-family: inherit;
   transition: all 0.3s ease;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }

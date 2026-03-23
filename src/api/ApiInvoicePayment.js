@@ -1,15 +1,8 @@
 
 import {getSessionRef, generateRefKey, getUserId, getClinicId, getBranchId} from "./Api.js"
-import { API } from "./ApiConfiguration";
+import { API, checkDbError, extractBackendError} from "./ApiConfiguration";
 const CHANNEL_ID = 1; 
 const PRODUCTION_MODE = 0;
-/* const API = axios.create({
-  baseURL: "/api",
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
-}); */
 
 export const getInvoiceList = async (clinicId = 0, options = {}) => {
   const userId = getUserId();
@@ -58,7 +51,9 @@ export const getInvoiceList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetInvoiceList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetInvoiceList response:", results);
 
     return results.map((inv) => ({
@@ -98,7 +93,7 @@ export const getInvoiceList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch invoices"
+      message:extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch invoices"
     };
 
     throw err;
@@ -166,7 +161,7 @@ export const updateInvoiceStatus = async (invoiceData) => {
     console.log("UpdateInvoiceStatus response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update invoice status");
     }
@@ -181,6 +176,7 @@ export const updateInvoiceStatus = async (invoiceData) => {
     console.error("updateInvoiceStatus error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -230,7 +226,7 @@ export const cancelInvoice = async (invoiceId, clinicId = 0, branchId = 0) => {
   try {
     const response = await API.post("/CancelInvoice", payload);
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate backend response
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to cancel invoice");
@@ -248,6 +244,7 @@ export const cancelInvoice = async (invoiceId, clinicId = 0, branchId = 0) => {
     console.error("cancelInvoice error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -307,7 +304,9 @@ export const getInvoicePaymentList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetInvoicePaymentList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetInvoicePaymentList response:", results);
 
     return results.map((payment) => ({
@@ -341,7 +340,7 @@ export const getInvoicePaymentList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch invoice payments"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch invoice payments"
     };
 
     throw err;
@@ -425,7 +424,7 @@ export const addInvoicePayment = async (paymentData) => {
     console.log("AddInvoicePayment response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
     }
@@ -448,6 +447,7 @@ export const addInvoicePayment = async (paymentData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -522,7 +522,7 @@ export const updateInvoicePayment = async (paymentData) => {
     console.log("UpdateInvoicePayment response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update invoice payment");
     }
@@ -537,6 +537,7 @@ export const updateInvoicePayment = async (paymentData) => {
     console.error("updateInvoicePayment error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||

@@ -128,30 +128,8 @@ const LoginPage = () => {
       if (result.success) {
         console.log("Silent token refresh successful");
 
-        let newLoginTime = new Date().toLocaleTimeString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: true,
-        });
-
-        if (result.responseTime && typeof result.responseTime === "string") {
-          const parts = result.responseTime.split(", ");
-          if (parts.length > 1) {
-            const [h, m, s] = parts[1].split(":").map(Number);
-            const tempDate = new Date();
-            tempDate.setHours(h, m, s, 0);
-            newLoginTime = tempDate.toLocaleTimeString("en-IN", {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: true,
-            });
-          }
-        }
-
-        localStorage.setItem("login_time", newLoginTime);
-        console.log("Updated login_time after silent refresh:", newLoginTime);
+        localStorage.setItem("login_timestamp", Date.now().toString());
+        console.log("Updated login_timestamp after silent refresh");
 
         login(result);
         navigate("/dashboard", { replace: true });
@@ -240,33 +218,8 @@ const LoginPage = () => {
       if (success) {
         console.log("Login Successful:", data);
 
-        let loginTimeIST = "12:00:00 PM";
-
-        if (data?.responseTime && typeof data.responseTime === "string") {
-          const [, timePart] = data.responseTime.split(", ");
-          if (timePart) {
-            const [h, m, s] = timePart.split(":").map(Number);
-            const tempDate = new Date();
-            tempDate.setHours(h, m, s, 0);
-
-            loginTimeIST = tempDate.toLocaleTimeString("en-IN", {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: true,
-            });
-          }
-        } else {
-          loginTimeIST = new Date().toLocaleTimeString("en-IN", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: true,
-          });
-        }
-
-        console.log("Saving login_time:", loginTimeIST);
-        localStorage.setItem("login_time", loginTimeIST);
+        localStorage.setItem("login_timestamp", Date.now().toString());
+        console.log("Saving login_timestamp:", localStorage.getItem("login_timestamp"));
 
         // ────────────────────────────────────────────────
         // Added: Call getClinicList() right after successful login

@@ -9,8 +9,11 @@ import Header from '../Header/Header.jsx';
 import AddSlotConfig from './AddSlotConfig.jsx';
 import GenerateSlots from './GenerateSlots.jsx';
 import AutoSlotGeneration from './AutoSlotGeneration.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 import styles from './SlotConfigList.module.css';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 // ────────────────────────────────────────────────
 const TASK_TYPE = 2;
@@ -57,6 +60,27 @@ const SlotConfigList = () => {
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
   const [disabling,          setDisabling]          = useState(false);
 
+  // ── MessagePopup state ──
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── ConfirmPopup state (slot config delete) ──
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // holds config object or null
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // ── Button cooldown states ──
+  const [searchCooldown,   setSearchCooldown]   = useState(false);
+  const [clearCooldown,    setClearCooldown]     = useState(false);
+  const [generateCooldown, setGenerateCooldown] = useState(false);
+  const [addCooldown,      setAddCooldown]       = useState(false);
+  const [autoGenCooldown,  setAutoGenCooldown]   = useState(false);
+
+  const startCooldown = (setter) => {
+    setter(true);
+    setTimeout(() => setter(false), 2000);
+  };
+
   // Toast notification
   const [toast, setToast] = useState(null);
 
@@ -66,7 +90,7 @@ const SlotConfigList = () => {
     searchType:  'DoctorName',
     searchValue: '',
     duration:    '',
-    status:      '',
+    status:      '1',
   });
 
   // Applied filters
@@ -75,7 +99,7 @@ const SlotConfigList = () => {
     searchType:  'DoctorName',
     searchValue: '',
     duration:    '',
-    status:      '',
+    status:      '1',
   });
 
   // Modals
@@ -83,7 +107,6 @@ const SlotConfigList = () => {
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [isAutoGenOpen,  setIsAutoGenOpen]  = useState(false);
   const [isAutoEditOpen, setIsAutoEditOpen] = useState(false);
-  const [deleteConfirm,  setDeleteConfirm]  = useState(null);
 
   // ── Toast helper ──
   const showToast = useCallback((message) => {
@@ -96,7 +119,7 @@ const SlotConfigList = () => {
     appliedFilters.doctorId    !== 'all' ||
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.duration    !== '' ||
-    appliedFilters.status      !== '';
+    appliedFilters.status      !== '1';
 
   // ── Fetch auto task status ──
   const fetchAutoTaskStatus = useCallback(async () => {
@@ -125,6 +148,8 @@ const SlotConfigList = () => {
   // ── Toggle area click inside the compound button ──
   const handleToggleAreaClick = (e) => {
     e.stopPropagation();
+    if (autoGenCooldown) return;
+    startCooldown(setAutoGenCooldown);
     if (autoTaskExists) {
       setShowDisableConfirm(true);
     } else {
@@ -133,6 +158,8 @@ const SlotConfigList = () => {
   };
 
   const handleLabelAreaClick = () => {
+    if (autoGenCooldown) return;
+    startCooldown(setAutoGenCooldown);
     if (autoTaskExists) {
       setIsAutoEditOpen(true);
     } else {
@@ -149,8 +176,10 @@ const SlotConfigList = () => {
       setAutoTaskExists(false);
       setAutoTaskData(null);
       setShowDisableConfirm(false);
+      showPopup('Auto generation disabled successfully.', 'success');
     } catch (err) {
       console.error('Disable auto generation failed:', err);
+      showPopup(err.message || 'Failed to disable auto generation.', 'error');
     } finally {
       setDisabling(false);
     }
@@ -268,12 +297,16 @@ const SlotConfigList = () => {
   };
 
   const handleSearch = () => {
+    if (searchCooldown) return;
+    startCooldown(setSearchCooldown);
     setAppliedFilters({ ...filterInputs });
     setPage(1);
   };
 
   const handleClearFilters = () => {
-    const empty = { doctorId: 'all', searchType: 'DoctorName', searchValue: '', duration: '', status: '' };
+    if (clearCooldown) return;
+    startCooldown(setClearCooldown);
+    const empty = { doctorId: 'all', searchType: 'DoctorName', searchValue: '', duration: '', status: '1' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
     setPage(1);
@@ -285,18 +318,27 @@ const SlotConfigList = () => {
     fetchConfigs(appliedFilters, newPage);
   };
 
-  const handleDeleteClick  = (config) => setDeleteConfirm(config);
-  const handleDeleteCancel = ()        => setDeleteConfirm(null);
+  // ── Delete: open ConfirmPopup ──
+  const handleDeleteClick   = (config) => setDeleteConfirm(config);
+  const handleDeleteCancel  = ()        => setDeleteConfirm(null);
 
+  // ── Delete: perform after confirmation ──
   const handleDeleteConfirm = async () => {
     if (!deleteConfirm) return;
+    setDeleteLoading(true);
+    setDeleteConfirm(null);
     try {
       await deleteSlotConfig(deleteConfirm.id);
-      setDeleteConfirm(null);
-      fetchConfigs(appliedFilters, page);
+      showPopup('Slot configuration deleted successfully!', 'success');
+      setTimeout(() => {
+        closePopup();
+        fetchConfigs(appliedFilters, page);
+      }, 1200);
     } catch (err) {
       console.error('Delete failed:', err);
-      setError(err);
+      showPopup(err.message || 'Failed to delete slot configuration.', 'error');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -304,7 +346,7 @@ const SlotConfigList = () => {
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
-  if (loading) return <div className={styles.loading}>Loading slot configurations...</div>;
+  if (loading) return <div className={styles.loading}><LoadingPage/></div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
   const startRecord = configs.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
@@ -314,6 +356,25 @@ const SlotConfigList = () => {
     <div className={styles.listWrapper}>
       <ErrorHandler error={error} />
       <Header title="Slot Configuration Management" />
+
+      {/* ── MessagePopup ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
+
+      {/* ── ConfirmPopup for slot config delete ── */}
+      <ConfirmPopup
+        visible={!!deleteConfirm}
+        message={`Delete slot config for ${deleteConfirm?.doctorFullName || 'this doctor'}?`}
+        subMessage="This action cannot be undone. The slot configuration will be permanently removed."
+        confirmLabel={deleteLoading ? 'Deleting...' : 'Yes, Delete'}
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
 
       {/* ── Toast Notification ── */}
       {toast && (
@@ -368,17 +429,33 @@ const SlotConfigList = () => {
           </select>
 
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              disabled={searchCooldown}
+              className={styles.searchButton}
+            >
               <FiSearch size={16} /> Search
             </button>
 
             {hasActiveFilters && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
+              <button
+                onClick={handleClearFilters}
+                disabled={clearCooldown}
+                className={styles.clearButton}
+              >
                 <FiX size={16} /> Clear
               </button>
             )}
 
-            <button onClick={() => setIsGenerateOpen(true)} className={styles.generateBtn}>
+            <button
+              onClick={() => {
+                if (generateCooldown) return;
+                startCooldown(setGenerateCooldown);
+                setIsGenerateOpen(true);
+              }}
+              disabled={generateCooldown}
+              className={styles.generateBtn}
+            >
               <FiCalendar size={16} /> Generate Slots
             </button>
 
@@ -389,7 +466,7 @@ const SlotConfigList = () => {
               <button
                 className={styles.autoGenLabel}
                 onClick={handleLabelAreaClick}
-                disabled={autoTaskLoading}
+                disabled={autoTaskLoading || autoGenCooldown}
                 title={autoTaskExists ? 'Click to edit auto generation settings' : 'Click to enable auto generation'}
               >
                 <FiZap size={14} />
@@ -401,7 +478,7 @@ const SlotConfigList = () => {
               <button
                 className={styles.autoGenToggleArea}
                 onClick={handleToggleAreaClick}
-                disabled={autoTaskLoading}
+                disabled={autoTaskLoading || autoGenCooldown}
                 title={autoTaskExists ? 'Turn off auto generation' : 'Turn on auto generation'}
                 aria-label={autoTaskExists ? 'Disable auto generation' : 'Enable auto generation'}
               >
@@ -411,7 +488,15 @@ const SlotConfigList = () => {
               </button>
             </div>
 
-            <button onClick={() => setIsAddFormOpen(true)} className={styles.addBtn}>
+            <button
+              onClick={() => {
+                if (addCooldown) return;
+                startCooldown(setAddCooldown);
+                setIsAddFormOpen(true);
+              }}
+              disabled={addCooldown}
+              className={styles.addBtn}
+            >
               <FiPlus size={18} /> Add Config
             </button>
           </div>
@@ -431,7 +516,9 @@ const SlotConfigList = () => {
                 <th>Create Days</th>
                 <th>Slot Date</th>
                 <th>Status</th>
-                <th>Actions</th>
+                {filteredConfigs.some((c) => c.status?.toLowerCase() === 'active') && (
+                  <th>Actions</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -469,11 +556,18 @@ const SlotConfigList = () => {
                         {config.status.toUpperCase()}
                       </span>
                     </td>
-                    <td>
-                      <button onClick={() => handleDeleteClick(config)} className={styles.btnDelete} title="Delete Configuration">
-                        <FiTrash2 size={16} />
-                      </button>
-                    </td>
+                    {config.status?.toLowerCase() === 'active' && (
+                      <td>
+                        <button
+                          onClick={() => handleDeleteClick(config)}
+                          disabled={deleteLoading}
+                          className={styles.btnDelete}
+                          title="Delete Configuration"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -535,13 +629,20 @@ const SlotConfigList = () => {
         doctors={doctors}
         shifts={shifts}
         doctorShifts={doctorShifts}
-        onSuccess={() => fetchConfigs(appliedFilters, page)}
+        onSuccess={() => {
+          // ✅ FIX: Removed duplicate showPopup() call here.
+          // AddSlotConfig already shows its own success popup internally.
+          fetchConfigs(appliedFilters, page);
+        }}
       />
 
       <GenerateSlots
         isOpen={isGenerateOpen}
         onClose={() => setIsGenerateOpen(false)}
-        onSuccess={() => console.log('Slots generated')}
+        onSuccess={() => {
+          // ✅ FIX: Removed duplicate showPopup() call here.
+          // GenerateSlots already shows its own success popup internally.
+        }}
       />
 
       <AutoSlotGeneration
@@ -560,7 +661,7 @@ const SlotConfigList = () => {
         existingTaskData={autoTaskData}
       />
 
-      {/* Disable Auto Generation Confirm */}
+      {/* ── Disable Auto Generation Confirm ── */}
       {showDisableConfirm && (
         <div className={styles.modalOverlay}>
           <div className={styles.confirmModal}>
@@ -597,34 +698,6 @@ const SlotConfigList = () => {
                   : 'Yes, Disable'
                 }
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Config Confirmation */}
-      {deleteConfirm && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h2>Delete Slot Configuration</h2>
-              <button onClick={handleDeleteCancel} className={styles.modalClose}>×</button>
-            </div>
-            <div className={styles.modalBody}>
-              <div className={styles.deleteConfirmation}>
-                <div className={styles.deleteIcon}><FiTrash2 size={48} /></div>
-                <p className={styles.deleteMessage}>Are you sure you want to delete this slot configuration?</p>
-                <div className={styles.deleteDetails}>
-                  <p><strong>Doctor:</strong> {deleteConfirm.doctorFullName}</p>
-                  <p><strong>Shift:</strong> {deleteConfirm.shiftName}</p>
-                  <p><strong>Duration:</strong> {deleteConfirm.duration}</p>
-                </div>
-                <p className={styles.deleteWarning}>This action cannot be undone.</p>
-              </div>
-            </div>
-            <div className={styles.modalFooter}>
-              <button onClick={handleDeleteCancel} className={styles.btnCancelModal}>Cancel</button>
-              <button onClick={handleDeleteConfirm} className={styles.btnDeleteConfirm}>Delete Configuration</button>
             </div>
           </div>
         </div>

@@ -7,9 +7,12 @@ import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import AddPatient from './AddPatient.jsx';
 import UpdatePatient from './UpdatePatient.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 import styles from './PatientList.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 // ────────────────────────────────────────────────
 // CONSTANTS (shared)
@@ -103,6 +106,21 @@ const PatientList = () => {
 
   const [updatePatientId, setUpdatePatientId] = useState(null);
 
+  // ── MessagePopup state ────────────────────────────────────────────────────
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+
+  // ── ConfirmPopup state (delete confirmation) ──────────────────────────────
+  const [confirmPopup, setConfirmPopup] = useState({ visible: false });
+
+  // ── Button cooldown states ────────────────────────────────────────────────
+  const [deleteCooldown, setDeleteCooldown] = useState(false);
+  const [updateCooldown, setUpdateCooldown] = useState(false);
+  const [searchCooldown, setSearchCooldown] = useState(false);
+  const [addCooldown, setAddCooldown]       = useState(false);
+
+  // ── Delete loading state ──────────────────────────────────────────────────
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   // ────────────────────────────────────────────────
   // Derived: pagination display values
   const startRecord = patients.length === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -115,7 +133,23 @@ const PatientList = () => {
     appliedFilters.status             !== '';
 
   // ────────────────────────────────────────────────
-  // Fetch patients list (now with pagination)
+  // Helpers
+  // ────────────────────────────────────────────────
+  const showPopup = (message, type) => {
+    setPopup({ visible: true, message, type });
+  };
+
+  const closePopup = () => {
+    setPopup({ visible: false, message: '', type: 'success' });
+  };
+
+  const startCooldown = (setter) => {
+    setter(true);
+    setTimeout(() => setter(false), 2000);
+  };
+
+  // ────────────────────────────────────────────────
+  // Fetch patients list (with pagination)
   // ────────────────────────────────────────────────
   const fetchPatients = async (filters = appliedFilters, currentPage = page) => {
     try {
@@ -221,6 +255,8 @@ const PatientList = () => {
   };
 
   const handleSearch = () => {
+    if (searchCooldown) return;
+    startCooldown(setSearchCooldown);
     setAppliedFilters({ ...filterInputs });
     setPage(1);
   };
@@ -247,7 +283,12 @@ const PatientList = () => {
     setDetailError(null);
   };
 
-  const openAddForm  = () => setIsAddFormOpen(true);
+  const openAddForm = () => {
+    if (addCooldown) return;
+    startCooldown(setAddCooldown);
+    setIsAddFormOpen(true);
+  };
+
   const closeAddForm = () => {
     setIsAddFormOpen(false);
     fetchPatients(appliedFilters);
@@ -256,6 +297,8 @@ const PatientList = () => {
   const handleAddSuccess = () => fetchPatients(appliedFilters);
 
   const handleUpdateClick = () => {
+    if (updateCooldown) return;
+    startCooldown(setUpdateCooldown);
     if (selectedPatient?.id) {
       setUpdatePatientId(selectedPatient.id);
       closeDetailModal();
@@ -274,17 +317,30 @@ const PatientList = () => {
     fetchPatients(appliedFilters);
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this patient?')) return;
+  const handleDelete = () => {
+    if (deleteCooldown || deleteLoading) return;
+    startCooldown(setDeleteCooldown);
+    // Open custom confirm popup — actual deletion only happens in performDelete
+    setConfirmPopup({ visible: true });
+  };
 
+  const performDelete = async () => {
+    setConfirmPopup({ visible: false });
+    setDeleteLoading(true);
     try {
       setDetailError(null);
       await deletePatient(selectedPatient.id);
-      closeDetailModal();
-      fetchPatients(appliedFilters);
+      showPopup('Patient deleted successfully!', 'success');
+      setTimeout(() => {
+        closePopup();
+        closeDetailModal();
+        fetchPatients(appliedFilters);
+      }, 1200);
     } catch (err) {
       console.error('Delete patient failed:', err);
-      setDetailError({ message: err.message || 'Failed to delete patient.' });
+      showPopup(err.message || 'Failed to delete patient.', 'error');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -295,11 +351,28 @@ const PatientList = () => {
     return <ErrorHandler error={listError} />;
   }
 
-  if (listLoading) return <div className={styles.loading}>Loading patients...</div>;
+  if (listLoading) return <div className={styles.loading}><LoadingPage/></div>;
   if (listError)   return <div className={styles.error}>Error: {listError.message || listError}</div>;
 
   return (
     <div className={styles.listWrapper}>
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
+
+      <ConfirmPopup
+        visible={confirmPopup.visible}
+        message="Delete this patient?"
+        subMessage="This action cannot be undone. The patient record will be permanently removed."
+        confirmLabel="Yes, Delete"
+        cancelLabel="Cancel"
+        onConfirm={performDelete}
+        onCancel={() => setConfirmPopup({ visible: false })}
+      />
+
       <ErrorHandler error={listError} />
       <Header title="Patient Management" />
 
@@ -356,7 +429,11 @@ const PatientList = () => {
           </div>
 
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              disabled={searchCooldown}
+              className={styles.searchButton}
+            >
               <FiSearch size={16} /> Search
             </button>
             {hasActiveFilters && (
@@ -364,7 +441,11 @@ const PatientList = () => {
                 <FiX size={16} /> Clear
               </button>
             )}
-            <button onClick={openAddForm} className={styles.addBtn}>
+            <button
+              onClick={openAddForm}
+              disabled={addCooldown}
+              className={styles.addBtn}
+            >
               <FiPlus size={18} /> Add Patient
             </button>
           </div>
@@ -513,7 +594,7 @@ const PatientList = () => {
                 </div>
               </div>
               <div className={styles.clinicNameone}>
-                <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
+                <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
                 {localStorage.getItem('clinicName') || '—'}
               </div>
 
@@ -670,10 +751,18 @@ const PatientList = () => {
 
             {/* Footer */}
             <div className={styles.detailModalFooter}>
-              <button onClick={handleDelete} className={styles.btnCancel}>
-                Delete Patient
+              <button
+                onClick={handleDelete}
+                disabled={deleteCooldown || deleteLoading}
+                className={styles.btnCancel}
+              >
+                {deleteLoading ? 'Deleting...' : 'Delete Patient'}
               </button>
-              <button onClick={handleUpdateClick} className={styles.btnUpdate}>
+              <button
+                onClick={handleUpdateClick}
+                disabled={updateCooldown}
+                className={styles.btnUpdate}
+              >
                 Update Patient
               </button>
             </div>

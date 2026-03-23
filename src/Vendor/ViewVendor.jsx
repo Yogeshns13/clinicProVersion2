@@ -2,18 +2,33 @@
 import React, { useState } from 'react';
 import { deleteVendor } from '../Api/ApiPharmacy.js';
 import UpdateVendor from './UpdateVendor.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 import styles from './ViewVendor.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
-import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
-// ────────────────────────────────────────────────
-// Props:
-//   vendor          — the vendor object to display
-//   onClose         — called when the modal is closed
-//   onDeleteSuccess — called after successful delete or update (so VendorList can refresh)
-// ────────────────────────────────────────────────
 const ViewVendor = ({ vendor, onClose, onDeleteSuccess }) => {
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
+
+  
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // ── Button cooldown state (2-sec disable after click) ──
+  const [btnCooldown, setBtnCooldown] = useState({});
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
+
+  // ── MessagePopup state ──────────────────────────
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── ConfirmPopup state ──────────────────────────
+  const [confirmPopup, setConfirmPopup] = useState({ visible: false });
+  const openConfirmPopup  = () => setConfirmPopup({ visible: true });
+  const closeConfirmPopup = () => setConfirmPopup({ visible: false });
 
   // ────────────────────────────────────────────────
   // Helper functions
@@ -39,11 +54,6 @@ const ViewVendor = ({ vendor, onClose, onDeleteSuccess }) => {
     return styles.inactive;
   };
 
-  const getStatusBadgeClass = (status) => {
-    if (status === 'active' || status === 1) return styles.activeBadge;
-    return styles.inactiveBadge;
-  };
-
   const getStatusLabel = (vendor) => {
     if (vendor.statusDesc) return vendor.statusDesc.toUpperCase();
     if (vendor.status === 1 || vendor.status === 'active')      return 'ACTIVE';
@@ -56,6 +66,7 @@ const ViewVendor = ({ vendor, onClose, onDeleteSuccess }) => {
   // ────────────────────────────────────────────────
   // Handlers
   const handleUpdateClick = () => {
+    triggerCooldown('update');
     setIsUpdateOpen(true);
   };
 
@@ -69,14 +80,23 @@ const ViewVendor = ({ vendor, onClose, onDeleteSuccess }) => {
     onDeleteSuccess(); // reused to refresh the vendor list after update
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this vendor?')) return;
+  const handleDeleteClick = () => {
+    triggerCooldown('delete');
+    openConfirmPopup();
+  };
+
+  const handleDeleteConfirm = async () => {
+    closeConfirmPopup();
+    setDeleteLoading(true);
+
     try {
       await deleteVendor(vendor.id);
+      onClose();
       onDeleteSuccess();
     } catch (err) {
       console.error('Delete vendor failed:', err);
-      alert(err.message || 'Failed to delete vendor.');
+      setDeleteLoading(false);
+      showPopup(err.message || 'Failed to delete vendor.', 'error');
     }
   };
 
@@ -92,9 +112,9 @@ const ViewVendor = ({ vendor, onClose, onDeleteSuccess }) => {
               <h2>{vendor.name}</h2>
             </div>
             <div className={styles.clinicNameone}>
-               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-                 {localStorage.getItem('clinicName') || '—'}
-               </div>
+              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
+              {localStorage.getItem('clinicName') || '—'}
+            </div>
             <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
           </div>
 
@@ -198,10 +218,18 @@ const ViewVendor = ({ vendor, onClose, onDeleteSuccess }) => {
 
             {/* ── Footer Actions ── */}
             <div className={styles.detailModalFooter}>
-              <button onClick={handleDelete} className={styles.btnDelete}>
-                Delete Vendor
+              <button
+                onClick={handleDeleteClick}
+                className={styles.btnDelete}
+                disabled={deleteLoading || !!btnCooldown['delete']}
+              >
+                {deleteLoading ? 'Deleting...' : 'Delete Vendor'}
               </button>
-              <button onClick={handleUpdateClick} className={styles.btnUpdate}>
+              <button
+                onClick={handleUpdateClick}
+                className={styles.btnUpdate}
+                disabled={!!btnCooldown['update']}
+              >
                 Update Vendor
               </button>
             </div>
@@ -218,6 +246,25 @@ const ViewVendor = ({ vendor, onClose, onDeleteSuccess }) => {
           onUpdateSuccess={handleUpdateSuccess}
         />
       )}
+
+      {/* ── ConfirmPopup ── */}
+      <ConfirmPopup
+        visible={confirmPopup.visible}
+        message="Delete this vendor?"
+        subMessage="This action cannot be undone. The vendor will be permanently removed."
+        confirmLabel="Yes, Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteConfirm}
+        onCancel={closeConfirmPopup}
+      />
+
+      {/* ── MessagePopup (replaces old inline popup) ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
     </>
   );
 };

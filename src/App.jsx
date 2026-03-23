@@ -15,6 +15,7 @@ import DepartmentList from "./DepartmentList/DepartmentList.jsx";
 
 import WorkShift from "./WorkShiftList/WorkShift.jsx";
 import EmployeeList from "./EmployeeList/EmployeeList.jsx";
+import AdminEmployeeList from "./AdminEmployeeList/AdminEmployeeList.jsx";
 import PatientList from "./Patients/PatientList.jsx";
 import SlotConfigList from "./Slot/SlotConfigList.jsx";
 import SlotList from "./Slot/SlotList.jsx";
@@ -72,6 +73,7 @@ function AppInner() {
 
         <Route path="/work-shift" element={<WorkShift />} />
         <Route path="/employee-list" element={<EmployeeList />} />
+        <Route path="/admin-employee-list" element={<AdminEmployeeList />} />
 
         <Route path="/patient-list" element={<PatientList />} />
         <Route path="/slotconfig-list" element={<SlotConfigList />} />

@@ -25,11 +25,14 @@ import {
 } from '../Api/ApiPharmacy.js';
 import Header from '../Header/Header.jsx';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 import AddPurchaseOrderDetail from './AddPurchaseOrderDetail.jsx';
 import UpdatePurchaseOrderDetail from './UpdatePurchaseOrderDetail.jsx';
 import styles from './PurchaseOrderItems.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 // ──────────────────────────────────────────────────
 const PO_STATUS_OPTIONS = [
@@ -64,21 +67,33 @@ const PurchaseOrderDetailList = () => {
   const [itemLoading, setItemLoading] = useState(true);
   const [itemError,   setItemError]   = useState(null);
 
-  // Delete confirm for item (inline, no window.confirm)
-  const [deleteConfirm, setDeleteConfirm] = useState({
-    isOpen: false, item: null, submitting: false, error: null,
-  });
+  // ── ConfirmPopup: delete item ──
+  const [confirmItem, setConfirmItem] = useState({ visible: false, item: null });
 
-  // ── NEW: Delete confirm for entire PO ─────────
-  const [deletePOConfirm, setDeletePOConfirm] = useState({
-    isOpen: false, submitting: false, error: null,
-  });
+  // ── ConfirmPopup: delete entire PO ──
+  const [confirmPO, setConfirmPO] = useState({ visible: false });
 
   // Add modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Update modal
   const [updateModal, setUpdateModal] = useState({ isOpen: false, item: null });
+
+  // ── Delete loading states ──────────────────────────────────────────────────
+  const [deleteItemLoading, setDeleteItemLoading] = useState(false);
+  const [deletePOLoading,   setDeletePOLoading]   = useState(false);
+
+  // ── Button cooldown state (2-sec disable after click) ──────────────────────
+  const [btnCooldown, setBtnCooldown] = useState({});
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
+
+  // ── MessagePopup state ──────────────────────────────────────────────────────
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
 
   // ── Fetch PO header ────────────────────────────
   const fetchPurchaseOrder = async () => {
@@ -129,6 +144,11 @@ const PurchaseOrderDetailList = () => {
     } finally {
       setItemLoading(false);
     }
+  };
+
+  // ── Refresh both PO header and items ──────────────────────────────────────
+  const refreshAll = async () => {
+    await Promise.all([fetchPurchaseOrder(), fetchItems()]);
   };
 
   useEffect(() => {
@@ -183,68 +203,75 @@ const PurchaseOrderDetailList = () => {
     return map[status] ?? styles.itemOrdered;
   };
 
-  // ── Totals ─────────────────────────────────────
+  // ── Totals (table footer only — computed from items) ───────────────────────
   const totals = useMemo(() => items.reduce(
     (acc, item) => {
-      acc.amount   += Number(item.amount)          || 0;
-      acc.cgst     += Number(item.cgstAmount)      || 0;
-      acc.sgst     += Number(item.sgstAmount)      || 0;
-      acc.total    += Number(item.totalLineAmount) || 0;
+      acc.amount += Number(item.amount)          || 0;
+      acc.cgst   += Number(item.cgstAmount)      || 0;
+      acc.sgst   += Number(item.sgstAmount)      || 0;
+      acc.total  += Number(item.totalLineAmount) || 0;
       return acc;
     },
     { amount: 0, cgst: 0, sgst: 0, total: 0 }
   ), [items]);
 
   // ── Delete item handlers ───────────────────────
-  const openDeleteConfirm  = (item) => setDeleteConfirm({ isOpen: true, item, submitting: false, error: null });
-  const closeDeleteConfirm = ()     => { if (!deleteConfirm.submitting) setDeleteConfirm({ isOpen: false, item: null, submitting: false, error: null }); };
+  const openDeleteItemConfirm = (item) => {
+    triggerCooldown(`del-item-${item.id}`);
+    setConfirmItem({ visible: true, item });
+  };
+  const closeDeleteItemConfirm = () => setConfirmItem({ visible: false, item: null });
 
   const handleDeleteItem = async () => {
-    setDeleteConfirm((prev) => ({ ...prev, submitting: true, error: null }));
+    closeDeleteItemConfirm();
+    setDeleteItemLoading(true);
     try {
-      await deletePurchaseOrderDetail(deleteConfirm.item.id);
-      setDeleteConfirm({ isOpen: false, item: null, submitting: false, error: null });
-      fetchItems();
+      await deletePurchaseOrderDetail(confirmItem.item.id);
+      showPopup('Item deleted successfully!', 'success');
+      await refreshAll();
     } catch (err) {
-      setDeleteConfirm((prev) => ({
-        ...prev,
-        submitting: false,
-        error: err.message || 'Failed to delete item.',
-      }));
+      showPopup(err.message || 'Failed to delete item.', 'error');
+    } finally {
+      setDeleteItemLoading(false);
     }
   };
 
-  // ── NEW: Delete entire PO handlers ────────────
-  const openDeletePOConfirm  = () => setDeletePOConfirm({ isOpen: true, submitting: false, error: null });
-  const closeDeletePOConfirm = () => { if (!deletePOConfirm.submitting) setDeletePOConfirm({ isOpen: false, submitting: false, error: null }); };
+  // ── Delete entire PO handlers ──────────────────
+  const openDeletePOConfirm  = () => {
+    triggerCooldown('del-po');
+    setConfirmPO({ visible: true });
+  };
+  const closeDeletePOConfirm = () => setConfirmPO({ visible: false });
 
   const handleDeletePO = async () => {
-    setDeletePOConfirm((prev) => ({ ...prev, submitting: true, error: null }));
+    closeDeletePOConfirm();
+    setDeletePOLoading(true);
     try {
       await deletePurchaseOrder(Number(id));
-      setDeletePOConfirm({ isOpen: false, submitting: false, error: null });
-      navigate('/purchaseorder-list');
+      showPopup('Purchase order deleted successfully!', 'success');
+      setTimeout(() => navigate('/purchaseorder-list'), 1500);
     } catch (err) {
-      setDeletePOConfirm((prev) => ({
-        ...prev,
-        submitting: false,
-        error: err.message || 'Failed to delete purchase order.',
-      }));
+      showPopup(err.message || 'Failed to delete purchase order.', 'error');
+    } finally {
+      setDeletePOLoading(false);
     }
   };
 
   // ── Update modal handlers ──────────────────────
-  const openUpdateModal  = (item) => setUpdateModal({ isOpen: true, item });
-  const closeUpdateModal = ()     => setUpdateModal({ isOpen: false, item: null });
-  const handleUpdateSuccess = () => {
+  const openUpdateModal  = (item) => {
+    triggerCooldown(`edit-${item.id}`);
+    setUpdateModal({ isOpen: true, item });
+  };
+  const closeUpdateModal = () => setUpdateModal({ isOpen: false, item: null });
+  const handleUpdateSuccess = async () => {
     closeUpdateModal();
-    fetchItems();
+    await refreshAll();
   };
 
   // ── Add modal handlers ─────────────────────────
-  const handleAddSuccess = () => {
+  const handleAddSuccess = async () => {
     setIsAddModalOpen(false);
-    fetchItems();
+    await refreshAll();
   };
 
   // ── Early return ───────────────────────────────
@@ -269,19 +296,29 @@ const PurchaseOrderDetailList = () => {
 
         {!poLoading && po && (
           <div className={styles.headerActions}>
-            {/* ── NEW: Delete PO Button ── */}
-            <button className={styles.btnDelete} onClick={openDeletePOConfirm}>
-              <FiTrash2 size={15} /> Delete PO
+            <button
+              className={styles.btnDelete}
+              onClick={openDeletePOConfirm}
+              disabled={deletePOLoading || !!btnCooldown['del-po']}
+            >
+              <FiTrash2 size={15} /> {deletePOLoading ? 'Deleting...' : 'Delete PO'}
             </button>
 
-            <button className={styles.addItemBtn} onClick={() => setIsAddModalOpen(true)}>
+            <button
+              className={styles.addItemBtn}
+              onClick={() => {
+                triggerCooldown('add-item');
+                setIsAddModalOpen(true);
+              }}
+              disabled={!!btnCooldown['add-item']}
+            >
               <FiPlus size={15} /> Add Item
             </button>
           </div>
         )}
       </div>
 
-      {/* ══ PO INFO CARD (max 2 rows) ══ */}
+      {/* ══ PO INFO CARD ══ */}
       {!poLoading && po && (
         <div className={styles.infoCard}>
           {/* Row 1 */}
@@ -345,7 +382,6 @@ const PurchaseOrderDetailList = () => {
                 </div>
               </div>
             )}
-            
             <div className={styles.infoItem}>
               <FiDollarSign size={13} className={styles.infoIcon} />
               <div>
@@ -381,7 +417,7 @@ const PurchaseOrderDetailList = () => {
       {poLoading && (
         <div className={styles.centerState}>
           <div className={styles.spinner} />
-          <span>Loading purchase order...</span>
+          <LoadingPage/>
         </div>
       )}
 
@@ -416,7 +452,14 @@ const PurchaseOrderDetailList = () => {
             <div className={styles.centerState}>
               <FiPackage size={48} className={styles.emptyIcon} />
               <p>No items in this purchase order.</p>
-              <button className={styles.addItemBtn} onClick={() => setIsAddModalOpen(true)}>
+              <button
+                className={styles.addItemBtn}
+                onClick={() => {
+                  triggerCooldown('add-item-empty');
+                  setIsAddModalOpen(true);
+                }}
+                disabled={!!btnCooldown['add-item-empty']}
+              >
                 <FiPlus size={15} /> Add First Item
               </button>
             </div>
@@ -487,13 +530,15 @@ const PurchaseOrderDetailList = () => {
                                 className={styles.editBtn}
                                 onClick={() => openUpdateModal(item)}
                                 title="Edit item"
+                                disabled={!!btnCooldown[`edit-${item.id}`]}
                               >
                                 <FiEdit2 size={14} />
                               </button>
                               <button
                                 className={styles.deleteBtn}
-                                onClick={() => openDeleteConfirm(item)}
+                                onClick={() => openDeleteItemConfirm(item)}
                                 title="Delete item"
+                                disabled={deleteItemLoading || !!btnCooldown[`del-item-${item.id}`]}
                               >
                                 <FiTrash2 size={14} />
                               </button>
@@ -516,7 +561,7 @@ const PurchaseOrderDetailList = () => {
                 </div>
               </div>
 
-              {/* ── Summary strip ── */}
+              {/* ── Summary strip — values sourced from getPurchaseOrderList API ── */}
               <div className={styles.summaryStrip}>
                 <div className={styles.summaryItem}>
                   <span className={styles.summaryLabel}>Items</span>
@@ -525,147 +570,24 @@ const PurchaseOrderDetailList = () => {
                 <div className={styles.summaryDivider} />
                 <div className={styles.summaryItem}>
                   <span className={styles.summaryLabel}>Subtotal</span>
-                  <span className={styles.summaryValue}>{fmt(totals.amount)}</span>
+                  <span className={styles.summaryValue}>{fmt(po.totalAmount)}</span>
                 </div>
                 <div className={styles.summaryDivider} />
                 <div className={styles.summaryItem}>
                   <span className={styles.summaryLabel}>CGST + SGST</span>
-                  <span className={styles.summaryValue}>{fmt(totals.cgst + totals.sgst)}</span>
+                  <span className={styles.summaryValue}>{fmt((po.cgstAmount || 0) + (po.sgstAmount || 0))}</span>
                 </div>
                 <div className={styles.summaryDivider} />
                 <div className={`${styles.summaryItem} ${styles.grandTotalItem}`}>
                   <span className={styles.summaryLabel}>Grand Total</span>
                   <span className={`${styles.summaryValue} ${styles.grandTotalValue}`}>
-                    {fmt(totals.total)}
+                    {fmt(po.netAmount)}
                   </span>
                 </div>
               </div>
             </>
           )}
         </>
-      )}
-
-      {/* ══ DELETE ITEM CONFIRM MODAL ══ */}
-      {deleteConfirm.isOpen && (
-        <div className={styles.modalOverlay} onClick={!deleteConfirm.submitting ? closeDeleteConfirm : undefined}>
-          <div className={styles.delModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.delModalHeader}>
-              <div className={styles.delHeaderContent}>
-                <h2>Delete Item</h2>
-                <span className={styles.delMedBadge}>{deleteConfirm.item?.medicineName}</span>
-              </div>
-              {!deleteConfirm.submitting && (
-                <button className={styles.delCloseBtn} onClick={closeDeleteConfirm}>
-                  <FiX size={20} />
-                </button>
-              )}
-            </div>
-            <div className={styles.delModalBody}>
-              <div className={styles.delWarningStrip}>
-                <FiAlertCircle size={18} className={styles.delWarningIcon} />
-                <span>
-                  Are you sure you want to delete <strong>{deleteConfirm.item?.medicineName}</strong>?
-                  This action cannot be undone.
-                </span>
-              </div>
-              {deleteConfirm.error && (
-                <div className={styles.delErrorBanner}>
-                  <FiAlertCircle size={14} />
-                  <span>{deleteConfirm.error}</span>
-                </div>
-              )}
-              {deleteConfirm.submitting && (
-                <div className={styles.delProgressBanner}>
-                  <div className={styles.delSpinner} />
-                  <span>Deleting, please wait...</span>
-                </div>
-              )}
-            </div>
-            <div className={styles.delModalFooter}>
-              <button
-                className={styles.delCancelBtn}
-                onClick={closeDeleteConfirm}
-                disabled={deleteConfirm.submitting}
-              >
-                Cancel
-              </button>
-              <button
-                className={styles.delConfirmBtn}
-                onClick={handleDeleteItem}
-                disabled={deleteConfirm.submitting}
-              >
-                {deleteConfirm.submitting ? (
-                  <><div className={styles.delBtnSpinner} /> Deleting...</>
-                ) : (
-                  <><FiTrash2 size={15} /> Yes, Delete</>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══ NEW: DELETE ENTIRE PO CONFIRM MODAL ══ */}
-      {deletePOConfirm.isOpen && (
-        <div className={styles.modalOverlay} onClick={!deletePOConfirm.submitting ? closeDeletePOConfirm : undefined}>
-          <div className={styles.delModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.delModalHeader}>
-              <div className={styles.delHeaderContent}>
-                <h2>Delete Purchase Order</h2>
-                {po?.poNumber && (
-                  <span className={styles.delMedBadge}>{po.poNumber}</span>
-                )}
-              </div>
-              {!deletePOConfirm.submitting && (
-                <button className={styles.delCloseBtn} onClick={closeDeletePOConfirm}>
-                  <FiX size={20} />
-                </button>
-              )}
-            </div>
-            <div className={styles.delModalBody}>
-              <div className={styles.delWarningStrip}>
-                <FiAlertCircle size={18} className={styles.delWarningIcon} />
-                <span>
-                  Are you sure you want to delete purchase order{' '}
-                  <strong>{po?.poNumber}</strong>? All items within this order
-                  will also be removed. This action cannot be undone.
-                </span>
-              </div>
-              {deletePOConfirm.error && (
-                <div className={styles.delErrorBanner}>
-                  <FiAlertCircle size={14} />
-                  <span>{deletePOConfirm.error}</span>
-                </div>
-              )}
-              {deletePOConfirm.submitting && (
-                <div className={styles.delProgressBanner}>
-                  <div className={styles.delSpinner} />
-                  <span>Deleting purchase order, please wait...</span>
-                </div>
-              )}
-            </div>
-            <div className={styles.delModalFooter}>
-              <button
-                className={styles.delCancelBtn}
-                onClick={closeDeletePOConfirm}
-                disabled={deletePOConfirm.submitting}
-              >
-                No, Cancel
-              </button>
-              <button
-                className={styles.delConfirmBtn}
-                onClick={handleDeletePO}
-                disabled={deletePOConfirm.submitting}
-              >
-                {deletePOConfirm.submitting ? (
-                  <><div className={styles.delBtnSpinner} /> Deleting...</>
-                ) : (
-                  <><FiTrash2 size={15} /> Yes, Delete</>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       {/* ══ ADD PURCHASE ORDER DETAIL MODAL ══ */}
@@ -685,6 +607,36 @@ const PurchaseOrderDetailList = () => {
           item={updateModal.item}
         />
       )}
+
+      {/* ══ CONFIRM: DELETE ITEM ══ */}
+      <ConfirmPopup
+        visible={confirmItem.visible}
+        message={`Delete ${confirmItem.item?.medicineName || 'this item'}?`}
+        subMessage="This action cannot be undone. The item will be permanently removed from this purchase order."
+        confirmLabel="Yes, Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteItem}
+        onCancel={closeDeleteItemConfirm}
+      />
+
+      {/* ══ CONFIRM: DELETE ENTIRE PO ══ */}
+      <ConfirmPopup
+        visible={confirmPO.visible}
+        message={`Delete purchase order${po?.poNumber ? ` ${po.poNumber}` : ''}?`}
+        subMessage="All items within this order will also be permanently removed. This action cannot be undone."
+        confirmLabel="Yes, Delete"
+        cancelLabel="No, Cancel"
+        onConfirm={handleDeletePO}
+        onCancel={closeDeletePOConfirm}
+      />
+
+      {/* ── MessagePopup (at root level so z-index is never blocked) ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
     </div>
   );
 };

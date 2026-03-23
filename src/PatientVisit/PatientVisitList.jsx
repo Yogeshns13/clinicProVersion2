@@ -10,11 +10,13 @@ import PatientVisitDetails from './ViewPatientVisit.jsx';
 import UpdatePatientVisit from './UpdatePatientVisit.jsx';
 import styles from './PatientVisitList.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 const STATUS_OPTIONS = [
   { id: 0, label: 'Initiated' },
   { id: 1, label: 'Ready to Consult' },
-  { id: 2, label: 'Consulted' }
+  { id: 2, label: 'Consulted' },
 ];
 
 const SEARCH_TYPE_OPTIONS = [
@@ -29,13 +31,35 @@ const todayDate = new Date().toISOString().split('T')[0];
 const PatientVisitList = () => {
   const navigate = useNavigate();
 
-  const [visits, setVisits]   = useState([]);
+  const [visits,  setVisits]  = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(null);
+  const [error,   setError]   = useState(null);
 
-  // Pagination state
-  const [page, setPage] = useState(1);
+  // Pagination
+  const [page,    setPage]    = useState(1);
   const [hasNext, setHasNext] = useState(false);
+
+  // ── MessagePopup ──
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Button cooldowns ──
+  const [searchCooldown,      setSearchCooldown]      = useState(false);
+  const [clearCooldown,       setClearCooldown]       = useState(false);
+  const [addCooldown,         setAddCooldown]         = useState(false);
+  const [viewCooldowns,       setViewCooldowns]       = useState({});
+  const [initCooldowns,       setInitCooldowns]       = useState({});
+  const [initSubmitCooldown,  setInitSubmitCooldown]  = useState(false);
+
+  const startCooldown = (setter) => {
+    setter(true);
+    setTimeout(() => setter(false), 2000);
+  };
+  const startIdCooldown = (setter, id) => {
+    setter(prev => ({ ...prev, [id]: true }));
+    setTimeout(() => setter(prev => ({ ...prev, [id]: false })), 2000);
+  };
 
   const [filterInputs, setFilterInputs] = useState({
     searchType:  'PatientName',
@@ -55,20 +79,17 @@ const PatientVisitList = () => {
     visitDate:   todayDate,
   });
 
-  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-
+  const [isAddFormOpen,      setIsAddFormOpen]      = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [selectedVisit, setSelectedVisit]           = useState(null);
-
-  // Update Modal (full edit form — no routing)
-  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [updateVisitId, setUpdateVisitId]         = useState(null);
+  const [selectedVisit,      setSelectedVisit]      = useState(null);
+  const [isUpdateModalOpen,  setIsUpdateModalOpen]  = useState(false);
+  const [updateVisitId,      setUpdateVisitId]      = useState(null);
 
   // Initialize Visit Modal (quick vitals)
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [visitToUpdate, setVisitToUpdate]     = useState(null);
-  const [updating, setUpdating]               = useState(false);
-  const [submitErrors, setSubmitErrors]       = useState([]);
+  const [visitToUpdate,   setVisitToUpdate]   = useState(null);
+  const [updating,        setUpdating]        = useState(false);
+  const [submitErrors,    setSubmitErrors]    = useState([]);
   const [formData, setFormData] = useState({
     symptoms:    '',
     bpSystolic:  '',
@@ -76,6 +97,17 @@ const PatientVisitList = () => {
     temperature: '',
     weight:      '',
   });
+
+  // ── Init form completeness (all vitals + symptoms required) ──
+  const isInitFormComplete =
+    !!formData.symptoms.trim() &&
+    !!formData.bpSystolic &&
+    !!formData.bpDiastolic &&
+    !!formData.temperature &&
+    !!formData.weight;
+
+  // ── Init submit attempted flag ──
+  const [initSubmitAttempted, setInitSubmitAttempted] = useState(false);
 
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
@@ -93,12 +125,12 @@ const PatientVisitList = () => {
       const branchId = await getStoredBranchId();
 
       const options = {
-        Page:         pageNum,
-        PageSize:     PAGE_SIZE,
-        BranchID:     branchId,
-        Status:       filters.status !== '' ? Number(filters.status) : undefined,
-        PatientName:  filters.searchType === 'PatientName' ? filters.searchValue : '',
-        DoctorName:   filters.searchType === 'DoctorName'  ? filters.searchValue : '',
+        Page:        pageNum,
+        PageSize:    PAGE_SIZE,
+        BranchID:    branchId,
+        Status:      filters.status !== '' ? Number(filters.status) : undefined,
+        PatientName: filters.searchType === 'PatientName' ? filters.searchValue : '',
+        DoctorName:  filters.searchType === 'DoctorName'  ? filters.searchValue : '',
       };
 
       if (filters.dateFrom && filters.dateTo) {
@@ -196,11 +228,15 @@ const PatientVisitList = () => {
   };
 
   const handleSearch = () => {
+    if (searchCooldown) return;
+    startCooldown(setSearchCooldown);
     setAppliedFilters({ ...filterInputs });
     setPage(1);
   };
 
   const handleClearFilters = () => {
+    if (clearCooldown) return;
+    startCooldown(setClearCooldown);
     const defaults = {
       searchType:  'PatientName',
       searchValue: '',
@@ -215,6 +251,8 @@ const PatientVisitList = () => {
   };
 
   const handleViewDetails = (visit) => {
+    if (viewCooldowns[visit.id]) return;
+    startIdCooldown(setViewCooldowns, visit.id);
     setSelectedVisit(visit);
     setIsDetailsModalOpen(true);
   };
@@ -224,8 +262,14 @@ const PatientVisitList = () => {
     setIsDetailsModalOpen(false);
   };
 
-  const openAddForm      = () => setIsAddFormOpen(true);
-  const closeAddForm     = () => setIsAddFormOpen(false);
+  const openAddForm = () => {
+    if (addCooldown) return;
+    startCooldown(setAddCooldown);
+    setIsAddFormOpen(true);
+  };
+  const closeAddForm = () => setIsAddFormOpen(false);
+
+  // Child owns success popup — parent just refreshes
   const handleAddSuccess = () => fetchVisits(appliedFilters, page);
 
   const handleEditFromModal = (visitId) => {
@@ -240,11 +284,14 @@ const PatientVisitList = () => {
     setUpdateVisitId(null);
   };
 
+  // Child owns success popup — parent just refreshes
   const handleUpdateSuccess = () => {
     fetchVisits(appliedFilters, page);
   };
 
   const handleInitializeVisit = (visit) => {
+    if (initCooldowns[visit.id]) return;
+    startIdCooldown(setInitCooldowns, visit.id);
     setVisitToUpdate(visit);
     setFormData({
       symptoms:    visit.symptoms    || '',
@@ -253,6 +300,7 @@ const PatientVisitList = () => {
       temperature: visit.temperature || '',
       weight:      visit.weight      || '',
     });
+    setInitSubmitAttempted(false);
     setShowUpdateModal(true);
   };
 
@@ -260,6 +308,7 @@ const PatientVisitList = () => {
     setShowUpdateModal(false);
     setVisitToUpdate(null);
     setSubmitErrors([]);
+    setInitSubmitAttempted(false);
     setFormData({ symptoms: '', bpSystolic: '', bpDiastolic: '', temperature: '', weight: '' });
   };
 
@@ -270,7 +319,17 @@ const PatientVisitList = () => {
 
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
+    setInitSubmitAttempted(true);
+
+    if (!isInitFormComplete) {
+      showPopup('Please fill all required fields before submitting.', 'error');
+      return;
+    }
+
     if (!visitToUpdate) return;
+
+    if (initSubmitCooldown) return;
+    startCooldown(setInitSubmitCooldown);
 
     try {
       setUpdating(true);
@@ -298,6 +357,7 @@ const PatientVisitList = () => {
       };
 
       await updatePatientVisit(visitData);
+      showPopup('Visit initialized successfully!', 'success');
       closeInitializeModal();
       await fetchVisits(appliedFilters, page);
     } catch (err) {
@@ -305,8 +365,9 @@ const PatientVisitList = () => {
       const apiErrors = err?.response?.data?.errors || err?.data?.errors || err?.errors;
       if (Array.isArray(apiErrors) && apiErrors.length > 0) {
         setSubmitErrors(apiErrors);
+        showPopup('Please fix the errors below.', 'error');
       } else {
-        setError({ message: err.message || 'Failed to update visit' });
+        showPopup(err.message || 'Failed to update visit.', 'error');
       }
     } finally {
       setUpdating(false);
@@ -323,7 +384,7 @@ const PatientVisitList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.loading}>Loading visits...</div>;
+  if (loading) return <div className={styles.loading}><LoadingPage/></div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
   const startRecord = visits.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
@@ -332,6 +393,14 @@ const PatientVisitList = () => {
   return (
     <div className={styles.listWrapper}>
       <Header title="Patient Visit Management" />
+
+      {/* ── MessagePopup ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
 
       {/* ── Filter Bar ── */}
       <div className={styles.filtersContainer}>
@@ -395,19 +464,31 @@ const PatientVisitList = () => {
           </div>
 
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              disabled={searchCooldown}
+              className={styles.searchButton}
+            >
               <FiSearch size={16} />
               Search
             </button>
 
             {hasActiveFilters && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
+              <button
+                onClick={handleClearFilters}
+                disabled={clearCooldown}
+                className={styles.clearButton}
+              >
                 <FiX size={16} />
                 Clear
               </button>
             )}
 
-            <button onClick={() => setIsAddFormOpen(true)} className={styles.addBtn}>
+            <button
+              onClick={openAddForm}
+              disabled={addCooldown}
+              className={styles.addBtn}
+            >
               <FiPlus size={18} />
               Add Visit
             </button>
@@ -424,7 +505,7 @@ const PatientVisitList = () => {
               <tr>
                 <th>Patient</th>
                 <th>Doctor</th>
-                <th>Visit Date & Time</th>
+                <th>Visit Date &amp; Time</th>
                 <th>Vitals</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -491,6 +572,7 @@ const PatientVisitList = () => {
                         {visit.status === 0 ? (
                           <button
                             onClick={() => handleInitializeVisit(visit)}
+                            disabled={!!initCooldowns[visit.id]}
                             className={styles.initializeBtn}
                             title="Initialize Visit"
                           >
@@ -509,6 +591,7 @@ const PatientVisitList = () => {
                         )}
                         <button
                           onClick={() => handleViewDetails(visit)}
+                          disabled={!!viewCooldowns[visit.id]}
                           className={styles.detailsBtn}
                         >
                           View Details
@@ -584,7 +667,7 @@ const PatientVisitList = () => {
         onEdit={handleEditFromModal}
       />
 
-      {/* ── Update Visit Modal (full form, no routing) ── */}
+      {/* ── Update Visit Modal (full form) ── */}
       <UpdatePatientVisit
         isOpen={isUpdateModalOpen}
         onClose={closeUpdateModal}
@@ -644,7 +727,7 @@ const PatientVisitList = () => {
                   <h4>Patient Vitals</h4>
 
                   <div className={styles.formGroup}>
-                    <label htmlFor="symptoms">Symptoms</label>
+                    <label htmlFor="symptoms">Symptoms <span className={styles.required}>*</span></label>
                     <textarea
                       id="symptoms"
                       name="symptoms"
@@ -660,7 +743,7 @@ const PatientVisitList = () => {
                   <div className={styles.formRow}>
                     <div className={styles.formGroup}>
                       <label htmlFor="bpSystolic">
-                        BP Systolic <span className={styles.unitLabel}>(mmHg)</span>
+                        BP Systolic <span className={styles.unitLabel}>(mmHg)</span> <span className={styles.required}>*</span>
                       </label>
                       <input
                         type="number"
@@ -668,7 +751,7 @@ const PatientVisitList = () => {
                         name="bpSystolic"
                         value={formData.bpSystolic}
                         onChange={handleFormChange}
-                        placeholder='50-250'
+                        placeholder="50-250"
                         required
                         min="50"
                         max="250"
@@ -678,7 +761,7 @@ const PatientVisitList = () => {
 
                     <div className={styles.formGroup}>
                       <label htmlFor="bpDiastolic">
-                        BP Diastolic <span className={styles.unitLabel}>(mmHg)</span>
+                        BP Diastolic <span className={styles.unitLabel}>(mmHg)</span> <span className={styles.required}>*</span>
                       </label>
                       <input
                         type="number"
@@ -687,15 +770,16 @@ const PatientVisitList = () => {
                         value={formData.bpDiastolic}
                         required
                         onChange={handleFormChange}
-                        placeholder='30-150'
+                        placeholder="30-150"
                         min="30"
                         max="150"
                         className={styles.formInput}
                       />
                     </div>
+
                     <div className={styles.formGroup}>
                       <label htmlFor="temperature">
-                        Temperature <span className={styles.unitLabel}>(°F)</span>
+                        Temperature <span className={styles.unitLabel}>(°F)</span> <span className={styles.required}>*</span>
                       </label>
                       <input
                         type="number"
@@ -704,7 +788,7 @@ const PatientVisitList = () => {
                         value={formData.temperature}
                         required
                         onChange={handleFormChange}
-                        placeholder='90-110'
+                        placeholder="90-110"
                         min="90"
                         max="110"
                         step="0.1"
@@ -714,7 +798,7 @@ const PatientVisitList = () => {
 
                     <div className={styles.formGroup}>
                       <label htmlFor="weight">
-                        Weight <span className={styles.unitLabel}>(kg)</span>
+                        Weight <span className={styles.unitLabel}>(kg)</span> <span className={styles.required}>*</span>
                       </label>
                       <input
                         type="number"
@@ -722,7 +806,7 @@ const PatientVisitList = () => {
                         name="weight"
                         value={formData.weight}
                         onChange={handleFormChange}
-                        placeholder='1-500'
+                        placeholder="1-500"
                         required
                         min="1"
                         max="500"
@@ -731,10 +815,16 @@ const PatientVisitList = () => {
                       />
                     </div>
                   </div>
-
                 </div>
 
-                {/* ── Inline API Error Display ── */}
+                {/* Incomplete hint */}
+                {initSubmitAttempted && !isInitFormComplete && (
+                  <div className={styles.formIncompleteHint}>
+                    Please fill all required fields to enable submission.
+                  </div>
+                )}
+
+                {/* Inline API errors */}
                 {submitErrors.length > 0 && (
                   <div className={styles.modalErrorBox}>
                     <div className={styles.modalErrorTitle}>
@@ -763,7 +853,8 @@ const PatientVisitList = () => {
                 <button
                   type="submit"
                   className={styles.updateBtnSubmit}
-                  disabled={updating}
+                  disabled={updating || initSubmitCooldown}
+                  title={!isInitFormComplete ? 'Please fill all required fields' : ''}
                 >
                   {updating ? 'Updating...' : 'Submit & Mark Ready'}
                 </button>

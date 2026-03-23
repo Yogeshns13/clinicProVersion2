@@ -4,6 +4,7 @@ import { FiZap, FiX, FiCalendar, FiHash, FiAlertCircle, FiEdit2 } from 'react-ic
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 import { addTask, deleteTask } from '../Api/Api.js';
 import styles from './AutoSlotGeneration.module.css';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
 
 const TASK_TYPE = 2;
 const TASK_NAME = 'GenerateSlots';
@@ -41,10 +42,30 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess, mode = 'add', existing
   const [toDate,      setToDate]      = useState('');
   const [interval,    setInterval]    = useState(5);
   const [submitting,  setSubmitting]  = useState(false);
-  const [submitError, setSubmitError] = useState(null);
+
+  // ── MessagePopup state ──
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Button cooldown ──
+  const [submitCooldown, setSubmitCooldown] = useState(false);
+  const startCooldown = () => {
+    setSubmitCooldown(true);
+    setTimeout(() => setSubmitCooldown(false), 2000);
+  };
 
   // Track original values to detect changes in edit mode
   const originalRef = useRef(null);
+
+  // ── Derive whether required fields are filled ──
+  const isRequiredFilled = () => {
+    if (!interval || interval < 1) return false;
+    if (rangeType === 'days') return !!daysCount && daysCount >= 1;
+    return !!fromDate && !!toDate;
+  };
+
+  const saveEnabled = isRequiredFilled() && !submitting && !submitCooldown;
 
   // ── Prefill form when opening ──
   useEffect(() => {
@@ -70,7 +91,8 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess, mode = 'add', existing
       originalRef.current = null;
     }
 
-    setSubmitError(null);
+    setPopup({ visible: false, message: '', type: 'success' });
+    setSubmitCooldown(false);
   }, [isOpen, isEdit, existingTaskData]);
 
   // ── Dirty check: has the user changed anything from original? ──
@@ -90,7 +112,8 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess, mode = 'add', existing
     setFromDate('');
     setToDate('');
     setInterval(5);
-    setSubmitError(null);
+    setPopup({ visible: false, message: '', type: 'success' });
+    setSubmitCooldown(false);
     originalRef.current = null;
   };
 
@@ -100,28 +123,37 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess, mode = 'add', existing
   };
 
   const handleSave = async () => {
-    // Validation
+    // Gate: required fields check
+    if (!isRequiredFilled()) {
+      showPopup(
+        rangeType === 'range' && (!fromDate || !toDate)
+          ? 'Please select both From Date and To Date.'
+          : 'Please fill all required fields.',
+        'warning'
+      );
+      return;
+    }
+
+    if (submitCooldown) return;
+    startCooldown();
+
+    // Extra validation
     if (rangeType === 'days' && (!daysCount || daysCount < 1)) {
-      setSubmitError('Days count must be at least 1.');
+      showPopup('Days count must be at least 1.', 'error');
       return;
     }
     if (rangeType === 'range') {
-      if (!fromDate || !toDate) {
-        setSubmitError('Please select both From Date and To Date.');
-        return;
-      }
       if (new Date(fromDate) > new Date(toDate)) {
-        setSubmitError('From Date cannot be after To Date.');
+        showPopup('From Date cannot be after To Date.', 'error');
         return;
       }
     }
     if (!interval || interval < 1) {
-      setSubmitError('Repeat interval must be at least 1 minute.');
+      showPopup('Repeat interval must be at least 1 minute.', 'error');
       return;
     }
 
     setSubmitting(true);
-    setSubmitError(null);
 
     try {
       const clinicId = await getStoredClinicId();
@@ -147,13 +179,21 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess, mode = 'add', existing
         taskParamsJson,
       });
 
-      resetForm();
-      onSuccess?.();
+      showPopup(
+        isEdit ? 'Auto generation updated successfully!' : 'Auto generation enabled successfully!',
+        'success'
+      );
+      setTimeout(() => {
+        closePopup();
+        resetForm();
+        onSuccess?.();
+      }, 1200);
     } catch (err) {
-      setSubmitError(
+      showPopup(
         isEdit
-          ? err.message || 'Failed to update auto generation'
-          : err.message || 'Failed to enable auto generation'
+          ? err.message || 'Failed to update auto generation.'
+          : err.message || 'Failed to enable auto generation.',
+        'error'
       );
     } finally {
       setSubmitting(false);
@@ -165,188 +205,200 @@ const AutoSlotGeneration = ({ isOpen, onClose, onSuccess, mode = 'add', existing
   const showUpdateBtn = isEdit && isDirty();
 
   return (
-    <div className={styles.overlay}>
-      <div className={styles.panel}>
+    <>
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
 
-        {/* ── Header ── */}
-        <div className={styles.header}>
-          <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>
-              {isEdit ? <FiEdit2 size={20} /> : <FiZap size={20} />}
+      <div className={styles.overlay}>
+        <div className={styles.panel}>
+
+          {/* ── Header ── */}
+          <div className={styles.header}>
+            <div className={styles.headerLeft}>
+              <div className={styles.headerIcon}>
+                {isEdit ? <FiEdit2 size={20} /> : <FiZap size={20} />}
+              </div>
+              <div>
+                <h2 className={styles.headerTitle}>
+                  {isEdit ? 'Edit Auto Generation' : 'Enable Auto Generation'}
+                </h2>
+                <p className={styles.headerSub}>
+                  {isEdit
+                    ? 'Modify the automatic slot creation schedule'
+                    : 'Configure automatic slot creation schedule'}
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className={styles.headerTitle}>
-                {isEdit ? 'Edit Auto Generation' : 'Enable Auto Generation'}
-              </h2>
-              <p className={styles.headerSub}>
-                {isEdit
-                  ? 'Modify the automatic slot creation schedule'
-                  : 'Configure automatic slot creation schedule'}
-              </p>
-            </div>
-          </div>
-          <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">
-            <FiX size={20} />
-          </button>
-        </div>
-
-        {/* ── Body ── */}
-        <div className={styles.body}>
-
-          {/* Generation Mode */}
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel}>Generation Mode</label>
-            <div className={styles.radioGroup}>
-              <label
-                className={`${styles.radioCard} ${rangeType === 'days' ? styles.radioCardActive : ''}`}
-                onClick={() => setRangeType('days')}
-              >
-                <input
-                  type="radio"
-                  name="rangeType"
-                  value="days"
-                  checked={rangeType === 'days'}
-                  onChange={() => setRangeType('days')}
-                  className={styles.hiddenRadio}
-                />
-                <div className={styles.radioIcon}><FiHash size={18} /></div>
-                <div className={styles.radioTitle}>Days Ahead</div>
-                <div className={styles.radioCheck} />
-              </label>
-
-              <label
-                className={`${styles.radioCard} ${rangeType === 'range' ? styles.radioCardActive : ''}`}
-                onClick={() => setRangeType('range')}
-              >
-                <input
-                  type="radio"
-                  name="rangeType"
-                  value="range"
-                  checked={rangeType === 'range'}
-                  onChange={() => setRangeType('range')}
-                  className={styles.hiddenRadio}
-                />
-                <div className={styles.radioIcon}><FiCalendar size={18} /></div>
-                <div className={styles.radioTitle}>Date Range</div>
-                <div className={styles.radioCheck} />
-              </label>
-            </div>
+            <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">
+              <FiX size={20} />
+            </button>
           </div>
 
-          {/* Conditional inputs */}
-          {rangeType === 'days' ? (
+          {/* ── Body ── */}
+          <div className={styles.body}>
+
+            {/* Generation Mode */}
             <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>Days Count</label>
-              <div className={styles.counterRow}>
-                <button
-                  type="button"
-                  className={styles.counterBtn}
-                  onClick={() => setDaysCount((v) => Math.max(1, v - 1))}
-                >−</button>
+              <label className={styles.fieldLabel}>Generation Mode</label>
+              <div className={styles.radioGroup}>
+                <label
+                  className={`${styles.radioCard} ${rangeType === 'days' ? styles.radioCardActive : ''}`}
+                  onClick={() => setRangeType('days')}
+                >
+                  <input
+                    type="radio"
+                    name="rangeType"
+                    value="days"
+                    checked={rangeType === 'days'}
+                    onChange={() => setRangeType('days')}
+                    className={styles.hiddenRadio}
+                  />
+                  <div className={styles.radioIcon}><FiHash size={18} /></div>
+                  <div className={styles.radioTitle}>Days Ahead</div>
+                  <div className={styles.radioCheck} />
+                </label>
+
+                <label
+                  className={`${styles.radioCard} ${rangeType === 'range' ? styles.radioCardActive : ''}`}
+                  onClick={() => setRangeType('range')}
+                >
+                  <input
+                    type="radio"
+                    name="rangeType"
+                    value="range"
+                    checked={rangeType === 'range'}
+                    onChange={() => setRangeType('range')}
+                    className={styles.hiddenRadio}
+                  />
+                  <div className={styles.radioIcon}><FiCalendar size={18} /></div>
+                  <div className={styles.radioTitle}>Date Range</div>
+                  <div className={styles.radioCheck} />
+                </label>
+              </div>
+            </div>
+
+            {/* Conditional inputs */}
+            {rangeType === 'days' ? (
+              <div className={styles.fieldGroup}>
+                <label className={styles.fieldLabel}>Days Count</label>
+                <div className={styles.counterRow}>
+                  <button
+                    type="button"
+                    className={styles.counterBtn}
+                    onClick={() => setDaysCount((v) => Math.max(1, v - 1))}
+                  >−</button>
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={daysCount}
+                    onChange={(e) => setDaysCount(Math.max(1, Number(e.target.value)))}
+                    className={styles.counterInput}
+                  />
+                  <button
+                    type="button"
+                    className={styles.counterBtn}
+                    onClick={() => setDaysCount((v) => Math.min(365, v + 1))}
+                  >+</button>
+                  <span className={styles.counterUnit}>days</span>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.dateRangeRow}>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>From Date</label>
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    className={styles.dateInput}
+                  />
+                </div>
+                <div className={styles.dateArrow}>→</div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>To Date</label>
+                  <input
+                    type="date"
+                    value={toDate}
+                    min={fromDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    className={styles.dateInput}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Interval */}
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel}>Repeat Interval</label>
+              <div className={styles.intervalRow}>
+                {[5, 10, 15, 30, 60].map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    className={`${styles.intervalChip} ${interval === val ? styles.intervalChipActive : ''}`}
+                    onClick={() => setInterval(val)}
+                  >
+                    {val < 60 ? `${val}m` : '1h'}
+                  </button>
+                ))}
                 <input
                   type="number"
                   min={1}
-                  max={365}
-                  value={daysCount}
-                  onChange={(e) => setDaysCount(Math.max(1, Number(e.target.value)))}
-                  className={styles.counterInput}
+                  placeholder="Custom"
+                  value={![5, 10, 15, 30, 60].includes(interval) ? interval : ''}
+                  onChange={(e) => setInterval(Number(e.target.value))}
+                  className={styles.intervalCustom}
                 />
-                <button
-                  type="button"
-                  className={styles.counterBtn}
-                  onClick={() => setDaysCount((v) => Math.min(365, v + 1))}
-                >+</button>
-                <span className={styles.counterUnit}>days</span>
+                <span className={styles.counterUnit}>min</span>
               </div>
             </div>
-          ) : (
-            <div className={styles.dateRangeRow}>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>From Date</label>
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  className={styles.dateInput}
-                />
-              </div>
-              <div className={styles.dateArrow}>→</div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>To Date</label>
-                <input
-                  type="date"
-                  value={toDate}
-                  min={fromDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                  className={styles.dateInput}
-                />
-              </div>
-            </div>
-          )}
 
-          {/* Interval */}
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel}>Repeat Interval</label>
-            <div className={styles.intervalRow}>
-              {[5, 10, 15, 30, 60].map((val) => (
-                <button
-                  key={val}
-                  type="button"
-                  className={`${styles.intervalChip} ${interval === val ? styles.intervalChipActive : ''}`}
-                  onClick={() => setInterval(val)}
-                >
-                  {val < 60 ? `${val}m` : '1h'}
-                </button>
-              ))}
-              <input
-                type="number"
-                min={1}
-                placeholder="Custom"
-                value={![5, 10, 15, 30, 60].includes(interval) ? interval : ''}
-                onChange={(e) => setInterval(Number(e.target.value))}
-                className={styles.intervalCustom}
-              />
-              <span className={styles.counterUnit}>min</span>
-            </div>
           </div>
 
-          {/* Error */}
-          {submitError && (
-            <div className={styles.errorBanner}>
-              <FiAlertCircle size={16} />
-              {submitError}
-            </div>
-          )}
-        </div>
+          {/* ── Footer ── */}
+          <div className={styles.footer}>
+            <button className={styles.cancelBtn} onClick={handleClose} disabled={submitting}>
+              Cancel
+            </button>
 
-        {/* ── Footer ── */}
-        <div className={styles.footer}>
-          <button className={styles.cancelBtn} onClick={handleClose} disabled={submitting}>
-            Cancel
-          </button>
-
-          {/* Edit mode: show Update only when something changed */}
-          {isEdit ? (
-            showUpdateBtn && (
-              <button className={styles.saveBtn} onClick={handleSave} disabled={submitting}>
+            {/* Edit mode: show Update only when something changed */}
+            {isEdit ? (
+              showUpdateBtn && (
+                <button
+                  className={styles.saveBtn}
+                  onClick={handleSave}
+                  disabled={!saveEnabled}
+                  title={!isRequiredFilled() ? 'Please fill all required fields' : ''}
+                >
+                  {submitting
+                    ? <><span className={styles.btnSpinner} />Updating…</>
+                    : <><FiZap size={15} />Update</>
+                  }
+                </button>
+              )
+            ) : (
+              <button
+                className={styles.saveBtn}
+                onClick={handleSave}
+                disabled={!saveEnabled}
+                title={!isRequiredFilled() ? 'Please fill all required fields' : ''}
+              >
                 {submitting
-                  ? <><span className={styles.btnSpinner} />Updating…</>
-                  : <><FiZap size={15} />Update</>
+                  ? <><span className={styles.btnSpinner} />Enabling…</>
+                  : <><FiZap size={15} />Enable Auto Generation</>
                 }
               </button>
-            )
-          ) : (
-            <button className={styles.saveBtn} onClick={handleSave} disabled={submitting}>
-              {submitting
-                ? <><span className={styles.btnSpinner} />Enabling…</>
-                : <><FiZap size={15} />Enable Auto Generation</>
-              }
-            </button>
-          )}
-        </div>
+            )}
+          </div>
 
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

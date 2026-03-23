@@ -1,5 +1,5 @@
 // src/components/LabWork/LabWorkQueue.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiSearch, FiCalendar, FiFilter, FiChevronDown, FiChevronRight, 
@@ -19,17 +19,48 @@ import {
 import { getEmployeeList } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
 import styles from './LabWorkQueue.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
+// ─── Hook: 2-second button cooldown ───────────────────────────────────────────
+const useButtonCooldown = () => {
+  const [cooldowns, setCooldowns] = useState({});
+  const timers = useRef({});
+
+  const trigger = (key) => {
+    setCooldowns(prev => ({ ...prev, [key]: true }));
+    if (timers.current[key]) clearTimeout(timers.current[key]);
+    timers.current[key] = setTimeout(() => {
+      setCooldowns(prev => ({ ...prev, [key]: false }));
+    }, 2000);
+  };
+
+  const isDisabled = (key) => !!cooldowns[key];
+
+  useEffect(() => () => {
+    Object.values(timers.current).forEach(clearTimeout);
+  }, []);
+
+  return { trigger, isDisabled };
+};
+
+// ─── Main Component ────────────────────────────────────────────────────────────
 const LabWorkQueue = () => {
   const navigate = useNavigate();
-  
+  const cooldown = useButtonCooldown();
+
+  // MessagePopup state
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopupMsg = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
   // ── Order list (lightweight — one row per orderId)
   const [orderList, setOrderList] = useState([]);
 
-  // ── Per-order lazy data: { [orderId]: { items, orderStatus, loading, loaded } }
+  // ── Per-order lazy data
   const [orderDetails, setOrderDetails] = useState({});
 
   const [expandedOrders, setExpandedOrders] = useState(new Set());
@@ -82,7 +113,7 @@ const LabWorkQueue = () => {
     { id: 4,  label: 'Rejected',     color: 'danger'   }
   ];
 
-  // ── Derived: are any filters active?
+  // Are any filters active?
   const hasActiveFilters =
     String(appliedFilters.searchValue).trim() !== '' ||
     Number(appliedFilters.status)              !== -1 ||
@@ -168,9 +199,7 @@ const LabWorkQueue = () => {
         });
 
       setOrderList(orders);
-      // Reset per-order detail cache and collapse all rows on fresh fetch
       setOrderDetails({});
-      setExpandedOrders(new Set());
     } catch (err) {
       console.error('fetchOrderList error:', err);
       setError(err);
@@ -179,9 +208,86 @@ const LabWorkQueue = () => {
     }
   };
 
+  // ── Fetch order list and re-expand a specific order after reload ─────────
+  const fetchOrderListAndReexpand = async (filters = appliedFilters, reexpandOrderId = null) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
+
+      const options = {
+        Page: 1, PageSize: 200,
+        BranchID: branchId,
+        Status: filters.status
+      };
+
+      if (filters.searchValue.trim()) {
+        const searchTerm = filters.searchValue.trim();
+        if (filters.searchType === 'orderId') {
+          options.OrderID = Number(searchTerm) || 0;
+        } else {
+          options.Search = searchTerm;
+        }
+      }
+
+      if (filters.doctorId > 0) options.DoctorID = filters.doctorId;
+      if (filters.dateFrom && filters.dateTo) {
+        options.FromDate = filters.dateFrom;
+        options.ToDate   = filters.dateTo;
+      }
+
+      const data = await getLabWorkItemsList(clinicId, options);
+
+      let filteredData = data;
+      if (filters.searchValue.trim() && filters.searchType !== 'orderId') {
+        const term = filters.searchValue.toLowerCase();
+        switch (filters.searchType) {
+          case 'patientName': filteredData = filteredData.filter(i => i.patientName?.toLowerCase().includes(term)); break;
+          case 'mobile':      filteredData = filteredData.filter(i => i.mobile?.toLowerCase().includes(term));      break;
+          case 'fileNo':      filteredData = filteredData.filter(i => i.fileNo?.toLowerCase().includes(term));      break;
+          case 'testName':    filteredData = filteredData.filter(i => i.testName?.toLowerCase().includes(term));    break;
+          default: break;
+        }
+      }
+
+      const seen   = new Set();
+      const orders = [];
+      [...filteredData]
+        .sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated))
+        .forEach(item => {
+          if (!seen.has(item.orderId)) {
+            seen.add(item.orderId);
+            orders.push({
+              orderId:     item.orderId,
+              patientName: item.patientName,
+              fileNo:      item.fileNo,
+              mobile:      item.mobile,
+              doctorName:  item.doctorName,
+              dateCreated: item.dateCreated,
+            });
+          }
+        });
+
+      setOrderList(orders);
+      setOrderDetails({});
+
+      // Re-expand the processed order and lazy-load its fresh details
+      if (reexpandOrderId) {
+        setExpandedOrders(new Set([reexpandOrderId]));
+      } else {
+        setExpandedOrders(new Set());
+      }
+    } catch (err) {
+      console.error('fetchOrderListAndReexpand error:', err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ── Lazy-load work items + order status for a single order ───────────────
   const loadOrderDetails = async (orderId) => {
-    // Already loaded or currently loading — skip
     if (orderDetails[orderId]?.loaded || orderDetails[orderId]?.loading) return;
 
     setOrderDetails(prev => ({
@@ -193,7 +299,6 @@ const LabWorkQueue = () => {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
 
-      // Fetch work items for this specific order
       const data = await getLabWorkItemsList(clinicId, {
         Page: 1, PageSize: 100,
         BranchID: branchId,
@@ -201,7 +306,6 @@ const LabWorkQueue = () => {
         Status: -1
       });
 
-      // Fetch order status
       let orderStatus = null;
       try {
         const orderData = await getLabTestOrderList(clinicId, { OrderID: orderId, BranchID: branchId });
@@ -232,6 +336,15 @@ const LabWorkQueue = () => {
     fetchOrderList(appliedFilters);
     fetchDoctors();
   }, []);
+
+  // When expandedOrders changes and an order has no details yet, load them
+  useEffect(() => {
+    expandedOrders.forEach(orderId => {
+      if (!orderDetails[orderId]?.loaded && !orderDetails[orderId]?.loading) {
+        loadOrderDetails(orderId);
+      }
+    });
+  }, [expandedOrders]);
 
   // Paginated slice of orderList
   const paginatedOrders = useMemo(() => {
@@ -276,7 +389,7 @@ const LabWorkQueue = () => {
       newExpanded.delete(orderId);
     } else {
       newExpanded.add(orderId);
-      loadOrderDetails(orderId);   // ← lazy fetch here
+      loadOrderDetails(orderId);
     }
     setExpandedOrders(newExpanded);
   };
@@ -309,7 +422,7 @@ const LabWorkQueue = () => {
     return { gradient: 'linear-gradient(90deg, #dc2626, #ef4444)', textColor: '#dc2626' };
   };
 
-  const isOrderMarkedComplete      = (orderId, items) => items.every(i => i.status === 3) && orderDetails[orderId]?.orderStatus === 2;
+  const isOrderMarkedComplete        = (orderId, items) => items.every(i => i.status === 3) && orderDetails[orderId]?.orderStatus === 2;
   const shouldShowMarkCompleteButton = (orderId, items) => items.every(i => i.status === 3) && orderDetails[orderId]?.orderStatus !== 2;
 
   const handleProcessWorkItem = (item, orderData) => {
@@ -318,15 +431,14 @@ const LabWorkQueue = () => {
     setShowWorkDetailModal(true);
   };
 
-  const handleCloseWorkDetail = () => {
+  // ── Close modal: reload list and re-expand the processed order ───────────
+  const handleCloseWorkDetail = (processedOrderId = null, message = null, messageType = 'success') => {
     setShowWorkDetailModal(false);
     setSelectedWorkItem(null);
     setSelectedOrderData(null);
-    // Reload details for currently expanded orders
-    expandedOrders.forEach(orderId => {
-      setOrderDetails(prev => ({ ...prev, [orderId]: { ...prev[orderId], loaded: false } }));
-      loadOrderDetails(orderId);
-    });
+    if (message) showPopupMsg(message, messageType);
+    const targetOrderId = processedOrderId || selectedOrderData?.orderId || null;
+    fetchOrderListAndReexpand(appliedFilters, targetOrderId);
   };
 
   const handleSaveWorkDetail = () => {};
@@ -338,8 +450,10 @@ const LabWorkQueue = () => {
 
   const handleConfirmMarkComplete = async () => {
     if (!orderToComplete) return;
+    cooldown.trigger('markComplete');
     try {
       setCompletingOrder(true);
+      setLoading(true);
       setError(null);
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
@@ -361,12 +475,14 @@ const LabWorkQueue = () => {
 
       setShowCompleteConfirm(false);
       setOrderToComplete(null);
+      showPopupMsg('Order marked as complete successfully!', 'success');
       fetchOrderList(appliedFilters);
     } catch (err) {
       console.error('Error marking order as complete:', err);
-      setError({ message: err.message || 'Failed to mark order as complete', status: err.status || 500 });
+      showPopupMsg(err.message || 'Failed to mark order as complete', 'error');
     } finally {
       setCompletingOrder(false);
+      setLoading(false);
     }
   };
 
@@ -383,7 +499,7 @@ const LabWorkQueue = () => {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.spinner}></div>
-        <p>Loading work queue...</p>
+        <LoadingPage/>
       </div>
     );
   }
@@ -392,6 +508,14 @@ const LabWorkQueue = () => {
     <div className={styles.wrapper}>
       <ErrorHandler error={error} />
       <Header title="Lab Work Queue" />
+
+      {/* MessagePopup */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
 
       {/* ── Filters ── */}
       <div className={styles.filtersContainer}>
@@ -530,7 +654,15 @@ const LabWorkQueue = () => {
                       )}
 
                       {showMarkCompleteBtn && (
-                        <button onClick={(e) => { e.stopPropagation(); handleMarkCompleteClick(orderId, orderData); }} className={styles.markCompleteBtn}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            cooldown.trigger(`markComplete_${orderId}`);
+                            handleMarkCompleteClick(orderId, orderData);
+                          }}
+                          disabled={cooldown.isDisabled(`markComplete_${orderId}`)}
+                          className={styles.markCompleteBtn}
+                        >
                           <FiCheckCircle size={18} /> Mark as Complete
                         </button>
                       )}
@@ -591,7 +723,15 @@ const LabWorkQueue = () => {
                                   </span>
                                 </td>
                                 <td>
-                                  <button onClick={(e) => { e.stopPropagation(); handleProcessWorkItem(item, orderData); }} className={styles.processBtn}>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      cooldown.trigger(`process_${item.workId}`);
+                                      handleProcessWorkItem(item, orderData);
+                                    }}
+                                    disabled={cooldown.isDisabled(`process_${item.workId}`)}
+                                    className={styles.processBtn}
+                                  >
                                     Process
                                   </button>
                                 </td>
@@ -623,7 +763,7 @@ const LabWorkQueue = () => {
           <div className={styles.pageSizeInfo}>Page Size: <strong>{pageSize}</strong></div>
         </div>
 
-      </div>{/* end tableSection */}
+      </div>
 
       {/* Work Detail Modal */}
       {showWorkDetailModal && selectedWorkItem && selectedOrderData && (
@@ -633,6 +773,7 @@ const LabWorkQueue = () => {
           onClose={handleCloseWorkDetail}
           onSave={handleSaveWorkDetail}
           employees={doctors}
+          showPopupMsg={showPopupMsg}
         />
       )}
 
@@ -651,7 +792,11 @@ const LabWorkQueue = () => {
             </div>
             <div className={styles.confirmFooter}>
               <button onClick={handleCancelMarkComplete} className={styles.cancelBtn} disabled={completingOrder}>Cancel</button>
-              <button onClick={handleConfirmMarkComplete} className={styles.confirmBtn} disabled={completingOrder}>
+              <button
+                onClick={handleConfirmMarkComplete}
+                className={styles.confirmBtn}
+                disabled={completingOrder || cooldown.isDisabled('markComplete')}
+              >
                 <FiCheckCircle size={18} />{completingOrder ? 'Processing...' : 'Yes, Mark Complete'}
               </button>
             </div>
@@ -663,7 +808,9 @@ const LabWorkQueue = () => {
 };
 
 // ── Lab Work Detail Modal Component ──────────────────────────────────────────
-const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees }) => {
+const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees, showPopupMsg }) => {
+  const cooldown = useButtonCooldown();
+
   const [sampleData, setSampleData] = useState({
     sampleCollectedTime:  workItem.sampleCollectedTime
       ? new Date(workItem.sampleCollectedTime).toISOString().slice(0, 16)
@@ -731,12 +878,25 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
     else                                    setActiveStep(3);
   }, []);
 
+  // ── Step 1 validation: sampleCollectedTime required ──
+  const isSampleFormValid = sampleData.sampleCollectedTime !== '';
+
+  // ── Step 2 validation: resultValue and testDoneBy required ──
+  const isResultFormValid = resultData.resultValue.trim() !== '' && resultData.testDoneBy !== 0;
+
+  // ── Approval validation: testApprovedBy required ──
+  const isApprovalFormValid = approvalData.testApprovedBy !== 0;
+
+  // ── Rejection validation: testApprovedBy and rejectReason required ──
+  const isRejectionFormValid = rejectionData.testApprovedBy !== 0 && rejectionData.rejectReason.trim() !== '';
+
   const handleSampleSave = async () => {
-    if (!sampleData.sampleCollectedTime) {
-      setValidationMessages(prev => ({ ...prev, sampleCollectedTime: 'Collection date and time is required' }));
+    if (!isSampleFormValid) {
+      showPopupMsg('Please fill all required fields: Collection Date & Time.', 'warning');
       return;
     }
     setValidationMessages(prev => ({ ...prev, sampleCollectedTime: '' }));
+    cooldown.trigger('sampleSave');
     try {
       setLoading(true); setError(null); setStatusMessage({ type: '', text: '' });
       const clinicId = await getStoredClinicId();
@@ -746,20 +906,21 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
         sampleCollectedTime:  sampleData.sampleCollectedTime.replace('T', ' ') + ':00',
         sampleCollectedPlace: sampleData.sampleCollectedPlace
       });
-      setStatusMessage({ type: 'success', text: 'Sample collection details saved successfully!' });
+      showPopupMsg('Sample collection details saved successfully!', 'success');
       setTimeout(() => { setActiveStep(2); setStatusMessage({ type: '', text: '' }); }, 1000);
     } catch (err) {
       setError(err);
-      setStatusMessage({ type: 'error', text: err.message || 'Failed to save sample collection' });
+      showPopupMsg(err.message || 'Failed to save sample collection', 'error');
     } finally { setLoading(false); }
   };
 
   const handleResultSave = async () => {
-    if (!resultData.resultValue?.trim()) {
-      setValidationMessages(prev => ({ ...prev, resultValue: 'Result value is required' }));
+    if (!isResultFormValid) {
+      showPopupMsg('Please fill all required fields: Result Value and Test Done By.', 'warning');
       return;
     }
     setValidationMessages(prev => ({ ...prev, resultValue: '' }));
+    cooldown.trigger('resultSave');
     try {
       setLoading(true); setError(null); setStatusMessage({ type: '', text: '' });
       const clinicId = await getStoredClinicId();
@@ -773,42 +934,49 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
         remarks:        resultData.remarks,
         testDoneBy:     resultData.testDoneBy
       });
-      setStatusMessage({ type: 'success', text: 'Test results saved successfully!' });
+      showPopupMsg('Test results saved successfully!', 'success');
       setTimeout(() => { setActiveStep(3); setStatusMessage({ type: '', text: '' }); }, 1000);
     } catch (err) {
       setError(err);
-      setStatusMessage({ type: 'error', text: err.message || 'Failed to save results' });
+      showPopupMsg(err.message || 'Failed to save results', 'error');
     } finally { setLoading(false); }
   };
 
   const handleApprove = async () => {
-    if (!approvalData.testApprovedBy) { setStatusMessage({ type: 'error', text: 'Please select an approver' }); return; }
+    if (!isApprovalFormValid) {
+      showPopupMsg('Please fill all required fields: Approved By.', 'warning');
+      return;
+    }
+    cooldown.trigger('approve');
     try {
       setLoading(true); setError(null); setStatusMessage({ type: '', text: '' });
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       await approveLabWorkItem({ workId: workItem.workId, clinicId, branchId, testApprovedBy: approvalData.testApprovedBy, approvalRemarks: approvalData.approvalRemarks });
-      setStatusMessage({ type: 'success', text: 'Work item approved successfully!' });
-      setTimeout(() => { setShowApprovalModal(false); onClose && onClose(); }, 1000);
+      // Pass orderId and success message to parent — parent shows the popup once
+      setTimeout(() => { setShowApprovalModal(false); onClose && onClose(orderData.orderId, 'Work item approved successfully!', 'success'); }, 1000);
     } catch (err) {
       setError(err);
-      setStatusMessage({ type: 'error', text: err.message || 'Failed to approve work item' });
+      showPopupMsg(err.message || 'Failed to approve work item', 'error');
     } finally { setLoading(false); }
   };
 
   const handleReject = async () => {
-    if (!rejectionData.testApprovedBy)      { setStatusMessage({ type: 'error', text: 'Please select an approver' });            return; }
-    if (!rejectionData.rejectReason.trim()) { setStatusMessage({ type: 'error', text: 'Please provide a reason for rejection' }); return; }
+    if (!isRejectionFormValid) {
+      showPopupMsg('Please fill all required fields: Rejected By and Rejection Reason.', 'warning');
+      return;
+    }
+    cooldown.trigger('reject');
     try {
       setLoading(true); setError(null); setStatusMessage({ type: '', text: '' });
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       await rejectLabWorkItem({ WorkID: workItem.workId, clinicId, branchID: branchId, TestApprovedBy: rejectionData.testApprovedBy, RejectReason: rejectionData.rejectReason });
-      setStatusMessage({ type: 'success', text: 'Work item rejected successfully!' });
-      setTimeout(() => { setShowRejectionModal(false); onClose && onClose(); }, 1000);
+      // Pass orderId and success message to parent — parent shows the popup once
+      setTimeout(() => { setShowRejectionModal(false); onClose && onClose(orderData.orderId, 'Work item rejected successfully!', 'success'); }, 1000);
     } catch (err) {
       setError(err);
-      setStatusMessage({ type: 'error', text: err.message || 'Failed to reject work item' });
+      showPopupMsg(err.message || 'Failed to reject work item', 'error');
     } finally { setLoading(false); }
   };
 
@@ -819,7 +987,7 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
   };
 
   return (
-    <div className={styles.detailModalOverlay} onClick={onClose}>
+    <div className={styles.detailModalOverlay} onClick={() => onClose(orderData.orderId)}>
       <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
         <ErrorHandler error={error} />
         
@@ -829,9 +997,10 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
             <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
             {localStorage.getItem('clinicName') || '—'}
           </div>
-          <button onClick={onClose} className={styles.detailCloseBtn}><FiX size={24} /></button>
+          <button onClick={() => onClose(orderData.orderId)} className={styles.detailCloseBtn}><FiX size={24} /></button>
         </div>
 
+        {/* Inner status message (inline, not popup) kept for step-level feedback */}
         {statusMessage.text && (
           <div className={`${styles.statusMessage} ${styles[statusMessage.type]}`}>{statusMessage.text}</div>
         )}
@@ -873,32 +1042,53 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
         </div>
 
         <div className={styles.detailModalBody}>
+
+          {/* ── Step 1: Sample Collection ── */}
           {activeStep === 1 && (
             <div className={styles.formSection}>
               <div className={styles.sectionHeader}><FiClock size={20} /><h3>Sample Collection Details</h3></div>
               <div className={styles.detailFormGrid}>
                 <div className={styles.detailFormGroup}>
                   <label>Collection Date & Time <span className={styles.required}>*</span></label>
-                  <input type="datetime-local" value={sampleData.sampleCollectedTime}
-                    onChange={(e) => { setSampleData({...sampleData, sampleCollectedTime: e.target.value}); if (e.target.value) setValidationMessages(prev => ({ ...prev, sampleCollectedTime: '' })); }}
-                    className={styles.detailFormInput} required />
-                  {validationMessages.sampleCollectedTime && <span className={styles.validationMsg}>{validationMessages.sampleCollectedTime}</span>}
+                  <input
+                    type="datetime-local"
+                    value={sampleData.sampleCollectedTime}
+                    onChange={(e) => {
+                      setSampleData({ ...sampleData, sampleCollectedTime: e.target.value });
+                      if (e.target.value) setValidationMessages(prev => ({ ...prev, sampleCollectedTime: '' }));
+                    }}
+                    className={styles.detailFormInput}
+                    required
+                  />
+                  {validationMessages.sampleCollectedTime && (
+                    <span className={styles.validationMsg}>{validationMessages.sampleCollectedTime}</span>
+                  )}
                 </div>
                 <div className={styles.detailFormGroup}>
                   <label>Collection Place</label>
-                  <input type="text" value={sampleData.sampleCollectedPlace}
-                    onChange={(e) => setSampleData({...sampleData, sampleCollectedPlace: e.target.value})}
-                    className={styles.detailFormInput} placeholder="e.g., Lab Room 1, Patient Room" />
+                  <input
+                    type="text"
+                    value={sampleData.sampleCollectedPlace}
+                    onChange={(e) => setSampleData({ ...sampleData, sampleCollectedPlace: e.target.value })}
+                    className={styles.detailFormInput}
+                    placeholder="e.g., Lab Room 1, Patient Room"
+                  />
                 </div>
               </div>
               <div className={styles.formActions}>
-                <button onClick={handleSampleSave} className={styles.saveBtn} disabled={loading}>
+                <button
+                  onClick={handleSampleSave}
+                  className={styles.saveBtn}
+                  disabled={loading || !isSampleFormValid || cooldown.isDisabled('sampleSave')}
+                  title={!isSampleFormValid ? 'Please fill all required fields' : ''}
+                >
                   <FiSave size={18} />{loading ? 'Saving...' : 'Save & Continue'}
                 </button>
               </div>
             </div>
           )}
 
+          {/* ── Step 2: Enter Results ── */}
           {activeStep === 2 && (
             <div className={styles.formSection}>
               <div className={styles.sectionHeader}>
@@ -917,38 +1107,69 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
               <div className={styles.detailFormGrid}>
                 <div className={styles.detailFormGroup}>
                   <label>Result Value <span className={styles.required}>*</span></label>
-                  <input type="text" value={resultData.resultValue}
-                    onChange={(e) => { setResultData({...resultData, resultValue: e.target.value}); if (e.target.value.trim()) setValidationMessages(prev => ({ ...prev, resultValue: '' })); }}
-                    className={styles.detailFormInput} placeholder="e.g., 120" required />
-                  {validationMessages.resultValue && <span className={styles.validationMsg}>{validationMessages.resultValue}</span>}
+                  <input
+                    type="text"
+                    value={resultData.resultValue}
+                    onChange={(e) => {
+                      setResultData({ ...resultData, resultValue: e.target.value });
+                      if (e.target.value.trim()) setValidationMessages(prev => ({ ...prev, resultValue: '' }));
+                    }}
+                    className={styles.detailFormInput}
+                    placeholder="e.g., 120"
+                    required
+                  />
+                  {validationMessages.resultValue && (
+                    <span className={styles.validationMsg}>{validationMessages.resultValue}</span>
+                  )}
                 </div>
                 <div className={styles.detailFormGroup}>
                   <label>Interpretation</label>
-                  <select value={resultData.interpretation || ''} onChange={(e) => setResultData({...resultData, interpretation: e.target.value ? Number(e.target.value) : null})} className={styles.detailFormInput}>
+                  <select
+                    value={resultData.interpretation || ''}
+                    onChange={(e) => setResultData({ ...resultData, interpretation: e.target.value ? Number(e.target.value) : null })}
+                    className={styles.detailFormInput}
+                  >
                     {interpretationOptions.map(opt => <option key={opt.value} value={opt.value || ''}>{opt.label}</option>)}
                   </select>
                 </div>
                 <div className={styles.detailFormGroup}>
                   <label>Test Done By <span className={styles.required}>*</span></label>
-                  <select required value={resultData.testDoneBy} onChange={(e) => setResultData({...resultData, testDoneBy: Number(e.target.value)})} className={styles.detailFormInput}>
-                    <option value="">Select Technician</option>
+                  <select
+                    required
+                    value={resultData.testDoneBy}
+                    onChange={(e) => setResultData({ ...resultData, testDoneBy: Number(e.target.value) })}
+                    className={styles.detailFormInput}
+                  >
+                    <option value={0}>Select Technician</option>
                     {employees.map(emp => <option key={emp.id} value={emp.id}>{emp.name} ({emp.employeeCode})</option>)}
                   </select>
                 </div>
                 <div className={styles.detailFormGroupFull}>
                   <label>Remarks</label>
-                  <textarea value={resultData.remarks} onChange={(e) => setResultData({...resultData, remarks: e.target.value})} className={styles.detailFormTextarea} rows={3} placeholder="Any additional notes or observations..." />
+                  <textarea
+                    value={resultData.remarks}
+                    onChange={(e) => setResultData({ ...resultData, remarks: e.target.value })}
+                    className={styles.detailFormTextarea}
+                    rows={3}
+                    placeholder="Any additional notes or observations..."
+                  />
                 </div>
               </div>
               <div className={styles.formActions}>
                 <button onClick={() => setActiveStep(1)} className={styles.backBtn}>← Back</button>
-                <button onClick={handleResultSave} className={styles.saveBtn} disabled={loading || !resultData.resultValue || !resultData.testDoneBy}>
+                <button
+                  onClick={handleResultSave}
+                  className={styles.saveBtn}
+                  disabled={loading || !isResultFormValid || cooldown.isDisabled('resultSave')}
+                  title={!isResultFormValid ? 'Please fill all required fields' : ''}
+                >
                   <FiSave size={18} />{loading ? 'Saving...' : 'Save & Continue'}
                 </button>
               </div>
             </div>
           )}
 
+          {/* ── Step 3: Approval ── */}
           {activeStep === 3 && (
             <div className={styles.formSection}>
               <div className={styles.sectionHeader}><FiCheckCircle size={20} /><h3>Review & Approval</h3></div>
@@ -967,13 +1188,26 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
               </div>
               <div className={styles.formActions}>
                 <button onClick={() => setActiveStep(2)} className={styles.backBtn}>← Back</button>
-                <button onClick={() => setShowRejectionModal(true)} className={styles.rejectBtn}><FiXCircle size={18} />Reject</button>
-                <button onClick={() => setShowApprovalModal(true)}  className={styles.approveBtn}><FiCheckCircle size={18} />Approve</button>
+                <button
+                  onClick={() => { cooldown.trigger('openReject'); setShowRejectionModal(true); }}
+                  disabled={cooldown.isDisabled('openReject')}
+                  className={styles.rejectBtn}
+                >
+                  <FiXCircle size={18} />Reject
+                </button>
+                <button
+                  onClick={() => { cooldown.trigger('openApprove'); setShowApprovalModal(true); }}
+                  disabled={cooldown.isDisabled('openApprove')}
+                  className={styles.approveBtn}
+                >
+                  <FiCheckCircle size={18} />Approve
+                </button>
               </div>
             </div>
           )}
         </div>
 
+        {/* ── Approval Modal ── */}
         {showApprovalModal && (
           <div className={styles.confirmOverlay} onClick={() => !loading && setShowApprovalModal(false)}>
             <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
@@ -984,25 +1218,46 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
               <div className={styles.confirmModalBody}>
                 {statusMessage.text && <div className={`${styles.statusMessage} ${styles[statusMessage.type]}`}>{statusMessage.text}</div>}
                 <div className={styles.detailFormGroup}>
-                  <label>Approved By *</label>
-                  <select value={approvalData.testApprovedBy} onChange={(e) => setApprovalData({...approvalData, testApprovedBy: Number(e.target.value)})} className={styles.detailFormInput} required disabled={loading}>
+                  <label>Approved By <span className={styles.required}>*</span></label>
+                  <select
+                    value={approvalData.testApprovedBy}
+                    onChange={(e) => setApprovalData({ ...approvalData, testApprovedBy: Number(e.target.value) })}
+                    className={styles.detailFormInput}
+                    required
+                    disabled={loading}
+                  >
                     <option value={0}>Select Doctor</option>
                     {employees.map(emp => <option key={emp.id} value={emp.id}>{emp.name} ({emp.employeeCode})</option>)}
                   </select>
                 </div>
                 <div className={styles.detailFormGroup}>
                   <label>Approval Remarks</label>
-                  <textarea value={approvalData.approvalRemarks} onChange={(e) => setApprovalData({...approvalData, approvalRemarks: e.target.value})} className={styles.detailFormTextarea} rows={3} placeholder="Optional remarks..." disabled={loading} />
+                  <textarea
+                    value={approvalData.approvalRemarks}
+                    onChange={(e) => setApprovalData({ ...approvalData, approvalRemarks: e.target.value })}
+                    className={styles.detailFormTextarea}
+                    rows={3}
+                    placeholder="Optional remarks..."
+                    disabled={loading}
+                  />
                 </div>
               </div>
               <div className={styles.confirmModalFooter}>
                 <button onClick={() => !loading && setShowApprovalModal(false)} className={styles.cancelBtn} disabled={loading}>Cancel</button>
-                <button onClick={handleApprove} className={styles.confirmApproveBtn} disabled={loading}><FiCheckCircle size={18} />{loading ? 'Approving...' : 'Approve'}</button>
+                <button
+                  onClick={handleApprove}
+                  className={styles.confirmApproveBtn}
+                  disabled={loading || !isApprovalFormValid || cooldown.isDisabled('approve')}
+                  title={!isApprovalFormValid ? 'Please select an approver' : ''}
+                >
+                  <FiCheckCircle size={18} />{loading ? 'Approving...' : 'Approve'}
+                </button>
               </div>
             </div>
           </div>
         )}
 
+        {/* ── Rejection Modal ── */}
         {showRejectionModal && (
           <div className={styles.confirmOverlay} onClick={() => !loading && setShowRejectionModal(false)}>
             <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
@@ -1013,20 +1268,41 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees })
               <div className={styles.confirmModalBody}>
                 {statusMessage.text && <div className={`${styles.statusMessage} ${styles[statusMessage.type]}`}>{statusMessage.text}</div>}
                 <div className={styles.detailFormGroup}>
-                  <label>Rejected By *</label>
-                  <select value={rejectionData.testApprovedBy} onChange={(e) => setRejectionData({...rejectionData, testApprovedBy: Number(e.target.value)})} className={styles.detailFormInput} required disabled={loading}>
+                  <label>Rejected By <span className={styles.required}>*</span></label>
+                  <select
+                    value={rejectionData.testApprovedBy}
+                    onChange={(e) => setRejectionData({ ...rejectionData, testApprovedBy: Number(e.target.value) })}
+                    className={styles.detailFormInput}
+                    required
+                    disabled={loading}
+                  >
                     <option value={0}>Select Doctor</option>
                     {employees.map(emp => <option key={emp.id} value={emp.id}>{emp.name} ({emp.employeeCode})</option>)}
                   </select>
                 </div>
                 <div className={styles.detailFormGroup}>
-                  <label>Rejection Reason *</label>
-                  <textarea value={rejectionData.rejectReason} onChange={(e) => setRejectionData({...rejectionData, rejectReason: e.target.value})} className={styles.detailFormTextarea} rows={4} placeholder="Please provide a detailed reason for rejection..." required disabled={loading} />
+                  <label>Rejection Reason <span className={styles.required}>*</span></label>
+                  <textarea
+                    value={rejectionData.rejectReason}
+                    onChange={(e) => setRejectionData({ ...rejectionData, rejectReason: e.target.value })}
+                    className={styles.detailFormTextarea}
+                    rows={4}
+                    placeholder="Please provide a detailed reason for rejection..."
+                    required
+                    disabled={loading}
+                  />
                 </div>
               </div>
               <div className={styles.confirmModalFooter}>
                 <button onClick={() => !loading && setShowRejectionModal(false)} className={styles.cancelBtn} disabled={loading}>Cancel</button>
-                <button onClick={handleReject} className={styles.confirmRejectBtn} disabled={loading}><FiXCircle size={18} />{loading ? 'Rejecting...' : 'Reject'}</button>
+                <button
+                  onClick={handleReject}
+                  className={styles.confirmRejectBtn}
+                  disabled={loading || !isRejectionFormValid || cooldown.isDisabled('reject')}
+                  title={!isRejectionFormValid ? 'Please fill all required fields' : ''}
+                >
+                  <FiXCircle size={18} />{loading ? 'Rejecting...' : 'Reject'}
+                </button>
               </div>
             </div>
           </div>

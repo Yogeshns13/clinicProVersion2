@@ -1,8 +1,8 @@
 // src/api.js
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
-import { API,UPLOAD_API_URL, FILE_API_URL } from "./ApiConfiguration";
-import { setEncrypted } from "../Utils/Cryptoutils"; 
+import { API, UPLOAD_API_URL, FILE_API_URL, checkDbError, extractBackendError } from "./ApiConfiguration";
+import { setEncrypted } from "../Utils/Cryptoutils";
 
 const CHANNEL_ID = 1;
 const PRODUCTION_MODE = 0;
@@ -13,25 +13,6 @@ export const getUserId = () => {
   return localStorage.getItem("userId");
 };
 
-/* const baseURL = import.meta.env.PROD
-  ? `${import.meta.env.VITE_API_BASE_URL}/api`
-  : '/api';
-
-const UPLOAD_API_URL = import.meta.env.PROD
-  ? `${import.meta.env.VITE_FTP_BASE_URL}/upload`
-  : '/upload';
-
-const FILE_API_URL = import.meta.env.PROD
-  ? `${import.meta.env.VITE_FTP_BASE_URL}/file`
-  : '/file';
-
-const API = axios.create({
-  baseURL,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-}); */
 
 export const generateRefKey = () => {
   const sessionRef = getSessionRef();
@@ -138,17 +119,17 @@ export const forgetPassword = async (username, email) => {
       localStorage.setItem("sessionRef", sessionRef);
 
       console.log("Forget Password Result:", result);
-      return { 
-        success: true, 
-        message: result.message || "Mail Sent Successfully" 
+      return {
+        success: true,
+        message: result.message || "Mail Sent Successfully"
       };
     } else {
       throw new Error(result?.message || "Failed to send reset email");
     }
   } catch (err) {
     throw new Error(
-      err.response?.data?.message || 
-      err.message || 
+      err.response?.data?.message ||
+      err.message ||
       "Network error - please try again later"
     );
   }
@@ -194,7 +175,6 @@ export const renewToken = async () => {
     return { success: false, responseTime };
   }
 };
-
 
 export const uploadPhoto = async (clinicId, file, fileAccessToken) => {
   try {
@@ -312,7 +292,6 @@ export const getFile = async (clinicId, fileId, fileAccessToken) => {
   }
 };
 
-
 export const getClinicList = async (options = {}) => {
   const userId = getUserId();
   if (!userId) {
@@ -334,18 +313,18 @@ export const getClinicList = async (options = {}) => {
     ClinicName: options.ClinicName || "",
     Mobile: options.Mobile || "",
     GstNo: options.GstNo || "",
-    Status: options.Status ?? -1           
+    Status: options.Status ?? -1
   };
 
   try {
     const response = await API.post("/GetClinicList", payload);
 
-    // Safety: ensure result is an array
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
 
     console.log("GetClinicList response:", results);
 
-    // Map backend response to clean frontend shape
     return results.map((clinic) => ({
       id: clinic.clinic_id,
       name: clinic.clinic_name,
@@ -378,7 +357,7 @@ export const getClinicList = async (options = {}) => {
       ...error,
       status: error.response?.status || 500,
       code: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || 'Failed to fetch clinic list'
+      message: extractBackendError(error) || error.response?.data?.message || error.message || 'Failed to fetch clinic list'
     };
 
     throw errorWithStatus;
@@ -419,7 +398,7 @@ export const addClinic = async (clinicData) => {
     ProfileName: clinicData.profileName || "admin" // optional, defaulting to "admin"
   };
 
-  console.log("Add Clinic:",payload)
+  console.log("Add Clinic:", payload)
 
   try {
     const response = await API.post("/AddClinic", payload);
@@ -427,6 +406,8 @@ export const addClinic = async (clinicData) => {
     console.log("AddClinic response:", response.data);
 
     const result = response.data?.result;
+
+    checkDbError(result);
 
     // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
@@ -451,10 +432,11 @@ export const addClinic = async (clinicData) => {
       ...error,
       status: error.response?.status || 500,
       code: error.response?.status || 500,
-      message: 
-        error.response?.data?.message || 
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
-        error.message || 
+        error.message ||
         "Failed to add clinic"
     };
 
@@ -462,7 +444,6 @@ export const addClinic = async (clinicData) => {
   }
 };
 
-// In your api.js — replace the entire updateClinic function with this:
 export const updateClinic = async (clinicData) => {
   const userId = getUserId();
   if (!userId) {
@@ -499,11 +480,13 @@ export const updateClinic = async (clinicData) => {
     SgstPercentage: Number(clinicData.SgstPercentage) || 0,
     Status: Number(clinicData.Status) || 1,
   };
-  console.log("Update Clinic:",payload)
+  console.log("Update Clinic:", payload)
 
   try {
     const response = await API.post("/UpdateClinic", payload);
     const result = response.data?.result;
+
+    checkDbError(result);
 
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Update failed");
@@ -513,11 +496,80 @@ export const updateClinic = async (clinicData) => {
   } catch (error) {
     console.error("updateClinic error:", error);
     throw new Error(
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
       "Failed to update clinic"
     );
+  }
+};
+
+export const deleteClinic = async (clinicId) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (!clinicId || isNaN(Number(clinicId))) {
+    const validationError = new Error("Valid Clinic ID is required");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: Number(clinicId),     
+  };
+
+  console.log("Delete Clinic Payload:", payload);
+
+  try {
+    const response = await API.post("/DeleteClinic", payload);
+
+    console.log("DeleteClinic response:", response.data);
+
+    const result = response.data?.result;
+
+    checkDbError(result);
+
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to delete clinic");
+    }
+
+    return {
+      success: true,
+      clinicId: result.IN_CLINIC_ID || Number(clinicId), 
+      message: result.OUT_ERROR || "Clinic deleted successfully" 
+    };
+
+  } catch (error) {
+    console.error("deleteClinic failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message ||
+        "Failed to delete clinic"
+    };
+
+    throw errorWithStatus;
   }
 };
 
@@ -530,7 +582,7 @@ export const getBranchList = async (clinicId = 0, options = {}) => {
     throw authError;
   }
 
- 
+
   if (PRODUCTION_MODE !== true) {
     if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
       const error = new Error("Invalid Clinic ID");
@@ -559,7 +611,9 @@ export const getBranchList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetBranchList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetBranchList response:", results);
 
     return results.map((branch) => ({
@@ -582,7 +636,7 @@ export const getBranchList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch branches"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch branches"
     };
     throw err;
   }
@@ -597,7 +651,7 @@ export const addBranch = async (branchData) => {
     throw authError;
   }
 
-   if (PRODUCTION_MODE !== true) {
+  if (PRODUCTION_MODE !== true) {
     if (branchData.clinicId < 0 || (branchData.clinicId !== 0 && isNaN(branchData.clinicId))) {
       const error = new Error("Invalid Clinic ID");
       error.status = 400;
@@ -651,10 +705,10 @@ export const addBranch = async (branchData) => {
       ...error,
       status: error.response?.status || 500,
       code: error.response?.status || 500,
-      message: 
-        error.response?.data?.message || 
+      message:
+        error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
-        error.message || 
+        error.message ||
         "Failed to add branch"
     };
 
@@ -671,7 +725,7 @@ export const updateBranch = async (branchData) => {
     throw authError;
   }
 
-  // BranchID is mandatory for update
+
   if (!branchData?.branchId && branchData?.branchId !== 0) {
     const validationError = new Error("BranchID is required to update a branch.");
     validationError.status = 400;
@@ -720,6 +774,7 @@ export const updateBranch = async (branchData) => {
     console.log("UpdateBranch response:", response.data);
 
     const result = response.data?.result;
+    checkDbError(result);
 
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update branch");
@@ -734,7 +789,8 @@ export const updateBranch = async (branchData) => {
   } catch (error) {
     console.error("updateBranch error:", error);
 
-    const errorMessage = 
+    const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -748,75 +804,148 @@ export const updateBranch = async (branchData) => {
   }
 };
 
-  export const getDepartmentList = async (clinicId = 0, branchId = 0, options = {}) => {
-    const userId = getUserId();
-    if (!userId) {
-      const authError = new Error("User ID is missing. Please log in again.");
-      authError.status = 401;
-      authError.code = 401;
-      throw authError;
+export const deleteBranch = async (branchId) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (!branchId || isNaN(Number(branchId))) {
+    const validationError = new Error("Valid Branch ID is required");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    BranchID: Number(branchId),     
+  };
+
+  console.log("Delete Branch Payload:", payload);
+
+  try {
+    const response = await API.post("/DeleteBranch", payload);
+
+    console.log("DeleteBranch response:", response.data);
+
+    const result = response.data?.result;
+
+    checkDbError(result);
+
+   
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response from server");
     }
 
-    if (clinicId < 0 || branchId < 0) {
-      const error = new Error("Invalid Clinic ID or Branch ID");
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to delete branch");
+    }
+
+    
+    return {
+      success: true,
+      branchId: result.IN_BRANCH_ID || Number(branchId), 
+      message: result.OUT_ERROR || "Branch deleted successfully" 
+    };
+
+  } catch (error) {
+    console.error("deleteBranch failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message ||
+        "Failed to delete branch"
+    };
+
+    throw errorWithStatus;
+  }
+};
+
+export const getDepartmentList = async (clinicId = 0, branchId = 0, options = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (clinicId < 0 || branchId < 0) {
+    const error = new Error("Invalid Clinic ID or Branch ID");
+    error.status = 400;
+    throw error;
+  }
+
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
       error.status = 400;
       throw error;
     }
+  }
 
-    if (PRODUCTION_MODE !== true) {
-      if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
-        const error = new Error("Invalid Clinic ID");
-        error.status = 400;
-        throw error;
-      }
-    }
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : branchId;
 
-    const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
-    const finalBranchId = PRODUCTION_MODE ? getBranchId() : branchId;
-
-    const payload = {
-      CHANNEL_ID,
-      REF_KEY: generateRefKey(),
-      SESSION_REF: getSessionRef(),
-      USER_ID: parseInt(userId),
-      Page: options.Page || 1,
-      PageSize: options.PageSize || 50,
-      ClinicID: finalClinicId,
-      BranchID: finalBranchId,
-      DepartmentID: options.DepartmentID || 0,
-      DepartmentName: options.DepartmentName || ""
-    };
-    
-    console.log("getDepartmentList Payload",payload)
-
-    try {
-      const response = await API.post("/GetDepartmentList", payload);
-      const results = Array.isArray(response.data?.result) ? response.data.result : [];
-
-      console.log("GetDepartmentList response:", results);
-
-      return results.map((dept) => ({
-        id: dept.department_id,
-        uniqueSeq: dept.unique_seq,
-        clinicId: dept.clinic_id,
-        clinicName: dept.clinic_name || "—",
-        branchId: dept.branch_id,
-        branchName: dept.branch_name || "—",
-        name: dept.department_name,
-        profile: dept.profile || null,           // This is your description field
-        dateCreated: dept.date_created,
-        dateModified: dept.date_modified
-      }));
-    } catch (error) {
-      console.error("getDepartmentList failed:", error);
-      const err = {
-        ...error,
-        status: error.response?.status || 500,
-        message: error.response?.data?.message || error.message || "Failed to fetch departments"
-      };
-      throw err;
-    }
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 50,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    DepartmentID: options.DepartmentID || 0,
+    DepartmentName: options.DepartmentName || ""
   };
+
+  console.log("getDepartmentList Payload", payload)
+
+  try {
+    const response = await API.post("/GetDepartmentList", payload);
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
+
+    console.log("GetDepartmentList response:", results);
+
+    return results.map((dept) => ({
+      id: dept.department_id,
+      uniqueSeq: dept.unique_seq,
+      clinicId: dept.clinic_id,
+      clinicName: dept.clinic_name || "—",
+      branchId: dept.branch_id,
+      branchName: dept.branch_name || "—",
+      name: dept.department_name,
+      profile: dept.profile || null,           // This is your description field
+      dateCreated: dept.date_created,
+      dateModified: dept.date_modified
+    }));
+  } catch (error) {
+    console.error("getDepartmentList failed:", error);
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch departments"
+    };
+    throw err;
+  }
+};
 
 export const addDepartment = async (departmentData) => {
   const userId = getUserId();
@@ -838,7 +967,7 @@ export const addDepartment = async (departmentData) => {
   const finalClinicId = PRODUCTION_MODE ? getClinicId() : (departmentData.clinicId || 0);
   const finalBranchId = PRODUCTION_MODE ? getBranchId() : (departmentData.branchId || 0);
 
-  // Base payload with required auth fields
+  
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
@@ -847,7 +976,7 @@ export const addDepartment = async (departmentData) => {
     ClinicID: finalClinicId,
     BranchID: finalBranchId,
     DepartmentName: departmentData.departmentName || "",
-    Profile: departmentData.profile || "" // Description / full name
+    Profile: departmentData.profile || "" 
   };
 
   console.log("Add Department", payload)
@@ -858,8 +987,8 @@ export const addDepartment = async (departmentData) => {
     console.log("AddDepartment response:", response.data);
 
     const result = response.data?.result;
+    checkDbError(result);
 
-    // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
     }
@@ -868,11 +997,10 @@ export const addDepartment = async (departmentData) => {
       throw new Error(result.OUT_ERROR || "Failed to add department");
     }
 
-    // Return success with new department ID
     return {
       success: true,
       departmentId: result.OUT_DEPARTMENT_ID,
-      message: result.OUT_ERROR // usually "OK"
+      message: result.OUT_ERROR 
     };
 
   } catch (error) {
@@ -882,10 +1010,11 @@ export const addDepartment = async (departmentData) => {
       ...error,
       status: error.response?.status || 500,
       code: error.response?.status || 500,
-      message: 
-        error.response?.data?.message || 
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
-        error.message || 
+        error.message ||
         "Failed to add department"
     };
 
@@ -909,7 +1038,6 @@ export const updateDepartment = async (departmentData) => {
     throw validationError;
   }
 
-  // ClinicID is also required (as per your payload)
   if (!departmentData?.clinicId && departmentData?.clinicId !== 0) {
     const validationError = new Error("ClinicID is required to update a department.");
     validationError.status = 400;
@@ -934,7 +1062,6 @@ export const updateDepartment = async (departmentData) => {
     USER_ID: parseInt(userId),
     DepartmentID: departmentData.departmentId,
     ClinicID: finalClinicId,
-
     DepartmentName: departmentData.DepartmentName?.trim() || "",
     Profile: departmentData.Profile?.trim() || ""
   };
@@ -946,6 +1073,8 @@ export const updateDepartment = async (departmentData) => {
     console.log("UpdateDepartment response:", response.data);
 
     const result = response.data?.result;
+
+    checkDbError(result);
 
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update department");
@@ -960,7 +1089,8 @@ export const updateDepartment = async (departmentData) => {
   } catch (error) {
     console.error("updateDepartment error:", error);
 
-    const errorMessage = 
+    const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1002,7 +1132,7 @@ export const getEmployeeList = async (clinicId = 0, options = {}) => {
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
     Page: options.Page || 1,
-    PageSize: options.PageSize || 20,       
+    PageSize: options.PageSize || 20,
     EmployeeID: options.EmployeeID || 0,
     ClinicID: finalClinicId,
     BranchID: finalBranchId,
@@ -1011,14 +1141,16 @@ export const getEmployeeList = async (clinicId = 0, options = {}) => {
     Name: options.Name || "",
     Mobile: options.Mobile || "",
     EmployeeCode: options.EmployeeCode || "",
-    Status: options.Status ?? -1          
+    Status: options.Status ?? -1
   };
 
   console.log("get Employee:", payload);
 
   try {
     const response = await API.post("/GetEmployeeList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetEmployeeList response:", results);
 
     return results.map((emp) => ({
@@ -1067,7 +1199,7 @@ export const getEmployeeList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch employees"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch employees"
     };
 
     throw err;
@@ -1113,14 +1245,14 @@ export const addEmployee = async (employeeData) => {
     FirstName: employeeData.firstName || "",
     LastName: employeeData.lastName || "",
     PhotoFileID: employeeData.photoFileId ?? 0,
-    Gender: employeeData.gender ?? 0,                
-    BirthDate: employeeData.birthDate || "",         
+    Gender: employeeData.gender ?? 0,
+    BirthDate: employeeData.birthDate || "",
     BloodGroup: employeeData.bloodGroup ?? 0,
     MaritalStatus: employeeData.maritalStatus ?? 0,
     Address: employeeData.address || "",
     Mobile: employeeData.mobile || "",
     AltMobile: employeeData.altMobile || "",
-    Email: employeeData.email || "", 
+    Email: employeeData.email || "",
     DepartmentID: employeeData.departmentId ?? 0,
     Designation: employeeData.designation ?? 0,
     Qualification: employeeData.qualification || "",
@@ -1134,7 +1266,7 @@ export const addEmployee = async (employeeData) => {
     ShiftID: employeeData.shiftId ?? 0
   };
 
-  console.log("Add Employee",payload)
+  console.log("Add Employee", payload)
 
   try {
     const response = await API.post("/AddEmployee", payload);
@@ -1142,6 +1274,8 @@ export const addEmployee = async (employeeData) => {
     console.log("AddEmployee response:", response.data);
 
     const result = response.data?.result;
+
+    checkDbError(result);
 
     // Validate expected response structure (matches your sample)
     if (!result || typeof result.OUT_OK === "undefined") {
@@ -1166,10 +1300,11 @@ export const addEmployee = async (employeeData) => {
       ...error,
       status: error.response?.status || 500,
       code: error.response?.status || 500,
-      message: 
-        error.response?.data?.message || 
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
-        error.message || 
+        error.message ||
         "Failed to add employee"
     };
 
@@ -1254,6 +1389,7 @@ export const updateEmployee = async (employeeData) => {
     console.log("UpdateEmployee response:", response.data);
 
     const result = response.data?.result;
+    checkDbError(result);
 
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update employee");
@@ -1269,6 +1405,7 @@ export const updateEmployee = async (employeeData) => {
     console.error("updateEmployee error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1312,6 +1449,7 @@ export const deleteEmployee = async (employeeId) => {
   try {
     const response = await API.post("/DeleteEmployee", payload);
     const result = response.data?.result;
+    checkDbError(result);
 
     // Validate backend response
     if (!result || result.OUT_OK !== 1) {
@@ -1328,6 +1466,7 @@ export const deleteEmployee = async (employeeId) => {
     console.error("deleteEmployee error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1380,7 +1519,9 @@ export const getEmployeeProofList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetEmployeeProofList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetEmployeeProofList response:", results);
 
     return results.map((proof) => ({
@@ -1410,7 +1551,7 @@ export const getEmployeeProofList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch employee proofs"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch employee proofs"
     };
 
     throw err;
@@ -1426,7 +1567,6 @@ export const addEmployeeProof = async (proofData) => {
     throw authError;
   }
 
-  // Basic required-field validation
   if (!proofData?.employeeId || proofData.employeeId === 0) {
     const validationError = new Error("Employee ID is required");
     validationError.status = 400;
@@ -1445,7 +1585,6 @@ export const addEmployeeProof = async (proofData) => {
     throw validationError;
   }
 
-  // In dev mode you might want to validate ClinicID / BranchID more strictly
   if (PRODUCTION_MODE !== true) {
     if (proofData.clinicId < 0 || (proofData.clinicId !== 0 && isNaN(proofData.clinicId))) {
       const error = new Error("Invalid Clinic ID");
@@ -1481,7 +1620,8 @@ export const addEmployeeProof = async (proofData) => {
 
     const result = response.data?.result;
 
-    // Validate expected response structure
+    checkDbError(result);
+    
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
     }
@@ -1504,10 +1644,11 @@ export const addEmployeeProof = async (proofData) => {
       ...error,
       status: error.response?.status || 500,
       code: error.response?.status || 500,
-      message: 
-        error.response?.data?.message || 
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
-        error.message || 
+        error.message ||
         "Failed to add employee proof"
     };
 
@@ -1584,6 +1725,8 @@ export const updateEmployeeProof = async (proofData) => {
 
     const result = response.data?.result;
 
+    checkDbError(result);
+
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update employee proof");
     }
@@ -1598,6 +1741,7 @@ export const updateEmployeeProof = async (proofData) => {
     console.error("updateEmployeeProof error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1620,7 +1764,6 @@ export const deleteEmployeeProof = async (proofId) => {
     throw authError;
   }
 
-  // ProofID is mandatory for delete
   if (!proofId && proofId !== 0) {
     const validationError = new Error("ProofID is required to delete an employee proof.");
     validationError.status = 400;
@@ -1641,8 +1784,9 @@ export const deleteEmployeeProof = async (proofId) => {
   try {
     const response = await API.post("/DeleteEmployeeProof", payload);
     const result = response.data?.result;
+    checkDbError(result);
 
-    // Validate backend response
+
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete employee proof");
     }
@@ -1657,6 +1801,7 @@ export const deleteEmployeeProof = async (proofId) => {
     console.error("deleteEmployeeProof error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1711,7 +1856,9 @@ export const getEmployeeBeneficiaryAccountList = async (clinicId = 0, options = 
 
   try {
     const response = await API.post("/GetEmployeeBeneficiaryAccountList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetEmployeeBeneficiaryAccountList response:", results);
 
     return results.map((account) => ({
@@ -1742,7 +1889,7 @@ export const getEmployeeBeneficiaryAccountList = async (clinicId = 0, options = 
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch employee beneficiary accounts"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch employee beneficiary accounts"
     };
 
     throw err;
@@ -1772,8 +1919,8 @@ export const addEmployeeBeneficiaryAccount = async (beneficiaryData) => {
   }
 
   // In production these come from context/session; in dev they may come from form
-  const finalClinicId  = PRODUCTION_MODE ? getClinicId()  : (beneficiaryData.ClinicID  || 0);
-  const finalBranchId  = PRODUCTION_MODE ? getBranchId()  : (beneficiaryData.BranchID  || 0);
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (beneficiaryData.ClinicID || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (beneficiaryData.BranchID || 0);
   const finalEmployeeId = beneficiaryData.EmployeeID;   // usually sent explicitly – no fallback to global
 
   const payload = {
@@ -1800,8 +1947,8 @@ export const addEmployeeBeneficiaryAccount = async (beneficiaryData) => {
     console.log("AddEmployeeBeneficiaryAccount response:", response.data);
 
     const result = response.data?.result;
-
-    // Validate expected response structure
+    checkDbError(result);
+    
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
     }
@@ -1825,6 +1972,7 @@ export const addEmployeeBeneficiaryAccount = async (beneficiaryData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -1891,18 +2039,18 @@ export const updateEmployeeBeneficiaryAccount = async (beneficiaryData) => {
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
-    
+
     BeneficiaryID: beneficiaryData.BeneficiaryID || 0,
     ClinicID: finalClinicId,
     BranchID: finalBranchId,
     EmployeeID: beneficiaryData.EmployeeID || 0,
-    
+
     AccountHolderName: beneficiaryData.AccountHolderName?.trim() || "",
     AccountNo: beneficiaryData.AccountNo?.trim() || "",
     IFSCCode: beneficiaryData.IFSCCode?.trim() || "",
     BankName: beneficiaryData.BankName?.trim() || "",
     BankAddress: beneficiaryData.BankAddress?.trim() || "",
-    
+
     IsDefault: beneficiaryData.IsDefault ?? 0,
     Status: beneficiaryData.Status ?? 1   // usually 1 = active
   };
@@ -1914,6 +2062,8 @@ export const updateEmployeeBeneficiaryAccount = async (beneficiaryData) => {
     console.log("UpdateEmployeeBeneficiaryAccount response:", response.data);
 
     const result = response.data?.result;
+
+    checkDbError(result);
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update beneficiary account");
     }
@@ -1927,6 +2077,7 @@ export const updateEmployeeBeneficiaryAccount = async (beneficiaryData) => {
     console.error("updateEmployeeBeneficiaryAccount error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1949,7 +2100,6 @@ export const deleteEmployeeBeneficiaryAccount = async (beneficiaryId) => {
     throw authError;
   }
 
-  // BeneficiaryID is mandatory
   if (!beneficiaryId && beneficiaryId !== 0) {
     const validationError = new Error("BeneficiaryID is required to delete beneficiary account.");
     validationError.status = 400;
@@ -1970,8 +2120,8 @@ export const deleteEmployeeBeneficiaryAccount = async (beneficiaryId) => {
   try {
     const response = await API.post("/DeleteEmployeeBeneficiaryAccount", payload);
     const result = response.data?.result;
+    checkDbError(result);
 
-    // Validate backend response (following same pattern as deleteEmployee)
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete beneficiary account");
     }
@@ -1985,6 +2135,7 @@ export const deleteEmployeeBeneficiaryAccount = async (beneficiaryId) => {
     console.error("deleteEmployeeBeneficiaryAccount error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -2025,13 +2176,15 @@ export const getEmployeeShiftList = async (clinicId = 0, options = {}) => {
     Page: options.Page || 1,
     PageSize: options.PageSize || 20,
     ClinicID: finalClinicId,
-    EmployeeID: options.EmployeeID || 0,   
+    EmployeeID: options.EmployeeID || 0,
     ShiftID: options.ShiftID || 0
   };
 
   try {
     const response = await API.post("/GetEmployeeShiftList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetEmployeeShiftList response:", results);
 
     return results.map((item) => ({
@@ -2042,8 +2195,8 @@ export const getEmployeeShiftList = async (clinicId = 0, options = {}) => {
       employeeCode: item.EmployeeCode || "",
       shiftId: item.ShiftID,
       shiftName: item.ShiftName || "Unknown",
-      shiftStartTime: item.ShiftStartTime || null, 
-      shiftEndTime: item.ShiftEndTime || null,     
+      shiftStartTime: item.ShiftStartTime || null,
+      shiftEndTime: item.ShiftEndTime || null,
     }));
   } catch (error) {
     console.error("getEmployeeShiftList failed:", error);
@@ -2051,7 +2204,7 @@ export const getEmployeeShiftList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch employee shifts"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch employee shifts"
     };
 
     throw err;
@@ -2102,6 +2255,8 @@ export const addEmployeeShift = async (shiftData) => {
 
     const result = response.data?.result;
 
+    checkDbError(result);
+
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
     }
@@ -2123,6 +2278,7 @@ export const addEmployeeShift = async (shiftData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -2162,6 +2318,7 @@ export const deleteEmployeeShift = async (shiftMapId) => {
   try {
     const response = await API.post("/DeleteEmployeeShift", payload);
     const result = response.data?.result;
+    checkDbError(result);
 
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete employee shift");
@@ -2169,7 +2326,7 @@ export const deleteEmployeeShift = async (shiftMapId) => {
 
     return {
       success: true,
-      shiftMapId: result.IN_ShiftMapID || shiftMapId, 
+      shiftMapId: result.IN_ShiftMapID || shiftMapId,
       message: "Employee shift deleted successfully"
     };
 
@@ -2177,6 +2334,7 @@ export const deleteEmployeeShift = async (shiftMapId) => {
     console.error("deleteEmployeeShift error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -2219,12 +2377,14 @@ export const getShiftList = async (clinicId = 0, options = {}) => {
     ShiftID: options.ShiftID || 0,
     ClinicID: finalClinicId,
     ShiftName: options.ShiftName || "",
-    Status: options.Status ?? -1   
+    Status: options.Status ?? -1
   };
 
   try {
     const response = await API.post("/GetWorkShiftList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetWorkShiftList response:", results);
 
     return results.map((shift) => ({
@@ -2233,9 +2393,9 @@ export const getShiftList = async (clinicId = 0, options = {}) => {
       clinicId: shift.clinic_id,
       clinicName: shift.clinic_name,
       shiftName: shift.shift_name || "Unnamed Shift",
-      timeStart: shift.shift_time_start || null,  
-      timeEnd: shift.shift_time_end || null,       
-      workingHours: shift.working_hours || null,   
+      timeStart: shift.shift_time_start || null,
+      timeEnd: shift.shift_time_end || null,
+      workingHours: shift.working_hours || null,
       status: shift.status === 1 ? "active" : "inactive",
       statusDesc: shift.status_desc || "Unknown",
       dateCreated: shift.date_created || null,
@@ -2247,7 +2407,7 @@ export const getShiftList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch work shifts"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch work shifts"
     };
 
     throw err;
@@ -2293,9 +2453,9 @@ export const addShift = async (shiftData) => {
     USER_ID: parseInt(userId),
     ClinicID: finalClinicId,
     ShiftName: shiftData.ShiftName?.trim() || "",
-    ShiftTimeStart: shiftData.ShiftTimeStart || "",   
-    ShiftTimeEnd: shiftData.ShiftTimeEnd || "",       
-    WorkingHours: shiftData.WorkingHours ?? null     
+    ShiftTimeStart: shiftData.ShiftTimeStart || "",
+    ShiftTimeEnd: shiftData.ShiftTimeEnd || "",
+    WorkingHours: shiftData.WorkingHours ?? null
   };
 
   console.log("Add Work Shift payload:", payload);
@@ -2306,6 +2466,8 @@ export const addShift = async (shiftData) => {
     console.log("AddWorkShift response:", response.data);
 
     const result = response.data?.result;
+
+    checkDbError(result);
 
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -2328,10 +2490,11 @@ export const addShift = async (shiftData) => {
       ...error,
       status: error.response?.status || 500,
       code: error.response?.status || 500,
-      message: 
-        error.response?.data?.message || 
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
-        error.message || 
+        error.message ||
         "Failed to add work shift"
     };
 
@@ -2380,10 +2543,10 @@ export const updateShift = async (shiftData) => {
     ShiftID: shiftData.ShiftID || 0,
     ClinicID: finalClinicId,
     ShiftName: shiftData.ShiftName?.trim() || "",
-    ShiftTimeStart: shiftData.ShiftTimeStart?.trim() || "",   
-    ShiftTimeEnd: shiftData.ShiftTimeEnd?.trim() || "",       
-    WorkingHours: shiftData.WorkingHours ?? null,             
-    Status: shiftData.Status ?? 1                           
+    ShiftTimeStart: shiftData.ShiftTimeStart?.trim() || "",
+    ShiftTimeEnd: shiftData.ShiftTimeEnd?.trim() || "",
+    WorkingHours: shiftData.WorkingHours ?? null,
+    Status: shiftData.Status ?? 1
   };
 
   console.log("updateShift payload:", payload);
@@ -2394,13 +2557,15 @@ export const updateShift = async (shiftData) => {
 
     const result = response.data?.result;
 
+    checkDbError(result);
+
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update work shift");
     }
 
     return {
       success: true,
-      shiftId: result.IN_SHIFT_ID || shiftData.ShiftID, 
+      shiftId: result.IN_SHIFT_ID || shiftData.ShiftID,
       message: "Work shift updated successfully"
     };
 
@@ -2408,6 +2573,7 @@ export const updateShift = async (shiftData) => {
     console.error("updateShift error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -2450,6 +2616,7 @@ export const deleteShift = async (shiftId) => {
   try {
     const response = await API.post("/DeleteWorkShift", payload);
     const result = response.data?.result;
+    checkDbError(result);
 
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete work shift");
@@ -2457,7 +2624,7 @@ export const deleteShift = async (shiftId) => {
 
     return {
       success: true,
-      shiftId: result.IN_SHIFT_ID || shiftId,   
+      shiftId: result.IN_SHIFT_ID || shiftId,
       message: "Work shift deleted successfully"
     };
 
@@ -2465,6 +2632,7 @@ export const deleteShift = async (shiftId) => {
     console.error("deleteShift error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -2515,7 +2683,9 @@ export const getWorkDaysList = async (clinicId = 0, employeeId) => {
 
   try {
     const response = await API.post("/GetWorkDays", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetWorkDays response:", results);
 
     return results.map((day) => ({
@@ -2534,7 +2704,7 @@ export const getWorkDaysList = async (clinicId = 0, employeeId) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch work days"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch work days"
     };
 
     throw err;
@@ -2592,6 +2762,7 @@ export const addWorkDays = async (workdayData) => {
     console.log("AddWorkDays response:", response.data);
 
     const result = response.data?.result;
+    checkDbError(result);
 
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -2615,6 +2786,7 @@ export const addWorkDays = async (workdayData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -2646,7 +2818,7 @@ export const deleteWorkDays = async (workDaysId) => {
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
-    WorkDaysID: workDaysId       
+    WorkDaysID: workDaysId
   };
 
   console.log("deleteWorkDays payload:", payload);
@@ -2654,6 +2826,7 @@ export const deleteWorkDays = async (workDaysId) => {
   try {
     const response = await API.post("/DeleteWorkDays", payload);
     const result = response.data?.result;
+    checkDbError(result);
 
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete work days record");
@@ -2669,6 +2842,7 @@ export const deleteWorkDays = async (workDaysId) => {
     console.error("deleteWorkDays error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -2729,7 +2903,9 @@ export const getPatientsList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetPatientList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetPatientList response:", results);
 
     return results.map((patient) => ({
@@ -2743,11 +2919,11 @@ export const getPatientsList = async (clinicId = 0, options = {}) => {
       patientName: patient.patient_name,
       firstName: patient.first_name,
       lastName: patient.last_name,
-      gender: patient.gender,               
+      gender: patient.gender,
       genderDesc: patient.gender_desc || "Unknown",
       birthDate: patient.birth_date || null,
-      age: patient.age || null,             
-      bloodGroup: patient.blood_group,    
+      age: patient.age || null,
+      bloodGroup: patient.blood_group,
       bloodGroupDesc: patient.blood_group_desc || null,
       maritalStatus: patient.marital_status,
       maritalStatusDesc: patient.marital_status_desc || null,
@@ -2774,7 +2950,7 @@ export const getPatientsList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch patients"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch patients"
     };
 
     throw err;
@@ -2823,23 +2999,23 @@ export const addPatient = async (patientData) => {
     ClinicID: finalClinicId,
     BranchID: finalBranchId,
     FirstName: patientData.firstName || "",
-    LastName: patientData.lastName  || "",
-    Gender: patientData.gender ??  0,
-    BirthDate: patientData.birthDate ||  "",
-    Age: patientData.age ??  0,                    
-    BloodGroup: patientData.bloodGroup ??  0,
-    PhotoFileID: patientData.photoFileId ??  0,
-    MaritalStatus: patientData.maritalStatus ??  0,
-    Mobile: patientData.mobile ||  "",
+    LastName: patientData.lastName || "",
+    Gender: patientData.gender ?? 0,
+    BirthDate: patientData.birthDate || "",
+    Age: patientData.age ?? 0,
+    BloodGroup: patientData.bloodGroup ?? 0,
+    PhotoFileID: patientData.photoFileId ?? 0,
+    MaritalStatus: patientData.maritalStatus ?? 0,
+    Mobile: patientData.mobile || "",
     AltMobile: patientData.altMobile || "",
-    Email: patientData.email ||  "",
+    Email: patientData.email || "",
     Address: patientData.address || "",
-    EmergencyContactNo: patientData.emergencyContactNo ||  "",
+    EmergencyContactNo: patientData.emergencyContactNo || "",
     Allergies: patientData.allergies || "No Allergies",
     ExistingMedicalConditions: patientData.existingMedicalConditions || "Not reported",
-    PastSurgeries: patientData.pastSurgeries ||  "Nothing",
+    PastSurgeries: patientData.pastSurgeries || "Nothing",
     CurrentMedications: patientData.currentMedications || "NA",
-    FamilyMedicalHistory: patientData.familyMedicalHistory ||  "",
+    FamilyMedicalHistory: patientData.familyMedicalHistory || "",
     ImmunizationRecords: patientData.immunizationRecords || "Not Available",
     FamilyPatientID: patientData.familyPatientId ?? 0,
   };
@@ -2853,7 +3029,8 @@ export const addPatient = async (patientData) => {
 
     const result = response.data?.result;
 
-    // Validate expected response structure
+    checkDbError(result);
+
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
     }
@@ -2877,6 +3054,7 @@ export const addPatient = async (patientData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -2962,6 +3140,8 @@ export const updatePatient = async (patientData) => {
 
     const result = response.data?.result;
 
+    checkDbError(result);
+
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update patient");
     }
@@ -2976,6 +3156,7 @@ export const updatePatient = async (patientData) => {
     console.error("updatePatient error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -2998,7 +3179,6 @@ export const deletePatient = async (patientId) => {
     throw authError;
   }
 
-  // PatientID is mandatory for delete
   if (!patientId && patientId !== 0) {
     const validationError = new Error("PatientID is required to delete a patient.");
     validationError.status = 400;
@@ -3020,7 +3200,8 @@ export const deletePatient = async (patientId) => {
     const response = await API.post("/DeletePatient", payload);
     const result = response.data?.result;
 
-    // Validate backend response
+    checkDbError(result);
+
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete patient");
     }
@@ -3035,6 +3216,7 @@ export const deletePatient = async (patientId) => {
     console.error("deletePatient error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -3055,7 +3237,7 @@ export const getSlotConfigList = async (clinicId = 0, options = {}) => {
     authError.status = 401;
     authError.code = 401;
     throw authError;
-  } 
+  }
 
   // Optional: stricter validation in non-production environments
   if (PRODUCTION_MODE !== true) {
@@ -3091,7 +3273,9 @@ export const getSlotConfigList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetSlotConfigList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetSlotConfigList response:", results);
 
     return results.map((config) => ({
@@ -3124,7 +3308,7 @@ export const getSlotConfigList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch slot configurations"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch slot configurations"
     };
 
     throw err;
@@ -3181,6 +3365,8 @@ export const addSlotConfig = async (slotConfigData) => {
 
     const result = response.data?.result;
 
+    checkDbError(result);
+
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
     }
@@ -3202,10 +3388,11 @@ export const addSlotConfig = async (slotConfigData) => {
       ...error,
       status: error.response?.status || 500,
       code: error.response?.status || 500,
-      message: 
-        error.response?.data?.message || 
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
-        error.message || 
+        error.message ||
         "Failed to add slot configuration"
     };
 
@@ -3244,7 +3431,8 @@ export const deleteSlotConfig = async (slotConfigId) => {
     const response = await API.post("/DeleteSlotConfig", payload);
     const result = response.data?.result;
 
-    // Validate backend response
+    checkDbError(result);
+
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete slot configuration");
     }
@@ -3259,6 +3447,7 @@ export const deleteSlotConfig = async (slotConfigId) => {
     console.error("deleteSlotConfig error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -3330,6 +3519,8 @@ export const generateSlots = async (slotData = {}) => {
 
     const result = response.data?.result;
 
+    checkDbError(result);
+
     if (!result || result.OUT_OK !== 1) {
       const errorMsg = result?.OUT_ERROR || "Failed to generate slots";
       throw new Error(errorMsg);
@@ -3344,6 +3535,7 @@ export const generateSlots = async (slotData = {}) => {
     console.error("generateSlots error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -3391,18 +3583,20 @@ export const getSlotList = async (clinicId = 0, options = {}) => {
     BranchID: finalBranchId,
     DoctorID: options.DoctorID || 0,
     DoctorName: options.DoctorName || "",
-    SlotDate: options.SlotDate || "",           
-    FromSlotDate: options.FromSlotDate || "",   
-    ToSlotDate: options.ToSlotDate || "",       
-    IsBooked: options.IsBooked ?? -1,           
-    Status: options.Status ?? -1               
+    SlotDate: options.SlotDate || "",
+    FromSlotDate: options.FromSlotDate || "",
+    ToSlotDate: options.ToSlotDate || "",
+    IsBooked: options.IsBooked ?? -1,
+    Status: options.Status ?? -1
   };
 
   console.log("get SlotList payload:", payload);
 
   try {
     const response = await API.post("/GetSlotList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetSlotList response:", results);
 
     return results.map((slot) => ({
@@ -3416,9 +3610,9 @@ export const getSlotList = async (clinicId = 0, options = {}) => {
       doctorFullName: slot.doctor_full_name,
       doctorCode: slot.doctor_code,
       doctorName: slot.doctor_name,
-      slotDate: slot.slot_date || null,           
-      slotTime: slot.slot_time || null,           
-      isBooked: !!slot.is_booked,                 
+      slotDate: slot.slot_date || null,
+      slotTime: slot.slot_time || null,
+      isBooked: !!slot.is_booked,
       bookedDesc: slot.booked_desc || "Unknown",
       appointmentId: slot.appointment_id ?? null,
       status: slot.status === 1 ? "active" : "inactive",
@@ -3432,7 +3626,7 @@ export const getSlotList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch slots"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch slots"
     };
 
     throw err;
@@ -3492,7 +3686,8 @@ export const addSlot = async (slotData) => {
 
     const result = response.data?.result;
 
-    // Validate expected response structure
+    checkDbError(result);
+
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
     }
@@ -3515,10 +3710,11 @@ export const addSlot = async (slotData) => {
       ...error,
       status: error.response?.status || 500,
       code: error.response?.status || 500,
-      message: 
-        error.response?.data?.message || 
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
-        error.message || 
+        error.message ||
         "Failed to add slot"
     };
 
@@ -3535,7 +3731,6 @@ export const deleteSlot = async (slotId) => {
     throw authError;
   }
 
-  // SlotID is mandatory for delete
   if (!slotId && slotId !== 0) {
     const validationError = new Error("SlotID is required to delete a slot.");
     validationError.status = 400;
@@ -3557,7 +3752,8 @@ export const deleteSlot = async (slotId) => {
     const response = await API.post("/DeleteSlot", payload);
     const result = response.data?.result;
 
-    // Validate backend response
+    checkDbError(result);
+
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete slot");
     }
@@ -3572,6 +3768,7 @@ export const deleteSlot = async (slotId) => {
     console.error("deleteSlot error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -3607,9 +3804,9 @@ export const updateSlot = async (slotData) => {
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
-    SlotID: slotData.slotId,          
-    AppointmentID: slotData.appointmentId ?? 0,   
-    IsBooked: slotData.isBooked ?? 0            
+    SlotID: slotData.slotId,
+    AppointmentID: slotData.appointmentId ?? 0,
+    IsBooked: slotData.isBooked ?? 0
   };
 
   console.log("updateSlot payload:", payload);
@@ -3619,6 +3816,8 @@ export const updateSlot = async (slotData) => {
     console.log("UpdateSlot response:", response.data);
 
     const result = response.data?.result;
+
+    checkDbError(result);
 
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update slot");
@@ -3634,6 +3833,7 @@ export const updateSlot = async (slotData) => {
     console.error("updateSlot error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -3683,22 +3883,22 @@ export const getAppointmentList = async (clinicId = 0, options = {}) => {
     PatientName: options.PatientName || "",
     DoctorID: options.DoctorID || 0,
     DoctorName: options.DoctorName || "",
-    AppointmentDate: options.AppointmentDate || "",    
-    FromDate: options.FromDate || "",                 
-    ToDate: options.ToDate || "",                     
+    AppointmentDate: options.AppointmentDate || "",
+    FromDate: options.FromDate || "",
+    ToDate: options.ToDate || "",
     SlotID: options.SlotID || 0,
-    Status: options.Status ?? -1                      
+    Status: options.Status ?? -1
   };
 
   console.log("getAppointmentList payload:", payload);
 
   try {
     const response = await API.post("/GetAppointmentList", payload);
-    
-    const results = Array.isArray(response.data?.result) 
-      ? response.data.result 
-      : [];
-    
+
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
+
     console.log("GetAppointmentList response count:", results);
 
     return results.map((appt) => ({
@@ -3731,7 +3931,7 @@ export const getAppointmentList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch appointments"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch appointments"
     };
 
     throw err;
@@ -3790,6 +3990,8 @@ export const addAppointment = async (appointmentData) => {
     console.log("AddAppointment response:", response.data);
 
     const result = response.data?.result;
+
+    checkDbError(result);
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response structure from server");
     }
@@ -3811,6 +4013,7 @@ export const addAppointment = async (appointmentData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -3850,6 +4053,7 @@ export const cancelAppointment = async (appointmentId) => {
   try {
     const response = await API.post("/CancelAppointment", payload);
     const result = response.data?.result;
+    checkDbError(result);
 
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -3869,6 +4073,7 @@ export const cancelAppointment = async (appointmentId) => {
     console.error("cancelAppointment error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -3929,8 +4134,9 @@ export const getPatientVisitList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetPatientVisitList", payload);
-    
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetPatientVisitList response:", results);
 
     return results.map((visit) => ({
@@ -3969,7 +4175,7 @@ export const getPatientVisitList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch patient visits"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch patient visits"
     };
 
     throw err;
@@ -4021,10 +4227,10 @@ export const addPatientVisit = async (visitData) => {
     VisitTime: visitData.VisitTime || "",             // HH:MM:SS or HH:MM
     Reason: visitData.reason || "",
     Symptoms: visitData.symptoms || "",
-    BPSystolic: visitData.bpSystolic ,
-    BPDiastolic: visitData.bpDiastolic ,
+    BPSystolic: visitData.bpSystolic,
+    BPDiastolic: visitData.bpDiastolic,
     Temperature: visitData.temperature,
-    Weight: visitData.weight ,
+    Weight: visitData.weight,
   };
 
   console.log("Add Patient Visit Payload:", payload);
@@ -4034,6 +4240,8 @@ export const addPatientVisit = async (visitData) => {
     console.log("AddPatientVisit response:", response.data);
 
     const result = response.data?.result;
+
+    checkDbError(result);
 
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response structure from server");
@@ -4056,6 +4264,7 @@ export const addPatientVisit = async (visitData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -4109,6 +4318,8 @@ export const updatePatientVisit = async (visitData) => {
     console.log("UpdatePatientVisit response:", response.data);
     const result = response.data?.result;
 
+    checkDbError(result);
+
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update patient visit");
     }
@@ -4123,6 +4334,7 @@ export const updatePatientVisit = async (visitData) => {
     console.error("updatePatientVisit error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -4165,7 +4377,7 @@ export const logout = async () => {
       localStorage.removeItem("userID");
       localStorage.removeItem("userId");
       localStorage.removeItem("profileName");
-      localStorage.removeItem("login_time"); 
+      localStorage.removeItem("login_timestamp"); 
       localStorage.removeItem("branchID"); 
       localStorage.removeItem("clinicID");
       localStorage.removeItem("clinicName");
@@ -4178,7 +4390,7 @@ export const logout = async () => {
   } catch (err) {
     localStorage.removeItem("SESSION_REF");
     localStorage.removeItem("sessionRef");
-    localStorage.removeItem("login_time");
+    localStorage.removeItem("login_timestamp");
     throw new Error(
       err.response?.data?.message || 
       err.response?.data?.result?.OUT_ERROR || 
@@ -4187,7 +4399,6 @@ export const logout = async () => {
     );
   }
 };
-
 
 export const getTaskList = async (taskData = {}) => {
   const userId = getUserId();
@@ -4228,6 +4439,8 @@ export const getTaskList = async (taskData = {}) => {
 
     const result = response.data?.result;
 
+    checkDbError(result);
+
     if (!result) {
       throw new Error("Failed to fetch task list");
     }
@@ -4258,6 +4471,7 @@ export const getTaskList = async (taskData = {}) => {
     console.error("getTaskList error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -4320,7 +4534,7 @@ export const addTask = async (taskData = {}) => {
     USER_ID: parseInt(userId),
     ClinicID: finalClinicId,
     BranchID: finalBranchId,
-    TaskType: Number(taskData.taskType),           
+    TaskType: Number(taskData.taskType),
     TaskName: taskData.taskName.trim(),
     TaskParamsJson: taskParams,                    // object → will be JSON.stringified by axios
     MaxRetry: Number(taskData.maxRetry ?? 3),
@@ -4334,6 +4548,7 @@ export const addTask = async (taskData = {}) => {
     console.log("AddTask response:", response.data);
 
     const result = response.data?.result;
+    checkDbError(result);
 
     if (!result || result.OUT_OK !== 1) {
       const errorMsg = result?.OUT_ERROR || "Failed to add task";
@@ -4350,6 +4565,7 @@ export const addTask = async (taskData = {}) => {
     console.error("addTask error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -4415,6 +4631,8 @@ export const deleteTask = async (taskData = {}) => {
 
     const result = response.data?.result;
 
+    checkDbError(result);
+
     if (!result || result.OUT_OK !== 1) {
       const errorMsg = result?.OUT_ERROR || "Failed to delete task";
       throw new Error(errorMsg);
@@ -4433,6 +4651,7 @@ export const deleteTask = async (taskData = {}) => {
     console.error("deleteTask error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -4476,9 +4695,9 @@ export const updatePassword = async (passwordData) => {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
-    USER_ID: parseInt(userId),          
+    USER_ID: parseInt(userId),
     ClinicID: finalClinicId,
-    UserID: finalTargetUserId,       
+    UserID: finalTargetUserId,
     Password: passwordData.Password.trim(),
   };
 
@@ -4489,6 +4708,7 @@ export const updatePassword = async (passwordData) => {
     console.log("UpdatePassword response:", response.data);
 
     const result = response.data?.result;
+    checkDbError(result);
 
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update password");
@@ -4504,6 +4724,7 @@ export const updatePassword = async (passwordData) => {
     console.error("updatePassword error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||

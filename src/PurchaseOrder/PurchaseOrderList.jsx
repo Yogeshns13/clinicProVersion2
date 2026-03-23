@@ -8,6 +8,7 @@ import Header from '../Header/Header.jsx';
 import AddPurchaseOrder from './AddPurchaseOrder.jsx';
 import styles from './PurchaseOrderList.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 // ──────────────────────────────────────────────────
 const STATUS_OPTIONS = [
@@ -33,8 +34,8 @@ const PurchaseOrderList = () => {
   const [error,   setError]                       = useState(null);
 
   // Pagination
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [page, setPage]         = useState(1);
+  const [pageSize]              = useState(20);
   const [totalRecords, setTotalRecords] = useState(0);
 
   const [filterInputs, setFilterInputs] = useState({
@@ -54,6 +55,13 @@ const PurchaseOrderList = () => {
   });
 
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+
+  // ── Button cooldown state (2-sec disable after click) ──────────────────────
+  const [btnCooldown, setBtnCooldown] = useState({});
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
 
   // ── Fetch ──────────────────────────────────────
   const fetchPurchaseOrders = async (filters) => {
@@ -76,7 +84,6 @@ const PurchaseOrderList = () => {
         ToDate:     filters.dateTo   || '',
       });
 
-      // Assuming backend returns array or { data: [], total: number }
       const orders = Array.isArray(data) ? data : data?.data || [];
       const total  = data?.total || orders.length;
 
@@ -144,11 +151,13 @@ const PurchaseOrderList = () => {
   };
 
   const handleSearch = () => {
+    triggerCooldown('search');
     setAppliedFilters({ ...filterInputs });
     setPage(1);
   };
 
   const handleClearFilters = () => {
+    triggerCooldown('clear');
     const empty = { searchType: 'VendorName', searchValue: '', status: '', dateFrom: '', dateTo: '' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
@@ -158,13 +167,21 @@ const PurchaseOrderList = () => {
   const handlePageChange = (newPage) => {
     if (newPage < 1) return;
     if (newPage > Math.ceil(totalRecords / pageSize)) return;
+    triggerCooldown(`page-${newPage}`);
     setPage(newPage);
   };
 
-  const handleViewDetails = (po) => navigate(`/purchaseorderitem/${po.id}`);
-  const openAddForm        = () => setIsAddFormOpen(true);
-  const closeAddForm       = () => setIsAddFormOpen(false);
-  const handleAddSuccess   = () => fetchPurchaseOrders(appliedFilters);
+  const handleViewDetails = (po) => {
+    triggerCooldown(`view-${po.id}`);
+    navigate(`/purchaseorderitem/${po.id}`);
+  };
+
+  const openAddForm  = () => {
+    triggerCooldown('add');
+    setIsAddFormOpen(true);
+  };
+  const closeAddForm = () => setIsAddFormOpen(false);
+  const handleAddSuccess = () => fetchPurchaseOrders(appliedFilters);
 
   // ── Early returns ──────────────────────────────
   if (error && (error?.status >= 400 || error?.code >= 400)) {
@@ -172,9 +189,9 @@ const PurchaseOrderList = () => {
   }
 
   // ── Pagination calc ────────────────────────────
-  const totalPages   = Math.ceil(totalRecords / pageSize);
-  const startRecord  = totalRecords === 0 ? 0 : (page - 1) * pageSize + 1;
-  const endRecord    = Math.min(page * pageSize, totalRecords);
+  const totalPages  = Math.ceil(totalRecords / pageSize);
+  const startRecord = totalRecords === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endRecord   = Math.min(page * pageSize, totalRecords);
 
   // ── Render ─────────────────────────────────────
   return (
@@ -247,15 +264,27 @@ const PurchaseOrderList = () => {
 
           {/* Actions */}
           <div className={styles.inlineFilterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              className={styles.searchButton}
+              disabled={!!btnCooldown['search']}
+            >
               <FiSearch size={16} /> Search
             </button>
             {isFiltersActive && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
+              <button
+                onClick={handleClearFilters}
+                className={styles.clearButton}
+                disabled={!!btnCooldown['clear']}
+              >
                 <FiX size={16} /> Clear
               </button>
             )}
-            <button onClick={openAddForm} className={styles.addBtn}>
+            <button
+              onClick={openAddForm}
+              className={styles.addBtn}
+              disabled={!!btnCooldown['add']}
+            >
               <FiPlus size={17} /> Add PO
             </button>
           </div>
@@ -266,7 +295,7 @@ const PurchaseOrderList = () => {
       {/* ══ TABLE + PAGINATION ══ */}
       <div className={styles.tableSection}>
         {loading ? (
-          <div className={styles.loading}>Loading purchase orders...</div>
+          <div className={styles.loading}><LoadingPage/></div>
         ) : error ? (
           <div className={styles.error}>Error: {error.message || error}</div>
         ) : (
@@ -326,6 +355,7 @@ const PurchaseOrderList = () => {
                             <button
                               onClick={() => handleViewDetails(po)}
                               className={styles.viewBtn}
+                              disabled={!!btnCooldown[`view-${po.id}`]}
                             >
                               View Details
                             </button>
@@ -352,7 +382,7 @@ const PurchaseOrderList = () => {
                 <button
                   className={styles.pageBtn}
                   onClick={() => handlePageChange(1)}
-                  disabled={page === 1}
+                  disabled={page === 1 || !!btnCooldown['page-1']}
                   title="First page"
                 >
                   «
@@ -361,7 +391,7 @@ const PurchaseOrderList = () => {
                 <button
                   className={styles.pageBtn}
                   onClick={() => handlePageChange(page - 1)}
-                  disabled={page === 1}
+                  disabled={page === 1 || !!btnCooldown[`page-${page - 1}`]}
                   title="Previous page"
                 >
                   ‹
@@ -372,7 +402,7 @@ const PurchaseOrderList = () => {
                 <button
                   className={styles.pageBtn}
                   onClick={() => handlePageChange(page + 1)}
-                  disabled={page >= totalPages}
+                  disabled={page >= totalPages || !!btnCooldown[`page-${page + 1}`]}
                   title="Next page"
                 >
                   ›

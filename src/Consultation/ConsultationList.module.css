@@ -414,14 +414,14 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 40px;
-  padding: 10px 20px;
+  height: 35px;
+  padding: 10px 15px;
   background: linear-gradient(135deg, #016183, var(--cl-primary-end));
   color: var(--cl-text-light);
   font-weight: 700;
   font-size: 0.94rem;
   border: none;
-  border-radius: 14px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.4s ease;
   box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);

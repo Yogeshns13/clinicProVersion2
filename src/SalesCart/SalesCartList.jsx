@@ -22,16 +22,18 @@ import {
 import { getMedicineMasterList } from "../Api/ApiPharmacy.js";
 import ErrorHandler from "../Hooks/ErrorHandler.jsx";
 import Header from "../Header/Header.jsx";
+import MessagePopup from "../Hooks/MessagePopup.jsx";
 import styles from "./SalesCartList.module.css";
 import { FaClinicMedical } from "react-icons/fa";
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from "../Hooks/LoadingPage.jsx";
 
 // ──────────────────────────────────────────────────
 // CONSTANTS
 // ──────────────────────────────────────────────────
 const PRES_SEARCH_TYPE_OPTIONS = [
   { value: "patientName", label: "Patient Name" },
-  { value: "doctorName", label: "Doctor Name" },
+  { value: "doctorName",  label: "Doctor Name"  },
 ];
 
 const CART_SEARCH_TYPE_OPTIONS = [
@@ -42,51 +44,66 @@ const PAGE_SIZE = 20;
 
 const SalesCartList = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("prescriptions");
+  const [activeTab, setActiveTab] = useState(
+    () => sessionStorage.getItem("salesCartActiveTab") || "prescriptions"
+  );
 
   // Prescriptions pagination & data
   const [prescriptions, setPrescriptions] = useState([]);
-  const [presPage, setPresPage] = useState(1);
-  const [presHasNext, setPresHasNext] = useState(false);
+  const [presPage, setPresPage]           = useState(1);
+  const [presHasNext, setPresHasNext]     = useState(false);
 
   // Sales Carts pagination & data
-  const [salesCarts, setSalesCarts] = useState([]);
-  const [cartPage, setCartPage] = useState(1);
+  const [salesCarts, setSalesCarts]   = useState([]);
+  const [cartPage, setCartPage]       = useState(1);
   const [cartHasNext, setCartHasNext] = useState(false);
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error,   setError]   = useState(null);
   const [cartedPrescriptionIds, setCartedPrescriptionIds] = useState(new Set());
 
   const today = new Date().toISOString().split("T")[0];
 
   const [presFilterInputs, setPresFilterInputs] = useState({
-    searchType: "patientName",
+    searchType:  "patientName",
     searchValue: "",
-    fromDate: today,
-    toDate: today,
-    status: "",
+    fromDate:    today,
+    toDate:      today,
+    status:      "",
   });
 
   const [cartFilterInputs, setCartFilterInputs] = useState({
-    searchType: "patientName",
+    searchType:  "patientName",
     searchValue: "",
-    status: "",
+    status:      "",
   });
 
   const [confirm, setConfirm] = useState({
-    isOpen: false,
-    prescription: null,
-    details: [],
-    medicineMap: {},
+    isOpen:         false,
+    prescription:   null,
+    details:        [],
+    medicineMap:    {},
     loadingDetails: false,
-    submitting: false,
+    submitting:     false,
     submitProgress: "",
-    error: null,
-    success: false,
-    cartId: null,
+    error:          null,
+    success:        false,
+    cartId:         null,
   });
 
+  // ── Button cooldown state (2-sec disable after click) ──────────────────────
+  const [btnCooldown, setBtnCooldown] = useState({});
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
+
+  // ── MessagePopup state ──────────────────────────────────────────────────────
+  const [popup, setPopup] = useState({ visible: false, message: "", type: "success" });
+  const showPopup  = (message, type = "success") => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: "", type: "success" });
+
+  // ────────────────────────────────────────────────
   const fetchPrescriptions = async (page = presPage, overrides = {}) => {
     try {
       setLoading(true);
@@ -95,15 +112,15 @@ const SalesCartList = () => {
       const branchId = await getStoredBranchId();
       const f = { ...presFilterInputs, ...overrides };
       const options = {
-        Page: page,
-        PageSize: PAGE_SIZE,
-        BranchID: branchId,
+        Page:        page,
+        PageSize:    PAGE_SIZE,
+        BranchID:    branchId,
         PatientName: f.searchType === "patientName" ? f.searchValue.trim() : "",
-        DoctorName: f.searchType === "doctorName" ? f.searchValue.trim() : "",
-        FromDate: f.fromDate || "",
-        ToDate: f.toDate || "",
-        IsRepeat: -1,
-        Status: f.status !== "" ? Number(f.status) : -1,
+        DoctorName:  f.searchType === "doctorName"  ? f.searchValue.trim() : "",
+        FromDate:    f.fromDate || "",
+        ToDate:      f.toDate   || "",
+        IsRepeat:    -1,
+        Status:      f.status !== "" ? Number(f.status) : -1,
       };
       const data = await getPrescriptionList(clinicId, options);
       const sorted = [...data].sort(
@@ -131,11 +148,11 @@ const SalesCartList = () => {
       const branchId = await getStoredBranchId();
       const f = { ...cartFilterInputs, ...overrides };
       const options = {
-        Page: page,
-        PageSize: PAGE_SIZE,
-        BranchID: branchId,
+        Page:        page,
+        PageSize:    PAGE_SIZE,
+        BranchID:    branchId,
         PatientName: f.searchValue.trim(),
-        Status: f.status !== "" ? Number(f.status) : -1,
+        Status:      f.status !== "" ? Number(f.status) : -1,
       };
       const data = await getSalesCartList(clinicId, options);
       const sorted = [...data].sort(
@@ -165,6 +182,7 @@ const SalesCartList = () => {
     }
   }, [activeTab]);
 
+  // ────────────────────────────────────────────────
   const handlePresFilterChange = (e) => {
     const { name, value } = e.target;
     setPresFilterInputs((prev) => ({ ...prev, [name]: value }));
@@ -176,22 +194,25 @@ const SalesCartList = () => {
   };
 
   const handlePresSearch = () => {
+    triggerCooldown("pres-search");
     fetchPrescriptions(1);
     setPresPage(1);
   };
 
   const handleCartSearch = () => {
+    triggerCooldown("cart-search");
     fetchSalesCarts(1);
     setCartPage(1);
   };
 
   const clearPresFilters = () => {
+    triggerCooldown("pres-clear");
     const empty = {
-      searchType: "patientName",
+      searchType:  "patientName",
       searchValue: "",
-      fromDate: today,
-      toDate: today,
-      status: "",
+      fromDate:    today,
+      toDate:      today,
+      status:      "",
     };
     setPresFilterInputs(empty);
     fetchPrescriptions(1, empty);
@@ -199,6 +220,7 @@ const SalesCartList = () => {
   };
 
   const clearCartFilters = () => {
+    triggerCooldown("cart-clear");
     const empty = { searchType: "patientName", searchValue: "", status: "" };
     setCartFilterInputs(empty);
     fetchSalesCarts(1, empty);
@@ -208,7 +230,7 @@ const SalesCartList = () => {
   const hasPresFilters = !!(
     presFilterInputs.searchValue ||
     presFilterInputs.fromDate !== today ||
-    presFilterInputs.toDate !== today ||
+    presFilterInputs.toDate   !== today ||
     presFilterInputs.status
   );
 
@@ -218,59 +240,64 @@ const SalesCartList = () => {
 
   const handlePresPageChange = (newPage) => {
     if (newPage < 1) return;
+    triggerCooldown(`pres-page-${newPage}`);
     setPresPage(newPage);
     fetchPrescriptions(newPage);
   };
 
   const handleCartPageChange = (newPage) => {
     if (newPage < 1) return;
+    triggerCooldown(`cart-page-${newPage}`);
     setCartPage(newPage);
     fetchSalesCarts(newPage);
   };
 
+  // ────────────────────────────────────────────────
   const handleAddToCartClick = async (prescription) => {
+    triggerCooldown(`addcart-${prescription.id}`);
     setConfirm({
-      isOpen: true,
+      isOpen:         true,
       prescription,
-      details: [],
-      medicineMap: {},
+      details:        [],
+      medicineMap:    {},
       loadingDetails: true,
-      submitting: false,
+      submitting:     false,
       submitProgress: "",
-      error: null,
-      success: false,
-      cartId: null,
+      error:          null,
+      success:        false,
+      cartId:         null,
     });
     try {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       const details = await getPrescriptionDetailList(clinicId, {
-        BranchID: branchId,
+        BranchID:       branchId,
         PrescriptionID: prescription.id,
-        PageSize: 50,
+        PageSize:       50,
       });
-      if (!details.length) {
+      const activeDetails = details.filter((d) => d.status === 1);
+      if (!activeDetails.length) {
         setConfirm((prev) => ({
           ...prev,
           loadingDetails: false,
-          error: "No medicine details found for this prescription.",
         }));
+        showPopup("No medicine details found for this prescription.", 'error');
         return;
       }
-      const uniqueMedicineIds = [...new Set(details.map((d) => d.medicineId))];
+      const uniqueMedicineIds = [...new Set(activeDetails.map((d) => d.medicineId))];
       const medicinePriceResults = await Promise.all(
         uniqueMedicineIds.map((medId) =>
           getMedicineMasterList(clinicId, {
-            BranchID: branchId,
+            BranchID:   branchId,
             MedicineID: medId,
-            PageSize: 1,
+            PageSize:   1,
           })
             .then((res) => {
               const med = res?.[0];
               return {
-                id: medId,
+                id:        medId,
                 sellPrice: med ? Number(med.sellPrice) || 0 : 0,
-                name: med?.name || "",
+                name:      med?.name || "",
               };
             })
             .catch(() => ({ id: medId, sellPrice: 0, name: "" })),
@@ -282,7 +309,7 @@ const SalesCartList = () => {
       });
       setConfirm((prev) => ({
         ...prev,
-        details,
+        details:        activeDetails,
         medicineMap,
         loadingDetails: false,
       }));
@@ -291,8 +318,8 @@ const SalesCartList = () => {
       setConfirm((prev) => ({
         ...prev,
         loadingDetails: false,
-        error: err.message || "Failed to load prescription details.",
       }));
+      showPopup(err.message || "Failed to load prescription details.", 'error');
     }
   };
 
@@ -301,9 +328,9 @@ const SalesCartList = () => {
     if (!prescription || !details.length) return;
     setConfirm((prev) => ({
       ...prev,
-      submitting: true,
+      submitting:     true,
       submitProgress: "Creating sales cart...",
-      error: null,
+      error:          null,
     }));
     try {
       const clinicId = await getStoredClinicId();
@@ -312,17 +339,17 @@ const SalesCartList = () => {
         clinicId,
         branchId,
         PatientID: prescription.patientId,
-        Name: prescription.patientName || "",
+        Name:      prescription.patientName || "",
       });
       const cartId = cartResult.cartId;
       setConfirm((prev) => ({
         ...prev,
         cartId,
-        submitProgress: 'Cart created. Adding medicines...',
+        submitProgress: "Cart created. Adding medicines...",
       }));
       const errors = [];
       for (let i = 0; i < details.length; i++) {
-        const detail = details[i];
+        const detail    = details[i];
         const unitPrice = medicineMap[detail.medicineId]?.sellPrice ?? 0;
         setConfirm((prev) => ({
           ...prev,
@@ -332,12 +359,12 @@ const SalesCartList = () => {
           await addSalesCartDetail({
             clinicId,
             branchId,
-            CartID: cartId,
-            MedicineID: detail.medicineId,
-            Quantity: Number(detail.quantity) || 1,
-            UnitPrice: unitPrice,
+            CartID:             cartId,
+            MedicineID:         detail.medicineId,
+            Quantity:           Number(detail.quantity) || 1,
+            UnitPrice:          unitPrice,
             DiscountPercentage: 0,
-            BatchSelection: "FEFO",
+            BatchSelection:     "FEFO",
           });
         } catch (detailErr) {
           console.error(
@@ -350,21 +377,26 @@ const SalesCartList = () => {
       if (errors.length > 0) {
         setConfirm((prev) => ({
           ...prev,
-          submitting: false,
+          submitting:     false,
           submitProgress: "",
-          error: `Cart created but some medicines failed:\n${errors.join("\n")}`,
-          success: false,
+          success:        false,
           cartId,
         }));
+        showPopup(`Cart created but some medicines failed:\n${errors.join("\n")}`, 'error');
       } else {
         setCartedPrescriptionIds((prev) => new Set([...prev, prescription.id]));
         setConfirm((prev) => ({
           ...prev,
-          submitting: false,
+          submitting:     false,
           submitProgress: "",
-          success: true,
+          success:        true,
           cartId,
         }));
+        // Show success MessagePopup
+        showPopup(
+          `Cart created! All ${details.length} medicine(s) added successfully.`,
+          "success"
+        );
         setTimeout(() => {
           closeConfirm();
           if (activeTab === "prescriptions") fetchPrescriptions(presPage);
@@ -375,35 +407,36 @@ const SalesCartList = () => {
       console.error("Add to cart failed:", err);
       setConfirm((prev) => ({
         ...prev,
-        submitting: false,
+        submitting:     false,
         submitProgress: "",
-        error: err.message || "Failed to add sales cart.",
       }));
+      showPopup(err.message || "Failed to add sales cart.", 'error');
     }
   };
 
   const closeConfirm = () => {
     if (confirm.submitting) return;
     setConfirm({
-      isOpen: false,
-      prescription: null,
-      details: [],
-      medicineMap: {},
+      isOpen:         false,
+      prescription:   null,
+      details:        [],
+      medicineMap:    {},
       loadingDetails: false,
-      submitting: false,
+      submitting:     false,
       submitProgress: "",
-      error: null,
-      success: false,
-      cartId: null,
+      error:          null,
+      success:        false,
+      cartId:         null,
     });
   };
 
+  // ────────────────────────────────────────────────
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
     return new Date(dateStr).toLocaleDateString("en-GB", {
-      year: "numeric",
+      year:  "numeric",
       month: "short",
-      day: "numeric",
+      day:   "numeric",
     });
   };
 
@@ -420,7 +453,7 @@ const SalesCartList = () => {
 
   if (error && (error?.status >= 400 || error?.code >= 400))
     return <ErrorHandler error={error} />;
-  if (loading) return <div className={styles.loading}>Loading...</div>;
+  if (loading) return <div className={styles.loading}><LoadingPage/></div>;
   if (error)
     return <div className={styles.error}>Error: {error.message || error}</div>;
 
@@ -428,29 +461,47 @@ const SalesCartList = () => {
     records.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
 
   const getEndRecord = (page, records) =>
-    Math.min(getStartRecord(page, records) + records.length - 1, (page - 1) * PAGE_SIZE + records.length);
+    Math.min(
+      getStartRecord(page, records) + records.length - 1,
+      (page - 1) * PAGE_SIZE + records.length,
+    );
 
+  // ── Only show active prescriptions (status === 1) in the table ──
+  const activePrescriptions = prescriptions.filter((pres) => pres.status === 1);
+
+  // ────────────────────────────────────────────────
   return (
     <div className={styles.wrapper}>
       <ErrorHandler error={error} />
       <Header title="Sales Cart Management" />
 
+      {/* ── Tabs ── */}
       <div className={styles.tabs}>
         <button
           className={`${styles.tab} ${activeTab === "prescriptions" ? styles.tabActive : ""}`}
-          onClick={() => setActiveTab("prescriptions")}
+          onClick={() => {
+            triggerCooldown("tab-prescriptions");
+            sessionStorage.setItem("salesCartActiveTab", "prescriptions");
+            setActiveTab("prescriptions");
+          }}
+          disabled={!!btnCooldown["tab-prescriptions"]}
         >
           <FiFileText size={18} /> Prescriptions
         </button>
         <button
           className={`${styles.tab} ${activeTab === "salesCarts" ? styles.tabActive : ""}`}
-          onClick={() => setActiveTab("salesCarts")}
+          onClick={() => {
+            triggerCooldown("tab-salesCarts");
+            sessionStorage.setItem("salesCartActiveTab", "salesCarts");
+            setActiveTab("salesCarts");
+          }}
+          disabled={!!btnCooldown["tab-salesCarts"]}
         >
           <FiShoppingCart size={18} /> Sales Carts
         </button>
       </div>
 
-      {/* PRESCRIPTION FILTERS */}
+      {/* ── PRESCRIPTION FILTERS ── */}
       {activeTab === "prescriptions" && (
         <div className={styles.inlineFiltersContainer}>
           <div className={styles.presFiltersGrid}>
@@ -462,9 +513,7 @@ const SalesCartList = () => {
                 className={styles.searchTypeSelect}
               >
                 {PRES_SEARCH_TYPE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
               <input
@@ -516,11 +565,19 @@ const SalesCartList = () => {
             </select>
 
             <div className={styles.inlineFilterActions}>
-              <button onClick={handlePresSearch} className={styles.searchButton}>
+              <button
+                onClick={handlePresSearch}
+                className={styles.searchButton}
+                disabled={!!btnCooldown["pres-search"]}
+              >
                 <FiSearch size={15} /> Search
               </button>
               {hasPresFilters && (
-                <button onClick={clearPresFilters} className={styles.clearButton}>
+                <button
+                  onClick={clearPresFilters}
+                  className={styles.clearButton}
+                  disabled={!!btnCooldown["pres-clear"]}
+                >
                   <FiX size={15} /> Clear
                 </button>
               )}
@@ -529,7 +586,7 @@ const SalesCartList = () => {
         </div>
       )}
 
-      {/* SALES CART FILTERS */}
+      {/* ── SALES CART FILTERS ── */}
       {activeTab === "salesCarts" && (
         <div className={styles.inlineFiltersContainer}>
           <div className={styles.cartFiltersGrid}>
@@ -541,9 +598,7 @@ const SalesCartList = () => {
                 className={styles.searchTypeSelect}
               >
                 {CART_SEARCH_TYPE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
               <input
@@ -570,11 +625,19 @@ const SalesCartList = () => {
             </select>
 
             <div className={styles.inlineFilterActions}>
-              <button onClick={handleCartSearch} className={styles.searchButton}>
+              <button
+                onClick={handleCartSearch}
+                className={styles.searchButton}
+                disabled={!!btnCooldown["cart-search"]}
+              >
                 <FiSearch size={15} /> Search
               </button>
               {hasCartFilters && (
-                <button onClick={clearCartFilters} className={styles.clearButton}>
+                <button
+                  onClick={clearCartFilters}
+                  className={styles.clearButton}
+                  disabled={!!btnCooldown["cart-clear"]}
+                >
                   <FiX size={15} /> Clear
                 </button>
               )}
@@ -583,7 +646,7 @@ const SalesCartList = () => {
         </div>
       )}
 
-      {/* PRESCRIPTIONS TABLE + PAGINATION */}
+      {/* ── PRESCRIPTIONS TABLE + PAGINATION ── */}
       {activeTab === "prescriptions" && (
         <div className={styles.tableSection}>
           <div className={styles.tableContainer}>
@@ -600,14 +663,14 @@ const SalesCartList = () => {
                 </tr>
               </thead>
               <tbody>
-                {prescriptions.length === 0 ? (
+                {activePrescriptions.length === 0 ? (
                   <tr>
                     <td colSpan={7} className={styles.noData}>
                       No prescriptions found.
                     </td>
                   </tr>
                 ) : (
-                  prescriptions.map((pres) => {
+                  activePrescriptions.map((pres) => {
                     const isCarted = cartedPrescriptionIds.has(pres.id);
                     return (
                       <tr key={pres.id}>
@@ -617,27 +680,19 @@ const SalesCartList = () => {
                               {pres.patientName?.charAt(0).toUpperCase() || "P"}
                             </div>
                             <div>
-                              <div className={styles.name}>
-                                {pres.patientName}
-                              </div>
+                              <div className={styles.name}>{pres.patientName}</div>
                             </div>
                           </div>
                         </td>
                         <td>
                           <div className={styles.name}>{pres.doctorFullName}</div>
-                          <div className={styles.subText}>
-                            {pres.doctorCode || "—"}
-                          </div>
+                          <div className={styles.subText}>{pres.doctorCode || "—"}</div>
                         </td>
                         <td>
-                          <div className={styles.name}>
-                            {formatDate(pres.dateIssued)}
-                          </div>
+                          <div className={styles.name}>{formatDate(pres.dateIssued)}</div>
                         </td>
                         <td>
-                          <div className={styles.name}>
-                            {formatDate(pres.validUntil)}
-                          </div>
+                          <div className={styles.name}>{formatDate(pres.validUntil)}</div>
                         </td>
                         <td>
                           <div className={styles.notesCell}>
@@ -658,16 +713,12 @@ const SalesCartList = () => {
                             <button
                               onClick={() => handleAddToCartClick(pres)}
                               className={`${styles.addCartBtn} ${isCarted ? styles.addCartBtnDone : ""}`}
-                              disabled={isCarted}
+                              disabled={isCarted || !!btnCooldown[`addcart-${pres.id}`]}
                             >
                               {isCarted ? (
-                                <>
-                                  <FiCheckCircle size={15} /> Cart Added
-                                </>
+                                <><FiCheckCircle size={15} /> Cart Added</>
                               ) : (
-                                <>
-                                  <FiShoppingCart size={15} /> Add to Cart
-                                </>
+                                <><FiShoppingCart size={15} /> Add to Cart</>
                               )}
                             </button>
                           </div>
@@ -682,9 +733,9 @@ const SalesCartList = () => {
 
           <div className={styles.paginationBar}>
             <div className={styles.paginationInfo}>
-              {prescriptions.length > 0
-                ? `Showing ${getStartRecord(presPage, prescriptions)}–${getEndRecord(presPage, prescriptions)} records`
-                : 'No records'}
+              {activePrescriptions.length > 0
+                ? `Showing ${getStartRecord(presPage, activePrescriptions)}–${getEndRecord(presPage, activePrescriptions)} records`
+                : "No records"}
             </div>
 
             <div className={styles.paginationControls}>
@@ -693,7 +744,7 @@ const SalesCartList = () => {
               <button
                 className={styles.pageBtn}
                 onClick={() => handlePresPageChange(1)}
-                disabled={presPage === 1}
+                disabled={presPage === 1 || !!btnCooldown["pres-page-1"]}
                 title="First page"
               >
                 «
@@ -702,7 +753,7 @@ const SalesCartList = () => {
               <button
                 className={styles.pageBtn}
                 onClick={() => handlePresPageChange(presPage - 1)}
-                disabled={presPage === 1}
+                disabled={presPage === 1 || !!btnCooldown[`pres-page-${presPage - 1}`]}
                 title="Previous page"
               >
                 ‹
@@ -713,7 +764,7 @@ const SalesCartList = () => {
               <button
                 className={styles.pageBtn}
                 onClick={() => handlePresPageChange(presPage + 1)}
-                disabled={!presHasNext}
+                disabled={!presHasNext || !!btnCooldown[`pres-page-${presPage + 1}`]}
                 title="Next page"
               >
                 ›
@@ -727,7 +778,7 @@ const SalesCartList = () => {
         </div>
       )}
 
-      {/* SALES CARTS TABLE + PAGINATION */}
+      {/* ── SALES CARTS TABLE + PAGINATION ── */}
       {activeTab === "salesCarts" && (
         <div className={styles.tableSection}>
           <div className={styles.tableContainer}>
@@ -753,9 +804,7 @@ const SalesCartList = () => {
                   salesCarts.map((cart) => (
                     <tr key={cart.id}>
                       <td>
-                        <div className={styles.name}>
-                          {cart.customerName || "—"}
-                        </div>
+                        <div className={styles.name}>{cart.customerName || "—"}</div>
                       </td>
                       <td>
                         <span className={styles.itemCountBadge}>
@@ -775,17 +824,17 @@ const SalesCartList = () => {
                         </span>
                       </td>
                       <td>
-                        <div className={styles.name}>
-                          {formatDate(cart.dateCreated)}
-                        </div>
+                        <div className={styles.name}>{formatDate(cart.dateCreated)}</div>
                       </td>
                       <td>
                         <div className={styles.actionsCell}>
                           <button
-                            onClick={() =>
-                              navigate(`/salescartdetail-list/${cart.id}`)
-                            }
+                            onClick={() => {
+                              triggerCooldown(`viewcart-${cart.id}`);
+                              navigate(`/salescartdetail-list/${cart.id}`);
+                            }}
                             className={styles.viewBtn}
+                            disabled={!!btnCooldown[`viewcart-${cart.id}`]}
                           >
                             View Cart
                           </button>
@@ -802,7 +851,7 @@ const SalesCartList = () => {
             <div className={styles.paginationInfo}>
               {salesCarts.length > 0
                 ? `Showing ${getStartRecord(cartPage, salesCarts)}–${getEndRecord(cartPage, salesCarts)} records`
-                : 'No records'}
+                : "No records"}
             </div>
 
             <div className={styles.paginationControls}>
@@ -811,7 +860,7 @@ const SalesCartList = () => {
               <button
                 className={styles.pageBtn}
                 onClick={() => handleCartPageChange(1)}
-                disabled={cartPage === 1}
+                disabled={cartPage === 1 || !!btnCooldown["cart-page-1"]}
                 title="First page"
               >
                 «
@@ -820,7 +869,7 @@ const SalesCartList = () => {
               <button
                 className={styles.pageBtn}
                 onClick={() => handleCartPageChange(cartPage - 1)}
-                disabled={cartPage === 1}
+                disabled={cartPage === 1 || !!btnCooldown[`cart-page-${cartPage - 1}`]}
                 title="Previous page"
               >
                 ‹
@@ -831,7 +880,7 @@ const SalesCartList = () => {
               <button
                 className={styles.pageBtn}
                 onClick={() => handleCartPageChange(cartPage + 1)}
-                disabled={!cartHasNext}
+                disabled={!cartHasNext || !!btnCooldown[`cart-page-${cartPage + 1}`]}
                 title="Next page"
               >
                 ›
@@ -845,7 +894,7 @@ const SalesCartList = () => {
         </div>
       )}
 
-      {/* CONFIRM MODAL */}
+      {/* ── CONFIRM MODAL ── */}
       {confirm.isOpen && (
         <div
           className={styles.modalOverlay}
@@ -881,17 +930,8 @@ const SalesCartList = () => {
                   <FiCheckCircle size={48} className={styles.successIcon} />
                   <h3>Cart Created Successfully!</h3>
                   <p className={styles.successSub}>
-                    All {confirm.details.length} medicine(s) have been added to
-                    the cart.
+                    All {confirm.details.length} medicine(s) have been added to the cart.
                   </p>
-                </div>
-              )}
-              {!confirm.success && confirm.error && (
-                <div className={styles.errorBanner}>
-                  <FiAlertCircle size={18} />
-                  <span style={{ whiteSpace: "pre-line" }}>
-                    {confirm.error}
-                  </span>
                 </div>
               )}
               {!confirm.success && confirm.loadingDetails && (
@@ -925,10 +965,7 @@ const SalesCartList = () => {
                       </div>
                       <div className={styles.presInfoItem}>
                         <div className={styles.presInfoNew}>
-                          <FiCalendar
-                            size={14}
-                            className={styles.presInfoIcon}
-                          />
+                          <FiCalendar size={14} className={styles.presInfoIcon} />
                           <span className={styles.presInfoLabel}>Issued</span>
                         </div>
                         <span className={styles.presInfoValue}>
@@ -936,16 +973,9 @@ const SalesCartList = () => {
                         </span>
                       </div>
                       {confirm.prescription.diagnosis && (
-                        <div
-                          className={`${styles.presInfoItem} ${styles.presInfoFullWidth}`}
-                        >
-                          <FiFileText
-                            size={14}
-                            className={styles.presInfoIcon}
-                          />
-                          <span className={styles.presInfoLabel}>
-                            Diagnosis
-                          </span>
+                        <div className={`${styles.presInfoItem} ${styles.presInfoFullWidth}`}>
+                          <FiFileText size={14} className={styles.presInfoIcon} />
+                          <span className={styles.presInfoLabel}>Diagnosis</span>
                           <span className={styles.presInfoValue}>
                             {confirm.prescription.diagnosis}
                           </span>
@@ -974,16 +1004,13 @@ const SalesCartList = () => {
                             <tbody>
                               {confirm.details.map((detail, idx) => {
                                 const price =
-                                  confirm.medicineMap[detail.medicineId]
-                                    ?.sellPrice ?? 0;
+                                  confirm.medicineMap[detail.medicineId]?.sellPrice ?? 0;
                                 const qty = Number(detail.quantity) || 1;
                                 return (
                                   <tr key={detail.id}>
                                     <td className={styles.medIdx}>{idx + 1}</td>
                                     <td>
-                                      <div className={styles.medName}>
-                                        {detail.medicineName}
-                                      </div>
+                                      <div className={styles.medName}>{detail.medicineName}</div>
                                       {detail.genericName && (
                                         <div className={styles.medGeneric}>
                                           {detail.genericName}
@@ -991,14 +1018,10 @@ const SalesCartList = () => {
                                       )}
                                     </td>
                                     <td>
-                                      <span className={styles.formBadge}>
-                                        {detail.formDesc}
-                                      </span>
+                                      <span className={styles.formBadge}>{detail.formDesc}</span>
                                     </td>
                                     <td>
-                                      <span className={styles.qtyBadge}>
-                                        {qty}
-                                      </span>
+                                      <span className={styles.qtyBadge}>{qty}</span>
                                     </td>
                                     <td className={styles.priceCell}>
                                       {formatCurrency(price)}
@@ -1012,10 +1035,7 @@ const SalesCartList = () => {
                             </tbody>
                             <tfoot>
                               <tr>
-                                <td
-                                  colSpan={5}
-                                  className={styles.grandTotalLabel}
-                                >
+                                <td colSpan={5} className={styles.grandTotalLabel}>
                                   Grand Total
                                 </td>
                                 <td className={styles.grandTotalValue}>
@@ -1067,6 +1087,14 @@ const SalesCartList = () => {
           </div>
         </div>
       )}
+
+      {/* ── MessagePopup (at root level so z-index is never blocked) ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
     </div>
   );
 };

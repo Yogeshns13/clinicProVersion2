@@ -157,6 +157,12 @@
   transform: none;
 }
 
+.validationMsg {
+  font-size: 0.75rem;
+  color: red;
+  margin-top: 2px;
+}
+
 /* ==================== MODAL BODY (scrollable) ==================== */
 .modalBody {
   flex: 1;

@@ -4,30 +4,32 @@ import { FiSearch, FiDollarSign, FiCreditCard, FiX } from 'react-icons/fi';
 import { getInvoicePaymentList, updateInvoicePayment } from '../Api/ApiInvoicePayment.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
 import styles from './InvoicePaymentManagement.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 const PAYMENT_STATUSES = [
-  { id: 1, label: 'Success' },
+  { id: 1, label: 'Success'  },
   { id: 4, label: 'Refunded' },
-  { id: 5, label: 'Reversed' }
+  { id: 5, label: 'Reversed' },
 ];
 
 const PAYMENT_MODES = [
-  { id: 1, label: 'Cash' },
-  { id: 2, label: 'Card' },
-  { id: 3, label: 'UPI' },
+  { id: 1, label: 'Cash'        },
+  { id: 2, label: 'Card'        },
+  { id: 3, label: 'UPI'         },
   { id: 4, label: 'Net Banking' },
-  { id: 5, label: 'Wallet' },
-  { id: 6, label: 'Cheque' },
-  { id: 7, label: 'Insurance' },
-  { id: 8, label: 'Credit' }
+  { id: 5, label: 'Wallet'      },
+  { id: 6, label: 'Cheque'      },
+  { id: 7, label: 'Insurance'   },
+  { id: 8, label: 'Credit'      },
 ];
 
 const SEARCH_TYPE_OPTIONS = [
-  { value: 'InvoiceNo',   label: 'Invoice No' },
-  { value: 'PatientName', label: 'Patient Name' },
+  { value: 'InvoiceNo',   label: 'Invoice No'    },
+  { value: 'PatientName', label: 'Patient Name'  },
 ];
 
 const getTodayStr = () => new Date().toISOString().split('T')[0];
@@ -38,21 +40,19 @@ const InvoicePaymentList = () => {
   const [payments, setPayments]       = useState([]);
   const [allPayments, setAllPayments] = useState([]);
   const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState(null);
+  const [error,   setError]           = useState(null);
 
-  // ── Pagination ──
+  // Pagination
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
   // Modal
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [selectedPayment, setSelectedPayment]     = useState(null);
-  const [formLoading, setFormLoading]             = useState(false);
-  const [formError, setFormError]                 = useState(null);
-  const [formSuccess, setFormSuccess]             = useState(null);
-  const [updateData, setUpdateData]               = useState({ status: '', remarks: '' });
+  const [selectedPayment,   setSelectedPayment]   = useState(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [updateData, setUpdateData]   = useState({ status: '', remarks: '' });
 
-  // ── Filter inputs (staged — not applied until Search is clicked) ──
+  // Filter inputs
   const [filterInputs, setFilterInputs] = useState({
     searchType:  'InvoiceNo',
     searchValue: '',
@@ -61,7 +61,7 @@ const InvoicePaymentList = () => {
     dateTo:      today,
   });
 
-  // ── Applied filters (drive the API call) ──
+  // Applied filters
   const [appliedFilters, setAppliedFilters] = useState({
     searchType:  'InvoiceNo',
     searchValue: '',
@@ -70,14 +70,30 @@ const InvoicePaymentList = () => {
     dateTo:      today,
   });
 
-  // ── Derived: are any filters actually active? ──
+  // ── Button cooldown state (2-sec disable after click) ──────────────────────
+  const [btnCooldown, setBtnCooldown] = useState({});
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
+
+  // ── MessagePopup state ──────────────────────────────────────────────────────
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Update form required-field gating ──────────────────────────────────────
+  // Enabled only when status is selected
+  const updateAllRequiredFilled = updateData.status !== '' && updateData.status !== undefined;
+
+  // ── Derived ────────────────────────────────────────────────────────────────
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.paymentMode        !== 0  ||
     appliedFilters.dateFrom           !== today ||
     appliedFilters.dateTo             !== today;
 
-  // ── Data fetching ──
+  // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchPayments = async (filters = appliedFilters, currentPage = page) => {
     try {
       setLoading(true);
@@ -115,7 +131,7 @@ const InvoicePaymentList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedFilters]);
 
-  // ── Computed ──
+  // ── Computed ───────────────────────────────────────────────────────────────
   const filteredPayments = useMemo(() => {
     return [...allPayments].sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated));
   }, [allPayments]);
@@ -125,9 +141,10 @@ const InvoicePaymentList = () => {
     return { total, count: filteredPayments.length };
   }, [filteredPayments]);
 
-  // ── Pagination helpers ──
+  // ── Pagination ─────────────────────────────────────────────────────────────
   const handlePageChange = (newPage) => {
     if (newPage < 1) return;
+    triggerCooldown(`page-${newPage}`);
     setPage(newPage);
     fetchPayments(appliedFilters, newPage);
   };
@@ -135,43 +152,40 @@ const InvoicePaymentList = () => {
   const startRecord = filteredPayments.length === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord   = (page - 1) * pageSize + filteredPayments.length;
 
-  // ── Handlers ──
+  // ── Filter handlers ────────────────────────────────────────────────────────
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSearch = () => {
+    triggerCooldown('search');
     setPage(1);
     setAppliedFilters({ ...filterInputs });
   };
 
   const handleClearFilters = () => {
+    triggerCooldown('clear');
     const defaults = {
-      searchType:  'InvoiceNo',
-      searchValue: '',
-      paymentMode: 0,
-      dateFrom:    today,
-      dateTo:      today,
+      searchType: 'InvoiceNo', searchValue: '',
+      paymentMode: 0, dateFrom: today, dateTo: today,
     };
     setPage(1);
     setFilterInputs(defaults);
     setAppliedFilters(defaults);
   };
 
+  // ── Modal handlers ─────────────────────────────────────────────────────────
   const openUpdateModal = (payment) => {
+    triggerCooldown(`update-${payment.id}`);
     setSelectedPayment(payment);
     setUpdateData({ status: payment.status.toString(), remarks: payment.remarks || '' });
-    setFormError(null);
-    setFormSuccess(null);
     setIsUpdateModalOpen(true);
   };
 
   const closeModal = () => {
     setIsUpdateModalOpen(false);
     setSelectedPayment(null);
-    setFormError(null);
-    setFormSuccess(null);
   };
 
   const handleUpdateInputChange = (e) => {
@@ -179,31 +193,40 @@ const InvoicePaymentList = () => {
     setUpdateData(prev => ({ ...prev, [name]: value }));
   };
 
+  // ── Update payment ─────────────────────────────────────────────────────────
   const handleUpdatePayment = async (e) => {
     e.preventDefault();
-    if (!updateData.status) { setFormError('Please select a status'); return; }
+
+    // Guard: required fields
+    if (!updateAllRequiredFilled) {
+      showPopup('Please fill all required fields: Payment Status.', 'warning');
+      return;
+    }
+
+    triggerCooldown('update-submit');
+
     try {
       setFormLoading(true);
-      setFormError(null);
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       await updateInvoicePayment({
         clinicId, branchId,
         paymentId: selectedPayment.id,
         status:    Number(updateData.status),
-        remarks:   updateData.remarks
+        remarks:   updateData.remarks,
       });
-      setFormSuccess('Payment updated successfully!');
+      showPopup('Payment updated successfully!', 'success');
       setTimeout(() => { closeModal(); fetchPayments(); }, 1500);
     } catch (err) {
-      setFormError(err.message || 'Failed to update payment');
+      showPopup(err.message || 'Failed to update payment.', 'error');
     } finally {
       setFormLoading(false);
     }
   };
 
-  const formatCurrency  = (amount)  => amount ? `₹${Number(amount).toFixed(2)}` : '₹0.00';
-  const formatDate      = (dateStr) => {
+  // ── Formatters ─────────────────────────────────────────────────────────────
+  const formatCurrency      = (amount)  => amount ? `₹${Number(amount).toFixed(2)}` : '₹0.00';
+  const formatDate          = (dateStr) => {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
@@ -215,33 +238,25 @@ const InvoicePaymentList = () => {
   };
   const getStatusLabel = (status) => PAYMENT_STATUSES.find(s => s.id === status)?.label || 'Unknown';
 
+  // ── Early returns ──────────────────────────────────────────────────────────
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.paymentListLoading}>Loading payments...</div>;
+  if (loading) return <div className={styles.paymentListLoading}><LoadingPage/></div>;
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className={styles.paymentWrapper}>
       <ErrorHandler error={error} />
       <Header title="Invoice Payment Management" />
 
-      {formSuccess && !isUpdateModalOpen && (
-        <div className={styles.formSuccess}>{formSuccess}</div>
-      )}
-
       {/* ── Filter Bar ── */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
 
-          {/* Search type + value */}
           <div className={styles.searchGroup}>
-            <select
-              name="searchType"
-              value={filterInputs.searchType}
-              onChange={handleFilterChange}
-              className={styles.searchTypeSelect}
-            >
+            <select name="searchType" value={filterInputs.searchType} onChange={handleFilterChange} className={styles.searchTypeSelect}>
               {SEARCH_TYPE_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
@@ -257,66 +272,36 @@ const InvoicePaymentList = () => {
             />
           </div>
 
-          {/* Payment Mode */}
           <div className={styles.filterGroup}>
-            <select
-              name="paymentMode"
-              value={filterInputs.paymentMode}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            >
+            <select name="paymentMode" value={filterInputs.paymentMode} onChange={handleFilterChange} className={styles.filterInput}>
               <option value={0}>All Modes</option>
-              {PAYMENT_MODES.map(m => (
-                <option key={m.id} value={m.id}>{m.label}</option>
-              ))}
+              {PAYMENT_MODES.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
             </select>
           </div>
 
-          {/* From Date */}
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
-              {!filterInputs.dateFrom && (
-                <span className={styles.datePlaceholder}>From Date</span>
-              )}
-              <input
-                type="date"
-                name="dateFrom"
-                value={filterInputs.dateFrom}
-                onChange={handleFilterChange}
-                max={today}
-                className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`}
-              />
+              {!filterInputs.dateFrom && <span className={styles.datePlaceholder}>From Date</span>}
+              <input type="date" name="dateFrom" value={filterInputs.dateFrom} onChange={handleFilterChange} max={today}
+                className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`} />
             </div>
           </div>
 
-          {/* To Date */}
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
-              {!filterInputs.dateTo && (
-                <span className={styles.datePlaceholder}>To Date</span>
-              )}
-              <input
-                type="date"
-                name="dateTo"
-                value={filterInputs.dateTo}
-                onChange={handleFilterChange}
-                max={today}
-                className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`}
-              />
+              {!filterInputs.dateTo && <span className={styles.datePlaceholder}>To Date</span>}
+              <input type="date" name="dateTo" value={filterInputs.dateTo} onChange={handleFilterChange} max={today}
+                className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`} />
             </div>
           </div>
 
-          {/* Actions */}
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
-              <FiSearch size={16} />
-              Search
+            <button onClick={handleSearch} className={styles.searchButton} disabled={!!btnCooldown['search']}>
+              <FiSearch size={16} /> Search
             </button>
-
             {hasActiveFilters && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
-                <FiX size={16} />
-                Clear
+              <button onClick={handleClearFilters} className={styles.clearButton} disabled={!!btnCooldown['clear']}>
+                <FiX size={16} /> Clear
               </button>
             )}
           </div>
@@ -324,9 +309,8 @@ const InvoicePaymentList = () => {
         </div>
       </div>
 
-      {/* ── Table + Pagination wrapper ── */}
+      {/* ── Table + Pagination ── */}
       <div className={styles.tableSection}>
-
         <div className={styles.paymentListTableContainer}>
           <table className={styles.paymentListTable}>
             <thead>
@@ -376,6 +360,7 @@ const InvoicePaymentList = () => {
                           onClick={() => openUpdateModal(payment)}
                           className={styles.paymentUpdateBtn}
                           title="Update Payment"
+                          disabled={!!btnCooldown[`update-${payment.id}`]}
                         >
                           Update Status
                         </button>
@@ -388,97 +373,49 @@ const InvoicePaymentList = () => {
           </table>
         </div>
 
-        {/* ── Pagination Bar — pinned to bottom of tableSection ── */}
+        {/* ── Pagination Bar ── */}
         <div className={styles.paginationBar}>
           <div className={styles.paginationInfo}>
-            {filteredPayments.length > 0
-              ? `Showing ${startRecord}–${endRecord} records`
-              : 'No records'}
+            {filteredPayments.length > 0 ? `Showing ${startRecord}–${endRecord} records` : 'No records'}
           </div>
-
           <div className={styles.paginationControls}>
             <span className={styles.paginationLabel}>Page</span>
-
-            <button
-              className={styles.pageBtn}
-              onClick={() => handlePageChange(1)}
-              disabled={page === 1}
-              title="First page"
-            >
-              «
-            </button>
-
-            <button
-              className={styles.pageBtn}
-              onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
-              title="Previous page"
-            >
-              ‹
-            </button>
-
+            <button className={styles.pageBtn} onClick={() => handlePageChange(1)}        disabled={page === 1 || !!btnCooldown['page-1']}          title="First page">«</button>
+            <button className={styles.pageBtn} onClick={() => handlePageChange(page - 1)} disabled={page === 1 || !!btnCooldown[`page-${page - 1}`]} title="Previous page">‹</button>
             <span className={styles.pageIndicator}>{page}</span>
-
-            <button
-              className={styles.pageBtn}
-              onClick={() => handlePageChange(page + 1)}
-              disabled={filteredPayments.length < pageSize}
-              title="Next page"
-            >
-              ›
-            </button>
+            <button className={styles.pageBtn} onClick={() => handlePageChange(page + 1)} disabled={filteredPayments.length < pageSize || !!btnCooldown[`page-${page + 1}`]} title="Next page">›</button>
           </div>
-
-          <div className={styles.pageSizeInfo}>
-            Total: <strong>{formatCurrency(statistics.total)}</strong>
-          </div>
+          <div className={styles.pageSizeInfo}>Total: <strong>{formatCurrency(statistics.total)}</strong></div>
         </div>
+      </div>
 
-      </div>{/* end tableSection */}
-
-      {/* Update Payment Modal */}
+      {/* ── Update Payment Modal ── */}
       {isUpdateModalOpen && (
         <div className={styles.paymentModalOverlay}>
           <div className={styles.paymentModal}>
             <div className={styles.paymentModalHeader}>
               <h2>Update Payment Status</h2>
-              
               <div className={styles.headerRight}>
                 <div className={styles.clinicNameone}>
-                  <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
+                  <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
                   {localStorage.getItem('clinicName') || '—'}
                 </div>
-                <button onClick={closeModal} className={styles.paymentModalClose}>×</button>
+                <button onClick={closeModal} className={styles.paymentModalClose} disabled={formLoading}>×</button>
               </div>
             </div>
-            <form onSubmit={handleUpdatePayment}>
+
+            <form onSubmit={handleUpdatePayment} noValidate>
               <div className={styles.paymentModalBody}>
-                {formError   && <div className={styles.formError}>{formError}</div>}
-                {formSuccess && <div className={styles.formSuccess}>{formSuccess}</div>}
                 <div className={styles.invoiceHeader}>
                   <div className={styles.detailsGrid}>
-                    <div className={styles.detailItem}>
-                      <label>Invoice:</label>
-                      <span>{selectedPayment?.invoiceNo}</span>
-                    </div>
-                    <div className={styles.detailItem}>
-                      <label>Patient:</label>
-                      <span>{selectedPayment?.patientName}</span>
-                    </div>
-                    <div className={styles.detailItem}>
-                      <label>Amount:</label>
-                      <span>{formatCurrency(selectedPayment?.amount)}</span>
-                    </div>
-                    <div className={styles.detailItem}>
-                      <label>Mode:</label>
-                      <span>{getPaymentModeLabel(selectedPayment?.paymentMode)}</span>
-                    </div>
-                    <div className={styles.detailItem}>
-                      <label>Date:</label>
-                      <span>{formatDate(selectedPayment?.paymentDate)}</span>
-                    </div>
+                    <div className={styles.detailItem}><label>Invoice:</label><span>{selectedPayment?.invoiceNo}</span></div>
+                    <div className={styles.detailItem}><label>Patient:</label><span>{selectedPayment?.patientName}</span></div>
+                    <div className={styles.detailItem}><label>Amount:</label><span>{formatCurrency(selectedPayment?.amount)}</span></div>
+                    <div className={styles.detailItem}><label>Mode:</label><span>{getPaymentModeLabel(selectedPayment?.paymentMode)}</span></div>
+                    <div className={styles.detailItem}><label>Date:</label><span>{formatDate(selectedPayment?.paymentDate)}</span></div>
                   </div>
                 </div>
+
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
                     <label>Payment Status <span className={styles.required}>*</span></label>
@@ -487,7 +424,6 @@ const InvoicePaymentList = () => {
                       value={updateData.status}
                       onChange={handleUpdateInputChange}
                       disabled={formLoading}
-                      required
                       className={styles.formSelect}
                     >
                       {PAYMENT_STATUSES.map(s => (
@@ -495,6 +431,7 @@ const InvoicePaymentList = () => {
                       ))}
                     </select>
                   </div>
+
                   <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                     <label>Remarks</label>
                     <textarea
@@ -508,11 +445,17 @@ const InvoicePaymentList = () => {
                   </div>
                 </div>
               </div>
+
               <div className={styles.paymentModalFooter}>
                 <button type="button" onClick={closeModal} className={styles.btnCancel} disabled={formLoading}>
                   Cancel
                 </button>
-                <button type="submit" className={styles.btnSubmit} disabled={formLoading}>
+                <button
+                  type="submit"
+                  className={styles.btnSubmit}
+                  disabled={formLoading || !updateAllRequiredFilled || !!btnCooldown['update-submit']}
+                  title={!updateAllRequiredFilled ? 'Please select a status to enable this button' : ''}
+                >
                   {formLoading ? 'Updating...' : 'Update Status'}
                 </button>
               </div>
@@ -520,6 +463,14 @@ const InvoicePaymentList = () => {
           </div>
         </div>
       )}
+
+      {/* ── MessagePopup (at root level so z-index is never blocked) ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
     </div>
   );
 };

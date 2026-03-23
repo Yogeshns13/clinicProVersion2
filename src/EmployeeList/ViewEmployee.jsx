@@ -30,10 +30,11 @@ import {
   getDepartmentList,
   getClinicList,                           // ← NEW IMPORT
 } from '../Api/Api.js';
-import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import styles from './ViewEmployee.module.css';
 import { FaClinicMedical } from 'react-icons/fa'; 
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 
 const NAME_REGEX       = /^[A-Za-z\s\.\-']+$/;
 const MOBILE_REGEX     = /^[6-9]\d{9}$/;
@@ -325,7 +326,7 @@ const ShiftDropdown = ({ shifts, selectedShifts, onToggle, disabled }) => {
 };
 
 // ────────────────────────────────────────────────
-// DELETE CONFIRM MODAL
+// DELETE CONFIRM MODAL (kept for proof & beneficiary deletes)
 // ────────────────────────────────────────────────
 const DeleteConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, loading }) => {
   if (!isOpen) return null;
@@ -362,10 +363,17 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
   const [error, setError]             = useState(null);
   const [successMsg, setSuccessMsg]   = useState('');
 
+  // ── MessagePopup state ──
+  const [msgPopup, setMsgPopup] = useState({ visible: false, message: '', type: 'success' });
+
   // Edit mode per section
   const [editMode, setEditMode] = useState({ basic: false, proof: false, bank: false, shift: false });
 
-  // Delete confirm state
+  // ── Employee delete: uses ConfirmPopup ──
+  const [empDeleteConfirmOpen, setEmpDeleteConfirmOpen] = useState(false);
+  const [empDeleteLoading, setEmpDeleteLoading]         = useState(false);
+
+  // ── Proof / Beneficiary delete: uses inline DeleteConfirmModal ──
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, type: '', targetId: null, title: '', message: '' });
   const [deleteLoading, setDeleteLoading] = useState(false);
 
@@ -675,17 +683,39 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
       });
       setEditMode(prev => ({ ...prev, basic: false }));
       showSuccess('Basic information updated successfully!');
-    } catch (err) { setError(err); }
+    } catch (err) {
+      setError(err);
+      setMsgPopup({
+        visible: true,
+        message: err?.message || 'Failed to save basic information. Please try again.',
+        type: 'error',
+      });
+    }
     finally { setLoading(false); }
   };
 
-  // ── Delete Employee ──
+  // ── Delete Employee — opens ConfirmPopup ──
   const handleDeleteEmployee = () => {
-    setDeleteConfirm({
-      open: true, type: 'employee', targetId: Number(id),
-      title: 'Delete Employee',
-      message: `Are you sure you want to delete ${formData.firstName} ${formData.lastName}? This action cannot be undone.`,
-    });
+    setEmpDeleteConfirmOpen(true);
+  };
+
+  // ── Delete Employee — actual API call, triggered by ConfirmPopup "Yes, Delete" ──
+  const performDeleteEmployee = async () => {
+    setEmpDeleteConfirmOpen(false);
+    setEmpDeleteLoading(true);
+    try {
+      await deleteEmployee(Number(id));
+      setMsgPopup({
+        visible: true,
+        message: `${formData.firstName} ${formData.lastName} has been deleted successfully.`,
+        type: 'success',
+      });
+    } catch (err) {
+      const errMessage = err?.message || 'Something went wrong. Please try again.';
+      setMsgPopup({ visible: true, message: errMessage, type: 'error' });
+    } finally {
+      setEmpDeleteLoading(false);
+    }
   };
 
   // ── Proofs ──
@@ -794,7 +824,14 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
       setSavedProofIds(updatedIds);
       setEditMode(prev => ({ ...prev, proof: false }));
       showSuccess('ID proof(s) updated successfully!');
-    } catch (err) { setError(err); }
+    } catch (err) {
+      setError(err);
+      setMsgPopup({
+        visible: true,
+        message: err?.message || 'Failed to save ID proof. Please try again.',
+        type: 'error',
+      });
+    }
     finally { setLoading(false); }
   };
 
@@ -857,7 +894,14 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
       setSavedBeneficiaryIds(updatedIds);
       setEditMode(prev => ({ ...prev, bank: false }));
       showSuccess('Bank account(s) updated successfully!');
-    } catch (err) { setError(err); }
+    } catch (err) {
+      setError(err);
+      setMsgPopup({
+        visible: true,
+        message: err?.message || 'Failed to save bank account. Please try again.',
+        type: 'error',
+      });
+    }
     finally { setLoading(false); }
   };
 
@@ -891,21 +935,22 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
       setExistingWorkDays(workDays.map(d => ({ id: d.id, workDay: d.workDay })));
       setEditMode(prev => ({ ...prev, shift: false }));
       showSuccess('Shift & workdays updated successfully!');
-    } catch (err) { setError(err); }
+    } catch (err) {
+      setError(err);
+      setMsgPopup({
+        visible: true,
+        message: err?.message || 'Failed to save shift & workdays. Please try again.',
+        type: 'error',
+      });
+    }
     finally { setLoading(false); }
   };
 
-  // ── Delete confirm ──
+  // ── Proof / Beneficiary delete confirm (inline DeleteConfirmModal) ──
   const handleDeleteConfirm = async () => {
     const { type, targetId } = deleteConfirm;
     setDeleteLoading(true);
     try {
-      if (type === 'employee') {
-        await deleteEmployee(targetId);
-        setDeleteConfirm({ open: false });
-        if (onDeleted) onDeleted();
-        return;
-      }
       if (type === 'proof') {
         await deleteEmployeeProof(targetId);
         const idx = savedProofIds.indexOf(targetId);
@@ -920,10 +965,23 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
       }
       setDeleteConfirm({ open: false });
     } catch (err) {
-      setError(err);
       setDeleteConfirm({ open: false });
+      const errMessage = err?.message || 'Something went wrong. Please try again.';
+      setMsgPopup({ visible: true, message: errMessage, type: 'error' });
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  // ── MessagePopup close handler ──
+  // For success on employee delete: close popup then call onDeleted to navigate away
+  const handleMsgPopupClose = () => {
+    const wasEmployeeDeleteSuccess =
+      msgPopup.type === 'success' &&
+      msgPopup.message.includes('deleted successfully');
+    setMsgPopup({ visible: false, message: '', type: 'success' });
+    if (wasEmployeeDeleteSuccess && onDeleted) {
+      onDeleted();
     }
   };
 
@@ -988,8 +1046,12 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
           
         <div className={styles.headerRight}>
             {!pageLoading && !pageError && (
-              <button className={styles.deleteEmpBtn} onClick={handleDeleteEmployee}>
-                <FiTrash2 size={14} /> Delete
+              <button
+                className={styles.deleteEmpBtn}
+                onClick={handleDeleteEmployee}
+                disabled={empDeleteLoading}
+              >
+                <FiTrash2 size={14} /> {empDeleteLoading ? 'Deleting...' : 'Delete'}
               </button>
             )}
             </div>
@@ -1009,16 +1071,6 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
               <p>Loading employee details...</p>
             </div>
           )}
-
-          {/* Error State */}
-          {pageError && !pageLoading && (
-            <div className={styles.errorState}>
-              <ErrorHandler error={pageError} />
-            </div>
-          )}
-
-          {/* Error inline */}
-          {error && !pageLoading && !pageError && <ErrorHandler error={error} />}
 
           {/* ══════════ BASIC INFO ══════════ */}
           {!pageLoading && !pageError && activeTab === 'basic' && (
@@ -1112,7 +1164,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                     <div className={styles.formGroup}>
                       <label>Gender <span className={styles.required}>*</span></label>
                       <select required name="gender" value={formData.gender} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''}>
-                        <option value={0}>Select Gender</option>
+                        <option value="">Select Gender</option>
                         {GENDER_OPTIONS.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
                       </select>
                       <ValidationMsg field="gender" msgs={validationMessages} />
@@ -1333,7 +1385,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                         <div className={styles.formGroup}>
                           <label>Proof Type <span className={styles.required}>*</span></label>
                           <select required name="proofType" value={proof.proofType} onChange={(e) => handleProofInputChange(index, e)} disabled={!editMode.proof || loading} className={!editMode.proof ? styles.inputReadOnly : ''}>
-                            <option value={0}>Select Proof Type</option>
+                            <option value="">Select Proof Type</option>
                             {ID_PROOF_OPTIONS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                           </select>
                           <ValidationMsg field="proofType" msgs={proofValidationMessages[index] || {}} />
@@ -1535,7 +1587,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
           </div>
         )}
 
-        {/* Delete Confirm (nested inside modal) */}
+        {/* Proof / Beneficiary Delete Confirm (nested inside modal, uses inline DeleteConfirmModal) */}
         <DeleteConfirmModal
           isOpen={deleteConfirm.open}
           title={deleteConfirm.title}
@@ -1545,6 +1597,25 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
           loading={deleteLoading}
         />
       </div>
+
+      {/* ── ConfirmPopup for Employee Delete ── */}
+      <ConfirmPopup
+        visible={empDeleteConfirmOpen}
+        message={`Delete ${formData.firstName} ${formData.lastName}?`}
+        subMessage="This action cannot be undone. The employee record will be permanently removed."
+        confirmLabel={empDeleteLoading ? 'Deleting...' : 'Yes, Delete'}
+        cancelLabel="Cancel"
+        onConfirm={performDeleteEmployee}
+        onCancel={() => setEmpDeleteConfirmOpen(false)}
+      />
+
+      {/* ── MessagePopup for Save Errors / Delete Success & Error ── */}
+      <MessagePopup
+        visible={msgPopup.visible}
+        message={msgPopup.message}
+        type={msgPopup.type}
+        onClose={handleMsgPopupClose}
+      />
     </div>
   );
 };

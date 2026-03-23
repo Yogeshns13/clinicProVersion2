@@ -229,6 +229,10 @@
   flex-direction: column;
 }
 
+.required{
+  color: red;
+}
+
 /* ==================== TABLE CONTAINER ==================== */
 .tableContainer {
   background: white;
@@ -735,6 +739,7 @@
   border: 1px solid #cbd5e1;
   border-radius: 10px;
   font-size: 0.92rem;
+  font-family: inherit;
   background: white;
   transition: all 0.2s ease;
 }

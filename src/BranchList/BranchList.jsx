@@ -1,19 +1,20 @@
 // src/components/BranchList.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   FiSearch,
   FiPlus,
   FiX,
+  FiChevronDown,
+  FiCheckCircle,
 } from 'react-icons/fi';
-import { 
-  getBranchList, 
-  getClinicList, 
-} from '../Api/CachedApi.js';
-import { addBranch } from '../Api/Api.js';
+import { addBranch, getBranchList, getClinicList, deleteBranch } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import UpdateBranch from './UpdateBranch.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 import styles from './BranchList.module.css';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 // ─── matches backend allowedCharactersRegex exactly ───────────────────────────
 const allowedCharactersRegex = /^[A-Za-z0-9\s\-_]+$/;
@@ -23,13 +24,15 @@ const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
     case 'clinicId':
       if (!value || value === '') return 'ClinicID is required';
-      if (isNaN(Number(value)) || !Number.isInteger(Number(value))) return 'ClinicID must be a positive integer';
+      if (isNaN(Number(value)) || !Number.isInteger(Number(value)))
+        return 'ClinicID must be a positive integer';
       return '';
 
     case 'branchName':
       if (!value || !value.trim()) return 'BranchName is required';
       if (value.trim().length > 100) return 'BranchName should not exceed 100 characters';
-      if (!allowedCharactersRegex.test(value.trim())) return 'BranchName contains invalid characters';
+      if (!allowedCharactersRegex.test(value.trim()))
+        return 'BranchName contains invalid characters';
       return '';
 
     case 'address':
@@ -43,11 +46,13 @@ const getLiveValidationMessage = (fieldName, value) => {
 
     case 'branchType':
       if (!value) return 'BranchType is required';
-      if (isNaN(Number(value)) || Number(value) < 1) return 'BranchType must be a valid integer (from text table)';
+      if (isNaN(Number(value)) || Number(value) < 1)
+        return 'BranchType must be a valid integer (from text table)';
       return '';
 
     case 'latitude':
       if (value === '') return '';
+      // eslint-disable-next-line no-case-declarations
       const lat = Number(value);
       if (isNaN(lat)) return 'Please enter a valid number';
       if (lat < -90 || lat > 90) return 'Latitude must be between -90 and 90';
@@ -55,6 +60,7 @@ const getLiveValidationMessage = (fieldName, value) => {
 
     case 'longitude':
       if (value === '') return '';
+      // eslint-disable-next-line no-case-declarations
       const lng = Number(value);
       if (isNaN(lng)) return 'Please enter a valid number';
       if (lng < -180 || lng > 180) return 'Longitude must be between -180 and 180';
@@ -104,32 +110,176 @@ const DEFAULT_FILTERS = {
   searchValue: '',
   clinicId:    'all',
   branchType:  '0',
-  status:      '1',          // default Active
+  status:      '1',
 };
 
 // ── Status dropdown → API Status integer ──
 const buildStatusParam = (status) => {
   if (status === '1')  return 1;
   if (status === '2')  return 2;
-  return -1;  // '-1' or anything else → All
+  return -1;
+};
+
+// ────────────────────────────────────────────────
+// Reusable Searchable Clinic Dropdown
+// Used in both the filter bar and the Add Branch form
+// Only shows active clinics (status === 'active')
+// ────────────────────────────────────────────────
+const ClinicSearchableDropdown = ({
+  clinics,
+  value,           // selected clinic id string, or 'all' (filter), or '' (form)
+  onChange,        // (idString) => void
+  placeholder,     // e.g. 'All Clinics' or 'Select Clinic'
+  showAllOption,   // true → render "All Clinics" first option (filter bar only)
+}) => {
+  const [query, setQuery] = useState('');
+  const [open, setOpen]   = useState(false);
+  const wrapperRef        = useRef(null);
+
+  // ── Only show active clinics ──
+  const activeClinics = clinics.filter(c => c.status === 'active');
+
+  const noneValue      = showAllOption ? 'all' : '';
+  const selectedClinic = (value === noneValue || value === '')
+    ? null
+    : activeClinics.find(c => String(c.id) === String(value));
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filtered = activeClinics.filter(c =>
+    c.name.toLowerCase().includes(query.toLowerCase())
+  );
+
+  const handleSelect = (clinic) => {
+    onChange(clinic ? String(clinic.id) : noneValue);
+    setQuery('');
+    setOpen(false);
+  };
+
+  const handleClear = (e) => {
+    e.stopPropagation();
+    onChange(noneValue);
+    setQuery('');
+    setOpen(false);
+  };
+
+  return (
+    <div className={styles.clinicDropdownWrapper} ref={wrapperRef}>
+      <div
+        className={`${styles.clinicDropdownTrigger} ${open ? styles.clinicDropdownTriggerOpen : ''}`}
+        onClick={() => setOpen(o => !o)}
+      >
+        <FiSearch className={styles.clinicDropdownSearchIcon} size={14} />
+
+        {open ? (
+          <input
+            autoFocus
+            className={styles.clinicDropdownInput}
+            placeholder={selectedClinic ? selectedClinic.name : placeholder}
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onClick={e => e.stopPropagation()}
+          />
+        ) : (
+          <span className={selectedClinic ? styles.clinicDropdownSelected : styles.clinicDropdownPlaceholder}>
+            {selectedClinic ? selectedClinic.name : placeholder}
+          </span>
+        )}
+
+        <div className={styles.clinicDropdownActions}>
+          {selectedClinic && !open && (
+            <button type="button" className={styles.clinicDropdownClearBtn} onClick={handleClear}>
+              <FiX size={12} />
+            </button>
+          )}
+          <FiChevronDown
+            size={14}
+            className={`${styles.clinicDropdownChevron} ${open ? styles.clinicDropdownChevronOpen : ''}`}
+          />
+        </div>
+      </div>
+
+      {open && (
+        <div className={styles.clinicDropdownMenu}>
+          {/* "All Clinics" option — only for filter bar */}
+          {showAllOption && (
+            <div
+              className={`${styles.clinicDropdownOption} ${value === 'all' ? styles.clinicDropdownOptionSelected : ''}`}
+              onMouseDown={() => handleSelect(null)}
+            >
+              <span className={styles.clinicDropdownOptionLabel}>All Clinics</span>
+              {value === 'all' && <FiCheckCircle size={13} className={styles.clinicDropdownCheck} />}
+            </div>
+          )}
+
+          {filtered.length === 0 ? (
+            <div className={styles.clinicDropdownNoResults}>No clinics found</div>
+          ) : (
+            filtered.map(c => (
+              <div
+                key={c.id}
+                className={`${styles.clinicDropdownOption} ${String(c.id) === String(value) ? styles.clinicDropdownOptionSelected : ''}`}
+                onMouseDown={() => handleSelect(c)}
+              >
+                <div className={styles.clinicDropdownAvatar}>
+                  {c.name.charAt(0).toUpperCase()}
+                </div>
+                <span className={styles.clinicDropdownOptionLabel}>{c.name}</span>
+                {String(c.id) === String(value) && (
+                  <FiCheckCircle size={13} className={styles.clinicDropdownCheck} />
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
 
 // ────────────────────────────────────────────────
 const BranchList = () => {
   const [branches, setBranches] = useState([]);
-  const [clinics, setClinics]   = useState([]);
+  const [clinics,  setClinics]  = useState([]);
 
-  const [filterInputs, setFilterInputs]     = useState({ ...DEFAULT_FILTERS });
+  // ── Central popup — used for fetch / delete actions ONLY ──
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Add form popup — shown ONLY inside the add modal ──
+  const [addPopup, setAddPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showAddPopup  = (message, type = 'success') => setAddPopup({ visible: true, message, type });
+  const closeAddPopup = () => setAddPopup({ visible: false, message: '', type: 'success' });
+
+  // ── ConfirmPopup for delete ──
+  const [deleteConfirm,    setDeleteConfirm]    = useState(null);
+  const [deleteLoading,    setDeleteLoading]    = useState(false);
+  const [deleteBtnCooldown, setDeleteBtnCooldown] = useState(false);
+
+  const [filterInputs,   setFilterInputs]   = useState({ ...DEFAULT_FILTERS });
   const [appliedFilters, setAppliedFilters] = useState({ ...DEFAULT_FILTERS });
 
   // Pagination
-  const [page, setPage]       = useState(1);
-  const [pageSize]            = useState(20);
+  const [page, setPage] = useState(1);
+  const [pageSize]      = useState(20);
 
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [loading, setLoading]               = useState(true);
   const [error, setError]                   = useState(null);
   const [isAddFormOpen, setIsAddFormOpen]   = useState(false);
+
+  // ── Button 2-sec cooldowns ──
+  const [searchBtnDisabled, setSearchBtnDisabled] = useState(false);
+  const [clearBtnDisabled,  setClearBtnDisabled]  = useState(false);
 
   const [formData, setFormData] = useState({
     clinicId:   '',
@@ -141,10 +291,9 @@ const BranchList = () => {
     branchType: 1,
   });
 
-  const [formLoading, setFormLoading]               = useState(false);
-  const [formError, setFormError]                   = useState('');
-  const [formSuccess, setFormSuccess]               = useState(false);
+  const [formLoading,        setFormLoading]        = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
+  const [submitAttempted,    setSubmitAttempted]    = useState(false);
 
   const [updateBranchData, setUpdateBranchData] = useState(null);
   const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);
@@ -155,15 +304,29 @@ const BranchList = () => {
     appliedFilters.branchType  !== '0'       ||
     appliedFilters.status      !== '1';
 
+  // ── isFormValid: all required add fields filled with no errors ──
+  const isFormValid = useMemo(() => {
+    const requiredFields = ['clinicId', 'branchName', 'address', 'branchType'];
+    const allFilled = requiredFields.every((f) => {
+      const v = formData[f];
+      return v !== '' && v !== null && v !== undefined && String(v).trim() !== '';
+    });
+    if (!allFilled) return false;
+    const hasErrors = Object.values(validationMessages).some((msg) => !!msg);
+    if (hasErrors) return false;
+    return true;
+  }, [formData, validationMessages]);
+
   // ────────────────────────────────────────────────
-  // Load clinic dropdown once
+  // Load ACTIVE clinic dropdown once (Status: 1)
   useEffect(() => {
     const fetchClinics = async () => {
       try {
-        const data = await getClinicList();
+        const data = await getClinicList({ Status: 1, PageSize: 200 });
         setClinics(data);
       } catch (err) {
         console.error('Failed to load clinics:', err);
+        showPopup('Failed to load clinic list. Please refresh.', 'error');
       }
     };
     fetchClinics();
@@ -176,7 +339,6 @@ const BranchList = () => {
   }, []);
 
   // ────────────────────────────────────────────────
-  // Core fetch — explicit filters + page, no stale closures
   const fetchBranches = async (filters, currentPage, forceRefresh = false) => {
     try {
       setLoading(true);
@@ -197,6 +359,7 @@ const BranchList = () => {
       setBranches(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('fetchBranches error:', err);
+      showPopup('Failed to load branches. Please try again.', 'error');
       setError(
         err?.status >= 400 || err?.code >= 400
           ? err
@@ -208,37 +371,47 @@ const BranchList = () => {
   };
 
   // ────────────────────────────────────────────────
-  const getBranchTypeLabel = (branchTypeId) => {
-    return BRANCH_TYPES.find((t) => t.id === branchTypeId)?.label || 'Main';
-  };
+  const getBranchTypeLabel = (branchTypeId) =>
+    BRANCH_TYPES.find((t) => t.id === branchTypeId)?.label || 'Main';
 
   const getStatusClass = (status) => {
-    if (status === 'active') return styles.active;
+    if (status === 'active')   return styles.active;
     if (status === 'inactive') return styles.inactive;
     return styles.inactive;
   };
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilterInputs(prev => ({ ...prev, [name]: value }));
+    setFilterInputs((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Search button → apply filters, reset to page 1, call API
-  const handleSearch = () => {
+  // Handler for clinic searchable dropdown in filter bar
+  const handleClinicFilterChange = (clinicId) => {
+    setFilterInputs((prev) => ({ ...prev, clinicId }));
+  };
+
+  // Search button — 2-sec cooldown
+  const handleSearch = async () => {
+    if (searchBtnDisabled) return;
+    setSearchBtnDisabled(true);
     const newFilters = { ...filterInputs };
     setAppliedFilters(newFilters);
     setPage(1);
-    fetchBranches(newFilters, 1);
+    await fetchBranches(newFilters, 1);
+    setTimeout(() => setSearchBtnDisabled(false), 2000);
   };
 
-  const handleClearFilters = () => {
+  // Clear button — 2-sec cooldown
+  const handleClearFilters = async () => {
+    if (clearBtnDisabled) return;
+    setClearBtnDisabled(true);
     setFilterInputs({ ...DEFAULT_FILTERS });
     setAppliedFilters({ ...DEFAULT_FILTERS });
     setPage(1);
-    fetchBranches({ ...DEFAULT_FILTERS }, 1);
+    await fetchBranches({ ...DEFAULT_FILTERS }, 1);
+    setTimeout(() => setClearBtnDisabled(false), 2000);
   };
 
-  // Pagination — reuse appliedFilters, only page changes
   const handlePageChange = (newPage) => {
     if (newPage < 1) return;
     setPage(newPage);
@@ -246,25 +419,25 @@ const BranchList = () => {
   };
 
   const openDetails = (branch) => setSelectedBranch(branch);
-  const closeModal  = () => setSelectedBranch(null);
+  const closeModal  = ()       => setSelectedBranch(null);
 
   const openAddForm = () => {
     setFormData({
       clinicId: '', branchName: '', address: '',
       location: '', latitude: '', longitude: '', branchType: 1,
     });
-    setFormError('');
-    setFormSuccess(false);
     setValidationMessages({});
+    setSubmitAttempted(false);
+    setAddPopup({ visible: false, message: '', type: 'success' });
     setIsAddFormOpen(true);
   };
 
   const closeAddForm = () => {
     setIsAddFormOpen(false);
     setFormLoading(false);
-    setFormError('');
-    setFormSuccess(false);
     setValidationMessages({});
+    setSubmitAttempted(false);
+    setAddPopup({ visible: false, message: '', type: 'success' });
   };
 
   const handleInputChange = (e) => {
@@ -287,6 +460,13 @@ const BranchList = () => {
     setValidationMessages((prev) => ({ ...prev, [name]: validationMessage }));
   };
 
+  // Handler for clinic searchable dropdown in the Add form
+  const handleFormClinicChange = (clinicId) => {
+    setFormData((prev) => ({ ...prev, clinicId }));
+    const validationMessage = getLiveValidationMessage('clinicId', clinicId);
+    setValidationMessages((prev) => ({ ...prev, clinicId: validationMessage }));
+  };
+
   const validateAllAddFields = () => {
     const messages = {};
     let isValid = true;
@@ -304,14 +484,20 @@ const BranchList = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Guard: form not valid — show popup ONLY inside the add modal
+    if (!isFormValid) {
+      setSubmitAttempted(true);
+      validateAllAddFields();
+      showAddPopup('Please fill all required fields before submitting.', 'warning');
+      return;
+    }
+
     if (!validateAllAddFields()) {
-      setFormError('Please correct all errors before submitting.');
+      showAddPopup('Please fill all required fields before submitting.', 'warning');
       return;
     }
 
     setFormLoading(true);
-    setFormError('');
-    setFormSuccess(false);
     setError(null);
 
     try {
@@ -323,14 +509,19 @@ const BranchList = () => {
         branchType: Number(formData.branchType),
       });
 
-      setFormSuccess(true);
+      // Show success popup ONLY inside the add modal
+      showAddPopup('Branch added successfully!', 'success');
+
+      // After 1s close the form and refresh — no central popup triggered
       setTimeout(() => {
         closeAddForm();
         fetchBranches(appliedFilters, page, true);
-      }, 1500);
+      }, 1000);
     } catch (err) {
       console.error('Add branch failed:', err);
-      setFormError(err.message?.split(':')[1]?.trim() || 'Failed to add branch.');
+      const errMsg = err.message || 'Failed to add branch.';
+      // Show error popup ONLY inside the add modal
+      showAddPopup(errMsg, 'error');
     } finally {
       setFormLoading(false);
     }
@@ -347,10 +538,45 @@ const BranchList = () => {
     setUpdateBranchData(null);
   };
 
+  // onSuccess: close modal + refresh ONLY — UpdateBranch shows its own popup
   const handleUpdateSuccess = () => {
     setIsUpdateFormOpen(false);
     setUpdateBranchData(null);
     fetchBranches(appliedFilters, page, true);
+  };
+
+  // onError: log only — UpdateBranch already shows its own error popup
+  const handleUpdateError = (message) => {
+    console.error('Update branch error (handled by UpdateBranch popup):', message);
+  };
+
+  // ── Delete: open ConfirmPopup ──
+  const handleDeleteClick = (branch) => {
+    if (deleteBtnCooldown) return;
+    setDeleteBtnCooldown(true);
+    setTimeout(() => setDeleteBtnCooldown(false), 2000);
+    setDeleteConfirm(branch);
+  };
+  const handleDeleteCancel = () => setDeleteConfirm(null);
+
+  // ── Delete: perform after confirmation ──
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
+    setDeleteLoading(true);
+    setDeleteConfirm(null);
+    setSelectedBranch(null);
+    try {
+      setLoading(true);
+      await deleteBranch(deleteConfirm.id);
+      showPopup('Branch deleted successfully!', 'success');
+      fetchBranches(appliedFilters, page, true);
+    } catch (err) {
+      console.error('Delete branch failed:', err);
+      showPopup(err.message || 'Failed to delete branch.', 'error');
+    } finally {
+      setDeleteLoading(false);
+      setLoading(false);
+    }
   };
 
   // ────────────────────────────────────────────────
@@ -358,7 +584,7 @@ const BranchList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.clinicLoading}>Loading branches...</div>;
+  if (loading) return <div className={styles.clinicLoading}><LoadingPage/></div>;
 
   if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
@@ -371,7 +597,26 @@ const BranchList = () => {
       <ErrorHandler error={error} />
       <Header title="Branch Management" />
 
-      {/* Filters */}
+      {/* ── Central MessagePopup (fetch / delete actions ONLY) ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
+
+      {/* ── ConfirmPopup for delete branch ── */}
+      <ConfirmPopup
+        visible={!!deleteConfirm}
+        message={`Delete branch "${deleteConfirm?.name || 'this branch'}"?`}
+        subMessage="This action cannot be undone. The branch will be permanently removed."
+        confirmLabel={deleteLoading ? 'Deleting...' : 'Yes, Delete'}
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
+
+      {/* ── Filters ── */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
 
@@ -392,7 +637,9 @@ const BranchList = () => {
             <input
               type="text"
               name="searchValue"
-              placeholder={`Search by ${SEARCH_TYPE_OPTIONS.find(o => o.value === filterInputs.searchType)?.label || ''}`}
+              placeholder={`Search by ${
+                SEARCH_TYPE_OPTIONS.find((o) => o.value === filterInputs.searchType)?.label || ''
+              }`}
               value={filterInputs.searchValue}
               onChange={handleFilterChange}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -400,18 +647,15 @@ const BranchList = () => {
             />
           </div>
 
+          {/* ── Clinic Searchable Dropdown (filter bar) ── */}
           <div className={styles.filterGroup}>
-            <select
-              name="clinicId"
+            <ClinicSearchableDropdown
+              clinics={clinics}
               value={filterInputs.clinicId}
-              onChange={handleFilterChange}
-              className={styles.statusFilterSelect}
-            >
-              <option value="all">All Clinics</option>
-              {clinics.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+              onChange={handleClinicFilterChange}
+              placeholder="All Clinics"
+              showAllOption={true}
+            />
           </div>
 
           <div className={styles.filterGroup}>
@@ -442,12 +686,28 @@ const BranchList = () => {
           </div>
 
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              className={styles.searchButton}
+              disabled={searchBtnDisabled}
+              style={{
+                opacity: searchBtnDisabled ? 0.6 : 1,
+                cursor:  searchBtnDisabled ? 'not-allowed' : 'pointer',
+              }}
+            >
               <FiSearch size={18} /> Search
             </button>
 
             {hasActiveFilters && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
+              <button
+                onClick={handleClearFilters}
+                className={styles.clearButton}
+                disabled={clearBtnDisabled}
+                style={{
+                  opacity: clearBtnDisabled ? 0.6 : 1,
+                  cursor:  clearBtnDisabled ? 'not-allowed' : 'pointer',
+                }}
+              >
                 <FiX size={18} /> Clear
               </button>
             )}
@@ -456,13 +716,13 @@ const BranchList = () => {
               <FiPlus size={18} /> Add Branch
             </button>
           </div>
+
         </div>
       </div>
 
-      {/* Table + Pagination wrapper */}
+      {/* ── Table + Pagination wrapper ── */}
       <div className={styles.tableSection}>
 
-        {/* Table */}
         <div className={styles.clinicTableContainer}>
           <table className={styles.clinicTable}>
             <thead>
@@ -506,12 +766,17 @@ const BranchList = () => {
                     </td>
                     <td>{branch.location || branch.address?.split(',')[0] || '—'}</td>
                     <td>
-                      <span className={`${styles.statusBadge} ${getStatusClass(branch.status)}`}>
+                      <span
+                        className={`${styles.statusBadge} ${getStatusClass(branch.status)}`}
+                      >
                         {branch.status.toUpperCase()}
                       </span>
                     </td>
                     <td>
-                      <button onClick={() => openDetails(branch)} className={styles.clinicDetailsBtn}>
+                      <button
+                        onClick={() => openDetails(branch)}
+                        className={styles.clinicDetailsBtn}
+                      >
                         View Details
                       </button>
                     </td>
@@ -522,7 +787,7 @@ const BranchList = () => {
           </table>
         </div>
 
-        {/* Pagination Bar — always at bottom */}
+        {/* ── Pagination Bar ── */}
         <div className={styles.paginationBar}>
           <div className={styles.paginationInfo}>
             {branches.length > 0
@@ -568,13 +833,15 @@ const BranchList = () => {
           </div>
         </div>
 
-      </div>{/* end tableSection */}
+      </div>
 
-      {/* Details Modal */}
+      {/* ──────────────── Details Modal ──────────────── */}
       {selectedBranch && (
         <div className={styles.detailModalOverlay} onClick={closeModal}>
-          <div className={styles.detailModalContent} onClick={e => e.stopPropagation()}>
-
+          <div
+            className={styles.detailModalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className={styles.detailModalHeader}>
               <div className={styles.detailHeaderContent}>
                 <h2>{selectedBranch.name}</h2>
@@ -582,7 +849,13 @@ const BranchList = () => {
                   <span className={styles.workIdBadge}>
                     {getBranchTypeLabel(selectedBranch.branchType)}
                   </span>
-                  <span className={`${styles.workIdBadge} ${selectedBranch.status === 'active' ? styles.activeBadge : styles.inactiveBadge}`}>
+                  <span
+                    className={`${styles.workIdBadge} ${
+                      selectedBranch.status === 'active'
+                        ? styles.activeBadge
+                        : styles.inactiveBadge
+                    }`}
+                  >
                     {selectedBranch.status?.toUpperCase()}
                   </span>
                 </div>
@@ -619,11 +892,19 @@ const BranchList = () => {
                 </div>
               </div>
 
+              {/* Footer — Delete Branch (left) | Update Branch (right) */}
               <div className={styles.detailModalFooter}>
-                <button onClick={closeModal} className={styles.btnCancel}>
-                  Close
+                <button
+                  onClick={() => handleDeleteClick(selectedBranch)}
+                  disabled={deleteBtnCooldown || deleteLoading}
+                  className={styles.btnCancel}
+                >
+                  Delete Branch
                 </button>
-                <button onClick={() => handleUpdateClick(selectedBranch)} className={styles.btnUpdate}>
+                <button
+                  onClick={() => handleUpdateClick(selectedBranch)}
+                  className={styles.btnUpdate}
+                >
                   Update Branch
                 </button>
               </div>
@@ -632,10 +913,20 @@ const BranchList = () => {
         </div>
       )}
 
-      {/* Add Form Modal */}
+      {/* ──────────────── Add Form Modal ──────────────── */}
       {isAddFormOpen && (
         <div className={styles.detailModalOverlay} onClick={closeAddForm}>
-          <div className={styles.addModalContent} onClick={e => e.stopPropagation()}>
+          <div
+            className={styles.addModalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* ── Add form's own MessagePopup — renders inside the modal overlay ── */}
+            <MessagePopup
+              visible={addPopup.visible}
+              message={addPopup.message}
+              type={addPopup.type}
+              onClose={closeAddPopup}
+            />
 
             <div className={styles.detailModalHeader}>
               <div className={styles.detailHeaderContent}>
@@ -645,8 +936,6 @@ const BranchList = () => {
             </div>
 
             <form onSubmit={handleSubmit} className={styles.addModalBody}>
-              {formError && <div className={styles.formError}>{formError}</div>}
-              {formSuccess && <div className={styles.formSuccess}>Branch added successfully!</div>}
 
               <div className={styles.addSection}>
                 <div className={styles.addSectionHeader}>
@@ -654,21 +943,18 @@ const BranchList = () => {
                 </div>
                 <div className={styles.addFormGrid}>
 
+                  {/* ── Clinic — Searchable Dropdown (same style as filter bar) ── */}
                   <div className={styles.addFormGroup}>
                     <label>Clinic <span className={styles.required}>*</span></label>
-                    <select
-                      required
-                      name="clinicId"
-                      value={formData.clinicId}
-                      onChange={handleInputChange}
-                    >
-                      <option value="">Select Clinic</option>
-                      {clinics.map((clinic) => (
-                        <option key={clinic.id} value={clinic.id}>
-                          {clinic.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div className={styles.addFormClinicDropdown}>
+                      <ClinicSearchableDropdown
+                        clinics={clinics}
+                        value={formData.clinicId}
+                        onChange={handleFormClinicChange}
+                        placeholder="Select Clinic"
+                        showAllOption={false}
+                      />
+                    </div>
                     {validationMessages.clinicId && (
                       <span className={styles.validationMsg}>{validationMessages.clinicId}</span>
                     )}
@@ -768,7 +1054,12 @@ const BranchList = () => {
                 <button type="button" onClick={closeAddForm} className={styles.btnCancel}>
                   Cancel
                 </button>
-                <button type="submit" disabled={formLoading} className={styles.btnSubmit}>
+                <button
+                  type="submit"
+                  disabled={formLoading}
+                  className={`${styles.btnSubmit} ${!isFormValid ? styles.btnSubmitDisabled : ''}`}
+                  title={!isFormValid ? 'Please fill all required fields' : ''}
+                >
                   {formLoading ? 'Adding...' : 'Add Branch'}
                 </button>
               </div>
@@ -777,12 +1068,14 @@ const BranchList = () => {
         </div>
       )}
 
+      {/* ──────────────── Update Branch Modal ──────────────── */}
       {isUpdateFormOpen && updateBranchData && (
         <UpdateBranch
           branch={updateBranchData}
           clinics={clinics}
           onClose={handleUpdateClose}
           onSuccess={handleUpdateSuccess}
+          onError={handleUpdateError}
         />
       )}
     </div>

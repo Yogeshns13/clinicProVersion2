@@ -5,40 +5,43 @@ import { FiSearch, FiFilter, FiFileText, FiDollarSign, FiCalendar, FiUser, FiX, 
 import { getInvoiceList, cancelInvoice, addInvoicePayment } from '../Api/ApiInvoicePayment.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 import ViewInvoice from './ViewInvoice.jsx';
 import styles from './InvoiceManagement.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 const INVOICE_STATUSES = [
-  { id: 1, label: 'Draft' },
-  { id: 2, label: 'Issued' },
-  { id: 3, label: 'Paid' },
+  { id: 1, label: 'Draft'          },
+  { id: 2, label: 'Issued'         },
+  { id: 3, label: 'Paid'           },
   { id: 4, label: 'Partially Paid' },
-  { id: 5, label: 'Cancelled' },
-  { id: 6, label: 'Refunded' },
-  { id: 7, label: 'Credit Note' }
+  { id: 5, label: 'Cancelled'      },
+  { id: 6, label: 'Refunded'       },
+  { id: 7, label: 'Credit Note'    },
 ];
 
 const INVOICE_TYPES = [
   { id: 1, label: 'Consultation' },
-  { id: 2, label: 'Lab' },
-  { id: 3, label: 'Pharmacy' }
+  { id: 2, label: 'Lab'          },
+  { id: 3, label: 'Pharmacy'     },
 ];
 
 const PAYMENT_MODES = [
-  { id: 1, label: 'Cash' },
-  { id: 2, label: 'Card' },
-  { id: 3, label: 'UPI' },
+  { id: 1, label: 'Cash'        },
+  { id: 2, label: 'Card'        },
+  { id: 3, label: 'UPI'         },
   { id: 4, label: 'Net Banking' },
-  { id: 5, label: 'Wallet' },
-  { id: 6, label: 'Cheque' },
-  { id: 7, label: 'Insurance' },
-  { id: 8, label: 'Credit' }
+  { id: 5, label: 'Wallet'      },
+  { id: 6, label: 'Cheque'      },
+  { id: 7, label: 'Insurance'   },
+  { id: 8, label: 'Credit'      },
 ];
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
-    case 'paymentDate':
+    case 'paymentDate': {
       if (!value || value === '') return 'Payment date is required';
       const selectedDate = new Date(value);
       const today = new Date();
@@ -50,21 +53,20 @@ const getLiveValidationMessage = (fieldName, value) => {
       oneYearAgo.setHours(0, 0, 0, 0);
       if (selectedDate < oneYearAgo) return 'Payment date cannot be more than 1 year old';
       return '';
-
-    case 'amount':
+    }
+    case 'amount': {
       if (!value || value === '') return 'Amount is required';
       const amount = Number(value);
-      if (isNaN(amount)) return 'Must be a valid number';
-      if (amount <= 0) return 'Amount must be greater than zero';
-      if (amount > 10000000) return 'Amount cannot exceed ₹1,00,00,000';
+      if (isNaN(amount))      return 'Must be a valid number';
+      if (amount <= 0)        return 'Amount must be greater than zero';
+      if (amount > 10000000)  return 'Amount cannot exceed ₹1,00,00,000';
       return '';
-
+    }
     case 'referenceNo':
       if (!value || value === '') return '';
-      if (value.trim().length < 3) return 'Reference number must be at least 3 characters';
+      if (value.trim().length < 3)  return 'Reference number must be at least 3 characters';
       if (value.trim().length > 50) return 'Reference number must not exceed 50 characters';
       return '';
-
     default:
       return '';
   }
@@ -72,17 +74,16 @@ const getLiveValidationMessage = (fieldName, value) => {
 
 const filterInput = (fieldName, value) => {
   switch (fieldName) {
-    case 'amount':
+    case 'amount': {
       if (value === '') return value;
       const numFiltered = value.replace(/[^0-9.]/g, '');
       const parts = numFiltered.split('.');
       if (parts.length > 2) return parts[0] + '.' + parts.slice(1).join('');
       if (parts.length === 2 && parts[1].length > 2) return parts[0] + '.' + parts[1].substring(0, 2);
       return numFiltered;
-
+    }
     case 'referenceNo':
       return value.replace(/[^a-zA-Z0-9\-_\s]/g, '');
-
     default:
       return value;
   }
@@ -92,61 +93,82 @@ const getTodayStr = () => new Date().toISOString().split('T')[0];
 
 const InvoiceList = () => {
   const navigate = useNavigate();
-  const [invoices, setInvoices] = useState([]);
+  const [invoices, setInvoices]       = useState([]);
   const [allInvoices, setAllInvoices] = useState([]);
 
   const today = getTodayStr();
 
-  // ── Pagination ──
+  // Pagination
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
   const [filterInputs, setFilterInputs] = useState({
-    searchType: 'InvoiceNo',
+    searchType:  'InvoiceNo',
     searchValue: '',
     patientName: '',
-    status: -1,
+    status:      -1,
     invoiceType: 0,
-    dateFrom: today,
-    dateTo: today,
+    dateFrom:    today,
+    dateTo:      today,
   });
 
   const [appliedFilters, setAppliedFilters] = useState({
-    searchType: 'InvoiceNo',
+    searchType:  'InvoiceNo',
     searchValue: '',
     patientName: '',
-    status: -1,
+    status:      -1,
     invoiceType: 0,
-    dateFrom: today,
-    dateTo: today,
+    dateFrom:    today,
+    dateTo:      today,
   });
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading]             = useState(true);
+  const [error,   setError]               = useState(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState(null);
-  const [formSuccess, setFormSuccess] = useState(null);
+  const [isViewModalOpen,    setIsViewModalOpen]    = useState(false);
+  const [selectedInvoice,    setSelectedInvoice]    = useState(null);
+  const [formLoading, setFormLoading]     = useState(false);
   const [paymentData, setPaymentData] = useState({
     paymentDate: today,
     paymentMode: '',
-    amount: '',
+    amount:      '',
     referenceNo: '',
-    remarks: ''
+    remarks:     '',
   });
-  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [activeDropdown, setActiveDropdown]         = useState(null);
   const [validationMessages, setValidationMessages] = useState({});
+  const [confirmCancel, setConfirmCancel]           = useState(null); // invoice to cancel
 
+  // ── Button cooldown state (2-sec disable after click) ──────────────────────
+  const [btnCooldown, setBtnCooldown] = useState({});
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
+
+  // ── MessagePopup state ──────────────────────────────────────────────────────
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Payment form required-field gating ─────────────────────────────────────
+  // Enabled only when paymentDate, paymentMode and amount are filled
+  const paymentAllRequiredFilled =
+    paymentData.paymentDate.trim().length > 0 &&
+    paymentData.paymentMode !== ''           &&
+    paymentData.amount.trim().length > 0     &&
+    Number(paymentData.amount) > 0;
+
+  // ── Derived ────────────────────────────────────────────────────────────────
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.patientName.trim() !== '' ||
-    appliedFilters.status !== -1 ||
-    appliedFilters.invoiceType !== 0 ||
-    appliedFilters.dateFrom !== today ||
-    appliedFilters.dateTo !== today;
+    appliedFilters.status      !== -1 ||
+    appliedFilters.invoiceType !== 0  ||
+    appliedFilters.dateFrom    !== today ||
+    appliedFilters.dateTo      !== today;
 
+  // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchInvoices = async (filters = appliedFilters, currentPage = page) => {
     try {
       setLoading(true);
@@ -155,15 +177,15 @@ const InvoiceList = () => {
       const branchId = await getStoredBranchId();
 
       const options = {
-        Page: currentPage,
-        PageSize: pageSize,
-        BranchID: branchId,
-        FromDate: filters.dateFrom || today,
-        ToDate: filters.dateTo || today,
+        Page:      currentPage,
+        PageSize:  pageSize,
+        BranchID:  branchId,
+        FromDate:  filters.dateFrom || today,
+        ToDate:    filters.dateTo   || today,
       };
       if (filters.patientName.trim()) options.PatientName = filters.patientName.trim();
-      if (filters.status !== -1) options.Status = filters.status;
-      if (filters.invoiceType !== 0) options.InvoiceType = filters.invoiceType;
+      if (filters.status !== -1)      options.Status      = filters.status;
+      if (filters.invoiceType !== 0)  options.InvoiceType = filters.invoiceType;
 
       const data = await getInvoiceList(clinicId, options);
       setInvoices(data);
@@ -190,6 +212,7 @@ const InvoiceList = () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  // ── Client-side filter ─────────────────────────────────────────────────────
   const filteredInvoices = useMemo(() => {
     let filtered = allInvoices;
     if (appliedFilters.searchValue.trim()) {
@@ -206,16 +229,17 @@ const InvoiceList = () => {
   }, [allInvoices, appliedFilters.searchValue, appliedFilters.searchType]);
 
   const statistics = useMemo(() => {
-    const total = filteredInvoices.reduce((sum, inv) => sum + (inv.netAmount || 0), 0);
-    const paid = filteredInvoices.filter(inv => inv.status === 3).length;
-    const pending = filteredInvoices.filter(inv => inv.status === 2).length;
+    const total     = filteredInvoices.reduce((sum, inv) => sum + (inv.netAmount || 0), 0);
+    const paid      = filteredInvoices.filter(inv => inv.status === 3).length;
+    const pending   = filteredInvoices.filter(inv => inv.status === 2).length;
     const cancelled = filteredInvoices.filter(inv => inv.status === 5).length;
     return { total, paid, pending, cancelled, count: filteredInvoices.length };
   }, [filteredInvoices]);
 
-  // ── Pagination helpers ──
+  // ── Pagination ─────────────────────────────────────────────────────────────
   const handlePageChange = (newPage) => {
     if (newPage < 1) return;
+    triggerCooldown(`page-${newPage}`);
     setPage(newPage);
     fetchInvoices(appliedFilters, newPage);
   };
@@ -223,43 +247,43 @@ const InvoiceList = () => {
   const startRecord = filteredInvoices.length === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord   = (page - 1) * pageSize + filteredInvoices.length;
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
   const calculateBalanceAmount = (netAmount, paidAmount) => {
-    const net = Number(netAmount) || 0;
-    const paid = Number(paidAmount) || 0;
-    return net - paid;
+    return (Number(netAmount) || 0) - (Number(paidAmount) || 0);
   };
 
+  // ── Filter handlers ────────────────────────────────────────────────────────
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSearch = () => {
+    triggerCooldown('search');
     setPage(1);
     setAppliedFilters({ ...filterInputs });
   };
 
   const handleClearFilters = () => {
+    triggerCooldown('clear');
     const defaults = {
-      searchType: 'InvoiceNo',
-      searchValue: '',
-      patientName: '',
-      status: -1,
-      invoiceType: 0,
-      dateFrom: today,
-      dateTo: today,
+      searchType: 'InvoiceNo', searchValue: '', patientName: '',
+      status: -1, invoiceType: 0, dateFrom: today, dateTo: today,
     };
     setPage(1);
     setFilterInputs(defaults);
     setAppliedFilters(defaults);
   };
 
+  // ── Dropdown ───────────────────────────────────────────────────────────────
   const toggleDropdown = (invoiceId, e) => {
     e.stopPropagation();
     setActiveDropdown(activeDropdown === invoiceId ? null : invoiceId);
   };
 
+  // ── Modal handlers ─────────────────────────────────────────────────────────
   const openViewModal = (invoice) => {
+    triggerCooldown(`view-${invoice.id}`);
     setSelectedInvoice(invoice);
     setIsViewModalOpen(true);
     setActiveDropdown(null);
@@ -276,12 +300,10 @@ const InvoiceList = () => {
     setPaymentData({
       paymentDate: today,
       paymentMode: '',
-      amount: balanceAmount > 0 ? balanceAmount.toString() : invoice.netAmount?.toString() || '',
+      amount:      balanceAmount > 0 ? balanceAmount.toString() : invoice.netAmount?.toString() || '',
       referenceNo: '',
-      remarks: ''
+      remarks:     '',
     });
-    setFormError(null);
-    setFormSuccess(null);
     setValidationMessages({});
     setIsPaymentModalOpen(true);
     setActiveDropdown(null);
@@ -290,11 +312,10 @@ const InvoiceList = () => {
   const closeModals = () => {
     setIsPaymentModalOpen(false);
     setSelectedInvoice(null);
-    setFormError(null);
-    setFormSuccess(null);
     setValidationMessages({});
   };
 
+  // ── Payment input handler ──────────────────────────────────────────────────
   const handlePaymentInputChange = (e) => {
     const { name, value } = e.target;
     const filteredValue = filterInput(name, value);
@@ -303,56 +324,81 @@ const InvoiceList = () => {
     setValidationMessages(prev => ({ ...prev, [name]: validationMessage }));
   };
 
+  // ── Add payment ────────────────────────────────────────────────────────────
   const handleAddPayment = async (e) => {
     e.preventDefault();
+
+    // Guard: required fields
+    if (!paymentAllRequiredFilled) {
+      const missing = [];
+      if (!paymentData.paymentDate)                            missing.push('Payment Date');
+      if (!paymentData.paymentMode)                            missing.push('Payment Mode');
+      if (!paymentData.amount || Number(paymentData.amount) <= 0) missing.push('Amount');
+      showPopup(`Please fill all required fields: ${missing.join(', ')}.`, 'warning');
+      return;
+    }
+
+    // Additional validations
     const paymentDateValidation = getLiveValidationMessage('paymentDate', paymentData.paymentDate);
-    if (paymentDateValidation) { setFormError(paymentDateValidation); return; }
-    if (!paymentData.paymentMode) { setFormError('Please select payment mode'); return; }
+    if (paymentDateValidation) { showPopup(paymentDateValidation, 'warning'); return; }
+
     const amountValidation = getLiveValidationMessage('amount', paymentData.amount);
-    if (amountValidation) { setFormError(amountValidation); return; }
-    if (!paymentData.amount || Number(paymentData.amount) <= 0) { setFormError('Please enter valid amount'); return; }
+    if (amountValidation) { showPopup(amountValidation, 'warning'); return; }
+
     if ([3, 4, 7].includes(Number(paymentData.paymentMode)) && paymentData.referenceNo) {
       const refValidation = getLiveValidationMessage('referenceNo', paymentData.referenceNo);
-      if (refValidation) { setFormError(refValidation); return; }
+      if (refValidation) { showPopup(refValidation, 'warning'); return; }
     }
+
+    triggerCooldown('payment-submit');
+
     try {
       setFormLoading(true);
-      setFormError(null);
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       await addInvoicePayment({
         clinicId, branchId,
-        invoiceId: selectedInvoice.id,
+        invoiceId:   selectedInvoice.id,
         paymentDate: paymentData.paymentDate,
         paymentMode: Number(paymentData.paymentMode),
-        amount: Number(paymentData.amount),
+        amount:      Number(paymentData.amount),
         referenceNo: paymentData.referenceNo,
-        remarks: paymentData.remarks
+        remarks:     paymentData.remarks,
       });
-      setFormSuccess('Payment recorded successfully!');
+      showPopup('Payment recorded successfully!', 'success');
       setTimeout(() => { closeModals(); fetchInvoices(); }, 1500);
     } catch (err) {
-      setFormError(err.message || 'Failed to record payment');
+      showPopup(err.message || 'Failed to record payment.', 'error');
     } finally {
       setFormLoading(false);
     }
   };
 
-  const handleCancelInvoice = async (invoice) => {
-    if (!window.confirm(`Cancel invoice ${invoice.invoiceNo}?`)) return;
+  // ── Cancel invoice ─────────────────────────────────────────────────────────
+  const handleCancelInvoice = (invoice) => {
+    triggerCooldown(`cancel-${invoice.id}`);
+    setActiveDropdown(null);
+    setConfirmCancel(invoice);
+  };
+
+  const handleConfirmCancelInvoice = async () => {
+    if (!confirmCancel) return;
+    const invoice = confirmCancel;
+    setConfirmCancel(null);
     try {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       await cancelInvoice(invoice.id, clinicId, branchId);
-      setActiveDropdown(null);
+      showPopup(`Invoice ${invoice.invoiceNo} cancelled successfully!`, 'success');
       fetchInvoices();
     } catch (err) {
-      setError({ message: err.message || 'Failed to cancel invoice' });
+      showPopup(err.message || 'Failed to cancel invoice.', 'error');
     }
   };
 
+  // ── Formatters ─────────────────────────────────────────────────────────────
   const formatCurrency = (amount) => amount ? `₹${Number(amount).toFixed(2)}` : '₹0.00';
-  const formatDate = (dateStr) => {
+  const formatDate     = (dateStr) => {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
@@ -367,20 +413,18 @@ const InvoiceList = () => {
     return statusObj?.label || 'Unknown';
   };
 
+  // ── Early returns ──────────────────────────────────────────────────────────
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.invoiceLoading}>Loading invoices...</div>;
+  if (loading) return <div className={styles.invoiceLoading}><LoadingPage/></div>;
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className={styles.invoiceListWrapper}>
       <ErrorHandler error={error} />
       <Header title="Invoice Management" />
-
-      {formSuccess && !isPaymentModalOpen && (
-        <div className={styles.formSuccess}>{formSuccess}</div>
-      )}
 
       {/* ── Filter Bar ── */}
       <div className={styles.filtersContainer}>
@@ -398,13 +442,13 @@ const InvoiceList = () => {
               <option value="Mobile">Mobile</option>
               <option value="FileNo">File No</option>
             </select>
-
             <input
               type="text"
               name="searchValue"
-              placeholder={`Search by ${filterInputs.searchType === 'InvoiceNo' ? 'Invoice No' :
-                filterInputs.searchType === 'Patient' ? 'Patient Name' :
-                  filterInputs.searchType === 'Mobile' ? 'Mobile' : 'File No'}`}
+              placeholder={`Search by ${
+                filterInputs.searchType === 'InvoiceNo' ? 'Invoice No'   :
+                filterInputs.searchType === 'Patient'   ? 'Patient Name' :
+                filterInputs.searchType === 'Mobile'    ? 'Mobile'       : 'File No'}`}
               value={filterInputs.searchValue}
               onChange={handleFilterChange}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -413,75 +457,42 @@ const InvoiceList = () => {
           </div>
 
           <div className={styles.filterGroup}>
-            <select
-              name="invoiceType"
-              value={filterInputs.invoiceType}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            >
+            <select name="invoiceType" value={filterInputs.invoiceType} onChange={handleFilterChange} className={styles.filterInput}>
               <option value={0}>All Types</option>
-              {INVOICE_TYPES.map(t => (
-                <option key={t.id} value={t.id}>{t.label}</option>
-              ))}
+              {INVOICE_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
             </select>
           </div>
 
           <div className={styles.filterGroup}>
-            <select
-              name="status"
-              value={filterInputs.status}
-              onChange={handleFilterChange}
-              className={styles.filterInput}
-            >
+            <select name="status" value={filterInputs.status} onChange={handleFilterChange} className={styles.filterInput}>
               <option value={-1}>All Status</option>
-              {INVOICE_STATUSES.map(s => (
-                <option key={s.id} value={s.id}>{s.label}</option>
-              ))}
+              {INVOICE_STATUSES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
             </select>
           </div>
 
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
-              {!filterInputs.dateFrom && (
-                <span className={styles.datePlaceholder}>From Date</span>
-              )}
-              <input
-                type="date"
-                name="dateFrom"
-                value={filterInputs.dateFrom}
-                onChange={handleFilterChange}
-                max={today}
-                className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`}
-              />
+              {!filterInputs.dateFrom && <span className={styles.datePlaceholder}>From Date</span>}
+              <input type="date" name="dateFrom" value={filterInputs.dateFrom} onChange={handleFilterChange} max={today}
+                className={`${styles.filterInput} ${!filterInputs.dateFrom ? styles.dateEmpty : ''}`} />
             </div>
           </div>
 
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
-              {!filterInputs.dateTo && (
-                <span className={styles.datePlaceholder}>To Date</span>
-              )}
-              <input
-                type="date"
-                name="dateTo"
-                value={filterInputs.dateTo}
-                onChange={handleFilterChange}
-                max={today}
-                className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`}
-              />
+              {!filterInputs.dateTo && <span className={styles.datePlaceholder}>To Date</span>}
+              <input type="date" name="dateTo" value={filterInputs.dateTo} onChange={handleFilterChange} max={today}
+                className={`${styles.filterInput} ${!filterInputs.dateTo ? styles.dateEmpty : ''}`} />
             </div>
           </div>
 
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
-              <FiSearch size={16} />
-              Search
+            <button onClick={handleSearch} className={styles.searchButton} disabled={!!btnCooldown['search']}>
+              <FiSearch size={16} /> Search
             </button>
-
             {hasActiveFilters && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
-                <FiX size={16} />
-                Clear
+              <button onClick={handleClearFilters} className={styles.clearButton} disabled={!!btnCooldown['clear']}>
+                <FiX size={16} /> Clear
               </button>
             )}
           </div>
@@ -489,9 +500,8 @@ const InvoiceList = () => {
         </div>
       </div>
 
-      {/* ── Table + Pagination wrapper ── */}
+      {/* ── Table + Pagination ── */}
       <div className={styles.tableSection}>
-
         <div className={styles.invoiceTableContainer}>
           <table className={styles.invoiceTable}>
             <thead>
@@ -539,6 +549,7 @@ const InvoiceList = () => {
                             onClick={() => openViewModal(invoice)}
                             className={styles.invoiceViewBtn}
                             title="View Details"
+                            disabled={!!btnCooldown[`view-${invoice.id}`]}
                           >
                             Details
                           </button>
@@ -559,17 +570,16 @@ const InvoiceList = () => {
                                     onClick={() => openPaymentModal(invoice)}
                                     className={`${styles.invoiceDropdownItem} ${styles.payment}`}
                                   >
-                                    <FiDollarSign size={16} />
-                                    Add Payment
+                                    <FiDollarSign size={16} /> Add Payment
                                   </button>
                                 )}
                                 {invoice.status !== 5 && (
                                   <button
                                     onClick={() => handleCancelInvoice(invoice)}
                                     className={`${styles.invoiceDropdownItem} ${styles.cancel}`}
+                                    disabled={!!btnCooldown[`cancel-${invoice.id}`]}
                                   >
-                                    <FiX size={16} />
-                                    Cancel Invoice
+                                    <FiX size={16} /> Cancel Invoice
                                   </button>
                                 )}
                               </div>
@@ -585,73 +595,39 @@ const InvoiceList = () => {
           </table>
         </div>
 
-        {/* ── Pagination Bar — pinned to bottom of tableSection ── */}
+        {/* ── Pagination Bar ── */}
         <div className={styles.paginationBar}>
           <div className={styles.paginationInfo}>
-            {filteredInvoices.length > 0
-              ? `Showing ${startRecord}–${endRecord} records`
-              : 'No records'}
+            {filteredInvoices.length > 0 ? `Showing ${startRecord}–${endRecord} records` : 'No records'}
           </div>
-
           <div className={styles.paginationControls}>
             <span className={styles.paginationLabel}>Page</span>
-
-            <button
-              className={styles.pageBtn}
-              onClick={() => handlePageChange(1)}
-              disabled={page === 1}
-              title="First page"
-            >
-              «
-            </button>
-
-            <button
-              className={styles.pageBtn}
-              onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
-              title="Previous page"
-            >
-              ‹
-            </button>
-
+            <button className={styles.pageBtn} onClick={() => handlePageChange(1)}        disabled={page === 1 || !!btnCooldown['page-1']}          title="First page">«</button>
+            <button className={styles.pageBtn} onClick={() => handlePageChange(page - 1)} disabled={page === 1 || !!btnCooldown[`page-${page - 1}`]} title="Previous page">‹</button>
             <span className={styles.pageIndicator}>{page}</span>
-
-            <button
-              className={styles.pageBtn}
-              onClick={() => handlePageChange(page + 1)}
-              disabled={filteredInvoices.length < pageSize}
-              title="Next page"
-            >
-              ›
-            </button>
+            <button className={styles.pageBtn} onClick={() => handlePageChange(page + 1)} disabled={filteredInvoices.length < pageSize || !!btnCooldown[`page-${page + 1}`]} title="Next page">›</button>
           </div>
-
-          <div className={styles.pageSizeInfo}>
-            Total: <strong>{formatCurrency(statistics.total)}</strong>
-          </div>
+          <div className={styles.pageSizeInfo}>Total: <strong>{formatCurrency(statistics.total)}</strong></div>
         </div>
+      </div>
 
-      </div>{/* end tableSection */}
-
-      {/* View Invoice Modal */}
+      {/* ── View Invoice Modal ── */}
       <ViewInvoice
         isOpen={isViewModalOpen}
         onClose={closeViewModal}
         invoiceId={selectedInvoice?.id}
       />
 
-      {/* Add Payment Modal */}
+      {/* ── Add Payment Modal ── */}
       {isPaymentModalOpen && (
         <div className={styles.invoiceModalOverlay}>
           <div className={styles.invoiceModal}>
             <div className={styles.invoiceModalHeader}>
               <h2>Add Payment</h2>
-              <button onClick={closeModals} className={styles.invoiceModalClose}>×</button>
+              <button onClick={closeModals} className={styles.invoiceModalClose} disabled={formLoading}>×</button>
             </div>
-            <form onSubmit={handleAddPayment}>
+            <form onSubmit={handleAddPayment} noValidate>
               <div className={styles.invoiceModalBody}>
-                {formError && <div className={styles.formError}>{formError}</div>}
-                {formSuccess && <div className={styles.formSuccess}>{formSuccess}</div>}
                 <div className={styles.invoiceHeader}>
                   <div className={styles.detailsGrid}>
                     <div className={styles.detailItem}>
@@ -672,6 +648,7 @@ const InvoiceList = () => {
                     </div>
                   </div>
                 </div>
+
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
                     <label>Payment Date <span className={styles.required}>*</span></label>
@@ -682,7 +659,6 @@ const InvoiceList = () => {
                       onChange={handlePaymentInputChange}
                       max={today}
                       disabled={formLoading}
-                      required
                     />
                     {validationMessages.paymentDate && (
                       <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
@@ -698,7 +674,6 @@ const InvoiceList = () => {
                       value={paymentData.paymentMode}
                       onChange={handlePaymentInputChange}
                       disabled={formLoading}
-                      required
                       className={styles.formSelect}
                     >
                       <option value="">Select mode</option>
@@ -715,7 +690,6 @@ const InvoiceList = () => {
                       onChange={handlePaymentInputChange}
                       placeholder="0.00"
                       disabled={formLoading}
-                      required
                     />
                     {validationMessages.amount && (
                       <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
@@ -758,9 +732,17 @@ const InvoiceList = () => {
                   </div>
                 </div>
               </div>
+
               <div className={styles.invoiceModalFooter}>
-                <button type="button" onClick={closeModals} className={styles.btnCancel} disabled={formLoading}>Cancel</button>
-                <button type="submit" className={styles.btnSubmit} disabled={formLoading}>
+                <button type="button" onClick={closeModals} className={styles.btnCancel} disabled={formLoading}>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={styles.btnSubmit}
+                  disabled={formLoading || !!btnCooldown['payment-submit']}
+                  title={!paymentAllRequiredFilled ? 'Please fill all required fields to enable this button' : ''}
+                >
                   {formLoading ? 'Recording...' : 'Record Payment'}
                 </button>
               </div>
@@ -768,6 +750,25 @@ const InvoiceList = () => {
           </div>
         </div>
       )}
+
+      {/* ── Confirm Cancel Invoice Popup ── */}
+      <ConfirmPopup
+        visible={!!confirmCancel}
+        message={`Cancel Invoice ${confirmCancel?.invoiceNo}?`}
+        subMessage="This action cannot be undone. The invoice will be marked as cancelled."
+        confirmLabel="Yes, Cancel Invoice"
+        cancelLabel="Keep Invoice"
+        onConfirm={handleConfirmCancelInvoice}
+        onCancel={() => setConfirmCancel(null)}
+      />
+
+      {/* ── MessagePopup (at root level so z-index is never blocked) ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
     </div>
   );
 };

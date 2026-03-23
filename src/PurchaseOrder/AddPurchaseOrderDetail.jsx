@@ -13,12 +13,13 @@ import {
   getPurchaseOrderList,
   getMedicineMasterList,
 } from "../Api/ApiPharmacy.js";
+import MessagePopup from "../Hooks/MessagePopup.jsx";
 import styles from "./AddPurchaseOrderDetail.module.css";
 import { FaClinicMedical } from "react-icons/fa";
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
 /* ─────────────────────────────────────────────── */
-/* Reusable SearchableDropdown                      */
+/* Reusable SearchableDropdown — UNCHANGED          */
 /* ─────────────────────────────────────────────── */
 const SearchableDropdown = ({
   label,
@@ -33,7 +34,7 @@ const SearchableDropdown = ({
   loading = false,
 }) => {
   const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen]   = useState(false);
   const wrapperRef = useRef(null);
 
   const selectedItem = items.find((i) => String(i.id) === String(selectedId));
@@ -51,7 +52,7 @@ const SearchableDropdown = ({
   const filtered = items.filter((item) => {
     const lbl = getItemLabel(item).toLowerCase();
     const sub = getItemSubLabel ? getItemSubLabel(item).toLowerCase() : "";
-    const q = query.toLowerCase();
+    const q   = query.toLowerCase();
     return lbl.includes(q) || sub.includes(q);
   });
 
@@ -91,21 +92,13 @@ const SearchableDropdown = ({
             <input
               autoFocus
               className={styles.searchableInnerInput}
-              placeholder={
-                selectedItem ? getItemLabel(selectedItem) : placeholder
-              }
+              placeholder={selectedItem ? getItemLabel(selectedItem) : placeholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <span
-              className={
-                selectedItem
-                  ? styles.searchableSelected
-                  : styles.searchablePlaceholder
-              }
-            >
+            <span className={selectedItem ? styles.searchableSelected : styles.searchablePlaceholder}>
               {loading
                 ? "Loading..."
                 : selectedItem
@@ -116,18 +109,11 @@ const SearchableDropdown = ({
 
           <div className={styles.searchableActions}>
             {selectedItem && !open && (
-              <button
-                type="button"
-                className={styles.clearBtn}
-                onClick={handleClear}
-              >
+              <button type="button" className={styles.clearBtn} onClick={handleClear}>
                 <FiX size={13} />
               </button>
             )}
-            <FiChevronDown
-              size={15}
-              className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`}
-            />
+            <FiChevronDown size={15} className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`} />
           </div>
         </div>
 
@@ -146,13 +132,9 @@ const SearchableDropdown = ({
                     {getItemLabel(item).charAt(0).toUpperCase()}
                   </div>
                   <div className={styles.optionInfo}>
-                    <span className={styles.optionLabel}>
-                      {getItemLabel(item)}
-                    </span>
+                    <span className={styles.optionLabel}>{getItemLabel(item)}</span>
                     {getItemSubLabel && (
-                      <span className={styles.optionSub}>
-                        {getItemSubLabel(item)}
-                      </span>
+                      <span className={styles.optionSub}>{getItemSubLabel(item)}</span>
                     )}
                   </div>
                   {String(item.id) === String(selectedId) && (
@@ -178,19 +160,30 @@ const AddPurchaseOrderDetail = ({
   preselectedPOID = null,
 }) => {
   const [formData, setFormData] = useState({
-    POID: "",
+    POID:       "",
     MedicineID: "",
-    Quantity: "",
-    UnitPrice: "",
+    Quantity:   "",
+    UnitPrice:  "",
   });
 
-  const [purchaseOrders, setPurchaseOrders] = useState([]);
-  const [medicines, setMedicines] = useState([]);
-  const [loadingPOs, setLoadingPOs] = useState(false);
-  const [loadingMedicines, setLoadingMedicines] = useState(false);
-  const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState("");
-  const [formSuccess, setFormSuccess] = useState(false);
+  const [purchaseOrders, setPurchaseOrders]       = useState([]);
+  const [medicines, setMedicines]                 = useState([]);
+  const [loadingPOs, setLoadingPOs]               = useState(false);
+  const [loadingMedicines, setLoadingMedicines]   = useState(false);
+  const [formLoading, setFormLoading]             = useState(false);
+
+  // ── MessagePopup state ──────────────────────────
+  const [popup, setPopup] = useState({ visible: false, message: "", type: "success" });
+  const showPopup  = (message, type = "success") => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: "", type: "success" });
+
+  // ── Submit button gating ────────────────────────
+  // Enabled only when POID, MedicineID, Quantity, UnitPrice are all filled
+  const allRequiredFilled =
+    !!formData.POID &&
+    !!formData.MedicineID &&
+    String(formData.Quantity).trim().length > 0 &&
+    String(formData.UnitPrice).trim().length > 0;
 
   /* fetch on open */
   useEffect(() => {
@@ -219,13 +212,13 @@ const AddPurchaseOrderDetail = ({
       const branchId = await getStoredBranchId();
       const data = await getPurchaseOrderList(clinicId, {
         BranchID: branchId,
-        POID: 0,
-        Status: -1,
+        POID:     0,
+        Status:   -1,
       });
       setPurchaseOrders(data);
     } catch (err) {
       console.error("Fetch purchase orders error:", err);
-      setFormError("Failed to load purchase orders. Please try again.");
+      showPopup("Failed to load purchase orders. Please try again.", "error");
     } finally {
       setLoadingPOs(false);
     }
@@ -238,14 +231,14 @@ const AddPurchaseOrderDetail = ({
       const branchId = await getStoredBranchId();
       const data = await getMedicineMasterList(clinicId, {
         BranchID: branchId,
-        Status: 1,
-        Page: 1,
+        Status:   1,
+        Page:     1,
         PageSize: 200,
       });
       setMedicines(data);
     } catch (err) {
       console.error("Fetch medicines error:", err);
-      setFormError("Failed to load medicines. Please try again.");
+      showPopup("Failed to load medicines. Please try again.", "error");
     } finally {
       setLoadingMedicines(false);
     }
@@ -253,13 +246,12 @@ const AddPurchaseOrderDetail = ({
 
   const resetForm = () => {
     setFormData({
-      POID: preselectedPOID || "",
+      POID:       preselectedPOID || "",
       MedicineID: "",
-      Quantity: "",
-      UnitPrice: "",
+      Quantity:   "",
+      UnitPrice:  "",
     });
-    setFormError("");
-    setFormSuccess(false);
+    setPopup({ visible: false, message: "", type: "success" });
   };
 
   /* ── Handlers ── */
@@ -268,15 +260,10 @@ const AddPurchaseOrderDetail = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handlePOChange = (e) => {
-    setFormData((prev) => ({ ...prev, POID: e.target.value }));
-  };
-
   const handleMedicineSelect = (medicine) => {
     setFormData((prev) => ({
       ...prev,
       MedicineID: medicine ? String(medicine.id) : "",
-      // Auto-fill unit price from medicine's purchase price if available
       UnitPrice:
         medicine?.purchasePrice && medicine.purchasePrice !== "0.00"
           ? medicine.purchasePrice
@@ -286,37 +273,50 @@ const AddPurchaseOrderDetail = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Guard: show warning popup if required fields missing
+    if (!allRequiredFilled) {
+      const missing = [];
+      if (!formData.POID)                            missing.push("Purchase Order");
+      if (!formData.MedicineID)                      missing.push("Medicine");
+      if (!String(formData.Quantity).trim())         missing.push("Quantity");
+      if (!String(formData.UnitPrice).trim())        missing.push("Unit Price");
+      showPopup(
+        `Please fill all required fields: ${missing.join(", ")}.`,
+        "warning"
+      );
+      return;
+    }
+
     setFormLoading(true);
-    setFormError("");
-    setFormSuccess(false);
 
     try {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
 
       const payload = {
-        clinicId: clinicId ? Number(clinicId) : 0,
-        branchId: branchId ? Number(branchId) : 0,
-        POID: formData.POID ? Number(formData.POID) : 0,
-        MedicineID: formData.MedicineID ? Number(formData.MedicineID) : 0,
-        Quantity: formData.Quantity ? Number(formData.Quantity) : 0,
-        UnitPrice: formData.UnitPrice ? parseFloat(formData.UnitPrice) : 0,
+        clinicId:   clinicId ? Number(clinicId) : 0,
+        branchId:   branchId ? Number(branchId) : 0,
+        POID:       formData.POID       ? Number(formData.POID)              : 0,
+        MedicineID: formData.MedicineID ? Number(formData.MedicineID)        : 0,
+        Quantity:   formData.Quantity   ? Number(formData.Quantity)          : 0,
+        UnitPrice:  formData.UnitPrice  ? parseFloat(formData.UnitPrice)     : 0,
       };
 
       const response = await addPurchaseOrderDetail(payload);
 
       if (response.success) {
-        setFormSuccess(true);
+        showPopup("Item added successfully!", "success");
         setTimeout(() => {
           onAddSuccess?.();
           onClose();
         }, 1500);
       } else {
-        setFormError(response.message || "Failed to add purchase order item.");
+        showPopup(response.message || "Failed to add purchase order item.", "error");
       }
     } catch (err) {
       console.error("Add purchase order detail failed:", err);
-      setFormError(err.message || "Failed to add purchase order item.");
+      showPopup(err.message || "Failed to add purchase order item.", "error");
     } finally {
       setFormLoading(false);
     }
@@ -333,217 +333,202 @@ const AddPurchaseOrderDetail = ({
   );
   const totalAmount =
     formData.Quantity && formData.UnitPrice
-      ? (
-          parseFloat(formData.Quantity) * parseFloat(formData.UnitPrice)
-        ).toFixed(2)
+      ? (parseFloat(formData.Quantity) * parseFloat(formData.UnitPrice)).toFixed(2)
       : null;
 
   if (!isOpen) return null;
 
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal}>
-        {/* Header */}
-        <div className={styles.header}>
-          <div className={styles.headerContent}>
-            <FiShoppingCart className={styles.headerIcon} size={22} />
-            <h2>Add Item to Purchase Order</h2>
-          </div>
-          <div className={styles.clinicNameone}>
-            <FaClinicMedical
-              size={20}
-              style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
-            />
-            {localStorage.getItem("clinicName") || "—"}
-          </div>
-
-          <button
-            className={styles.closeBtn}
-            onClick={handleClose}
-            disabled={formLoading}
-          >
-            <FiX size={20} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.body}>
-            {/* Alerts */}
-            {formError && <div className={styles.alertError}>{formError}</div>}
-            {formSuccess && (
-              <div className={styles.alertSuccess}>
-                Item added successfully!
-              </div>
-            )}
-
-            {/* ── Medicine Section ── */}
-            <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>
-                <FiPackage size={17} />
-                Medicine Details
-              </h3>
-
-              {/* Medicine Searchable Dropdown */}
-              <SearchableDropdown
-                label="Select Medicine"
-                required
-                placeholder="Search by name or generic name..."
-                items={medicines}
-                selectedId={formData.MedicineID}
-                onSelect={handleMedicineSelect}
-                getItemLabel={(m) => m.name}
-                getItemSubLabel={(m) =>
-                  [m.genericName, m.typeDesc, m.manufacturer]
-                    .filter(Boolean)
-                    .join(" · ")
-                }
-                loading={loadingMedicines}
-                disabled={loadingMedicines}
-              />
-
-              {/* Selected Medicine Info Card */}
-              {selectedMedicine && (
-                <div className={styles.infoCard}>
-                  <div className={styles.infoCardGrid}>
-                    {selectedMedicine.genericName && (
-                      <div className={styles.infoCardItem}>
-                        <span className={styles.infoCardKey}>GENERIC NAME</span>
-                        <span className={styles.infoCardValue}>
-                          {selectedMedicine.genericName}
-                        </span>
-                      </div>
-                    )}
-                    {selectedMedicine.typeDesc && (
-                      <div className={styles.infoCardItem}>
-                        <span className={styles.infoCardKey}>TYPE</span>
-                        <span className={styles.infoCardValue}>
-                          {selectedMedicine.typeDesc}
-                        </span>
-                      </div>
-                    )}
-                    {selectedMedicine.manufacturer && (
-                      <div className={styles.infoCardItem}>
-                        <span className={styles.infoCardKey}>MANUFACTURER</span>
-                        <span className={styles.infoCardValue}>
-                          {selectedMedicine.manufacturer}
-                        </span>
-                      </div>
-                    )}
-                    {selectedMedicine.unitDesc && (
-                      <div className={styles.infoCardItem}>
-                        <span className={styles.infoCardKey}>UNIT</span>
-                        <span className={styles.infoCardValue}>
-                          {selectedMedicine.unitDesc}
-                        </span>
-                      </div>
-                    )}
-                    <div className={styles.infoCardItem}>
-                      <span className={styles.infoCardKey}>STOCK QTY</span>
-                      <span
-                        className={`${styles.infoCardValue} ${selectedMedicine.isLowStock ? styles.lowStock : ""}`}
-                      >
-                        {selectedMedicine.stockQuantity}
-                        {selectedMedicine.isLowStock && (
-                          <span className={styles.lowStockBadge}>Low</span>
-                        )}
-                      </span>
-                    </div>
-                    <div className={styles.infoCardItem}>
-                      <span className={styles.infoCardKey}>PURCHASE PRICE</span>
-                      <span className={styles.infoCardValue}>
-                        ₹{selectedMedicine.purchasePrice}
-                      </span>
-                    </div>
-                    <div className={styles.infoCardItem}>
-                      <span className={styles.infoCardKey}>MRP</span>
-                      <span className={styles.infoCardValue}>
-                        ₹{selectedMedicine.mrp}
-                      </span>
-                    </div>
-                    {selectedMedicine.hsnCode && (
-                      <div className={styles.infoCardItem}>
-                        <span className={styles.infoCardKey}>HSN CODE</span>
-                        <span className={styles.infoCardValue}>
-                          {selectedMedicine.hsnCode}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Quantity & Unit Price Row */}
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>
-                    Quantity <span className={styles.required}>*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="Quantity"
-                    value={formData.Quantity}
-                    onChange={handleInputChange}
-                    required
-                    min="1"
-                    placeholder="Enter quantity"
-                    className={styles.formInput}
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>
-                    Unit Price (₹) <span className={styles.required}>*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="UnitPrice"
-                    value={formData.UnitPrice}
-                    onChange={handleInputChange}
-                    required
-                    min="0"
-                    step="0.01"
-                    placeholder="Enter unit price"
-                    className={styles.formInput}
-                  />
-                </div>
-              </div>
-
-              {/* Total Amount Badge */}
-              {totalAmount && (
-                <div className={styles.totalBadge}>
-                  <FiCheckCircle size={16} />
-                  Total Amount: <strong>₹{totalAmount}</strong>
-                </div>
-              )}
+    <>
+      <div className={styles.overlay}>
+        <div className={styles.modal}>
+          {/* Header */}
+          <div className={styles.header}>
+            <div className={styles.headerContent}>
+              <FiShoppingCart className={styles.headerIcon} size={22} />
+              <h2>Add Item to Purchase Order</h2>
             </div>
-
-            <p className={styles.noteText}>
-              Fields marked with <span className={styles.required}>*</span> are
-              required. Total amount is calculated automatically.
-            </p>
-          </div>
-
-          {/* Footer */}
-          <div className={styles.footer}>
+            <div className={styles.clinicNameone}>
+              <FaClinicMedical
+                size={20}
+                style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
+              />
+              {localStorage.getItem("clinicName") || "—"}
+            </div>
             <button
-              type="button"
-              className={styles.btnCancel}
+              className={styles.closeBtn}
               onClick={handleClose}
               disabled={formLoading}
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className={styles.btnSubmit}
-              disabled={formLoading || !formData.POID || !formData.MedicineID}
-            >
-              {formLoading ? "Adding..." : "Add Item"}
+              <FiX size={20} />
             </button>
           </div>
-        </form>
+
+          <form onSubmit={handleSubmit} className={styles.form} noValidate>
+            <div className={styles.body}>
+
+              {/* ── Medicine Section ── */}
+              <div className={styles.section}>
+                <h3 className={styles.sectionTitle}>
+                  <FiPackage size={17} />
+                  Medicine Details
+                </h3>
+
+                {/* Medicine Searchable Dropdown */}
+                <SearchableDropdown
+                  label="Select Medicine"
+                  required
+                  placeholder="Search by name or generic name..."
+                  items={medicines}
+                  selectedId={formData.MedicineID}
+                  onSelect={handleMedicineSelect}
+                  getItemLabel={(m) => m.name}
+                  getItemSubLabel={(m) =>
+                    [m.genericName, m.typeDesc, m.manufacturer]
+                      .filter(Boolean)
+                      .join(" · ")
+                  }
+                  loading={loadingMedicines}
+                  disabled={loadingMedicines}
+                />
+
+                {/* Selected Medicine Info Card */}
+                {selectedMedicine && (
+                  <div className={styles.infoCard}>
+                    <div className={styles.infoCardGrid}>
+                      {selectedMedicine.genericName && (
+                        <div className={styles.infoCardItem}>
+                          <span className={styles.infoCardKey}>GENERIC NAME</span>
+                          <span className={styles.infoCardValue}>{selectedMedicine.genericName}</span>
+                        </div>
+                      )}
+                      {selectedMedicine.typeDesc && (
+                        <div className={styles.infoCardItem}>
+                          <span className={styles.infoCardKey}>TYPE</span>
+                          <span className={styles.infoCardValue}>{selectedMedicine.typeDesc}</span>
+                        </div>
+                      )}
+                      {selectedMedicine.manufacturer && (
+                        <div className={styles.infoCardItem}>
+                          <span className={styles.infoCardKey}>MANUFACTURER</span>
+                          <span className={styles.infoCardValue}>{selectedMedicine.manufacturer}</span>
+                        </div>
+                      )}
+                      {selectedMedicine.unitDesc && (
+                        <div className={styles.infoCardItem}>
+                          <span className={styles.infoCardKey}>UNIT</span>
+                          <span className={styles.infoCardValue}>{selectedMedicine.unitDesc}</span>
+                        </div>
+                      )}
+                      <div className={styles.infoCardItem}>
+                        <span className={styles.infoCardKey}>STOCK QTY</span>
+                        <span className={`${styles.infoCardValue} ${selectedMedicine.isLowStock ? styles.lowStock : ""}`}>
+                          {selectedMedicine.stockQuantity}
+                          {selectedMedicine.isLowStock && (
+                            <span className={styles.lowStockBadge}>Low</span>
+                          )}
+                        </span>
+                      </div>
+                      <div className={styles.infoCardItem}>
+                        <span className={styles.infoCardKey}>PURCHASE PRICE</span>
+                        <span className={styles.infoCardValue}>₹{selectedMedicine.purchasePrice}</span>
+                      </div>
+                      <div className={styles.infoCardItem}>
+                        <span className={styles.infoCardKey}>MRP</span>
+                        <span className={styles.infoCardValue}>₹{selectedMedicine.mrp}</span>
+                      </div>
+                      {selectedMedicine.hsnCode && (
+                        <div className={styles.infoCardItem}>
+                          <span className={styles.infoCardKey}>HSN CODE</span>
+                          <span className={styles.infoCardValue}>{selectedMedicine.hsnCode}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quantity & Unit Price Row */}
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>
+                      Quantity <span className={styles.required}>*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="Quantity"
+                      value={formData.Quantity}
+                      onChange={handleInputChange}
+                      min="1"
+                      placeholder="Enter quantity"
+                      className={styles.formInput}
+                      disabled={formLoading}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>
+                      Unit Price (₹) <span className={styles.required}>*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="UnitPrice"
+                      value={formData.UnitPrice}
+                      onChange={handleInputChange}
+                      min="0"
+                      step="0.01"
+                      placeholder="Enter unit price"
+                      className={styles.formInput}
+                      disabled={formLoading}
+                    />
+                  </div>
+                </div>
+
+                {/* Total Amount Badge */}
+                {totalAmount && (
+                  <div className={styles.totalBadge}>
+                    <FiCheckCircle size={16} />
+                    Total Amount: <strong>₹{totalAmount}</strong>
+                  </div>
+                )}
+              </div>
+
+              <p className={styles.noteText}>
+                Fields marked with <span className={styles.required}>*</span> are
+                required. Total amount is calculated automatically.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className={styles.footer}>
+              <button
+                type="button"
+                className={styles.btnCancel}
+                onClick={handleClose}
+                disabled={formLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className={styles.btnSubmit}
+                disabled={formLoading}
+                title={!allRequiredFilled ? 'Please fill all required fields to enable this button' : ''}
+              >
+                {formLoading ? "Adding..." : "Add Item"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+
+      {/* ── MessagePopup (outside modal so z-index is clean) ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
+    </>
   );
 };
 

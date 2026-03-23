@@ -10,8 +10,8 @@ import AppointmentDetails from './ViewAppointment.jsx';
 import styles from './AppointmentList.module.css';
 import AddAppointmentVisit from './AddAppointmentVisits.jsx';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
-
-
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 // ──────────────────────────────────────────────────
 // CONSTANTS
@@ -41,6 +41,28 @@ const AppointmentList = () => {
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState(null);
 
+  // ── MessagePopup state — only for cancel outcome (from ViewAppointment) ──
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Button cooldown states ──
+  const [searchCooldown,  setSearchCooldown]  = useState(false);
+  const [clearCooldown,   setClearCooldown]   = useState(false);
+  const [addCooldown,     setAddCooldown]     = useState(false);
+  const [viewCooldowns,   setViewCooldowns]   = useState({});
+  const [visitCooldowns,  setVisitCooldowns]  = useState({});
+
+  const startCooldown = (setter) => {
+    setter(true);
+    setTimeout(() => setter(false), 2000);
+  };
+
+  const startIdCooldown = (setter, id) => {
+    setter((prev) => ({ ...prev, [id]: true }));
+    setTimeout(() => setter((prev) => ({ ...prev, [id]: false })), 2000);
+  };
+
   // ── Pagination ──
   const [page, setPage] = useState(1);
   const pageSize = 20;
@@ -66,19 +88,19 @@ const AppointmentList = () => {
   });
 
   // Modals
-  const [isAddFormOpen,      setIsAddFormOpen]      = useState(false);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [isAddVisitModalOpen,setIsAddVisitModalOpen]= useState(false);
-  const [selectedAppointment,setSelectedAppointment]= useState(null);
+  const [isAddFormOpen,       setIsAddFormOpen]       = useState(false);
+  const [isDetailsModalOpen,  setIsDetailsModalOpen]  = useState(false);
+  const [isAddVisitModalOpen, setIsAddVisitModalOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
 
   // ──────────────────────────────────────────────────
   // Derived: are any filters actually active?
   const hasActiveFilters =
-    appliedFilters.searchValue.trim()           !== '' ||
-    appliedFilters.status                        !== '' ||
-    appliedFilters.appointmentDate               !== todayDate ||
-    appliedFilters.dateFrom                      !== '' ||
-    appliedFilters.dateTo                        !== '';
+    appliedFilters.searchValue.trim()  !== '' ||
+    appliedFilters.status               !== '' ||
+    appliedFilters.appointmentDate      !== todayDate ||
+    appliedFilters.dateFrom             !== '' ||
+    appliedFilters.dateTo               !== '';
 
   // ──────────────────────────────────────────────────
   // Data fetching — driven by appliedFilters
@@ -91,13 +113,12 @@ const AppointmentList = () => {
       const branchId = await getStoredBranchId();
 
       const options = {
-        BranchID:  branchId,
-        Page:      currentPage,
-        PageSize:  pageSize,
-        Status:    filters.status !== '' ? Number(filters.status) : -1,
+        BranchID: branchId,
+        Page:     currentPage,
+        PageSize: pageSize,
+        Status:   filters.status !== '' ? Number(filters.status) : -1,
       };
 
-      // Date range takes priority over single appointment date
       if (filters.dateFrom && filters.dateTo) {
         options.FromDate = filters.dateFrom;
         options.ToDate   = filters.dateTo;
@@ -105,7 +126,6 @@ const AppointmentList = () => {
         options.AppointmentDate = filters.appointmentDate;
       }
 
-      // Search fields
       if (filters.searchType === 'PatientName' && filters.searchValue.trim()) {
         options.PatientName = filters.searchValue.trim();
       }
@@ -166,15 +186,12 @@ const AppointmentList = () => {
   };
 
   // ──────────────────────────────────────────────────
-  // Pagination helpers
+  // Pagination
   const handlePageChange = (newPage) => {
     if (newPage < 1) return;
     setPage(newPage);
     fetchAppointments(appliedFilters, newPage);
   };
-
-  const startRecord = sortedAppointments => sortedAppointments.length === 0 ? 0 : (page - 1) * pageSize + 1;
-  const endRecord   = sortedAppointments => (page - 1) * pageSize + sortedAppointments.length;
 
   // ──────────────────────────────────────────────────
   // Handlers
@@ -182,7 +199,6 @@ const AppointmentList = () => {
     const { name, value } = e.target;
     setFilterInputs((prev) => {
       const updated = { ...prev, [name]: value };
-      // If dateFrom or dateTo is set, clear appointmentDate; if appointmentDate is set, clear date range
       if (name === 'dateFrom' || name === 'dateTo') {
         updated.appointmentDate = '';
       }
@@ -195,11 +211,15 @@ const AppointmentList = () => {
   };
 
   const handleSearch = () => {
+    if (searchCooldown) return;
+    startCooldown(setSearchCooldown);
     setPage(1);
     setAppliedFilters({ ...filterInputs });
   };
 
   const handleClearFilters = () => {
+    if (clearCooldown) return;
+    startCooldown(setClearCooldown);
     const reset = {
       searchType:      'PatientName',
       searchValue:     '',
@@ -214,6 +234,8 @@ const AppointmentList = () => {
   };
 
   const handleViewDetails = (appt) => {
+    if (viewCooldowns[appt.id]) return;
+    startIdCooldown(setViewCooldowns, appt.id);
     setSelectedAppointment(appt);
     setIsDetailsModalOpen(true);
   };
@@ -223,12 +245,21 @@ const AppointmentList = () => {
     setIsDetailsModalOpen(false);
   };
 
-  const openAddForm  = () => setIsAddFormOpen(true);
+  const openAddForm  = () => {
+    if (addCooldown) return;
+    startCooldown(setAddCooldown);
+    setIsAddFormOpen(true);
+  };
   const closeAddForm = () => setIsAddFormOpen(false);
 
-  const handleAddSuccess = () => fetchAppointments(appliedFilters);
+  // ── Child modal owns its own success popup — parent only refreshes list ──
+  const handleAddSuccess = () => {
+    fetchAppointments(appliedFilters);
+  };
 
   const handleAddVisitClick = (appt) => {
+    if (visitCooldowns[appt.id]) return;
+    startIdCooldown(setVisitCooldowns, appt.id);
     setSelectedAppointment(appt);
     setIsAddVisitModalOpen(true);
   };
@@ -238,7 +269,25 @@ const AppointmentList = () => {
     setIsAddVisitModalOpen(false);
   };
 
-  const handleAddVisitSuccess = () => fetchAppointments(appliedFilters);
+  // ── Child modal owns its own success popup — parent only refreshes list ──
+  const handleAddVisitSuccess = () => {
+    fetchAppointments(appliedFilters);
+  };
+
+  const handleAddVisitError = (message) => {
+    showPopup(message || 'Failed to add patient visit.', 'error');
+  };
+
+  // ── Cancel lives in ViewAppointment which has no own MessagePopup,
+  //    so parent shows the outcome here ──
+  const handleCancelSuccess = () => {
+    showPopup('Appointment cancelled successfully.', 'success');
+    fetchAppointments(appliedFilters);
+  };
+
+  const handleCancelError = (message) => {
+    showPopup(message || 'Failed to cancel appointment.', 'error');
+  };
 
   // ──────────────────────────────────────────────────
   // Sorted appointments
@@ -256,10 +305,9 @@ const AppointmentList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.clinicLoading}>Loading appointments...</div>;
+  if (loading) return <div className={styles.clinicLoading}><LoadingPage/></div>;
   if (error)   return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
-  // Pagination computed values (after sortedAppointments is available)
   const start = sortedAppointments.length === 0 ? 0 : (page - 1) * pageSize + 1;
   const end   = (page - 1) * pageSize + sortedAppointments.length;
 
@@ -267,6 +315,14 @@ const AppointmentList = () => {
   return (
     <div className={styles.clinicContainer}>
       <Header title="Appointment Management" />
+
+      {/* ── MessagePopup — cancel outcome only ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
 
       {/* ── Filter Bar ── */}
       <div className={styles.filtersContainer}>
@@ -351,19 +407,31 @@ const AppointmentList = () => {
 
           {/* Actions */}
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              disabled={searchCooldown}
+              className={styles.searchButton}
+            >
               <FiSearch size={16} />
               Search
             </button>
 
             {hasActiveFilters && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
+              <button
+                onClick={handleClearFilters}
+                disabled={clearCooldown}
+                className={styles.clearButton}
+              >
                 <FiX size={16} />
                 Clear
               </button>
             )}
 
-            <button onClick={openAddForm} className={styles.addBtn}>
+            <button
+              onClick={openAddForm}
+              disabled={addCooldown}
+              className={styles.addBtn}
+            >
               <FiPlus size={18} />
               New Appointment
             </button>
@@ -434,6 +502,7 @@ const AppointmentList = () => {
                       <div className={styles.clinicActions}>
                         <button
                           onClick={() => handleViewDetails(appt)}
+                          disabled={!!viewCooldowns[appt.id]}
                           className={styles.clinicDetailsBtn}
                         >
                           View Details
@@ -441,7 +510,7 @@ const AppointmentList = () => {
                         <button
                           onClick={() => handleAddVisitClick(appt)}
                           className={`${styles.clinicDetailsBtn} ${styles.addVisitBtn} ${appt.status !== 1 ? styles.disabled : ''}`}
-                          disabled={appt.status !== 1}
+                          disabled={appt.status !== 1 || !!visitCooldowns[appt.id]}
                         >
                           <FiActivity size={14} /> Add Visit
                         </button>
@@ -454,7 +523,7 @@ const AppointmentList = () => {
           </table>
         </div>
 
-        {/* ── Pagination Bar — pinned to bottom of tableSection ── */}
+        {/* ── Pagination Bar ── */}
         <div className={styles.paginationBar}>
           <div className={styles.paginationInfo}>
             {sortedAppointments.length > 0
@@ -500,7 +569,7 @@ const AppointmentList = () => {
           </div>
         </div>
 
-      </div>{/* end tableSection */}
+      </div>
 
       {/* ── Add Appointment Modal ── */}
       <AddAppointment
@@ -515,6 +584,8 @@ const AppointmentList = () => {
         onClose={closeDetailsModal}
         appointment={selectedAppointment}
         onRefresh={() => fetchAppointments(appliedFilters)}
+        onCancelSuccess={handleCancelSuccess}
+        onCancelError={handleCancelError}
       />
 
       {/* ── Add Patient Visit Modal ── */}
@@ -522,6 +593,7 @@ const AppointmentList = () => {
         isOpen={isAddVisitModalOpen}
         onClose={closeAddVisitModal}
         onSuccess={handleAddVisitSuccess}
+        onError={handleAddVisitError}
         appointment={selectedAppointment}
       />
     </div>

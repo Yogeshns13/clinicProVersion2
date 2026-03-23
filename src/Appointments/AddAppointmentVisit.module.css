@@ -76,6 +76,10 @@
   opacity: 0.9;
 }
 
+.addVisitTextarea{
+  font-family: inherit;
+}
+
 .addVisitModalHeader h2 {
   margin: 0;
   font-size: 1.48rem;

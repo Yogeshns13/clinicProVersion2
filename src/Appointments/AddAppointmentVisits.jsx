@@ -1,111 +1,130 @@
+// src/components/AddAppointmentVisit.jsx
 import React, { useState, useEffect } from 'react';
-import { FiX, FiSave, FiUser,FiActivity} from 'react-icons/fi';
+import { FiX, FiSave, FiUser, FiActivity } from 'react-icons/fi';
 import { addPatientVisit } from '../Api/Api.js';
 import styles from './AddAppointmentVisit.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
 
 
-const AddAppointmentVisit = ({ isOpen, onClose, onSuccess, appointment }) => {
+const AddAppointmentVisit = ({ isOpen, onClose, onSuccess, onError, appointment }) => {
   const [formData, setFormData] = useState({
-    reason: '',
-    symptoms: '',
-    bpSystolic: '',
+    reason:      '',
+    symptoms:    '',
+    bpSystolic:  '',
     bpDiastolic: '',
     temperature: '',
-    weight: ''
+    weight:      '',
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+
+  // ── MessagePopup state ──
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Submit attempted flag ──
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  // ── Button cooldown ──
+  const [submitCooldown, setSubmitCooldown] = useState(false);
+  const startCooldown = (setter) => {
+    setter(true);
+    setTimeout(() => setter(false), 2000);
+  };
+
+  // ── Form completeness: reason is the only required field ──
+  const isFormComplete = !!formData.reason.trim();
 
   // Reset form when modal opens with new appointment
   useEffect(() => {
     if (isOpen && appointment) {
       setFormData({
-        reason: appointment.reason || '',
-        symptoms: '',
-        bpSystolic: '',
+        reason:      appointment.reason || '',
+        symptoms:    '',
+        bpSystolic:  '',
         bpDiastolic: '',
         temperature: '',
-        weight: ''
+        weight:      '',
       });
-      setError(null);
+      setSubmitAttempted(false);
+      closePopup();
     }
   }, [isOpen, appointment]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    setError(null);
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitAttempted(true);
 
     if (!appointment) {
-      setError('No appointment selected');
+      showPopup('No appointment selected.', 'error');
       return;
     }
 
-    // Validation
-    if (!formData.reason.trim()) {
-      setError('Reason for visit is required');
+    if (!isFormComplete) {
+      showPopup('Please fill all required fields before submitting.', 'error');
       return;
     }
+
+    if (submitCooldown) return;
+    startCooldown(setSubmitCooldown);
 
     setLoading(true);
-    setError(null);
-
-    const clinicId = await getStoredClinicId();
-    const branchId = await getStoredBranchId();
 
     try {
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
+
       // Convert to YYYY-MM-DD in Asia/Kolkata (IST)
       const visitDate = new Date(appointment.appointmentDate)
         .toLocaleDateString('en-CA', {
           timeZone: 'Asia/Kolkata',
           year: 'numeric',
           month: '2-digit',
-          day: '2-digit'
+          day: '2-digit',
         });
 
       const visitData = {
-        clinicId: clinicId,
-        branchId: branchId,
+        clinicId:      clinicId,
+        branchId:      branchId,
         appointmentId: appointment.id,
-        PatientID: appointment.patientId,
-        DoctorID: appointment.doctorId,
-        VisitDate: visitDate,
-        VisitTime: appointment.appointmentTime,
-        reason: formData.reason.trim(),
-        symptoms: formData.symptoms.trim(),
-        bpSystolic: formData.bpSystolic ,
-        bpDiastolic: formData.bpDiastolic,
-        temperature: formData.temperature,
-        weight: formData.weight 
+        PatientID:     appointment.patientId,
+        DoctorID:      appointment.doctorId,
+        VisitDate:     visitDate,
+        VisitTime:     appointment.appointmentTime,
+        reason:        formData.reason.trim(),
+        symptoms:      formData.symptoms.trim(),
+        bpSystolic:    formData.bpSystolic,
+        bpDiastolic:   formData.bpDiastolic,
+        temperature:   formData.temperature,
+        weight:        formData.weight,
       };
 
       const result = await addPatientVisit(visitData);
 
       if (result.success) {
-        onSuccess();
-        onClose();
-        // Reset form
-        setFormData({
-          reason: '',
-          symptoms: '',
-          bpSystolic: '',
-          bpDiastolic: '',
-          temperature: '',
-          weight: ''
-        });
+        showPopup('Patient visit added successfully!', 'success');
+        setTimeout(() => {
+          onSuccess();
+          onClose();
+          setFormData({
+            reason: '', symptoms: '', bpSystolic: '',
+            bpDiastolic: '', temperature: '', weight: '',
+          });
+          setSubmitAttempted(false);
+        }, 1200);
       }
     } catch (err) {
       console.error('Failed to add patient visit:', err);
-      setError(err.message || 'Failed to add patient visit');
+      const msg = err.message || 'Failed to add patient visit.';
+      showPopup(msg, 'error');
+      if (onError) onError(msg);
     } finally {
       setLoading(false);
     }
@@ -114,11 +133,7 @@ const AddAppointmentVisit = ({ isOpen, onClose, onSuccess, appointment }) => {
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   const formatTime = (timeStr) => {
@@ -134,6 +149,15 @@ const AddAppointmentVisit = ({ isOpen, onClose, onSuccess, appointment }) => {
   return (
     <div className={styles.addVisitModalOverlay}>
       <div className={styles.addVisitModal}>
+
+        {/* ── MessagePopup ── */}
+        <MessagePopup
+          visible={popup.visible}
+          message={popup.message}
+          type={popup.type}
+          onClose={closePopup}
+        />
+
         {/* Header */}
         <div className={styles.addVisitModalHeader}>
           <div className={styles.addVisitHeaderContent}>
@@ -171,12 +195,6 @@ const AddAppointmentVisit = ({ isOpen, onClose, onSuccess, appointment }) => {
             </div>
           )}
 
-          {error && (
-            <div className={styles.addVisitErrorMessage}>
-              {error}
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className={styles.addVisitForm}>
             {/* Reason */}
             <div className={styles.addVisitFormGroup}>
@@ -194,25 +212,32 @@ const AddAppointmentVisit = ({ isOpen, onClose, onSuccess, appointment }) => {
                 required
               />
             </div>
-            
+
+            {/* Incomplete hint */}
+            {submitAttempted && !isFormComplete && (
+              <div className={styles.formIncompleteHint}>
+                Please fill all required fields to enable submission.
+              </div>
+            )}
           </form>
         </div>
 
         {/* Footer */}
         <div className={styles.addVisitModalFooter}>
-          <button 
+          <button
             type="button"
-            onClick={onClose} 
+            onClick={onClose}
             className={styles.addVisitCancelBtn}
             disabled={loading}
           >
             Cancel
           </button>
-          <button 
+          <button
             type="submit"
             onClick={handleSubmit}
             className={styles.addVisitSubmitBtn}
-            disabled={loading}
+            disabled={loading || !isFormComplete || submitCooldown}
+            title={!isFormComplete ? 'Please fill all required fields' : ''}
           >
             {loading ? (
               <>

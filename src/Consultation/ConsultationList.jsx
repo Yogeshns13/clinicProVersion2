@@ -9,6 +9,7 @@ import Header from '../Header/Header.jsx';
 import AddConsultation from './AddConsultation.jsx';
 import styles from './ConsultationList.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 const today = new Date().toISOString().split('T')[0];
 
@@ -299,7 +300,7 @@ const ConsultationList = () => {
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
-  if (loading) return <div className={styles.loading}>Loading...</div>;
+  if (loading) return <div className={styles.loading}><LoadingPage/></div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
   // ── Pagination computed values ──

@@ -205,6 +205,7 @@
   border-radius: 10px;
   font-size: 0.9rem;
   background: white;
+  font-family: inherit;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 

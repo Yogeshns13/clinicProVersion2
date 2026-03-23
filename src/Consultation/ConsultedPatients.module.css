@@ -1,4 +1,4 @@
-/* src/components/ConsultedPatients.module.css */
+/* src/components/ConsultationList.module.css */
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
@@ -24,9 +24,13 @@
 .wrapper {
   padding: 20px;
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   color: var(--cl-text-dark);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 /* ==================== FILTER BAR ==================== */
@@ -34,11 +38,16 @@
   background: white;
   border-radius: 17px;
   padding: 16px 20px;
-  margin: 0 0 24px 0;
+  margin-bottom: 20px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
 }
 
+/* grid: search-group | fromDate | toDate | actions */
 .filtersGrid {
   display: grid;
   grid-template-columns: 1fr 140px 140px auto;
@@ -46,6 +55,7 @@
   align-items: center;
 }
 
+/* Search type + value joined */
 .searchGroup {
   display: flex;
   align-items: stretch;
@@ -93,6 +103,12 @@
   border-left: 1px solid var(--cl-accent-end);
 }
 
+/* ── Date inputs ── */
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+}
+
 .filterInput {
   width: 100%;
   height: 40px;
@@ -115,6 +131,30 @@
 
 .dateWrapper {
   position: relative;
+  width: 100%;
+}
+
+.dateWrapper .filterInput {
+  width: 100%;
+  color: var(--cl-text-dark);
+}
+
+.dateEmpty::-webkit-datetime-edit-text,
+.dateEmpty::-webkit-datetime-edit-month-field,
+.dateEmpty::-webkit-datetime-edit-day-field,
+.dateEmpty::-webkit-datetime-edit-year-field {
+  color: transparent;
+}
+
+.datePlaceholder {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  color: #94a3b8;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .filterActions {
@@ -160,15 +200,26 @@
   transform: translateY(-2px);
 }
 
-/* ==================== TABLE ==================== */
+/* ==================== TABLE SECTION ==================== */
+.tableSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== TABLE CONTAINER ==================== */
 .tableContainer {
   background: white;
   border-radius: 17px;
-  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
   border: 1px solid rgba(34, 43, 108, 0.1);
 }
 
+/* ==================== TABLE ==================== */
 .table {
   width: 100%;
   table-layout: auto;
@@ -186,6 +237,9 @@
   letter-spacing: 1px;
   border: none;
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .table td {
@@ -270,6 +324,7 @@
   border: 1px solid rgba(139, 92, 246, 0.2);
 }
 
+/* ==================== VITALS BADGES ==================== */
 .vitalsCell {
   display: flex;
   flex-wrap: wrap;
@@ -336,6 +391,99 @@
 
 .error { color: #ef4444; }
 
+/* ==================== PAGINATION BAR ==================== */
+.paginationBar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 14px;
+  padding: 10px 20px;
+  margin-top: 14px;
+  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  gap: 16px;
+}
+
+.paginationInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.paginationLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--cl-primary-start);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.pageBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: var(--cl-primary-start);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--cl-accent-start), var(--cl-accent-end));
+  border-color: var(--cl-accent-end);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.3);
+}
+
+.pageBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pageIndicator {
+  min-width: 36px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--cl-primary-end), var(--cl-accent-end));
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0 8px;
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
+}
+
+.pageSizeInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pageSizeInfo strong {
+  color: var(--cl-primary-start);
+  font-weight: 700;
+}
+
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .wrapper {
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -353,6 +501,10 @@
   background: #0f172a;
   border-color: #475569;
   color: #e2e8f0;
+}
+
+:global(.dark-mode) .datePlaceholder {
+  color: #64748b;
 }
 
 :global(.dark-mode) .searchInput:focus {
@@ -390,6 +542,32 @@
 
 :global(.dark-mode) .name    { color: #e2e8f0; }
 :global(.dark-mode) .subText { color: #94a3b8; }
+
+:global(.dark-mode) .paginationBar {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .paginationInfo,
+:global(.dark-mode) .pageSizeInfo {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .paginationLabel {
+  color: var(--cl-accent-end);
+}
+
+:global(.dark-mode) .pageBtn {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--cl-accent-start), var(--cl-accent-end));
+  border-color: var(--cl-accent-end);
+  color: white;
+}
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 1024px) {
@@ -455,6 +633,16 @@
   .viewBtn {
     width: 100%;
     justify-content: center;
+  }
+
+  .paginationBar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .paginationControls {
+    align-self: center;
   }
 }
 

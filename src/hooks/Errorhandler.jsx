@@ -1,24 +1,68 @@
 import styles from "../ClinicList/ClinicList.module.css";
 
+// ── Parse any error shape into { statusCode, message } ──────────────────────
+// Handles:
+//   1. Backend validation array  → { errors: [{ path, msg }] }
+//   2. Backend result error      → { result: { OUT_ERROR } }
+//   3. Standard JS/Axios error   → error.message / error.response.data.message
+const resolveError = (error) => {
+  if (!error) return null;
+
+  const statusCode = error?.status || error?.code || error?.response?.status;
+
+  // ── Shape 1: Express-validator array  { errors: [{ path, msg }] } ──
+  const backendErrors = error?.response?.data?.errors;
+  if (Array.isArray(backendErrors) && backendErrors.length > 0) {
+    const message = backendErrors
+      .map((e) => `${e.path}: ${e.msg}`)
+      .join("\n");
+    return { statusCode: statusCode || 422, message };
+  }
+
+  // ── Shape 2: Backend OUT_ERROR string ──
+  const outError = error?.response?.data?.result?.OUT_ERROR;
+  if (outError) {
+    return { statusCode: statusCode || 400, message: outError };
+  }
+
+  // ── Shape 3: Standard message ──
+  const message =
+    error?.response?.data?.message ||
+    error?.message ||
+    error?.error ||
+    "An unexpected error occurred";
+
+  return { statusCode: statusCode || 500, message };
+};
+
+// ── Severity label ───────────────────────────────────────────────────────────
+const getSeverityLabel = (code) => {
+  if (!code) return "Error";
+  if (code >= 500) return "Server Error";
+  if (code === 422) return "Validation Error";
+  if (code === 404) return "Not Found";
+  if (code === 403) return "Forbidden";
+  if (code === 401) return "Unauthorized";
+  if (code === 400) return "Bad Request";
+  return "Client Error";
+};
+
+// ── Component ────────────────────────────────────────────────────────────────
 const ErrorHandler = ({ error, onClose }) => {
   if (!error) return null;
 
-  const statusCode = error?.status || error?.code;
-  const message = error?.message || error?.error || "An unexpected error occurred";
+  const resolved = resolveError(error);
+  if (!resolved) return null;
 
-  if (statusCode < 400) return null;
+  const { statusCode, message } = resolved;
 
-  // Determine error severity label
-  const getSeverityLabel = (code) => {
-    if (code >= 500) return "Server Error";
-    if (code === 404) return "Not Found";
-    if (code === 403) return "Forbidden";
-    if (code === 401) return "Unauthorized";
-    if (code === 400) return "Bad Request";
-    return "Client Error";
-  };
+  // Suppress non-error status codes
+  if (statusCode && statusCode < 400) return null;
 
   const handleReload = () => window.location.reload();
+
+  // Render each line as its own paragraph so multi-field errors are readable
+  const messageLines = message.split("\n").filter(Boolean);
 
   return (
     <div className={styles.clinicModalOverlay} onClick={onClose}>
@@ -78,6 +122,7 @@ const ErrorHandler = ({ error, onClose }) => {
                 gap: "12px",
               }}
             >
+              {/* Status code row */}
               <div
                 style={{
                   display: "flex",
@@ -113,6 +158,7 @@ const ErrorHandler = ({ error, onClose }) => {
                 </span>
               </div>
 
+              {/* Message row — renders each line separately */}
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                 <span
                   style={{
@@ -125,17 +171,28 @@ const ErrorHandler = ({ error, onClose }) => {
                 >
                   Message
                 </span>
-                <span
+                <div
                   style={{
-                    fontSize: "0.85rem",
-                    fontWeight: "600",
-                    color: "#7f1d1d",
-                    lineHeight: "1.5",
-                    wordBreak: "break-word",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6px",
                   }}
                 >
-                  {message}
-                </span>
+                  {messageLines.map((line, idx) => (
+                    <span
+                      key={idx}
+                      style={{
+                        fontSize: "0.85rem",
+                        fontWeight: "600",
+                        color: "#7f1d1d",
+                        lineHeight: "1.5",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {line}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

@@ -42,14 +42,26 @@ UpdateClinic
     "Status":1
 }
 
+-----------------------------------------------------------
+
 DeleteClinic
 {
     "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000,
-    "ClinicID": 1
+    "ClinicID": 31
 }
+
+{
+    "result": {
+        "IN_CLINIC_ID": 31,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-------------------------------------------------------
 
 
 GetClinicList

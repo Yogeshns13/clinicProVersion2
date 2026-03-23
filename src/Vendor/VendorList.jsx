@@ -8,6 +8,7 @@ import AddVendor from './AddVendor.jsx';
 import ViewVendor from './ViewVendor.jsx';
 import styles from './VendorList.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 const STATUS_OPTIONS = [
   { id: 1, label: 'Active' },
@@ -36,7 +37,7 @@ const VendorList = () => {
   const [filterInputs, setFilterInputs] = useState({
     searchType:  'Name',
     searchValue: '',
-    status:      '',
+    status:      '1',
     dateFrom:    '',
     dateTo:      '',
   });
@@ -45,21 +46,29 @@ const VendorList = () => {
   const [appliedFilters, setAppliedFilters] = useState({
     searchType:  'Name',
     searchValue: '',
-    status:      '',
+    status:      '1',
     dateFrom:    '',
     dateTo:      '',
   });
 
   // UI states
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState(null);
+
+  // ── Button cooldown state (2-sec disable after click) ──────────────────────
+  const [btnCooldown, setBtnCooldown] = useState({});
+
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
 
   // ──────────────────────────────────────────────────
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
-    appliedFilters.status             !== '' ||
+    appliedFilters.status             !== '1' ||
     appliedFilters.dateFrom           !== '' ||
     appliedFilters.dateTo             !== '';
 
@@ -125,12 +134,14 @@ const VendorList = () => {
   };
 
   const handleSearch = () => {
+    triggerCooldown('search');
     setAppliedFilters({ ...filterInputs });
-    setPage(1);          
+    setPage(1);
   };
 
   const handleClearFilters = () => {
-    const empty = { searchType: 'Name', searchValue: '', status: '', dateFrom: '', dateTo: '' };
+    triggerCooldown('clear');
+    const empty = { searchType: 'Name', searchValue: '', status: '1', dateFrom: '', dateTo: '' };
     setFilterInputs(empty);
     setAppliedFilters(empty);
     setPage(1);
@@ -138,13 +149,24 @@ const VendorList = () => {
 
   const handlePageChange = (newPage) => {
     if (newPage < 1) return;
+    triggerCooldown(`page-${newPage}`);
     setPage(newPage);
   };
 
-  const handleViewDetails = (vendor) => setSelectedVendor(vendor);
-  const handleViewClose   = () => setSelectedVendor(null);
-  const openAddForm  = () => setIsAddFormOpen(true);
+  const handleViewDetails = (vendor) => {
+    triggerCooldown(`view-${vendor.id}`);
+    setSelectedVendor(vendor);
+  };
+
+  const handleViewClose = () => setSelectedVendor(null);
+
+  const openAddForm = () => {
+    triggerCooldown('add');
+    setIsAddFormOpen(true);
+  };
+
   const closeAddForm = () => setIsAddFormOpen(false);
+
   const handleAddSuccess = () => {
     fetchVendors(appliedFilters, page);
   };
@@ -154,7 +176,7 @@ const VendorList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.loading}>Loading vendors...</div>;
+  if (loading) return <div className={styles.loading}><LoadingPage/></div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
   const startRecord = vendors.length === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -243,19 +265,31 @@ const VendorList = () => {
           </div>
 
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              className={styles.searchButton}
+              disabled={!!btnCooldown['search']}
+            >
               <FiSearch size={16} />
               Search
             </button>
 
             {hasActiveFilters && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
+              <button
+                onClick={handleClearFilters}
+                className={styles.clearButton}
+                disabled={!!btnCooldown['clear']}
+              >
                 <FiX size={16} />
                 Clear
               </button>
             )}
 
-            <button onClick={openAddForm} className={styles.addBtn}>
+            <button
+              onClick={openAddForm}
+              className={styles.addBtn}
+              disabled={!!btnCooldown['add']}
+            >
               <FiPlus size={18} />
               Add Vendor
             </button>
@@ -320,6 +354,7 @@ const VendorList = () => {
                       <button
                         onClick={() => handleViewDetails(vendor)}
                         className={styles.detailsBtn}
+                        disabled={!!btnCooldown[`view-${vendor.id}`]}
                       >
                         View Details
                       </button>
@@ -331,7 +366,7 @@ const VendorList = () => {
           </table>
         </div>
 
-        {/* Pagination Bar ── same style as ClinicList */}
+        {/* Pagination Bar */}
         <div className={styles.paginationBar}>
           <div className={styles.paginationInfo}>
             {vendors.length > 0
@@ -345,7 +380,7 @@ const VendorList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(1)}
-              disabled={page === 1}
+              disabled={page === 1 || !!btnCooldown['page-1']}
               title="First page"
             >
               «
@@ -354,7 +389,7 @@ const VendorList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
+              disabled={page === 1 || !!btnCooldown[`page-${page - 1}`]}
               title="Previous page"
             >
               ‹
@@ -365,7 +400,7 @@ const VendorList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(page + 1)}
-              disabled={vendors.length < pageSize}
+              disabled={vendors.length < pageSize || !!btnCooldown[`page-${page + 1}`]}
               title="Next page"
             >
               ›
@@ -384,7 +419,10 @@ const VendorList = () => {
         <ViewVendor
           vendor={selectedVendor}
           onClose={handleViewClose}
-          onDeleteSuccess={() => fetchVendors(appliedFilters, page)}
+          onDeleteSuccess={() => {
+            handleViewClose();
+            fetchVendors(appliedFilters, page);
+          }}
         />
       )}
 

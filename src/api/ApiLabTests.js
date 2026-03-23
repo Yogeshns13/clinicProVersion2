@@ -1,15 +1,8 @@
 
 import {getSessionRef, generateRefKey, getUserId, getClinicId, getBranchId} from "./Api.js"
-import { API } from "./ApiConfiguration";
+import { API, checkDbError, extractBackendError} from "./ApiConfiguration";
 const CHANNEL_ID = 1;
 const PRODUCTION_MODE = 0;
-/* const API = axios.create({
-  baseURL: "/api",
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
-}); */
 
 export const getLabTestMasterList = async (clinicId = 0, options = {}) => {
   const userId = getUserId();
@@ -53,7 +46,9 @@ export const getLabTestMasterList = async (clinicId = 0, options = {}) => {
   try {
     const response = await API.post("/GetLabTestMasterList", payload);
     
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetLabTestMasterList response:", results);
 
     return results.map((test) => ({
@@ -85,7 +80,7 @@ export const getLabTestMasterList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch lab test master list"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch lab test master list"
     };
 
     throw err;
@@ -145,7 +140,7 @@ export const addLabTestMaster = async (labTestData) => {
     console.log("AddLabTestMaster response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -168,7 +163,8 @@ export const addLabTestMaster = async (labTestData) => {
       ...error,
       status: error.response?.status || 500,
       code: error.response?.status || 500,
-      message: 
+      message:
+        extractBackendError(error) || 
         error.response?.data?.message || 
         error.response?.data?.result?.OUT_ERROR ||
         error.message || 
@@ -242,7 +238,7 @@ export const updateLabTestMaster = async (labTestData) => {
     console.log("UpdateLabTestMaster response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update lab test");
     }
@@ -257,6 +253,7 @@ export const updateLabTestMaster = async (labTestData) => {
     console.error("updateLabTestMaster error:", error);
 
     const errorMessage =
+        extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -299,7 +296,7 @@ export const deleteLabTestMaster = async (testId) => {
   try {
     const response = await API.post("/DeleteLabTestMaster", payload);
     const result = response.data?.result;
-
+    checkDbError(result); 
     // Validate backend response (same pattern)
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete lab test");
@@ -315,6 +312,7 @@ export const deleteLabTestMaster = async (testId) => {
     console.error("deleteLabTestMaster error:", error);
 
     const errorMsg =
+        extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -368,7 +366,9 @@ export const getLabTestPackageList = async (clinicId = 0, options = {}) => {
     const response = await API.post("/GetLabTestPackageList", payload);
 
     // Safeguard: make sure we have an array
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetLabTestPackageList response:", results);
 
     return results.map((pkg) => ({
@@ -388,7 +388,7 @@ export const getLabTestPackageList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch lab test packages"
+      message:extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch lab test packages"
     };
 
     throw err;
@@ -446,7 +446,7 @@ export const addLabTestPackage = async (packageData) => {
     console.log("AddLabTestPackage response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response structure from server");
     }
@@ -469,6 +469,7 @@ export const addLabTestPackage = async (packageData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -538,7 +539,7 @@ export const updateLabTestPackage = async (packageData) => {
     console.log("UpdateLabTestPackage response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update lab test package");
     }
@@ -553,6 +554,7 @@ export const updateLabTestPackage = async (packageData) => {
     console.error("updateLabTestPackage error:", error);
 
     const errorMessage =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -596,7 +598,7 @@ export const deleteLabTestPackage = async (packageId) => {
   try {
     const response = await API.post("/DeleteLabTestPackage", payload);
     const result = response.data?.result;
-
+    checkDbError(result);   
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete lab test package");
     }
@@ -611,6 +613,7 @@ export const deleteLabTestPackage = async (packageId) => {
     console.error("deleteLabTestPackage error:", error);
 
     const errorMsg =
+        extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -651,9 +654,9 @@ export const getLabTestPackageItemList = async (options = {}) => {
   try {
     const response = await API.post("/GetLabTestPackageItemList", payload);
 
-    // Safeguard: make sure we have an array
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
-
+   const result = response.data?.result;
+   checkDbError(result);
+   const results = Array.isArray(result) ? result : [];
     console.log("GetLabTestPackageItemList response:", results);
 
     return results.map((item) => ({
@@ -674,7 +677,7 @@ export const getLabTestPackageItemList = async (options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message 
+      message:extractBackendError(error) || error.response?.data?.message 
         || error.message 
         || "Failed to fetch lab test package items"
     };
@@ -719,7 +722,7 @@ export const addLabPackageItem = async (packageItemData) => {
     console.log("AddLabPackageItem response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate expected response structure (matches your sample)
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response structure from server");
@@ -743,6 +746,7 @@ export const addLabPackageItem = async (packageItemData) => {
       status: error.response?.status || 500,
       code:   error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -810,7 +814,7 @@ export const rebuildPackageFees = async (packageData) => {
     console.log("RebuildPackageFees response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result); 
     if (!result || result.RowsUpdated !== 1) {
       throw new Error(result?.OUT_ERROR || result?.message || "Failed to rebuild package fees");
     }
@@ -829,6 +833,7 @@ export const rebuildPackageFees = async (packageData) => {
     console.error("rebuildPackageFees error:", error);
 
     const errorMessage =
+        extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.result?.message ||
       error.response?.data?.message ||
@@ -872,7 +877,7 @@ export const deleteLabPackageItem = async (packageItemId) => {
   try {
     const response = await API.post("/DeleteLabPackageItem", payload);
     const result = response.data?.result;
-
+    checkDbError(result); 
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete lab package item");
     }
@@ -887,6 +892,7 @@ export const deleteLabPackageItem = async (packageItemId) => {
     console.error("deleteLabPackageItem error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -949,8 +955,9 @@ export const getLabTestOrderList = async (clinicId = 0, options = {}) => {
   try {
     const response = await API.post("/GetLabTestOrderList", payload);
     
-    // Safeguard: make sure result is array
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetLabTestOrderList response:", results);
 
     return results.map((order) => ({
@@ -984,7 +991,7 @@ export const getLabTestOrderList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch lab test orders"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch lab test orders"
     };
 
     throw err;
@@ -1034,7 +1041,7 @@ export const addLabTestOrder = async (orderData) => {
     console.log("AddLabTestOrder response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
     }
@@ -1058,6 +1065,7 @@ export const addLabTestOrder = async (orderData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -1126,7 +1134,7 @@ export const updateLabTestOrder = async (orderData) => {
     console.log("UpdateLabTestOrder response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     // Basic structure + success check (aligned with your sample)
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -1146,6 +1154,7 @@ export const updateLabTestOrder = async (orderData) => {
     console.error("updateLabTestOrder error:", error);
 
     const errorMessage =
+    extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1189,7 +1198,7 @@ export const deleteLabTestOrder = async (orderId) => {
   try {
     const response = await API.post("/DeleteLabTestOrder", payload);
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate backend response (matches your sample structure)
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -1209,6 +1218,7 @@ export const deleteLabTestOrder = async (orderId) => {
     console.error("deleteLabTestOrder error:", error);
 
     const errorMsg =
+      extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1263,8 +1273,9 @@ export const getLabTestOrderItemList = async (clinicId = 0, options = {}) => {
   try {
     const response = await API.post("/GetLabTestOrderItemList", payload);
     
-    // Safeguard: make sure we have an array
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetLabTestOrderItemList response:", results);
 
     return results.map((item) => ({
@@ -1293,7 +1304,7 @@ export const getLabTestOrderItemList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch lab test order items"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch lab test order items"
     };
 
     throw err;
@@ -1359,7 +1370,7 @@ export const addLabTestOrderItem = async (orderItemData) => {
     console.log("AddLabTestOrderItem response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate expected response structure
     if (!result || typeof result.OK === "undefined") {
       throw new Error("Invalid response from server – missing OK flag");
@@ -1384,6 +1395,7 @@ export const addLabTestOrderItem = async (orderItemData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.Error ||
         error.message ||
@@ -1448,7 +1460,7 @@ export const updateLabTestOrderItem = async (itemData) => {
     console.log("UpdateLabTestOrderItem response:", response.data);
 
     const result = response.data?.result;
-
+      checkDbError(result);
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update lab test order item");
     }
@@ -1463,6 +1475,7 @@ export const updateLabTestOrderItem = async (itemData) => {
     console.error("updateLabTestOrderItem error:", error);
 
     const errorMessage =
+        extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1521,7 +1534,9 @@ export const getLabWorkItemsList = async (clinicId = 0, options = {}) => {
   try {
     const response = await API.post("/GetLabWorkItemList", payload);
     
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetLabWorkItemList response count:", results.length);
 
     return results.map((item) => ({
@@ -1555,6 +1570,7 @@ export const getLabWorkItemsList = async (clinicId = 0, options = {}) => {
       ...error,
       status: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.message ||
         "Failed to fetch lab work items"
@@ -1610,7 +1626,7 @@ export const createWorkItemsForOrder = async (orderId, clinicId = 0) => {
     console.log("CreateWorkItemsForOrder response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result); 
     if (!result || typeof result.OK === "undefined") {
       throw new Error("Invalid response structure from server");
     }
@@ -1634,6 +1650,7 @@ export const createWorkItemsForOrder = async (orderId, clinicId = 0) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) || 
         error.response?.data?.message ||
         error.response?.data?.result?.Error ||
         error.message ||
@@ -1703,6 +1720,7 @@ export const updateSampleCollection = async (sampleData) => {
     console.log("UpdateSampleCollection response:", response.data);
 
     const result = response.data?.result;
+    checkDbError(result);
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update sample collection");
     }
@@ -1717,6 +1735,7 @@ export const updateSampleCollection = async (sampleData) => {
     console.error("updateSampleCollection error:", error);
 
     const errorMessage =
+        extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1788,7 +1807,7 @@ export const updateLabWorkItemResult = async (workItemData) => {
     console.log("UpdateLabWorkItemResult response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result); 
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update lab work item result");
     }
@@ -1803,6 +1822,7 @@ export const updateLabWorkItemResult = async (workItemData) => {
     console.error("updateLabWorkItemResult error:", error);
 
     const errorMessage =
+        extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -1860,7 +1880,7 @@ export const approveLabWorkItem = async (approvalData) => {
     console.log("ApproveLabWorkItem response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result); 
     
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response structure from server");
@@ -1883,6 +1903,7 @@ export const approveLabWorkItem = async (approvalData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) || 
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -1938,7 +1959,7 @@ export const rejectLabWorkItem = async (rejectData) => {
     console.log("RejectLabWorkItem response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result); 
     // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -1960,6 +1981,7 @@ export const rejectLabWorkItem = async (rejectData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.response?.data?.result?.OUT_ERROR ||
         error.message ||
@@ -2019,8 +2041,9 @@ export const getLabTestReportList = async (clinicId = 0, options = {}) => {
   try {
     const response = await API.post("/GetLabTestReportList", payload);
     
-    // Safeguard: make sure we have an array
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetLabTestReportList response:", results);
 
     return results.map((report) => ({
@@ -2056,7 +2079,7 @@ export const getLabTestReportList = async (clinicId = 0, options = {}) => {
     const err = {
       ...error,
       status: error.response?.status || 500,
-      message: error.response?.data?.message || error.message || "Failed to fetch lab test reports"
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch lab test reports"
     };
 
     throw err;
@@ -2127,7 +2150,7 @@ export const addLabTestReport = async (reportData) => {
     console.log("AddLabTestReport response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result);
     // Validate expected response structure (matches your sample)
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
@@ -2152,6 +2175,7 @@ export const addLabTestReport = async (reportData) => {
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message: 
+        extractBackendError(error) || 
         error.response?.data?.message || 
         error.response?.data?.result?.OUT_ERROR ||
         error.message || 
@@ -2230,7 +2254,7 @@ export const updateLabTestReport = async (reportData) => {
     console.log("UpdateLabTestReport response:", response.data);
 
     const result = response.data?.result;
-
+      checkDbError(result); 
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to update lab test report");
     }
@@ -2245,6 +2269,7 @@ export const updateLabTestReport = async (reportData) => {
     console.error("updateLabTestReport error:", error);
 
     const errorMessage =
+        extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -2287,7 +2312,7 @@ export const deleteLabTestReport = async (reportId) => {
   try {
     const response = await API.post("/DeleteLabTestReport", payload);
     const result = response.data?.result;
-
+    checkDbError(result); 
     if (!result || result.OUT_OK !== 1) {
       throw new Error(result?.OUT_ERROR || "Failed to delete lab test report");
     }
@@ -2302,6 +2327,7 @@ export const deleteLabTestReport = async (reportId) => {
     console.error("deleteLabTestReport error:", error);
 
     const errorMsg =
+        extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -2380,7 +2406,7 @@ export const generateLabInvoice = async (invoiceData = {}) => {
     console.log("GenerateLabInvoice response:", response.data);
 
     const result = response.data?.result;
-
+    checkDbError(result); 
     if (!result || result.OUT_OK !== 1) {
       const errorMsg = result?.OUT_ERROR || "Failed to generate lab invoice";
       throw new Error(errorMsg);
@@ -2396,6 +2422,7 @@ export const generateLabInvoice = async (invoiceData = {}) => {
     console.error("generateLabInvoice error:", error);
 
     const errorMessage =
+        extractBackendError(error) ||
       error.response?.data?.result?.OUT_ERROR ||
       error.response?.data?.message ||
       error.message ||
@@ -2451,7 +2478,9 @@ export const getLabInvoiceDetailList = async (clinicId = 0, options = {}) => {
 
   try {
     const response = await API.post("/GetLabInvoiceDetailList", payload);
-    const results = Array.isArray(response.data?.result) ? response.data.result : [];
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
     console.log("GetLabInvoiceDetailList response:", results);
 
     return results.map((detail) => ({
@@ -2489,6 +2518,7 @@ export const getLabInvoiceDetailList = async (clinicId = 0, options = {}) => {
       ...error,
       status: error.response?.status || 500,
       message:
+        extractBackendError(error) ||
         error.response?.data?.message ||
         error.message ||
         "Failed to fetch lab invoice details",

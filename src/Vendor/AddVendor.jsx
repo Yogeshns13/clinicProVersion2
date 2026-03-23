@@ -2,13 +2,14 @@
 import React, { useState, useEffect } from "react";
 import { FiX } from "react-icons/fi";
 import { addVendor } from "../Api/ApiPharmacy.js";
+import MessagePopup from "../Hooks/MessagePopup.jsx";
 import styles from "./AddVendor.module.css";
 import { FaClinicMedical } from "react-icons/fa";
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
-// ────────────────────────────────────────────────
-// Validation
-// ────────────────────────────────────────────────
+const REQUIRED_FIELDS = ['name', 'mobile', 'altMobile', 'email', 'gstNo'];
+
+
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
     case "name":
@@ -20,13 +21,11 @@ const getLiveValidationMessage = (fieldName, value) => {
       return "";
 
     case "contactPerson":
-      if (value && value.trim()) {
-        if (value.trim().length < 2)
-          return "Contact person must be at least 2 characters";
-        if (value.trim().length > 100)
-          return "Contact person must not exceed 100 characters";
-      }
-      return "";
+      if (!value || !value.trim()) return 'Contact Person is required';
+      if (value.trim().length > 100) return 'Contact Person should not exceed 100 characters';
+      if (!allowedCharactersRegex.test(value.trim()))
+        return 'Contact Person should not contain special characters';
+      return '';
 
     case "mobile":
       if (!value || !value.trim()) return "Mobile number is required";
@@ -98,6 +97,8 @@ const getLiveValidationMessage = (fieldName, value) => {
 
 const filterInput = (fieldName, value) => {
   switch (fieldName) {
+    case 'contactPerson':
+      return value.replace(/[^a-zA-Z\s]/g, '');
     case "mobile":
     case "altMobile":
       return value.replace(/[^0-9]/g, "");
@@ -125,8 +126,11 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
 
   const [formLoading, setFormLoading] = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
-  const [formError, setFormError] = useState("");
-  const [formSuccess, setFormSuccess] = useState(false);
+
+  // ── MessagePopup state ──────────────────────────
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
 
   useEffect(() => {
     if (!isOpen) {
@@ -145,10 +149,11 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
       gstNo: "",
       licenseDetail: "",
     });
-    setFormError("");
-    setFormSuccess(false);
     setValidationMessages({});
+    setPopup({ visible: false, message: '', type: 'success' });
   };
+
+
 
   // ────────────────────────────────────────────────
   // Form Handlers
@@ -190,11 +195,17 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
     });
 
     setValidationMessages(newMessages);
-    if (hasError) return;
+
+    // Show warning popup if any validation fails
+    if (hasError) {
+      showPopup(
+        'Please fill all required fields correctly before submitting.',
+        'warning'
+      );
+      return;
+    }
 
     setFormLoading(true);
-    setFormError("");
-    setFormSuccess(false);
 
     try {
       const clinicId = await getStoredClinicId();
@@ -215,14 +226,15 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
 
       await addVendor(payload);
 
-      setFormSuccess(true);
+      // Success popup (auto-closes in 1 s), then close modal
+      showPopup('Vendor added successfully!', 'success');
       setTimeout(() => {
         onAddSuccess?.();
         onClose();
       }, 1500);
     } catch (err) {
       console.error("Add vendor failed:", err);
-      setFormError(err.message || "Failed to add vendor.");
+      showPopup(err.message || "Failed to add vendor.", 'error');
     } finally {
       setFormLoading(false);
     }
@@ -231,208 +243,218 @@ const AddVendor = ({ isOpen, onClose, onAddSuccess }) => {
   if (!isOpen) return null;
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        {/* ── Static Header (does not scroll) ── */}
-        <div className={styles.modalHeader}>
-          <h2>Add New Vendor</h2>
+    <>
+      <div className={styles.modalOverlay} onClick={onClose}>
+        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
 
-          <div className={styles.headerRight}>
-            <div className={styles.clinicNameone}>
-              <FaClinicMedical
-                size={20}
-                style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
-              />
-              {localStorage.getItem("clinicName") || "—"}
+          {/* ── Static Header (does not scroll) ── */}
+          <div className={styles.modalHeader}>
+            <h2>Add New Vendor</h2>
+
+            <div className={styles.headerRight}>
+              <div className={styles.clinicNameone}>
+                <FaClinicMedical
+                  size={20}
+                  style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
+                />
+                {localStorage.getItem("clinicName") || "—"}
+              </div>
+              <button onClick={onClose} className={styles.modalClose}>
+                <FiX />
+              </button>
             </div>
-            <button onClick={onClose} className={styles.modalClose}>
-              <FiX />
-            </button>
+          </div>
+
+          {/* ── Scrollable Body ── */}
+          <div className={styles.modalBodyScrollable}>
+            <form onSubmit={handleSubmit} noValidate>
+
+              <div className={styles.formGrid}>
+                {/* ── Basic Information ── */}
+                <h3 className={styles.formSectionTitle}>Basic Information</h3>
+
+                <div className={styles.formGroup}>
+                  <label>
+                    Vendor Name <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Enter vendor name"
+                    disabled={formLoading}
+                  />
+                  {validationMessages.name && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.name}
+                    </span>
+                  )}
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Contact Person</label>
+                  <input
+                    name="contactPerson"
+                    value={formData.contactPerson}
+                    onChange={handleInputChange}
+                    placeholder="Enter contact person name"
+                    disabled={formLoading}
+                  />
+                  {validationMessages.contactPerson && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.contactPerson}
+                    </span>
+                  )}
+                </div>
+
+                {/* ── Contact Information ── */}
+                <h3 className={styles.formSectionTitle}>Contact Information</h3>
+
+                <div className={styles.formGroup}>
+                  <label>
+                    Mobile <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    name="mobile"
+                    value={formData.mobile}
+                    onChange={handleInputChange}
+                    placeholder="Enter mobile number"
+                    maxLength="10"
+                    disabled={formLoading}
+                  />
+                  {validationMessages.mobile && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.mobile}
+                    </span>
+                  )}
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>
+                    Alternate Mobile <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    name="altMobile"
+                    value={formData.altMobile}
+                    onChange={handleInputChange}
+                    placeholder="Enter alternate mobile"
+                    maxLength="10"
+                    disabled={formLoading}
+                  />
+                  {validationMessages.altMobile && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.altMobile}
+                    </span>
+                  )}
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>
+                    Email <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="Enter email address"
+                    disabled={formLoading}
+                  />
+                  {validationMessages.email && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.email}
+                    </span>
+                  )}
+                </div>
+
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                  <label>Address</label>
+                  <textarea
+                    name="address"
+                    rows={3}
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    placeholder="Enter complete address"
+                    disabled={formLoading}
+                  />
+                  {validationMessages.address && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.address}
+                    </span>
+                  )}
+                </div>
+
+                {/* ── Business Information ── */}
+                <h3 className={styles.formSectionTitle}>Business Information</h3>
+
+                <div className={styles.formGroup}>
+                  <label>
+                    GST Number <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    name="gstNo"
+                    value={formData.gstNo}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 22AAAAA0000A1Z5"
+                    maxLength="15"
+                    disabled={formLoading}
+                  />
+                  {validationMessages.gstNo && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.gstNo}
+                    </span>
+                  )}
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>License Detail</label>
+                  <input
+                    name="licenseDetail"
+                    value={formData.licenseDetail}
+                    onChange={handleInputChange}
+                    placeholder="Enter license details"
+                    disabled={formLoading}
+                  />
+                  {validationMessages.licenseDetail && (
+                    <span className={styles.validationMsg}>
+                      {validationMessages.licenseDetail}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Footer ── */}
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className={styles.btnCancel}
+                  disabled={formLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={formLoading}
+                  className={styles.btnSubmit}
+                >
+                  {formLoading ? "Saving..." : "Save Vendor"}
+                </button>
+              </div>
+
+            </form>
           </div>
         </div>
-
-        {/* ── Scrollable Body ── */}
-        <div className={styles.modalBodyScrollable}>
-          <form onSubmit={handleSubmit}>
-            {formError && <div className={styles.formError}>{formError}</div>}
-            {formSuccess && (
-              <div className={styles.formSuccess}>
-                Vendor added successfully!
-              </div>
-            )}
-
-            <div className={styles.formGrid}>
-              {/* ── Basic Information ── */}
-              <h3 className={styles.formSectionTitle}>Basic Information</h3>
-
-              <div className={styles.formGroup}>
-                <label>
-                  Vendor Name <span className={styles.required}>*</span>
-                </label>
-                <input
-                  required
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter vendor name"
-                />
-                {validationMessages.name && (
-                  <span className={styles.validationMsg}>
-                    {validationMessages.name}
-                  </span>
-                )}
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Contact Person</label>
-                <input
-                  name="contactPerson"
-                  value={formData.contactPerson}
-                  onChange={handleInputChange}
-                  placeholder="Enter contact person name"
-                />
-                {validationMessages.contactPerson && (
-                  <span className={styles.validationMsg}>
-                    {validationMessages.contactPerson}
-                  </span>
-                )}
-              </div>
-
-              {/* ── Contact Information ── */}
-              <h3 className={styles.formSectionTitle}>Contact Information</h3>
-
-              <div className={styles.formGroup}>
-                <label>
-                  Mobile <span className={styles.required}>*</span>
-                </label>
-                <input
-                  required
-                  name="mobile"
-                  value={formData.mobile}
-                  onChange={handleInputChange}
-                  placeholder="Enter mobile number"
-                  maxLength="10"
-                />
-                {validationMessages.mobile && (
-                  <span className={styles.validationMsg}>
-                    {validationMessages.mobile}
-                  </span>
-                )}
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>
-                  Alternate Mobile <span className={styles.required}>*</span>
-                </label>
-                <input
-                  required
-                  name="altMobile"
-                  value={formData.altMobile}
-                  onChange={handleInputChange}
-                  placeholder="Enter alternate mobile"
-                  maxLength="10"
-                />
-                {validationMessages.altMobile && (
-                  <span className={styles.validationMsg}>
-                    {validationMessages.altMobile}
-                  </span>
-                )}
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>
-                  Email <span className={styles.required}>*</span>
-                </label>
-                <input
-                  required
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="Enter email address"
-                />
-                {validationMessages.email && (
-                  <span className={styles.validationMsg}>
-                    {validationMessages.email}
-                  </span>
-                )}
-              </div>
-
-              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>Address</label>
-                <textarea
-                  name="address"
-                  rows={3}
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder="Enter complete address"
-                />
-                {validationMessages.address && (
-                  <span className={styles.validationMsg}>
-                    {validationMessages.address}
-                  </span>
-                )}
-              </div>
-
-              {/* ── Business Information ── */}
-              <h3 className={styles.formSectionTitle}>Business Information</h3>
-
-              <div className={styles.formGroup}>
-                <label>
-                  GST Number <span className={styles.required}>*</span>
-                </label>
-                <input
-                  required
-                  name="gstNo"
-                  value={formData.gstNo}
-                  onChange={handleInputChange}
-                  placeholder="e.g. 22AAAAA0000A1Z5"
-                  maxLength="15"
-                />
-                {validationMessages.gstNo && (
-                  <span className={styles.validationMsg}>
-                    {validationMessages.gstNo}
-                  </span>
-                )}
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>License Detail</label>
-                <input
-                  name="licenseDetail"
-                  value={formData.licenseDetail}
-                  onChange={handleInputChange}
-                  placeholder="Enter license details"
-                />
-                {validationMessages.licenseDetail && (
-                  <span className={styles.validationMsg}>
-                    {validationMessages.licenseDetail}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* ── Footer ── */}
-            <div className={styles.modalFooter}>
-              <button
-                type="button"
-                onClick={onClose}
-                className={styles.btnCancel}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={formLoading}
-                className={styles.btnSubmit}
-              >
-                {formLoading ? "Saving..." : "Save Vendor"}
-              </button>
-            </div>
-          </form>
-        </div>
       </div>
-    </div>
+
+      {/* ── MessagePopup (rendered outside modal so z-index is clean) ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
+    </>
   );
 };
 

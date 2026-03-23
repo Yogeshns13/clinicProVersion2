@@ -16,6 +16,7 @@ import AddMedicineMaster from './AddMedicineMaster.jsx';
 import ViewMedicineMaster from './ViewMedicineMaster.jsx';
 import UpdateMedicineMaster from './UpdateMedicineMaster.jsx';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 // ──────────────────────────────────────────────────
 // CONSTANTS
@@ -52,21 +53,21 @@ const MedicineMasterList = () => {
   const [pageSize] = useState(20);
   const [totalRecords, setTotalRecords] = useState(0);
 
-  // Filter inputs (staged)
+  // Filter inputs (staged) — default status = '1' (Active)
   const [filterInputs, setFilterInputs] = useState({
     searchType:   'Name',
     searchValue:  '',
     type:         '',
-    status:       '',
+    status:       '1',
     lowStockOnly: '',
   });
 
-  // Applied filters
+  // Applied filters — default status = '1' (Active)
   const [appliedFilters, setAppliedFilters] = useState({
     searchType:   'Name',
     searchValue:  '',
     type:         '',
-    status:       '',
+    status:       '1',
     lowStockOnly: '',
   });
 
@@ -85,11 +86,19 @@ const MedicineMasterList = () => {
     medicineId: null,
   });
 
+  // ── Button cooldown state (2-sec disable after click) ──────────────────────
+  const [btnCooldown, setBtnCooldown] = useState({});
+
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
+
   // ──────────────────────────────────────────────────
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.type               !== '' ||
-    appliedFilters.status             !== '' ||
+    appliedFilters.status             !== '1' ||
     appliedFilters.lowStockOnly       !== '';
 
   // ──────────────────────────────────────────────────
@@ -148,30 +157,34 @@ const MedicineMasterList = () => {
   };
 
   const handleSearch = () => {
+    triggerCooldown('search');
     setAppliedFilters({ ...filterInputs });
     setPage(1);
   };
 
   const handleClearFilters = () => {
-    const empty = {
+    triggerCooldown('clear');
+    const defaultFilters = {
       searchType:   'Name',
       searchValue:  '',
       type:         '',
-      status:       '',
+      status:       '1',
       lowStockOnly: '',
     };
-    setFilterInputs(empty);
-    setAppliedFilters(empty);
+    setFilterInputs(defaultFilters);
+    setAppliedFilters(defaultFilters);
     setPage(1);
   };
 
   const handlePageChange = (newPage) => {
     if (newPage < 1) return;
     if (newPage > Math.ceil(totalRecords / pageSize)) return;
+    triggerCooldown(`page-${newPage}`);
     setPage(newPage);
   };
 
   const handleViewStock = (medicine) => {
+    triggerCooldown(`stock-${medicine.id}`);
     navigate('/medicinestock-list', {
       state: {
         medicineId:   medicine.id,
@@ -181,6 +194,7 @@ const MedicineMasterList = () => {
   };
 
   const handleViewDetails = (medicine) => {
+    triggerCooldown(`view-${medicine.id}`);
     setViewModal({ isOpen: true, medicineId: medicine.id });
   };
 
@@ -206,6 +220,11 @@ const MedicineMasterList = () => {
     fetchMedicines(appliedFilters, page);
   };
 
+  const handleDeleteSuccess = () => {
+    setViewModal({ isOpen: false, medicineId: null });
+    fetchMedicines(appliedFilters, page);
+  };
+
   const formatCurrency = (value) =>
     `₹${parseFloat(value || 0).toFixed(2)}`;
 
@@ -214,15 +233,15 @@ const MedicineMasterList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.loading}>Loading medicines...</div>;
+  if (loading) return <div className={styles.loading}><LoadingPage/></div>;
 
   if (error) return <div className={styles.error}>Error: {error.message || error}</div>;
 
-  const totalPages = Math.ceil(totalRecords / pageSize);
+  const totalPages  = Math.ceil(totalRecords / pageSize);
   const startRecord = totalRecords === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord   = Math.min(page * pageSize, totalRecords);
 
-  const hasActiveFilter = hasActiveFilters; // just alias for consistency with ClinicList naming
+  const hasActiveFilter = hasActiveFilters;
 
   // ──────────────────────────────────────────────────
   return (
@@ -298,24 +317,39 @@ const MedicineMasterList = () => {
           </div>
 
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              className={styles.searchButton}
+              disabled={!!btnCooldown['search']}
+            >
               <FiSearch size={16} /> Search
             </button>
 
             {hasActiveFilters && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
+              <button
+                onClick={handleClearFilters}
+                className={styles.clearButton}
+                disabled={!!btnCooldown['clear']}
+              >
                 <FiX size={16} /> Clear
               </button>
             )}
 
-            <button onClick={() => setIsAddFormOpen(true)} className={styles.addBtn}>
+            <button
+              onClick={() => {
+                triggerCooldown('add');
+                setIsAddFormOpen(true);
+              }}
+              className={styles.addBtn}
+              disabled={!!btnCooldown['add']}
+            >
               <FiPlus size={18} /> Add Medicine
             </button>
           </div>
         </div>
       </div>
 
-      {/* Table + Pagination wrapper — same structure as ClinicList */}
+      {/* Table + Pagination wrapper */}
       <div className={styles.tableSection}>
 
         <div className={styles.tableContainer}>
@@ -401,6 +435,7 @@ const MedicineMasterList = () => {
                           onClick={() => handleViewStock(medicine)}
                           className={styles.stockBtn}
                           title="View Stock History"
+                          disabled={!!btnCooldown[`stock-${medicine.id}`]}
                         >
                           <FiLayers size={16} />
                         </button>
@@ -408,6 +443,7 @@ const MedicineMasterList = () => {
                           onClick={() => handleViewDetails(medicine)}
                           className={styles.detailsBtn}
                           title="View Details"
+                          disabled={!!btnCooldown[`view-${medicine.id}`]}
                         >
                           <FiEye size={16} />
                         </button>
@@ -420,7 +456,7 @@ const MedicineMasterList = () => {
           </table>
         </div>
 
-        {/* ── Pagination Bar ── same as ClinicList */}
+        {/* ── Pagination Bar ── */}
         <div className={styles.paginationBar}>
           <div className={styles.paginationInfo}>
             {totalRecords > 0
@@ -434,7 +470,7 @@ const MedicineMasterList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(1)}
-              disabled={page === 1}
+              disabled={page === 1 || !!btnCooldown['page-1']}
               title="First page"
             >
               «
@@ -443,7 +479,7 @@ const MedicineMasterList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
+              disabled={page === 1 || !!btnCooldown[`page-${page - 1}`]}
               title="Previous page"
             >
               ‹
@@ -454,7 +490,7 @@ const MedicineMasterList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(page + 1)}
-              disabled={page >= totalPages}
+              disabled={page >= totalPages || !!btnCooldown[`page-${page + 1}`]}
               title="Next page"
             >
               ›
@@ -481,6 +517,7 @@ const MedicineMasterList = () => {
           medicineId={viewModal.medicineId}
           onClose={handleCloseViewModal}
           onUpdateRequest={handleUpdateRequest}
+          onDeleteSuccess={handleDeleteSuccess}
         />
       )}
 

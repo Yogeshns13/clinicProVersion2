@@ -5,52 +5,66 @@ import { FiSearch, FiX, FiCalendar, FiFilter, FiEye, FiFileText, FiDollarSign, F
 import { getLabInvoiceDetailList } from '../Api/ApiLabTests.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
 import styles from './LabInvoiceList.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 const LabInvoiceList = () => {
   const navigate = useNavigate();
-  
+
   // Data States
-  const [invoiceDetails, setInvoiceDetails] = useState([]);
+  const [invoiceDetails, setInvoiceDetails]       = useState([]);
   const [allInvoiceDetails, setAllInvoiceDetails] = useState([]);
-  
+
   // Filter inputs (not applied until search)
   const [filterInputs, setFilterInputs] = useState({
-    searchType: 'patientName', // patientName, invoiceNo, testName
+    searchType:  'patientName',
     searchValue: '',
-    dateFrom: '',
-    dateTo: ''
+    dateFrom:    '',
+    dateTo:      '',
   });
 
   // Applied filters
   const [appliedFilters, setAppliedFilters] = useState({
-    searchType: 'patientName',
+    searchType:  'patientName',
     searchValue: '',
-    dateFrom: '',
-    dateTo: ''
+    dateFrom:    '',
+    dateTo:      '',
   });
 
   // Pagination
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [page, setPage]       = useState(1);
+  const [pageSize]            = useState(20);
 
   // UI States
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
+  const [error,   setError]   = useState(null);
+
   // Modal States
-  const [isInvoiceDetailsOpen, setIsInvoiceDetailsOpen] = useState(false);
+  const [isInvoiceDetailsOpen,  setIsInvoiceDetailsOpen]  = useState(false);
   const [selectedInvoiceDetail, setSelectedInvoiceDetail] = useState(null);
 
-  // ── Derived: are any filters actually active?
+  // ── Button cooldown state (2-sec disable after click) ──────────────────────
+  const [btnCooldown, setBtnCooldown] = useState({});
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
+
+  // ── MessagePopup state ──────────────────────────────────────────────────────
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Derived: are any filters actually active? ──────────────────────────────
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
-    appliedFilters.dateFrom           !== '' ||
-    appliedFilters.dateTo             !== '';
+    appliedFilters.dateFrom            !== '' ||
+    appliedFilters.dateTo              !== '';
 
-  // Fetch Lab Invoice Details
+  // ── Fetch Lab Invoice Details ──────────────────────────────────────────────
   const fetchInvoiceDetails = async () => {
     try {
       setLoading(true);
@@ -59,14 +73,13 @@ const LabInvoiceList = () => {
       const branchId = await getStoredBranchId();
 
       const options = {
-        Page: 1,
+        Page:     1,
         PageSize: 100,
-        BranchID: branchId
+        BranchID: branchId,
       };
 
       const data = await getLabInvoiceDetailList(clinicId, options);
 
-      // Group by invoice and sort
       const sortedData = data.sort((a, b) => {
         const dateA = new Date(a.dateCreated);
         const dateB = new Date(b.dateCreated);
@@ -91,14 +104,13 @@ const LabInvoiceList = () => {
     fetchInvoiceDetails();
   }, []);
 
-  // Computed filtered invoice details based on applied filters
+  // ── Computed filtered invoice details ──────────────────────────────────────
   const filteredInvoiceDetails = useMemo(() => {
     let filtered = allInvoiceDetails;
 
-    // Apply search filter based on search type
     if (appliedFilters.searchValue) {
       const term = appliedFilters.searchValue.toLowerCase();
-      
+
       switch (appliedFilters.searchType) {
         case 'patientName':
           filtered = filtered.filter(inv => inv.patientName?.toLowerCase().includes(term));
@@ -114,63 +126,59 @@ const LabInvoiceList = () => {
       }
     }
 
-    // Date from filter
     if (appliedFilters.dateFrom) {
       const fromDate = new Date(appliedFilters.dateFrom);
       filtered = filtered.filter(inv => {
         if (!inv.invoiceDate) return false;
-        const invoiceDate = new Date(inv.invoiceDate);
-        return invoiceDate >= fromDate;
+        return new Date(inv.invoiceDate) >= fromDate;
       });
     }
 
-    // Date to filter
     if (appliedFilters.dateTo) {
       const toDate = new Date(appliedFilters.dateTo);
       toDate.setHours(23, 59, 59, 999);
       filtered = filtered.filter(inv => {
         if (!inv.invoiceDate) return false;
-        const invoiceDate = new Date(inv.invoiceDate);
-        return invoiceDate <= toDate;
+        return new Date(inv.invoiceDate) <= toDate;
       });
     }
 
     return filtered;
   }, [allInvoiceDetails, appliedFilters]);
 
-  // Group invoice details by invoice
+  // ── Group invoice details by invoice ──────────────────────────────────────
   const groupedInvoices = useMemo(() => {
     const groups = {};
-    
+
     filteredInvoiceDetails.forEach(detail => {
       const invoiceId = detail.invoiceId;
       if (!groups[invoiceId]) {
         groups[invoiceId] = {
-          invoiceId: detail.invoiceId,
-          invoiceNo: detail.invoiceNo,
-          invoiceDate: detail.invoiceDate,
-          patientId: detail.patientId,
-          patientName: detail.patientName,
-          patientMobile: detail.patientMobile,
-          patientFileNo: detail.patientFileNo,
-          clinicName: detail.clinicName,
-          branchName: detail.branchName,
-          dateCreated: detail.dateCreated,
-          details: [],
-          totalAmount: 0,
-          totalCgst: 0,
-          totalSgst: 0,
-          totalNetAmount: 0
+          invoiceId:      detail.invoiceId,
+          invoiceNo:      detail.invoiceNo,
+          invoiceDate:    detail.invoiceDate,
+          patientId:      detail.patientId,
+          patientName:    detail.patientName,
+          patientMobile:  detail.patientMobile,
+          patientFileNo:  detail.patientFileNo,
+          clinicName:     detail.clinicName,
+          branchName:     detail.branchName,
+          dateCreated:    detail.dateCreated,
+          details:        [],
+          totalAmount:    0,
+          totalCgst:      0,
+          totalSgst:      0,
+          totalNetAmount: 0,
         };
       }
-      
+
       groups[invoiceId].details.push(detail);
-      groups[invoiceId].totalAmount += detail.amount || 0;
-      groups[invoiceId].totalCgst += detail.cgstAmount || 0;
-      groups[invoiceId].totalSgst += detail.sgstAmount || 0;
-      groups[invoiceId].totalNetAmount += detail.netAmount || 0;
+      groups[invoiceId].totalAmount    += detail.amount     || 0;
+      groups[invoiceId].totalCgst      += detail.cgstAmount || 0;
+      groups[invoiceId].totalSgst      += detail.sgstAmount || 0;
+      groups[invoiceId].totalNetAmount += detail.netAmount  || 0;
     });
-    
+
     return Object.values(groups).sort((a, b) => {
       const dateA = new Date(a.dateCreated);
       const dateB = new Date(b.dateCreated);
@@ -178,85 +186,76 @@ const LabInvoiceList = () => {
     });
   }, [filteredInvoiceDetails]);
 
-  // Paginated slice of groupedInvoices
+  // ── Paginated slice ────────────────────────────────────────────────────────
   const paginatedInvoices = useMemo(() => {
     const start = (page - 1) * pageSize;
     return groupedInvoices.slice(start, start + pageSize);
   }, [groupedInvoices, page, pageSize]);
 
-  // Calculate summary statistics
+  // ── Summary statistics ─────────────────────────────────────────────────────
   const summaryStats = useMemo(() => {
-    const uniqueInvoices = new Set(allInvoiceDetails.map(d => d.invoiceId)).size;
-    const totalRevenue = allInvoiceDetails.reduce((sum, d) => sum + (d.netAmount || 0), 0);
-    const totalTests = allInvoiceDetails.length;
+    const uniqueInvoices  = new Set(allInvoiceDetails.map(d => d.invoiceId)).size;
+    const totalRevenue    = allInvoiceDetails.reduce((sum, d) => sum + (d.netAmount || 0), 0);
+    const totalTests      = allInvoiceDetails.length;
     const avgInvoiceValue = uniqueInvoices > 0 ? totalRevenue / uniqueInvoices : 0;
-
-    return {
-      uniqueInvoices,
-      totalRevenue,
-      totalTests,
-      avgInvoiceValue
-    };
+    return { uniqueInvoices, totalRevenue, totalTests, avgInvoiceValue };
   }, [allInvoiceDetails]);
 
-  // Filter handlers
+  // ── Filter handlers ────────────────────────────────────────────────────────
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSearch = () => {
+    triggerCooldown('search');
     setAppliedFilters({ ...filterInputs });
     setPage(1);
   };
 
   const handleClearFilters = () => {
-    const emptyFilters = {
-      searchType: 'patientName',
-      searchValue: '',
-      dateFrom: '',
-      dateTo: ''
-    };
+    triggerCooldown('clear');
+    const emptyFilters = { searchType: 'patientName', searchValue: '', dateFrom: '', dateTo: '' };
     setFilterInputs(emptyFilters);
     setAppliedFilters(emptyFilters);
     setPage(1);
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
+    if (e.key === 'Enter') handleSearch();
   };
 
   const handlePageChange = (newPage) => {
     if (newPage < 1) return;
+    triggerCooldown(`page-${newPage}`);
     setPage(newPage);
   };
 
   const handleViewInvoiceDetails = (invoice) => {
+    triggerCooldown(`view-${invoice.invoiceId}`);
     setSelectedInvoiceDetail(invoice);
     setIsInvoiceDetailsOpen(true);
   };
 
   const handlePrintInvoice = (invoice) => {
-    // Placeholder for print functionality
+    triggerCooldown(`print-${invoice.invoiceId}`);
     console.log('Print invoice:', invoice.invoiceNo);
-    alert(`Print functionality for Invoice ${invoice.invoiceNo} will be implemented.`);
+    showPopup(`Print functionality for Invoice ${invoice.invoiceNo} will be implemented.`, 'warning');
   };
 
   const handleDownloadInvoice = (invoice) => {
-    // Placeholder for download functionality
+    triggerCooldown(`download-${invoice.invoiceId}`);
     console.log('Download invoice:', invoice.invoiceNo);
-    alert(`Download functionality for Invoice ${invoice.invoiceNo} will be implemented.`);
+    showPopup(`Download functionality for Invoice ${invoice.invoiceNo} will be implemented.`, 'warning');
   };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year:  'numeric',
+      month: 'short',
+      day:   'numeric',
     });
   };
 
@@ -273,7 +272,7 @@ const LabInvoiceList = () => {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.spinner}></div>
-        <p>Loading lab invoices...</p>
+        <LoadingPage/>
       </div>
     );
   }
@@ -282,16 +281,16 @@ const LabInvoiceList = () => {
   const startRecord = paginatedInvoices.length === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord   = (page - 1) * pageSize + paginatedInvoices.length;
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className={styles.wrapper}>
       <ErrorHandler error={error} />
       <Header title="Lab Invoice Management" />
 
-      {/* Filters Container */}
+      {/* ── Filters Container ── */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
 
-          {/* Fused search type + value */}
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -303,13 +302,13 @@ const LabInvoiceList = () => {
               <option value="invoiceNo">Invoice No</option>
               <option value="testName">Test Name</option>
             </select>
-            
+
             <input
               type="text"
               name="searchValue"
               placeholder={`Search by ${
                 filterInputs.searchType === 'patientName' ? 'Patient Name' :
-                filterInputs.searchType === 'invoiceNo' ? 'Invoice No' :
+                filterInputs.searchType === 'invoiceNo'   ? 'Invoice No'   :
                 'Test Name'
               }`}
               value={filterInputs.searchValue}
@@ -319,7 +318,7 @@ const LabInvoiceList = () => {
             />
           </div>
 
-          {/* From Date — VendorList overlay-placeholder style */}
+          {/* From Date */}
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
               {!filterInputs.dateFrom && (
@@ -335,7 +334,7 @@ const LabInvoiceList = () => {
             </div>
           </div>
 
-          {/* To Date — VendorList overlay-placeholder style */}
+          {/* To Date */}
           <div className={styles.filterGroup}>
             <div className={styles.dateWrapper}>
               {!filterInputs.dateTo && (
@@ -353,12 +352,20 @@ const LabInvoiceList = () => {
 
           {/* Actions */}
           <div className={styles.filterActions}>
-            <button onClick={handleSearch} className={styles.searchButton}>
+            <button
+              onClick={handleSearch}
+              className={styles.searchButton}
+              disabled={!!btnCooldown['search']}
+            >
               <FiSearch size={18} />
               Search
             </button>
             {hasActiveFilters && (
-              <button onClick={handleClearFilters} className={styles.clearButton}>
+              <button
+                onClick={handleClearFilters}
+                className={styles.clearButton}
+                disabled={!!btnCooldown['clear']}
+              >
                 <FiX size={18} />
                 Clear
               </button>
@@ -371,7 +378,6 @@ const LabInvoiceList = () => {
       {/* ── Table + Pagination wrapper ── */}
       <div className={styles.tableSection}>
 
-        {/* Invoices Table */}
         <div className={styles.tableContainer}>
           <table className={styles.table}>
             <thead>
@@ -390,7 +396,7 @@ const LabInvoiceList = () => {
               {paginatedInvoices.length === 0 ? (
                 <tr>
                   <td colSpan={8} className={styles.noData}>
-                    {Object.values(appliedFilters).some(v => v && v !== 'patientName') 
+                    {Object.values(appliedFilters).some(v => v && v !== 'patientName')
                       ? 'No invoices found matching your search.'
                       : 'No lab invoices found.'}
                   </td>
@@ -443,20 +449,24 @@ const LabInvoiceList = () => {
                       <div className={styles.dateCell}>
                         <div className={styles.name}>{formatDate(invoice.invoiceDate)}</div>
                         <div className={styles.subText}>
-                          {invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleTimeString('en-US', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          }) : '—'}
+                          {invoice.invoiceDate
+                            ? new Date(invoice.invoiceDate).toLocaleTimeString('en-US', {
+                                hour:   '2-digit',
+                                minute: '2-digit',
+                              })
+                            : '—'}
                         </div>
                       </div>
                     </td>
                     <td>
                       <div className={styles.actionsCell}>
                         <div className={styles.actionDropdownWrapper}>
-                          <button 
-                           onClick={() => handleViewInvoiceDetails(invoice)}
-                           className={styles.actionBtn}
-                           title="View Details">
+                          <button
+                            onClick={() => handleViewInvoiceDetails(invoice)}
+                            className={styles.actionBtn}
+                            title="View Details"
+                            disabled={!!btnCooldown[`view-${invoice.invoiceId}`]}
+                          >
                             View Details
                           </button>
                         </div>
@@ -483,7 +493,7 @@ const LabInvoiceList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(1)}
-              disabled={page === 1}
+              disabled={page === 1 || !!btnCooldown['page-1']}
               title="First page"
             >
               «
@@ -492,7 +502,7 @@ const LabInvoiceList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
+              disabled={page === 1 || !!btnCooldown[`page-${page - 1}`]}
               title="Previous page"
             >
               ‹
@@ -503,7 +513,7 @@ const LabInvoiceList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(page + 1)}
-              disabled={paginatedInvoices.length < pageSize}
+              disabled={paginatedInvoices.length < pageSize || !!btnCooldown[`page-${page + 1}`]}
               title="Next page"
             >
               ›
@@ -515,9 +525,9 @@ const LabInvoiceList = () => {
           </div>
         </div>
 
-      </div>{/* end tableSection */}
+      </div>
 
-      {/* Invoice Details Modal */}
+      {/* ── Invoice Details Modal ── */}
       {isInvoiceDetailsOpen && selectedInvoiceDetail && (
         <InvoiceDetailsModal
           invoice={selectedInvoiceDetail}
@@ -529,27 +539,50 @@ const LabInvoiceList = () => {
           formatDate={formatDate}
         />
       )}
+
+      {/* ── MessagePopup (at root level so z-index is never blocked) ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
     </div>
   );
 };
 
+// ──────────────────────────────────────────────────
 // Invoice Details Modal Component
+// ──────────────────────────────────────────────────
 const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) => {
+  // ── Button cooldown state (2-sec disable) ──
+  const [btnCooldown, setBtnCooldown] = useState({});
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
+
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-       
+
         <div className={styles.modalHeader}>
           <h2>Invoice Details - {invoice.invoiceNo}</h2>
-
           <div className={styles.headerRight}>
             <div className={styles.clinicNameone}>
-                <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-                  {localStorage.getItem('clinicName') || '—'}
-                 </div>
-          <button onClick={onClose} className={styles.closeBtn}>×</button>
+              <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
+              {localStorage.getItem('clinicName') || '—'}
+            </div>
+            <button
+              onClick={() => { triggerCooldown('close'); onClose(); }}
+              className={styles.closeBtn}
+              disabled={!!btnCooldown['close']}
+            >
+              ×
+            </button>
+          </div>
         </div>
-        </div>
+
         <div className={styles.modalBody}>
           {/* Invoice Header Info */}
           <div className={styles.invoiceHeader}>
@@ -634,8 +667,13 @@ const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) =
             </table>
           </div>
         </div>
+
         <div className={styles.modalFooter}>
-          <button onClick={onClose} className={styles.cancelBtn}>
+          <button
+            onClick={() => { triggerCooldown('modal-close'); onClose(); }}
+            className={styles.cancelBtn}
+            disabled={!!btnCooldown['modal-close']}
+          >
             Close
           </button>
         </div>

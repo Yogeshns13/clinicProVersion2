@@ -29,10 +29,12 @@ import {
 } from '../Api/ApiPharmacy.js';
 import Header from '../Header/Header.jsx';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
+import MessagePopup from '../Hooks/MessagePopup.jsx';
+import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 import styles from './SalesCartDetailList.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
-
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 // ─────────────────────────────────────────────────────────
 const SalesCartDetailList = () => {
@@ -51,40 +53,50 @@ const SalesCartDetailList = () => {
 
   // ── Invoice modal state ───────────────────────────────
   const [invoice, setInvoice] = useState({
-    isOpen:      false,
-    discount:    '',
-    submitting:  false,
-    error:       null,
-    success:     false,
-    invoiceId:   null,
-    message:     '',
+    isOpen:     false,
+    discount:   '',
+    submitting: false,
+    error:      null,
+    success:    false,
+    invoiceId:  null,
+    message:    '',
   });
 
   // ── Update Quantity modal state ───────────────────────
   const [updateQty, setUpdateQty] = useState({
-    isOpen:       false,
-    item:         null,
-    newQty:       '',
-    newDiscount:  '',
-    submitting:   false,
-    error:        null,
-    success:      false,
+    isOpen:      false,
+    item:        null,
+    newQty:      '',
+    newDiscount: '',
+    submitting:  false,
+    error:       null,
+    success:     false,
   });
 
-  // ── NEW: Delete entire cart modal state ───────────────
-  const [deleteCart, setDeleteCart] = useState({
-    isOpen:     false,
-    submitting: false,
-    error:      null,
-  });
+  // ── ConfirmPopup: delete entire cart ─────────────────
+  const [confirmDeleteCart, setConfirmDeleteCart] = useState({ visible: false });
 
-  // ── NEW: Delete single cart detail modal state ────────
-  const [deleteDetail, setDeleteDetail] = useState({
-    isOpen:     false,
-    item:       null,
-    submitting: false,
-    error:      null,
-  });
+  // ── ConfirmPopup: delete single cart detail ───────────
+  const [confirmDeleteDetail, setConfirmDeleteDetail] = useState({ visible: false, item: null });
+
+  // ── Delete loading states ─────────────────────────────
+  const [deleteCartLoading,   setDeleteCartLoading]   = useState(false);
+  const [deleteDetailLoading, setDeleteDetailLoading] = useState(false);
+
+  // ── Button cooldown state (2-sec disable after click) ──────────────────────
+  const [btnCooldown, setBtnCooldown] = useState({});
+  const triggerCooldown = (key) => {
+    setBtnCooldown((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
+  };
+
+  // ── MessagePopup state ──────────────────────────────────────────────────────
+  const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── Update Qty button gating ────────────────────────────────────────────────
+  const updateQtyAllRequiredFilled = updateQty.newQty.trim().length > 0;
 
   // ─────────────────────────────────────────────────────
   // FETCH
@@ -158,18 +170,19 @@ const SalesCartDetailList = () => {
   };
 
   const exportCSV = () => {
+    triggerCooldown('export-csv');
     const headers = [
-      '#','Medicine','Generic Name','Manufacturer',
-      'Batch No','Expiry','Qty',
-      'Unit Price','Discount %','Discount Amt',
-      'Total','CGST','SGST','Net Amount','Status',
+      '#', 'Medicine', 'Generic Name', 'Manufacturer',
+      'Batch No', 'Expiry', 'Qty',
+      'Unit Price', 'Discount %', 'Discount Amt',
+      'Total', 'CGST', 'SGST', 'Net Amount', 'Status',
     ];
     const rows = details.map((item, idx) => [
       idx + 1,
       item.medicineName,
-      item.genericName   || '',
-      item.manufacturer  || '',
-      item.batchNo       || '',
+      item.genericName  || '',
+      item.manufacturer || '',
+      item.batchNo      || '',
       fmtDate(item.expiryDate),
       item.quantity,
       Number(item.unitPrice).toFixed(2),
@@ -198,6 +211,7 @@ const SalesCartDetailList = () => {
   // INVOICE MODAL HANDLERS
   // ─────────────────────────────────────────────────────
   const openInvoiceModal = () => {
+    triggerCooldown('invoice');
     setInvoice({
       isOpen:     true,
       discount:   '',
@@ -246,12 +260,14 @@ const SalesCartDetailList = () => {
         invoiceId:  result.invoiceId,
         message:    result.message || 'Invoice generated successfully!',
       }));
+      showPopup('Invoice generated successfully!', 'success');
     } catch (err) {
       setInvoice((prev) => ({
         ...prev,
         submitting: false,
         error: err.message || 'Failed to generate invoice.',
       }));
+      showPopup(err.message || 'Failed to generate invoice.', 'error');
     }
   };
 
@@ -259,14 +275,15 @@ const SalesCartDetailList = () => {
   // UPDATE QUANTITY MODAL HANDLERS
   // ─────────────────────────────────────────────────────
   const openUpdateQtyModal = (item) => {
+    triggerCooldown(`uqty-${item.id}`);
     setUpdateQty({
-      isOpen:       true,
+      isOpen:      true,
       item,
-      newQty:       String(item.quantity ?? ''),
-      newDiscount:  String(Number(item.discountPercentage) || 0),
-      submitting:   false,
-      error:        null,
-      success:      false,
+      newQty:      String(item.quantity ?? ''),
+      newDiscount: String(Number(item.discountPercentage) || 0),
+      submitting:  false,
+      error:       null,
+      success:     false,
     });
   };
 
@@ -276,6 +293,11 @@ const SalesCartDetailList = () => {
   };
 
   const handleUpdateQty = async () => {
+    if (!updateQty.newQty.trim()) {
+      showPopup('Please fill all required fields: New Quantity.', 'warning');
+      return;
+    }
+
     const newQtyVal = Number(updateQty.newQty);
 
     if (!updateQty.newQty || isNaN(newQtyVal) || newQtyVal <= 0 || !Number.isInteger(newQtyVal)) {
@@ -301,15 +323,12 @@ const SalesCartDetailList = () => {
     const clinicId = await getStoredClinicId();
     const branchId = await getStoredBranchId();
 
-    // ── Phase 1: Delete existing cart detail ──────────────
+    // ── Phase 1: Delete existing cart detail ──
     try {
       await deleteSalesCartDetail(item.id);
     } catch (err) {
-      setUpdateQty((prev) => ({
-        ...prev,
-        submitting: false,
-        error: `Delete failed: ${err.message || 'Could not remove existing item. No changes made.'}`,
-      }));
+      setUpdateQty((prev) => ({ ...prev, submitting: false }));
+      showPopup(`Delete failed: ${err.message || 'Could not remove existing item. No changes made.'}`, 'error');
       return;
     }
 
@@ -326,15 +345,13 @@ const SalesCartDetailList = () => {
         branchId,
       });
     } catch (err) {
-      setUpdateQty((prev) => ({
-        ...prev,
-        submitting: false,
-        error: `⚠️ Item was deleted but could not be re-added: ${err.message || 'Please add it manually.'}`,
-      }));
+      setUpdateQty((prev) => ({ ...prev, submitting: false }));
+      showPopup(`⚠️ Item was deleted but could not be re-added: ${err.message || 'Please add it manually.'}`, 'error');
       return;
     }
 
     setUpdateQty((prev) => ({ ...prev, submitting: false, success: true }));
+    showPopup('Quantity updated successfully!', 'success');
     setTimeout(() => {
       setUpdateQty((prev) => ({ ...prev, isOpen: false }));
       fetchDetails();
@@ -342,44 +359,48 @@ const SalesCartDetailList = () => {
   };
 
   // ─────────────────────────────────────────────────────
-  // NEW: DELETE ENTIRE CART HANDLERS
+  // DELETE ENTIRE CART HANDLERS
   // ─────────────────────────────────────────────────────
-  const openDeleteCartModal  = () => setDeleteCart({ isOpen: true, submitting: false, error: null });
-  const closeDeleteCartModal = () => { if (!deleteCart.submitting) setDeleteCart({ isOpen: false, submitting: false, error: null }); };
+  const openDeleteCartConfirm  = () => {
+    triggerCooldown('del-cart');
+    setConfirmDeleteCart({ visible: true });
+  };
+  const closeDeleteCartConfirm = () => setConfirmDeleteCart({ visible: false });
 
   const handleDeleteCart = async () => {
-    setDeleteCart((prev) => ({ ...prev, submitting: true, error: null }));
+    closeDeleteCartConfirm();
+    setDeleteCartLoading(true);
     try {
       await deleteSalesCart(Number(cartId));
-      setDeleteCart({ isOpen: false, submitting: false, error: null });
-      navigate(-1);
+      showPopup('Sales cart deleted successfully!', 'success');
+      setTimeout(() => navigate(-1), 1500);
     } catch (err) {
-      setDeleteCart((prev) => ({
-        ...prev,
-        submitting: false,
-        error: err.message || 'Failed to delete sales cart.',
-      }));
+      showPopup(err.message || 'Failed to delete sales cart.', 'error');
+    } finally {
+      setDeleteCartLoading(false);
     }
   };
 
   // ─────────────────────────────────────────────────────
-  // NEW: DELETE SINGLE CART DETAIL HANDLERS
+  // DELETE SINGLE CART DETAIL HANDLERS
   // ─────────────────────────────────────────────────────
-  const openDeleteDetailModal  = (item) => setDeleteDetail({ isOpen: true, item, submitting: false, error: null });
-  const closeDeleteDetailModal = () => { if (!deleteDetail.submitting) setDeleteDetail({ isOpen: false, item: null, submitting: false, error: null }); };
+  const openDeleteDetailConfirm  = (item) => {
+    triggerCooldown(`del-detail-${item.id}`);
+    setConfirmDeleteDetail({ visible: true, item });
+  };
+  const closeDeleteDetailConfirm = () => setConfirmDeleteDetail({ visible: false, item: null });
 
   const handleDeleteDetail = async () => {
-    setDeleteDetail((prev) => ({ ...prev, submitting: true, error: null }));
+    closeDeleteDetailConfirm();
+    setDeleteDetailLoading(true);
     try {
-      await deleteSalesCartDetail(deleteDetail.item.id);
-      setDeleteDetail({ isOpen: false, item: null, submitting: false, error: null });
+      await deleteSalesCartDetail(confirmDeleteDetail.item.id);
+      showPopup('Item deleted successfully!', 'success');
       fetchDetails();
     } catch (err) {
-      setDeleteDetail((prev) => ({
-        ...prev,
-        submitting: false,
-        error: err.message || 'Failed to delete item.',
-      }));
+      showPopup(err.message || 'Failed to delete item.', 'error');
+    } finally {
+      setDeleteDetailLoading(false);
     }
   };
 
@@ -400,25 +421,42 @@ const SalesCartDetailList = () => {
       {/* ══ PAGE HEADER ══ */}
       <div className={styles.pageHeader}>
         <div className={styles.pageHeaderLeft}>
-          <button className={styles.backBtn} onClick={() => navigate(-1)}>
+          <button
+            className={styles.backBtn}
+            onClick={() => {
+              triggerCooldown('back');
+              navigate(-1);
+            }}
+            disabled={!!btnCooldown['back']}
+          >
             <FiArrowLeft size={17} />
             Back
           </button>
         </div>
 
-        {!loading && !error && details.length > 0 && (
+        {/* ── Action buttons: Delete Cart always visible (when not loading/error),
+               Generate Invoice only when there are items ── */}
+        {!loading && !error && (
           <div className={styles.headerActions}>
-
-            {/* ── NEW: Delete Cart button ── */}
-            <button className={styles.deleteCartBtn} onClick={openDeleteCartModal}>
+            <button
+              className={styles.deleteCartBtn}
+              onClick={openDeleteCartConfirm}
+              disabled={deleteCartLoading || !!btnCooldown['del-cart']}
+            >
               <FiTrash2 size={15} />
-              Delete Cart
+              {deleteCartLoading ? 'Deleting...' : 'Delete Cart'}
             </button>
 
-            <button className={styles.invoiceBtn} onClick={openInvoiceModal}>
-              <FiFileText size={15} />
-              Generate Invoice
-            </button>
+            {details.length > 0 && (
+              <button
+                className={styles.invoiceBtn}
+                onClick={openInvoiceModal}
+                disabled={!!btnCooldown['invoice']}
+              >
+                <FiFileText size={15} />
+                Generate Invoice
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -453,12 +491,12 @@ const SalesCartDetailList = () => {
           {meta.clinicName && (
             <div className={styles.infoItem}>
               <FaClinicMedical size={13} className={styles.infoIcon} />
-            <div>
-               <span className={styles.infoLabel}>Clinic</span>
+              <div>
+                <span className={styles.infoLabel}>Clinic</span>
                 <span className={styles.infoValue}>{meta.clinicName}</span>
-                  </div>
-                </div>
-             )}
+              </div>
+            </div>
+          )}
           {meta.branchName && (
             <div className={styles.infoItem}>
               <FiMapPin size={13} className={styles.infoIcon} />
@@ -482,7 +520,7 @@ const SalesCartDetailList = () => {
       {loading && (
         <div className={styles.centerState}>
           <div className={styles.spinner} />
-          <span>Loading cart items...</span>
+          <LoadingPage/>
         </div>
       )}
       {!loading && error && (
@@ -540,7 +578,9 @@ const SalesCartDetailList = () => {
                       <td className={styles.idxCell}>{idx + 1}</td>
                       <td>
                         <div className={styles.medName}>{item.medicineName}</div>
-                        {item.genericName && <div className={styles.medSub}>{item.genericName}</div>}
+                        {item.genericName && (
+                          <div className={styles.medSub}>{item.genericName}</div>
+                        )}
                       </td>
                       <td>
                         {item.batchNo
@@ -553,19 +593,31 @@ const SalesCartDetailList = () => {
                       <td className={styles.numCell}>
                         {Number(item.discountPercentage) > 0 ? (
                           <div className={styles.discountGroup}>
-                            <span className={styles.discPct}>{Number(item.discountPercentage).toFixed(1)}%</span>
+                            <span className={styles.discPct}>
+                              {Number(item.discountPercentage).toFixed(1)}%
+                            </span>
                             <span className={styles.discAmt}>({fmt(item.discount)})</span>
                           </div>
                         ) : (
                           <span className={styles.dash}>—</span>
                         )}
                       </td>
-                      <td className={styles.numCell}><span className={styles.totalAmt}>{fmt(item.totalAmount)}</span></td>
-                      <td className={styles.numCell}><span className={styles.taxAmt}>{fmt(item.cgstAmount)}</span></td>
-                      <td className={styles.numCell}><span className={styles.taxAmt}>{fmt(item.sgstAmount)}</span></td>
-                      <td className={styles.numCell}><span className={styles.netAmt}>{fmt(item.netAmount)}</span></td>
+                      <td className={styles.numCell}>
+                        <span className={styles.totalAmt}>{fmt(item.totalAmount)}</span>
+                      </td>
+                      <td className={styles.numCell}>
+                        <span className={styles.taxAmt}>{fmt(item.cgstAmount)}</span>
+                      </td>
+                      <td className={styles.numCell}>
+                        <span className={styles.taxAmt}>{fmt(item.sgstAmount)}</span>
+                      </td>
+                      <td className={styles.numCell}>
+                        <span className={styles.netAmt}>{fmt(item.netAmount)}</span>
+                      </td>
                       <td>
-                        <span className={`${styles.statusBadge} ${item.status === 1 ? styles.statusActive : styles.statusInactive}`}>
+                        <span
+                          className={`${styles.statusBadge} ${item.status === 1 ? styles.statusActive : styles.statusInactive}`}
+                        >
                           {item.statusDesc}
                         </span>
                       </td>
@@ -574,16 +626,16 @@ const SalesCartDetailList = () => {
                           className={styles.updateQtyBtn}
                           onClick={() => openUpdateQtyModal(item)}
                           title="Update Quantity"
+                          disabled={!!btnCooldown[`uqty-${item.id}`]}
                         >
                           <FiEdit2 size={13} />
                           Qty
                         </button>
-
-                        {/* ── NEW: Delete detail button ── */}
                         <button
                           className={styles.deleteDetailBtn}
-                          onClick={() => openDeleteDetailModal(item)}
+                          onClick={() => openDeleteDetailConfirm(item)}
                           title="Delete item"
+                          disabled={deleteDetailLoading || !!btnCooldown[`del-detail-${item.id}`]}
                         >
                           <FiTrash2 size={13} />
                         </button>
@@ -621,7 +673,9 @@ const SalesCartDetailList = () => {
                 <div className={styles.summaryDivider} />
                 <div className={styles.summaryItem}>
                   <span className={styles.summaryLabel}>Discount</span>
-                  <span className={`${styles.summaryValue} ${styles.discountValue}`}>-{fmt(totals.discount)}</span>
+                  <span className={`${styles.summaryValue} ${styles.discountValue}`}>
+                    -{fmt(totals.discount)}
+                  </span>
                 </div>
               </>
             )}
@@ -633,7 +687,9 @@ const SalesCartDetailList = () => {
             <div className={styles.summaryDivider} />
             <div className={`${styles.summaryItem} ${styles.grandTotalItem}`}>
               <span className={styles.summaryLabel}>Grand Total</span>
-              <span className={`${styles.summaryValue} ${styles.grandTotalValue}`}>{fmt(totals.netAmount)}</span>
+              <span className={`${styles.summaryValue} ${styles.grandTotalValue}`}>
+                {fmt(totals.netAmount)}
+              </span>
             </div>
           </div>
         </>
@@ -647,7 +703,6 @@ const SalesCartDetailList = () => {
         >
           <div className={styles.ivModal} onClick={(e) => e.stopPropagation()}>
 
-            {/* ── Header ── */}
             <div className={styles.ivModalHeader}>
               <div className={styles.ivHeaderContent}>
                 <h2>Generate Invoice</h2>
@@ -664,19 +719,13 @@ const SalesCartDetailList = () => {
               )}
             </div>
 
-            {/* ── Body ── */}
             <div className={styles.ivModalBody}>
-
-              {/* Success state */}
               {invoice.success && (
                 <div className={styles.ivSuccessState}>
                   <div className={styles.ivSuccessIcon}>
                     <FiCheckCircle size={52} />
                   </div>
                   <h3>Invoice Generated!</h3>
-                  {invoice.invoiceId && (
-                    <p>Invoice ID: <strong>#{invoice.invoiceId}</strong></p>
-                  )}
                   <p className={styles.ivSuccessMsg}>{invoice.message}</p>
                 </div>
               )}
@@ -698,7 +747,9 @@ const SalesCartDetailList = () => {
                     </div>
                     <div className={styles.ivInfoBlock}>
                       <span className={styles.ivInfoLabel}>Net Amount</span>
-                      <span className={`${styles.ivInfoVal} ${styles.ivNetAmt}`}>{fmt(totals.netAmount)}</span>
+                      <span className={`${styles.ivInfoVal} ${styles.ivNetAmt}`}>
+                        {fmt(totals.netAmount)}
+                      </span>
                     </div>
                   </div>
 
@@ -720,7 +771,7 @@ const SalesCartDetailList = () => {
                             setInvoice((prev) => ({
                               ...prev,
                               discount: e.target.value,
-                              error: null,
+                              error:    null,
                             }))
                           }
                           className={styles.ivInput}
@@ -750,7 +801,6 @@ const SalesCartDetailList = () => {
               )}
             </div>
 
-            {/* ── Footer ── */}
             {!invoice.success && (
               <div className={styles.ivModalFooter}>
                 <button
@@ -802,11 +852,10 @@ const SalesCartDetailList = () => {
               <div className={styles.uqHeaderContent}>
                 <h2>Update Quantity & Discount</h2>
               </div>
-                <div className={styles.clinicNameone}>
-                               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-                                 {localStorage.getItem('clinicName') || '—'}
-                            </div>
-
+              <div className={styles.clinicNameone}>
+                <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
+                {localStorage.getItem('clinicName') || '—'}
+              </div>
               {!updateQty.submitting && !updateQty.success && (
                 <button className={styles.uqCloseBtn} onClick={closeUpdateQtyModal}>
                   <FiX size={22} />
@@ -815,7 +864,6 @@ const SalesCartDetailList = () => {
             </div>
 
             <div className={styles.uqModalBody}>
-
               {updateQty.success && (
                 <div className={styles.uqSuccessState}>
                   <div className={styles.uqSuccessIcon}>
@@ -864,7 +912,7 @@ const SalesCartDetailList = () => {
                   <div className={styles.uqFormSection}>
                     <div className={styles.uqFormGrid}>
                       <div className={styles.uqFormGroup}>
-                        <label>New Quantity</label>
+                        <label>New Quantity <span style={{ color: '#dc2626' }}>*</span></label>
                         <input
                           type="number"
                           min="1"
@@ -875,7 +923,7 @@ const SalesCartDetailList = () => {
                             setUpdateQty((prev) => ({
                               ...prev,
                               newQty: e.target.value,
-                              error: null,
+                              error:  null,
                             }))
                           }
                           className={styles.uqInput}
@@ -904,7 +952,7 @@ const SalesCartDetailList = () => {
                               setUpdateQty((prev) => ({
                                 ...prev,
                                 newDiscount: e.target.value,
-                                error: null,
+                                error:       null,
                               }))
                             }
                             className={styles.uqInput}
@@ -912,19 +960,10 @@ const SalesCartDetailList = () => {
                           />
                           <span className={styles.uqInputSuffix}>%</span>
                         </div>
-                        <span className={styles.uqInputHint}>
-                          Leave 0 for no discount
-                        </span>
+                        <span className={styles.uqInputHint}>Leave 0 for no discount</span>
                       </div>
                     </div>
                   </div>
-
-                  {updateQty.error && (
-                    <div className={styles.uqErrorBanner}>
-                      <FiAlertCircle size={15} />
-                      <span>{updateQty.error}</span>
-                    </div>
-                  )}
 
                   {updateQty.submitting && (
                     <div className={styles.uqProgressBanner}>
@@ -948,7 +987,8 @@ const SalesCartDetailList = () => {
                 <button
                   className={styles.uqConfirmBtn}
                   onClick={handleUpdateQty}
-                  disabled={updateQty.submitting}
+                  disabled={updateQty.submitting || !updateQtyAllRequiredFilled}
+                  title={!updateQtyAllRequiredFilled ? 'Please enter a quantity to enable this button' : ''}
                 >
                   {updateQty.submitting ? (
                     <>
@@ -968,146 +1008,35 @@ const SalesCartDetailList = () => {
         </div>
       )}
 
-      {/* ══ NEW: DELETE ENTIRE CART MODAL ══ */}
-      {deleteCart.isOpen && (
-        <div
-          className={styles.modalOverlay}
-          onClick={!deleteCart.submitting ? closeDeleteCartModal : undefined}
-        >
-          <div className={styles.delModal} onClick={(e) => e.stopPropagation()}>
+      {/* ══ CONFIRM: DELETE ENTIRE CART ══ */}
+      <ConfirmPopup
+        visible={confirmDeleteCart.visible}
+        message={`Delete this sales cart${meta?.customerName ? ` for ${meta.customerName}` : ''}?`}
+        subMessage={`All ${details.length} item${details.length !== 1 ? 's' : ''} will be permanently removed. This action cannot be undone.`}
+        confirmLabel="Yes, Delete"
+        cancelLabel="No, Cancel"
+        onConfirm={handleDeleteCart}
+        onCancel={closeDeleteCartConfirm}
+      />
 
-            <div className={styles.delModalHeader}>
-              <div className={styles.delHeaderContent}>
-                <h2>Delete Sales Cart</h2>
-                {meta?.customerName && (
-                  <span className={styles.delBadge}>{meta.customerName}</span>
-                )}
-              </div>
-              {!deleteCart.submitting && (
-                <button className={styles.delCloseBtn} onClick={closeDeleteCartModal}>
-                  <FiX size={20} />
-                </button>
-              )}
-            </div>
+      {/* ══ CONFIRM: DELETE SINGLE DETAIL ══ */}
+      <ConfirmPopup
+        visible={confirmDeleteDetail.visible}
+        message={`Delete ${confirmDeleteDetail.item?.medicineName || 'this item'} from the cart?`}
+        subMessage="This action cannot be undone."
+        confirmLabel="Yes, Delete"
+        cancelLabel="No, Cancel"
+        onConfirm={handleDeleteDetail}
+        onCancel={closeDeleteDetailConfirm}
+      />
 
-            <div className={styles.delModalBody}>
-              <div className={styles.delWarningStrip}>
-                <FiAlertCircle size={18} className={styles.delWarningIcon} />
-                <span>
-                  Are you sure you want to delete this entire sales cart
-                  {meta?.customerName ? <> for <strong>{meta.customerName}</strong></> : ''}?
-                  All {details.length} item{details.length !== 1 ? 's' : ''} will be removed.
-                  This action cannot be undone.
-                </span>
-              </div>
-
-              {deleteCart.error && (
-                <div className={styles.delErrorBanner}>
-                  <FiAlertCircle size={14} />
-                  <span>{deleteCart.error}</span>
-                </div>
-              )}
-
-              {deleteCart.submitting && (
-                <div className={styles.delProgressBanner}>
-                  <div className={styles.delSpinner} />
-                  <span>Deleting cart, please wait...</span>
-                </div>
-              )}
-            </div>
-
-            <div className={styles.delModalFooter}>
-              <button
-                className={styles.delCancelBtn}
-                onClick={closeDeleteCartModal}
-                disabled={deleteCart.submitting}
-              >
-                No, Cancel
-              </button>
-              <button
-                className={styles.delConfirmBtn}
-                onClick={handleDeleteCart}
-                disabled={deleteCart.submitting}
-              >
-                {deleteCart.submitting ? (
-                  <><div className={styles.delBtnSpinner} /> Deleting...</>
-                ) : (
-                  <><FiTrash2 size={15} /> Yes, Delete</>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══ NEW: DELETE SINGLE DETAIL MODAL ══ */}
-      {deleteDetail.isOpen && deleteDetail.item && (
-        <div
-          className={styles.modalOverlay}
-          onClick={!deleteDetail.submitting ? closeDeleteDetailModal : undefined}
-        >
-          <div className={styles.delModal} onClick={(e) => e.stopPropagation()}>
-
-            <div className={styles.delModalHeader}>
-              <div className={styles.delHeaderContent}>
-                <h2>Delete Item</h2>
-                <span className={styles.delBadge}>{deleteDetail.item.medicineName}</span>
-              </div>
-              {!deleteDetail.submitting && (
-                <button className={styles.delCloseBtn} onClick={closeDeleteDetailModal}>
-                  <FiX size={20} />
-                </button>
-              )}
-            </div>
-
-            <div className={styles.delModalBody}>
-              <div className={styles.delWarningStrip}>
-                <FiAlertCircle size={18} className={styles.delWarningIcon} />
-                <span>
-                  Are you sure you want to delete{' '}
-                  <strong>{deleteDetail.item.medicineName}</strong> from the cart?
-                  This action cannot be undone.
-                </span>
-              </div>
-
-              {deleteDetail.error && (
-                <div className={styles.delErrorBanner}>
-                  <FiAlertCircle size={14} />
-                  <span>{deleteDetail.error}</span>
-                </div>
-              )}
-
-              {deleteDetail.submitting && (
-                <div className={styles.delProgressBanner}>
-                  <div className={styles.delSpinner} />
-                  <span>Deleting item, please wait...</span>
-                </div>
-              )}
-            </div>
-
-            <div className={styles.delModalFooter}>
-              <button
-                className={styles.delCancelBtn}
-                onClick={closeDeleteDetailModal}
-                disabled={deleteDetail.submitting}
-              >
-                No, Cancel
-              </button>
-              <button
-                className={styles.delConfirmBtn}
-                onClick={handleDeleteDetail}
-                disabled={deleteDetail.submitting}
-              >
-                {deleteDetail.submitting ? (
-                  <><div className={styles.delBtnSpinner} /> Deleting...</>
-                ) : (
-                  <><FiTrash2 size={15} /> Yes, Delete</>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ── MessagePopup (at root level so z-index is never blocked) ── */}
+      <MessagePopup
+        visible={popup.visible}
+        message={popup.message}
+        type={popup.type}
+        onClose={closePopup}
+      />
     </div>
   );
 };
