@@ -422,6 +422,10 @@ const LabWorkQueue = () => {
     return { gradient: 'linear-gradient(90deg, #dc2626, #ef4444)', textColor: '#dc2626' };
   };
 
+  // ── Show "Mark as Complete" button only when:
+  //    - all items are completed (100%)
+  //    - order status is NOT already 2 (marked complete)
+  //    (button shows regardless of orderStatus === 4 or not — clicking handles the guard)
   const isOrderMarkedComplete        = (orderId, items) => items.every(i => i.status === 3) && orderDetails[orderId]?.orderStatus === 2;
   const shouldShowMarkCompleteButton = (orderId, items) => items.every(i => i.status === 3) && orderDetails[orderId]?.orderStatus !== 2;
 
@@ -443,7 +447,15 @@ const LabWorkQueue = () => {
 
   const handleSaveWorkDetail = () => {};
 
+  // ── Mark as Complete click guard:
+  //    If orderStatus !== 4 → show warning popup (not invoiced yet)
+  //    If orderStatus === 4 → open confirm dialog
   const handleMarkCompleteClick = (orderId, orderData) => {
+    const currentOrderStatus = orderDetails[orderId]?.orderStatus;
+    if (currentOrderStatus !== 4) {
+      showPopupMsg('This order has not been invoiced yet. Please invoice the order first and try again.', 'warning');
+      return;
+    }
     setOrderToComplete({ orderId, orderData });
     setShowCompleteConfirm(true);
   };
@@ -473,10 +485,11 @@ const LabWorkQueue = () => {
         [orderToComplete.orderId]: { ...prev[orderToComplete.orderId], orderStatus: 2 }
       }));
 
+      const completedOrderId = orderToComplete.orderId;
       setShowCompleteConfirm(false);
       setOrderToComplete(null);
       showPopupMsg('Order marked as complete successfully!', 'success');
-      fetchOrderList(appliedFilters);
+      fetchOrderListAndReexpand(appliedFilters, completedOrderId);
     } catch (err) {
       console.error('Error marking order as complete:', err);
       showPopupMsg(err.message || 'Failed to mark order as complete', 'error');
@@ -811,10 +824,16 @@ const LabWorkQueue = () => {
 const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees, showPopupMsg }) => {
   const cooldown = useButtonCooldown();
 
+  const toLocalDateTimeString = (date) => {
+    const d = new Date(date);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
   const [sampleData, setSampleData] = useState({
     sampleCollectedTime:  workItem.sampleCollectedTime
-      ? new Date(workItem.sampleCollectedTime).toISOString().slice(0, 16)
-      : new Date().toISOString().slice(0, 16),
+      ? toLocalDateTimeString(workItem.sampleCollectedTime)
+      : toLocalDateTimeString(new Date()),
     sampleCollectedPlace: workItem.sampleCollectedPlace || ''
   });
 
