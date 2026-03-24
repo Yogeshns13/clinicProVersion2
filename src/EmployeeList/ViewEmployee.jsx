@@ -28,7 +28,7 @@ import {
   deleteWorkDays,
   getShiftList,
   getDepartmentList,
-  getClinicList,                           // ← NEW IMPORT
+  getClinicList,                         
 } from '../Api/Api.js';
 import styles from './ViewEmployee.module.css';
 import { FaClinicMedical } from 'react-icons/fa'; 

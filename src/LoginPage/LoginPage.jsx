@@ -144,6 +144,7 @@ const LoginPage = () => {
   useEffect(() => {
     generateCaptcha(mode);
   }, [mode]);
+  
 
   const generateCaptcha = (targetMode) => {
     const num1 = Math.floor(Math.random() * 10) + 1;
@@ -221,10 +222,8 @@ const LoginPage = () => {
         localStorage.setItem("login_timestamp", Date.now().toString());
         console.log("Saving login_timestamp:", localStorage.getItem("login_timestamp"));
 
-        // ────────────────────────────────────────────────
-        // Added: Call getClinicList() right after successful login
+      
         await getClinicList();
-        // ────────────────────────────────────────────────
 
         login(data);
         navigate("/dashboard", { replace: true });
@@ -237,7 +236,7 @@ const LoginPage = () => {
     } catch (err) {
       console.error("Login failed:", err);
       setIsResetSuccess(false);
-      setPopupMessage(err.message || "Login failed. Please try again.");
+      setPopupMessage("Username or password is incorrect. Please try again!");
       setShowPopup(true);
       generateCaptcha("login");
       setError(err.message || "Login failed");
