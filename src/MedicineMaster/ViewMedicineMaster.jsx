@@ -11,6 +11,7 @@ import styles from './ViewMedicineMaster.module.css';
 import UpdateMedicineMaster from './UpdateMedicineMaster.jsx';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 // ────────────────────────────────────────────────
 // CONSTANTS — UNCHANGED
@@ -213,7 +214,7 @@ const ViewMedicineMaster = ({ isModal = false, onClose, medicineId, onUpdateRequ
   // ────────────────────────────────────────────────
   const renderContent = () => {
     if (error && (error?.status >= 400 || error?.code >= 400)) return <ErrorHandler error={error} />;
-    if (loading)   return <div className={styles.loading}>Loading medicine details...</div>;
+    if (loading)   return <div className={styles.loading}><LoadingPage/></div>;
     if (error)     return <div className={styles.error}>Error: {error.message || error}</div>;
     if (!medicine) return <div className={styles.error}>Medicine not found</div>;
 

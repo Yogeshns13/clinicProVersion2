@@ -96,6 +96,7 @@ const MessagePopup = ({ visible, message, type = 'success', onClose }) => {
       <div
         style={{
           position: 'fixed',
+          padding: '20px 20px 20px 260px',
           inset: 0,
           backgroundColor: 'rgba(34, 43, 108, 0.32)',
           display: 'flex',

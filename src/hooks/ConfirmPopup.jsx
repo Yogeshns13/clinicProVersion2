@@ -38,6 +38,7 @@ const ConfirmPopup = ({ visible, message, subMessage, onConfirm, onCancel, confi
         style={{
           position: 'fixed',
           inset: 0,
+          padding: '20px 20px 20px 260px',
           backgroundColor: 'rgba(15, 23, 42, 0.45)',
           backdropFilter: 'blur(3px)',
           WebkitBackdropFilter: 'blur(3px)',
