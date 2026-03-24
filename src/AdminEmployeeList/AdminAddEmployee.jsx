@@ -189,6 +189,7 @@ const getTodayDate = () => new Date().toISOString().split('T')[0];
 // ────────────────────────────────────────────────
 // CONSTANTS
 // ────────────────────────────────────────────────
+
 const GENDER_OPTIONS         = [{ id: 1, label: 'Male' }, { id: 2, label: 'Female' }, { id: 3, label: 'Other' }];
 const BLOOD_GROUP_OPTIONS    = [{ id: 1, label: 'A+' }, { id: 2, label: 'A-' }, { id: 3, label: 'B+' }, { id: 4, label: 'B-' }, { id: 5, label: 'AB+' }, { id: 6, label: 'AB-' }, { id: 7, label: 'O+' }, { id: 8, label: 'O-' }, { id: 9, label: 'Others' }];
 const MARITAL_STATUS_OPTIONS = [{ id: 1, label: 'Single' }, { id: 2, label: 'Married' }, { id: 3, label: 'Widowed' }, { id: 4, label: 'Divorced' }, { id: 5, label: 'Separated' }];
