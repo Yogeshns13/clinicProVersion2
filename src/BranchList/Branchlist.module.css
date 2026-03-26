@@ -1,4 +1,4 @@
-/* src/components/ClinicList.module.css */
+/* src/components/BranchList.module.css */
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
@@ -46,8 +46,8 @@
 .filtersContainer {
   background: white;
   border-radius: 17px;
-  padding: 20px;
-  margin-bottom: 20px;
+  padding: 14px 20px;
+  margin-bottom: 16px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
   /* overflow: visible so the clinic dropdown menu can escape the container */
@@ -57,10 +57,12 @@
   flex-shrink: 0;
 }
 
+/* ── BranchList has more filters so we allow wrapping ── */
 .filtersGrid {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .filterGroup {
@@ -72,11 +74,11 @@
   display: flex;
   flex: 1;
   align-items: stretch;
-  min-width: 0;
+  min-width: 220px;
 }
 
 .searchTypeSelect {
-  min-width: 140px;
+  min-width: 130px;
   height: 40px;
   padding: 0 12px;
   background: white;
@@ -130,7 +132,7 @@
 
 /* ==================== STATUS FILTER SELECT ==================== */
 .statusFilterSelect {
-  width: 160px;
+  width: 145px;
   height: 40px;
   padding: 0 12px;
   background: white;
@@ -217,6 +219,11 @@
 }
 
 /* ==================== TABLE SECTION ==================== */
+/*
+  flex: 1        → fills ALL remaining height after the filter bar
+  min-height: 0  → allows it to shrink below its content (required for nested scroll)
+  display:flex + flex-direction:column → so clinicTableContainer can flex:1 inside it
+*/
 .tableSection {
   flex: 1;
   min-height: 0;
@@ -225,6 +232,11 @@
 }
 
 /* ==================== TABLE CONTAINER ==================== */
+/*
+  flex: 1        → fills all space between filter bar and pagination bar
+  min-height: 0  → allows shrinking (critical for scroll to work)
+  overflow-y: auto → table scrolls here, not the page
+*/
 .clinicTableContainer {
   background: white;
   border-radius: 17px;
@@ -316,19 +328,6 @@
   font-size: 0.72rem;
   color: #64748b;
   margin-top: 2px;
-}
-
-.clinicNameone {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--text-light);
-  line-height: 1.2;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  max-width: 220px;
 }
 
 /* ==================== STATUS BADGES ==================== */
@@ -918,7 +917,7 @@
   background: #f8fafc;
 }
 
-/* ==================== ADD CLINIC MODAL ==================== */
+/* ==================== ADD BRANCH MODAL ==================== */
 .addModalContent {
   background: white;
   border-radius: 20px;
@@ -1028,9 +1027,7 @@
   background: white;
 }
 
-/* Wrapper for the clinic dropdown inside the add form —
-   makes it full-width like the other fields but keeps
-   the exact same filter-bar look (no style overrides) */
+/* Wrapper for the clinic dropdown inside the add form */
 .addFormClinicDropdown {
   width: 100%;
 }
@@ -1090,6 +1087,10 @@
 }
 
 /* ==================== PAGINATION BAR ==================== */
+/*
+  flex-shrink: 0  → never compressed, always visible at the bottom of tableSection
+  margin-top: 14px → gap between table and bar
+*/
 .paginationBar {
   flex-shrink: 0;
   display: flex;

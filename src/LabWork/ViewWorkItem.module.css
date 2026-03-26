@@ -1,0 +1,302 @@
+/* ==================== ViewWorkItem.module.css ==================== */
+
+/* ── Modal Container ── */
+.viewModal {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Modal Header ── */
+.viewHeader {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #225ca0, #30b2b5);
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.viewHeaderLeft { flex: 1; }
+
+.viewHeaderLeft h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.clinicName {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.viewCloseBtn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #ffffff;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.viewCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.05);
+}
+
+/* ── View Body ── */
+.viewBody {
+  padding: 24px 28px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Info Grid ── */
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.infoCard {
+  background: linear-gradient(135deg, rgba(240, 247, 255, 0.6), rgba(230, 242, 255, 0.6));
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.infoCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #222b6c;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(34, 43, 108, 0.1);
+}
+
+.infoCardHeader svg { color: #30b2b5; }
+
+.infoRows { display: flex; flex-direction: column; gap: 6px; }
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(34, 43, 108, 0.05);
+}
+
+.infoRow:last-child { border-bottom: none; }
+
+.infoLabel {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.infoValue {
+  font-size: 0.82rem;
+  color: #1e293b;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* ── Detail Section ── */
+.detailSection {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  overflow: hidden;
+  box-shadow: 0 3px 12px rgba(34, 43, 108, 0.06);
+}
+
+.detailSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #222b6c;
+  border-bottom: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.detailSectionHeader svg { color: #30b2b5; }
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0;
+}
+
+.detailField {
+  padding: 14px 18px;
+  border-right: 1px solid rgba(34, 43, 108, 0.07);
+  border-bottom: 1px solid rgba(34, 43, 108, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.detailField:nth-child(even) { border-right: none; }
+
+.fieldLabel {
+  font-size: 0.73rem;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.fieldValue {
+  font-size: 0.9rem;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.unitTag {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+.notSet {
+  color: #94a3b8;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.82rem;
+}
+
+/* ── View Actions ── */
+.viewActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 2px solid rgba(34, 43, 108, 0.08);
+  margin-top: 4px;
+}
+
+.updateBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 26px;
+  background: linear-gradient(135deg, #207d9c, #30b2b5);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+}
+
+.updateBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(32, 125, 156, 0.45);
+}
+
+.closeActionBtn {
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+  color: var(--text-light);
+  border: none;
+  border-radius: 14px;
+  height: 40px;
+  padding: 0 20px;
+  font-weight: 700;
+  font-size: 0.94rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  white-space: nowrap;
+  z-index: 0;
+}
+
+.closeActionBtn:hover {
+  transform: translateY(-3px); box-shadow: 0 14px 34px;
+}
+
+/* ── Update Wrapper ── */
+.updateWrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Next Button ── */
+.nextBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 0.94rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #222b6c, #225ca0);
+  color: #ffffff;
+  box-shadow: 0 5px 15px rgba(34, 43, 108, 0.3);
+}
+
+.nextBtn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.4);
+}
+
+.nextBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .viewBody { padding: 16px; }
+  .infoGrid { grid-template-columns: 1fr; }
+  .detailGrid { grid-template-columns: 1fr; }
+  .detailField { border-right: none; }
+  .viewActions { flex-direction: column; }
+  .updateBtn, .closeActionBtn { width: 100%; justify-content: center; }
+}

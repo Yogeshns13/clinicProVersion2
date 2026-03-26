@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   FiSearch, FiCalendar, FiFilter, FiChevronDown, FiChevronRight, 
   FiClock, FiCheckCircle, FiAlertCircle, FiPackage, FiActivity, FiX,
-  FiSave, FiXCircle, FiUser, FiFileText
+  FiSave, FiXCircle, FiUser, FiFileText, FiEye
 } from 'react-icons/fi';
 import { 
   getLabWorkItemsList, 
@@ -24,6 +24,7 @@ import styles from './LabWorkQueue.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
+import ViewWorkItem from './ViewWorkItem.jsx';
 
 // ─── Hook: 2-second button cooldown ───────────────────────────────────────────
 const useButtonCooldown = () => {
@@ -99,6 +100,12 @@ const LabWorkQueue = () => {
   const [selectedWorkItem, setSelectedWorkItem] = useState(null);
   const [selectedOrderData, setSelectedOrderData] = useState(null);
 
+  // View Work Item Modal States
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewWorkItem, setViewWorkItem] = useState(null);
+  const [viewOrderData, setViewOrderData] = useState(null);
+  const [viewOrderStatus, setViewOrderStatus] = useState(null);
+
   // Mark as Complete States
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
   const [orderToComplete, setOrderToComplete] = useState(null);
@@ -144,7 +151,8 @@ const LabWorkQueue = () => {
       const branchId = await getStoredBranchId();
 
       const options = {
-        Page: 1, PageSize: 200,
+        Page: 1,
+        PageSize: 200,
         BranchID: branchId,
         Status: filters.status
       };
@@ -217,7 +225,8 @@ const LabWorkQueue = () => {
       const branchId = await getStoredBranchId();
 
       const options = {
-        Page: 1, PageSize: 200,
+        Page: 1,
+        PageSize: 200,
         BranchID: branchId,
         Status: filters.status
       };
@@ -300,7 +309,8 @@ const LabWorkQueue = () => {
       const branchId = await getStoredBranchId();
 
       const data = await getLabWorkItemsList(clinicId, {
-        Page: 1, PageSize: 100,
+        Page: 1,
+        PageSize: 100,
         BranchID: branchId,
         OrderID: orderId,
         Status: -1
@@ -425,7 +435,6 @@ const LabWorkQueue = () => {
   // ── Show "Mark as Complete" button only when:
   //    - all items are completed (100%)
   //    - order status is NOT already 2 (marked complete)
-  //    (button shows regardless of orderStatus === 4 or not — clicking handles the guard)
   const isOrderMarkedComplete        = (orderId, items) => items.every(i => i.status === 3) && orderDetails[orderId]?.orderStatus === 2;
   const shouldShowMarkCompleteButton = (orderId, items) => items.every(i => i.status === 3) && orderDetails[orderId]?.orderStatus !== 2;
 
@@ -433,6 +442,26 @@ const LabWorkQueue = () => {
     setSelectedWorkItem(item);
     setSelectedOrderData(orderData);
     setShowWorkDetailModal(true);
+  };
+
+  // ── Open View modal for completed/rejected items ───────────────────────────
+  const handleViewWorkItem = (item, orderData, orderStatus) => {
+    setViewWorkItem(item);
+    setViewOrderData(orderData);
+    setViewOrderStatus(orderStatus ?? null);
+    setShowViewModal(true);
+  };
+
+  // ── Close View modal ──────────────────────────────────────────────────────
+  const handleCloseViewModal = (processedOrderId = null, message = null, messageType = 'success') => {
+    setShowViewModal(false);
+    setViewWorkItem(null);
+    setViewOrderData(null);
+    setViewOrderStatus(null);
+    if (message) showPopupMsg(message, messageType);
+    if (processedOrderId) {
+      fetchOrderListAndReexpand(appliedFilters, processedOrderId);
+    }
   };
 
   // ── Close modal: reload list and re-expand the processed order ───────────
@@ -707,49 +736,69 @@ const LabWorkQueue = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            {items.map((item) => (
-                              <tr key={item.workId} className={styles.workItemRow}>
-                                <td><div className={styles.testName}>{item.testName}</div></td>
-                                <td>
-                                  <div className={styles.resultCell}>
-                                    {item.resultValue ? (
-                                      <>
-                                        <div className={styles.resultValue}>{item.resultValue} {item.resultUnits || ''}</div>
-                                        <div className={styles.normalRange}>Range: {item.normalRange || 'N/A'}</div>
-                                      </>
-                                    ) : <span className={styles.noResult}>Not entered</span>}
-                                  </div>
-                                </td>
-                                <td>
-                                  <div className={styles.sampleCell}>
-                                    {item.sampleCollectedTime ? (
-                                      <>
-                                        <div className={styles.sampleTime}><FiClock size={12} />{formatDate(item.sampleCollectedTime)} {formatTime(item.sampleCollectedTime)}</div>
-                                        <div className={styles.samplePlace}>{item.sampleCollectedPlace || 'Not specified'}</div>
-                                      </>
-                                    ) : <span className={styles.noSample}>Not collected</span>}
-                                  </div>
-                                </td>
-                                <td>
-                                  <span className={`${styles.badge} ${getStatusBadgeClass(statusOptions.find(s => s.id === item.status)?.color || 'default')}`}>
-                                    {statusOptions.find(s => s.id === item.status)?.label || 'Unknown'}
-                                  </span>
-                                </td>
-                                <td>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      cooldown.trigger(`process_${item.workId}`);
-                                      handleProcessWorkItem(item, orderData);
-                                    }}
-                                    disabled={cooldown.isDisabled(`process_${item.workId}`)}
-                                    className={styles.processBtn}
-                                  >
-                                    Process
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
+                            {items.map((item) => {
+                              // Show View button for completed (status 3) or rejected (status 4) items
+                              const showViewBtn = item.status === 3 || item.status === 4;
+                              return (
+                                <tr key={item.workId} className={styles.workItemRow}>
+                                  <td><div className={styles.testName}>{item.testName}</div></td>
+                                  <td>
+                                    <div className={styles.resultCell}>
+                                      {item.resultValue ? (
+                                        <>
+                                          <div className={styles.resultValue}>{item.resultValue} {item.resultUnits || ''}</div>
+                                          <div className={styles.normalRange}>Range: {item.normalRange || 'N/A'}</div>
+                                        </>
+                                      ) : <span className={styles.noResult}>Not entered</span>}
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <div className={styles.sampleCell}>
+                                      {item.sampleCollectedTime ? (
+                                        <>
+                                          <div className={styles.sampleTime}><FiClock size={12} />{formatDate(item.sampleCollectedTime)} {formatTime(item.sampleCollectedTime)}</div>
+                                          <div className={styles.samplePlace}>{item.sampleCollectedPlace || 'Not specified'}</div>
+                                        </>
+                                      ) : <span className={styles.noSample}>Not collected</span>}
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <span className={`${styles.badge} ${getStatusBadgeClass(statusOptions.find(s => s.id === item.status)?.color || 'default')}`}>
+                                      {statusOptions.find(s => s.id === item.status)?.label || 'Unknown'}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    {showViewBtn ? (
+                                      /* ── View button for completed or rejected items ── */
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          cooldown.trigger(`view_${item.workId}`);
+                                          handleViewWorkItem(item, orderData, detail?.orderStatus);
+                                        }}
+                                        disabled={cooldown.isDisabled(`view_${item.workId}`)}
+                                        className={styles.viewBtn}
+                                      >
+                                        <FiEye size={14} /> View
+                                      </button>
+                                    ) : (
+                                      /* ── Process button for pending/in-progress items ── */
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          cooldown.trigger(`process_${item.workId}`);
+                                          handleProcessWorkItem(item, orderData);
+                                        }}
+                                        disabled={cooldown.isDisabled(`process_${item.workId}`)}
+                                        className={styles.processBtn}
+                                      >
+                                        Process
+                                      </button>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       )}
@@ -785,6 +834,18 @@ const LabWorkQueue = () => {
           orderData={selectedOrderData}
           onClose={handleCloseWorkDetail}
           onSave={handleSaveWorkDetail}
+          employees={doctors}
+          showPopupMsg={showPopupMsg}
+        />
+      )}
+
+      {/* View Work Item Modal */}
+      {showViewModal && viewWorkItem && viewOrderData && (
+        <ViewWorkItem
+          workItem={viewWorkItem}
+          orderData={viewOrderData}
+          orderStatus={viewOrderStatus}
+          onClose={handleCloseViewModal}
           employees={doctors}
           showPopupMsg={showPopupMsg}
         />
@@ -841,7 +902,7 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees, s
     resultValue:    workItem.resultValue    || '',
     interpretation: workItem.interpretation || null,
     remarks:        '',
-    testDoneBy:     0
+    testDoneBy:     workItem.technicianId   || 0
   });
 
   const [testMasterData, setTestMasterData] = useState({
@@ -851,7 +912,7 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees, s
     fetched:     false
   });
 
-  const [approvalData,   setApprovalData]   = useState({ testApprovedBy: 0, approvalRemarks: '' });
+  const [approvalData,   setApprovalData]   = useState({ testApprovedBy: workItem.approverId || 0, approvalRemarks: '' });
   const [rejectionData,  setRejectionData]  = useState({ testApprovedBy: 0, rejectReason: '' });
   const [validationMessages, setValidationMessages] = useState({});
   const [activeStep,    setActiveStep]    = useState(1);
@@ -1037,7 +1098,6 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees, s
             <div className={styles.infoHeader}><FiActivity size={18} /><h3>Test Information</h3></div>
             <div className={styles.infoContent}>
               <div className={styles.infoRow}><span className={styles.infoLabel}>Test Name:</span><span className={styles.infoValue}>{workItem.testName}</span></div>
-              <div className={styles.infoRow}><span className={styles.infoLabel}>Test ID:</span>  <span className={styles.infoValue}>{workItem.testId}</span></div>
               <div className={styles.infoRow}><span className={styles.infoLabel}>Doctor:</span>   <span className={styles.infoValue}>{orderData.doctorName || 'N/A'}</span></div>
             </div>
           </div>

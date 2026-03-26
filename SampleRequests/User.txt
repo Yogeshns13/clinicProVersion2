@@ -14,17 +14,18 @@ AddUser
     "ProfileName":"admin"
 }
 
-UpdateUser 
+UpdateUser
 {
     "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000,
-    "ClinicID":1,    
-    "UserID":1,  
+    "ClinicID":5,    
+    "UserID":2000018,  
     "Mobile": "8220485398",   
-    "EMail": "hameedsha21@gmail.com",
-    "ProfileName":"admin"
+    "EMail": "thivaakarad@gmail.com",
+    "ProfileName":"spradmin",
+    "Password":"thiva@123"
 }
 
 
@@ -55,9 +56,8 @@ DeleteUser
     "USER_ID" : 2000000,
     "ClinicID":1,    
     "UserID":1
-    
-   
 }
+
 SuspendUser 
 {
     "CHANNEL_ID":1,
@@ -89,18 +89,7 @@ UserLogin
     "Password":"admin@123"
 }
 
-GetUser
-{
-    "CHANNEL_ID":1,
-    "REF_KEY":"hshshshshshshshshshsh",
-    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
-    "USER_ID" : 2000000,
-    "UserID":2000000   
-   
-}
-
-// GetUserList
-
+/ GetUserList
 {
     "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",
@@ -129,7 +118,7 @@ ForgetPassword
     "Email":"siva@gmail.com"
 }
 
-ForgetPassword
+/ForgetPassword
 
 {
     "CHANNEL_ID":1,
@@ -145,3 +134,122 @@ ForgetPassword
         "message": "Mail Sent Successfully"
     }
 }
+
+
+--------------------------------------------------------------
+
+/GetUserList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "ClinicID": 0,
+    "BranchID":0,
+    "UserID":0,
+    "EmployeeID":0,
+    "UserName":"",
+    "Mobile":"",
+    "Email":"",
+    "Status":-1
+}
+
+{
+    "result": [
+        {
+            "user_id": 2000024,
+            "user_name": "demofrontdesk@gmail.com",
+            "mobile": "8364747487",
+            "email": "demofrontdesk@gmail.com",
+            "profile_name": "fronttdesk",
+            "last_login": "2026-03-24T13:47:07.000Z",
+            "clinic_id": 35,
+            "clinic_name": "Mother Teresa Clinic",
+            "branch_id": 33,
+            "branch_name": "Madurai Main Branch",
+            "employee_id": 1000049,
+            "employee_name": "Siva Shankaran",
+            "employee_code": "EMP081",
+            "status": 0,
+            "status_desc": "Active",
+            "date_created": "2026-03-24T13:38:27.000Z",
+            "date_modified": "2026-03-24T13:38:27.000Z"
+        },
+        {
+            "user_id": 2000023,
+            "user_name": "demolabtech@gmail.com",
+            "mobile": "7363636464",
+            "email": "demolabtech@gmail.com",
+            "profile_name": "labtest",
+            "last_login": "2026-03-24T13:50:31.000Z",
+            "clinic_id": 35,
+            "clinic_name": "Mother Teresa Clinic",
+            "branch_id": 33,
+            "branch_name": "Madurai Main Branch",
+            "employee_id": 1000054,
+            "employee_name": "Sangeetha Raj",
+            "employee_code": "EMP011",
+            "status": 0,
+            "status_desc": "Active",
+            "date_created": "2026-03-24T13:33:39.000Z",
+            "date_modified": "2026-03-24T13:33:39.000Z"
+        }
+    ]
+}
+
+--------------------------------------------------------------------
+
+/AddUser
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":5,
+    "BranchID":3,
+    "EmployeeID":1000031,
+    "UserName":"newuser@gmail.com",
+    "Mobile": "8220476788",   
+    "EMail": "newuser@gmail.com",  
+    "Password" : "newuser@123",
+    "ProfileName":"admin"
+}
+
+{
+    "result": {
+        "OUT_USER_ID": 2000025,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+---------------------------------------------------
+
+/UpdateUser
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "ClinicID":5,    
+    "UserID":2000025,  
+    "Mobile": "8220485377",   
+    "EMail": "newuser@gmail.com",
+    "ProfileName":"admin",
+    "Password":"newuser@123"
+}
+
+{
+    "result": {
+        "IN_USER_ID": 2000025,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+
+-----------------------------------------------------
+
+
+
