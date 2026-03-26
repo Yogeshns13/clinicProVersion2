@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
-
 const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700&display=swap');
+
   .lp-overlay {
     position: fixed;
     top: 0;
@@ -14,114 +14,107 @@ const css = `
     background: var(--lp-bg, #ffffff);
   }
 
-  .lp-canvas-wrap {
-    position: relative;
-    width: 360px;
-    height: 120px;
+  .lp-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
-  .lp-canvas-wrap canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
+  /* Heart wrapper */
+  .lp-heart-wrap {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 28px;
   }
+
+  .lp-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2.5px solid rgba(14,165,233,0.3);
+    animation: lpRingOut 1.6s ease-out infinite;
+  }
+  .lp-ring-2 { animation-delay: 0.8s; }
+
+  @keyframes lpRingOut {
+    0%   { transform: scale(0.6); opacity: 0.9; }
+    100% { transform: scale(2.2); opacity: 0;   }
+  }
+
+  .lp-heart-svg {
+    width: 38px;
+    height: 34px;
+    position: relative;
+    z-index: 1;
+    animation: lpHeartBeat 1.6s ease-in-out infinite;
+  }
+
+  @keyframes lpHeartBeat {
+    0%,100% { transform: scale(1);    }
+    14%     { transform: scale(1.22); }
+    28%     { transform: scale(1);    }
+    42%     { transform: scale(1.12); }
+    70%     { transform: scale(1);    }
+  }
+
+  /* ECG strip */
+  .lp-ecg-outer {
+    width: 340px;
+    height: 90px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .lp-ecg-svg {
+    width: 680px;
+    height: 90px;
+    animation: lpEcgScroll 1.6s linear infinite;
+  }
+
+  @keyframes lpEcgScroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-340px); }
+  }
+
+  .lp-ecg-outer::before,
+  .lp-ecg-outer::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 56px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .lp-ecg-outer::before { left:0;  background: linear-gradient(90deg,  var(--lp-bg,#ffffff), transparent); }
+  .lp-ecg-outer::after  { right:0; background: linear-gradient(270deg, var(--lp-bg,#ffffff), transparent); }
 `;
 
+const C = [
+  [0,45],[18,45],
+  [24,38],[30,45],[36,45],
+  [40,48],[46,4],[52,82],[58,32],[64,45],
+  [70,45],[80,52],[92,45],
+  [112,45],[130,45],[148,45],
+  [154,38],[160,45],[166,45],
+  [170,48],[176,4],[182,82],[188,32],[194,45],
+  [200,45],[210,52],[222,45],
+  [242,45],[260,45],[278,45],
+  [284,38],[290,45],[296,45],
+  [300,48],[306,4],[312,82],[318,32],[324,45],
+  [330,45],[340,52],[340,45],
+];
+
+const pts = [
+  ...C.map(([x,y]) => `${x},${y}`),
+  ...C.map(([x,y]) => `${x+340},${y}`),
+].join(" ");
+
 export default function LoadingPage({ bg = "#ffffff", sidebarWidth = "240px" }) {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const W = 360, H = 120;
-    const CY = H / 2;
-    const SPEED = 1.8;
-    const HEART_COLOR = "#30b2b5";
-    const WAVE_COLOR = "#207d9c";
-    let offset = 0;
-    let lastPeak = false;
-    let heartScale = 1;
-    let rafId;
-
-    function ecgY(x) {
-      const cycle = 280;
-      const t = ((x % cycle) + cycle) % cycle;
-      if (t < 60)  return 0;
-      if (t < 70)  return -(t - 60) * 0.6;
-      if (t < 80)  return (t - 70) * 0.6;
-      if (t < 90)  return 0;
-      if (t < 100) return -(t - 90) * 4.5;
-      if (t < 110) return 45 - (t - 100) * 9;
-      if (t < 120) return -45 + (t - 110) * 4.5;
-      if (t < 140) return (t - 120) * 0.8;
-      if (t < 160) return 16 - (t - 140) * 0.8;
-      return 0;
-    }
-
-    function drawHeart(cx, cy, scale, alpha) {
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.translate(cx, cy);
-      ctx.scale(scale, scale);
-      ctx.beginPath();
-      ctx.moveTo(0, -8);
-      ctx.bezierCurveTo(0, -14, -12, -14, -12, -5);
-      ctx.bezierCurveTo(-12, 2, 0, 10, 0, 14);
-      ctx.bezierCurveTo(0, 10, 12, 2, 12, -5);
-      ctx.bezierCurveTo(12, -14, 0, -14, 0, -8);
-      ctx.closePath();
-      ctx.fillStyle = HEART_COLOR;
-      ctx.shadowColor = "rgba(48,178,181,0.5)";
-      ctx.shadowBlur = 10;
-      ctx.fill();
-      ctx.restore();
-    }
-
-    function animate() {
-      ctx.clearRect(0, 0, W, H);
-      offset += SPEED;
-
-      // Draw pulse line
-      ctx.beginPath();
-      for (let x = 0; x <= W; x++) {
-        const y = CY + ecgY(x + offset);
-        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      }
-      ctx.strokeStyle = WAVE_COLOR;
-      ctx.lineWidth = 2.5;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.shadowColor = "rgba(32,125,156,0.3)";
-      ctx.shadowBlur = 4;
-      ctx.stroke();
-
-      // Heart rides at front of the line
-      const heartX = 280;
-      const heartY = CY + ecgY(heartX + offset);
-      const cycle = 280;
-      const t = ((heartX + offset) % cycle + cycle) % cycle;
-      const onPeak = t > 90 && t < 130;
-      if (onPeak && !lastPeak) heartScale = 1.45;
-      lastPeak = onPeak;
-      heartScale += (1 - heartScale) * 0.15;
-
-      drawHeart(heartX, heartY, heartScale, 1);
-
-      // Ghost trails behind heart
-      for (let i = 1; i <= 3; i++) {
-        const gx = heartX - i * 60;
-        const gy = CY + ecgY(gx + offset);
-        drawHeart(gx, gy, 0.55, 0.12 - i * 0.03);
-      }
-
-      rafId = requestAnimationFrame(animate);
-    }
-
-    animate();
-    return () => cancelAnimationFrame(rafId);
-  }, []);
-
   return (
     <>
       <style>{css}</style>
@@ -129,8 +122,47 @@ export default function LoadingPage({ bg = "#ffffff", sidebarWidth = "240px" }) 
         className="lp-overlay"
         style={{ "--lp-bg": bg, "--lp-sidebar": sidebarWidth }}
       >
-        <div className="lp-canvas-wrap">
-          <canvas ref={canvasRef} width={360} height={120} />
+        <div className="lp-center">
+
+          {/* Beating heart */}
+          <div className="lp-heart-wrap">
+            <div className="lp-ring" />
+            <div className="lp-ring lp-ring-2" />
+            <svg
+              className="lp-heart-svg"
+              viewBox="0 0 38 34"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M19 31C19 31 3 21 3 11C3 6.58 6.58 3 11 3C14.1 3 16.82 4.74 19 7C21.18 4.74 23.9 3 27 3C31.42 3 35 6.58 35 11C35 21 19 31 19 31Z"
+                fill="#0ea5e9"
+                stroke="#0ea5e9"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+
+          {/* ECG strip */}
+          <div className="lp-ecg-outer">
+            <svg
+              className="lp-ecg-svg"
+              viewBox="0 0 680 90"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <polyline
+                points={pts}
+                stroke="#0ea5e9"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </svg>
+          </div>
+
         </div>
       </div>
     </>

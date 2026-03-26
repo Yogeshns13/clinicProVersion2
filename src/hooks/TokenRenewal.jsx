@@ -11,6 +11,7 @@ export const useTokenRenewal = () => {
   const { logout } = useAuth();
   const timeoutRef = useRef(null);
   const [nextRenewalTime, setNextRenewalTime] = useState(null);
+  // Guards against the timer and the axios interceptor renewing simultaneously
   const isLocalRenewing = useRef(false);
 
   const scheduleRef = useRef(null);

@@ -76,6 +76,33 @@
   font-weight: 500;
 }
 
+.viewBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #222b6c, #225ca0);
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(34, 43, 108, 0.25);
+}
+ 
+.viewBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.38);
+}
+ 
+.viewBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ==================== INLINE LOADER (per-order expand) ==================== */
 .inlineLoader {
   display: flex;
@@ -368,7 +395,7 @@
 
 /* ==================== ORDER HEADER ==================== */
 .orderHeader {
-  padding: 20px;
+  padding: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -520,7 +547,7 @@
 .table th {
   text-align: left;
   padding: 12px 20px;
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
+  background-color: #d5e6ec;
   color: var(--primary-start);
   font-weight: 600;
   font-size: 0.75rem;
@@ -530,7 +557,7 @@
 }
 
 .table td {
-  padding: 16px 20px;
+  padding: 8px 10px;
   border-bottom: 1px solid #e2e8f0;
   color: var(--text-dark);
   font-size: 0.85rem;
@@ -541,6 +568,10 @@
 .table td:last-child {
   text-align: right;
   padding-right: 24px;
+}
+
+.table tr:nth-child(even) {
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
 }
 
 .workItemRow { transition: all 0.25s ease; }
@@ -653,7 +684,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: 5px 10px;
   background: linear-gradient(135deg, rgba(22, 163, 74, 0.15), rgba(22, 163, 74, 0.2));
   color: var(--success);
   font-weight: 700;
@@ -890,9 +921,6 @@
   box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
   white-space: nowrap;
   z-index: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .cancelBtn::before {
