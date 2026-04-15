@@ -519,6 +519,7 @@
   resize: vertical;
   min-height: 120px;   /* tall enough for ~200 chars */
   line-height: 1.5;
+  font-family: inherit;
 }
 
 .medicalTallTextarea:focus {
@@ -637,4 +638,12 @@
     font-size: 0.88rem;
     padding: 9px 12px;
   }
+}
+
+/* ==================== READ-ONLY INPUT ==================== */
+.readOnlyInput {
+  background: rgba(34, 43, 108, 0.05) !important;
+  border-color: rgba(34, 43, 108, 0.2) !important;
+  color: #64748b !important;
+  cursor: not-allowed !important;
 }

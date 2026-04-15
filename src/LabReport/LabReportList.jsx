@@ -1,8 +1,9 @@
 // src/components/LabReportList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiX, FiTrash2, FiEdit } from 'react-icons/fi';
+import { FiSearch, FiX, FiTrash2, FiEdit, FiEye } from 'react-icons/fi';
 import { getLabTestReportList, deleteLabTestReport } from '../Api/ApiLabTests.js';
+import { getFile } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
@@ -66,6 +67,10 @@ const LabReportList = () => {
   const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
   const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
   const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
+
+  // ── File view state ────────────────────────────────────────────────────────
+  const [fileLoading, setFileLoading] = useState({});
+  const [lightbox, setLightbox]       = useState({ open: false, url: null, title: '', isPdf: false });
 
   // ── Derived ────────────────────────────────────────────────────────────────
   const hasActiveFilters =
@@ -257,6 +262,31 @@ const LabReportList = () => {
     fetchReports(appliedFilters, newPage);
   };
 
+  // ── File view handler ──────────────────────────────────────────────────────
+  const handleViewFile = async (report) => {
+    if (!report.fileId || report.fileId <= 0) return;
+    setFileLoading(prev => ({ ...prev, [report.id]: true }));
+    try {
+      const clinicId = await getStoredClinicId();
+      const result   = await getFile(clinicId, report.fileId);
+      const isPdf    = result.blob?.type === 'application/pdf';
+      setLightbox({
+        open:  true,
+        url:   result.url,
+        title: `Report File — ${report.patientName || ''}`,
+        isPdf,
+      });
+    } catch (err) {
+      console.error('View file error:', err);
+      showPopup('Failed to load report file.', 'error');
+    } finally {
+      setFileLoading(prev => ({ ...prev, [report.id]: false }));
+    }
+  };
+
+  const closeLightbox = () =>
+    setLightbox({ open: false, url: null, title: '', isPdf: false });
+
   // ── Early returns ──────────────────────────────────────────────────────────
   if (error && (error?.status >= 400 || error?.code >= 400)) return <ErrorHandler error={error} />;
   if (loading) return <div className={styles.clinicLoading}><LoadingPage/></div>;
@@ -404,13 +434,27 @@ const LabReportList = () => {
                       </span>
                     </td>
                     <td>
-                      <button
-                        onClick={() => openDetails(report)}
-                        className={styles.clinicDetailsBtn}
-                        disabled={!!btnCooldown[`view-${report.id}`]}
-                      >
-                        View Details
-                      </button>
+                      {/* ── Actions cell: both buttons in a flex row ── */}
+                      <div className={styles.tableActionBtns}>
+                        {report.fileId > 0 && (
+                          <button
+                            onClick={() => handleViewFile(report)}
+                            className={styles.btnViewReport}
+                            disabled={!!fileLoading[report.id]}
+                            title="View attached report file"
+                          >
+                            <FiEye size={13} />
+                            {fileLoading[report.id] ? 'Opening...' : 'View Report'}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => openDetails(report)}
+                          className={styles.clinicDetailsBtn}
+                          disabled={!!btnCooldown[`view-${report.id}`]}
+                        >
+                          View Details
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -546,7 +590,7 @@ const LabReportList = () => {
                 </div>
 
                 <div className={styles.detailInfoCard}>
-                  <div className={styles.detailInfoHeader}><h3>Clinic & Timeline</h3></div>
+                  <div className={styles.detailInfoHeader}><h3>Clinic &amp; Timeline</h3></div>
                   <div className={styles.detailInfoContent}>
                     <div className={styles.detailInfoRow}>
                       <span className={styles.detailInfoLabel}>Doctor</span>
@@ -578,6 +622,17 @@ const LabReportList = () => {
             </div>
 
             <div className={styles.detailModalFooter}>
+              {/* ── View Report File button — only when fileId exists ── */}
+              {selectedReport.fileId > 0 && (
+                <button
+                  onClick={() => handleViewFile(selectedReport)}
+                  className={styles.btnViewFile}
+                  disabled={!!fileLoading[selectedReport.id]}
+                >
+                  <FiEye size={15} />
+                  {fileLoading[selectedReport.id] ? 'Loading...' : 'View Report File'}
+                </button>
+              )}
               <button
                 onClick={() => handleDeleteClick(selectedReport)}
                 className={styles.btnDelete}
@@ -624,6 +679,33 @@ const LabReportList = () => {
         type={popup.type}
         onClose={closePopup}
       />
+
+      {/* ── Lightbox ── */}
+      {lightbox.open && (
+        <div className={styles.lightboxOverlay} onClick={closeLightbox}>
+          <div className={styles.lightboxModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.lightboxHeader}>
+              <span className={styles.lightboxTitle}>{lightbox.title}</span>
+              <button className={styles.lightboxCloseBtn} onClick={closeLightbox}>✕</button>
+            </div>
+            <div className={styles.lightboxBody}>
+              {lightbox.isPdf ? (
+                <embed
+                  src={lightbox.url}
+                  type="application/pdf"
+                  className={styles.lightboxPdf}
+                />
+              ) : (
+                <img
+                  src={lightbox.url}
+                  alt={lightbox.title}
+                  className={styles.lightboxImg}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

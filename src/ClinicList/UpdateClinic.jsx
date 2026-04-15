@@ -149,18 +149,20 @@ const VALIDATED_FIELDS = [
 // ─────────────────────────────────────────────────────────────────────────────
 const UpdateClinic = ({ clinic, onClose, onSuccess, onError }) => {
   const [formData, setFormData] = useState({
-    clinicName:     clinic.name           || '',
-    address:        clinic.address        || '',
-    location:       clinic.location       || '',
-    clinicType:     clinic.clinicType     || '',
-    gstNo:          clinic.gstNo          || '',
-    cgstPercentage: clinic.cgstPercentage || '',
-    sgstPercentage: clinic.sgstPercentage || '',
-    ownerName:      clinic.ownerName      || '',
-    mobile:         clinic.mobile         || '',
-    altMobile:      clinic.altMobile      || '',
-    email:          clinic.email          || '',
-    status:         clinic.status === 'active' ? 1 : 2,
+    clinicName:          clinic.name                || '',
+    address:             clinic.address             || '',
+    location:            clinic.location            || '',
+    clinicType:          clinic.clinicType          || '',
+    gstNo:               clinic.gstNo               || '',
+    cgstPercentage:      clinic.cgstPercentage      || '',
+    sgstPercentage:      clinic.sgstPercentage      || '',
+    ownerName:           clinic.ownerName           || '',
+    mobile:              clinic.mobile              || '',
+    altMobile:           clinic.altMobile           || '',
+    email:               clinic.email               || '',
+    status:              clinic.status === 'active' ? 1 : 2,
+    inLabAvailable:      clinic.inLabAvailable      ?? 0,
+    inPharmacyAvailable: clinic.inPharmacyAvailable ?? 0,
   });
 
   const [formLoading,        setFormLoading]        = useState(false);
@@ -203,6 +205,12 @@ const UpdateClinic = ({ clinic, onClose, onSuccess, onError }) => {
     setValidationMessages((prev) => ({ ...prev, [name]: msg }));
   };
 
+  // ── Handler for Yes/No select fields (inLabAvailable, inPharmacyAvailable) ──
+  const handleAvailabilityChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: Number(value) }));
+  };
+
   // ── Validate all fields; returns true only if zero errors ──
   const validateAllFields = () => {
     const messages = {};
@@ -241,19 +249,21 @@ const UpdateClinic = ({ clinic, onClose, onSuccess, onError }) => {
 
     try {
       await updateClinic({
-        clinicId:       Number(clinic.id),
-        ClinicName:     formData.clinicName.trim(),
-        Address:        formData.address.trim(),
-        Location:       formData.location.trim(),
-        ClinicType:     formData.clinicType.trim(),
-        GstNo:          formData.gstNo.trim(),
-        CgstPercentage: Number(formData.cgstPercentage),
-        SgstPercentage: Number(formData.sgstPercentage),
-        OwnerName:      formData.ownerName.trim(),
-        Mobile:         formData.mobile.trim(),
-        AltMobile:      formData.altMobile.trim(),
-        Email:          formData.email.trim(),
-        Status:         Number(formData.status),
+        clinicId:            Number(clinic.id),
+        ClinicName:          formData.clinicName.trim(),
+        Address:             formData.address.trim(),
+        Location:            formData.location.trim(),
+        ClinicType:          formData.clinicType.trim(),
+        GstNo:               formData.gstNo.trim(),
+        CgstPercentage:      Number(formData.cgstPercentage),
+        SgstPercentage:      Number(formData.sgstPercentage),
+        OwnerName:           formData.ownerName.trim(),
+        Mobile:              formData.mobile.trim(),
+        AltMobile:           formData.altMobile.trim(),
+        Email:               formData.email.trim(),
+        Status:              Number(formData.status),
+        inLabAvailable:      formData.inLabAvailable,
+        inPharmacyAvailable: formData.inPharmacyAvailable,
       });
 
       // Show success popup here (inside UpdateClinic only)
@@ -518,6 +528,38 @@ const UpdateClinic = ({ clinic, onClose, onSuccess, onError }) => {
                 {validationMessages.sgstPercentage && (
                   <span className={styles.validationMsg}>{validationMessages.sgstPercentage}</span>
                 )}
+              </div>
+
+            </div>
+          </div>
+
+          {/* ── Availability ── */}
+          <div className={styles.addSection}>
+            <div className={styles.addSectionHeader}><h3>Availability</h3></div>
+            <div className={styles.addFormGrid}>
+
+              <div className={styles.addFormGroup}>
+                <label>In-Lab Available</label>
+                <select
+                  name="inLabAvailable"
+                  value={formData.inLabAvailable}
+                  onChange={handleAvailabilityChange}
+                >
+                  <option value={0}>No</option>
+                  <option value={1}>Yes</option>
+                </select>
+              </div>
+
+              <div className={styles.addFormGroup}>
+                <label>In-Pharmacy Available</label>
+                <select
+                  name="inPharmacyAvailable"
+                  value={formData.inPharmacyAvailable}
+                  onChange={handleAvailabilityChange}
+                >
+                  <option value={0}>No</option>
+                  <option value={1}>Yes</option>
+                </select>
               </div>
 
             </div>

@@ -609,14 +609,14 @@
 }
 .snapshot-row { display: flex; gap: 8px; font-size: .82rem; align-items: baseline; }
 .snapshot-label {
-  color: var(--text-3); font-weight: 700; font-size: .7rem;
+  color: var(--primary-start);
+  font-weight: 700; font-size: .7rem;
   text-transform: uppercase; letter-spacing: .35px;
   width: 60px; flex-shrink: 0;
 }
+.snapshot-mark{color: var(--primary-start);}
 
-.snapshot-value{
-  color: black;
-}
+.snapshot-value{color: var(--accent-start); font-weight: 600;}
 
 .form-stack { display: flex; flex-direction: column; gap: 12px; }
 .form-group { display: flex; flex-direction: column; gap: 5px; }
@@ -678,6 +678,34 @@
 }
 .consult-update-bar__btn:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
 .consult-update-bar__btn:disabled { opacity: .65; cursor: not-allowed; transform: none; }
+
+.error-popup__btn--cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end), var(--accent-start));
+  color: #ffffff;
+  border: none;
+  border-radius: 9px;
+  padding: 10px 28px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 3px 10px rgba(229, 57, 53, 0.35);
+}
+
+.error-popup__btn--cancel:hover {
+  background: red;
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.error-popup__btn-cancel:active {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 /* ══════════════════════════════════════════════════════
    MEDICINE CONTAINER CARD — Panel 2

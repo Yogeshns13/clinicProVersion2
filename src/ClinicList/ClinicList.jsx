@@ -239,6 +239,7 @@ const ClinicList = () => {
     longitude: '',   clinicType: '',   gstNo: '',     cgstPercentage: '',
     sgstPercentage: '', ownerName: '', mobile: '',    altMobile: '',
     email: '',       fileNoPrefix: '', lastFileSeq: '', invoicePrefix: '',
+    inLabAvailable: 0, inPharmacyAvailable: 0,
   });
   const [formLoading,        setFormLoading]        = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
@@ -375,6 +376,7 @@ const ClinicList = () => {
       longitude: '',   clinicType: '',   gstNo: '',     cgstPercentage: '',
       sgstPercentage: '', ownerName: '', mobile: '',    altMobile: '',
       email: '',       fileNoPrefix: '', lastFileSeq: '', invoicePrefix: '',
+      inLabAvailable: 0, inPharmacyAvailable: 0,
     });
     setValidationMessages({});
     setSubmitAttempted(false);
@@ -410,6 +412,12 @@ const ClinicList = () => {
     setValidationMessages((prev) => ({ ...prev, [name]: validationMessage }));
   };
 
+  // ── Handler for Yes/No select fields (inLabAvailable, inPharmacyAvailable) ──
+  const handleAvailabilityChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: Number(value) }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -431,20 +439,22 @@ const ClinicList = () => {
 
     try {
       await addClinic({
-        clinicName:     formData.clinicName.trim(),
-        address:        formData.address.trim(),
-        location:       formData.location.trim(),
-        clinicType:     formData.clinicType.trim(),
-        gstNo:          formData.gstNo.trim(),
-        cgstPercentage: Number(formData.cgstPercentage),
-        sgstPercentage: Number(formData.sgstPercentage),
-        ownerName:      formData.ownerName.trim(),
-        mobile:         formData.mobile.trim(),
-        altMobile:      formData.altMobile.trim(),
-        email:          formData.email.trim(),
-        fileNoPrefix:   formData.fileNoPrefix.trim(),
-        lastFileSeq:    Number(formData.lastFileSeq),
-        invoicePrefix:  formData.invoicePrefix.trim(),
+        clinicName:          formData.clinicName.trim(),
+        address:             formData.address.trim(),
+        location:            formData.location.trim(),
+        clinicType:          formData.clinicType.trim(),
+        gstNo:               formData.gstNo.trim(),
+        cgstPercentage:      Number(formData.cgstPercentage),
+        sgstPercentage:      Number(formData.sgstPercentage),
+        ownerName:           formData.ownerName.trim(),
+        mobile:              formData.mobile.trim(),
+        altMobile:           formData.altMobile.trim(),
+        email:               formData.email.trim(),
+        fileNoPrefix:        formData.fileNoPrefix.trim(),
+        lastFileSeq:         Number(formData.lastFileSeq),
+        invoicePrefix:       formData.invoicePrefix.trim(),
+        inLabAvailable:      formData.inLabAvailable,
+        inPharmacyAvailable: formData.inPharmacyAvailable,
       });
 
       // ── FIX: Close the modal first, then show the popup once in the main view ──
@@ -832,6 +842,18 @@ const ClinicList = () => {
                       <span className={styles.infoLabel}>Invoice Prefix</span>
                       <span className={styles.infoValue}>{selectedClinic.invoicePrefix || '—'}</span>
                     </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>In-Lab Available</span>
+                      <span className={styles.infoValue}>
+                        {selectedClinic.inLabAvailable === 1 ? 'Yes' : 'No'}
+                      </span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>In-Pharmacy Available</span>
+                      <span className={styles.infoValue}>
+                        {selectedClinic.inPharmacyAvailable === 1 ? 'Yes' : 'No'}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -1180,6 +1202,30 @@ const ClinicList = () => {
                     {validationMessages.invoicePrefix && (
                       <span className={styles.validationMsg}>{validationMessages.invoicePrefix}</span>
                     )}
+                  </div>
+
+                  <div className={styles.addFormGroup}>
+                    <label>In-Lab Available</label>
+                    <select
+                      name="inLabAvailable"
+                      value={formData.inLabAvailable}
+                      onChange={handleAvailabilityChange}
+                    >
+                      <option value={0}>No</option>
+                      <option value={1}>Yes</option>
+                    </select>
+                  </div>
+
+                  <div className={styles.addFormGroup}>
+                    <label>In-Pharmacy Available</label>
+                    <select
+                      name="inPharmacyAvailable"
+                      value={formData.inPharmacyAvailable}
+                      onChange={handleAvailabilityChange}
+                    >
+                      <option value={0}>No</option>
+                      <option value={1}>Yes</option>
+                    </select>
                   </div>
 
                 </div>

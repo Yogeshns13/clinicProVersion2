@@ -104,7 +104,6 @@ const toStatusNumber = (status) => {
 const ConsultationChargeConfig = () => {
   const [chargeConfigs,    setChargeConfigs]    = useState([]);
   const [allChargeConfigs, setAllChargeConfigs] = useState([]);
-  const [clinics,          setClinics]          = useState([]);
 
   // Pagination
   const [page,    setPage]    = useState(1);
@@ -207,20 +206,9 @@ const ConsultationChargeConfig = () => {
     }
   };
 
-  const fetchClinics = async () => {
-    try {
-      const clinicId = await getStoredClinicId();
-      const data     = await getClinicList(clinicId);
-      setClinics(data);
-    } catch (err) {
-      console.error('fetchClinics error:', err);
-    }
-  };
-
   useEffect(() => {
     fetchChargeConfigs(1);
     setPage(1);
-    fetchClinics();
   }, [appliedFilters]);
 
   const filteredConfigs = useMemo(() => {
@@ -294,16 +282,33 @@ const ConsultationChargeConfig = () => {
     startCooldown(setAddCooldown);
     setIsEditMode(false);
     setEditingConfig(null);
+
     const clinicId = await getStoredClinicId();
-    const clinic   = clinics.find(c => c.id === clinicId);
+
+    let gstNo          = '';
+    let cgstPercentage = '';
+    let sgstPercentage = '';
+
+    try {
+      const clinicData = await getClinicList({ ClinicID: Number(clinicId), Page: 1, PageSize: 1 });
+      const clinic     = clinicData.find(c => c.id === clinicId) || clinicData[0];
+      if (clinic) {
+        gstNo          = clinic.gstNo          || '';
+        cgstPercentage = clinic.cgstPercentage || '';
+        sgstPercentage = clinic.sgstPercentage || '';
+      }
+    } catch (err) {
+      console.error('Failed to fetch clinic details for prefill:', err);
+    }
+
     setFormData({
       clinicId:       clinicId || '',
       chargeCode:     '',
       chargeName:     '',
       defaultAmount:  '',
-      gstNo:          clinic?.gstNo          || '',
-      cgstPercentage: clinic?.cgstPercentage || '',
-      sgstPercentage: clinic?.sgstPercentage || '',
+      gstNo,
+      cgstPercentage,
+      sgstPercentage,
       status:         1,
     });
     setValidationMessages({});

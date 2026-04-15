@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { FiSave, FiX } from 'react-icons/fi';
 import { getLabTestPackageList, updateLabTestPackage } from '../Api/ApiLabTests.js';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
-import styles from './LabMaster.module.css';
+import styles from './LabMasterList.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 

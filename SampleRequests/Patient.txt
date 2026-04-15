@@ -32,7 +32,6 @@ AddPatient
 -- Blood Group text table tabke id  #2
 -- Marital Status text table tabke id  #3
 
-
 UpdatePatient
 {
     "CHANNEL_ID":1,
@@ -76,7 +75,6 @@ DeletePatient
     "PatientID": 2000000  
 }
 
-
 GetPatientList
 {
     "CHANNEL_ID":1,
@@ -98,7 +96,6 @@ GetPatientList
     "FamilyPatientID":0 ,
     "Status":-1 
 }
-
 _______________________________________________________________________________________________________________________
 
 GetPatientList

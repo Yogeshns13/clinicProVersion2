@@ -1,12 +1,89 @@
-AddClinic
+/GetClinicList
+{
+    "CHANNEL_ID":1,
+    "REF_KEY":"hshshshshshshshshshsh",
+    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
+    "USER_ID" : 2000000,
+    "Page":1,
+    "PageSize":20,
+    "ClinicID": 0,
+    "ClinicName":"",
+    "Mobile":"",
+    "GstNo":"",
+    "Status":-1
+}
+
+{
+    "result": [
+        {
+            "clinic_id": 5,
+            "clinic_name": "ClinicPro Test",
+            "logo_file_id": 1,
+            "address": "ClinicPro Test Address",
+            "location": "Test Location",
+            "clinic_type": "General",
+            "gst_no": "AAB4536RRE2",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "owner_name": "Gopi",
+            "mobile": "7863542668",
+            "in_lab_available": 0,
+            "in_pharmacy_available": 0,
+            "alt_mobile": "8765432265",
+            "email": "sivashankarandeveloper@gmail.com",
+            "file_no_prefix": "CPT",
+            "last_file_seq": 200000,
+            "invoice_prefix": "CPT-INV",
+            "invoice_last_seq": 1,
+            "current_year": 2026,
+            "seq_gen": 1,
+            "status": 1,
+            "file_access_token": "f331ae3b9b216f61aac1b25756997d6cfac5c2ba441d150da285463da12678d5",
+            "status_desc": "Active",
+            "date_created": "2026-04-13T05:21:18.000Z",
+            "date_modified": "2026-04-13T05:21:18.000Z"
+        },
+        {
+            "clinic_id": 4,
+            "clinic_name": "Cauvery Health Clinic",
+            "logo_file_id": 0,
+            "address": "No.21, Salai Road, Trichy",
+            "location": "Trichy",
+            "clinic_type": "Cardiology",
+            "gst_no": "33QWERT1234Y1Z6",
+            "cgst_percentage": "9.00",
+            "sgst_percentage": "9.00",
+            "owner_name": "Dr. Karthik Raj",
+            "mobile": "9090909090",
+            "in_lab_available": 1,
+            "in_pharmacy_available": 0,
+            "alt_mobile": "9090911111",
+            "email": "cauveryclinic@gmail.com",
+            "file_no_prefix": "CHC",
+            "last_file_seq": 100010,
+            "invoice_prefix": "INV",
+            "invoice_last_seq": 3,
+            "current_year": 2026,
+            "seq_gen": 1,
+            "status": 1,
+            "file_access_token": "token_chc_004",
+            "status_desc": "Active",
+            "date_created": "2026-04-11T07:46:32.000Z",
+            "date_modified": "2026-04-11T07:46:32.000Z"
+        }
+    ]
+}
+-------------------------------------------
+/AddClinic
 {
     "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000,    
-    "ClinicName":"ClinicPro Test",
-    "Address":"ClinicPro Test Address",
-    "Location":"Test Location",
+    "ClinicName":"ClinicPro Main",
+    "LogoFileID":2,
+    "Address":"ClinicPro Main Address",
+    "Location":"Main Location",
     "ClinicType":"General",
     "GstNo": "AAB4536RRE2",   
     "CgstPercentage": 9.0,  
@@ -14,21 +91,30 @@ AddClinic
     "OwnerName":"Gopi",
     "Mobile":"7863542668",
     "AltMobile":"8765432265",
-    "Email":"sivashankarandeveloper@gmail.com",
+    "Email":"nsyogeshofficial@gmail.com",
     "FileNoPrefix":"CPT",
     "LastFileSeq":200000,
     "InvoicePrefix" : "CPT-INV",
     "ProfileName":"admin"
 }
 
-UpdateClinic
+{
+    "result": {
+        "OUT_CLINIC_ID": 6,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
+--------------------------------------------
+/UpdateClinic
 {
     "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",
     "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
     "USER_ID" : 2000000,
-    "ClinicID": 1,
+    "ClinicID": 5,
     "ClinicName":"ClinicPro Test",
+    "LogoFileID":1,
     "Address":"ClinicPro Test Address",
     "Location":"Test Location",
     "ClinicType":"General",
@@ -36,15 +122,22 @@ UpdateClinic
     "CgstPercentage": 9.0,  
     "SgstPercentage":9.0,
     "OwnerName":"Gopi",
-    "Mobile":"7863542668",
+    "Mobile":"7863542669",
     "AltMobile":"8765432265",
     "Email":"sivashankarandeveloper@gmail.com",
     "Status":1
 }
 
------------------------------------------------------------
+{
+    "result": {
+        "IN_CLINIC_ID": 5,
+        "OUT_OK": 1,
+        "OUT_ERROR": "OK"
+    }
+}
 
-DeleteClinic
+-------------------------------------------------------
+/DeleteClinic
 {
     "CHANNEL_ID":1,
     "REF_KEY":"hshshshshshshshshshsh",
@@ -62,99 +155,3 @@ DeleteClinic
 }
 
 -------------------------------------------------------
-
-
-GetClinicList
-{
-    "CHANNEL_ID":1,
-    "REF_KEY":"hshshshshshshshshshsh",
-    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
-    "USER_ID" : 2000000,
-    "Page":1,
-    "PageSize":20,
-    "ClinicID": 1,
-    "ClinicName":"",
-    "Mobile":"",
-    "GstNo":"",
-    "Status":-1
-}
-
-
-----------------------------------------------------------------
-
-GetClinicList
-{
-    "CHANNEL_ID":1,
-    "REF_KEY":"hshshshshshshshshshsh",
-    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
-    "USER_ID" : 2000000,
-    "Page":1,
-    "PageSize":20,
-    "ClinicID": 1,
-    "ClinicName":"",
-    "Mobile":"",
-    "GstNo":"",
-    "Status":-1
-}
-
-{
-    "result": [
-        {
-            "clinic_id": 1,
-            "clinic_name": "ClinicPro Test",
-            "address": "ClinicPro Test Address",
-            "location": "Test Location",
-            "clinic_type": "General",
-            "gst_no": "AAB4536RRE2",
-            "cgst_percentage": "9.00",
-            "sgst_percentage": "9.00",
-            "owner_name": "Gopi",
-            "mobile": "7863542668",
-            "alt_mobile": "8765432270",
-            "email": "sivashankarandeveloper@gmail.com",
-            "file_no_prefix": "CPT",
-            "last_file_seq": 200002,
-            "invoice_prefix": "CPT-INV",
-            "invoice_last_seq": 7,
-            "current_year": 2025,
-            "seq_gen": 1,
-            "status": 1,
-            "file_access_token": "817773817764fec53d676c61628288e2d2e7eb011d3c20bcd6b10b169740093c",
-            "status_desc": "Active",
-            "date_created": "2025-11-21T07:30:10.000Z",
-            "date_modified": "2025-12-05T08:07:46.000Z"
-        }
-    ]
-}
-
-
-_____________
-
-
-AddClinic
-{
-    "CHANNEL_ID":1,
-    "REF_KEY":"hshshshshshshshshshsh",
-    "SESSION_REF" : "jdyqt6e5y3ndjne67363nnd",
-    "USER_ID" : 2000000,    
-    "ClinicName":"ClinicPro Test",
-    "Address":"ClinicPro Test Address",
-    "Location":"Test Location",
-    "ClinicType":"General",
-    "GstNo": "AAB4536RRE2",   
-    "CgstPercentage": 9.0,  
-    "SgstPercentage":9.0,
-    "OwnerName":"Gopi",
-    "Mobile":"7863542668",
-    "AltMobile":"8765432265",
-    "Email":"sivashankarandeveloper@gmail.com",
-    "FileNoPrefix":"CPT",
-    "LastFileSeq":200000,
-    "InvoicePrefix" : "CPT-INV",
-    "ProfileName":"admin"
-   
-}
-
-
-
-

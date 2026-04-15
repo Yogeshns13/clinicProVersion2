@@ -70,3 +70,18 @@ export const getStoredClinicName = async () => {
   const clincName = await getDecrypted('clinicName');
   return clincName || null;   
 };
+
+export const getStoredFileAccessToken = async () => {
+  const fileAccessToken = await getDecrypted('fileAccessToken');
+  return fileAccessToken || null;
+};
+
+export const getStoredInPharmacy = async () => {
+  const inPharmacyAvailable = await getDecrypted('yxyz');
+  return inPharmacyAvailable ? parseInt(inPharmacyAvailable, 10) : null;
+};
+
+export const getStoredInLab = async () => {
+  const inLabAvailable = await getDecrypted('bxyz');
+  return inLabAvailable ? parseInt(inLabAvailable, 10) : null;
+};

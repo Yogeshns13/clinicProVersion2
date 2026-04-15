@@ -2,7 +2,7 @@
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { API, UPLOAD_API_URL, FILE_API_URL, checkDbError, extractBackendError } from "./ApiConfiguration";
-import { setEncrypted } from "../Utils/Cryptoutils";
+import { setEncrypted, getStoredClinicId, getStoredFileAccessToken } from "../Utils/Cryptoutils";
 
 const CHANNEL_ID = 1;
 const PRODUCTION_MODE = 0;
@@ -12,7 +12,6 @@ const storeSessionRef = (sessionRef) => localStorage.setItem("SESSION_REF", sess
 export const getUserId = () => {
   return localStorage.getItem("userId");
 };
-
 
 export const generateRefKey = () => {
   const sessionRef = getSessionRef();
@@ -81,7 +80,10 @@ export const loginUser = async (username, password) => {
         const clinicList = await getClinicList({ ClinicID: result.CLINIC_ID });
         const matchedClinic = clinicList.find((clinic) => clinic.id === result.CLINIC_ID);
         if (matchedClinic) {
-          localStorage.setItem("clinicName", matchedClinic.name); // Encrypted
+          localStorage.setItem("clinicName", matchedClinic.name);
+          await setEncrypted("fileAccessToken", matchedClinic.fileAccessToken);
+          await setEncrypted("yxyz", matchedClinic.inPharmacyAvailable);
+          await setEncrypted("bxyz", matchedClinic.inLabAvailable); 
         }
       } catch (clinicErr) {
         console.warn("Failed to fetch clinic name:", clinicErr.message);
@@ -137,8 +139,6 @@ export const forgetPassword = async (username, email) => {
 
 export const renewToken = async () => {
   const userId = getUserId();
-  // RefreshToken is sent automatically via the httpOnly cookie (withCredentials: true)
-  // USER_ID is not duplicated — only UserId (the actual value) is sent
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
@@ -173,9 +173,11 @@ export const renewToken = async () => {
   }
 };
 
-
 export const uploadPhoto = async (clinicId, file, fileAccessToken) => {
   try {
+    const resolvedClinicId = clinicId ?? await getStoredClinicId();
+    const resolvedFileAccessToken = fileAccessToken ?? await getStoredFileAccessToken();
+
     const fileExtension = file.name.split('.').pop().toLowerCase();
     let fileType;
     if (['jpeg', 'jpg'].includes(fileExtension)) {
@@ -189,8 +191,8 @@ export const uploadPhoto = async (clinicId, file, fileAccessToken) => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('fileType', fileType);
-    formData.append('ClinicID', clinicId);
-    formData.append('FileAccessToken', fileAccessToken);   // ← passed in, not from localStorage
+    formData.append('ClinicID', resolvedClinicId);
+    formData.append('FileAccessToken', resolvedFileAccessToken);
 
     const response = await axios.post(UPLOAD_API_URL, formData, {
       headers: {
@@ -208,8 +210,11 @@ export const uploadPhoto = async (clinicId, file, fileAccessToken) => {
   }
 };
 
-export const uploadIDProof = async (clinicId, file, fileAccessToken) => {
+export const uploadFile = async (clinicId, file, fileAccessToken) => {
   try {
+    const resolvedClinicId = clinicId ?? await getStoredClinicId();
+    const resolvedFileAccessToken = fileAccessToken ?? await getStoredFileAccessToken();
+
     const fileExtension = file.name.split('.').pop().toLowerCase();
     let fileType;
     if (['jpeg', 'jpg'].includes(fileExtension)) {
@@ -225,8 +230,8 @@ export const uploadIDProof = async (clinicId, file, fileAccessToken) => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('fileType', fileType);
-    formData.append('ClinicID', clinicId);
-    formData.append('FileAccessToken', fileAccessToken);   // ← passed in, not from localStorage
+    formData.append('ClinicID', resolvedClinicId);
+    formData.append('FileAccessToken', resolvedFileAccessToken);
 
     const response = await axios.post(UPLOAD_API_URL, formData, {
       headers: {
@@ -246,13 +251,17 @@ export const uploadIDProof = async (clinicId, file, fileAccessToken) => {
 
 export const getFile = async (clinicId, fileId, fileAccessToken) => {
   try {
+    const resolvedClinicId = clinicId ?? await getStoredClinicId();
+    const resolvedFileAccessToken = fileAccessToken ?? await getStoredFileAccessToken();
+
     if (!fileId) {
       throw new Error('FileID is required');
     }
+
     const payload = {
-      ClinicID: clinicId,
+      ClinicID: resolvedClinicId,
       FileID: Number(fileId),
-      FileAccessToken: fileAccessToken,        // ← passed in, not from localStorage
+      FileAccessToken: resolvedFileAccessToken,
     };
 
     console.log("getFile Request:", payload);
@@ -334,6 +343,8 @@ export const getClinicList = async (options = {}) => {
       sgstPercentage: clinic.sgst_percentage,
       ownerName: clinic.owner_name,
       mobile: clinic.mobile,
+      inLabAvailable: clinic.in_lab_available,
+      inPharmacyAvailable: clinic.in_pharmacy_available,
       altMobile: clinic.alt_mobile,
       email: clinic.email,
       fileNoPrefix: clinic.file_no_prefix,
@@ -377,8 +388,6 @@ export const addClinic = async (clinicData) => {
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
-    ClinicID: 1,
-    // Clinic fields from input
     ClinicName: clinicData.clinicName || "",
     Address: clinicData.address || "",
     Location: clinicData.location || "",
@@ -387,13 +396,15 @@ export const addClinic = async (clinicData) => {
     CgstPercentage: clinicData.cgstPercentage ?? 0,
     SgstPercentage: clinicData.sgstPercentage ?? 0,
     OwnerName: clinicData.ownerName || "",
+    InLabAvailable: clinicData.inLabAvailable ?? 0,       
+    InPharmacyAvailable: clinicData.inPharmacyAvailable ?? 0, 
     Mobile: clinicData.mobile || "",
     AltMobile: clinicData.altMobile || "",
     Email: clinicData.email || "",
     FileNoPrefix: clinicData.fileNoPrefix || "",
     LastFileSeq: clinicData.lastFileSeq ?? 0,
     InvoicePrefix: clinicData.invoicePrefix || "",
-    ProfileName: clinicData.profileName || "admin" // optional, defaulting to "admin"
+    ProfileName: clinicData.profileName || "admin",
   };
 
   console.log("Add Clinic:", payload)
@@ -451,7 +462,6 @@ export const updateClinic = async (clinicData) => {
     throw authError;
   }
 
-  // ClinicID is mandatory for update
   if (!clinicData?.clinicId && clinicData?.clinicId !== 0) {
     const validationError = new Error("ClinicID is required to update a clinic.");
     validationError.status = 400;
@@ -467,6 +477,8 @@ export const updateClinic = async (clinicData) => {
     ClinicID: clinicData.clinicId,
     ClinicName: clinicData.ClinicName?.trim() || "",
     OwnerName: clinicData.OwnerName?.trim() || "",
+    InLabAvailable: clinicData.inLabAvailable ?? 0,       
+    InPharmacyAvailable: clinicData.inPharmacyAvailable ?? 0, 
     Mobile: clinicData.Mobile?.trim() || "",
     AltMobile: clinicData.AltMobile?.trim() || "",
     Email: clinicData.Email?.trim() || "",
@@ -1415,7 +1427,7 @@ export const updateEmployee = async (employeeData) => {
 
     throw formattedError;
   }
-};
+};  
 
 export const deleteEmployee = async (employeeId) => {
   const userId = getUserId();
@@ -2964,13 +2976,6 @@ export const addPatient = async (patientData) => {
     throw authError;
   }
 
-  // Basic required-field validation (adjust as per your backend requirements)
-  if (!patientData?.firstName || !patientData?.lastName) {
-    const validationError = new Error("First name and last name are required");
-    validationError.status = 400;
-    throw validationError;
-  }
-
   if (!patientData?.mobile) {
     const validationError = new Error("Mobile number is required");
     validationError.status = 400;
@@ -3009,12 +3014,12 @@ export const addPatient = async (patientData) => {
     Email: patientData.email || "",
     Address: patientData.address || "",
     EmergencyContactNo: patientData.emergencyContactNo || "",
-    Allergies: patientData.allergies || "No Allergies",
-    ExistingMedicalConditions: patientData.existingMedicalConditions || "Not reported",
-    PastSurgeries: patientData.pastSurgeries || "Nothing",
-    CurrentMedications: patientData.currentMedications || "NA",
+    Allergies: patientData.allergies || "",
+    ExistingMedicalConditions: patientData.existingMedicalConditions || "",
+    PastSurgeries: patientData.pastSurgeries || "",
+    CurrentMedications: patientData.currentMedications || "",
     FamilyMedicalHistory: patientData.familyMedicalHistory || "",
-    ImmunizationRecords: patientData.immunizationRecords || "Not Available",
+    ImmunizationRecords: patientData.immunizationRecords || "",
     FamilyPatientID: patientData.familyPatientId ?? 0,
   };
 
@@ -4736,8 +4741,261 @@ export const updatePassword = async (passwordData) => {
   }
 };
 
+export const getUserList = async (clinicId = 0, options = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
 
+  // Optional: stricter validation in non-production (same as getEmployeeList)
+  if (PRODUCTION_MODE !== true) {
+    if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
 
+  // Determine final IDs based on environment (exactly same logic as getEmployeeList)
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    UserID: options.UserID || 0,
+    EmployeeID: options.EmployeeID || 0,
+    UserName: options.UserName || "",
+    Mobile: options.Mobile || "",
+    Email: options.Email || "",
+    Status: options.Status ?? -1
+  };
+
+  console.log("getUserList:", payload);
+
+  try {
+    const response = await API.post("/GetUserList", payload);
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
+    console.log("GetUserList response:", results);
+
+    return results.map((user) => ({
+      id: user.user_id,
+      userId: user.user_id,
+      userName: user.user_name,
+      mobile: user.mobile || null,
+      email: user.email || null,
+      profileName: user.profile_name || null,
+      lastLogin: user.last_login || null,
+      clinicId: user.clinic_id,
+      clinicName: user.clinic_name,
+      branchId: user.branch_id,
+      branchName: user.branch_name,
+      employeeId: user.employee_id,
+      employeeName: user.employee_name,
+      employeeCode: user.employee_code,
+      status: user.status === 0 ? "active" : "inactive",   // based on your sample (status: 0 = Active)
+      statusDesc: user.status_desc || "Unknown",
+      dateCreated: user.date_created,
+      dateModified: user.date_modified
+    }));
+  } catch (error) {
+    console.error("getUserList failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message: extractBackendError(error) || error.response?.data?.message || error.message || "Failed to fetch users"
+    };
+
+    throw err;
+  }
+};
+
+export const addUser = async (userData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Basic required-field validation (adjust as per your backend rules)
+  if (!userData?.userName || !userData?.email || !userData?.password) {
+    const validationError = new Error("UserName, Email and Password are required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  // In dev mode you might want to validate ClinicID / BranchID more strictly
+  if (PRODUCTION_MODE !== true) {
+    if (userData.clinicId < 0 || (userData.clinicId !== 0 && isNaN(userData.clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (userData.clinicId || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (userData.branchId || 0);
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    EmployeeID: userData.employeeId ?? 0,
+    UserName: userData.userName || "",
+    Mobile: userData.mobile || "",
+    EMail: userData.email || "",           // ← Backend expects "EMail" (exact key)
+    Password: userData.password || "",
+    ProfileName: userData.profileName || ""
+  };
+
+  console.log("Add User", payload);
+
+  try {
+    const response = await API.post("/AddUser", payload);
+
+    console.log("AddUser response:", response.data);
+
+    const result = response.data?.result;
+
+    checkDbError(result);
+
+    // Validate expected response structure (matches your sample)
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to add user");
+    }
+
+    // Return success with new user ID
+    return {
+      success: true,
+      userId: result.OUT_USER_ID,
+      message: result.OUT_ERROR || "OK"
+    };
+
+  } catch (error) {
+    console.error("addUser failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message ||
+        "Failed to add user"
+    };
+
+    throw errorWithStatus;
+  }
+};
+
+export const updateUser = async (userData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // UserID is mandatory for update (same pattern as EmployeeID in updateEmployee)
+  if (!userData?.userId && userData?.userId !== 0) {
+    const validationError = new Error("UserID is required to update a user.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  // ClinicID is also typically required
+  if (!userData?.clinicId && userData?.clinicId !== 0) {
+    const validationError = new Error("ClinicID is required to update a user.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  if (PRODUCTION_MODE !== true) {
+    if (userData.clinicId < 0 || (userData.clinicId !== 0 && isNaN(userData.clinicId))) {
+      const error = new Error("Invalid Clinic ID");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (userData.clinicId || 0);
+  // Note: UpdateUser payload does NOT include BranchID (as per your sample)
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    UserID: userData.userId || 0,
+    Mobile: userData.mobile?.trim() || "",
+    EMail: userData.email?.trim() || "",           // ← Backend expects exact key "EMail"
+    ProfileName: userData.profileName?.trim() || "",
+    Password: userData.password?.trim() || ""      // trim for safety (optional on update)
+  };
+
+  console.log("updateUser payload:", payload);
+
+  try {
+    const response = await API.post("/UpdateUser", payload);
+    console.log("UpdateUser response:", response.data);
+
+    const result = response.data?.result;
+    checkDbError(result);
+
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to update user");
+    }
+
+    return {
+      success: true,
+      userId: result.IN_USER_ID || userData.userId,   // echo the updated ID
+      message: "User updated successfully"
+    };
+
+  } catch (error) {
+    console.error("updateUser error:", error);
+
+    const errorMessage =
+      extractBackendError(error) ||
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to update user";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
+  }
+};
 
 
 

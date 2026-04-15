@@ -5,7 +5,7 @@ import {
   addEmployee,
   uploadPhoto,
   addEmployeeProof,
-  uploadIDProof,
+  uploadFile,
   addEmployeeBeneficiaryAccount,
   addEmployeeShift,
   getShiftList,
@@ -571,7 +571,7 @@ const AddEmployee = ({ isOpen, onClose, onSuccess, onError }) => {
     updateProofUploadStatus(index, 'Uploading ID proof...');
     try {
       const fileAccessToken = await fetchFileAccessToken(selectedClinicId);
-      const res = await uploadIDProof(selectedClinicId, file, fileAccessToken);
+      const res = await uploadFile(selectedClinicId, file, fileAccessToken);
       setProofList(prev => prev.map((p, i) => i === index ? { ...p, fileId: res.fileId } : p));
       updateProofUploadStatus(index, 'ID proof uploaded successfully!');
       setProofFilesUploaded(prev => prev.map((v, i) => i === index ? true : v));

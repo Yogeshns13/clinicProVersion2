@@ -1,0 +1,936 @@
+/* src/components/ExternalLabList.module.css */
+
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --primary-start: #222b6c;
+  --primary-end: #225ca0;
+  --accent-start: #207d9c;
+  --accent-end: #30b2b5;
+  --text-light: #ffffff;
+  --text-dark: #1e293b;
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== MAIN WRAPPER ==================== */
+.labListWrapper {
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  height: 100vh;
+  overflow: hidden;
+  color: var(--text-dark);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* ==================== FILTERS CONTAINER ==================== */
+.filtersContainer {
+  background: white;
+  border-radius: 17px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.filtersGrid {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.searchGroup {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.searchInput {
+  flex: 1;
+  height: 40px;
+  padding: 0 15px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  min-width: 0;
+}
+
+.searchInput::placeholder { color: #94a3b8; }
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+.filterActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ==================== STATUS FILTER SELECT ==================== */
+.statusFilterSelect {
+  width: 160px;
+  height: 40px;
+  padding: 0 12px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.statusFilterSelect:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+.searchButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 20px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+}
+
+.searchButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+}
+
+.clearButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 20px;
+  background: #e2e8f0;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.clearButton:hover {
+  background: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.addLabBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 20px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+}
+
+.addLabBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+}
+
+/* ==================== TABLE SECTION ==================== */
+.tableSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== TABLE CONTAINER ==================== */
+.labTableContainer {
+  background: white;
+  border-radius: 17px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.labTable {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+
+.labTable th {
+  text-align: left;
+  padding: 12px 17px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+}
+
+.labTable td {
+  padding: 6px 17px;
+  border-bottom: 1px solid #e2e8f0;
+  color: var(--text-dark);
+  font-size: 0.75rem;
+  vertical-align: middle;
+}
+
+.labTable th:last-child,
+.labTable td:last-child {
+  text-align: right;
+  padding-right: 24px;
+}
+
+.labTable tbody tr:nth-child(even) { background-color: #d5e6ec; }
+
+.labTable tbody tr:hover {
+  background-color: rgba(48, 178, 181, 0.08) !important;
+  transition: background-color 0.25s ease;
+}
+
+/* ==================== TABLE CELLS ==================== */
+.labNameCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.labAvatar {
+  width: 33px;
+  height: 33px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  font-weight: bold;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 12px rgba(32, 125, 156, 0.35);
+  flex-shrink: 0;
+}
+
+.labName {
+  font-weight: 700;
+  color: var(--text-dark);
+  font-size: 0.87rem;
+}
+
+.labDetail {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.addressCell {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==================== STATUS BADGES ==================== */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ==================== BUTTONS ==================== */
+.labDetailsBtn,
+.btnUpdate,
+.btnSubmit {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  z-index: 1;
+}
+
+.labDetailsBtn {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  padding: 7px 15px;
+  font-size: 0.75rem;
+  border-radius: 9px;
+  white-space: nowrap;
+}
+
+.btnUpdate,
+.btnSubmit {
+  padding: 10px 24px;
+  font-size: 0.85rem;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+}
+
+.labDetailsBtn::before,
+.btnUpdate::before,
+.btnSubmit::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.labDetailsBtn:hover::before,
+.btnUpdate:hover::before,
+.btnSubmit:hover::before {
+  width: 170px;
+  height: 170px;
+}
+
+.labDetailsBtn:hover,
+.btnUpdate:hover,
+.btnSubmit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+}
+
+.labDetailsBtn:active,
+.btnUpdate:active,
+.btnSubmit:active {
+  transform: translateY(-1px);
+}
+
+.btnSubmitDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnCancel {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  border: none;
+  border-radius: 14px;
+  height: 40px;
+  padding: 0 20px;
+  font-weight: 700;
+  font-size: 0.94rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  white-space: nowrap;
+  z-index: 0;
+}
+
+.btnCancel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+}
+
+.btnCancel:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
+}
+
+.btnCancel:hover::before { opacity: 1; }
+
+.btnIcon { margin-right: 5px; }
+
+/* ==================== DETAILS MODAL ==================== */
+.detailModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+  backdrop-filter: blur(4px);
+  padding: 20px 20px 20px 260px;
+}
+
+.detailModalContent {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 760px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease;
+}
+
+.detailModalHeader {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.detailHeaderContent { flex: 1; }
+
+.detailHeaderContent h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.detailHeaderMeta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.workIdBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  color: var(--text-light);
+}
+
+.activeBadge {
+  background: rgba(22, 163, 74, 0.35) !important;
+  border: 1px solid rgba(22, 163, 74, 0.5);
+}
+
+.inactiveBadge {
+  background: rgba(220, 38, 38, 0.35) !important;
+  border: 1px solid rgba(220, 38, 38, 0.5);
+}
+
+.detailCloseBtn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: var(--text-light);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.detailCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.08);
+}
+
+.detailModalBody {
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.infoSection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 24px 28px;
+  background-color: rgba(0, 0, 0, 0.05);
+  flex: 1;
+}
+
+.infoCard {
+  background: white;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+}
+
+.infoHeader {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
+}
+
+.infoHeader h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-start);
+}
+
+.infoContent { display: flex; flex-direction: column; gap: 2px; }
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(34, 43, 108, 0.06);
+}
+
+.infoRow:last-child { border-bottom: none; }
+
+.infoLabel {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.infoValue {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+.detailModalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 18px 28px;
+  border-top: 2px solid rgba(34, 43, 108, 0.1);
+  background: #f8fafc;
+}
+
+/* ==================== ADD / UPDATE MODAL ==================== */
+.addModalContent {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 760px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease;
+}
+
+.addModalBody {
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(0, 0, 0, 0.05);
+  gap: 0;
+}
+
+.addSection {
+  padding: 20px 28px;
+  border-bottom: 1px solid rgba(34, 43, 108, 0.08);
+}
+
+.addSection:last-of-type { border-bottom: none; }
+
+.addSectionHeader {
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(48, 178, 181, 0.25);
+}
+
+.addSectionHeader h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-start);
+}
+
+.addFormGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.addFormGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.addFormGroup.fullWidth,
+.fullWidth { grid-column: 1 / -1; }
+
+.addFormGroup label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary-start);
+}
+
+.addFormGroup input,
+.addFormGroup textarea,
+.addFormGroup select {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(34, 43, 108, 0.15);
+  border-radius: 10px;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.addFormGroup textarea {
+  resize: vertical;
+  min-height: 70px;
+  line-height: 1.5;
+}
+
+.addFormGroup input::placeholder,
+.addFormGroup textarea::placeholder { color: rgba(30, 41, 59, 0.35); }
+
+.addFormGroup input:focus,
+.addFormGroup textarea:focus,
+.addFormGroup select:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
+  background: white;
+}
+
+.validationMsg {
+  font-size: 0.75rem;
+  color: red;
+  margin-top: 2px;
+}
+
+.required { color: #dc2626; font-weight: 700; }
+
+/* ==================== PAGINATION BAR ==================== */
+.paginationBar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 14px;
+  padding: 10px 20px;
+  margin-top: 14px;
+  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  gap: 16px;
+}
+
+.paginationInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.paginationLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.pageBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: var(--primary-start);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-color: var(--accent-end);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.3);
+}
+
+.pageBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pageIndicator {
+  min-width: 36px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0 8px;
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
+}
+
+.pageSizeInfo {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pageSizeInfo strong {
+  color: var(--primary-start);
+  font-weight: 700;
+}
+
+/* ==================== UTILITY STATES ==================== */
+.labNoData {
+  text-align: center;
+  padding: 68px 17px;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+.labLoading,
+.labError {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  font-size: 1.3rem;
+  color: #64748b;
+}
+
+.labError { color: #ef4444; }
+
+/* ==================== DARK MODE ==================== */
+:global(.dark-mode) .labListWrapper {
+  --glass-bg: rgba(30, 41, 59, 0.92);
+  --text-dark: #e2e8f0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .filtersContainer {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .searchInput {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .statusFilterSelect {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .clearButton {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .clearButton:hover { background: #475569; }
+
+:global(.dark-mode) .labTableContainer {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .labTable th {
+  background: linear-gradient(135deg, #334155, #475569);
+}
+
+:global(.dark-mode) .labTable td {
+  border-bottom-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .labTable tbody tr:nth-child(even) { background-color: #334155; }
+
+:global(.dark-mode) .addFormGroup label { color: var(--accent-end); }
+
+:global(.dark-mode) .addFormGroup input,
+:global(.dark-mode) .addFormGroup textarea,
+:global(.dark-mode) .addFormGroup select {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .paginationBar {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .paginationInfo,
+:global(.dark-mode) .pageSizeInfo { color: #94a3b8; }
+
+:global(.dark-mode) .paginationLabel { color: var(--accent-end); }
+
+:global(.dark-mode) .pageBtn {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-color: var(--accent-end);
+  color: white;
+}
+
+:global(.dark-mode) .infoCard {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .infoLabel { color: var(--accent-end); }
+:global(.dark-mode) .infoValue { color: #e2e8f0; }
+
+:global(.dark-mode) .detailModalContent,
+:global(.dark-mode) .addModalContent {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .detailModalFooter { background: #0f172a; }
+
+:global(.dark-mode) .addSectionHeader h3 { color: var(--accent-end); }
+:global(.dark-mode) .infoHeader h3       { color: var(--accent-end); }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .filtersGrid { flex-direction: column; align-items: stretch; }
+
+  .filterActions { flex-direction: column; }
+
+  .searchButton,
+  .clearButton,
+  .addLabBtn,
+  .statusFilterSelect { width: 100%; justify-content: center; }
+
+  .labTable th,
+  .labTable td { padding: 12px 14px; }
+
+  .labDetailsBtn { padding: 7px 14px; font-size: 0.72rem; }
+
+  .detailModalOverlay { padding: 16px; }
+
+  .paginationBar { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+  .paginationControls { align-self: center; }
+}
+
+@media (max-width: 480px) {
+  .labListWrapper { padding: 14px; }
+
+  .btnSubmit,
+  .btnCancel { width: 100%; justify-content: center; }
+
+  .detailModalFooter { flex-direction: column; }
+}

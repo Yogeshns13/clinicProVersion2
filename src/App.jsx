@@ -46,6 +46,8 @@ import PharmacyInvoiceList from "./MedicineMaster/PharmacyInvoiceList.jsx";
 import InvoiceManagement from "./ConsultationCharge/InvoiceManagement.jsx";
 import InvoicePaymentManagement from "./ConsultationCharge/InvoicePaymentManagement.jsx";
 import Logout from "./Logout/Logout.jsx";
+import ExternalLabList from "./ExternalLab/ExternalLabList.jsx";
+import UserList from "./UserList/UserList.jsx";
 
 // Inner component so useTokenRenewal runs inside AuthProvider + Router context
 function AppInner() {
@@ -74,6 +76,7 @@ function AppInner() {
         <Route path="/work-shift" element={<WorkShift />} />
         <Route path="/employee-list" element={<EmployeeList />} />
         <Route path="/admin-employee-list" element={<AdminEmployeeList />} />
+        <Route path="/user-list" element={<UserList />} />
 
         <Route path="/patient-list" element={<PatientList />} />
         <Route path="/slotconfig-list" element={<SlotConfigList />} />
@@ -86,6 +89,7 @@ function AppInner() {
         <Route path="/view-consultation/:id" element={<ViewConsultation />} />
         <Route path="/consultationcharge-config" element={<ConsultationChargeConfig />} />
         <Route path="/consultation-charge" element={<ConsultationChargeList />} />
+        <Route path="/external-lab" element={<ExternalLabList />} />
 
         <Route path="/labtestmaster" element={<LabMasterList />} />
         <Route path="/laborder-list" element={<LabOrderList />} />

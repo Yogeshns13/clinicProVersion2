@@ -466,21 +466,6 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
                   </div>
                 )}
 
-                {/* CreateSlotDays — read-only */}
-                <div className={styles.formGroup}>
-                  <label>Create Slots For (Days)</label>
-                  <input
-                    type="number"
-                    value={createSlotDays}
-                    disabled
-                    readOnly
-                    className={styles.readonlyInput}
-                  />
-                  {validationMessages.createSlotDays && (
-                    <span className={styles.validationMsg}>{validationMessages.createSlotDays}</span>
-                  )}
-                </div>
-
               </div>
 
               {/* Summary box */}

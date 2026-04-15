@@ -11,12 +11,13 @@ import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
 
+const PAGE_SIZE = 20;
+
 const LabInvoiceList = () => {
   const navigate = useNavigate();
 
   // Data States
-  const [invoiceDetails, setInvoiceDetails]       = useState([]);
-  const [allInvoiceDetails, setAllInvoiceDetails] = useState([]);
+  const [invoiceDetails, setInvoiceDetails] = useState([]);
 
   // Filter inputs (not applied until search)
   const [filterInputs, setFilterInputs] = useState({
@@ -36,7 +37,7 @@ const LabInvoiceList = () => {
 
   // Pagination
   const [page, setPage]       = useState(1);
-  const [pageSize]            = useState(20);
+  const [hasNext, setHasNext] = useState(false);
 
   // UI States
   const [loading, setLoading] = useState(true);
@@ -65,7 +66,7 @@ const LabInvoiceList = () => {
     appliedFilters.dateTo              !== '';
 
   // ── Fetch Lab Invoice Details ──────────────────────────────────────────────
-  const fetchInvoiceDetails = async () => {
+  const fetchInvoiceDetails = async (pageNum = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -73,9 +74,14 @@ const LabInvoiceList = () => {
       const branchId = await getStoredBranchId();
 
       const options = {
-        Page:     1,
-        PageSize: 100,
-        BranchID: branchId,
+        Page:        pageNum,
+        PageSize:    PAGE_SIZE,
+        BranchID:    branchId,
+        PatientName: appliedFilters.searchType === 'patientName' ? appliedFilters.searchValue.trim() : '',
+        InvoiceNo:   appliedFilters.searchType === 'invoiceNo'   ? appliedFilters.searchValue.trim() : '',
+        TestName:    appliedFilters.searchType === 'testName'    ? appliedFilters.searchValue.trim() : '',
+        FromDate:    appliedFilters.dateFrom || '',
+        ToDate:      appliedFilters.dateTo   || '',
       };
 
       const data = await getLabInvoiceDetailList(clinicId, options);
@@ -87,7 +93,7 @@ const LabInvoiceList = () => {
       });
 
       setInvoiceDetails(sortedData);
-      setAllInvoiceDetails(sortedData);
+      setHasNext(sortedData.length === PAGE_SIZE);
     } catch (err) {
       console.error('fetchInvoiceDetails error:', err);
       setError(
@@ -101,56 +107,23 @@ const LabInvoiceList = () => {
   };
 
   useEffect(() => {
-    fetchInvoiceDetails();
-  }, []);
+    fetchInvoiceDetails(1);
+    setPage(1);
+  }, [appliedFilters]);
 
-  // ── Computed filtered invoice details ──────────────────────────────────────
-  const filteredInvoiceDetails = useMemo(() => {
-    let filtered = allInvoiceDetails;
-
-    if (appliedFilters.searchValue) {
-      const term = appliedFilters.searchValue.toLowerCase();
-
-      switch (appliedFilters.searchType) {
-        case 'patientName':
-          filtered = filtered.filter(inv => inv.patientName?.toLowerCase().includes(term));
-          break;
-        case 'invoiceNo':
-          filtered = filtered.filter(inv => inv.invoiceNo?.toLowerCase().includes(term));
-          break;
-        case 'testName':
-          filtered = filtered.filter(inv => inv.testName?.toLowerCase().includes(term));
-          break;
-        default:
-          break;
-      }
-    }
-
-    if (appliedFilters.dateFrom) {
-      const fromDate = new Date(appliedFilters.dateFrom);
-      filtered = filtered.filter(inv => {
-        if (!inv.invoiceDate) return false;
-        return new Date(inv.invoiceDate) >= fromDate;
-      });
-    }
-
-    if (appliedFilters.dateTo) {
-      const toDate = new Date(appliedFilters.dateTo);
-      toDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(inv => {
-        if (!inv.invoiceDate) return false;
-        return new Date(inv.invoiceDate) <= toDate;
-      });
-    }
-
-    return filtered;
-  }, [allInvoiceDetails, appliedFilters]);
+  // ── Pagination Handlers ────────────────────────────────────────────────────
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    triggerCooldown(`page-${newPage}`);
+    setPage(newPage);
+    fetchInvoiceDetails(newPage);
+  };
 
   // ── Group invoice details by invoice ──────────────────────────────────────
   const groupedInvoices = useMemo(() => {
     const groups = {};
 
-    filteredInvoiceDetails.forEach(detail => {
+    invoiceDetails.forEach(detail => {
       const invoiceId = detail.invoiceId;
       if (!groups[invoiceId]) {
         groups[invoiceId] = {
@@ -179,27 +152,17 @@ const LabInvoiceList = () => {
       groups[invoiceId].totalNetAmount += detail.netAmount  || 0;
     });
 
-    return Object.values(groups).sort((a, b) => {
-      const dateA = new Date(a.dateCreated);
-      const dateB = new Date(b.dateCreated);
-      return dateB - dateA;
-    });
-  }, [filteredInvoiceDetails]);
-
-  // ── Paginated slice ────────────────────────────────────────────────────────
-  const paginatedInvoices = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return groupedInvoices.slice(start, start + pageSize);
-  }, [groupedInvoices, page, pageSize]);
+    return Object.values(groups);
+  }, [invoiceDetails]);
 
   // ── Summary statistics ─────────────────────────────────────────────────────
   const summaryStats = useMemo(() => {
-    const uniqueInvoices  = new Set(allInvoiceDetails.map(d => d.invoiceId)).size;
-    const totalRevenue    = allInvoiceDetails.reduce((sum, d) => sum + (d.netAmount || 0), 0);
-    const totalTests      = allInvoiceDetails.length;
+    const uniqueInvoices  = new Set(invoiceDetails.map(d => d.invoiceId)).size;
+    const totalRevenue    = invoiceDetails.reduce((sum, d) => sum + (d.netAmount || 0), 0);
+    const totalTests      = invoiceDetails.length;
     const avgInvoiceValue = uniqueInvoices > 0 ? totalRevenue / uniqueInvoices : 0;
     return { uniqueInvoices, totalRevenue, totalTests, avgInvoiceValue };
-  }, [allInvoiceDetails]);
+  }, [invoiceDetails]);
 
   // ── Filter handlers ────────────────────────────────────────────────────────
   const handleFilterChange = (e) => {
@@ -223,12 +186,6 @@ const LabInvoiceList = () => {
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') handleSearch();
-  };
-
-  const handlePageChange = (newPage) => {
-    if (newPage < 1) return;
-    triggerCooldown(`page-${newPage}`);
-    setPage(newPage);
   };
 
   const handleViewInvoiceDetails = (invoice) => {
@@ -278,8 +235,8 @@ const LabInvoiceList = () => {
   }
 
   // Pagination display values
-  const startRecord = paginatedInvoices.length === 0 ? 0 : (page - 1) * pageSize + 1;
-  const endRecord   = (page - 1) * pageSize + paginatedInvoices.length;
+  const startRecord = invoiceDetails.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const endRecord   = startRecord + invoiceDetails.length - 1;
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -393,16 +350,16 @@ const LabInvoiceList = () => {
               </tr>
             </thead>
             <tbody>
-              {paginatedInvoices.length === 0 ? (
+              {groupedInvoices.length === 0 ? (
                 <tr>
                   <td colSpan={8} className={styles.noData}>
-                    {Object.values(appliedFilters).some(v => v && v !== 'patientName')
+                    {hasActiveFilters
                       ? 'No invoices found matching your search.'
                       : 'No lab invoices found.'}
                   </td>
                 </tr>
               ) : (
-                paginatedInvoices.map((invoice) => (
+                groupedInvoices.map((invoice) => (
                   <tr key={invoice.invoiceId} className={styles.tableRow}>
                     <td>
                       <div>
@@ -482,7 +439,7 @@ const LabInvoiceList = () => {
         {/* ── Pagination Bar ── */}
         <div className={styles.paginationBar}>
           <div className={styles.paginationInfo}>
-            {paginatedInvoices.length > 0
+            {invoiceDetails.length > 0
               ? `Showing ${startRecord}–${endRecord} records`
               : 'No records'}
           </div>
@@ -513,7 +470,7 @@ const LabInvoiceList = () => {
             <button
               className={styles.pageBtn}
               onClick={() => handlePageChange(page + 1)}
-              disabled={paginatedInvoices.length < pageSize || !!btnCooldown[`page-${page + 1}`]}
+              disabled={!hasNext || !!btnCooldown[`page-${page + 1}`]}
               title="Next page"
             >
               ›
@@ -521,7 +478,7 @@ const LabInvoiceList = () => {
           </div>
 
           <div className={styles.pageSizeInfo}>
-            Page Size: <strong>{pageSize}</strong>
+            Page Size: <strong>{PAGE_SIZE}</strong>
           </div>
         </div>
 

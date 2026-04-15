@@ -238,7 +238,7 @@ const LoginPage = () => {
     } catch (err) {
       console.error("Login failed:", err);
       setIsResetSuccess(false);
-      setPopupMessage(err.message || "Login failed. Please try again.");
+      setPopupMessage("Username or password is incorrect. Please try again!");
       setShowPopup(true);
       generateCaptcha("login");
       setError(err.message || "Login failed");

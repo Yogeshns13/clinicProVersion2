@@ -38,6 +38,21 @@ const nameRegex = /^[A-Za-z\s.\-']+$/;
 // ── Backend: mobileRegex = /^[6-9]\d{9}$/
 const mobileRegex = /^[6-9]\d{9}$/;
 
+// ── Calculate age from date of birth ─────────────────────────────────────────
+const calculateAgeFromDOB = (dob) => {
+  if (!dob) return '';
+  const today = new Date();
+  const birthDate = new Date(dob);
+  if (isNaN(birthDate.getTime())) return '';
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  if (age < 0 || age > 150) return '';
+  return String(age);
+};
+
 // ── Validation messages match backend patientValidator word-for-word ──────────
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
@@ -74,17 +89,6 @@ const getLiveValidationMessage = (fieldName, value) => {
     case 'altMobile':
       if (value && value.trim()) {
         if (!mobileRegex.test(value.trim())) return 'Invalid alternate mobile';
-      }
-      return '';
-
-    case 'birthDate':
-      if (value) {
-        const d = new Date(value);
-        if (isNaN(d.getTime())) return 'Invalid BirthDate';
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        d.setHours(0, 0, 0, 0);
-        if (d > today) return 'Invalid BirthDate';
       }
       return '';
 
@@ -143,27 +147,10 @@ const filterInput = (fieldName, value) => {
   }
 };
 
-const getTodayDate = () => {
-  const today = new Date();
-  return today.toISOString().split('T')[0];
-};
-
-const calculateAge = (birthDateString) => {
-  if (!birthDateString) return '';
-  const birthDate = new Date(birthDateString);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return age >= 0 ? age : '';
-};
-
 // ── Fields validated on submit ────────────────────────────────────────────────
 const VALIDATED_FIELDS = [
   'firstName', 'lastName', 'mobile', 'altMobile',
-  'gender', 'birthDate', 'age',
+  'gender', 'age',
   'email', 'address', 'emergencyContactNo',
   'allergies', 'currentMedications',
 ];
@@ -177,7 +164,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
     firstName: '',
     lastName: '',
     gender: 0,
-    birthDate: '',
+    dob: '',
     age: '',
     bloodGroup: 0,
     maritalStatus: 0,
@@ -186,12 +173,12 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
     email: '',
     address: '',
     emergencyContactNo: '',
-    allergies: 'No Allergies',
-    existingMedicalConditions: 'Not reported',
-    pastSurgeries: 'Nothing',
-    currentMedications: 'NA',
+    allergies: '',
+    existingMedicalConditions: '',
+    pastSurgeries: '',
+    currentMedications: '',
     familyMedicalHistory: '',
-    immunizationRecords: 'Not Available',
+    immunizationRecords: '',
     familyPatientId: 0,
   });
 
@@ -241,7 +228,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
       firstName: '',
       lastName: '',
       gender: 0,
-      birthDate: '',
+      dob: '',
       age: '',
       bloodGroup: 0,
       maritalStatus: 0,
@@ -250,12 +237,12 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
       email: '',
       address: '',
       emergencyContactNo: '',
-      allergies: 'No Allergies',
-      existingMedicalConditions: 'Not reported',
-      pastSurgeries: 'Nothing',
-      currentMedications: 'NA',
+      allergies: '',
+      existingMedicalConditions: '',
+      pastSurgeries: '',
+      currentMedications: '',
       familyMedicalHistory: '',
-      immunizationRecords: 'Not Available',
+      immunizationRecords: '',
       familyPatientId: 0,
     });
     setValidationMessages({});
@@ -294,7 +281,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
       setSearchResults([]);
       setSearchError('');
       setSelectedFamilyPatient(null);
-      setFormData((prev) => ({ ...prev, familyPatientId: 0 }));
+      setFormData((prev) => ({ ...prev, familyPatientId: 0, mobile: '' }));
     }
   };
 
@@ -344,9 +331,16 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
 
   const handleSelectFamilyPatient = (patient) => {
     setSelectedFamilyPatient(patient);
+    const patientMobile = patient.mobile || patient.Mobile || patient.mobileNo || patient.mobileNumber || '';
     setFormData((prev) => ({
       ...prev,
       familyPatientId: patient.patientId || patient.patientID || patient.id,
+      mobile: patientMobile,
+    }));
+    // Clear any existing mobile validation message since it's prefilled
+    setValidationMessages((prev) => ({
+      ...prev,
+      mobile: getLiveValidationMessage('mobile', patientMobile),
     }));
   };
 
@@ -355,21 +349,33 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
     return found ? found.label : '-';
   };
 
+  // ── Handle DOB change: auto-calculate and prefill age ────────────────────
+  const handleDobChange = (e) => {
+    const dob = e.target.value;
+    const calculatedAge = calculateAgeFromDOB(dob);
+    setFormData((prev) => ({
+      ...prev,
+      dob,
+      age: calculatedAge,
+    }));
+    if (calculatedAge !== '') {
+      setValidationMessages((prev) => ({
+        ...prev,
+        age: getLiveValidationMessage('age', calculatedAge),
+      }));
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     let filteredValue = filterInput(name, value);
 
-    if (name === 'birthDate') {
-      const calculatedAge = calculateAge(value);
-      setFormData((prev) => ({
-        ...prev,
-        birthDate: value,
-        age: calculatedAge !== '' ? calculatedAge : '',
-      }));
+    // If age is manually edited, clear dob
+    if (name === 'age') {
+      setFormData((prev) => ({ ...prev, age: filteredValue, dob: '' }));
       setValidationMessages((prev) => ({
         ...prev,
-        [name]: getLiveValidationMessage(name, value),
-        age: calculatedAge === '' ? '' : getLiveValidationMessage('age', String(calculatedAge)),
+        age: getLiveValidationMessage('age', filteredValue),
       }));
       return;
     }
@@ -424,7 +430,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         gender: Number(formData.gender),
-        birthDate: formData.birthDate,
+        birthDate: formData.dob || '',
         age: Number(formData.age || 0),
         bloodGroup: Number(formData.bloodGroup),
         photoFileId: 0,
@@ -511,9 +517,8 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                   </div>
 
                   <div className={styles.addFormGroup}>
-                    <label>Last Name <span className={styles.required}>*</span></label>
+                    <label>Last Name</label>
                     <input
-                      required
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleInputChange}
@@ -543,18 +548,14 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                   </div>
 
                   <div className={styles.addFormGroup}>
-                    <label>Birth Date <span className={styles.required}>*</span></label>
+                    <label>Date of Birth</label>
                     <input
-                      required
                       type="date"
-                      name="birthDate"
-                      value={formData.birthDate}
-                      onChange={handleInputChange}
-                      max={getTodayDate()}
+                      name="dob"
+                      value={formData.dob}
+                      onChange={handleDobChange}
+                      max={new Date().toISOString().split('T')[0]}
                     />
-                    {validationMessages.birthDate && (
-                      <span className={styles.validationMsg}>{validationMessages.birthDate}</span>
-                    )}
                   </div>
 
                   <div className={styles.addFormGroup}>
@@ -566,8 +567,7 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                       value={formData.age}
                       onChange={handleInputChange}
                       min="0"
-                      placeholder="Enter age"
-                      readOnly={!!formData.birthDate}
+                      placeholder={formData.dob ? 'Auto-calculated from DOB' : 'Enter age'}
                     />
                     {validationMessages.age && (
                       <span className={styles.validationMsg}>{validationMessages.age}</span>
@@ -575,13 +575,14 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                   </div>
 
                   <div className={styles.addFormGroup}>
-                    <label>Blood Group</label>
+                    <label>Blood Group <span className={styles.required}>*</span></label>
                     <select
+                      required
                       name="bloodGroup"
                       value={formData.bloodGroup}
                       onChange={handleInputChange}
                     >
-                      <option value="0">Select Blood Group</option>
+                      <option value="">Select Blood Group</option>
                       {BLOOD_GROUP_OPTIONS.map((bg) => (
                         <option key={bg.id} value={bg.id}>{bg.label}</option>
                       ))}
@@ -589,101 +590,18 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                   </div>
 
                   <div className={styles.addFormGroup}>
-                    <label>Marital Status</label>
+                    <label>Marital Status <span className={styles.required}>*</span></label>
                     <select
+                      required
                       name="maritalStatus"
                       value={formData.maritalStatus}
                       onChange={handleInputChange}
                     >
-                      <option value="0">Select Status</option>
+                      <option value="">Select Status</option>
                       {MARITAL_STATUS_OPTIONS.map((ms) => (
                         <option key={ms.id} value={ms.id}>{ms.label}</option>
                       ))}
                     </select>
-                  </div>
-
-                </div>
-              </div>
-
-              {/* Contact Information */}
-              <div className={styles.addSection}>
-                <div className={styles.addSectionHeader}>
-                  <h3>Contact Information</h3>
-                </div>
-                <div className={styles.addFormGrid}>
-
-                  <div className={styles.addFormGroup}>
-                    <label>Mobile <span className={styles.required}>*</span></label>
-                    <input
-                      required
-                      name="mobile"
-                      value={formData.mobile}
-                      onChange={handleInputChange}
-                      placeholder="Enter mobile number"
-                      maxLength="10"
-                    />
-                    {validationMessages.mobile && (
-                      <span className={styles.validationMsg}>{validationMessages.mobile}</span>
-                    )}
-                  </div>
-
-                  <div className={styles.addFormGroup}>
-                    <label>Alternate Mobile <span className={styles.required}>*</span></label>
-                    <input
-                      required
-                      name="altMobile"
-                      value={formData.altMobile}
-                      onChange={handleInputChange}
-                      placeholder="Enter alternate mobile"
-                      maxLength="10"
-                    />
-                    {validationMessages.altMobile && (
-                      <span className={styles.validationMsg}>{validationMessages.altMobile}</span>
-                    )}
-                  </div>
-
-                  <div className={styles.addFormGroup}>
-                    <label>Email <span className={styles.required}>*</span></label>
-                    <input
-                      required
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="Enter email address"
-                    />
-                    {validationMessages.email && (
-                      <span className={styles.validationMsg}>{validationMessages.email}</span>
-                    )}
-                  </div>
-
-                  <div className={styles.addFormGroup}>
-                    <label>Emergency Contact <span className={styles.required}>*</span></label>
-                    <input
-                      required
-                      name="emergencyContactNo"
-                      value={formData.emergencyContactNo}
-                      onChange={handleInputChange}
-                      placeholder="Enter emergency contact"
-                      maxLength="10"
-                    />
-                    {validationMessages.emergencyContactNo && (
-                      <span className={styles.validationMsg}>{validationMessages.emergencyContactNo}</span>
-                    )}
-                  </div>
-
-                  <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
-                    <label>Address</label>
-                    <textarea
-                      name="address"
-                      rows={3}
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      placeholder="Enter full address"
-                    />
-                    {validationMessages.address && (
-                      <span className={styles.validationMsg}>{validationMessages.address}</span>
-                    )}
                   </div>
 
                 </div>
@@ -769,7 +687,8 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                                       onClick={() => {
                                         if (isSelected) {
                                           setSelectedFamilyPatient(null);
-                                          setFormData((prev) => ({ ...prev, familyPatientId: 0 }));
+                                          setFormData((prev) => ({ ...prev, familyPatientId: 0, mobile: '' }));
+                                          setValidationMessages((prev) => ({ ...prev, mobile: '' }));
                                         }
                                       }}
                                       className={styles.familyRadio}
@@ -795,6 +714,89 @@ const AddPatient = ({ isOpen, onClose, onSuccess }) => {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Contact Information */}
+              <div className={styles.addSection}>
+                <div className={styles.addSectionHeader}>
+                  <h3>Contact Information</h3>
+                </div>
+                <div className={styles.addFormGrid}>
+
+                  <div className={styles.addFormGroup}>
+                    <label>Mobile <span className={styles.required}>*</span></label>
+                    <input
+                      required
+                      name="mobile"
+                      value={formData.mobile}
+                      onChange={handleInputChange}
+                      placeholder="Enter mobile number"
+                      maxLength="10"
+                      readOnly={hasFamilyPatient && !!selectedFamilyPatient}
+                      className={hasFamilyPatient && !!selectedFamilyPatient ? styles.readOnlyInput : ''}
+                    />
+                    {validationMessages.mobile && (
+                      <span className={styles.validationMsg}>{validationMessages.mobile}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.addFormGroup}>
+                    <label>Alternate Mobile</label>
+                    <input
+                      name="altMobile"
+                      value={formData.altMobile}
+                      onChange={handleInputChange}
+                      placeholder="Enter alternate mobile"
+                      maxLength="10"
+                    />
+                    {validationMessages.altMobile && (
+                      <span className={styles.validationMsg}>{validationMessages.altMobile}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.addFormGroup}>
+                    <label>Email</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="Enter email address"
+                    />
+                    {validationMessages.email && (
+                      <span className={styles.validationMsg}>{validationMessages.email}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.addFormGroup}>
+                    <label>Emergency Contact</label>
+                    <input
+                      name="emergencyContactNo"
+                      value={formData.emergencyContactNo}
+                      onChange={handleInputChange}
+                      placeholder="Enter emergency contact"
+                      maxLength="10"
+                    />
+                    {validationMessages.emergencyContactNo && (
+                      <span className={styles.validationMsg}>{validationMessages.emergencyContactNo}</span>
+                    )}
+                  </div>
+
+                  <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
+                    <label>Address</label>
+                    <textarea
+                      name="address"
+                      rows={3}
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      placeholder="Enter full address"
+                    />
+                    {validationMessages.address && (
+                      <span className={styles.validationMsg}>{validationMessages.address}</span>
+                    )}
+                  </div>
+
+                </div>
               </div>
 
               {/* ── Medical Information ── */}

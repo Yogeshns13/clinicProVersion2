@@ -409,7 +409,7 @@ const MedicineMasterList = () => {
                     <td>
                       <div>
                         <div className={styles.name}>
-                          {medicine.stockQuantity || 0} {medicine.unitDesc || ''}
+                          {medicine.stockQuantity || 0}
                         </div>
                         {medicine.isLowStock ? (
                           <span className={styles.lowStockBadge}>

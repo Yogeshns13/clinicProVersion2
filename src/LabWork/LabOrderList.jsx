@@ -1,18 +1,21 @@
 // src/components/LabWork/LabOrderList.jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiX, FiCalendar, FiFilter, FiEye, FiCheckCircle, FiClock, FiAlertCircle, FiFileText, FiEdit, FiPrinter } from 'react-icons/fi';
+import { FiSearch, FiX, FiCalendar, FiFilter, FiEye, FiCheckCircle, FiClock, FiAlertCircle, FiFileText, FiEdit, FiPrinter, FiUpload } from 'react-icons/fi';
 import { 
   getLabTestOrderList, 
   updateLabTestOrder, 
   createWorkItemsForOrder,
   generateLabInvoice,
   addLabTestReport,
-  getLabTestReportList,
   updateLabTestReport,
-  getLabTestOrderItemList
+  getLabTestOrderItemList,
+  getLabTestReportList
 } from '../Api/ApiLabTests.js';
 import { getEmployeeList } from '../Api/Api.js';
+import { uploadFile } from '../Api/Api.js';
+import { getFile } from '../Api/Api.js';
+import { getExternalLabList } from '../Api/ApiLabTests.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import LabOrderPrintModal from './LabOrderPrintModal.jsx';
@@ -58,7 +61,7 @@ const LabOrderList = () => {
   const [orders, setOrders] = useState([]);
   const [allOrders, setAllOrders] = useState([]);
   const [doctors, setDoctors] = useState([]);
-  const [orderReports, setOrderReports] = useState({});
+  const [externalLabs, setExternalLabs] = useState([]);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -111,6 +114,29 @@ const LabOrderList = () => {
   const [reportMessage, setReportMessage] = useState({ type: '', text: '' });
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [currentReportId, setCurrentReportId] = useState(null);
+  // ─── true when Add/Update Report is opened from a status-6 (External) order ─────
+  const [isExternalFlow, setIsExternalFlow] = useState(false);
+
+  // ─── External file upload states ──────────────────────────────────────────
+  const [externalFile, setExternalFile] = useState(null);
+  const [externalFileUrl, setExternalFileUrl] = useState(null);
+  const [externalFileUploaded, setExternalFileUploaded] = useState(false);
+  const [externalFileUploadStatus, setExternalFileUploadStatus] = useState('');
+  const [isExternalFileUploading, setIsExternalFileUploading] = useState(false);
+  const [externalFileId, setExternalFileId] = useState(0);
+
+  // ─── Existing file preview states (for Update Report with existing fileId) ──
+  const [existingFileUrl, setExistingFileUrl] = useState(null);
+  const [existingFileIsPdf, setExistingFileIsPdf] = useState(false);
+  const [loadingExistingFile, setLoadingExistingFile] = useState(false);
+  // ─── Existing fileId from report (used in submit to preserve if no new file) ─
+  const [existingReportFileId, setExistingReportFileId] = useState(0);
+
+  // ─── Lightbox for viewing existing file inside report modal ───────────────
+  const [reportFileLightbox, setReportFileLightbox] = useState({ open: false, url: null, isPdf: false });
+
+  // ─── External Lab selection state (for External flow report) ──────────────
+  const [selectedExternalLabId, setSelectedExternalLabId] = useState(0);
   
   // Report Form States
   const [reportForm, setReportForm] = useState({
@@ -175,20 +201,20 @@ const LabOrderList = () => {
     }
   };
 
-  // Fetch Lab Test Reports
-  const fetchLabTestReports = async () => {
+  // Fetch External Labs List
+  const fetchExternalLabs = async () => {
     try {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-      const options = { Page: 1, PageSize: 100, BranchID: branchId };
-      const reports = await getLabTestReportList(clinicId, options);
-      const reportsMap = {};
-      reports.forEach(report => {
-        if (report.orderId) reportsMap[report.orderId] = report.id;
+      const labs = await getExternalLabList(clinicId, {
+        BranchID: branchId,
+        Page: 1,
+        PageSize: 50,
+        Status: 0
       });
-      setOrderReports(reportsMap);
+      setExternalLabs(labs);
     } catch (err) {
-      console.error('Failed to fetch lab test reports:', err);
+      console.error('Failed to fetch external labs:', err);
     }
   };
 
@@ -204,7 +230,6 @@ const LabOrderList = () => {
       const sortedData = data.sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated));
       setOrders(sortedData);
       setAllOrders(sortedData);
-      await fetchLabTestReports();
     } catch (err) {
       console.error('fetchOrders error:', err);
       setError(
@@ -220,6 +245,7 @@ const LabOrderList = () => {
   useEffect(() => {
     fetchOrders(page);
     fetchDoctors();
+    fetchExternalLabs();
   }, []);
 
   // Computed filtered orders
@@ -328,40 +354,114 @@ const LabOrderList = () => {
   };
 
   const handleUpdateOrder      = (order) => { setSelectedOrder(order); setIsUpdateOrderOpen(true); };
-  const handleMakeWorkClick    = (order) => { setSelectedOrder(order); setIsConfirmWorkOpen(true); };
   const handleMakeInvoiceClick = (order) => { setSelectedOrder(order); setIsMakeInvoiceOpen(true); };
 
-  const handleConfirmMakeWork = async () => {
-    if (!selectedOrder) return;
-    cooldown.trigger('makeWork');
+  // ─── Reset external file upload states ────────────────────────────────────
+  const resetExternalFileStates = () => {
+    setExternalFile(null);
+    setExternalFileUrl(null);
+    setExternalFileUploaded(false);
+    setExternalFileUploadStatus('');
+    setIsExternalFileUploading(false);
+    setExternalFileId(0);
+  };
+
+  // ─── Reset existing file preview states ───────────────────────────────────
+  const resetExistingFileStates = () => {
+    setExistingFileUrl(null);
+    setExistingFileIsPdf(false);
+    setLoadingExistingFile(false);
+    setExistingReportFileId(0);
+  };
+
+  // ─── Reset external lab selection ─────────────────────────────────────────
+  const resetExternalLabState = () => {
+    setSelectedExternalLabId(0);
+  };
+
+  // ─── Handle external file selection ───────────────────────────────────────
+  const handleExternalFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) { setExternalFileUploadStatus('No file selected.'); return; }
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+      setExternalFileUploadStatus('Please upload JPG, JPEG, PNG, or PDF.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setExternalFileUploadStatus('File size exceeds 5MB limit.');
+      return;
+    }
+    setExternalFile(file);
+    setExternalFileUrl(file.type.startsWith('image/') ? URL.createObjectURL(file) : null);
+    setExternalFileUploaded(false);
+    setExternalFileId(0);
+    setExternalFileUploadStatus('File selected. Click "Upload File" to submit.');
+  };
+
+  // ─── Handle external file upload ──────────────────────────────────────────
+  const handleExternalFileUpload = async () => {
+    if (!externalFile) { setExternalFileUploadStatus('Please select a file first.'); return; }
+    setIsExternalFileUploading(true);
+    setExternalFileUploadStatus('Uploading file...');
     try {
-      setLoading(true);
-      const clinicId = await getStoredClinicId();
-      await createWorkItemsForOrder(selectedOrder.id, clinicId);
-      setIsConfirmWorkOpen(false);
-      setSelectedOrder(null);
-      await fetchOrders(page);
-      showPopupMsg('Work items created successfully! Navigate to Work Queue to process them.', 'success');
+      const res = await uploadFile(null, externalFile, null);
+      setExternalFileId(res.fileId);
+      setExternalFileUploaded(true);
+      setExternalFileUploadStatus('File uploaded successfully!');
     } catch (err) {
-      console.error('Error creating work items:', err);
-      showPopupMsg(err.message || 'Failed to create work items', 'error');
+      setExternalFileUploaded(false);
+      setExternalFileId(0);
+      setExternalFileUploadStatus(`Failed: ${err.message}`);
     } finally {
-      setLoading(false);
+      setIsExternalFileUploading(false);
     }
   };
 
-  const handleGenerateInvoice = async (invoiceData) => {
-    cooldown.trigger('generateInvoice');
+  // ─── Handle external file removal ─────────────────────────────────────────
+  const handleExternalFileRemove = () => {
+    resetExternalFileStates();
+  };
+
+  // ─── Handle "View Photo" click: lazily fetch the existing file ────────────
+  const handleViewExistingFile = async () => {
+    // If already loaded, just open the lightbox
+    if (existingFileUrl) {
+      setReportFileLightbox({ open: true, url: existingFileUrl, isPdf: existingFileIsPdf });
+      return;
+    }
+    // Otherwise fetch now
+    if (existingReportFileId <= 0) return;
+    setLoadingExistingFile(true);
+    try {
+      const clinicId = await getStoredClinicId();
+      const fileResult = await getFile(clinicId, existingReportFileId);
+      const isPdf = fileResult.blob?.type === 'application/pdf';
+      setExistingFileUrl(fileResult.url);
+      setExistingFileIsPdf(isPdf);
+      setReportFileLightbox({ open: true, url: fileResult.url, isPdf });
+    } catch (fileErr) {
+      console.error('Failed to fetch existing report file:', fileErr);
+      showPopupMsg('Failed to load the report file.', 'error');
+    } finally {
+      setLoadingExistingFile(false);
+    }
+  };
+
+  // ─── Combined: Make Work first, then Generate Invoice ────────────────────────
+  const handleGenerateInvoiceAndMakeWork = async (invoiceData) => {
+    cooldown.trigger('generateInvoiceAndMakeWork');
     try {
       setLoading(true);
+      await createWorkItemsForOrder(invoiceData.orderId, invoiceData.clinicId);
       await generateLabInvoice(invoiceData);
       setIsMakeInvoiceOpen(false);
       setSelectedOrder(null);
       await fetchOrders(page);
-      showPopupMsg('Invoice generated successfully!', 'success');
+      showPopupMsg('Work items created and invoice generated successfully!', 'success');
     } catch (err) {
-      console.error('Error generating invoice:', err);
-      showPopupMsg(err.message || 'Failed to generate invoice', 'error');
+      console.error('Error in Make Work & Generate Invoice:', err);
+      showPopupMsg(err.message || 'Failed to create work items or generate invoice', 'error');
     } finally {
       setLoading(false);
     }
@@ -384,19 +484,30 @@ const LabOrderList = () => {
     }
   };
 
+  // ─── Add Report: uses allOrders state — NO extra API call ─────────────────
   const handleAddReportClick = async (order) => {
     try {
       setSubmittingReport(true);
       setIsUpdateMode(false);
       setCurrentReportId(null);
-      const clinicId = await getStoredClinicId();
-      const branchId = await getStoredBranchId();
-      const orderList = await getLabTestOrderList(clinicId, { OrderID: order.id, BranchID: branchId, Page: 1, PageSize: 1 });
-      if (!orderList || orderList.length === 0) throw new Error('Order details not found');
-      setOrderDetails(orderList[0]);
+      resetExternalFileStates();
+      resetExistingFileStates();
+      resetExternalLabState();
+      setIsExternalFlow(order.status === 6);
+
+      // ─── Reuse already-loaded order from allOrders — no API call needed ──
+      const fetchedOrder = allOrders.find(o => o.id === order.id) || order;
+
+      setOrderDetails(fetchedOrder);
       setSelectedOrderForReport(order);
       const now = new Date();
-      setReportForm({ verifiedBy: 0, verifiedDateTime: now.toISOString().slice(0, 16), remarks: '', status: 1 });
+      setReportForm({ verifiedBy: 0, verifiedDateTime: now.toISOString().slice(0, 16), remarks: '', fileId: 0, status: 1 });
+
+      // ─── Pre-fill externalLabId from the order for External flow ──────────
+      if (order.status === 6 && fetchedOrder.externalLabId && fetchedOrder.externalLabId !== 0) {
+        setSelectedExternalLabId(fetchedOrder.externalLabId);
+      }
+
       setShowReportModal(true);
     } catch (err) {
       console.error('Error processing add report:', err);
@@ -407,30 +518,64 @@ const LabOrderList = () => {
     }
   };
 
+  // ─── Update Report: uses allOrders state — NO extra getLabTestOrderList call ─
   const handleUpdateReportClick = async (order) => {
     try {
       setSubmittingReport(true);
-      const clinicId = await getStoredClinicId();
-      const branchId = await getStoredBranchId();
-      const reports = await getLabTestReportList(clinicId, { OrderID: order.id, BranchID: branchId, Page: 1, PageSize: 1 });
-      if (!reports || reports.length === 0) throw new Error('Report not found for this order');
-      const existingReport = reports[0];
-      const orderList = await getLabTestOrderList(clinicId, { OrderID: order.id, BranchID: branchId, Page: 1, PageSize: 1 });
-      if (!orderList || orderList.length === 0) throw new Error('Order details not found');
-      setOrderDetails(orderList[0]);
+      resetExternalFileStates();
+      resetExistingFileStates();
+      resetExternalLabState();
+      setIsExternalFlow(order.status === 6);
+
+      // ─── Reuse already-loaded order from allOrders — no API call needed ──
+      const fetchedOrder = allOrders.find(o => o.id === order.id) || order;
+
+      if (!fetchedOrder.reportId || fetchedOrder.reportId <= 0) throw new Error('Report not found for this order');
+
+      setOrderDetails(fetchedOrder);
       setIsUpdateMode(true);
-      setCurrentReportId(existingReport.id);
+      setCurrentReportId(fetchedOrder.reportId);
       setSelectedOrderForReport(order);
-      const formattedDateTime = existingReport.verifiedDateTime
-        ? new Date(existingReport.verifiedDateTime).toISOString().slice(0, 16)
-        : new Date().toISOString().slice(0, 16);
+
+      // ─── Fetch report details only for External flow (to get fileId + externalLabId) ──
+      // getLabTestReportList is a different endpoint — still needed here
+      if (order.status === 6) {
+        try {
+          const clinicId = await getStoredClinicId();
+          const branchId = await getStoredBranchId();
+          const reportList = await getLabTestReportList(clinicId, {
+            ReportID: fetchedOrder.reportId,
+            BranchID: branchId,
+            Page: 1,
+            PageSize: 1
+          });
+
+          if (reportList && reportList.length > 0) {
+            const fetchedReport = reportList[0];
+
+            // ─── Pre-fill externalLabId from the report ──────────────────────
+            if (fetchedReport.externalLabId && fetchedReport.externalLabId !== 0) {
+              setSelectedExternalLabId(fetchedReport.externalLabId);
+            }
+
+            // ─── Just store the fileId; getFile will be called on "View Photo" click ──
+            if (fetchedReport.fileId && fetchedReport.fileId > 0) {
+              setExistingReportFileId(fetchedReport.fileId);
+            }
+          }
+        } catch (reportErr) {
+          console.error('Failed to fetch report details:', reportErr);
+        }
+      }
+
       setReportForm({
-        verifiedBy: existingReport.verifiedBy || 0,
-        verifiedDateTime: formattedDateTime,
-        remarks: existingReport.remarks || '',
-        fileId: existingReport.fileId|| 0,
-        status: existingReport.status ?? 1
+        verifiedBy: 0,
+        verifiedDateTime: new Date().toISOString().slice(0, 16),
+        remarks: '',
+        fileId: fetchedOrder.fileId || 0,
+        status: 1
       });
+
       setShowReportModal(true);
     } catch (err) {
       console.error('Error loading report for update:', err);
@@ -441,16 +586,46 @@ const LabOrderList = () => {
     }
   };
 
-  // ── Report form validation: required fields filled? ──
+  // ── External Report form validation ──
+  // In update mode: if existing file present and no new file selected → valid (keep existing)
+  // In add mode: new file must be uploaded + external lab selected
+  const isExternalReportFormValid = isUpdateMode
+    ? (
+        selectedExternalLabId !== 0 &&
+        (
+          (existingReportFileId > 0 && !externalFile) || // keeping existing file
+          externalFileUploaded                           // or new file uploaded
+        )
+      )
+    : (externalFileUploaded && selectedExternalLabId !== 0);
+
+  // ── Normal report form validation ──
   const isReportFormValid = reportForm.verifiedBy !== 0 && reportForm.verifiedDateTime !== '';
 
   const handleSubmitReport = async (e) => {
     e.preventDefault();
 
-    // Guard: show message if required fields missing
-    if (!isReportFormValid) {
-      showPopupMsg('Please fill all required fields: Verified By and Verified Date & Time.', 'warning');
-      return;
+    if (isExternalFlow) {
+      if (isUpdateMode) {
+        if (existingReportFileId <= 0 && !externalFileUploaded) {
+          showPopupMsg('Please upload a report file before submitting.', 'warning');
+          return;
+        }
+      } else {
+        if (!externalFileUploaded) {
+          showPopupMsg('Please upload a report file before submitting.', 'warning');
+          return;
+        }
+      }
+      if (selectedExternalLabId === 0) {
+        showPopupMsg('Please select an External Lab before submitting.', 'warning');
+        return;
+      }
+    } else {
+      if (!isReportFormValid) {
+        showPopupMsg('Please fill all required fields: Verified By and Verified Date & Time.', 'warning');
+        return;
+      }
     }
 
     cooldown.trigger('submitReport');
@@ -464,48 +639,96 @@ const LabOrderList = () => {
         setOrderDetails(null);
         setIsUpdateMode(false);
         setCurrentReportId(null);
-        setReportForm({ verifiedBy: 0, verifiedDateTime: '', remarks: '', status: 1 });
+        setIsExternalFlow(false);
+        setReportForm({ verifiedBy: 0, verifiedDateTime: '', remarks: '', fileId: 0, status: 1 });
         setReportMessage({ type: '', text: '' });
+        resetExternalFileStates();
+        resetExistingFileStates();
+        resetExternalLabState();
         fetchOrders(page);
       };
 
       if (isUpdateMode) {
-        const result = await updateLabTestReport({
-          reportId: currentReportId,
-          clinicId: orderDetails.clinicId,
-          branchId: orderDetails.branchId,
-          fileId: reportForm.fileId || 0,
-          verifiedBy: reportForm.verifiedBy,
-          verifiedDateTime: reportForm.verifiedDateTime,
-          remarks: reportForm.remarks,
-          status: reportForm.status
-        });
-        if (result.success) {
-          showPopupMsg('Lab test report updated successfully!', 'success');
-          setTimeout(resetForm, 1500);
+        if (isExternalFlow) {
+          // Use newly uploaded fileId if available, else keep existing report fileId
+          const fileIdToUse = externalFileUploaded ? externalFileId : existingReportFileId;
+          const result = await updateLabTestReport({
+            reportId: currentReportId,
+            clinicId: orderDetails.clinicId,
+            branchId: orderDetails.branchId,
+            fileId: fileIdToUse,
+            externalLabId: selectedExternalLabId !== 0 ? selectedExternalLabId : 0,
+            verifiedBy: reportForm.verifiedBy || 0,
+            verifiedDateTime: reportForm.verifiedDateTime || new Date().toISOString().slice(0, 16),
+            remarks: reportForm.remarks,
+            status: reportForm.status
+          });
+          if (result.success) {
+            showPopupMsg('Lab test report updated successfully!', 'success');
+            setTimeout(resetForm, 1500);
+          }
+        } else {
+          const result = await updateLabTestReport({
+            reportId: currentReportId,
+            clinicId: orderDetails.clinicId,
+            branchId: orderDetails.branchId,
+            fileId: reportForm.fileId || 0,
+            verifiedBy: reportForm.verifiedBy,
+            verifiedDateTime: reportForm.verifiedDateTime,
+            remarks: reportForm.remarks,
+            status: reportForm.status
+          });
+          if (result.success) {
+            showPopupMsg('Lab test report updated successfully!', 'success');
+            setTimeout(resetForm, 1500);
+          }
         }
       } else {
-        const result = await addLabTestReport({
-          orderId: orderDetails.id,
-          consultationId: orderDetails.consultationId,
-          visitId: orderDetails.visitId,
-          patientId: orderDetails.patientId,
-          doctorId: orderDetails.doctorId,
-          clinicId: orderDetails.clinicId,
-          branchId: orderDetails.branchId,
-          fileId: orderDetails.fileId || 0,
-          verifiedBy: reportForm.verifiedBy,
-          verifiedDateTime: reportForm.verifiedDateTime,
-          remarks: reportForm.remarks
-        });
-        if (result.success) {
-          showPopupMsg('Lab test report added successfully!', 'success');
-          setTimeout(resetForm, 1500);
+        if (isExternalFlow) {
+          const result = await addLabTestReport({
+            orderId: orderDetails.id,
+            consultationId: orderDetails.consultationId,
+            visitId: orderDetails.visitId,
+            patientId: orderDetails.patientId,
+            doctorId: orderDetails.doctorId,
+            clinicId: orderDetails.clinicId,
+            branchId: orderDetails.branchId,
+            fileId: externalFileId,
+            externalLabId: selectedExternalLabId,
+            verifiedBy: 0,
+            verifiedDateTime: new Date().toISOString().slice(0, 16),
+            remarks: reportForm.remarks
+          });
+          if (result.success) {
+            showPopupMsg('Lab test report added successfully!', 'success');
+            setTimeout(resetForm, 1500);
+          }
+        } else {
+          const result = await addLabTestReport({
+            orderId: orderDetails.id,
+            consultationId: orderDetails.consultationId,
+            visitId: orderDetails.visitId,
+            patientId: orderDetails.patientId,
+            doctorId: orderDetails.doctorId,
+            clinicId: orderDetails.clinicId,
+            branchId: orderDetails.branchId,
+            fileId: orderDetails.fileId || 0,
+            verifiedBy: reportForm.verifiedBy,
+            verifiedDateTime: reportForm.verifiedDateTime,
+            remarks: reportForm.remarks
+          });
+          if (result.success) {
+            showPopupMsg('Lab test report added successfully!', 'success');
+            setTimeout(resetForm, 1500);
+          }
         }
       }
     } catch (err) {
       console.error('Error submitting report:', err);
-      showPopupMsg(err.message || `Failed to ${isUpdateMode ? 'update' : 'add'} lab test report`, 'error');
+      showPopupMsg(
+        err.message || `Failed to ${isUpdateMode ? 'update' : 'add'} lab test report`,
+        'error'
+      );
     } finally {
       setSubmittingReport(false);
     }
@@ -517,8 +740,12 @@ const LabOrderList = () => {
     setOrderDetails(null);
     setIsUpdateMode(false);
     setCurrentReportId(null);
+    setIsExternalFlow(false);
     setReportMessage({ type: '', text: '' });
-    setReportForm({ verifiedBy: 0, verifiedDateTime: '', remarks: '', status: 1 });
+    setReportForm({ verifiedBy: 0, verifiedDateTime: '', remarks: '', fileId: 0, status: 1 });
+    resetExternalFileStates();
+    resetExistingFileStates();
+    resetExternalLabState();
   };
 
   const formatDate = (dateStr) => {
@@ -540,6 +767,13 @@ const LabOrderList = () => {
     }
   };
 
+  // ─── Helper: get external lab name by ID ─────────────────────────────────
+  const getExternalLabName = (externalLabId) => {
+    if (!externalLabId || externalLabId === 0) return null;
+    const lab = externalLabs.find(l => l.externalLabId === externalLabId);
+    return lab ? lab.name : null;
+  };
+
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
@@ -558,7 +792,6 @@ const LabOrderList = () => {
       <ErrorHandler error={error} />
       <Header title="Lab Order Management" />
 
-      {/* MessagePopup — replaces old showPopup */}
       <MessagePopup
         visible={popup.visible}
         message={popup.message}
@@ -650,7 +883,8 @@ const LabOrderList = () => {
                 </tr>
               ) : (
                 filteredOrders.map((order) => {
-                  const hasReport = orderReports[order.id];
+                  const hasReport = order.reportId > 0;
+                  const suggestedLabName = getExternalLabName(order.externalLabId);
                   return (
                     <tr key={order.id} className={styles.tableRow}>
                       <td>
@@ -682,67 +916,105 @@ const LabOrderList = () => {
                       </td>
                       <td>
                         <div className={styles.actionsCell}>
+
+                          {/* View Button — always visible */}
                           <button
                             onClick={() => { cooldown.trigger(`view_${order.id}`); handleViewOrderDetails(order); }}
                             disabled={cooldown.isDisabled(`view_${order.id}`)}
-                            className={styles.viewBtn}
+                            className={styles.actionIconBtn}
                             title="View Details"
                           >
                             <FiEye size={16} />
                           </button>
+
+                          {/* Print Button — always visible */}
                           <button
                             onClick={() => { cooldown.trigger(`print_${order.id}`); handlePrintClick(order); }}
                             disabled={cooldown.isDisabled(`print_${order.id}`)}
-                            className={styles.printBtn}
+                            className={`${styles.actionIconBtn} ${styles.actionIconBtnPrint}`}
                             title="Print Order"
                           >
                             <FiPrinter size={16} />
                           </button>
-                          <div className={styles.actionDropdownWrapper}>
-                            <button className={styles.actionBtn}>Actions</button>
-                            <div className={styles.actionDropdown}>
-                              {order.status === 1 && (
-                                <button
-                                  onClick={() => { cooldown.trigger(`makeWork_${order.id}`); handleMakeWorkClick(order); }}
-                                  disabled={cooldown.isDisabled(`makeWork_${order.id}`)}
-                                  className={styles.dropdownItem}
-                                >
-                                  Make Work
-                                </button>
-                              )}
-                              {order.status === 2 && !hasReport && (
-                                <button
-                                  onClick={() => { cooldown.trigger(`addReport_${order.id}`); handleAddReportClick(order); }}
-                                  disabled={cooldown.isDisabled(`addReport_${order.id}`)}
-                                  className={styles.dropdownItem}
-                                >
-                                  <FiFileText size={14} /> Add Report
-                                </button>
-                              )}
-                              {order.status === 2 && hasReport && (
-                                <button
-                                  onClick={() => { cooldown.trigger(`updReport_${order.id}`); handleUpdateReportClick(order); }}
-                                  disabled={cooldown.isDisabled(`updReport_${order.id}`)}
-                                  className={styles.dropdownItem}
-                                >
-                                  <FiEdit size={14} /> Update Report
-                                </button>
-                              )}
-                              {order.status === 5 && (
-                                <button
-                                  onClick={() => { cooldown.trigger(`invoice_${order.id}`); handleMakeInvoiceClick(order); }}
-                                  disabled={cooldown.isDisabled(`invoice_${order.id}`)}
-                                  className={styles.dropdownItem}
-                                >
-                                  <FiFileText size={14} /> Make Invoice
-                                </button>
-                              )}
-                              {order.status === 4 && (
-                                <button className={`${styles.dropdownItem} ${styles.invoicedItem}`} disabled>
-                                  <FiCheckCircle size={14} /> Invoiced!
-                                </button>
-                              )}
-                            </div>
+
+                          {/* ── Status-based action button (uniform width slot) ── */}
+                          <div className={styles.actionSlot}>
+
+                            {order.status === 1 && (
+                              <button
+                                onClick={() => { cooldown.trigger(`invoice_${order.id}`); handleMakeInvoiceClick(order); }}
+                                disabled={cooldown.isDisabled(`invoice_${order.id}`)}
+                                className={`${styles.actionLabelBtn} ${styles.actionLabelBtnPending}`}
+                                title="Make Work"
+                              >
+                                <FiFileText size={14} /> Make Work
+                              </button>
+                            )}
+
+                            {order.status === 4 && (
+                              <button
+                                className={`${styles.actionLabelBtn} ${styles.actionLabelBtnInvoiced}`}
+                                disabled
+                                title="Work Processed"
+                              >
+                                <FiCheckCircle size={14} /> Work Proceed
+                              </button>
+                            )}
+
+                            {order.status === 5 && (
+                              <button
+                                className={`${styles.actionLabelBtn} ${styles.actionLabelBtnWork}`}
+                                disabled
+                                title="Work is in progress"
+                              >
+                                <FiClock size={14} /> Work in Progress
+                              </button>
+                            )}
+
+                            {order.status === 2 && !hasReport && (
+                              <button
+                                onClick={() => { cooldown.trigger(`addReport_${order.id}`); handleAddReportClick(order); }}
+                                disabled={cooldown.isDisabled(`addReport_${order.id}`)}
+                                className={`${styles.actionLabelBtn} ${styles.actionLabelBtnAdd}`}
+                                title="Add Report"
+                              >
+                                <FiFileText size={14} /> Add Report
+                              </button>
+                            )}
+
+                            {order.status === 2 && hasReport && (
+                              <button
+                                onClick={() => { cooldown.trigger(`updReport_${order.id}`); handleUpdateReportClick(order); }}
+                                disabled={cooldown.isDisabled(`updReport_${order.id}`)}
+                                className={`${styles.actionLabelBtn} ${styles.actionLabelBtnUpdate}`}
+                                title="Update Report"
+                              >
+                                <FiEdit size={14} /> Update Report
+                              </button>
+                            )}
+
+                            {order.status === 6 && !hasReport && (
+                              <button
+                                onClick={() => { cooldown.trigger(`addReport_${order.id}`); handleAddReportClick(order); }}
+                                disabled={cooldown.isDisabled(`addReport_${order.id}`)}
+                                className={`${styles.actionLabelBtn} ${styles.actionLabelBtnAdd}`}
+                                title="Add Report"
+                              >
+                                <FiFileText size={14} /> Add Report
+                              </button>
+                            )}
+
+                            {order.status === 6 && hasReport && (
+                              <button
+                                onClick={() => { cooldown.trigger(`updReport_${order.id}`); handleUpdateReportClick(order); }}
+                                disabled={cooldown.isDisabled(`updReport_${order.id}`)}
+                                className={`${styles.actionLabelBtn} ${styles.actionLabelBtnUpdate}`}
+                                title="Update Report"
+                              >
+                                <FiEdit size={14} /> Update Report
+                              </button>
+                            )}
+
                           </div>
                         </div>
                       </td>
@@ -783,6 +1055,7 @@ const LabOrderList = () => {
           orderItems={selectedOrderItems}
           loadingOrderItems={loadingOrderItems}
           statusOptions={statusOptions}
+          externalLabs={externalLabs}
           onClose={() => { setIsOrderDetailsOpen(false); setSelectedOrder(null); setSelectedOrderItems([]); }}
           onUpdate={() => { setIsOrderDetailsOpen(false); handleUpdateOrder(selectedOrder); }}
           cooldown={cooldown}
@@ -801,20 +1074,11 @@ const LabOrderList = () => {
         />
       )}
 
-      {isConfirmWorkOpen && selectedOrder && (
-        <ConfirmMakeWorkModal
-          order={selectedOrder}
-          onClose={() => { setIsConfirmWorkOpen(false); setSelectedOrder(null); }}
-          onConfirm={handleConfirmMakeWork}
-          cooldown={cooldown}
-        />
-      )}
-
       {isMakeInvoiceOpen && selectedOrder && (
         <MakeInvoiceModal
           order={selectedOrder}
           onClose={() => { setIsMakeInvoiceOpen(false); setSelectedOrder(null); }}
-          onSubmit={handleGenerateInvoice}
+          onSubmit={handleGenerateInvoiceAndMakeWork}
           cooldown={cooldown}
           showPopupMsg={showPopupMsg}
         />
@@ -825,7 +1089,9 @@ const LabOrderList = () => {
         <div className={styles.modalOverlay}>
           <div className={styles.reportModal}>
             <div className={styles.reportModalHeader}>
-              <h3>{isUpdateMode ? 'Update Lab Test Report' : 'Add Lab Test Report'}</h3>
+              <h3>
+                {isUpdateMode ? 'Update Lab Test Report' : 'Add Lab Test Report'}
+              </h3>
               <button onClick={handleCloseReportModal} className={styles.reportCloseBtn} disabled={submittingReport}>
                 <FiX size={24} />
               </button>
@@ -835,8 +1101,8 @@ const LabOrderList = () => {
                 {reportMessage.text && (
                   <div className={`${styles.reportMessage} ${styles[reportMessage.type]}`}>{reportMessage.text}</div>
                 )}
+
                 <div className={styles.orderInfoSection}>
-                  <h4>Order Information</h4>
                   <div className={styles.infoGrid}>
                     <div className={styles.infoItem}>
                       <span className={styles.infoLabel}>Patient:</span>
@@ -846,63 +1112,251 @@ const LabOrderList = () => {
                       <span className={styles.infoLabel}>Doctor:</span>
                       <span className={styles.infoValue}>{orderDetails?.doctorFullName}</span>
                     </div>
+                    {isExternalFlow && orderDetails?.externalLabId > 0 && (
+                      <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>Suggest Lab:</span>
+                        <span className={`${styles.infoValue} ${styles.suggestLabInfoValue}`}>
+                          {getExternalLabName(orderDetails.externalLabId) || '—'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className={styles.reportFormGroup}>
-                  <label className={styles.reportFormLabel}>
-                    Verified By <span className={styles.reportRequired}>*</span>
-                  </label>
-                  <select
-                    value={reportForm.verifiedBy}
-                    onChange={(e) => setReportForm({ ...reportForm, verifiedBy: Number(e.target.value) })}
-                    className={styles.reportFormSelect}
-                    required
-                    disabled={submittingReport}
-                  >
-                    <option value={0}>Select Doctor</option>
-                    {doctors.map(doctor => (
-                      <option key={doctor.id} value={doctor.id}>{doctor.name} ({doctor.employeeCode})</option>
-                    ))}
-                  </select>
-                </div>
-                <div className={styles.reportFormGroup}>
-                  <label className={styles.reportFormLabel}>
-                    Verified Date & Time <span className={styles.reportRequired}>*</span>
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={reportForm.verifiedDateTime}
-                    onChange={(e) => setReportForm({ ...reportForm, verifiedDateTime: e.target.value })}
-                    className={styles.reportFormInput}
-                    required
-                    disabled={submittingReport}
-                  />
-                </div>
-                {isUpdateMode && (
-                  <div className={styles.reportFormGroup}>
-                    <label className={styles.reportFormLabel}>Status</label>
-                    <select
-                      value={reportForm.status}
-                      onChange={(e) => setReportForm({ ...reportForm, status: Number(e.target.value) })}
-                      className={styles.reportFormSelect}
-                      disabled={submittingReport}
-                    >
-                      {reportStatusOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
-                    </select>
-                  </div>
+
+                {/* ─── External Flow ─── */}
+                {isExternalFlow && (
+                  <>
+                    <div className={styles.externalUploadSection}>
+                      <h4 className={styles.externalUploadTitle}>
+                        <FiUpload size={15} /> Report File{!isUpdateMode && <span className={styles.reportRequired}> *</span>}
+                      </h4>
+
+                      <div className={styles.externalUploadBody}>
+
+                        {/* Preview panel */}
+                        <div className={styles.externalFilePreview}>
+                          {externalFileUrl ? (
+                            <div className={styles.externalFilePreviewImg}>
+                              <img src={externalFileUrl} alt="New Report Preview" />
+                              <button
+                                type="button"
+                                onClick={handleExternalFileRemove}
+                                className={styles.externalFileRemoveBtn}
+                                disabled={submittingReport || isExternalFileUploading}
+                              >
+                                <FiX size={14} />
+                              </button>
+                            </div>
+                          ) : externalFile && externalFile.type === 'application/pdf' ? (
+                            <div className={styles.externalFilePdfPlaceholder}>
+                              <FiFileText size={32} />
+                              <p>{externalFile.name}</p>
+                              <button
+                                type="button"
+                                onClick={handleExternalFileRemove}
+                                className={styles.externalFileRemoveBtn}
+                                disabled={submittingReport || isExternalFileUploading}
+                              >
+                                <FiX size={14} />
+                              </button>
+                            </div>
+                          ) : isUpdateMode && loadingExistingFile ? (
+                            <div className={styles.externalFilePlaceholder}>
+                              <div className={styles.orderItemsSpinner}></div>
+                              <p style={{ fontSize: '0.75rem', marginTop: 6 }}>Loading file...</p>
+                            </div>
+                          ) : isUpdateMode && existingFileUrl && !existingFileIsPdf ? (
+                            <div
+                              className={styles.externalFilePreviewImg}
+                              style={{ cursor: 'pointer' }}
+                              onClick={handleViewExistingFile}
+                              title="Click to view full image"
+                            >
+                              <img src={existingFileUrl} alt="Existing Report" />
+                              <div className={styles.existingFileOverlay}>
+                                <FiEye size={18} />
+                              </div>
+                            </div>
+                          ) : isUpdateMode && existingFileUrl && existingFileIsPdf ? (
+                            <div
+                              className={styles.externalFilePdfPlaceholder}
+                              style={{ cursor: 'pointer' }}
+                              onClick={handleViewExistingFile}
+                              title="Click to view PDF"
+                            >
+                              <FiFileText size={32} />
+                              <p>Existing Report (PDF)</p>
+                              <div className={styles.existingFileOverlay}>
+                                <FiEye size={16} />
+                              </div>
+                            </div>
+                          ) : isUpdateMode && existingReportFileId > 0 ? (
+                            <div
+                              className={styles.externalFilePlaceholder}
+                              style={{ cursor: 'pointer' }}
+                              onClick={handleViewExistingFile}
+                              title="Click to load and view file"
+                            >
+                              <FiEye size={32} />
+                              <p>Click to view existing file</p>
+                            </div>
+                          ) : (
+                            <div className={styles.externalFilePlaceholder}>
+                              <FiUpload size={32} />
+                              <p>No file selected</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Controls */}
+                        <div className={styles.externalFileControls}>
+
+                          {/* View Photo button — only in update mode when existing fileId present and no new file selected */}
+                          {isUpdateMode && existingReportFileId > 0 && !externalFile && (
+                            <button
+                              type="button"
+                              onClick={handleViewExistingFile}
+                              className={styles.externalFileBtnView}
+                              disabled={submittingReport || loadingExistingFile}
+                            >
+                              {loadingExistingFile ? 'Loading...' : <><FiEye size={14} /> View Photo</>}
+                            </button>
+                          )}
+
+                          <input
+                            type="file"
+                            id="externalFileInput"
+                            accept="image/jpeg,image/jpg,image/png,application/pdf"
+                            onChange={handleExternalFileSelect}
+                            style={{ display: 'none' }}
+                            disabled={submittingReport || isExternalFileUploading}
+                          />
+
+                          <label
+                            htmlFor="externalFileInput"
+                            className={`${styles.externalFileBtnSelect} ${(submittingReport || isExternalFileUploading) ? styles.externalFileBtnDisabled : ''}`}
+                          >
+                            {isUpdateMode && existingReportFileId > 0 && !externalFile ? 'Upload New File' : 'Select File'}
+                          </label>
+
+                          {externalFile && !externalFileUploaded && (
+                            <button
+                              type="button"
+                              onClick={handleExternalFileUpload}
+                              disabled={isExternalFileUploading || submittingReport}
+                              className={styles.externalFileBtnUpload}
+                            >
+                              {isExternalFileUploading ? 'Uploading...' : 'Upload File'}
+                            </button>
+                          )}
+
+                          {externalFileUploadStatus && (
+                            <p className={`${styles.externalFileStatus} ${externalFileUploaded ? styles.externalFileStatusSuccess : styles.externalFileStatusInfo}`}>
+                              {externalFileUploadStatus}
+                            </p>
+                          )}
+
+                          <p className={styles.externalFileHint}>
+                            JPG, JPEG, PNG or PDF · Max 5MB
+                          </p>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    {/* External Lab Dropdown */}
+                    <div className={styles.reportFormGroup}>
+                      <label className={styles.reportFormLabel}>
+                        External Lab <span className={styles.reportRequired}>*</span>
+                      </label>
+                      <select
+                        value={selectedExternalLabId}
+                        onChange={(e) => setSelectedExternalLabId(Number(e.target.value))}
+                        className={styles.reportFormSelect}
+                        required
+                        disabled={submittingReport}
+                      >
+                        <option value={0}>Select External Lab</option>
+                        {externalLabs.map(lab => (
+                          <option key={lab.externalLabId} value={lab.externalLabId}>
+                            {lab.name}
+                          </option>
+                        ))}
+                        <option value={-1}>Others</option>
+                      </select>
+                    </div>
+                  </>
                 )}
-                <div className={styles.reportFormGroup}>
-                  <label className={styles.reportFormLabel}>Remarks</label>
-                  <textarea
-                    value={reportForm.remarks}
-                    onChange={(e) => setReportForm({ ...reportForm, remarks: e.target.value })}
-                    className={styles.reportFormTextarea}
-                    rows={4}
-                    placeholder="Enter any additional remarks..."
-                    disabled={submittingReport}
-                  />
-                </div>
+
+                {/* ─── Normal Flow ─── */}
+                {!isExternalFlow && (
+                  <>
+                    <div className={styles.reportFormRow}>
+                      <div className={styles.reportFormGroup}>
+                        <label className={styles.reportFormLabel}>
+                          Verified By <span className={styles.reportRequired}>*</span>
+                        </label>
+                        <select
+                          value={reportForm.verifiedBy}
+                          onChange={(e) => setReportForm({ ...reportForm, verifiedBy: Number(e.target.value) })}
+                          className={styles.reportFormSelect}
+                          required
+                          disabled={submittingReport}
+                        >
+                          <option value={0}>Select Doctor</option>
+                          {doctors.map(doctor => (
+                            <option key={doctor.id} value={doctor.id}>
+                              {doctor.name} ({doctor.employeeCode})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className={styles.reportFormGroup}>
+                        <label className={styles.reportFormLabel}>
+                          Verified Date & Time <span className={styles.reportRequired}>*</span>
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={reportForm.verifiedDateTime}
+                          onChange={(e) => setReportForm({ ...reportForm, verifiedDateTime: e.target.value })}
+                          className={styles.reportFormInput}
+                          required
+                          disabled={submittingReport}
+                        />
+                      </div>
+                    </div>
+
+                    {isUpdateMode && (
+                      <div className={styles.reportFormGroup}>
+                        <label className={styles.reportFormLabel}>Status</label>
+                        <select
+                          value={reportForm.status}
+                          onChange={(e) => setReportForm({ ...reportForm, status: Number(e.target.value) })}
+                          className={styles.reportFormSelect}
+                          disabled={submittingReport}
+                        >
+                          {reportStatusOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
+                        </select>
+                      </div>
+                    )}
+
+                    <div className={styles.reportFormGroup}>
+                      <label className={styles.reportFormLabel}>Remarks</label>
+                      <textarea
+                        value={reportForm.remarks}
+                        onChange={(e) => setReportForm({ ...reportForm, remarks: e.target.value })}
+                        className={styles.reportFormTextarea}
+                        rows={4}
+                        placeholder="Enter any additional remarks..."
+                        disabled={submittingReport}
+                      />
+                    </div>
+                  </>
+                )}
+
               </div>
+
               <div className={styles.reportModalFooter}>
                 <button
                   type="button"
@@ -912,12 +1366,21 @@ const LabOrderList = () => {
                 >
                   Cancel
                 </button>
-                {/* Submit button: disabled until required fields filled */}
                 <button
                   type="submit"
                   className={styles.reportSubmitBtn}
-                  disabled={submittingReport || !isReportFormValid || cooldown.isDisabled('submitReport')}
-                  title={!isReportFormValid ? 'Please fill all required fields' : ''}
+                  disabled={
+                    submittingReport ||
+                    (isExternalFlow ? !isExternalReportFormValid : !isReportFormValid) ||
+                    cooldown.isDisabled('submitReport')
+                  }
+                  title={
+                    isExternalFlow
+                      ? (!externalFileUploaded && existingReportFileId <= 0
+                          ? 'Please upload a file'
+                          : selectedExternalLabId === 0 ? 'Please select an external lab' : '')
+                      : (!isReportFormValid ? 'Please fill all required fields' : '')
+                  }
                 >
                   {submittingReport
                     ? (isUpdateMode ? 'Updating...' : 'Submitting...')
@@ -925,6 +1388,38 @@ const LabOrderList = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Report File Lightbox ─────────────────────────────────────────────── */}
+      {reportFileLightbox.open && (
+        <div className={styles.reportLightboxOverlay} onClick={() => setReportFileLightbox({ open: false, url: null, isPdf: false })}>
+          <div className={styles.reportLightboxModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.reportLightboxHeader}>
+              <span className={styles.reportLightboxTitle}>Report File</span>
+              <button
+                className={styles.reportLightboxCloseBtn}
+                onClick={() => setReportFileLightbox({ open: false, url: null, isPdf: false })}
+              >
+                ✕
+              </button>
+            </div>
+            <div className={styles.reportLightboxBody}>
+              {reportFileLightbox.isPdf ? (
+                <embed
+                  src={reportFileLightbox.url}
+                  type="application/pdf"
+                  className={styles.reportLightboxPdf}
+                />
+              ) : (
+                <img
+                  src={reportFileLightbox.url}
+                  alt="Report File"
+                  className={styles.reportLightboxImg}
+                />
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -941,7 +1436,15 @@ const LabOrderList = () => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions, onClose, onUpdate, cooldown }) => {
+const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions, externalLabs, onClose, onUpdate, cooldown }) => {
+  const getExternalLabName = (externalLabId) => {
+    if (!externalLabId || externalLabId === 0) return null;
+    const lab = externalLabs.find(l => l.externalLabId === externalLabId);
+    return lab ? lab.name : null;
+  };
+
+  const suggestedLabName = getExternalLabName(order.externalLabId);
+
   return (
     <div className={styles.detailModalOverlay} onClick={onClose}>
       <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
@@ -967,7 +1470,6 @@ const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions
         <div className={styles.detailModalBody}>
           <div className={styles.detailInfoSection}>
 
-            {/* Card 1 — Patient Information */}
             <div className={styles.detailInfoCard}>
               <div className={styles.detailInfoHeader}><h3>Patient Information</h3></div>
               <div className={styles.detailInfoContent}>
@@ -991,10 +1493,15 @@ const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions
                   <span className={styles.detailInfoLabel}>Visit ID</span>
                   <span className={styles.detailInfoValue}>{order.visitId || '—'}</span>
                 </div>
+                {suggestedLabName && (
+                  <div className={styles.detailInfoRow}>
+                    <span className={styles.detailInfoLabel}>Suggest Lab</span>
+                    <span className={styles.detailInfoValue}>{suggestedLabName}</span>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Card 2 — Order Information */}
             <div className={styles.detailInfoCard}>
               <div className={styles.detailInfoHeader}><h3>Order Information</h3></div>
               <div className={styles.detailInfoContent}>
@@ -1021,7 +1528,6 @@ const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions
               </div>
             </div>
 
-            {/* Card 3 — Clinical Details */}
             <div className={styles.detailInfoCard}>
               <div className={styles.detailInfoHeader}><h3>Clinical Details</h3></div>
               <div className={styles.detailInfoContent}>
@@ -1048,7 +1554,6 @@ const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions
               </div>
             </div>
 
-            {/* Card 4 — Order Items */}
             <div className={`${styles.detailInfoCard} ${styles.detailInfoCardFullWidth}`}>
               <div className={styles.detailInfoHeader}><h3>Order Items</h3></div>
               {loadingOrderItems ? (
@@ -1123,7 +1628,6 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
     testApprovedBy: order.doctorId
   });
 
-  // Required: status and priority must be valid (non-zero for priority)
   const isFormValid = formData.status !== '' && formData.priority !== '';
 
   const handleSubmit = async (e) => {
@@ -1213,42 +1717,6 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
   );
 };
 
-// ─── Confirm Make Work Modal ───────────────────────────────────────────────────
-const ConfirmMakeWorkModal = ({ order, onClose, onConfirm, cooldown }) => (
-  <div className={styles.modalOverlay} >
-    <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
-      <div className={styles.modalHeader}>
-        <h2>Confirm Create Work Items</h2>
-        <button onClick={onClose} className={styles.closeBtn}>×</button>
-      </div>
-      <div className={styles.modalBody}>
-        <div className={styles.confirmIcon}><FiAlertCircle size={48} /></div>
-        <p className={styles.confirmText}>Are you sure you want to create work items for this order?</p>
-        <div className={styles.confirmDetails}>
-          <div className={styles.confirmDetailRow}>
-            <span className={styles.confirmLabel}>Patient:</span>
-            <span className={styles.confirmValue}>{order.patientName}</span>
-          </div>
-          <div className={styles.confirmDetailRow}>
-            <span className={styles.confirmLabel}>Doctor:</span>
-            <span className={styles.confirmValue}>{order.doctorFullName}</span>
-          </div>
-        </div>
-      </div>
-      <div className={styles.modalFooter}>
-        <button
-          onClick={() => { cooldown.trigger('makeWork'); onConfirm(); }}
-          disabled={cooldown.isDisabled('makeWork')}
-          className={styles.confirmBtn}
-        >
-          <FiCheckCircle size={18} /> Yes, Create Work Items
-        </button>
-        <button onClick={onClose} className={styles.cancelBtn}>Cancel</button>
-      </div>
-    </div>
-  </div>
-);
-
 // ─── Make Invoice Modal ────────────────────────────────────────────────────────
 const MakeInvoiceModal = ({ order, onClose, onSubmit, cooldown, showPopupMsg }) => {
   const getTodayDate = () => {
@@ -1257,7 +1725,6 @@ const MakeInvoiceModal = ({ order, onClose, onSubmit, cooldown, showPopupMsg }) 
   };
   const [formData, setFormData] = useState({ invoiceDate: getTodayDate(), discount: 0 });
 
-  // Required: invoiceDate must be filled
   const isFormValid = formData.invoiceDate !== '';
 
   const handleSubmit = async (e) => {
@@ -1324,11 +1791,13 @@ const MakeInvoiceModal = ({ order, onClose, onSubmit, cooldown, showPopupMsg }) 
             <button type="button" onClick={onClose} className={styles.cancelBtn}>Cancel</button>
             <button
               type="submit"
-              className={styles.confirmBtn}
-              disabled={!isFormValid || cooldown.isDisabled('generateInvoice')}
-              title={!isFormValid ? 'Please fill all required fields' : ''}
+              className={styles.generateAndWorkBtn}
+              disabled={!isFormValid || cooldown.isDisabled('generateInvoiceAndMakeWork')}
+              title={!isFormValid ? 'Please fill all required fields' : 'Generate Invoice and create Work Items'}
             >
-              <FiFileText size={18} /> Generate Invoice
+              <FiFileText size={16} />
+              <FiCheckCircle size={16} />
+              Generate Invoice &amp; Make Work
             </button>
           </div>
         </form>

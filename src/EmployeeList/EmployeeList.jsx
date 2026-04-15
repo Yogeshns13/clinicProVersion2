@@ -349,6 +349,7 @@ const EmployeeList = () => {
                 <th>Employee</th>
                 <th>Code</th>
                 <th>Clinic</th>
+                <th>Branch</th>
                 <th>Department</th>
                 <th>Designation</th>
                 <th>Mobile</th>
@@ -381,6 +382,7 @@ const EmployeeList = () => {
                     </td>
                     <td>{employee.employeeCode || '—'}</td>
                     <td>{employee.clinicName|| '—'}</td>
+                    <td>{employee.branchName|| '—'}</td>
                     <td>{employee.departmentName || '—'}</td>
                     <td>
                       <span className={styles.designationBadge}>

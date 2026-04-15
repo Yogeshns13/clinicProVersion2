@@ -551,6 +551,7 @@
   resize: vertical;
   min-height: 120px;
   line-height: 1.5;
+  font-family: inherit;
 }
 
 .medicalTallTextarea:focus {
@@ -579,6 +580,14 @@
 .medicalCheckboxBox {
   display: flex;
   flex-direction: column;
+}
+
+/* ==================== READ-ONLY INPUT ==================== */
+.readOnlyInput {
+  background: rgba(34, 43, 108, 0.05) !important;
+  border-color: rgba(34, 43, 108, 0.2) !important;
+  color: #64748b !important;
+  cursor: not-allowed !important;
 }
 
 /* ==================== RESPONSIVE ==================== */

@@ -751,9 +751,9 @@ const PatientVisitList = () => {
                         name="bpSystolic"
                         value={formData.bpSystolic}
                         onChange={handleFormChange}
-                        placeholder="50-250"
+                        placeholder="10-250"
                         required
-                        min="50"
+                        min="10"
                         max="250"
                         className={styles.formInput}
                       />
@@ -771,8 +771,8 @@ const PatientVisitList = () => {
                         required
                         onChange={handleFormChange}
                         placeholder="30-150"
-                        min="30"
-                        max="150"
+                        min="10"
+                        max="250"
                         className={styles.formInput}
                       />
                     </div>
