@@ -16,7 +16,15 @@ const INVOICE_STATUSES = [
   { id: 7, label: 'Credit Note' }
 ];
 
-const ViewInvoice = ({ isOpen, onClose, invoiceId }) => {
+const ViewInvoice = ({
+  isOpen,
+  onClose,
+  invoiceId,
+  invoiceStatus,
+  invoiceNo,
+  onCancelInvoice,
+  cancelCooldown = {},
+}) => {
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -100,6 +108,10 @@ const ViewInvoice = ({ isOpen, onClose, invoiceId }) => {
     return net - paid;
   };
 
+  // Use fetched invoice status when available, fall back to prop
+  const currentStatus = invoice?.status ?? invoiceStatus;
+  const isCancelled   = currentStatus === 5;
+
   if (!isOpen) return null;
 
   return (
@@ -114,7 +126,7 @@ const ViewInvoice = ({ isOpen, onClose, invoiceId }) => {
           <div className="clinicNameone">
             <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
               {localStorage.getItem('clinicName') || '—'}
-                </div>
+          </div>
           <button onClick={onClose} className="invoice-modal-close">
             <FiX size={20} />
           </button>
@@ -254,6 +266,17 @@ const ViewInvoice = ({ isOpen, onClose, invoiceId }) => {
 
         {/* Footer */}
         <div className="invoice-modal-footer">
+          {/* Cancel Invoice — only shown when invoice is NOT already cancelled */}
+          {!isCancelled && !loading && !error && invoice && (
+            <button
+              onClick={() => onCancelInvoice && onCancelInvoice(invoice)}
+              className="invoice-cancel-btn"
+              disabled={!!cancelCooldown[`cancel-${invoiceId}`]}
+              title="Cancel this invoice"
+            >
+              Cancel Invoice
+            </button>
+          )}
           <button onClick={onClose} className="invoice-close-btn">
             Close
           </button>

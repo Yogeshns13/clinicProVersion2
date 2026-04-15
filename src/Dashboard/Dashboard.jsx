@@ -339,7 +339,7 @@ const Dashboard = () => {
                   <button
                     type="button"
                     className="cp-eye-btn"
-                    onClick={() => setShowNewPass((v) => !v)}
+                    onClick={() => { setShowNewPass((v) => !v); setShowConfirmPass(false); }}
                     tabIndex={-1}
                     aria-label="Toggle new password visibility"
                   >
@@ -365,7 +365,7 @@ const Dashboard = () => {
                   <button
                     type="button"
                     className="cp-eye-btn"
-                    onClick={() => setShowConfirmPass((v) => !v)}
+                    onClick={() => { setShowConfirmPass((v) => !v); setShowNewPass(false); }}
                     tabIndex={-1}
                     aria-label="Toggle confirm password visibility"
                   >

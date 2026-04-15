@@ -11,7 +11,6 @@
   --success-color: #10b981;
 }
 
-/* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -21,10 +20,6 @@
   from { opacity: 0; transform: translateY(22px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-/* ────────────────────────────────────────────────
-   OVERLAY & MODAL CONTAINER – WIDER NOW
-   ──────────────────────────────────────────────── */
 
 .overlay {
   position: fixed;
@@ -43,8 +38,7 @@
   background: var(--glass-bg);
   border-radius: 20px;
   width: 100%;
-  max-width: 980px;                    /* ← increased from 780px */
-  max-width: min(96vw, 1100px);        /* safe wide on large screens */
+  max-width: min(96vw, 1100px);
   max-height: 94vh;
   overflow: hidden;
   display: flex;
@@ -53,10 +47,7 @@
   animation: slideUp 0.35s ease;
 }
 
-/* ────────────────────────────────────────────────
-   HEADER
-   ──────────────────────────────────────────────── */
-
+/* ── Header ── */
 .header {
   padding: 14px 18px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
@@ -75,9 +66,7 @@
   gap: 14px;
 }
 
-.headerIcon {
-  opacity: 0.9;
-}
+.headerIcon { opacity: 0.9; }
 
 .header h2 {
   margin: 0;
@@ -90,13 +79,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.05rem;           
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-light);
   line-height: 1.2;
-  white-space: nowrap;          
-  text-overflow: ellipsis;      
-  max-width: 220px;             
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
 
 .closeBtn {
@@ -114,16 +103,12 @@
   justify-content: center;
   transition: all 0.25s ease;
 }
-
 .closeBtn:hover {
   background: rgba(255, 255, 255, 0.38);
   transform: scale(1.08);
 }
 
-/* ────────────────────────────────────────────────
-   BODY & FORM – reduced vertical padding/margins
-   ──────────────────────────────────────────────── */
-
+/* ── Body ── */
 .form {
   display: flex;
   flex-direction: column;
@@ -132,42 +117,32 @@
 }
 
 .body {
-  padding: 20px 32px 24px;             /* more horizontal → less vertical feel */
+  padding: 20px 32px 24px;
   overflow-y: auto;
   flex: 1;
 }
 
-.alertError,
-.alertSuccess {
-  padding: 10px 14px;
-  margin-bottom: 16px;
-  font-size: 0.9rem;
-  border-radius: 10px;
-}
-
 .section {
-  margin-bottom: 20px;                 /* reduced from 28px */
+  margin-bottom: 20px;
 }
-
-.section:last-child {
-  margin-bottom: 0;
-}
+.section:last-child { margin-bottom: 0; }
 
 .sectionTitle {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 0 0 12px 0;                  /* tighter */
+  margin: 0 0 16px 0;
   font-size: 1.08rem;
   font-weight: 700;
   color: var(--primary-start);
-   margin-bottom: 16px;
   padding-bottom: 10px;
   border-bottom: 2px solid rgba(48, 178, 181, 0.25);
 }
+.sectionTitle svg { color: var(--accent-start); }
 
-.sectionTitle svg {
-  color: var(--accent-start);
+/* Push Add Patient button to the far right of the title row */
+.sectionTitle .addPatientBtn {
+  margin-left: auto;
 }
 
 .sectionTitleSub {
@@ -176,13 +151,8 @@
   margin-left: 8px;
 }
 
-/* ────────────────────────────────────────────────
-   FORM ELEMENTS
-   ──────────────────────────────────────────────── */
-
-.formGroup {
-  margin-bottom: 14px;                 /* reduced from 20px */
-}
+/* ── Form elements ── */
+.formGroup { margin-bottom: 14px; }
 
 .formLabel {
   display: block;
@@ -192,10 +162,7 @@
   color: var(--primary-start);
 }
 
-.required {
-  color: var(--danger-color);
-  font-weight: 700;
-}
+.required { color: var(--danger-color); font-weight: 700; }
 
 .formInput,
 .formTextarea {
@@ -208,7 +175,6 @@
   font-family: inherit;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-
 .formInput:focus,
 .formTextarea:focus {
   outline: none;
@@ -218,7 +184,7 @@
 
 .formTextarea {
   resize: vertical;
-  min-height: 68px;                    /* smaller default height */
+  min-height: 68px;
   max-height: 140px;
 }
 
@@ -231,16 +197,11 @@
 .formRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px 28px;                     /* more horizontal breathing room */
+  gap: 20px 28px;
 }
 
-/* ────────────────────────────────────────────────
-   Searchable Dropdown styles (unchanged except spacing)
-   ──────────────────────────────────────────────── */
-
-.searchableWrapper {
-  position: relative;
-}
+/* ── Generic SearchableDropdown (doctors) ── */
+.searchableWrapper { position: relative; }
 
 .searchableInput {
   display: flex;
@@ -253,24 +214,18 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .searchableInputOpen,
 .searchableInput:focus-within {
   border-color: var(--accent-end);
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
 }
-
 .searchableInputDisabled {
   background: #f1f5f9;
   cursor: not-allowed;
   opacity: 0.7;
 }
 
-.searchIcon {
-  color: #64748b;
-  margin-right: 10px;
-  flex-shrink: 0;
-}
+.searchIcon { color: #64748b; margin-right: 10px; flex-shrink: 0; }
 
 .searchableInnerInput {
   flex: 1;
@@ -286,16 +241,9 @@
   font-size: 0.9rem;
   color: var(--text-dark);
 }
+.searchablePlaceholder { color: #94a3b8; }
 
-.searchablePlaceholder {
-  color: #94a3b8;
-}
-
-.searchableActions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+.searchableActions { display: flex; align-items: center; gap: 6px; }
 
 .clearBtn {
   background: none;
@@ -305,14 +253,8 @@
   padding: 4px;
 }
 
-.chevron {
-  color: #64748b;
-  transition: transform 0.2s ease;
-}
-
-.chevronOpen {
-  transform: rotate(180deg);
-}
+.chevron { color: #64748b; transition: transform 0.2s ease; }
+.chevronOpen { transform: rotate(180deg); }
 
 .searchableDropdown {
   position: absolute;
@@ -324,7 +266,7 @@
   border: 1px solid #cbd5e1;
   border-radius: 10px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-  max-height: 300px;
+  max-height: 260px;
   overflow-y: auto;
   z-index: 10;
 }
@@ -344,7 +286,6 @@
   cursor: pointer;
   transition: background 0.15s ease;
 }
-
 .searchableOption:hover,
 .searchableOptionSelected {
   background: rgba(48, 178, 181, 0.08);
@@ -364,10 +305,7 @@
   flex-shrink: 0;
 }
 
-.optionInfo {
-  flex: 1;
-  min-width: 0;
-}
+.optionInfo { flex: 1; min-width: 0; }
 
 .optionLabel {
   font-size: 0.92rem;
@@ -385,15 +323,9 @@
   margin-top: 1px;
 }
 
-.optionCheck {
-  color: var(--accent-end);
-  flex-shrink: 0;
-}
+.optionCheck { color: var(--accent-end); flex-shrink: 0; }
 
-/* ────────────────────────────────────────────────
-   Patient Info Card – more compact
-   ──────────────────────────────────────────────── */
-
+/* ── Patient Info Card ── */
 .infoCard {
   background: white;
   border-radius: 12px;
@@ -409,10 +341,7 @@
   gap: 12px 20px;
 }
 
-.infoCardItem {
-  display: flex;
-  flex-direction: column;
-}
+.infoCardItem { display: flex; flex-direction: column; }
 
 .infoCardKey {
   font-size: 0.76rem;
@@ -427,10 +356,7 @@
   color: var(--text-dark);
 }
 
-/* ────────────────────────────────────────────────
-   Slots Grid – slightly more compact
-   ──────────────────────────────────────────────── */
-
+/* ── Slots ── */
 .slotsLoading {
   text-align: center;
   padding: 32px 0;
@@ -447,9 +373,7 @@
   margin: 0 auto 10px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .noSlots {
   text-align: center;
@@ -459,11 +383,7 @@
   border: 1px solid rgba(239, 68, 68, 0.2);
   color: #991b1b;
 }
-
-.noSlots p {
-  margin: 6px 0;
-  font-size: 0.9rem;
-}
+.noSlots p { margin: 6px 0; font-size: 0.9rem; }
 
 .slotsGrid {
   display: grid;
@@ -484,7 +404,6 @@
   transition: all 0.2s ease;
   text-align: center;
 }
-
 .slotBtnSelected {
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: white;
@@ -506,10 +425,7 @@
   font-weight: 600;
 }
 
-/* ────────────────────────────────────────────────
-   FOOTER
-   ──────────────────────────────────────────────── */
-
+/* ── Footer ── */
 .footer {
   display: flex;
   justify-content: flex-end;
@@ -530,27 +446,18 @@
   border: none;
 }
 
-.btnCancel {
-  background: #e2e8f0;
-  color: #475569;
-}
-
-.btnCancel:hover {
-  background: #cbd5e1;
-  transform: translateY(-2px);
-}
+.btnCancel { background: #e2e8f0; color: #475569; }
+.btnCancel:hover { background: #cbd5e1; transform: translateY(-2px); }
 
 .btnSubmit {
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: white;
   box-shadow: 0 5px 15px rgba(32, 125, 156, 0.28);
 }
-
 .btnSubmit:hover {
   transform: translateY(-2px);
   box-shadow: 0 9px 22px rgba(32, 125, 156, 0.42);
 }
-
 .btnSubmit:disabled,
 .btnCancel:disabled {
   opacity: 0.55;
@@ -560,54 +467,268 @@
 }
 
 /* ────────────────────────────────────────────────
-   RESPONSIVE
+   PATIENT SEARCH DROPDOWN
+   Tabs + input + search button all in one row,
+   results appear in a floating dropdown below.
    ──────────────────────────────────────────────── */
 
+/* outer wrapper gives position:relative so the absolute
+   .searchableDropdown anchors correctly below the row */
+.patientSearchOuter {
+  position: relative;
+}
+
+/* Wraps tabs + input + button horizontally */
+.patientSearchRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0 6px 0 0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.patientSearchRow:focus-within {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+/* The 3 tabs sit flush inside the left side of the row */
+.patientSearchTabs {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  border-right: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.patientSearchTab {
+  height: 100%;
+  padding: 0 11px;
+  border: none;
+  background: transparent;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+  border-radius: 0;
+}
+.patientSearchTab:first-child { border-radius: 9px 0 0 9px; }
+.patientSearchTab:hover { background: rgba(48,178,181,0.07); color: var(--accent-start); }
+
+.patientSearchTabActive {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end)) !important;
+  color: white !important;
+}
+
+/* Text input stretches to fill remaining space */
+.patientSearchInputWrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.patientSearchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: transparent;
+  padding: 0 8px;
+  min-width: 0;
+}
+
+/* Small icon-only search button at the right end */
+.patientSearchIconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: white;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.patientSearchIconBtn:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: scale(1.05);
+}
+.patientSearchIconBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Add Patient Button (in Patient Information heading) ── */
+.addPatientBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  color: white;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 12px rgba(34, 43, 108, 0.28);
+  letter-spacing: 0.01em;
+}
+.addPatientBtn:hover {
+  opacity: 0.92;
+  background: linear-gradient(135deg, var(--primary-end), var(--primary-start));
+  transform: translateY(-2px);
+  box-shadow: 0 7px 18px rgba(34, 43, 108, 0.38);
+}
+
+/* ── Responsive ── */
 @media (max-width: 1024px) {
-  .modal {
-    max-width: 92%;
-  }
+  .modal { max-width: 92%; }
 }
 
 @media (max-width: 768px) {
-  .modal {
-    max-width: 96%;
-  }
-
-  .formRow {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .body {
-    padding: 18px 24px;
-  }
-
-  .footer {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .btnCancel,
-  .btnSubmit {
-    width: 100%;
-  }
-
-  .slotsGrid {
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  }
+  .modal { max-width: 96%; }
+  .formRow { grid-template-columns: 1fr; gap: 16px; }
+  .body { padding: 18px 24px; }
+  .footer { flex-direction: column; gap: 10px; }
+  .btnCancel, .btnSubmit { width: 100%; }
+  .slotsGrid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+  .patientSearchTab { padding: 0 8px; font-size: 0.75rem; }
 }
 
 @media (max-width: 480px) {
-  .body {
-    padding: 16px 20px;
-  }
+  .body { padding: 16px 20px; }
+  .header { padding: 16px 20px; }
+  .footer { padding: 14px 20px; }
+}
 
-  .header {
-    padding: 16px 20px;
-  }
+/* ────────────────────────────────────────────────
+   FAMILY SEARCH — inline button + popup
+   ──────────────────────────────────────────────── */
 
-  .footer {
-    padding: 14px 20px;
-  }
+/* Small pill button shown at the right of each Name/FileNo result row */
+.familySearchBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 7px;
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+  color: white;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(34, 43, 108, 0.22);
+}
+.familySearchBtn:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(34, 43, 108, 0.32);
+}
+.familySearchBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Fixed overlay behind the family popup card */
+.familyOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 22, 41, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease;
+}
+
+/* The family results popup card */
+.familyCard {
+  background: white;
+  border-radius: 16px;
+  width: min(440px, 92vw);
+  max-height: 68vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.24);
+  animation: slideUp 0.28s ease;
+  overflow: hidden;
+}
+
+/* Header strip inside the family card */
+.familyCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 18px;
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+  color: white;
+  flex-shrink: 0;
+}
+
+.familyCardHeader h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  flex: 1;
+}
+
+/* Close button inside the family card header */
+.familyCardCloseBtn {
+  background: rgba(255, 255, 255, 0.22);
+  border: none;
+  color: white;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.familyCardCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.38);
+  transform: scale(1.08);
+}
+
+/* Scrollable patient list inside the family card */
+.familyCardList {
+  overflow-y: auto;
+  flex: 1;
+  padding: 6px 0;
+}
+
+/* Empty state message inside the family card */
+.familyEmptyMsg {
+  padding: 28px 20px;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9rem;
 }

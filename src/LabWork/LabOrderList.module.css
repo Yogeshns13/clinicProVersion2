@@ -389,137 +389,191 @@
 .priorityStat    { background: rgba(220, 38, 38, 0.1);   color: var(--danger); border-color: rgba(220, 38, 38, 0.3); }
 
 /* ==================== ACTION BUTTONS ==================== */
+
+/*
+  Layout: [View icon] [Print icon] [---- uniform slot ----]
+  The slot is a fixed-width container so every row's actions
+  column lines up perfectly regardless of which button renders.
+*/
+
 .actionsCell {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
   align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
-.viewBtn {
-  width: 36px;
-  height: 36px;
+/* ── Shared square icon buttons (View & Print) ── */
+.actionIconBtn {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
   padding: 0;
-  font-size: 0.75rem;
-  font-weight: 600;
   border: none;
   border-radius: 9px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease;
   background: linear-gradient(135deg, #016183, var(--primary-end));
   color: var(--text-light);
   box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
 }
 
-.viewBtn:hover {
+.actionIconBtn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
 }
 
-.printBtn {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 9px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.actionIconBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Print button colour override */
+.actionIconBtnPrint {
   background: linear-gradient(135deg, #30b2b5, #0d7aa8);
-  color: var(--text-light);
   box-shadow: 0 3px 10px rgba(13, 122, 168, 0.3);
 }
 
-.printBtn:hover {
-  transform: translateY(-2px);
+.actionIconBtnPrint:hover:not(:disabled) {
   box-shadow: 0 5px 17px rgba(13, 122, 168, 0.45);
 }
 
-/* ==================== ACTION DROPDOWN ==================== */
-.actionDropdownWrapper { position: relative; }
+/* ── Uniform slot: reserves the same space on every row ── */
+.actionSlot {
+  flex-shrink: 0;
+  width: 148px;           /* wide enough for longest label "Generate Invoice" */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
 
-.actionBtn {
-  padding: 8px 16px;
-  font-size: 0.75rem;
-  font-weight: 600;
+/* ── Shared label button base (fills the slot) ── */
+.actionLabelBtn {
+  width: 100%;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  font-size: 0.73rem;
+  font-weight: 700;
   border: none;
   border-radius: 9px;
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/* ── Pending Actions trigger (status 1) ── */
+.actionLabelBtnPending {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(1, 97, 131, 0.3);
+}
+
+.actionLabelBtnPending:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(1, 97, 131, 0.45);
+}
+
+/* ── Generate Invoice (status 1 — kept for reference, not used as trigger) ── */
+.actionLabelBtnInvoice {
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: var(--text-light);
   box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
 }
 
-.actionBtn:hover {
+.actionLabelBtnInvoice:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+  box-shadow: 0 5px 17px rgba(32, 125, 156, 0.45);
 }
 
-.actionDropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  min-width: 160px;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
-  z-index: 100;
-  border: 1px solid rgba(34, 43, 108, 0.1);
-  overflow: hidden;
+/* ── Invoice Processed / Work Processed disabled (status 4) ── */
+.actionLabelBtnInvoiced {
+  background: rgba(2, 132, 199, 0.08);
+  color: var(--info);
+  border: 1px solid rgba(2, 132, 199, 0.3);
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
-.actionDropdownWrapper:hover .actionDropdown {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
+/* ── Work in Progress disabled (status 5) ── */
+.actionLabelBtnWork {
+  background: rgba(139, 92, 246, 0.08);
+  color: var(--progress);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
-.dropdownItem {
+/* ── Add Report (status 2, no report) ── */
+.actionLabelBtnAdd {
+  background: linear-gradient(135deg, var(--success), #15803d);
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.3);
+}
+
+.actionLabelBtnAdd:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(22, 163, 74, 0.45);
+}
+
+/* ── Update Report (status 2, has report) ── */
+.actionLabelBtnUpdate {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+}
+
+.actionLabelBtnUpdate:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 17px rgba(32, 125, 156, 0.45);
+}
+
+/* Disabled state for all label buttons */
+.actionLabelBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Combined Generate Invoice & Make Work button (inside modal footer) ── */
+.generateAndWorkBtn {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
-  padding: 12px 16px;
-  background: white;
+  padding: 10px 20px;
+  font-size: 0.88rem;
+  font-weight: 700;
   border: none;
-  border-bottom: 1px solid rgba(34, 43, 108, 0.08);
-  color: var(--text-dark);
-  font-size: 0.85rem;
-  font-weight: 600;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 4px 14px rgba(1, 97, 131, 0.35);
 }
 
-.dropdownItem:last-child { border-bottom: none; }
-
-.dropdownItem:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(48, 178, 181, 0.1), rgba(32, 125, 156, 0.1));
-  color: var(--accent-end);
+.generateAndWorkBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 22px rgba(1, 97, 131, 0.45);
+  background: linear-gradient(135deg, var(--accent-start), var(--primary-end));
 }
 
-.dropdownItem:disabled {
-  opacity: 0.5;
+.generateAndWorkBtn:disabled {
+  opacity: 0.55;
   cursor: not-allowed;
-  background: rgba(100, 116, 139, 0.05);
+  transform: none;
 }
-
-.invoicedItem { color: var(--info); }
 
 /* ==================== SHARED MODAL OVERLAY ==================== */
 .modalOverlay {
@@ -774,7 +828,7 @@
 
 .detailInfoValue {
   font-size: 0.85rem;
-  color: var(--text-dark);
+  color: var(--accent-start);
   font-weight: 600;
   text-align: right;
   word-break: break-word;
@@ -1086,7 +1140,7 @@
   background: linear-gradient(135deg, rgba(240, 247, 255, 0.5), rgba(230, 242, 255, 0.5));
   border: 1px solid rgba(34, 43, 108, 0.1);
   border-radius: 12px;
-  padding: 18px;
+  padding: 9px;
   margin-bottom: 24px;
 }
 
@@ -1102,7 +1156,7 @@
 .infoGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
 .infoItem { display: flex; flex-direction: column; gap: 5px; }
 .infoLabel { font-size: 0.75rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-.infoValue { font-size: 0.95rem; color: var(--text-dark); font-weight: 600; }
+.infoValue { font-size: 0.95rem; color: var(--accent-start); font-weight: 600; }
 
 .reportFormGroup { margin-bottom: 20px; }
 
@@ -1302,10 +1356,6 @@
 .noData { text-align: center; padding: 68px 17px; color: #64748b; font-size: 1.1rem; }
 
 /* ==================== PAGINATION BAR ==================== */
-/*
-  flex-shrink: 0  → never compressed, always pinned to the bottom of tableSection
-  margin-top: 14px → gap between scrollable table and this bar
-*/
 .paginationBar {
   flex-shrink: 0;
   display: flex;
@@ -1398,6 +1448,290 @@
   font-weight: 700;
 }
 
+/* ==================== PENDING ACTIONS DROPDOWN ==================== */
+
+/*
+  On hover over .dropdownWrapper, the .dropdownMenu slides down below the trigger button.
+  Pointer-events are toggled so the menu is only interactive when visible.
+*/
+
+.dropdownWrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 148px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.18);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 6px 6px 6px;
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.dropdownWrapper:hover .dropdownMenu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* ── Shared dropdown item base ── */
+.dropdownItem {
+  width: 100%;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+  padding: 0 10px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.dropdownItem:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Generate Invoice dropdown item */
+.dropdownItemInvoice {
+  background: rgba(32, 125, 156, 0.08);
+  color: var(--accent-start);
+}
+
+.dropdownItemInvoice:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+}
+
+/* External dropdown item */
+.dropdownItemExternal {
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--external);
+}
+
+.dropdownItemExternal:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: var(--text-light);
+  box-shadow: 0 3px 10px rgba(99, 102, 241, 0.3);
+}
+
+/* ==================== EXTERNAL FILE UPLOAD (Matching AddEmployee Style) ==================== */
+
+.externalUploadSection {
+  background: rgba(240, 247, 255, 0.6);
+  border: 1.5px solid rgba(48, 178, 181, 0.25);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 24px;
+}
+
+.externalUploadTitle {
+  margin: 0 0 16px 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.externalUploadBody {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* Preview Section */
+.externalFilePreview {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+}
+
+.externalFilePreviewImg {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  border: 2px solid rgba(48, 178, 181, 0.3);
+}
+
+.externalFilePreviewImg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.externalFilePdfPlaceholder,
+.externalFilePlaceholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  border: 2px dashed rgba(34, 43, 108, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  background: white;
+  text-align: center;
+  gap: 6px;
+  position: relative;
+}
+
+.externalFilePdfPlaceholder p {
+  margin: 0;
+  font-size: 0.75rem;
+  text-align: center;
+  color: #475569;
+}
+
+/* X Remove Button */
+.externalFileRemoveBtn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(220, 38, 38, 0.9);
+  border: none;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.externalFileRemoveBtn:hover:not(:disabled) {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.externalFileRemoveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.externalFileRemoveBtn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+/* Controls */
+.externalFileControls {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+}
+
+.externalFileBtnSelect {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 18px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-start));
+  color: white;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: fit-content;
+  font-family: inherit;
+}
+
+.externalFileBtnSelect:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.externalFileBtnUpload {
+  padding: 9px 18px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: fit-content;
+  font-family: inherit;
+}
+
+.externalFileBtnUpload:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.externalFileBtnUpload:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.externalFileBtnRemove {
+  padding: 9px 16px;
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+  border: 1.5px solid rgba(220, 38, 38, 0.25);
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.externalFileBtnRemove:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: #dc2626;
+}
+
+/* Status & Hint */
+.externalFileStatus {
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin: 4px 0 0 0;
+}
+
+.externalFileStatusSuccess { color: #059669; }
+.externalFileStatusInfo    { color: #0284c7; }
+
+.externalFileHint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 1200px) {
   .filtersGrid {
@@ -1432,8 +1766,12 @@
   .table th,
   .table td { padding: 10px 12px; font-size: 0.8rem; }
 
-  .actionsCell { flex-direction: row; gap: 6px; }
-  .viewBtn, .actionBtn { width: auto; justify-content: center; }
+  .actionsCell { gap: 5px; }
+
+  .actionSlot { width: 120px; }
+
+  .actionLabelBtn { font-size: 0.68rem; }
+
   .actionDropdown { right: 0; left: auto; }
 
   /* Detail modal responsive */
@@ -1457,6 +1795,10 @@
   .paginationControls {
     align-self: center;
   }
+
+  /* External upload responsive */
+  .externalUploadBody { flex-direction: column; }
+  .externalFilePreview { width: 100%; height: 80px; }
 }
 
 @media (max-width: 480px) {
@@ -1467,12 +1809,186 @@
   .modalBody, .reportModalBody { padding: 16px; }
   .modalFooter, .reportModalFooter, .detailModalFooter { flex-direction: column; }
   .updateBtn, .confirmBtn, .cancelBtn,
-  .reportSubmitBtn, .reportCancelBtn { width: 100%; justify-content: center; }
-  .actionDropdown { min-width: 140px; }
-  .dropdownItem { padding: 10px 12px; font-size: 0.8rem; }
+  .reportSubmitBtn, .reportCancelBtn,
+  .generateAndWorkBtn { width: 100%; justify-content: center; }
+
+  .actionsCell { flex-wrap: wrap; justify-content: flex-end; }
+  .actionSlot { width: 100%; }
+  .actionLabelBtn { width: 100%; justify-content: center; font-size: 0.72rem; }
+
   .detailHeaderAvatar { width: 42px; height: 42px; font-size: 1.1rem; }
   .detailHeaderTitle { font-size: 1.1rem; }
 
   .itemsTable thead th,
   .itemsTable td { padding: 8px 10px; font-size: 0.8rem; }
+}
+
+.reportFormRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .reportFormRow {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* ── Suggest Lab text shown below patient subtext in table row ── */
+.suggestLabText {
+  font-size: 0.72rem;
+  color: var(--accent-start);
+  font-weight: 600;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+ 
+/* ── Suggest Lab value inside Add/Update Report modal info section ── */
+.suggestLabInfoValue {
+  color: var(--accent-start);
+  font-weight: 700;
+}
+ 
+
+/* ==================== EXISTING FILE OVERLAY (hover eye icon) ==================== */
+.existingFileOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 10px;
+}
+
+.externalFilePreviewImg:hover .existingFileOverlay,
+.externalFilePdfPlaceholder:hover .existingFileOverlay {
+  opacity: 1;
+}
+
+/* ── View Photo button (update mode, existing file) ── */
+.externalFileBtnView {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: fit-content;
+  font-family: inherit;
+}
+
+.externalFileBtnView:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.externalFileBtnView:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==================== REPORT FILE LIGHTBOX ==================== */
+.reportLightboxOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 30, 0.88);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease;
+  padding: 20px 20px 20px 260px;
+}
+
+.reportLightboxModal {
+  background: #1e293b;
+  border-radius: 16px;
+  overflow: hidden;
+  max-width: 85vw;
+  max-height: 88vh;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.55);
+  animation: slideUp 0.25s ease;
+}
+
+.reportLightboxHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  flex-shrink: 0;
+  gap: 20px;
+}
+
+.reportLightboxTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reportLightboxCloseBtn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.reportLightboxCloseBtn:hover { background: rgba(255, 255, 255, 0.35); }
+
+.reportLightboxBody {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: #0f172a;
+}
+
+.reportLightboxImg {
+  max-width: 100%;
+  max-height: 72vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.reportLightboxPdf {
+  width: 75vw;
+  height: 72vh;
+  border: none;
+  border-radius: 8px;
 }

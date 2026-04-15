@@ -66,6 +66,17 @@
   100% { transform: rotate(360deg); }
 }
 
+@keyframes quickAddSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 /* Overlay */
 .addVisitOverlay {
   position: fixed;
@@ -85,7 +96,7 @@
   background: var(--glass-bg);
   border-radius: 15px;
   width: 100%;
-  max-width: 960px;
+  max-width: 1080px;
   max-height: 92vh;
   overflow: hidden;
   box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.15);
@@ -221,6 +232,75 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--primary-start);
+  min-height: 42px; /* ── alignment fix ── */
+}
+
+/* Section title row variant — icon+text on left, controls on right */
+.sectionTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(48, 178, 181, 0.25);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-start);
+  min-height: 42px; /* ── alignment fix ── */
+}
+
+.sectionTitleLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Right side of section title row — holds toggle + add button */
+.sectionTitleRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─────────────────────────────────────────────── */
+/* Emergency Patient Toggle Button                  */
+/* ─────────────────────────────────────────────── */
+.emergencyToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border: 2px solid rgba(239, 68, 68, 0.35);
+  border-radius: 20px;
+  background: rgba(239, 68, 68, 0.06);
+  color: #b91c1c;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.emergencyToggleBtn:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.55);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.18);
+}
+
+/* When emergency is ON — filled red style */
+.emergencyToggleBtnOn {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  border-color: #dc2626;
+  color: white;
+  box-shadow: 0 3px 10px rgba(220, 38, 38, 0.35);
+}
+
+.emergencyToggleBtnOn:hover {
+  background: linear-gradient(135deg, #b91c1c, #dc2626);
+  border-color: #b91c1c;
+  box-shadow: 0 5px 14px rgba(185, 28, 28, 0.42);
 }
 
 /* Form elements */
@@ -283,6 +363,13 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+}
+
+/* ── alignment fix: both Patient and Doctor columns stretch equally ── */
+.formRow > .formSection {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
 }
 
 .reasonSymptomsRow {
@@ -457,7 +544,7 @@
 }
 
 /* ─────────────────────────────────────────────── */
-/* Searchable Dropdown                                */
+/* Doctor Searchable Dropdown                        */
 /* ─────────────────────────────────────────────── */
 
 .searchableWrapper {
@@ -657,6 +744,401 @@
   flex-shrink: 0;
 }
 
+/* ─────────────────────────────────────────────── */
+/* Patient Search Dropdown                          */
+/* ─────────────────────────────────────────────── */
+
+/* Label row: label on left, Add Patient button on right */
+.patientLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+
+.patientLabelRow .formLabel {
+  margin-bottom: 0;
+}
+
+/* Add Patient inline button */
+.addPatientInlineBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(34, 43, 108, 0.25);
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.addPatientInlineBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.35);
+  opacity: 0.92;
+}
+
+.addPatientInlineBtn:active {
+  transform: translateY(0);
+}
+
+/* outer wrapper gives position:relative so the absolute
+   .searchableDropdown anchors correctly below the row */
+.patientSearchOuter {
+  position: relative;
+}
+
+/* Wraps tabs + input + button horizontally */
+.patientSearchRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  background: white;
+  border: 2px solid var(--border-light);
+  border-radius: 8px;
+  padding: 0 6px 0 0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* The 3 tabs sit flush inside the left side of the row */
+.patientSearchTabs {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  border-right: 1px solid rgba(34, 43, 108, 0.15);
+  flex-shrink: 0;
+}
+
+.patientSearchTab {
+  height: 100%;
+  padding: 0 11px;
+  border: none;
+  background: transparent;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+  border-radius: 0;
+}
+.patientSearchTab:first-child { border-radius: 6px 0 0 6px; }
+.patientSearchTab:hover { background: rgba(34, 43, 108, 0.06); color: var(--primary-start); }
+
+.patientSearchTabActive {
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end)) !important;
+  color: white !important;
+}
+
+/* Text input stretches to fill remaining space */
+.patientSearchInputWrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.patientSearchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.875rem;
+  font-family: inherit;
+  background: transparent;
+  padding: 0 8px;
+  min-width: 0;
+  color: var(--text-dark);
+}
+
+.patientSearchInput::placeholder {
+  color: var(--muted);
+}
+
+/* Small icon-only search button at the right end */
+.patientSearchIconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  color: white;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.patientSearchIconBtn:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: scale(1.05);
+}
+.patientSearchIconBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Selected patient chip shown inside the search row */
+.patientSelectedTrigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(34, 43, 108, 0.08);
+  border-radius: 6px;
+  padding: 3px 8px 3px 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  max-width: 160px;
+}
+
+.patientSelectedLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary-start);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─────────────────────────────────────────────── */
+/* Quick Add Patient Modal  (Emergency / Scenario 2) */
+/* ─────────────────────────────────────────────── */
+
+.quickAddOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 22, 41, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  animation: fadeIn 0.2s ease;
+}
+
+.quickAddModal {
+  background: var(--glass-bg);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  animation: quickAddSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.quickAddHeader {
+  padding: 13px 16px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.quickAddHeaderContent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.quickAddClose {
+  background: rgba(255, 255, 255, 0.22);
+  border: none;
+  color: white;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.quickAddClose:hover {
+  background: rgba(255, 255, 255, 0.38);
+  transform: scale(1.08);
+}
+
+.quickAddForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.quickAddBody {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.quickAddRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.quickAddGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.quickAddLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-start);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.optionalTag {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.quickAddInput {
+  width: 100%;
+  padding: 9px 12px;
+  border: 2px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  background: white;
+  color: var(--text-dark);
+  box-sizing: border-box;
+}
+
+.quickAddInput:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+.quickAddInput::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.quickAddSelect {
+  width: 100%;
+  padding: 9px 12px;
+  border: 2px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  background: white;
+  color: var(--text-dark);
+  box-sizing: border-box;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.quickAddSelect:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+.quickAddFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1.5px solid var(--border-light);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.45));
+  flex-shrink: 0;
+}
+
+.quickAddBtnCancel {
+  padding: 0 18px;
+  height: 38px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  border: none;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(32, 125, 156, 0.3);
+  z-index: 0;
+}
+
+.quickAddBtnCancel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.quickAddBtnCancel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(231, 76, 60, 0.4);
+}
+
+.quickAddBtnCancel:hover::before {
+  opacity: 1;
+}
+
+.quickAddBtnCancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.quickAddBtnSubmit {
+  padding: 0 18px;
+  height: 38px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  border: none;
+  box-shadow: 0 4px 14px rgba(32, 125, 156, 0.3);
+}
+
+.quickAddBtnSubmit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 18px rgba(32, 125, 156, 0.42);
+}
+
+.quickAddBtnSubmit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* Dark mode overrides */
 .dark-mode .addVisitModal h2 {
   background: linear-gradient(135deg, var(--text-light), var(--accent-end));
@@ -665,21 +1147,28 @@
 }
 
 .dark-mode .sectionTitle,
+.dark-mode .sectionTitleRow,
 .dark-mode .formLabel {
   color: var(--accent-start);
 }
 
 .dark-mode .formInput,
 .dark-mode .formTextarea,
-.dark-mode .searchableInput {
+.dark-mode .searchableInput,
+.dark-mode .patientSearchRow {
   background: #1e293b;
   border-color: #475569;
   color: var(--text-light);
 }
 
+.dark-mode .patientSearchInput {
+  color: var(--text-light);
+}
+
 .dark-mode .formInput:focus,
 .dark-mode .formTextarea:focus,
-.dark-mode .searchableInputOpen {
+.dark-mode .searchableInputOpen,
+.dark-mode .patientSearchRow:focus-within {
   border-color: var(--accent-start);
   box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2);
 }
@@ -728,4 +1217,192 @@
   background: #78350f;
   border-color: #fbbf24;
   color: #fef3c7;
+}
+
+.dark-mode .patientSelectedTrigger {
+  background: rgba(34, 211, 238, 0.12);
+}
+
+.dark-mode .patientSelectedLabel {
+  color: var(--accent-start);
+}
+
+.dark-mode .quickAddModal {
+  background: rgba(30, 41, 59, 0.96);
+}
+
+.dark-mode .quickAddInput,
+.dark-mode .quickAddSelect {
+  background: #1e293b;
+  border-color: #475569;
+  color: var(--text-light);
+}
+
+.dark-mode .quickAddInput:focus,
+.dark-mode .quickAddSelect:focus {
+  border-color: var(--accent-start);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2);
+}
+
+.dark-mode .quickAddLabel {
+  color: var(--accent-start);
+}
+
+.dark-mode .quickAddFooter {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border-top-color: #475569;
+}
+
+.dark-mode .emergencyToggleBtn {
+  border-color: rgba(248, 113, 113, 0.4);
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+}
+
+.dark-mode .emergencyToggleBtnOn {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  border-color: #dc2626;
+  color: white;
+}
+
+/* ────────────────────────────────────────────────
+   FAMILY SEARCH — inline button + popup
+   ──────────────────────────────────────────────── */
+
+/* Small pill button shown at the right of each Name/FileNo result row */
+.familySearchBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 7px;
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+  color: white;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(34, 43, 108, 0.22);
+}
+.familySearchBtn:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(34, 43, 108, 0.32);
+}
+.familySearchBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Fixed overlay behind the family popup card */
+.familyOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 22, 41, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease;
+}
+
+/* The family results popup card */
+.familyCard {
+  background: white;
+  border-radius: 16px;
+  width: min(440px, 92vw);
+  max-height: 68vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.24);
+  animation: slideUp 0.28s ease;
+  overflow: hidden;
+}
+
+/* Header strip inside the family card */
+.familyCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 18px;
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+  color: white;
+  flex-shrink: 0;
+}
+
+.familyCardHeader h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  flex: 1;
+}
+
+/* Close button inside the family card header */
+.familyCardCloseBtn {
+  background: rgba(255, 255, 255, 0.22);
+  border: none;
+  color: white;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.familyCardCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.38);
+  transform: scale(1.08);
+}
+
+/* Scrollable patient list inside the family card */
+.familyCardList {
+  overflow-y: auto;
+  flex: 1;
+  padding: 6px 0;
+}
+
+/* Empty state message inside the family card */
+.familyEmptyMsg {
+  padding: 28px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* Dark mode overrides for family popup */
+.dark-mode .familyCard {
+  background: rgba(30, 41, 59, 0.98);
+}
+
+.dark-mode .familyEmptyMsg {
+  color: #94a3b8;
+}
+
+/* ─────────────────────────────────────────────── */
+/* Incomplete form hint                             */
+/* ─────────────────────────────────────────────── */
+.formIncompleteHint {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1.5px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  color: var(--danger-color);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* Fix: override AddPatient overlay padding when nested inside this modal */
+.addPatientWrapper > div {
+  padding: 20px !important;
 }

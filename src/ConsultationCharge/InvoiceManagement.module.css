@@ -257,11 +257,6 @@
 }
 
 /* ==================== TABLE SECTION ==================== */
-/*
-  flex: 1        → fills ALL remaining height after filter bar + stats card
-  min-height: 0  → allows shrinking below content (required for nested scroll)
-  display: flex + flex-direction: column → so invoiceTableContainer can flex:1 inside it
-*/
 .tableSection {
   flex: 1;
   min-height: 0;
@@ -270,11 +265,6 @@
 }
 
 /* ==================== TABLE CONTAINER ==================== */
-/*
-  flex: 1        → fills all space between stats and pagination bar
-  min-height: 0  → allows shrinking (critical for scroll to work)
-  overflow-y: auto → table scrolls here, not the page
-*/
 .invoiceTableContainer {
   background: white;
   border-radius: 17px;
@@ -460,7 +450,7 @@
   border: 1px solid rgba(20, 184, 166, 0.3);
 }
 
-/* ==================== ACTIONS + DROPDOWN ==================== */
+/* ==================== ACTIONS CELL ==================== */
 .invoiceActionsCell {
   display: flex;
   align-items: center;
@@ -468,6 +458,51 @@
   gap: 8px;
 }
 
+/* ── Add Payment button ── */
+.invoicePaymentBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(5, 150, 105, 0.3);
+}
+
+.invoicePaymentBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(5, 150, 105, 0.45);
+}
+
+.invoicePaymentBtn:active {
+  transform: translateY(-1px);
+}
+
+/* ── Paid pill (replaces payment button when status = 3) ── */
+.invoicePaidPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 11px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 10px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* ── Details / View button ── */
 .invoiceViewBtn {
   position: relative;
   overflow: hidden;
@@ -507,77 +542,7 @@
 
 .invoiceViewBtn:active { transform: translateY(-1px); }
 
-.invoiceActionsDropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.invoiceActionsBtn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 6px;
-  color: #64748b;
-}
-
-.invoiceActionsBtn:hover {
-  color: var(--primary-start);
-}
-
-.invoiceDropdownMenu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  min-width: 180px;
-  z-index: 100;
-  overflow: hidden;
-  margin-top: 4px;
-}
-
-.invoiceDropdownItem {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 10px 16px;
-  border: none;
-  background: white;
-  text-align: left;
-  font-size: 0.9rem;
-  color: #374151;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.invoiceDropdownItem:not(:last-child) {
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.invoiceDropdownItem:hover {
-  background: #f9fafb;
-}
-
-.invoiceDropdownItem.payment {
-  color: #059669;
-}
-
-.invoiceDropdownItem.payment:hover {
-  background: #ecfdf5;
-}
-
-.invoiceDropdownItem.cancel {
-  color: #dc2626;
-}
-
-.invoiceDropdownItem.cancel:hover {
-  background: #fef2f2;
-}
-
-/* ==================== ADD PAYMENT MODAL – Exact match to Add Clinic popup ==================== */
+/* ==================== ADD PAYMENT MODAL ==================== */
 .invoiceModalOverlay {
   position: fixed;
   inset: 0;
@@ -833,10 +798,6 @@
 }
 
 /* ==================== PAGINATION BAR ==================== */
-/*
-  flex-shrink: 0  → never compressed, always pinned to the bottom of tableSection
-  margin-top: 14px → gap between scrollable table and this bar
-*/
 .paginationBar {
   flex-shrink: 0;
   display: flex;

@@ -474,7 +474,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   color: #ffffff;
   border: none;
   border-radius: 9px;
@@ -487,11 +487,40 @@
 }
 
 .error-popup__btn:hover {
+  background: linear-gradient(135deg, var(--accent-end), var(--accent-start));
   opacity: 0.9;
   transform: translateY(-1px);
 }
 
 .error-popup__btn:active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.error-popup__btn--cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end), var(--accent-start));
+  color: #ffffff;
+  border: none;
+  border-radius: 9px;
+  padding: 10px 28px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 3px 10px rgba(229, 57, 53, 0.35);
+}
+
+.error-popup__btn--cancel:hover {
+  background: red;
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.error-popup__btn-cancel:active {
   opacity: 1;
   transform: translateY(0);
 }
@@ -780,10 +809,15 @@
 }
 .snapshot-row { gap: 16px; font-size: .82rem; align-items: baseline; }
 .snapshot-label {
-  color: black; font-weight: 700; font-size: .7rem;
+  color: var(--primary-start);
+  font-weight: 700; font-size: .7rem;
   text-transform: uppercase; letter-spacing: .35px;
   width: 60px; flex-shrink: 0;
 }
+
+.snapshot-mark{color: var(--primary-start);}
+
+.snapshot-value{color: var(--accent-start); font-weight: 600;}
 
 .form-stack { display: flex; flex-direction: column; gap: 12px; }
 .form-group { display: flex; flex-direction: column; gap: 5px; }
@@ -1951,3 +1985,149 @@
   background: rgba(255,255,255,.25) !important;
   box-shadow: 0 4px 12px rgba(48,178,181,.3) !important;
 }
+
+/* ══════════════════════════════════════════════════════
+   MEDICINE LIST — LOW STOCK & OUT OF STOCK STATES
+   ══════════════════════════════════════════════════════ */
+
+/* Low stock — amber/orange shadow + tinted background */
+.med-item--low-stock {
+  background: rgba(217,119,6,.05);
+  border-color: rgba(217,119,6,.28) !important;
+  box-shadow: inset 3px 0 0 rgba(217,119,6,.55);
+}
+.med-item--low-stock:hover {
+  background: rgba(217,119,6,.09);
+  border-color: rgba(217,119,6,.48) !important;
+}
+.med-item--low-stock .med-item__name { color: #92400e; }
+
+/* Out of stock — red shadow, dimmed, no pointer */
+.med-item--out-of-stock {
+  background: rgba(220,38,38,.04);
+  border-color: rgba(220,38,38,.2) !important;
+  box-shadow: inset 3px 0 0 rgba(220,38,38,.45);
+  opacity: .58;
+  cursor: not-allowed !important;
+}
+.med-item--out-of-stock:hover {
+  background: rgba(220,38,38,.06);
+  border-color: rgba(220,38,38,.3) !important;
+  transform: none !important;
+}
+.med-item--out-of-stock .med-item__drag { color: #f0c4c4; }
+.med-item--out-of-stock .med-item__name { color: #991b1b; }
+
+/* Low stock badge — amber */
+.tag--low-stock {
+  background: rgba(217,119,6,.14);
+  color: #92400e;
+  border: 1px solid rgba(217,119,6,.3);
+  font-weight: 800;
+}
+
+/* Out of stock badge — red */
+.tag--out-of-stock {
+  background: rgba(220,38,38,.1);
+  color: #991b1b;
+  border: 1px solid rgba(220,38,38,.25);
+  font-weight: 800;
+}
+
+.confirm-popup__btns{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Low stock — RED shade */
+.med-item--low-stock {
+  background: rgba(220,38,38,.06);
+  border-color: rgba(220,38,38,.35) !important;
+  box-shadow: inset 3px 0 0 rgba(220,38,38,.65);
+}
+.med-item--low-stock:hover {
+  background: rgba(220,38,38,.10);
+  border-color: rgba(220,38,38,.55) !important;
+}
+.med-item--low-stock .med-item__name { color: #b91c1c; }
+
+/* Low stock badge — RED */
+.tag--low-stock {
+  background: rgba(220,38,38,.14);
+  color: #b91c1c;
+  border: 1px solid rgba(220,38,38,.35);
+  font-weight: 800;
+}
+
+
+
+/* ══════════════════════════════════════════════════════
+   EXTERNAL LAB SELECTOR (inLabMode === 0 only)
+   ══════════════════════════════════════════════════════ */
+.lab-external-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  background: linear-gradient(90deg, rgba(32,125,156,.05), rgba(48,178,181,.03));
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.lab-external-section__label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .77rem;
+  font-weight: 800;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.lab-external-section__required {
+  color: var(--red);
+  font-size: .85rem;
+}
+
+.lab-external-section__loading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: .82rem;
+  color: var(--text-3);
+}
+
+.lab-external-select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border-3);
+  border-radius: var(--r-sm);
+  font-size: .87rem;
+  color: var(--text);
+  background: var(--white);
+  font-family: var(--font);
+  outline: none;
+  cursor: pointer;
+  transition: border-color .18s, box-shadow .18s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237a90b0' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px;
+}
+
+.lab-external-select:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48,178,181,.12);
+}
+
+.lab-external-select option {
+  color: var(--text);
+  background: var(--white);
+}
+

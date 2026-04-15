@@ -48,6 +48,9 @@ const useButtonCooldown = () => {
   return { trigger, isDisabled };
 };
 
+// ─── Valid order statuses to display ──────────────────────────────────────────
+const VALID_ORDER_STATUSES = [2, 4, 5];
+
 // ─── Main Component ────────────────────────────────────────────────────────────
 const LabWorkQueue = () => {
   const navigate = useNavigate();
@@ -58,13 +61,15 @@ const LabWorkQueue = () => {
   const showPopupMsg = (message, type = 'success') => setPopup({ visible: true, message, type });
   const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
 
-  // ── Order list (lightweight — one row per orderId)
+  // ── Order list — fetched from getLabTestOrderList
   const [orderList, setOrderList] = useState([]);
 
-  // ── Per-order lazy data
+  // ── Per-order lazy work items data
   const [orderDetails, setOrderDetails] = useState({});
 
   const [expandedOrders, setExpandedOrders] = useState(new Set());
+  // Track orders that have ever been expanded
+  const [everExpandedOrders, setEverExpandedOrders] = useState(new Set());
   const [doctors, setDoctors] = useState([]);
   
   // Filter inputs (not applied until search)
@@ -111,13 +116,21 @@ const LabWorkQueue = () => {
   const [orderToComplete, setOrderToComplete] = useState(null);
   const [completingOrder, setCompletingOrder] = useState(false);
 
-  // Status options
+  // Order-level status options — only show Completed, Invoice Processed, Work in Progress
   const statusOptions = [
-    { id: -1, label: 'All Statuses', color: 'default' },
-    { id: 1,  label: 'Pending',      color: 'warning'  },
-    { id: 2,  label: 'In Progress',  color: 'progress' },
-    { id: 3,  label: 'Completed',    color: 'success'  },
-    { id: 4,  label: 'Rejected',     color: 'danger'   }
+    { id: -1, label: 'All Statuses',      color: 'default'  },
+    { id: 2,  label: 'Completed',         color: 'success'  },
+    { id: 4,  label: 'Invoice Processed', color: 'progress' },
+    { id: 5,  label: 'Work in Progress',  color: 'progress' },
+  ];
+
+  // Work item (lab test) status options
+  // 1=Pending, 2=InProgress, 3=Completed, 4=Rejected
+  const workItemStatusOptions = [
+    { id: 1, label: 'Pending',    color: 'warning'  },
+    { id: 2, label: 'InProgress', color: 'progress' },
+    { id: 3, label: 'Completed',  color: 'success'  },
+    { id: 4, label: 'Rejected',   color: 'danger'   },
   ];
 
   // Are any filters active?
@@ -142,7 +155,7 @@ const LabWorkQueue = () => {
     }
   };
 
-  // ── Fetch ONLY the order list (lightweight) ──────────────────────────────
+  // ── Fetch order list from getLabTestOrderList ────────────────────────────
   const fetchOrderList = async (filters = appliedFilters) => {
     try {
       setLoading(true);
@@ -152,9 +165,9 @@ const LabWorkQueue = () => {
 
       const options = {
         Page: 1,
-        PageSize: 200,
+        PageSize: 20,
         BranchID: branchId,
-        Status: filters.status
+        Status: filters.status === -1 ? undefined : filters.status
       };
 
       if (filters.searchValue.trim()) {
@@ -172,10 +185,16 @@ const LabWorkQueue = () => {
         options.ToDate   = filters.dateTo;
       }
 
-      const data = await getLabWorkItemsList(clinicId, options);
+      const data = await getLabTestOrderList(clinicId, options);
 
       // Client-side filter for non-orderId search types
-      let filteredData = data;
+      let filteredData = Array.isArray(data) ? data : [];
+
+      // Only show orders with status 2, 4, or 5
+      if (filters.status === -1) {
+        filteredData = filteredData.filter(i => VALID_ORDER_STATUSES.includes(i.status));
+      }
+
       if (filters.searchValue.trim() && filters.searchType !== 'orderId') {
         const term = filters.searchValue.toLowerCase();
         switch (filters.searchType) {
@@ -187,27 +206,14 @@ const LabWorkQueue = () => {
         }
       }
 
-      // Deduplicate to one summary row per orderId (sorted newest first)
-      const seen   = new Set();
-      const orders = [];
-      [...filteredData]
-        .sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated))
-        .forEach(item => {
-          if (!seen.has(item.orderId)) {
-            seen.add(item.orderId);
-            orders.push({
-              orderId:     item.orderId,
-              patientName: item.patientName,
-              fileNo:      item.fileNo,
-              mobile:      item.mobile,
-              doctorName:  item.doctorName,
-              dateCreated: item.dateCreated,
-            });
-          }
-        });
+      // Sort newest first
+      const orders = [...filteredData].sort(
+        (a, b) => new Date(b.dateCreated || b.createdDate || 0) - new Date(a.dateCreated || a.createdDate || 0)
+      );
 
       setOrderList(orders);
       setOrderDetails({});
+      setEverExpandedOrders(new Set());
     } catch (err) {
       console.error('fetchOrderList error:', err);
       setError(err);
@@ -228,7 +234,7 @@ const LabWorkQueue = () => {
         Page: 1,
         PageSize: 200,
         BranchID: branchId,
-        Status: filters.status
+        Status: filters.status === -1 ? undefined : filters.status
       };
 
       if (filters.searchValue.trim()) {
@@ -246,9 +252,15 @@ const LabWorkQueue = () => {
         options.ToDate   = filters.dateTo;
       }
 
-      const data = await getLabWorkItemsList(clinicId, options);
+      const data = await getLabTestOrderList(clinicId, options);
 
-      let filteredData = data;
+      let filteredData = Array.isArray(data) ? data : [];
+
+      // Only show orders with status 2, 4, or 5
+      if (filters.status === -1) {
+        filteredData = filteredData.filter(i => VALID_ORDER_STATUSES.includes(i.status));
+      }
+
       if (filters.searchValue.trim() && filters.searchType !== 'orderId') {
         const term = filters.searchValue.toLowerCase();
         switch (filters.searchType) {
@@ -260,23 +272,9 @@ const LabWorkQueue = () => {
         }
       }
 
-      const seen   = new Set();
-      const orders = [];
-      [...filteredData]
-        .sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated))
-        .forEach(item => {
-          if (!seen.has(item.orderId)) {
-            seen.add(item.orderId);
-            orders.push({
-              orderId:     item.orderId,
-              patientName: item.patientName,
-              fileNo:      item.fileNo,
-              mobile:      item.mobile,
-              doctorName:  item.doctorName,
-              dateCreated: item.dateCreated,
-            });
-          }
-        });
+      const orders = [...filteredData].sort(
+        (a, b) => new Date(b.dateCreated || b.createdDate || 0) - new Date(a.dateCreated || a.createdDate || 0)
+      );
 
       setOrderList(orders);
       setOrderDetails({});
@@ -284,8 +282,10 @@ const LabWorkQueue = () => {
       // Re-expand the processed order and lazy-load its fresh details
       if (reexpandOrderId) {
         setExpandedOrders(new Set([reexpandOrderId]));
+        setEverExpandedOrders(new Set([reexpandOrderId]));
       } else {
         setExpandedOrders(new Set());
+        setEverExpandedOrders(new Set());
       }
     } catch (err) {
       console.error('fetchOrderListAndReexpand error:', err);
@@ -295,13 +295,13 @@ const LabWorkQueue = () => {
     }
   };
 
-  // ── Lazy-load work items + order status for a single order ───────────────
+  // ── Lazy-load work items for a single order using getLabWorkItemsList ────
   const loadOrderDetails = async (orderId) => {
     if (orderDetails[orderId]?.loaded || orderDetails[orderId]?.loading) return;
 
     setOrderDetails(prev => ({
       ...prev,
-      [orderId]: { items: [], orderStatus: null, loading: true, loaded: false }
+      [orderId]: { items: [], loading: true, loaded: false }
     }));
 
     try {
@@ -310,34 +310,25 @@ const LabWorkQueue = () => {
 
       const data = await getLabWorkItemsList(clinicId, {
         Page: 1,
-        PageSize: 100,
+        PageSize: 20,
         BranchID: branchId,
         OrderID: orderId,
         Status: -1
       });
 
-      let orderStatus = null;
-      try {
-        const orderData = await getLabTestOrderList(clinicId, { OrderID: orderId, BranchID: branchId });
-        if (orderData && orderData.length > 0) orderStatus = orderData[0].status;
-      } catch (err) {
-        console.error(`Failed to fetch order status for ${orderId}:`, err);
-      }
-
       setOrderDetails(prev => ({
         ...prev,
         [orderId]: {
-          items:       Array.isArray(data) ? data : [],
-          orderStatus,
-          loading:     false,
-          loaded:      true
+          items:   Array.isArray(data) ? data : [],
+          loading: false,
+          loaded:  true
         }
       }));
     } catch (err) {
       console.error(`loadOrderDetails error for order ${orderId}:`, err);
       setOrderDetails(prev => ({
         ...prev,
-        [orderId]: { items: [], orderStatus: null, loading: false, loaded: false }
+        [orderId]: { items: [], loading: false, loaded: false }
       }));
     }
   };
@@ -392,7 +383,7 @@ const LabWorkQueue = () => {
     setPage(newPage);
   };
 
-  // ── Toggle expand — triggers lazy load on first open ─────────────────────
+  // ── Toggle expand — triggers lazy load of work items on first open ────────
   const toggleOrderExpansion = (orderId) => {
     const newExpanded = new Set(expandedOrders);
     if (newExpanded.has(orderId)) {
@@ -400,17 +391,10 @@ const LabWorkQueue = () => {
     } else {
       newExpanded.add(orderId);
       loadOrderDetails(orderId);
+      // Mark this order as ever expanded
+      setEverExpandedOrders(prev => new Set([...prev, orderId]));
     }
     setExpandedOrders(newExpanded);
-  };
-
-  const getOrderStatus = (items) => {
-    const statuses = items.map(i => i.status);
-    if (statuses.every(s => s === 3)) return { status: 3, label: 'All Completed', color: 'success'  };
-    if (statuses.some(s  => s === 2)) return { status: 2, label: 'In Progress',   color: 'progress' };
-    if (statuses.some(s  => s === 1)) return { status: 1, label: 'Pending',        color: 'warning'  };
-    if (statuses.some(s  => s === 4)) return { status: 4, label: 'Rejected',       color: 'danger'   };
-    return { status: -1, label: 'Mixed', color: 'default' };
   };
 
   const getStatusBadgeClass = (color) => styles[`status${color}`] || styles.statusDefault;
@@ -433,21 +417,38 @@ const LabWorkQueue = () => {
   };
 
   // ── Show "Mark as Complete" button only when:
-  //    - all items are completed (100%)
-  //    - order status is NOT already 2 (marked complete)
-  const isOrderMarkedComplete        = (orderId, items) => items.every(i => i.status === 3) && orderDetails[orderId]?.orderStatus === 2;
-  const shouldShowMarkCompleteButton = (orderId, items) => items.every(i => i.status === 3) && orderDetails[orderId]?.orderStatus !== 2;
+  //    - all work items are completed (100%)
+  //    - order status is NOT already 2 (Completed)
+  const isOrderMarkedComplete        = (orderStatus, items) => items.length > 0 && items.every(i => i.status === 3) && orderStatus === 2;
+  const shouldShowMarkCompleteButton = (orderStatus, items) => items.length > 0 && items.every(i => i.status === 3) && orderStatus !== 2;
 
+  // ── Enrich orderData with item-level fields (fileNo, mobile, doctorName, patientName)
+  //    before opening either the Process or View modal ────────────────────────
   const handleProcessWorkItem = (item, orderData) => {
+    const enrichedOrderData = {
+      ...orderData,
+      patientName: item.patientName || orderData.patientName,
+      fileNo:      item.fileNo      || orderData.fileNo      || '—',
+      mobile:      item.mobile      || orderData.mobile      || '—',
+      doctorName:  item.doctorName  || orderData.doctorName  || 'N/A',
+    };
     setSelectedWorkItem(item);
-    setSelectedOrderData(orderData);
+    setSelectedOrderData(enrichedOrderData);
     setShowWorkDetailModal(true);
   };
 
-  // ── Open View modal for completed/rejected items ───────────────────────────
+  // ── Open View modal — use fileNo, mobile, doctorName from the work item
+  //    since getLabWorkItemsList already maps these fields from the API ──────
   const handleViewWorkItem = (item, orderData, orderStatus) => {
+    const enrichedOrderData = {
+      ...orderData,
+      patientName: item.patientName || orderData.patientName,
+      fileNo:      item.fileNo      || orderData.fileNo      || '—',
+      mobile:      item.mobile      || orderData.mobile      || '—',
+      doctorName:  item.doctorName  || orderData.doctorName  || 'N/A',
+    };
     setViewWorkItem(item);
-    setViewOrderData(orderData);
+    setViewOrderData(enrichedOrderData);
     setViewOrderStatus(orderStatus ?? null);
     setShowViewModal(true);
   };
@@ -480,7 +481,7 @@ const LabWorkQueue = () => {
   //    If orderStatus !== 4 → show warning popup (not invoiced yet)
   //    If orderStatus === 4 → open confirm dialog
   const handleMarkCompleteClick = (orderId, orderData) => {
-    const currentOrderStatus = orderDetails[orderId]?.orderStatus;
+    const currentOrderStatus = orderData.status;
     if (currentOrderStatus !== 4) {
       showPopupMsg('This order has not been invoiced yet. Please invoice the order first and try again.', 'warning');
       return;
@@ -499,20 +500,12 @@ const LabWorkQueue = () => {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
 
-      const orderDetailsApi = await getLabTestOrderList(clinicId, { OrderID: orderToComplete.orderId, BranchID: branchId });
-      if (!orderDetailsApi || orderDetailsApi.length === 0) throw new Error('Order details not found');
-
-      const od = orderDetailsApi[0];
+      const od = orderToComplete.orderData;
       await updateLabTestOrder({
         orderId: orderToComplete.orderId, clinicId, branchId,
         status: 2, fileId: od.fileId || 0, priority: od.priority || 1,
         notes: od.notes || '', testApprovedBy: od.doctorId || 0
       });
-
-      setOrderDetails(prev => ({
-        ...prev,
-        [orderToComplete.orderId]: { ...prev[orderToComplete.orderId], orderStatus: 2 }
-      }));
 
       const completedOrderId = orderToComplete.orderId;
       setShowCompleteConfirm(false);
@@ -631,23 +624,29 @@ const LabWorkQueue = () => {
         <div className={styles.workQueueContainer}>
           {paginatedOrders.length === 0 ? (
             <div className={styles.noData}>
-              {hasActiveFilters ? 'No work items found matching your filters.' : 'No work items found.'}
+              {hasActiveFilters ? 'No orders found matching your filters.' : 'No orders found.'}
             </div>
           ) : (
             paginatedOrders.map((orderData) => {
-              const { orderId } = orderData;
-              const isExpanded  = expandedOrders.has(orderId);
-              const detail      = orderDetails[orderId];
-              const items       = detail?.items || [];
-              const isLoading   = detail?.loading || false;
+              // orderId field — support both orderId and id from getLabTestOrderList response
+              const orderId = orderData.orderId ?? orderData.id;
+
+              const isExpanded   = expandedOrders.has(orderId);
+              const everExpanded = everExpandedOrders.has(orderId);
+              const detail       = orderDetails[orderId];
+              const items        = detail?.items || [];
+              const isLoading    = detail?.loading || false;
+
+              // Order status comes directly from the order record
+              const orderStatus = orderData.status;
 
               const completedCount     = items.filter(i => i.status === 3).length;
               const totalCount         = items.length;
               const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
               const progressColors     = getProgressColors(progressPercentage);
 
-              const showMarkCompleteBtn = detail?.loaded && shouldShowMarkCompleteButton(orderId, items);
-              const showCompletedBadge  = detail?.loaded && isOrderMarkedComplete(orderId, items);
+              const showMarkCompleteBtn = detail?.loaded && shouldShowMarkCompleteButton(orderStatus, items);
+              const showCompletedBadge  = detail?.loaded && isOrderMarkedComplete(orderStatus, items);
 
               return (
                 <div key={orderId} className={styles.orderGroup}>
@@ -665,7 +664,7 @@ const LabWorkQueue = () => {
                             </div>
                             <div>
                               <div className={styles.patientName}>{orderData.patientName}</div>
-                              <div className={styles.patientDetails}>{orderData.fileNo} • {orderData.mobile}</div>
+                              <div className={styles.patientDetails}>{orderData.fileId} • {orderData.patientMobile}</div>
                             </div>
                           </div>
 
@@ -676,13 +675,20 @@ const LabWorkQueue = () => {
                                 <div className={styles.statItem}><FiCheckCircle size={14} /><span>{completedCount} / {totalCount} Completed</span></div>
                               </>
                             )}
-                            <div className={styles.statItem}><FiCalendar size={14} /><span>{formatDate(orderData.dateCreated)}</span></div>
+                            <div className={styles.statItem}><FiCalendar size={14} /><span>{formatDate(orderData.dateCreated || orderData.createdDate)}</span></div>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     <div className={styles.orderHeaderRight}>
+                      {/* Order-level status badge — only show if never expanded */}
+                      {!everExpanded && (
+                        <span className={`${styles.badge} ${getStatusBadgeClass(statusOptions.find(s => s.id === orderStatus)?.color || 'default')}`}>
+                          {statusOptions.find(s => s.id === orderStatus)?.label || 'Unknown'}
+                        </span>
+                      )}
+
                       {detail?.loaded && totalCount > 0 && (
                         <div className={styles.progressContainer}>
                           <div className={styles.progressBar}>
@@ -763,8 +769,9 @@ const LabWorkQueue = () => {
                                     </div>
                                   </td>
                                   <td>
-                                    <span className={`${styles.badge} ${getStatusBadgeClass(statusOptions.find(s => s.id === item.status)?.color || 'default')}`}>
-                                      {statusOptions.find(s => s.id === item.status)?.label || 'Unknown'}
+                                    {/* Work item status uses workItemStatusOptions (1=Pending,2=InProgress,3=Completed,4=Rejected) */}
+                                    <span className={`${styles.badge} ${getStatusBadgeClass(workItemStatusOptions.find(s => s.id === item.status)?.color || 'default')}`}>
+                                      {workItemStatusOptions.find(s => s.id === item.status)?.label || 'Unknown'}
                                     </span>
                                   </td>
                                   <td>
@@ -774,7 +781,7 @@ const LabWorkQueue = () => {
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           cooldown.trigger(`view_${item.workId}`);
-                                          handleViewWorkItem(item, orderData, detail?.orderStatus);
+                                          handleViewWorkItem(item, orderData, orderStatus);
                                         }}
                                         disabled={cooldown.isDisabled(`view_${item.workId}`)}
                                         className={styles.viewBtn}
@@ -862,7 +869,7 @@ const LabWorkQueue = () => {
             <div className={styles.confirmBody}>
               <p>Are you sure you want to mark this order as complete?</p>
               <p><strong>Patient:</strong> {orderToComplete.orderData.patientName}</p>
-              <p className={styles.confirmSubtext}>This will update the order status to "In Progress".</p>
+              <p className={styles.confirmSubtext}>This will update the order status to "Completed".</p>
             </div>
             <div className={styles.confirmFooter}>
               <button onClick={handleCancelMarkComplete} className={styles.cancelBtn} disabled={completingOrder}>Cancel</button>
@@ -895,7 +902,11 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees, s
     sampleCollectedTime:  workItem.sampleCollectedTime
       ? toLocalDateTimeString(workItem.sampleCollectedTime)
       : toLocalDateTimeString(new Date()),
-    sampleCollectedPlace: workItem.sampleCollectedPlace || ''
+    sampleCollectedPlace: workItem.sampleCollectedPlace
+  ? workItem.sampleCollectedPlace
+  : orderData.clinicName
+    ? `${orderData.clinicName}${orderData.clinicAddress ? `, ${orderData.clinicAddress}` : ''}`
+    : ''
   });
 
   const [resultData, setResultData] = useState({
@@ -1033,8 +1044,8 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees, s
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       await approveLabWorkItem({ workId: workItem.workId, clinicId, branchId, testApprovedBy: approvalData.testApprovedBy, approvalRemarks: approvalData.approvalRemarks });
-      // Pass orderId and success message to parent — parent shows the popup once
-      setTimeout(() => { setShowApprovalModal(false); onClose && onClose(orderData.orderId, 'Work item approved successfully!', 'success'); }, 1000);
+      const orderId = orderData.orderId ?? orderData.id;
+      setTimeout(() => { setShowApprovalModal(false); onClose && onClose(orderId, 'Work item approved successfully!', 'success'); }, 1000);
     } catch (err) {
       setError(err);
       showPopupMsg(err.message || 'Failed to approve work item', 'error');
@@ -1052,8 +1063,8 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees, s
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       await rejectLabWorkItem({ WorkID: workItem.workId, clinicId, branchID: branchId, TestApprovedBy: rejectionData.testApprovedBy, RejectReason: rejectionData.rejectReason });
-      // Pass orderId and success message to parent — parent shows the popup once
-      setTimeout(() => { setShowRejectionModal(false); onClose && onClose(orderData.orderId, 'Work item rejected successfully!', 'success'); }, 1000);
+      const orderId = orderData.orderId ?? orderData.id;
+      setTimeout(() => { setShowRejectionModal(false); onClose && onClose(orderId, 'Work item rejected successfully!', 'success'); }, 1000);
     } catch (err) {
       setError(err);
       showPopupMsg(err.message || 'Failed to reject work item', 'error');
@@ -1066,6 +1077,8 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees, s
     return 'pending';
   };
 
+  const orderId = orderData.orderId ?? orderData.id;
+
   return (
     <div className={styles.detailModalOverlay} >
       <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
@@ -1077,10 +1090,9 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees, s
             <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
             {localStorage.getItem('clinicName') || '—'}
           </div>
-          <button onClick={() => onClose(orderData.orderId)} className={styles.detailCloseBtn}><FiX size={24} /></button>
+          <button onClick={() => onClose(orderId)} className={styles.detailCloseBtn}><FiX size={24} /></button>
         </div>
 
-        {/* Inner status message (inline, not popup) kept for step-level feedback */}
         {statusMessage.text && (
           <div className={`${styles.statusMessage} ${styles[statusMessage.type]}`}>{statusMessage.text}</div>
         )}
@@ -1098,7 +1110,7 @@ const LabWorkDetailModal = ({ workItem, orderData, onClose, onSave, employees, s
             <div className={styles.infoHeader}><FiActivity size={18} /><h3>Test Information</h3></div>
             <div className={styles.infoContent}>
               <div className={styles.infoRow}><span className={styles.infoLabel}>Test Name:</span><span className={styles.infoValue}>{workItem.testName}</span></div>
-              <div className={styles.infoRow}><span className={styles.infoLabel}>Doctor:</span>   <span className={styles.infoValue}>{orderData.doctorName || 'N/A'}</span></div>
+              <div className={styles.infoRow}><span className={styles.infoLabel}>Doctor:</span>   <span className={styles.infoValue}>{orderData.doctorFullName || orderData.doctorName || 'N/A'}</span></div>
             </div>
           </div>
         </div>

@@ -135,7 +135,6 @@ const InvoiceList = () => {
     referenceNo: '',
     remarks:     '',
   });
-  const [activeDropdown, setActiveDropdown]         = useState(null);
   const [validationMessages, setValidationMessages] = useState({});
   const [confirmCancel, setConfirmCancel]           = useState(null); // invoice to cancel
 
@@ -152,7 +151,6 @@ const InvoiceList = () => {
   const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
 
   // ── Payment form required-field gating ─────────────────────────────────────
-  // Enabled only when paymentDate, paymentMode and amount are filled
   const paymentAllRequiredFilled =
     paymentData.paymentDate.trim().length > 0 &&
     paymentData.paymentMode !== ''           &&
@@ -201,16 +199,6 @@ const InvoiceList = () => {
     fetchInvoices(appliedFilters, page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedFilters]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest(`.${styles.invoiceActionsDropdown}`)) {
-        setActiveDropdown(null);
-      }
-    };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
 
   // ── Client-side filter ─────────────────────────────────────────────────────
   const filteredInvoices = useMemo(() => {
@@ -275,18 +263,11 @@ const InvoiceList = () => {
     setAppliedFilters(defaults);
   };
 
-  // ── Dropdown ───────────────────────────────────────────────────────────────
-  const toggleDropdown = (invoiceId, e) => {
-    e.stopPropagation();
-    setActiveDropdown(activeDropdown === invoiceId ? null : invoiceId);
-  };
-
   // ── Modal handlers ─────────────────────────────────────────────────────────
   const openViewModal = (invoice) => {
     triggerCooldown(`view-${invoice.id}`);
     setSelectedInvoice(invoice);
     setIsViewModalOpen(true);
-    setActiveDropdown(null);
   };
 
   const closeViewModal = () => {
@@ -306,7 +287,6 @@ const InvoiceList = () => {
     });
     setValidationMessages({});
     setIsPaymentModalOpen(true);
-    setActiveDropdown(null);
   };
 
   const closeModals = () => {
@@ -328,7 +308,6 @@ const InvoiceList = () => {
   const handleAddPayment = async (e) => {
     e.preventDefault();
 
-    // Guard: required fields
     if (!paymentAllRequiredFilled) {
       const missing = [];
       if (!paymentData.paymentDate)                            missing.push('Payment Date');
@@ -338,7 +317,6 @@ const InvoiceList = () => {
       return;
     }
 
-    // Additional validations
     const paymentDateValidation = getLiveValidationMessage('paymentDate', paymentData.paymentDate);
     if (paymentDateValidation) { showPopup(paymentDateValidation, 'warning'); return; }
 
@@ -377,7 +355,6 @@ const InvoiceList = () => {
   // ── Cancel invoice ─────────────────────────────────────────────────────────
   const handleCancelInvoice = (invoice) => {
     triggerCooldown(`cancel-${invoice.id}`);
-    setActiveDropdown(null);
     setConfirmCancel(invoice);
   };
 
@@ -390,6 +367,7 @@ const InvoiceList = () => {
       const branchId = await getStoredBranchId();
       await cancelInvoice(invoice.id, clinicId, branchId);
       showPopup(`Invoice ${invoice.invoiceNo} cancelled successfully!`, 'success');
+      closeViewModal();
       fetchInvoices();
     } catch (err) {
       showPopup(err.message || 'Failed to cancel invoice.', 'error');
@@ -545,6 +523,23 @@ const InvoiceList = () => {
                       <td><span className={getStatusBadgeClass(invoice.status)}>{getStatusLabel(invoice.status)}</span></td>
                       <td>
                         <div className={styles.invoiceActionsCell}>
+
+                          {/* ── Add Payment / Paid indicator ── */}
+                          {invoice.status === 3 ? (
+                            /* Paid — show a muted "Paid" pill, no button */
+                            <span className={styles.invoicePaidPill}>✓ Paid</span>
+                          ) : invoice.status !== 5 ? (
+                            /* Any status except Paid (3) and Cancelled (5) */
+                            <button
+                              onClick={() => openPaymentModal(invoice)}
+                              className={styles.invoicePaymentBtn}
+                              title="Add Payment"
+                            >
+                              <FiDollarSign size={14} /> Add Payment
+                            </button>
+                          ) : null}
+
+                          {/* ── Details button ── */}
                           <button
                             onClick={() => openViewModal(invoice)}
                             className={styles.invoiceViewBtn}
@@ -553,38 +548,7 @@ const InvoiceList = () => {
                           >
                             Details
                           </button>
-                          <div className={styles.invoiceActionsDropdown}>
-                            {invoice.status !== 5 && (
-                              <button
-                                onClick={(e) => toggleDropdown(invoice.id, e)}
-                                className={styles.invoiceActionsBtn}
-                                title="Actions"
-                              >
-                                <FiMoreVertical size={18} />
-                              </button>
-                            )}
-                            {activeDropdown === invoice.id && (
-                              <div className={styles.invoiceDropdownMenu}>
-                                {invoice.status !== 3 && invoice.status !== 5 && (
-                                  <button
-                                    onClick={() => openPaymentModal(invoice)}
-                                    className={`${styles.invoiceDropdownItem} ${styles.payment}`}
-                                  >
-                                    <FiDollarSign size={16} /> Add Payment
-                                  </button>
-                                )}
-                                {invoice.status !== 5 && (
-                                  <button
-                                    onClick={() => handleCancelInvoice(invoice)}
-                                    className={`${styles.invoiceDropdownItem} ${styles.cancel}`}
-                                    disabled={!!btnCooldown[`cancel-${invoice.id}`]}
-                                  >
-                                    <FiX size={16} /> Cancel Invoice
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </div>
+
                         </div>
                       </td>
                     </tr>
@@ -616,6 +580,11 @@ const InvoiceList = () => {
         isOpen={isViewModalOpen}
         onClose={closeViewModal}
         invoiceId={selectedInvoice?.id}
+        invoiceStatus={selectedInvoice?.status}
+        invoiceNo={selectedInvoice?.invoiceNo}
+        onCancelInvoice={handleCancelInvoice}
+        cancelCooldown={btnCooldown}
+        triggerCooldown={triggerCooldown}
       />
 
       {/* ── Add Payment Modal ── */}
@@ -762,7 +731,7 @@ const InvoiceList = () => {
         onCancel={() => setConfirmCancel(null)}
       />
 
-      {/* ── MessagePopup (at root level so z-index is never blocked) ── */}
+      {/* ── MessagePopup ── */}
       <MessagePopup
         visible={popup.visible}
         message={popup.message}

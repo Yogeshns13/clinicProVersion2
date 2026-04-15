@@ -15,7 +15,7 @@ import {
   addEmployeeProof,
   updateEmployeeProof,
   deleteEmployeeProof,
-  uploadIDProof,
+  uploadFile,
   getEmployeeBeneficiaryAccountList,
   addEmployeeBeneficiaryAccount,
   updateEmployeeBeneficiaryAccount,
@@ -450,6 +450,50 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, id]);
 
+  // ── Auto-fetch photo when entering Basic edit mode ──
+  useEffect(() => {
+    if (editMode.basic && formData.photoFileId > 0 && !fetchedPhotoUrl && !photoFetchLoading) {
+      (async () => {
+        setPhotoFetchLoading(true);
+        try {
+          const clinicId = await getStoredClinicId();
+          const fileAccessToken = await fetchFileAccessToken(employeeClinicId || clinicId);
+          const res = await getFile(clinicId, formData.photoFileId, fileAccessToken);
+          setFetchedPhotoUrl(res.url);
+        } catch (err) {
+          console.error('Failed to auto-load photo in edit mode:', err);
+        } finally {
+          setPhotoFetchLoading(false);
+        }
+      })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editMode.basic]);
+
+  // ── Auto-fetch proof files when entering Proof edit mode ──
+  useEffect(() => {
+    if (editMode.proof) {
+      proofList.forEach((proof, index) => {
+        if (proof.fileId > 0 && !fetchedProofUrls[index] && !proofFetchLoading[index]) {
+          setProofFetchLoading(prev => { const a = [...prev]; a[index] = true; return a; });
+          (async () => {
+            try {
+              const clinicId = await getStoredClinicId();
+              const fileAccessToken = await fetchFileAccessToken(employeeClinicId || clinicId);
+              const res = await getFile(clinicId, proof.fileId, fileAccessToken);
+              setFetchedProofUrls(prev => { const a = [...prev]; a[index] = res.url; return a; });
+            } catch (err) {
+              console.error(`Failed to auto-load proof file ${index} in edit mode:`, err);
+            } finally {
+              setProofFetchLoading(prev => { const a = [...prev]; a[index] = false; return a; });
+            }
+          })();
+        }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editMode.proof]);
+
   // Close on Escape key
   useEffect(() => {
     const handleEsc = (e) => { if (e.key === 'Escape' && isOpen) onClose(); };
@@ -588,6 +632,8 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     setPhotoUploadStatus('File selected. Click "Upload Photo" to submit.');
     setPhotoUploaded(false);
     setFormData(prev => ({ ...prev, photoFileId: 0 }));
+    // Clear fetched photo so new selection takes visual priority
+    setFetchedPhotoUrl(null);
   };
 
   // ── MODIFIED: fetch fileAccessToken via getClinicList before uploading photo ──
@@ -608,6 +654,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
 
   const handleRemovePhoto = () => {
     setPhoto(null); setPhotoUrl(null); setPhotoUploaded(false); setPhotoUploadStatus('');
+    setFetchedPhotoUrl(null);
     setFormData(prev => ({ ...prev, photoFileId: 0 }));
   };
 
@@ -748,6 +795,8 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     setProofUploadStatuses(prev => prev.filter((_, i) => i !== index));
     setIsProofUploading(prev => prev.filter((_, i) => i !== index));
     setProofValidationMessages(prev => prev.filter((_, i) => i !== index));
+    setFetchedProofUrls(prev => prev.filter((_, i) => i !== index));
+    setProofFetchLoading(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleProofInputChange = (index, e) => {
@@ -769,6 +818,8 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     setProofFileUrls(prev => prev.map((u, i) => i === index ? (file.type.startsWith('image/') ? URL.createObjectURL(file) : null) : u));
     setProofFilesUploaded(prev => prev.map((v, i) => i === index ? false : v));
     setProofList(prev => prev.map((p, i) => i === index ? { ...p, fileId: 0 } : p));
+    // Clear fetched proof url so new selection takes priority
+    setFetchedProofUrls(prev => prev.map((u, i) => i === index ? null : u));
     updateProofStatus(index, 'File selected. Click upload to submit.');
   };
 
@@ -781,7 +832,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     try {
       const clinicId = await getStoredClinicId();
       const fileAccessToken = await fetchFileAccessToken(clinicId);
-      const res = await uploadIDProof(clinicId, file, fileAccessToken);
+      const res = await uploadFile(clinicId, file, fileAccessToken);
 
       setProofList(prev => prev.map((p, i) => i === index ? { ...p, fileId: res.fileId } : p));
       setProofFilesUploaded(prev => prev.map((v, i) => i === index ? true : v));
@@ -795,6 +846,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     setProofFileUrls(prev => prev.map((u, i) => i === index ? null : u));
     setProofFilesUploaded(prev => prev.map((v, i) => i === index ? false : v));
     setProofList(prev => prev.map((p, i) => i === index ? { ...p, fileId: 0 } : p));
+    setFetchedProofUrls(prev => prev.map((u, i) => i === index ? null : u));
     updateProofStatus(index, '');
   };
 
@@ -1095,24 +1147,45 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                   <div className={styles.formSectionHeader}><h3><FiUpload size={15} /> Photo</h3></div>
                   <div className={styles.photoUploadContainer}>
                     <div className={styles.photoPreviewSection}>
-                      {/* View mode: show fetched photo if available */}
-                      {!editMode.basic && fetchedPhotoUrl ? (
-                        <div className={styles.photoPreview}>
+                      {/* ── FIX: Show fetchedPhotoUrl in BOTH view and edit mode, with click-to-lightbox ── */}
+                      {fetchedPhotoUrl ? (
+                        <div
+                          className={styles.photoPreview}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => setLightbox({ open: true, url: fetchedPhotoUrl, title: 'Employee Photo' })}
+                        >
                           <img src={fetchedPhotoUrl} alt="Employee" />
+                          {editMode.basic && (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleRemovePhoto(); }}
+                              className={styles.removePhotoBtn}
+                            >
+                              <FiX size={14} />
+                            </button>
+                          )}
                         </div>
                       ) : photoUrl ? (
                         <div className={styles.photoPreview}>
                           <img src={photoUrl} alt="Preview" />
-                          {editMode.basic && <button type="button" onClick={handleRemovePhoto} className={styles.removePhotoBtn}><FiX size={14} /></button>}
+                          {editMode.basic && (
+                            <button type="button" onClick={handleRemovePhoto} className={styles.removePhotoBtn}>
+                              <FiX size={14} />
+                            </button>
+                          )}
                         </div>
                       ) : (
                         <div className={styles.photoPlaceholder}>
                           <FiUser size={36} />
-                          <p>{formData.photoFileId ? 'Photo on file' : 'No photo'}</p>
+                          {photoFetchLoading
+                            ? <p>Loading...</p>
+                            : <p>{formData.photoFileId ? 'Photo on file' : 'No photo'}</p>
+                          }
                         </div>
                       )}
                     </div>
-                    {/* View mode: show View Photo button */}
+
+                    {/* ── FIX: "View Photo" button only in view mode when photo not yet fetched ── */}
                     {!editMode.basic && formData.photoFileId > 0 && !fetchedPhotoUrl && (
                       <div className={styles.photoUploadControls}>
                         <button
@@ -1126,6 +1199,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                         </button>
                       </div>
                     )}
+
                     {editMode.basic && (
                       <div className={styles.photoUploadControls}>
                         <input type="file" id="photoInput" accept="image/jpeg,image/jpg,image/png" onChange={handlePhotoUpload} style={{ display: 'none' }} />
@@ -1330,7 +1404,8 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                         <span className={styles.proofCardTitle}><FiShield size={13} /> Proof {index + 1}</span>
                         {editMode.proof && <button type="button" className={styles.btnRemoveProof} onClick={() => handleRemoveProofRow(index)} disabled={loading}><FiTrash2 size={14} /></button>}
                       </div>
-                      {/* View mode: show View Proof button */}
+
+                      {/* ── View mode: show proof thumbnail with click-to-lightbox ── */}
                       {!editMode.proof && proof.fileId > 0 && (
                         <div className={styles.proofViewRow}>
                           {fetchedProofUrls[index] ? (
@@ -1356,18 +1431,45 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                           )}
                         </div>
                       )}
+
+                      {/* ── Edit mode: show file preview (fetched or newly selected) ── */}
                       {editMode.proof && (
                         <div className={styles.photoUploadContainer}>
                           <div className={styles.photoPreviewSection}>
+                            {/* ── FIX: show newly selected file first, then fetched proof, then placeholder ── */}
                             {proofFileUrls[index] ? (
                               <div className={styles.photoPreview}>
                                 <img src={proofFileUrls[index]} alt="Proof" />
                                 <button type="button" onClick={() => handleRemoveProofFile(index)} className={styles.removePhotoBtn}><FiX size={14} /></button>
                               </div>
+                            ) : fetchedProofUrls[index] ? (
+                              <div
+                                className={styles.photoPreview}
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => setLightbox({ open: true, url: fetchedProofUrls[index], title: `Proof ${index + 1}` })}
+                              >
+                                <img src={fetchedProofUrls[index]} alt={`Proof ${index + 1}`} />
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); handleRemoveProofFile(index); }}
+                                  className={styles.removePhotoBtn}
+                                >
+                                  <FiX size={14} />
+                                </button>
+                              </div>
                             ) : (
                               <div className={styles.photoPlaceholder}>
                                 <FiUpload size={36} />
-                                <p>{proofFiles[index]?.type === 'application/pdf' ? `PDF: ${proofFiles[index].name}` : proof.fileId ? 'File on record' : 'No file'}</p>
+                                <p>
+                                  {proofFetchLoading[index]
+                                    ? 'Loading...'
+                                    : proofFiles[index]?.type === 'application/pdf'
+                                      ? `PDF: ${proofFiles[index].name}`
+                                      : proof.fileId
+                                        ? 'File on record'
+                                        : 'No file'
+                                  }
+                                </p>
                               </div>
                             )}
                           </div>
@@ -1380,6 +1482,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                           </div>
                         </div>
                       )}
+
                       <div className={styles.formGrid}>
 
                         <div className={styles.formGroup}>

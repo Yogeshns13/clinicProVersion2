@@ -23,7 +23,7 @@ import Header from '../Header/Header.jsx';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
 import ViewLabMaster from './ViewLabMaster.jsx';
 import ViewLabPackage from './ViewLabPackage.jsx';
-import styles from './LabMaster.module.css';
+import styles from './LabMasterList.module.css';
 import UpdateLabTestMaster from './UpdateLabTestMaster.jsx';
 import UpdateLabTestPackage from './UpdateLabTestPackage.jsx';
 import { FaClinicMedical } from 'react-icons/fa';

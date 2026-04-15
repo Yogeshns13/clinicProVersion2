@@ -965,6 +965,9 @@ export const getLabTestOrderList = async (clinicId = 0, options = {}) => {
       uniqueSeq: order.unique_seq,
       clinicId: order.clinic_id,
       clinicName: order.clinic_name,
+      clinicMobile: order.clinic_mobile || null,
+      clinicAltMobile: order.clinic_alt_mobile || null,
+      clinicAddress: order.clinic_address || null,
       branchId: order.branch_id,
       branchName: order.branch_name,
       consultationId: order.consultation_id,
@@ -973,9 +976,16 @@ export const getLabTestOrderList = async (clinicId = 0, options = {}) => {
       patientName: order.patient_name,
       patientMobile: order.patient_mobile,
       patientFileNo: order.patient_file_no,
+      patientAge: order.patient_age || null,
+      patientGender: order.patient_gender || null,
       doctorId: order.doctor_id,
       doctorFullName: order.doctor_full_name,
       doctorCode: order.doctor_code,
+      designation: order.designation || null,  
+      qualification: order.qualification || null,  
+      specialization: order.specialization || null,
+      doctorMobile: order.doctor_mobile || null,
+      doctorAltMobile: order.doctor_alt_mobile || null,
       fileId: order.file_id ?? null,           
       status: order.status,
       statusDesc: order.status_desc || "Unknown",
@@ -1029,7 +1039,9 @@ export const addLabTestOrder = async (orderData) => {
     VisitID: Number(orderData.VisitID),
     PatientID: Number(orderData.PatientID),
     DoctorID: orderData.doctorId ?? 0,
-    Priority: orderData.priority ?? 1,           
+    ExternalLabID: orderData.externalLabId ?? 0,
+    ReportID: orderData.reportId ?? 0,
+    Priority: orderData.priority ?? 1,       
     Notes: orderData.notes || "",
   };
 
@@ -1122,7 +1134,9 @@ export const updateLabTestOrder = async (orderData) => {
     BranchID: finalBranchId,
     Priority: orderData.priority ?? 1,            
     Notes: orderData.notes?.trim() || "",
-    FileID: orderData.fileId ?? 0,                
+    FileID: orderData.fileId ?? 0,
+    ExternalLabID: orderData.externalLabId ?? 0, 
+    ReportID: orderData.reportId ?? 0,
     Status: orderData.status ?? 1,                
     TestApprovedBy: orderData.testApprovedBy ?? 0 
   };
@@ -2030,7 +2044,6 @@ export const getLabTestReportList = async (clinicId = 0, options = {}) => {
     DoctorID: options.DoctorID || 0,
     DoctorName: options.DoctorName || "",
     VerifiedBy: options.VerifiedBy || 0,
-    // Date range (expecting YYYY-MM-DD format strings)
     FromDate: options.FromDate || "",
     ToDate: options.ToDate || "",
     Status: options.Status ?? -1
@@ -2064,6 +2077,7 @@ export const getLabTestReportList = async (clinicId = 0, options = {}) => {
       doctorFullName: report.doctor_full_name,
       doctorCode: report.doctor_code,
       fileId: report.file_id,                   // probably the report PDF/result file
+      externalLabId: report.external_lab_id, 
       verifiedBy: report.verified_by,
       verifiedByName: report.verified_by_name,
       verifiedDateTime: report.verified_datetime || null,
@@ -2137,7 +2151,8 @@ export const addLabTestReport = async (reportData) => {
     PatientID: reportData.patientId,
     DoctorID: reportData.doctorId || 0,
     FileID: reportData.fileId || 0,
-    VerifiedBy: reportData.verifiedBy || 0,
+    ExternalLabID: reportData.externalLabId || 0,
+    VerifiedBy: reportData.verifiedBy || null,
     VerifiedDateTime: verifiedDateTime,
     Remarks: reportData.remarks || ""
   };
@@ -2243,6 +2258,7 @@ export const updateLabTestReport = async (reportData) => {
     VerifiedBy: reportData.verifiedBy ?? 0,
     VerifiedDateTime: verifiedDateTime,
     FileID: reportData.fileId ?? 0,
+    ExternalLabID: reportData.externalLabId || 0,
     Remarks: reportData.remarks?.trim() || "",
     Status: reportData.status ?? -1   
   };
@@ -2527,4 +2543,282 @@ export const getLabInvoiceDetailList = async (clinicId = 0, options = {}) => {
     throw err;
   }
 };
+
+export const getExternalLabList = async (clinicId = 0, options = {}) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  const finalClinicId = clinicId;
+  const finalBranchId = options.BranchID;
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    Page: options.Page || 1,
+    PageSize: options.PageSize || 20,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    Status: options.Status ?? -1,
+    Search: options.Search || "",
+  };
+
+  console.log("getExternalLabList payload:", payload);
+
+  try {
+    const response = await API.post("/GetExternalLabList", payload);
+
+    const result = response.data?.result;
+    checkDbError(result);
+    const results = Array.isArray(result) ? result : [];
+    console.log("GetExternalLabList response:", results);
+
+    return results.map((lab) => ({
+      externalLabId: lab.external_lab_id,
+      name: lab.name || "",
+      detail: lab.detail || "",
+      mobile: lab.mobile || "",
+      email: lab.email || "",
+      address: lab.address || "",
+      status: lab.status || 0,
+      dateCreated: lab.date_created || null,
+      dateModified: lab.date_modified || null,
+    }));
+
+  } catch (error) {
+    console.error("getExternalLabList failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch external lab list",
+    };
+
+    throw err;
+  }
+};
+
+export const addExternalLab = async (externalLabData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (!externalLabData?.Name) {
+    const validationError = new Error("Name is required");
+    validationError.status = 400;
+    throw validationError;
+  }
+
+  const finalClinicId = externalLabData.clinicId || 0;
+  const finalBranchId = externalLabData.branchId || 0;
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    Name: externalLabData.Name || "",
+    Detail: externalLabData.Detail || "",
+    Mobile: externalLabData.Mobile || "",
+    EMail: externalLabData.EMail || "",
+    Address: externalLabData.Address || "",
+  };
+
+  console.log("Add ExternalLab payload:", payload);
+
+  try {
+    const response = await API.post("/AddExternalLab", payload);
+
+    console.log("AddExternalLab response:", response.data);
+
+    const result = response.data?.result;
+    checkDbError(result);
+
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to add external lab");
+    }
+
+    return {
+      success: true,
+      externalLabId: result.OUT_EXTERNAL_LAB_ID,
+      message: result.OUT_ERROR || "OK",
+    };
+
+  } catch (error) {
+    console.error("addExternalLab failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message ||
+        "Failed to add external lab",
+    };
+
+    throw errorWithStatus;
+  }
+};
+
+export const updateExternalLab = async (externalLabData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (!externalLabData?.ExternalLabID && externalLabData?.ExternalLabID !== 0) {
+    const validationError = new Error("ExternalLabID is required to update an external lab.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const finalClinicId = externalLabData.ClinicID || 0;
+  const finalBranchId = externalLabData.BranchID || 0;
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ExternalLabID: externalLabData.ExternalLabID,
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId,
+    Name: externalLabData.Name?.trim() || "",
+    Detail: externalLabData.Detail?.trim() || "",
+    Mobile: externalLabData.Mobile?.trim() || "",
+    EMail: externalLabData.EMail?.trim() || "",
+    Address: externalLabData.Address?.trim() || "",
+    Status: externalLabData.Status ?? 1,
+  };
+
+  console.log("updateExternalLab payload:", payload);
+
+  try {
+    const response = await API.post("/UpdateExternalLab", payload);
+    console.log("UpdateExternalLab response:", response.data);
+
+    const result = response.data?.result;
+    checkDbError(result);
+
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to update external lab");
+    }
+
+    return {
+      success: true,
+      externalLabId: result.OUT_EXTERNAL_LAB_ID || externalLabData.ExternalLabID,
+      message: "External lab updated successfully",
+    };
+
+  } catch (error) {
+    console.error("updateExternalLab error:", error);
+
+    const errorMessage =
+      extractBackendError(error) ||
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to update external lab";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
+  }
+};
+
+export const deleteExternalLab = async (externalLabId, clinicId) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  if (!externalLabId && externalLabId !== 0) {
+    const validationError = new Error("ExternalLabID is required to delete an external lab.");
+    validationError.status = 400;
+    validationError.code = 400;
+    throw validationError;
+  }
+
+  const finalClinicId = clinicId;
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    ExternalLabID: externalLabId,
+  };
+
+  console.log("deleteExternalLab payload:", payload);
+
+  try {
+    const response = await API.post("/DeleteExternalLab", payload);
+    const result = response.data?.result;
+    checkDbError(result);
+
+    if (!result || result.OUT_OK !== 1) {
+      throw new Error(result?.OUT_ERROR || "Failed to delete external lab");
+    }
+
+    return {
+      success: true,
+      externalLabId: result.OUT_EXTERNAL_LAB_ID || externalLabId,
+      message: "External lab deleted successfully",
+    };
+
+  } catch (error) {
+    console.error("deleteExternalLab error:", error);
+
+    const errorMsg =
+      extractBackendError(error) ||
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to delete external lab";
+
+    const enhancedError = new Error(errorMsg);
+    enhancedError.status = error.response?.status || 500;
+    enhancedError.code = error.response?.status || 500;
+
+    throw enhancedError;
+  }
+};
+
+
+
+
+
 

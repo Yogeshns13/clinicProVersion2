@@ -10,7 +10,7 @@
   --card-bg:       #ffffff;
   --border-light:  #e2e8f0;
   --danger-color:  #ef4444;
-  --amount-highlight: #166534;   /* green for positive amounts */
+  --amount-highlight: #166534;
   --paid-color: #059669;
   --balance-color: #dc2626;
 }
@@ -82,7 +82,6 @@
 }
 
 .invoice-modal-header h2 {
- 
   font-size: 1.2rem;
   font-weight: 700;
 }
@@ -118,7 +117,7 @@
 }
 
 /* ────────────────────────────────────────────────
-   BODY – White cards, minimal spacing
+   BODY
    ──────────────────────────────────────────────── */
 
 .invoice-modal-body {
@@ -159,7 +158,7 @@
 
 .invoice-details-grid {
   display: grid;
-  grid-template-columns: 1fr  1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
   gap: 12px 20px;
 }
 
@@ -231,12 +230,44 @@
 .invoice-modal-footer {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 12px;
   padding: 16px 28px;
   border-top: 1px solid #e5e7eb;
   background: #ffffff;
 }
 
+/* Cancel Invoice button — left-aligned, red/danger style */
+.invoice-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 1.5px solid rgba(220, 38, 38, 0.4);
+  background: #dc2626;
+  color: white;
+}
+
+.invoice-cancel-btn:hover {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: rgba(220, 38, 38, 0.7);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.18);
+}
+
+.invoice-cancel-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Close button */
 .invoice-close-btn {
   padding: 10px 24px;
   border-radius: 10px;
@@ -274,6 +305,13 @@
 
   .invoice-modal-footer {
     padding: 14px 22px;
+    flex-wrap: wrap;
+  }
+
+  .invoice-cancel-btn,
+  .invoice-close-btn {
+    flex: 1;
+    justify-content: center;
   }
 }
 

@@ -431,14 +431,12 @@ export const addMedicineMaster = async (medicineData) => {
     throw authError;
   }
 
-  // Basic required-field validation (adjust as per your backend rules)
   if (!medicineData?.name) {
     const validationError = new Error("Medicine name is required");
     validationError.status = 400;
     throw validationError;
   }
 
-  // In dev mode → stricter ClinicID validation (same as addEmployee)
   if (PRODUCTION_MODE !== true) {
     if (medicineData.clinicId < 0 || (medicineData.clinicId !== 0 && isNaN(medicineData.clinicId))) {
       const error = new Error("Invalid Clinic ID");
@@ -487,16 +485,18 @@ export const addMedicineMaster = async (medicineData) => {
 
     const result = response.data?.result;
     checkDbError(result);
-    // Validate expected response structure
-    if (!result || typeof result.OUT_OK === "undefined") {
+
+    // Normalize: backend sometimes returns {"0": 0, "OUT_ERROR": "..."} instead of {"OUT_OK": 1}
+    const outOk = result?.OUT_OK ?? result?.["0"];
+
+    if (!result || typeof outOk === "undefined") {
       throw new Error("Invalid response from server");
     }
 
-    if (result.OUT_OK !== 1) {
+    if (outOk !== 1) {
       throw new Error(result.OUT_ERROR || "Failed to add medicine");
     }
 
-    // Return success with new medicine ID
     return {
       success: true,
       medicineId: result.OUT_ID,
@@ -1598,9 +1598,19 @@ export const getPrescriptionList = async (clinicId = 0, options = {}) => {
       patientName: pres.patient_name,
       patientMobile: pres.patient_mobile || null,
       patientFileNo: pres.patient_file_no || null,
+      age: pres.age || null,
+      gender: pres.gender || null,
       doctorId: pres.doctor_id,
       doctorFullName: pres.doctor_full_name,
       doctorCode: pres.doctor_code || null,
+      designation: pres.designation || null,  
+      qualification: pres.qualification || null,  
+      specialization: pres.specialization || null, 
+      doctorMobile: pres.doctor_mobile || null,
+      doctorAltMobile: pres.doctor_alt_mobile || null,
+      clinicMobile: pres.clinic_mobile || null,
+      clinicAltMobile: pres.clinic_alt_mobile || null,
+      clinicAddress: pres.clinic_address || null,
       dateIssued: pres.date_issued || null,       // ISO string
       validUntil: pres.valid_until || null,       // ISO string
       diagnosis: pres.diagnosis || null,

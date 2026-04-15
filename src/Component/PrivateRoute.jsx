@@ -11,6 +11,7 @@ const ROUTE_PERMISSIONS = {
   "/work-shift": ["admin", "doctor", "nurse", "frontdesk"],
   "/employee-list": ["admin", "nurse","frontdesk","nurse"],
   "/admin-employee-list": ["spradmin"],
+  "/user-list": ["spradmin"],
 
   "/patient-list": ["admin", "frontdesk","nurse","accounts","doctor",],
   "/slotconfig-list": ["admin", "frontdesk"],
@@ -23,6 +24,8 @@ const ROUTE_PERMISSIONS = {
   "/view-consultation/:id": ["admin", "nurse","frontdesk", "doctor", "accounts"],
   "/consultationcharge-config": ["admin", "frontdesk","accounts"],
   "/consultation-charge": ["admin", "frontdesk","accounts"],
+  "/external-lab": ["admin","doctor","frontdesk"],
+  
 
   "/labtestmaster": ["admin","labtech","accounts"],
   "/laborder-list": ["admin", "labtech"],

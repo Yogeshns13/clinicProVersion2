@@ -20,10 +20,11 @@ import {
 import {
   addLabTestOrder, addLabTestOrderItem, getLabTestMasterList,
   getLabTestPackageList, getLabTestOrderList, getLabTestOrderItemList,
-  updateLabTestOrderItem, deleteLabTestOrder,
+  updateLabTestOrderItem, deleteLabTestOrder, updateLabTestOrder,
+  getExternalLabList,
 } from '../Api/ApiLabTests.js';
 import './ViewConsultation.css';
-import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import { getStoredClinicId, getStoredBranchId, getStoredInLab } from '../Utils/Cryptoutils.js';
 import { FaClinicMedical } from 'react-icons/fa';
 
 /* ─── Constants ─────────────────────────────────── */
@@ -209,7 +210,6 @@ const MedicineContainer = ({ container, onUpdate, onRemove, readOnly = false }) 
 };
 
 /* ─── SavedMedicineCard ─────────────────────────── */
-// clinicId / branchId props removed — component fetches its own fresh IDs
 const SavedMedicineCard = ({ item, onUpdated, onDeleted, onError }) => {
   const [expanded, setExpanded]       = useState(true);
   const [editing, setEditing]         = useState(false);
@@ -251,7 +251,6 @@ const SavedMedicineCard = ({ item, onUpdated, onDeleted, onError }) => {
 
   const handleSave = async () => {
     if (!local) return;
-    // Always fetch fresh IDs to guarantee correct values
     const clinicId = await getStoredClinicId();
     const branchId = await getStoredBranchId();
     try {
@@ -386,14 +385,12 @@ const SavedMedicineCard = ({ item, onUpdated, onDeleted, onError }) => {
 };
 
 /* ─── SavedLabSection (inside Lab Modal) ────────── */
-// clinicId / branchId props removed — component fetches its own fresh IDs
 const SavedLabSection = ({ labItems, labPriorityDesc, onItemStatusChange, onError }) => {
   const [togglingId, setTogglingId] = useState(null);
 
   const handleToggleItem = async (itemId, currentStatus) => {
     try {
       setTogglingId(itemId);
-      // Always fetch fresh IDs to guarantee correct values
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
       const newStatus = currentStatus === 1 ? 2 : 1;
@@ -482,6 +479,27 @@ const ErrorPopup = ({ message, onClose }) => {
   );
 };
 
+/* ─── Submit Confirmation Popup ───────────────────────────── */
+const SubmitConfirmPopup = ({ onConfirm, onCancel }) => (
+  <div className="error-popup-overlay" onClick={onCancel}>
+    <div className="error-popup confirm-popup" onClick={e => e.stopPropagation()}>
+      <p className="error-popup__title">Confirm Submission</p>
+      <p className="error-popup__msg">
+        Are you sure you want to submit updates to this consultation?<br />
+        This action cannot be undone.
+      </p>
+      <div className="confirm-popup__btns" style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '20px' }}>
+        <button className="error-popup__btn error-popup__btn--cancel" onClick={onCancel}>
+          <FiX size={14} /> Cancel
+        </button>
+        <button className="error-popup__btn" onClick={onConfirm}>
+          <FiCheck size={14} /> Yes, Submit
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 /* ═══════════════════════════════════════════════════
    MAIN — ViewConsultation
    ═══════════════════════════════════════════════════ */
@@ -498,6 +516,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
   /* ── Bootstrap / consultation data ── */
   const [consultation, setConsultation]   = useState(null);
   const [loading, setLoading]             = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   /* ── Panel 1: editable consultation fields ── */
   const [consultationNotes, setConsultationNotes]       = useState('');
@@ -563,13 +582,20 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
   const [isFinished, setIsFinished]           = useState(false);
   const [error, setError]                     = useState(null);
 
-  // ── Clinic / Branch IDs — loaded once when the view opens ──
-  // Stored in state so every render has the correct resolved values
-  // (avoids passing a Promise or 0 to child components / API calls).
+  /* ── Clinic / Branch IDs ── */
   const [clinicId, setClinicId] = useState(null);
   const [branchId, setBranchId] = useState(null);
 
-  // Load IDs as soon as the view becomes active
+  /* ── getStoredInLab flag — loaded once when view opens ── */
+  const [inLabMode, setInLabMode] = useState(null); // null = loading, 1 = internal, 0 = external
+
+  /* ── External Lab state (used only when inLabMode === 0) ── */
+  const [externalLabList, setExternalLabList]             = useState([]);
+  const [externalLabsLoading, setExternalLabsLoading]     = useState(false);
+  const [selectedExternalLabId, setSelectedExternalLabId] = useState(0);
+  const [stagedExternalLabId, setStagedExternalLabId]     = useState(0);
+
+  /* ── Load IDs + inLabMode as soon as the view becomes active ── */
   useEffect(() => {
     if (!activeIsOpen) return;
     (async () => {
@@ -577,10 +603,12 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
       const bId = await getStoredBranchId();
       setClinicId(cId);
       setBranchId(bId);
+      const labMode = await getStoredInLab();
+      setInLabMode(labMode);
     })();
   }, [activeIsOpen]);
 
-  // ── Central helper: always returns fresh, resolved IDs and keeps state in sync ──
+  /* ── Central helper: always returns fresh, resolved IDs and keeps state in sync ── */
   const getIds = async () => {
     const cId = await getStoredClinicId();
     const bId = await getStoredBranchId();
@@ -652,6 +680,14 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
         setSavedLabPriorityDesc(PRIORITY_OPTIONS.find(p => p.id === order.priority)?.label || '');
         setLabPriority(order.priority || 1);
         setStagedLabPriority(order.priority || 1);
+
+        // ── Pre-fill external lab ID from existing order ──
+        const existingExtLabId = order.externalLabId ?? order.ExternalLabID ?? order.external_lab_id ?? 0;
+        if (existingExtLabId) {
+          setSelectedExternalLabId(existingExtLabId);
+          setStagedExternalLabId(existingExtLabId);
+        }
+
         const items = await getLabTestOrderItemList(clinicId, { OrderID: order.id, BranchID: branchId, Page: 1, PageSize: 50 });
         const active = (items || []).filter(i => i.status === 1);
         const deact  = (items || []).filter(i => i.status !== 1);
@@ -670,6 +706,20 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
       setError(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  /* ── Fetch external labs (only when inLabMode === 0) ── */
+  const fetchExternalLabs = async () => {
+    try {
+      setExternalLabsLoading(true);
+      const { clinicId, branchId } = await getIds();
+      const labs = await getExternalLabList(clinicId, { BranchID: branchId, Status: 0, PageSize: 50 });
+      setExternalLabList(labs || []);
+    } catch (err) {
+      console.error('fetchExternalLabs failed:', err);
+    } finally {
+      setExternalLabsLoading(false);
     }
   };
 
@@ -808,8 +858,10 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     } catch (e) { console.error(e); }
   };
 
-  /* ── Submit lab items ── */
-  const submitLabItems = async (clinicId, branchId, orderId, testIds, pkgIds, labOrder) => {
+  /* ── Submit lab items ──
+     If external lab mode (inLabMode === 0), also calls updateLabTestOrder with status 6,
+     mirroring the AddConsultation behaviour. */
+  const submitLabItems = async (clinicId, branchId, orderId, testIds, pkgIds, labOrder, externalLabIdOverride) => {
     for (const testId of testIds) {
       await addLabTestOrderItem({ clinicId, branchId, OrderID: orderId, PatientID: consultation.patientId, DoctorID: consultation.doctorId, TestID: testId, PackageID: 0 });
     }
@@ -820,6 +872,22 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     setSubmittedLabPkgIds(prev => [...new Set([...prev, ...pkgIds])]);
     setDeactivatedLabTestIds(prev => prev.filter(id => !testIds.includes(id)));
     setDeactivatedLabPkgIds(prev => prev.filter(id => !pkgIds.includes(id)));
+
+    // If external lab mode, update the order with external lab id + status 6
+    if (inLabMode === 0) {
+      const extLabId = externalLabIdOverride ?? selectedExternalLabId ?? 0;
+      await updateLabTestOrder({
+        orderId,
+        clinicId,
+        branchId,
+        priority: labOrder?.priority ?? labPriority ?? 1,
+        notes: consultationNotes || '',
+        externalLabId: extLabId,
+        status: 6,
+        testApprovedBy: consultation?.doctorId ?? 0,
+      });
+    }
+
     try {
       const items = await getLabTestOrderItemList(clinicId, { OrderID: orderId, BranchID: branchId, Page: 1, PageSize: 50 });
       setSavedLabItems(items || []);
@@ -835,6 +903,11 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     setLabTestSearch(''); setLabPkgSearch('');
     setReactivateConfirm(null);
     setConfirmDelOrder(false);
+    // Restore previously staged / prefilled external lab id into selector
+    if (inLabMode === 0) {
+      setSelectedExternalLabId(stagedExternalLabId || 0);
+      if (!externalLabList.length) fetchExternalLabs();
+    }
     setShowLabModal(true);
     if (!labMasterItems.length && !labPackages.length) fetchLabItems();
   };
@@ -844,7 +917,33 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     const newTestIds = selectedTestIds.filter(id => !submittedLabTestIds.includes(id) && !deactivatedLabTestIds.includes(id));
     const newPkgIds  = selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id) && !deactivatedLabPkgIds.includes(id));
 
-    if (newTestIds.length === 0 && newPkgIds.length === 0) { setShowLabModal(false); return; }
+    if (newTestIds.length === 0 && newPkgIds.length === 0) {
+      // No new items — but still update if priority or external lab id changed on an existing order
+      const priorityChanged  = labOrderId && (labPriority !== stagedLabPriority);
+      const extLabChanged    = inLabMode === 0 && labOrderId && (selectedExternalLabId !== stagedExternalLabId);
+
+      if (priorityChanged || extLabChanged) {
+        try {
+          const { clinicId, branchId } = await getIds();
+          await updateLabTestOrder({
+            orderId:        labOrderId,
+            clinicId,
+            branchId,
+            priority:       labPriority,
+            notes:          consultationNotes || '',
+            externalLabId:  inLabMode === 0 ? selectedExternalLabId : 0,
+            status:         inLabMode === 0 ? 6 : 1,
+            testApprovedBy: consultation?.doctorId ?? 0,
+          });
+          setStagedLabPriority(labPriority);
+          if (inLabMode === 0) setStagedExternalLabId(selectedExternalLabId);
+        } catch (err) {
+          setError(err);
+        }
+      }
+      setShowLabModal(false);
+      return;
+    }
 
     const { clinicId, branchId } = await getIds();
     setShowLabModal(false); setError(null);
@@ -852,6 +951,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     const steps = [];
     if (!labOrderId) steps.push({ label: 'Creating lab order' });
     steps.push({ label: `Adding ${newTestIds.length + newPkgIds.length} lab item(s)` });
+    if (inLabMode === 0) steps.push({ label: 'Sending to external lab' });
     setSubmitProgress({ steps, currentStep: 0, done: false });
 
     try {
@@ -868,6 +968,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
           doctorId:  consultation.doctorId,
           priority:  labPriority,
           Notes:     consultationNotes,
+          externalLabId: inLabMode === 0 ? selectedExternalLabId : 0,
         });
         if (!lr.success) throw new Error('Failed to create lab order');
         activeLabOrderId = lr.orderId;
@@ -880,10 +981,14 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
         clinicId, branchId,
         activeLabOrderId,
         newTestIds, newPkgIds,
-        { priorityDesc: PRIORITY_OPTIONS.find(p => p.id === labPriority)?.label },
+        { priorityDesc: PRIORITY_OPTIONS.find(p => p.id === labPriority)?.label, priority: labPriority },
+        selectedExternalLabId,
       );
 
       setStagedLabTestIds([]); setStagedLabPkgIds([]);
+      setStagedLabPriority(labPriority);
+      setSavedLabPriorityDesc(PRIORITY_OPTIONS.find(p => p.id === labPriority)?.label || '');
+      if (inLabMode === 0) setStagedExternalLabId(selectedExternalLabId);
       setSubmitProgress(p => ({ ...p, done: true }));
       setIsFinished(true);
       setTimeout(() => setSubmitProgress(null), 2500);
@@ -906,6 +1011,9 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     const { clinicId, branchId } = await getIds();
     const consultId = consultation?.consultationId ?? consultation?.id ?? activeConsultId;
 
+    // Resolve external lab id to use
+    const externalLabIdToUse = inLabMode === 0 ? (stagedExternalLabId || selectedExternalLabId || 0) : 0;
+
     const newTestIds      = stagedLabTestIds.filter(id => !submittedLabTestIds.includes(id));
     const newPkgIds       = stagedLabPkgIds.filter(id => !submittedLabPkgIds.includes(id));
     const hasNewMeds      = pendingContainers.length > 0;
@@ -922,6 +1030,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     if (needAddDetails)  steps.push({ label: `Adding ${pendingContainers.length} medicine(s)` });
     if (needNewLabOrder) { steps.push({ label: 'Creating lab order' }); steps.push({ label: `Adding ${newTestIds.length + newPkgIds.length} lab item(s)` }); }
     if (needAddLabItems) steps.push({ label: `Adding ${newTestIds.length + newPkgIds.length} more lab item(s)` });
+    if (inLabMode === 0 && (needNewLabOrder || needAddLabItems)) steps.push({ label: 'Sending to external lab' });
 
     if (steps.length === 0) { setError({ message: 'Nothing new to submit.' }); return; }
 
@@ -973,20 +1082,35 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
           clinicId, branchId, ConsultationID: consultId,
           VisitID: consultation.visitId, PatientID: consultation.patientId,
           doctorId: consultation.doctorId, priority: stagedLabPriority, Notes: consultationNotes,
+          externalLabId: externalLabIdToUse,
         });
         if (!lr.success) throw new Error('Failed to create lab order');
         setLabOrderId(lr.orderId); s++;
         setSubmitProgress(p => ({ ...p, currentStep: s }));
-        await submitLabItems(clinicId, branchId, lr.orderId, newTestIds, newPkgIds,
-          { priorityDesc: PRIORITY_OPTIONS.find(p => p.id === stagedLabPriority)?.label }); s++;
+        await submitLabItems(
+          clinicId, branchId,
+          lr.orderId,
+          newTestIds, newPkgIds,
+          { priorityDesc: PRIORITY_OPTIONS.find(p => p.id === stagedLabPriority)?.label, priority: stagedLabPriority },
+          externalLabIdToUse,
+        ); s++;
       }
 
       if (needAddLabItems) {
         setSubmitProgress(p => ({ ...p, currentStep: s }));
-        await submitLabItems(clinicId, branchId, labOrderId, newTestIds, newPkgIds); s++;
+        await submitLabItems(
+          clinicId, branchId,
+          labOrderId,
+          newTestIds, newPkgIds,
+          { priority: stagedLabPriority },
+          externalLabIdToUse,
+        ); s++;
       }
 
       setStagedLabTestIds([]); setStagedLabPkgIds([]);
+      setStagedLabPriority(stagedLabPriority);
+      setSavedLabPriorityDesc(PRIORITY_OPTIONS.find(p => p.id === stagedLabPriority)?.label || '');
+      setStagedExternalLabId(externalLabIdToUse);
       setSubmitProgress(p => ({ ...p, done: true }));
       setIsFinished(true);
       setTimeout(() => setSubmitProgress(null), 2500);
@@ -1049,6 +1173,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     setDeactivatedLabTestIds([]); setDeactivatedLabPkgIds([]);
     setStagedLabTestIds([]); setStagedLabPkgIds([]);
     setSelectedTestIds([]); setSelectedPkgIds([]);
+    setSelectedExternalLabId(0); setStagedExternalLabId(0);
   };
 
   const handleLabItemStatusChange = (itemId, newStatus) => {
@@ -1098,6 +1223,9 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     setShowPatientModal(false); setShowFamilyModal(false); setFamilyPatientDetails(null);
     setSubmitProgress(null); setError(null); setIsFinished(false);
     setIsDragOver(false); setConfirmDelOrder(false); setDeletingOrder(false);
+    // Reset external lab state
+    setSelectedExternalLabId(0); setStagedExternalLabId(0);
+    setExternalLabList([]); setExternalLabsLoading(false);
     if (isRoutePage) navigate(-1);
     else if (onClose) onClose();
   };
@@ -1150,9 +1278,9 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
 
           <div className="ac-header__right">
             <div className="styles.clinicNameone">
-               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px'}} />  
+               <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px'}} />
                 {localStorage.getItem('clinicName') || '—'}
-                </div>
+            </div>
             {consultation && (
               <div className="header-nav-group">
                 <button className="btn-nav" onClick={() => { if (consultation) { fetchPatientDetails(consultation.patientId); setShowPatientModal(true); } }}>
@@ -1194,18 +1322,18 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                       <span>{patientDetails.allergies}</span>
                     </div>
                   )}
-                  {patientDetails.existingMedicalConditions && (
+                  {patientDetails.pastSurgeries && (
                     <div className="patient-bar__item">
                       <FiHeart size={12} />
-                      <strong>Conditions:</strong>
-                      <span>{patientDetails.existingMedicalConditions}</span>
+                      <strong>Past Surgeries:</strong>
+                      <span>{patientDetails.pastSurgeries}</span>
                     </div>
                   )}
-                  {patientDetails.currentMedications && (
+                  {patientDetails.familyMedicalHistory && (
                     <div className="patient-bar__item">
                       <FiDroplet size={12} />
-                      <strong>Medications:</strong>
-                      <span>{patientDetails.currentMedications}</span>
+                      <strong>Family Medical History:</strong>
+                      <span>{patientDetails.familyMedicalHistory}</span>
                     </div>
                   )}
                 </div>
@@ -1224,10 +1352,10 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                     {(consultation.reason || consultation.symptoms || consultation.bpReading) && (
                       <div className="visit-snapshot">
                         {consultation.reason && (
-                          <div className="snapshot-row"><span className="snapshot-label">Reason</span><span>{consultation.reason}</span></div>
+                          <div className="snapshot-row"><span className="snapshot-label">Reason   </span><span className="snapshot-mark">:</span><span className="snapshot-value">{consultation.reason}</span></div>
                         )}
                         {consultation.symptoms && (
-                          <div className="snapshot-row"><span className="snapshot-label">Symptom</span><span>{consultation.symptoms}</span></div>
+                          <div className="snapshot-row"><span className="snapshot-label">Symptom</span><span className="snapshot-mark">:</span><span className="snapshot-value">{consultation.symptoms}</span></div>
                         )}
                         {(consultation.bpReading || consultation.temperature || consultation.weight) && (
                           <div className="vitals-row" style={{ marginTop: 4 }}>
@@ -1360,27 +1488,44 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                       ) : filteredMedicines.length === 0 ? (
                         <div className="state-empty state-empty--sm"><p>No medicines found</p></div>
                       ) : filteredMedicines.map(m => {
-                        const isSelected   = selectedMedIds.includes(m.id);
+                        const isSelected = selectedMedIds.includes(m.id);
                         const alreadyAdded = containers.some(c => c.medicineId === m.id)
                           || savedPrescItems.some(item => item.medicineId === m.id);
+                        const isOutOfStock = m.stockQuantity === 0;
+                        const isLowStock = m.isLowStock || (m.stockQuantity > 0 && m.stockQuantity < 10);
+                        const isDisabled = isOutOfStock || alreadyAdded;
+
                         return (
                           <div key={m.id}
-                            className={`med-item ${isSelected ? 'med-item--sel' : ''} ${alreadyAdded ? 'med-item--added' : ''}`}
-                            draggable={!alreadyAdded}
-                            onClick={() => !alreadyAdded && toggleMedSelection(m.id)}
-                            onDragStart={e => handleDragStart(e, m.id)} onDragEnd={handleDragEnd}>
+                            className={`med-item ${isSelected ? 'med-item--sel' : ''}
+                                      ${alreadyAdded ? 'med-item--added' : ''}
+                                      ${isOutOfStock ? 'med-item--out-of-stock' : ''}
+                                      ${isLowStock && !isOutOfStock ? 'med-item--low-stock' : ''}`}
+                            draggable={!isDisabled}
+                            onClick={() => !isDisabled && toggleMedSelection(m.id)}
+                            onDragStart={e => !isDisabled && handleDragStart(e, m.id)}
+                            onDragEnd={handleDragEnd}
+                            title={isOutOfStock ? 'Out of stock — cannot add' : isLowStock ? `Low stock: ${m.stockQuantity} remaining` : undefined}
+                          >
                             <span className="med-item__drag"><FiMenu size={10} /></span>
                             <input type="checkbox" className="med-item__chk" checked={isSelected}
-                              onChange={() => toggleMedSelection(m.id)} onClick={e => e.stopPropagation()} disabled={alreadyAdded} />
+                              onChange={() => toggleMedSelection(m.id)} onClick={e => e.stopPropagation()}
+                              disabled={isDisabled} />
                             <div className="med-item__info">
                               <div className="med-item__name">
                                 {m.name}
                                 {alreadyAdded && <span className="tag tag--added"><FiCheck size={8} /> Added</span>}
+                                {!alreadyAdded && isOutOfStock && (
+                                  <span className="tag tag--out-of-stock">Out of stock</span>
+                                )}
+                                {!alreadyAdded && !isOutOfStock && isLowStock && (
+                                  <span className="tag tag--low-stock">Low: {m.stockQuantity}</span>
+                                )}
                               </div>
                               <div className="med-item__tags">
                                 {m.genericName && <span className="tag">{m.genericName}</span>}
-                                {m.typeDesc    && <span className="tag">{m.typeDesc}</span>}
-                                {m.dosageForm  && <span className="tag">{m.dosageForm}</span>}
+                                {m.typeDesc && <span className="tag">{m.typeDesc}</span>}
+                                {m.dosageForm && <span className="tag">{m.dosageForm}</span>}
                               </div>
                             </div>
                           </div>
@@ -1419,7 +1564,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
               {(hasAnythingNew || consultDataChanged) ? (
                 <button
                   className="btn-footer-submit"
-                  onClick={handleFinalSubmit}
+                  onClick={() => setShowSubmitConfirm(true)}
                   disabled={!!submitProgress}
                 >
                   {submitProgress && !submitProgress.done ? (
@@ -1475,6 +1620,16 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
           message={error?.message || (typeof error === 'string' ? error : null)}
           onClose={() => setError(null)}
         />
+
+        {showSubmitConfirm && (
+          <SubmitConfirmPopup
+            onConfirm={() => {
+              setShowSubmitConfirm(false);
+              handleFinalSubmit();
+            }}
+            onCancel={() => setShowSubmitConfirm(false)}
+          />
+        )}
 
         {/* ── PATIENT MODAL ── */}
         {showPatientModal && (
@@ -1537,11 +1692,20 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                     {patientDetails.allergies && (
                       <div className="pt-cell pt-cell--full pt-cell--alert"><label><FiAlertCircle size={10} /> Allergies</label><span>{patientDetails.allergies}</span></div>
                     )}
+                    {patientDetails.pastSurgeries && (
+                      <div className="pt-cell pt-cell--full"><label>Past Surgeries</label><span>{patientDetails.pastSurgeries}</span></div>
+                    )}
+                    {patientDetails.familyMedicalHistory && (
+                      <div className="pt-cell pt-cell--full"><label>Family Medical History</label><span>{patientDetails.familyMedicalHistory}</span></div>
+                    )}
                     {patientDetails.existingMedicalConditions && (
                       <div className="pt-cell pt-cell--full"><label>Medical Conditions</label><span>{patientDetails.existingMedicalConditions}</span></div>
                     )}
                     {patientDetails.currentMedications && (
                       <div className="pt-cell pt-cell--full"><label>Current Medications</label><span>{patientDetails.currentMedications}</span></div>
+                    )}
+                    {patientDetails.immunizationRecords && (
+                      <div className="pt-cell pt-cell--full"><label>Immunization Records</label><span>{patientDetails.immunizationRecords}</span></div>
                     )}
                   </div>
                 </>
@@ -1590,11 +1754,20 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                 {familyPatientDetails.allergies && (
                   <div className="pt-cell pt-cell--full pt-cell--alert"><label><FiAlertCircle size={10} /> Allergies</label><span>{familyPatientDetails.allergies}</span></div>
                 )}
+                {familyPatientDetails.pastSurgeries && (
+                  <div className="pt-cell pt-cell--full"><label>Past Surgeries</label><span>{familyPatientDetails.pastSurgeries}</span></div>
+                )}
+                {familyPatientDetails.familyMedicalHistory && (
+                  <div className="pt-cell pt-cell--full"><label>Family Medical History</label><span>{familyPatientDetails.familyMedicalHistory}</span></div>
+                )}
                 {familyPatientDetails.existingMedicalConditions && (
                   <div className="pt-cell pt-cell--full"><label>Medical Conditions</label><span>{familyPatientDetails.existingMedicalConditions}</span></div>
                 )}
                 {familyPatientDetails.currentMedications && (
                   <div className="pt-cell pt-cell--full"><label>Current Medications</label><span>{familyPatientDetails.currentMedications}</span></div>
+                )}
+                {familyPatientDetails.immunizationRecords && (
+                  <div className="pt-cell pt-cell--full"><label>Immunization Records</label><span>{familyPatientDetails.immunizationRecords}</span></div>
                 )}
               </div>
             </div>
@@ -1763,14 +1936,48 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                 </div>
               )}
 
+              {/* ── EXTERNAL LAB SELECTOR (only when inLabMode === 0) ── */}
+              {inLabMode === 0 && (
+                <div className="lab-external-section">
+                  <div className="lab-external-section__label">
+                    <FiActivity size={13} />
+                    <span>External Lab</span>
+                    <span className="lab-external-section__required">*</span>
+                  </div>
+                  {externalLabsLoading ? (
+                    <div className="lab-external-section__loading">
+                      <span className="spin-sm spin-sm--teal" /> Loading external labs…
+                    </div>
+                  ) : (
+                    <select
+                      className="lab-external-select"
+                      value={selectedExternalLabId}
+                      onChange={e => setSelectedExternalLabId(Number(e.target.value))}
+                    >
+                      <option value={0}>— Select External Lab —</option>
+                      {externalLabList.map(lab => (
+                        <option key={lab.externalLabId} value={lab.externalLabId}>
+                          {lab.name}{lab.detail ? ` — ${lab.detail}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+
               <div className="lab-footer">
                 <button className="lab-footer__cancel" onClick={() => setShowLabModal(false)}><FiX size={12} /> Cancel</button>
                 <button className="lab-footer__save" onClick={handleStageAndSubmitLabOrder}>
                   <FiCheck size={13} />
                   {(() => {
-                    const newTests = selectedTestIds.filter(id => !submittedLabTestIds.includes(id) && !deactivatedLabTestIds.includes(id)).length;
-                    const newPkgs  = selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id) && !deactivatedLabPkgIds.includes(id)).length;
-                    const total    = newTests + newPkgs;
+                    const newTests        = selectedTestIds.filter(id => !submittedLabTestIds.includes(id) && !deactivatedLabTestIds.includes(id)).length;
+                    const newPkgs         = selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id) && !deactivatedLabPkgIds.includes(id)).length;
+                    const total           = newTests + newPkgs;
+                    const priorityChanged = labOrderId && (labPriority !== stagedLabPriority);
+                    const extLabChanged   = inLabMode === 0 && labOrderId && (selectedExternalLabId !== stagedExternalLabId);
+                    if (total === 0 && (priorityChanged || extLabChanged)) {
+                      return 'Update Order';
+                    }
                     return total > 0 ? `Submit ${total} Item${total !== 1 ? 's' : ''}` : 'Done';
                   })()}
                 </button>

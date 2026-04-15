@@ -72,7 +72,8 @@ const Sidebar = () => {
       subItems: [
         {to: "/work-shift", label: "Work Shift", roles: ["admin","frontdesk", "nurse"],},
         {to: "/employee-list", label: "Employee List", roles: ["admin","frontdesk", "nurse"],},
-        {to: "/admin-employee-list", label: "Employee List", roles: ["spradmin"],}, 
+        {to: "/admin-employee-list", label: "Employee List", roles: ["spradmin"],},
+        {to: "/user-list", label: "User List", roles: ["spradmin"],},
       ],
     },
     {
@@ -100,6 +101,7 @@ const Sidebar = () => {
         {to: "/consulted-patient", label: "Consultation List", roles: ["nurse", "frontdesk", "accounts"],},
         {to: "/consultationcharge-config", label: "Consul Charge Config", roles: ["admin", "frontdesk", "accounts"],},
         {to: "/consultation-charge", label: "Consultation Charge", roles: ["admin", "frontdesk", "accounts"],},
+        {to: "/external-lab", label: "External Lab", roles: ["admin","doctor","frontdesk"],},
       ],
     },
     {

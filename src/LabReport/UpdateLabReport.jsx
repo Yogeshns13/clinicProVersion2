@@ -1,8 +1,8 @@
 // src/components/UpdateLabReport.jsx
 import React, { useState, useEffect } from 'react';
-import { FiSave, FiX } from 'react-icons/fi';
+import { FiSave, FiX, FiEye, FiUpload } from 'react-icons/fi';
 import { updateLabTestReport } from '../Api/ApiLabTests.js';
-import { getEmployeeList } from '../Api/Api.js';
+import { getEmployeeList, getFile, uploadFile } from '../Api/Api.js';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
 import styles from './LabReportList.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
@@ -17,19 +17,31 @@ const STATUS_OPTIONS = [
 
 // ────────────────────────────────────────────────
 const UpdateLabReport = ({ report, onClose, onSuccess }) => {
-  const [doctors, setDoctors]             = useState([]);
+  const [doctors, setDoctors]               = useState([]);
   const [loadingDoctors, setLoadingDoctors] = useState(true);
 
   const [formData, setFormData] = useState({
-    verifiedBy:      0,
+    verifiedBy:       0,
     verifiedDateTime: '',
-    fileId:          0,
-    remarks:         '',
-    status:          1,
+    fileId:           0,
+    remarks:          '',
+    status:           1,
   });
 
-  const [formLoading, setFormLoading]         = useState(false);
+  const [formLoading, setFormLoading]               = useState(false);
   const [validationMessages, setValidationMessages] = useState({});
+
+  // ── File view / upload state ───────────────────────────────────────────────
+  const [fetchedFileUrl,   setFetchedFileUrl]   = useState(null);
+  const [fileViewLoading,  setFileViewLoading]  = useState(false);
+  const [newFile,          setNewFile]          = useState(null);
+  const [newFileUrl,       setNewFileUrl]       = useState(null);
+  const [fileUploaded,     setFileUploaded]     = useState(false);
+  const [fileUploadStatus, setFileUploadStatus] = useState('');
+  const [isFileUploading,  setIsFileUploading]  = useState(false);
+
+  // ── Lightbox state ─────────────────────────────────────────────────────────
+  const [lightbox, setLightbox] = useState({ open: false, url: null, title: '', isPdf: false });
 
   // ── Button cooldown state (2-sec disable after click) ──────────────────────
   const [btnCooldown, setBtnCooldown] = useState({});
@@ -44,7 +56,6 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
   const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
 
   // ── Submit button gating ────────────────────────────────────────────────────
-  // Enabled only when verifiedBy is selected (non-zero)
   const allRequiredFilled = Number(formData.verifiedBy) > 0;
 
   // ────────────────────────────────────────────────
@@ -100,6 +111,16 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
       remarks:          report.remarks    || '',
       status:           report.status     || 1,
     });
+
+    // Reset file state when report changes
+    setFetchedFileUrl(null);
+    setFileViewLoading(false);
+    setNewFile(null);
+    setNewFileUrl(null);
+    setFileUploaded(false);
+    setFileUploadStatus('');
+    setIsFileUploading(false);
+    setLightbox({ open: false, url: null, title: '', isPdf: false });
   }, [report]);
 
   // ────────────────────────────────────────────────
@@ -120,10 +141,78 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
     }
   };
 
+  // ── File: view current file ────────────────────────────────────────────────
+  const handleViewCurrentFile = async () => {
+    if (!formData.fileId || formData.fileId <= 0) return;
+    setFileViewLoading(true);
+    try {
+      const clinicId = await getStoredClinicId();
+      const result   = await getFile(clinicId, formData.fileId);
+      const isPdf    = result.blob?.type === 'application/pdf';
+      setFetchedFileUrl(result.url);
+      setLightbox({ open: true, url: result.url, title: 'Report File', isPdf });
+    } catch (err) {
+      console.error('View file error:', err);
+      showPopup('Failed to load file.', 'error');
+    } finally {
+      setFileViewLoading(false);
+    }
+  };
+
+  // ── File: select new file ──────────────────────────────────────────────────
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+      setFileUploadStatus('Invalid file type. Use JPG, PNG or PDF.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setFileUploadStatus('File exceeds 5MB limit.');
+      return;
+    }
+    setNewFile(file);
+    setNewFileUrl(file.type.startsWith('image/') ? URL.createObjectURL(file) : null);
+    setFileUploaded(false);
+    setFileUploadStatus('File selected. Click Upload to submit.');
+  };
+
+  // ── File: upload new file ──────────────────────────────────────────────────
+  const handleFileUploadSubmit = async () => {
+    if (!newFile) return;
+    setIsFileUploading(true);
+    setFileUploadStatus('Uploading...');
+    try {
+      const clinicId = await getStoredClinicId();
+      const result   = await uploadFile(clinicId, newFile);
+      setFormData((prev) => ({ ...prev, fileId: result.fileId }));
+      setFileUploaded(true);
+      setFileUploadStatus('File uploaded successfully!');
+    } catch (err) {
+      setFileUploadStatus(`Upload failed: ${err.message}`);
+    } finally {
+      setIsFileUploading(false);
+    }
+  };
+
+  // ── File: clear new file selection (revert to original) ───────────────────
+  const handleRemoveFile = () => {
+    setNewFile(null);
+    setNewFileUrl(null);
+    setFileUploaded(false);
+    setFileUploadStatus('');
+    // Revert fileId to original report value
+    setFormData((prev) => ({ ...prev, fileId: report.fileId || 0 }));
+  };
+
+  const closeLightbox = () =>
+    setLightbox({ open: false, url: null, title: '', isPdf: false });
+
+  // ── Submit ─────────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Guard: show warning popup if required fields missing
     if (!allRequiredFilled) {
       setValidationMessages((prev) => ({ ...prev, verifiedBy: 'Please select a doctor' }));
       showPopup('Please fill all required fields: Verified By (Doctor).', 'warning');
@@ -153,7 +242,6 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
         status:           Number(formData.status),
       });
 
-      // Success: let the parent (LabReportList) show the success popup via onSuccess
       if (onSuccess) onSuccess();
     } catch (err) {
       showPopup(err.message || 'Failed to update lab report.', 'error');
@@ -167,7 +255,7 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
 
   return (
     <>
-      <div className={styles.clinicModalOverlay} >
+      <div className={styles.clinicModalOverlay}>
         <div
           className={`${styles.clinicModal} ${styles.updateModal}`}
           onClick={(e) => e.stopPropagation()}
@@ -190,9 +278,9 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
           </div>
 
           <form onSubmit={handleSubmit} className={styles.clinicModalBody} noValidate>
-
             <div className={styles.formGrid}>
-              {/* Patient Info (Read-only for context) */}
+
+              {/* ── Patient Info (Read-only context) ── */}
               <div className={styles.infoSection}>
                 <span className={styles.infoLabel}>Patient:</span>
                 <span className={styles.infoValue}>{report.patientName} ({report.patientFileNo})</span>
@@ -203,7 +291,7 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
                 <span className={styles.infoValue}>{report.doctorFullName}</span>
               </div>
 
-              {/* Editable Fields */}
+              {/* ── Verified By ── */}
               <div className={styles.formGroup}>
                 <label>
                   Verified By <span className={styles.required}>*</span>
@@ -228,8 +316,9 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
                 )}
               </div>
 
+              {/* ── Verified Date & Time ── */}
               <div className={styles.formGroup}>
-                <label>Verified Date & Time</label>
+                <label>Verified Date &amp; Time</label>
                 <input
                   type="datetime-local"
                   name="verifiedDateTime"
@@ -239,30 +328,129 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
                 />
               </div>
 
-              <div className={styles.formGroup}>
-                <label>File ID</label>
-                <input
-                  type="number"
-                  name="fileId"
-                  value={formData.fileId}
-                  onChange={handleInputChange}
-                  min="0"
-                  placeholder="Enter file ID"
-                  disabled={formLoading}
-                />
-              </div>
-
+              {/* ── Status ── */}
               <div className={styles.formGroup}>
                 <label>
                   Status <span className={styles.required}>*</span>
                 </label>
-                <select name="status" value={formData.status} onChange={handleInputChange} disabled={formLoading}>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  disabled={formLoading}
+                >
                   {STATUS_OPTIONS.map((status) => (
                     <option key={status.id} value={status.id}>{status.label}</option>
                   ))}
                 </select>
               </div>
 
+              {/* ── Report File section (replaces raw File ID input) ── */}
+              <div className={`${styles.formGroup} ${styles.fullWidth} ${styles.fileSection}`}>
+                <span className={styles.fileSectionTitle}>Report File</span>
+
+                <div className={styles.fileUploadContainer}>
+                  {/* ── Preview area ── */}
+                  <div className={styles.filePreviewSection}>
+                    {newFileUrl ? (
+                      /* Newly selected image preview */
+                      <div className={styles.filePreview}>
+                        <img src={newFileUrl} alt="Selected file" />
+                        <button
+                          type="button"
+                          onClick={handleRemoveFile}
+                          className={styles.removeFileBtn}
+                          disabled={formLoading}
+                        >
+                          <FiX size={13} />
+                        </button>
+                      </div>
+                    ) : fetchedFileUrl ? (
+                      /* Fetched existing file — click to open lightbox */
+                      <div
+                        className={styles.filePreview}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => setLightbox({ open: true, url: fetchedFileUrl, title: 'Report File', isPdf: false })}
+                        title="Click to enlarge"
+                      >
+                        <img src={fetchedFileUrl} alt="Current report file" />
+                      </div>
+                    ) : (
+                      /* Placeholder */
+                      <div className={styles.filePlaceholder}>
+                        <FiUpload size={26} />
+                        <p>
+                          {fileViewLoading
+                            ? 'Loading...'
+                            : newFile?.type === 'application/pdf'
+                              ? `PDF: ${newFile.name}`
+                              : formData.fileId > 0
+                                ? 'File on record'
+                                : 'No file'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── Upload controls ── */}
+                  <div className={styles.fileUploadControls}>
+
+                    {/* View + Select/Replace — same row, same size.
+                        Hidden once a file has been selected (upload flow takes over). */}
+                    {!newFile && (
+                      <div className={styles.fileActionRow}>
+                        {formData.fileId > 0 && !fetchedFileUrl && (
+                          <button
+                            type="button"
+                            onClick={handleViewCurrentFile}
+                            disabled={fileViewLoading || formLoading}
+                            className={styles.btnFileAction}
+                          >
+                            <FiEye size={14} />
+                            {fileViewLoading ? 'Loading...' : 'View Current File'}
+                          </button>
+                        )}
+                        <input
+                          type="file"
+                          id="reportFileInput"
+                          accept="image/jpeg,image/jpg,image/png,application/pdf"
+                          onChange={handleFileSelect}
+                          style={{ display: 'none' }}
+                          disabled={formLoading}
+                        />
+                        <label
+                          htmlFor="reportFileInput"
+                          className={styles.btnFileAction}
+                        >
+                          {formData.fileId > 0 ? 'Replace Filee' : 'Select File'}
+                        </label>
+                      </div>
+                    )}
+
+                    {/* Upload button — shown only when file is selected but not yet uploaded */}
+                    {newFile && !fileUploaded && (
+                      <button
+                        type="button"
+                        onClick={handleFileUploadSubmit}
+                        disabled={isFileUploading || formLoading}
+                        className={styles.btnUploadFile}
+                      >
+                        <FiUpload size={14} />
+                        {isFileUploading ? 'Uploading...' : 'Upload File'}
+                      </button>
+                    )}
+
+                    {fileUploadStatus && (
+                      <p className={`${styles.fileStatus} ${fileUploaded ? styles.fileStatusSuccess : styles.fileStatusInfo}`}>
+                        {fileUploadStatus}
+                      </p>
+                    )}
+                    <p className={styles.fileHint}>JPG, PNG or PDF · Max 5MB</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Remarks ── */}
               <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                 <label>Remarks</label>
                 <textarea
@@ -299,6 +487,33 @@ const UpdateLabReport = ({ report, onClose, onSuccess }) => {
           </form>
         </div>
       </div>
+
+      {/* ── Lightbox (fixed, above all modals) ── */}
+      {lightbox.open && (
+        <div className={styles.lightboxOverlay} onClick={closeLightbox}>
+          <div className={styles.lightboxModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.lightboxHeader}>
+              <span className={styles.lightboxTitle}>{lightbox.title}</span>
+              <button className={styles.lightboxCloseBtn} onClick={closeLightbox}>✕</button>
+            </div>
+            <div className={styles.lightboxBody}>
+              {lightbox.isPdf ? (
+                <embed
+                  src={lightbox.url}
+                  type="application/pdf"
+                  className={styles.lightboxPdf}
+                />
+              ) : (
+                <img
+                  src={lightbox.url}
+                  alt={lightbox.title}
+                  className={styles.lightboxImg}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── MessagePopup (error/warning only — success is handled by parent) ── */}
       <MessagePopup
