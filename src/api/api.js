@@ -335,6 +335,7 @@ export const getClinicList = async (options = {}) => {
     return results.map((clinic) => ({
       id: clinic.clinic_id,
       name: clinic.clinic_name,
+      logoFileId: clinic.logo_file_id,
       address: clinic.address,
       location: clinic.location,
       clinicType: clinic.clinic_type,
@@ -389,6 +390,7 @@ export const addClinic = async (clinicData) => {
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
     ClinicName: clinicData.clinicName || "",
+    LogoFileID: clinicData.logoFileId || 0,
     Address: clinicData.address || "",
     Location: clinicData.location || "",
     ClinicType: clinicData.clinicType || "",
@@ -453,6 +455,69 @@ export const addClinic = async (clinicData) => {
   }
 };
 
+export const updateClinicWithLogo = async (clinicData) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: clinicData.clinicId || clinicData.ClinicID,
+    LogoFileID: clinicData.logoFileId || clinicData.LogoFileID,
+  };
+
+  console.log("Update Clinic With Logo:", payload);
+
+  try {
+    const response = await API.post("/UpdateClinicWithLogo", payload);
+
+    console.log("UpdateClinicWithLogo response:", response.data);
+
+    const result = response.data?.result;
+
+    checkDbError(result);
+
+    if (!result || typeof result.OUT_OK === "undefined") {
+      throw new Error("Invalid response from server");
+    }
+
+    if (result.OUT_OK !== 1) {
+      throw new Error(result.OUT_ERROR || "Failed to update clinic logo");
+    }
+
+    // Return success
+    return {
+      success: true,
+      clinicId: result.IN_CLINIC_ID || payload.ClinicID,
+      message: result.OUT_ERROR || "OK"
+    };
+
+  } catch (error) {
+    console.error("updateClinicWithLogo failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message ||
+        "Failed to update clinic logo"
+    };
+
+    throw errorWithStatus;
+  }
+};
+
 export const updateClinic = async (clinicData) => {
   const userId = getUserId();
   if (!userId) {
@@ -476,6 +541,7 @@ export const updateClinic = async (clinicData) => {
     USER_ID: parseInt(userId),
     ClinicID: clinicData.clinicId,
     ClinicName: clinicData.ClinicName?.trim() || "",
+    LogoFileID: clinicData.logoFileId || 0,
     OwnerName: clinicData.OwnerName?.trim() || "",
     InLabAvailable: clinicData.inLabAvailable ?? 0,       
     InPharmacyAvailable: clinicData.inPharmacyAvailable ?? 0, 

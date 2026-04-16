@@ -92,7 +92,6 @@ GetPrescriptionList
     "ToDate":"",
     "IsRepeat":-1,
     "Status":-1,
-    
 }
 
 {
