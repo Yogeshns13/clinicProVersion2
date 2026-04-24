@@ -1,11 +1,12 @@
 // src/components/LabTestMasterList.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   FiSearch,
   FiPlus,
   FiX,
   FiPackage,
   FiFileText,
+  FiActivity,
 } from 'react-icons/fi';
 import {
   getLabTestMasterList,
@@ -32,6 +33,101 @@ import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 const PAGE_SIZE = 20;
 
+// ─────────────────────────────────────────────────────────────────────────────
+// IndexedDB helpers
+// DB: "AppPreferences"  |  Store: "columnPrefs"
+// Matches the existing pattern: "medicineMasterColPrefs", "purchaseOrderList"
+// Value shape: { activeColumns: string[], menuOrder: string[] }
+// ─────────────────────────────────────────────────────────────────────────────
+const IDB_DB_NAME    = 'AppPreferences';
+const IDB_DB_VERSION = 1;
+const IDB_STORE_NAME = 'columnPrefs';
+
+// IDB key for LabTestMaster tab column prefs
+const IDB_KEY_LAB_MASTER = 'labTestMasterColPrefs';
+
+function openIDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_DB_NAME, IDB_DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(IDB_STORE_NAME)) {
+        db.createObjectStore(IDB_STORE_NAME);
+      }
+    };
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror   = (e) => reject(e.target.error);
+  });
+}
+
+// Returns { activeColumns: string[], menuOrder: string[] } | null
+async function idbGetPrefs(key) {
+  const db = await openIDB();
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(IDB_STORE_NAME, 'readonly');
+    const req = tx.objectStore(IDB_STORE_NAME).get(key);
+    req.onsuccess = () => resolve(req.result ?? null);
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+// value: { activeColumns: string[], menuOrder: string[] }
+async function idbSetPrefs(key, value) {
+  const db = await openIDB();
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(IDB_STORE_NAME, 'readwrite');
+    const req = tx.objectStore(IDB_STORE_NAME).put(value, key);
+    req.onsuccess = () => resolve();
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LabTestMaster dynamic column pool
+// Only 1 dynamic col: normalRange
+// Slot 0 → default: "Status"  |  dynamic: "Normal Range"
+// ─────────────────────────────────────────────────────────────────────────────
+const LAB_MASTER_DYNAMIC_COLS_MAP = {
+  normalRange: {
+    id:     'normalRange',
+    label:  'Normal Range',
+    header: 'Normal Range',
+    icon:   <FiActivity size={15} />,
+    render: (t) => t.normalRange || '—',
+  },
+};
+
+// Default slot renderers (shown when dynamic col is NOT active)
+const LAB_MASTER_SLOT_DEFAULTS = [
+  {
+    header: 'Status',
+    render: (t, styles) => {
+      const getStatusClass = (id) => {
+        if (id === 1) return styles.active;
+        if (id === 2) return styles.inactive;
+        if (id === 3) return styles.deprecated;
+        return styles.inactive;
+      };
+      const getTestStatusLabel = (id) => {
+        if (id === 1) return 'Active';
+        if (id === 2) return 'Inactive';
+        if (id === 3) return 'Deprecated';
+        return 'Unknown';
+      };
+      return (
+        <span className={`${styles.statusBadge} ${getStatusClass(t.status)}`}>
+          {getTestStatusLabel(t.status)}
+        </span>
+      );
+    },
+  },
+];
+
+const LAB_MASTER_INITIAL_ORDER = ['normalRange'];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Validation helpers
+// ─────────────────────────────────────────────────────────────────────────────
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
     case 'TestName':
@@ -41,10 +137,10 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
 
     case 'packName':
-      if (!value || !value.trim()) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name is required`;
-      if (/\d/.test(value)) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name cannot contain numbers`;
-      if (value.trim().length < 2) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name must be at least 2 characters`;
-      if (value.trim().length > 100) return `${fieldName === 'TestName' ? 'Test' : 'Package'} name must not exceed 100 characters`;
+      if (!value || !value.trim()) return 'Package name is required';
+      if (/\d/.test(value)) return 'Package name cannot contain numbers';
+      if (value.trim().length < 2) return 'Package name must be at least 2 characters';
+      if (value.trim().length > 100) return 'Package name must not exceed 100 characters';
       return '';
 
     case 'ShortName':
@@ -61,9 +157,6 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
 
     case 'Description':
-      if (value && value.length > 500) return 'Description must not exceed 500 characters';
-      return '';
-
     case 'description':
       if (value && value.length > 500) return 'Description must not exceed 500 characters';
       return '';
@@ -84,11 +177,6 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
 
     case 'Fees':
-      if (!value || value.trim() === '') return 'Fees is required';
-      if (!/^\d+(\.\d{1,2})?$/.test(value)) return 'Enter a valid amount (e.g., 100 or 100.50)';
-      if (Number(value) <= 0) return 'Fees must be greater than 0';
-      return '';
-
     case 'fees':
       if (!value || value.trim() === '') return 'Fees is required';
       if (!/^\d+(\.\d{1,2})?$/.test(value)) return 'Enter a valid amount (e.g., 100 or 100.50)';
@@ -98,13 +186,14 @@ const getLiveValidationMessage = (fieldName, value) => {
     case 'CGSTPercentage':
     case 'SGSTPercentage':
     case 'cgstPercentage':
-    case 'sgstPercentage':
+    case 'sgstPercentage': {
       if (value === '' || value === null || value === undefined) return '';
       const percentage = Number(value);
       if (isNaN(percentage)) return 'Must be a valid number';
       if (percentage < 0) return 'Percentage cannot be negative';
       if (percentage > 100) return 'Percentage cannot exceed 100';
       return '';
+    }
 
     default:
       return '';
@@ -126,14 +215,13 @@ const filterInput = (fieldName, value) => {
     case 'CGSTPercentage':
     case 'SGSTPercentage':
     case 'cgstPercentage':
-    case 'sgstPercentage':
+    case 'sgstPercentage': {
       if (value === '') return value;
       const filtered = value.replace(/[^0-9.]/g, '');
       const parts = filtered.split('.');
-      if (parts.length > 2) {
-        return parts[0] + '.' + parts.slice(1).join('');
-      }
+      if (parts.length > 2) return parts[0] + '.' + parts.slice(1).join('');
       return filtered;
+    }
 
     case 'Units':
       return value.replace(/[^a-zA-Z\s/]/g, '');
@@ -146,6 +234,9 @@ const filterInput = (fieldName, value) => {
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Constants
+// ─────────────────────────────────────────────────────────────────────────────
 const TEST_TYPES = [
   { id: 1, label: 'Blood' },
   { id: 2, label: 'Urine' },
@@ -167,113 +258,160 @@ const PACKAGE_STATUS_OPTIONS = [
   { id: 2, label: 'Inactive' },
 ];
 
-const MASTER_SEARCH_TYPE_OPTIONS = [{ value: 'testName', label: 'Test Name' }];
-const PACKAGE_SEARCH_TYPE_OPTIONS = [{ value: 'packName', label: 'Package Name' }];
+const MASTER_SEARCH_TYPE_OPTIONS  = [{ value: 'testName',  label: 'Test Name'    }];
+const PACKAGE_SEARCH_TYPE_OPTIONS = [{ value: 'packName',  label: 'Package Name' }];
 
-// ──────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Component
+// ─────────────────────────────────────────────────────────────────────────────
 const LabMasterList = () => {
   const today = new Date().toISOString().split('T')[0];
 
   const [activeTab, setActiveTab] = useState('master');
 
-  // ===== LAB TEST MASTER =====
-  const [tests, setTests] = useState([]);
-  const [allTests, setAllTests] = useState([]);
+  // ── LabTestMaster dynamic columns ──────────────────────────────────────────
+  const [masterActiveColumns, setMasterActiveColumns] = useState(new Set());
+  const [masterMenuOrder,     setMasterMenuOrder]     = useState(LAB_MASTER_INITIAL_ORDER);
+  const masterPrefsLoaded = useRef(false);
+
+  // ── Load persisted prefs from IndexedDB on mount ──────────────────────────
+  useEffect(() => {
+    (async () => {
+      try {
+        const prefs = await idbGetPrefs(IDB_KEY_LAB_MASTER);
+        if (prefs) {
+          if (Array.isArray(prefs.activeColumns))
+            setMasterActiveColumns(new Set(prefs.activeColumns));
+          if (Array.isArray(prefs.menuOrder))
+            setMasterMenuOrder(prefs.menuOrder);
+        }
+      } catch (e) {
+        console.warn('IDB load failed:', e);
+      } finally {
+        masterPrefsLoaded.current = true;
+      }
+    })();
+  }, []);
+
+  // ── Persist prefs whenever they change ────────────────────────────────────
+  useEffect(() => {
+    if (!masterPrefsLoaded.current) return;
+    idbSetPrefs(IDB_KEY_LAB_MASTER, {
+      activeColumns: [...masterActiveColumns],
+      menuOrder:     masterMenuOrder,
+    }).catch(console.warn);
+  }, [masterActiveColumns, masterMenuOrder]);
+
+  // ── Compute table slots ───────────────────────────────────────────────────
+  const masterTableSlots = useMemo(() => {
+    return LAB_MASTER_SLOT_DEFAULTS.map((def, slotIdx) => {
+      const colId  = masterMenuOrder[slotIdx];
+      const dynCol = colId ? LAB_MASTER_DYNAMIC_COLS_MAP[colId] : null;
+      if (dynCol && masterActiveColumns.has(colId)) {
+        return { header: dynCol.header, render: (t) => dynCol.render(t) };
+      }
+      return { header: def.header, render: (t) => def.render(t, styles) };
+    });
+  }, [masterActiveColumns, masterMenuOrder]);
+
+  const toggleMasterDynCol = (id) => {
+    setMasterActiveColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const masterMenuItems = masterMenuOrder.map((id) => {
+    const col = LAB_MASTER_DYNAMIC_COLS_MAP[id];
+    return {
+      id:       col.id,
+      icon:     col.icon,
+      label:    col.label,
+      checked:  masterActiveColumns.has(col.id),
+      keepOpen: true,
+      onClick:  () => toggleMasterDynCol(col.id),
+    };
+  });
+
+  // ── Header menu — only show for LabTestMaster tab ─────────────────────────
+  const headerMenuItems   = activeTab === 'master' ? masterMenuItems : [];
+  const handleMenuReorder = activeTab === 'master'
+    ? (newOrder) => setMasterMenuOrder(newOrder)
+    : undefined;
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // LAB TEST MASTER state
+  // ═════════════════════════════════════════════════════════════════════════
+  const [tests,        setTests]        = useState([]);
+  const [allTests,     setAllTests]     = useState([]);
   const [selectedTest, setSelectedTest] = useState(null);
   const [isAddTestFormOpen, setIsAddTestFormOpen] = useState(false);
-  const [updateTest, setUpdateTest] = useState(null);
+  const [updateTest,   setUpdateTest]   = useState(null);
   const [testFormData, setTestFormData] = useState({
-    TestName: '',
-    ShortName: '',
-    Description: '',
-    TestType: 1,
-    NormalRange: '',
-    Units: '',
-    Remarks: '',
-    Fees: '',
-    CGSTPercentage: '9',
-    SGSTPercentage: '9',
+    TestName: '', ShortName: '', Description: '', TestType: 1,
+    NormalRange: '', Units: '', Remarks: '', Fees: '',
+    CGSTPercentage: '9', SGSTPercentage: '9',
   });
 
   const [masterFilterInputs, setMasterFilterInputs] = useState({
-    searchType: 'testName',
-    searchValue: '',
-    testType: '',
-    status: '',
-    dateFrom: '',
-    dateTo: '',
+    searchType: 'testName', searchValue: '', testType: '', status: '', dateFrom: '', dateTo: '',
   });
-
   const [masterAppliedFilters, setMasterAppliedFilters] = useState({
-    searchType: 'testName',
-    searchValue: '',
-    testType: '',
-    status: '',
-    dateFrom: '',
-    dateTo: '',
+    searchType: 'testName', searchValue: '', testType: '', status: '', dateFrom: '', dateTo: '',
   });
 
-  // ===== LAB TEST PACKAGE =====
-  const [packages, setPackages] = useState([]);
-  const [allPackages, setAllPackages] = useState([]);
+  // ═════════════════════════════════════════════════════════════════════════
+  // LAB TEST PACKAGE state
+  // ═════════════════════════════════════════════════════════════════════════
+  const [packages,        setPackages]        = useState([]);
+  const [allPackages,     setAllPackages]     = useState([]);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [isAddPackageFormOpen, setIsAddPackageFormOpen] = useState(false);
-  const [updatePackage, setUpdatePackage] = useState(null);
+  const [updatePackage,   setUpdatePackage]   = useState(null);
   const [packageFormData, setPackageFormData] = useState({
-    packName: '',
-    packShortName: '',
-    description: '',
-    fees: '',
-    cgstPercentage: '9',
-    sgstPercentage: '9',
+    packName: '', packShortName: '', description: '',
+    fees: '', cgstPercentage: '9', sgstPercentage: '9',
   });
 
   const [packageFilterInputs, setPackageFilterInputs] = useState({
-    searchType: 'packName',
-    searchValue: '',
-    status: '',
-    dateFrom: '',
-    dateTo: '',
+    searchType: 'packName', searchValue: '', status: '', dateFrom: '', dateTo: '',
   });
-
   const [packageAppliedFilters, setPackageAppliedFilters] = useState({
-    searchType: 'packName',
-    searchValue: '',
-    status: '',
-    dateFrom: '',
-    dateTo: '',
+    searchType: 'packName', searchValue: '', status: '', dateFrom: '', dateTo: '',
   });
 
-  // ===== PACKAGE ITEMS =====
-  const [packageItems, setPackageItems] = useState([]);
+  // ═════════════════════════════════════════════════════════════════════════
+  // PACKAGE ITEMS state
+  // ═════════════════════════════════════════════════════════════════════════
+  const [packageItems,      setPackageItems]      = useState([]);
   const [isAddItemFormOpen, setIsAddItemFormOpen] = useState(false);
-  const [availableTests, setAvailableTests] = useState([]);
-  const [selectedTestIds, setSelectedTestIds] = useState([]);
+  const [availableTests,    setAvailableTests]    = useState([]);
+  const [selectedTestIds,   setSelectedTestIds]   = useState([]);
 
-  // ===== SHARED =====
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // ═════════════════════════════════════════════════════════════════════════
+  // SHARED state
+  // ═════════════════════════════════════════════════════════════════════════
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState(null);
   const [formLoading, setFormLoading] = useState(false);
-  const [testValidationMessages, setTestValidationMessages] = useState({});
+  const [testValidationMessages,    setTestValidationMessages]    = useState({});
   const [packageValidationMessages, setPackageValidationMessages] = useState({});
-
-  // Pagination
-  const [page, setPage] = useState(1);
+  const [page,    setPage]    = useState(1);
   const [hasNext, setHasNext] = useState(false);
 
-  // ── Button cooldown state (2-sec disable after click) ──────────────────────
   const [btnCooldown, setBtnCooldown] = useState({});
   const triggerCooldown = (key) => {
     setBtnCooldown((prev) => ({ ...prev, [key]: true }));
     setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
   };
 
-  // ── MessagePopup state ──────────────────────────────────────────────────────
   const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
-  const showPopup = (message, type = 'success') => setPopup({ visible: true, message, type });
+  const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
   const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
 
-  // ── Submit button gating ────────────────────────────────────────────────────
+  // ── Submit button gating ──────────────────────────────────────────────────
   const testAllRequiredFilled =
     testFormData.TestName.trim().length > 0 &&
     testFormData.ShortName.trim().length > 0 &&
@@ -287,34 +425,27 @@ const LabMasterList = () => {
     packageFormData.fees !== '' && packageFormData.fees !== 0;
 
   const hasMasterActiveFilters =
-    !!masterAppliedFilters.searchValue ||
-    !!masterAppliedFilters.testType ||
-    !!masterAppliedFilters.status ||
-    !!masterAppliedFilters.dateFrom ||
-    !!masterAppliedFilters.dateTo;
+    !!masterAppliedFilters.searchValue || !!masterAppliedFilters.testType ||
+    !!masterAppliedFilters.status || !!masterAppliedFilters.dateFrom || !!masterAppliedFilters.dateTo;
 
   const hasPackageActiveFilters =
-    !!packageAppliedFilters.searchValue ||
-    !!packageAppliedFilters.status ||
-    !!packageAppliedFilters.dateFrom ||
-    !!packageAppliedFilters.dateTo;
+    !!packageAppliedFilters.searchValue || !!packageAppliedFilters.status ||
+    !!packageAppliedFilters.dateFrom || !!packageAppliedFilters.dateTo;
 
-  // ── FETCH ──────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  // FETCH
+  // ─────────────────────────────────────────────────────────────────────────
   const fetchTests = async (filters = masterAppliedFilters, pageNum = page) => {
     try {
       setLoading(true);
       setError(null);
-
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-
       const options = { BranchID: branchId, Page: pageNum, PageSize: PAGE_SIZE };
       if (filters.searchValue) options.TestName = filters.searchValue;
       if (filters.testType !== '') options.TestType = Number(filters.testType);
-      if (filters.status !== '') options.Status = Number(filters.status);
-
+      if (filters.status    !== '') options.Status  = Number(filters.status);
       const data = await getLabTestMasterList(clinicId, options);
-
       setTests(data);
       setAllTests(data);
       setHasNext(data.length === PAGE_SIZE);
@@ -334,16 +465,12 @@ const LabMasterList = () => {
     try {
       setLoading(true);
       setError(null);
-
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-
       const options = { BranchID: branchId, Page: pageNum, PageSize: PAGE_SIZE };
       if (filters.searchValue) options.PackNameSearch = filters.searchValue;
       if (filters.status !== '') options.Status = Number(filters.status);
-
       const data = await getLabTestPackageList(clinicId, options);
-
       setPackages(data);
       setAllPackages(data);
       setHasNext(data.length === PAGE_SIZE);
@@ -363,13 +490,7 @@ const LabMasterList = () => {
     try {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-
-      const data = await getLabTestPackageItemList({
-        packageId: PackageId,
-        ClinicID: clinicId,
-        BranchID: branchId,
-      });
-
+      const data = await getLabTestPackageItemList({ packageId: PackageId, ClinicID: clinicId, BranchID: branchId });
       setPackageItems(data);
     } catch (err) {
       console.error('fetchPackageItems error:', err);
@@ -381,7 +502,6 @@ const LabMasterList = () => {
     try {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-
       const data = await getLabTestMasterList(clinicId, { BranchID: branchId, Status: 1 });
       setAvailableTests(data);
     } catch (err) {
@@ -399,7 +519,9 @@ const LabMasterList = () => {
     }
   }, [activeTab, masterAppliedFilters, packageAppliedFilters]);
 
-  // ── CLIENT FILTERS ─────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  // CLIENT FILTERS (date range applied client-side)
+  // ─────────────────────────────────────────────────────────────────────────
   const filteredTests = useMemo(() => {
     let filtered = tests;
     if (masterAppliedFilters.dateFrom) {
@@ -428,7 +550,9 @@ const LabMasterList = () => {
     return filtered;
   }, [packages, packageAppliedFilters]);
 
-  // ── FILTER HANDLERS ────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  // FILTER HANDLERS
+  // ─────────────────────────────────────────────────────────────────────────
   const handleMasterFilterChange = (e) => {
     const { name, value } = e.target;
     setMasterFilterInputs(prev => ({ ...prev, [name]: value }));
@@ -471,16 +595,15 @@ const LabMasterList = () => {
     if (newPage < 1) return;
     triggerCooldown(`page-${newPage}`);
     setPage(newPage);
-    if (activeTab === 'master') {
-      fetchTests(masterAppliedFilters, newPage);
-    } else {
-      fetchPackages(packageAppliedFilters, newPage);
-    }
+    if (activeTab === 'master') fetchTests(masterAppliedFilters, newPage);
+    else fetchPackages(packageAppliedFilters, newPage);
   };
 
-  // ── HELPERS ────────────────────────────────────────────────────────────────
-  const getTestTypeLabel = (id) => TEST_TYPES.find((t) => t.id === id)?.label || 'Unknown';
-  const getTestStatusLabel = (id) => TEST_STATUS_OPTIONS.find((s) => s.id === id)?.label || 'Unknown';
+  // ─────────────────────────────────────────────────────────────────────────
+  // HELPERS
+  // ─────────────────────────────────────────────────────────────────────────
+  const getTestTypeLabel    = (id) => TEST_TYPES.find((t) => t.id === id)?.label || 'Unknown';
+  const getTestStatusLabel  = (id) => TEST_STATUS_OPTIONS.find((s) => s.id === id)?.label || 'Unknown';
   const getPackageStatusLabel = (id) => PACKAGE_STATUS_OPTIONS.find((s) => s.id === id)?.label || 'Unknown';
   const getStatusClass = (id) => {
     if (id === 1) return styles.active;
@@ -489,7 +612,9 @@ const LabMasterList = () => {
     return styles.inactive;
   };
 
-  // ── TEST HANDLERS ──────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  // TEST HANDLERS
+  // ─────────────────────────────────────────────────────────────────────────
   const openTestDetails = (test) => {
     triggerCooldown(`view-test-${test.id}`);
     setSelectedTest(test);
@@ -523,8 +648,6 @@ const LabMasterList = () => {
 
   const handleTestSubmit = async (e) => {
     e.preventDefault();
-
-    // Guard: show warning popup if required fields missing
     if (!testAllRequiredFilled) {
       const missing = [];
       if (!testFormData.TestName.trim()) missing.push('Test Name');
@@ -533,28 +656,23 @@ const LabMasterList = () => {
       showPopup(`Please fill all required fields: ${missing.join(', ')}.`, 'warning');
       return;
     }
-
     setFormLoading(true);
-
     try {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-
       await addLabTestMaster({
-        clinicId,
-        branchId,
-        TestName: testFormData.TestName.trim(),
-        ShortName: testFormData.ShortName.trim(),
-        Description: testFormData.Description.trim(),
-        TestType: Number(testFormData.TestType),
-        NormalRange: testFormData.NormalRange.trim(),
-        Units: testFormData.Units.trim(),
-        Remarks: testFormData.Remarks.trim(),
-        Fees: Number(testFormData.Fees) || 0,
+        clinicId, branchId,
+        TestName:       testFormData.TestName.trim(),
+        ShortName:      testFormData.ShortName.trim(),
+        Description:    testFormData.Description.trim(),
+        TestType:       Number(testFormData.TestType),
+        NormalRange:    testFormData.NormalRange.trim(),
+        Units:          testFormData.Units.trim(),
+        Remarks:        testFormData.Remarks.trim(),
+        Fees:           Number(testFormData.Fees) || 0,
         CGSTPercentage: Number(testFormData.CGSTPercentage) || 9,
         SGSTPercentage: Number(testFormData.SGSTPercentage) || 9,
       });
-
       showPopup('Lab test added successfully!', 'success');
       setTimeout(async () => {
         closeAddTestForm();
@@ -568,15 +686,10 @@ const LabMasterList = () => {
     }
   };
 
-  const handleTestUpdateClick = (test) => {
-    setSelectedTest(null);
-    setUpdateTest(test);
-  };
+  const handleTestUpdateClick = (test) => { setSelectedTest(null); setUpdateTest(test); };
 
   const handleTestDelete = async (test) => {
-
     setFormLoading(true);
-
     try {
       await deleteLabTestMaster(test.id);
       closeTestModal();
@@ -590,7 +703,9 @@ const LabMasterList = () => {
     }
   };
 
-  // ── PACKAGE HANDLERS ───────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  // PACKAGE HANDLERS
+  // ─────────────────────────────────────────────────────────────────────────
   const openPackageDetails = async (pkg) => {
     triggerCooldown(`view-pkg-${pkg.id}`);
     setSelectedPackage(pkg);
@@ -598,17 +713,11 @@ const LabMasterList = () => {
     await fetchPackageItems(pkg.id);
   };
 
-  const closePackageModal = () => {
-    setSelectedPackage(null);
-    setPackageItems([]);
-  };
+  const closePackageModal = () => { setSelectedPackage(null); setPackageItems([]); };
 
   const openAddPackageForm = () => {
     triggerCooldown('add-package');
-    setPackageFormData({
-      packName: '', packShortName: '', description: '',
-      fees: '', cgstPercentage: '9', sgstPercentage: '9',
-    });
+    setPackageFormData({ packName: '', packShortName: '', description: '', fees: '', cgstPercentage: '9', sgstPercentage: '9' });
     setPackageValidationMessages({});
     setIsAddPackageFormOpen(true);
   };
@@ -629,8 +738,6 @@ const LabMasterList = () => {
 
   const handlePackageSubmit = async (e) => {
     e.preventDefault();
-
-    // Guard: show warning popup if required fields missing
     if (!packageAllRequiredFilled) {
       const missing = [];
       if (!packageFormData.packName.trim()) missing.push('Package Name');
@@ -639,31 +746,25 @@ const LabMasterList = () => {
       showPopup(`Please fill all required fields: ${missing.join(', ')}.`, 'warning');
       return;
     }
-
     const feesMsg = getLiveValidationMessage('fees', packageFormData.fees);
     if (feesMsg) {
       setPackageValidationMessages((prev) => ({ ...prev, fees: feesMsg }));
       showPopup(`Fees: ${feesMsg}`, 'warning');
       return;
     }
-
     setFormLoading(true);
-
     try {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-
       await addLabTestPackage({
-        clinicId,
-        branchId,
-        packName: packageFormData.packName.trim(),
-        packShortName: packageFormData.packShortName.trim(),
-        description: packageFormData.description.trim(),
-        fees: Number(packageFormData.fees),
+        clinicId, branchId,
+        packName:       packageFormData.packName.trim(),
+        packShortName:  packageFormData.packShortName.trim(),
+        description:    packageFormData.description.trim(),
+        fees:           Number(packageFormData.fees),
         cgstPercentage: Number(packageFormData.cgstPercentage) || 9,
         sgstPercentage: Number(packageFormData.sgstPercentage) || 9,
       });
-
       showPopup('Lab test package added successfully!', 'success');
       setTimeout(async () => {
         closeAddPackageForm();
@@ -677,12 +778,11 @@ const LabMasterList = () => {
     }
   };
 
-  const handlePackageUpdateClick = (pkg) => {
-    setSelectedPackage(null);
-    setUpdatePackage(pkg);
-  };
+  const handlePackageUpdateClick = (pkg) => { setSelectedPackage(null); setUpdatePackage(pkg); };
 
-  // ── PACKAGE ITEM HANDLERS ──────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  // PACKAGE ITEM HANDLERS
+  // ─────────────────────────────────────────────────────────────────────────
   const openAddItemForm = async () => {
     triggerCooldown('add-items');
     setSelectedTestIds([]);
@@ -690,10 +790,7 @@ const LabMasterList = () => {
     setIsAddItemFormOpen(true);
   };
 
-  const closeAddItemForm = () => {
-    setIsAddItemFormOpen(false);
-    setSelectedTestIds([]);
-  };
+  const closeAddItemForm = () => { setIsAddItemFormOpen(false); setSelectedTestIds([]); };
 
   const handleTestSelection = (testId) => {
     setSelectedTestIds((prev) =>
@@ -702,26 +799,14 @@ const LabMasterList = () => {
   };
 
   const handleAddPackageItems = async () => {
-    if (selectedTestIds.length === 0) {
-      showPopup('Please select at least one test.', 'warning');
-      return;
-    }
-
+    if (selectedTestIds.length === 0) { showPopup('Please select at least one test.', 'warning'); return; }
     setFormLoading(true);
-
     try {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-
       for (const testId of selectedTestIds) {
-        await addLabPackageItem({
-          clinicId,
-          branchId,
-          packageId: selectedPackage.id,
-          testId: testId,
-        });
+        await addLabPackageItem({ clinicId, branchId, packageId: selectedPackage.id, testId });
       }
-
       showPopup(`${selectedTestIds.length} test(s) added to package successfully!`, 'success');
       setTimeout(async () => {
         closeAddItemForm();
@@ -736,7 +821,6 @@ const LabMasterList = () => {
   };
 
   const handleDeletePackageItem = async (packageItemId) => {
-
     try {
       await deleteLabPackageItem(packageItemId);
       await fetchPackageItems(selectedPackage.id);
@@ -750,22 +834,11 @@ const LabMasterList = () => {
   const handleRebuildFees = async () => {
     triggerCooldown('rebuild-fees');
     setFormLoading(true);
-
     try {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-
-      const result = await rebuildPackageFees({
-        packageId: selectedPackage.id,
-        clinicId: clinicId,
-        branchId: branchId,
-      });
-
-      showPopup(
-        `Package fees rebuilt! New Fees: ${result.formattedNewFees || result.newPackageFees}`,
-        'success'
-      );
-
+      const result = await rebuildPackageFees({ packageId: selectedPackage.id, clinicId, branchId });
+      showPopup(`Package fees rebuilt! New Fees: ${result.formattedNewFees || result.newPackageFees}`, 'success');
       await fetchPackages(packageAppliedFilters, page);
       const updatedPkg = await getLabTestPackageList(clinicId, { BranchID: branchId });
       const updated = updatedPkg.find(p => p.id === selectedPackage.id);
@@ -778,24 +851,29 @@ const LabMasterList = () => {
     }
   };
 
-  // ── EARLY RETURNS ──────────────────────────────────────────────────────────
-  if (error && (error?.status >= 400 || error?.code >= 400)) {
-    return <ErrorHandler error={error} />;
-  }
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // EARLY RETURNS
+  // ─────────────────────────────────────────────────────────────────────────
+  if (error && (error?.status >= 400 || error?.code >= 400)) return <ErrorHandler error={error} />;
   if (loading) return <div className={styles.loading}><LoadingPage /></div>;
-  if (error) return <div className={styles.error}>Error: {error.message || error}</div>;
+  if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
   const startRecord = (activeTab === 'master' ? tests : packages).length === 0
-    ? 0
-    : (page - 1) * PAGE_SIZE + 1;
+    ? 0 : (page - 1) * PAGE_SIZE + 1;
   const endRecord = startRecord + (activeTab === 'master' ? tests : packages).length - 1;
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER
+  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className={styles.wrapper}>
       <ErrorHandler error={error} />
-      <Header title="Lab Test Management" />
+
+      <Header
+        title="Lab Test Management"
+        menuItems={headerMenuItems}
+        onMenuReorder={handleMenuReorder}
+      />
 
       {/* ── Tab Navigation ── */}
       <div className={styles.tabs}>
@@ -804,20 +882,18 @@ const LabMasterList = () => {
           onClick={() => { triggerCooldown('tab-master'); setActiveTab('master'); }}
           disabled={!!btnCooldown['tab-master']}
         >
-          <FiFileText size={18} />
-          Lab Test Master
+          <FiFileText size={18} /> Lab Test Master
         </button>
         <button
           className={`${styles.tab} ${activeTab === 'packages' ? styles.tabActive : ''}`}
           onClick={() => { triggerCooldown('tab-packages'); setActiveTab('packages'); }}
           disabled={!!btnCooldown['tab-packages']}
         >
-          <FiPackage size={18} />
-          Lab Test Packages
+          <FiPackage size={18} /> Lab Test Packages
         </button>
       </div>
 
-      {/* ══ LAB TEST MASTER TAB ══ */}
+      {/* ══════════════════════ LAB TEST MASTER TAB ══════════════════════ */}
       {activeTab === 'master' && (
         <>
           <div className={styles.filtersContainer}>
@@ -847,18 +923,14 @@ const LabMasterList = () => {
               <div className={styles.filterGroup}>
                 <select name="testType" value={masterFilterInputs.testType} onChange={handleMasterFilterChange} className={styles.filterInput}>
                   <option value="">All Types</option>
-                  {TEST_TYPES.map(t => (
-                    <option key={t.id} value={t.id}>{t.label}</option>
-                  ))}
+                  {TEST_TYPES.map(t => (<option key={t.id} value={t.id}>{t.label}</option>))}
                 </select>
               </div>
 
               <div className={styles.filterGroup}>
                 <select name="status" value={masterFilterInputs.status} onChange={handleMasterFilterChange} className={styles.filterInput}>
                   <option value="">All Status</option>
-                  {TEST_STATUS_OPTIONS.map(s => (
-                    <option key={s.id} value={s.id}>{s.label}</option>
-                  ))}
+                  {TEST_STATUS_OPTIONS.map(s => (<option key={s.id} value={s.id}>{s.label}</option>))}
                 </select>
               </div>
 
@@ -910,14 +982,14 @@ const LabMasterList = () => {
                     <th>Type</th>
                     <th>Fees</th>
                     <th>Units</th>
-                    <th>Status</th>
+                    {masterTableSlots.map((slot, i) => <th key={i}>{slot.header}</th>)}
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredTests.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className={styles.noData}>
+                      <td colSpan={5 + masterTableSlots.length + 1} className={styles.noData}>
                         {hasMasterActiveFilters ? 'No lab tests found for the applied filters.' : 'No lab tests registered yet.'}
                       </td>
                     </tr>
@@ -937,11 +1009,7 @@ const LabMasterList = () => {
                         <td><span className={styles.testTypeBadge}>{getTestTypeLabel(test.testType)}</span></td>
                         <td>₹{parseFloat(test.fees || 0).toFixed(2)}</td>
                         <td>{test.units || '—'}</td>
-                        <td>
-                          <span className={`${styles.statusBadge} ${getStatusClass(test.status)}`}>
-                            {getTestStatusLabel(test.status)}
-                          </span>
-                        </td>
+                        {masterTableSlots.map((slot, i) => <td key={i}>{slot.render(test)}</td>)}
                         <td>
                           <button
                             onClick={() => openTestDetails(test)}
@@ -975,7 +1043,7 @@ const LabMasterList = () => {
         </>
       )}
 
-      {/* ══ LAB TEST PACKAGES TAB ══ */}
+      {/* ══════════════════════ LAB TEST PACKAGES TAB ══════════════════════ */}
       {activeTab === 'packages' && (
         <>
           <div className={styles.filtersContainer}>
@@ -1005,9 +1073,7 @@ const LabMasterList = () => {
               <div className={styles.filterGroup}>
                 <select name="status" value={packageFilterInputs.status} onChange={handlePackageFilterChange} className={styles.filterInput}>
                   <option value="">All Status</option>
-                  {PACKAGE_STATUS_OPTIONS.map(s => (
-                    <option key={s.id} value={s.id}>{s.label}</option>
-                  ))}
+                  {PACKAGE_STATUS_OPTIONS.map(s => (<option key={s.id} value={s.id}>{s.label}</option>))}
                 </select>
               </div>
 
@@ -1126,7 +1192,7 @@ const LabMasterList = () => {
         </>
       )}
 
-      {/* ══ MODALS ══ */}
+      {/* ══════════════════════ MODALS ══════════════════════ */}
       {selectedTest && (
         <ViewLabMaster
           test={selectedTest}
@@ -1168,7 +1234,7 @@ const LabMasterList = () => {
 
       {/* ── Add Test Form Modal ── */}
       {isAddTestFormOpen && (
-        <div className={styles.modalOverlay} >
+        <div className={styles.modalOverlay}>
           <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Add New Lab Test</h2>
@@ -1202,9 +1268,7 @@ const LabMasterList = () => {
                 <div className={styles.formGroup}>
                   <label>Test Type <span className={styles.required}>*</span></label>
                   <select name="TestType" value={testFormData.TestType} onChange={handleTestInputChange} disabled={formLoading}>
-                    {TEST_TYPES.map((type) => (
-                      <option key={type.id} value={type.id}>{type.label}</option>
-                    ))}
+                    {TEST_TYPES.map((type) => (<option key={type.id} value={type.id}>{type.label}</option>))}
                   </select>
                 </div>
 
@@ -1269,7 +1333,7 @@ const LabMasterList = () => {
 
       {/* ── Add Package Form Modal ── */}
       {isAddPackageFormOpen && (
-        <div className={styles.modalOverlay} >
+        <div className={styles.modalOverlay}>
           <div className={`${styles.modal} ${styles.formModal}`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Add New Lab Test Package</h2>
@@ -1343,7 +1407,7 @@ const LabMasterList = () => {
 
       {/* ── Add Items Form Modal ── */}
       {isAddItemFormOpen && (
-        <div className={styles.modalOverlay} >
+        <div className={styles.modalOverlay}>
           <div className={`${styles.modal} ${styles.testSelectionModal}`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Add Tests to Package</h2>
@@ -1375,7 +1439,6 @@ const LabMasterList = () => {
                       </div>
                     </div>
                   ))}
-
                   {availableTests.length === 0 && (
                     <div className={styles.noData}>No active tests available</div>
                   )}
@@ -1399,7 +1462,7 @@ const LabMasterList = () => {
         </div>
       )}
 
-      {/* ── MessagePopup (at root level so z-index is never blocked) ── */}
+      {/* ── MessagePopup ── */}
       <MessagePopup
         visible={popup.visible}
         message={popup.message}

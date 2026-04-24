@@ -1,7 +1,7 @@
 // src/components/PurchaseOrderList.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiPlus, FiX } from 'react-icons/fi';
+import { FiSearch, FiPlus, FiX, FiPhone, FiPercent } from 'react-icons/fi';
 import { getPurchaseOrderList } from '../Api/ApiPharmacy.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
@@ -25,7 +25,72 @@ const SEARCH_TYPE_OPTIONS = [
   { value: 'PONumber',   label: 'PO Number'   },
 ];
 
-// ──────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Dynamic column pool
+// Slot 0 → replaces "Contact Person" column
+// Slot 1 → replaces "Total Amount" column
+// ─────────────────────────────────────────────────────────────────────────────
+const DYNAMIC_COLS_MAP = {
+  discount:     { id: 'discount',     label: 'Discount',      header: 'Discount',      icon: <FiPercent size={15} />, render: (po) => po.discount !== undefined && po.discount !== null ? `₹${parseFloat(po.discount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—' },
+  vendorMobile: { id: 'vendorMobile', label: 'Vendor Mobile', header: 'Vendor Mobile', icon: <FiPhone   size={15} />, render: (po) => po.vendorMobile || po.contactMobile || '—' },
+};
+
+// Slot defaults — used when the dynamic col for that slot is NOT active
+const SLOT_DEFAULTS = [
+  { header: 'Contact Person', render: (po) => po.contactPerson || '—' },
+  { header: 'Total Amount',   render: (po) => po.totalAmount !== undefined && po.totalAmount !== null ? `₹${parseFloat(po.totalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—' },
+];
+
+const INITIAL_ORDER = ['discount', 'vendorMobile'];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// IndexedDB helpers
+// ─────────────────────────────────────────────────────────────────────────────
+const IDB_NAME    = 'AppPreferences';
+const IDB_STORE   = 'columnPrefs';
+const IDB_KEY     = 'purchaseOrderList';
+const IDB_VERSION = 1;
+
+const openIDB = () =>
+  new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(IDB_STORE)) {
+        db.createObjectStore(IDB_STORE);
+      }
+    };
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror   = (e) => reject(e.target.error);
+  });
+
+const idbGet = async (key) => {
+  try {
+    const db = await openIDB();
+    return new Promise((resolve, reject) => {
+      const tx  = db.transaction(IDB_STORE, 'readonly');
+      const req = tx.objectStore(IDB_STORE).get(key);
+      req.onsuccess = (e) => resolve(e.target.result ?? null);
+      req.onerror   = (e) => reject(e.target.error);
+    });
+  } catch { return null; }
+};
+
+const idbSet = async (key, value) => {
+  try {
+    const db = await openIDB();
+    return new Promise((resolve, reject) => {
+      const tx  = db.transaction(IDB_STORE, 'readwrite');
+      const req = tx.objectStore(IDB_STORE).put(value, key);
+      req.onsuccess = () => resolve();
+      req.onerror   = (e) => reject(e.target.error);
+    });
+  } catch { /* silent */ }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PurchaseOrderList
+// ─────────────────────────────────────────────────────────────────────────────
 const PurchaseOrderList = () => {
   const navigate = useNavigate();
 
@@ -33,9 +98,86 @@ const PurchaseOrderList = () => {
   const [loading, setLoading]                     = useState(true);
   const [error,   setError]                       = useState(null);
 
-  // Pagination
-  const [page, setPage]         = useState(1);
-  const [pageSize]              = useState(20);
+  // ── Dynamic columns ───────────────────────────────────────────────────────
+  const [activeColumns, setActiveColumns] = useState(new Set());
+  const [menuOrder,     setMenuOrder]     = useState(INITIAL_ORDER);
+
+  // FIX 1: useState instead of useRef — so the persist effect re-runs
+  //        in the same React batch after the async IDB load completes.
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+
+  // Load persisted prefs from IndexedDB on mount
+  useEffect(() => {
+    // Clean up old stale DB if it exists
+    indexedDB.deleteDatabase('PurchaseOrderPrefs');
+
+    (async () => {
+      try {
+        const saved = await idbGet(IDB_KEY);
+        if (saved) {
+          if (Array.isArray(saved.activeColumns) && saved.activeColumns.length > 0) {
+            setActiveColumns(new Set(saved.activeColumns));
+          }
+          if (Array.isArray(saved.menuOrder) && saved.menuOrder.length > 0) {
+            setMenuOrder(saved.menuOrder);
+          }
+        }
+      } catch {
+        // Fall through with defaults on any IDB error
+      } finally {
+        // FIX 2: always set loaded=true even on error, so the guard unblocks
+        setPrefsLoaded(true);
+      }
+    })();
+  }, []);
+
+  // Persist prefs to IndexedDB whenever they change — skip before first load
+  useEffect(() => {
+    if (!prefsLoaded) return;
+    idbSet(IDB_KEY, {
+      activeColumns: Array.from(activeColumns),
+      menuOrder,
+    });
+  }, [activeColumns, menuOrder, prefsLoaded]);
+
+  // ── Derived table slots ───────────────────────────────────────────────────
+  const tableSlots = useMemo(() => {
+    return SLOT_DEFAULTS.map((def, slotIdx) => {
+      const colId  = menuOrder[slotIdx];
+      const dynCol = colId ? DYNAMIC_COLS_MAP[colId] : null;
+      if (dynCol && activeColumns.has(colId)) {
+        return { header: dynCol.header, render: dynCol.render };
+      }
+      return { header: def.header, render: def.render };
+    });
+  }, [activeColumns, menuOrder]);
+
+  const toggleDynCol = (id) => {
+    setActiveColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleMenuReorder = (newOrderIds) => setMenuOrder(newOrderIds);
+
+  const poMenuItems = menuOrder.map((id) => {
+    const col = DYNAMIC_COLS_MAP[id];
+    return {
+      id:       col.id,
+      icon:     col.icon,
+      label:    col.label,
+      checked:  activeColumns.has(col.id),
+      keepOpen: true,
+      onClick:  () => toggleDynCol(col.id),
+    };
+  });
+
+  // ── Pagination ────────────────────────────────────────────────────────────
+  const [page, setPage]                 = useState(1);
+  const [pageSize]                      = useState(20);
   const [totalRecords, setTotalRecords] = useState(0);
 
   const [filterInputs, setFilterInputs] = useState({
@@ -56,15 +198,15 @@ const PurchaseOrderList = () => {
 
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
 
-  // ── Button cooldown state (2-sec disable after click) ──────────────────────
+  // ── Button cooldown (2-sec disable after click) ───────────────────────────
   const [btnCooldown, setBtnCooldown] = useState({});
   const triggerCooldown = (key) => {
     setBtnCooldown((prev) => ({ ...prev, [key]: true }));
     setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
   };
 
-  // ── Fetch ──────────────────────────────────────
-  const fetchPurchaseOrders = async (filters) => {
+  // ── Fetch ─────────────────────────────────────────────────────────────────
+  const fetchPurchaseOrders = async (filters, currentPage) => {
     try {
       setLoading(true);
       setError(null);
@@ -73,7 +215,7 @@ const PurchaseOrderList = () => {
       const branchId = await getStoredBranchId();
 
       const data = await getPurchaseOrderList(clinicId, {
-        Page:       page,
+        Page:       currentPage,
         PageSize:   pageSize,
         BranchID:   branchId,
         POID:       0,
@@ -101,17 +243,18 @@ const PurchaseOrderList = () => {
   };
 
   useEffect(() => {
-    fetchPurchaseOrders(appliedFilters);
-  }, [appliedFilters, page]);
+    fetchPurchaseOrders(appliedFilters, page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // ── Computed ───────────────────────────────────
+  // ── Computed ──────────────────────────────────────────────────────────────
   const isFiltersActive =
     appliedFilters.searchValue !== '' ||
     appliedFilters.status      !== '' ||
     appliedFilters.dateFrom    !== '' ||
     appliedFilters.dateTo      !== '';
 
-  // ── Helpers ────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────────────────
   const getStatusLabel = (status) =>
     STATUS_OPTIONS.find((s) => s.id === status)?.label ?? 'Unknown';
 
@@ -144,7 +287,7 @@ const PurchaseOrderList = () => {
     })}`;
   };
 
-  // ── Handlers ───────────────────────────────────
+  // ── Handlers ──────────────────────────────────────────────────────────────
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs((prev) => ({ ...prev, [name]: value }));
@@ -154,6 +297,7 @@ const PurchaseOrderList = () => {
     triggerCooldown('search');
     setAppliedFilters({ ...filterInputs });
     setPage(1);
+    fetchPurchaseOrders({ ...filterInputs }, 1);
   };
 
   const handleClearFilters = () => {
@@ -162,6 +306,7 @@ const PurchaseOrderList = () => {
     setFilterInputs(empty);
     setAppliedFilters(empty);
     setPage(1);
+    fetchPurchaseOrders(empty, 1);
   };
 
   const handlePageChange = (newPage) => {
@@ -169,6 +314,7 @@ const PurchaseOrderList = () => {
     if (newPage > Math.ceil(totalRecords / pageSize)) return;
     triggerCooldown(`page-${newPage}`);
     setPage(newPage);
+    fetchPurchaseOrders(appliedFilters, newPage);
   };
 
   const handleViewDetails = (po) => {
@@ -176,33 +322,33 @@ const PurchaseOrderList = () => {
     navigate(`/purchaseorderitem/${po.id}`);
   };
 
-  const openAddForm  = () => {
-    triggerCooldown('add');
-    setIsAddFormOpen(true);
-  };
-  const closeAddForm = () => setIsAddFormOpen(false);
-  const handleAddSuccess = () => fetchPurchaseOrders(appliedFilters);
+  const openAddForm      = () => { triggerCooldown('add'); setIsAddFormOpen(true); };
+  const closeAddForm     = () => setIsAddFormOpen(false);
+  const handleAddSuccess = () => fetchPurchaseOrders(appliedFilters, page);
 
-  // ── Early returns ──────────────────────────────
+  // ── Early returns ─────────────────────────────────────────────────────────
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
-  // ── Pagination calc ────────────────────────────
+  // ── Pagination calc ───────────────────────────────────────────────────────
   const totalPages  = Math.ceil(totalRecords / pageSize);
   const startRecord = totalRecords === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord   = Math.min(page * pageSize, totalRecords);
 
-  // ── Render ─────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className={styles.wrapper}>
-      <Header title="Purchase Order List" />
+      <Header
+        title="Purchase Order List"
+        menuItems={poMenuItems}
+        onMenuReorder={handleMenuReorder}
+      />
 
       {/* ══ FILTERS ══ */}
       <div className={styles.inlineFiltersContainer}>
         <div className={styles.poFiltersGrid}>
 
-          {/* Search type + value */}
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -225,7 +371,6 @@ const PurchaseOrderList = () => {
             />
           </div>
 
-          {/* Status */}
           <select
             name="status"
             value={filterInputs.status}
@@ -238,7 +383,6 @@ const PurchaseOrderList = () => {
             ))}
           </select>
 
-          {/* From Date */}
           <div className={styles.dateWrapper}>
             {!filterInputs.dateFrom && <span className={styles.datePlaceholder}>From Date</span>}
             <input
@@ -250,7 +394,6 @@ const PurchaseOrderList = () => {
             />
           </div>
 
-          {/* To Date */}
           <div className={styles.dateWrapper}>
             {!filterInputs.dateTo && <span className={styles.datePlaceholder}>To Date</span>}
             <input
@@ -262,7 +405,6 @@ const PurchaseOrderList = () => {
             />
           </div>
 
-          {/* Actions */}
           <div className={styles.inlineFilterActions}>
             <button
               onClick={handleSearch}
@@ -295,7 +437,7 @@ const PurchaseOrderList = () => {
       {/* ══ TABLE + PAGINATION ══ */}
       <div className={styles.tableSection}>
         {loading ? (
-          <div className={styles.loading}><LoadingPage/></div>
+          <div className={styles.loading}><LoadingPage /></div>
         ) : error ? (
           <div className={styles.error}>Error: {error.message || error}</div>
         ) : (
@@ -307,8 +449,8 @@ const PurchaseOrderList = () => {
                     <th>PO Number</th>
                     <th>PO Date</th>
                     <th>Vendor</th>
-                    <th>Contact Person</th>
-                    <th>Total Amount</th>
+                    <th>{tableSlots[0].header}</th>
+                    <th>{tableSlots[1].header}</th>
                     <th>Net Amount</th>
                     <th>Status</th>
                     <th>Actions</th>
@@ -338,9 +480,14 @@ const PurchaseOrderList = () => {
                         </td>
                         <td>{formatDate(po.poDate)}</td>
                         <td>{po.vendorName || '—'}</td>
-                        <td>{po.contactPerson || '—'}</td>
+                        {/* Slot 0 — Contact Person or dynamic */}
+                        <td>{tableSlots[0].render(po)}</td>
+                        {/* Slot 1 — Total Amount (styled) or dynamic */}
                         <td>
-                          <span className={styles.amountBadge}>{formatAmount(po.totalAmount)}</span>
+                          {activeColumns.has(menuOrder[1]) && DYNAMIC_COLS_MAP[menuOrder[1]]
+                            ? tableSlots[1].render(po)
+                            : <span className={styles.amountBadge}>{tableSlots[1].render(po)}</span>
+                          }
                         </td>
                         <td>
                           <span className={styles.amountBadge}>{formatAmount(po.netAmount)}</span>
@@ -368,7 +515,6 @@ const PurchaseOrderList = () => {
               </table>
             </div>
 
-            {/* ── Pagination Bar ── */}
             <div className={styles.paginationBar}>
               <div className={styles.paginationInfo}>
                 {totalRecords > 0
@@ -378,35 +524,25 @@ const PurchaseOrderList = () => {
 
               <div className={styles.paginationControls}>
                 <span className={styles.paginationLabel}>Page</span>
-
                 <button
                   className={styles.pageBtn}
                   onClick={() => handlePageChange(1)}
                   disabled={page === 1 || !!btnCooldown['page-1']}
                   title="First page"
-                >
-                  «
-                </button>
-
+                >«</button>
                 <button
                   className={styles.pageBtn}
                   onClick={() => handlePageChange(page - 1)}
                   disabled={page === 1 || !!btnCooldown[`page-${page - 1}`]}
                   title="Previous page"
-                >
-                  ‹
-                </button>
-
+                >‹</button>
                 <span className={styles.pageIndicator}>{page}</span>
-
                 <button
                   className={styles.pageBtn}
                   onClick={() => handlePageChange(page + 1)}
                   disabled={page >= totalPages || !!btnCooldown[`page-${page + 1}`]}
                   title="Next page"
-                >
-                  ›
-                </button>
+                >›</button>
               </div>
 
               <div className={styles.pageSizeInfo}>

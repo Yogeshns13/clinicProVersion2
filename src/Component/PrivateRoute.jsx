@@ -21,12 +21,13 @@ const ROUTE_PERMISSIONS = {
 
   "/consultation-list": ["admin", "doctor"],
   "/consulted-patient": ["frontdesk","nurse","accounts"],
+  "/print-prescription": ["admin", "doctor", "nurse"],
   "/view-consultation/:id": ["admin", "nurse","frontdesk", "doctor", "accounts"],
   "/consultationcharge-config": ["admin", "frontdesk","accounts"],
   "/consultation-charge": ["admin", "frontdesk","accounts"],
   "/external-lab": ["admin","doctor","frontdesk"],
+  "/consultation-invoice": ["admin", "frontdesk","accounts", "nurse"],
   
-
   "/labtestmaster": ["admin","labtech","accounts"],
   "/laborder-list": ["admin", "labtech"],
   "/labwork-list": ["admin", "labtech"],

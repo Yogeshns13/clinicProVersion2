@@ -1,17 +1,19 @@
 // src/components/SalesCartList.jsx
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiSearch,
   FiShoppingCart,
   FiFileText,
   FiCheckCircle,
-  FiAlertCircle,
   FiX,
   FiCalendar,
   FiUser,
   FiPackage,
+  FiPhone,
+  FiDollarSign,
 } from "react-icons/fi";
+import { MdCake } from "react-icons/md";
 import {
   getPrescriptionList,
   getPrescriptionDetailList,
@@ -42,6 +44,145 @@ const CART_SEARCH_TYPE_OPTIONS = [
 
 const PAGE_SIZE = 20;
 
+// ──────────────────────────────────────────────────
+// IndexedDB helpers
+// DB: "AppPreferences"  |  Store: "columnPrefs"
+// Matches the existing pattern used by other components
+// (e.g. "medicineMasterColPrefs", "purchaseOrderList")
+// Value shape: { activeColumns: string[], menuOrder: string[] }
+// ──────────────────────────────────────────────────
+const DB_NAME    = "AppPreferences";
+const DB_VERSION = 1;
+const STORE_NAME = "columnPrefs";
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror   = (e) => reject(e.target.error);
+  });
+}
+
+// Returns { activeColumns: string[], menuOrder: string[] } or null
+async function idbGetPrefs(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(STORE_NAME, "readonly");
+    const req = tx.objectStore(STORE_NAME).get(key);
+    req.onsuccess = () => resolve(req.result ?? null);
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+// value: { activeColumns: string[], menuOrder: string[] }
+async function idbSetPrefs(key, value) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(STORE_NAME, "readwrite");
+    const req = tx.objectStore(STORE_NAME).put(value, key);
+    req.onsuccess = () => resolve();
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+// ──────────────────────────────────────────────────
+// PRESCRIPTION dynamic-column definitions
+// Slot 0 → "Notes" column (default)
+// Slot 1 → "Status" column (default)
+// ──────────────────────────────────────────────────
+const PRES_DYNAMIC_COLS_MAP = {
+  patientAge: {
+    id:     "patientAge",
+    label:  "Patient Age",
+    header: "Age",
+    icon:   <MdCake size={15} />,
+    render: (p) => p.patientAge != null ? p.patientAge : "—",
+  },
+  patientMobile: {
+    id:     "patientMobile",
+    label:  "Patient Mobile",
+    header: "Patient Mobile",
+    icon:   <FiPhone size={15} />,
+    render: (p) => p.patientMobile || "—",
+  },
+};
+
+// Default slot renderers (shown when the dynamic column is NOT active)
+const PRES_SLOT_DEFAULTS = [
+  {
+    header: "Notes",
+    render: (p) => p.notes ? <div className={styles.subText}>{p.notes}</div> : "—",
+  },
+  {
+    header: "Status",
+    render: (p) => (
+      <span className={`${styles.badge} ${p.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}>
+        {p.statusDesc}
+      </span>
+    ),
+  },
+];
+
+const PRES_INITIAL_ORDER = ["patientAge", "patientMobile"];
+
+// ──────────────────────────────────────────────────
+// SALES CART dynamic-column definitions
+// Slot 0 → "Total Items" column (default)
+// Slot 1 → "Created Date" column (default)
+// ──────────────────────────────────────────────────
+const CART_DYNAMIC_COLS_MAP = {
+  netAmount: {
+    id:     "netAmount",
+    label:  "Net Amount",
+    header: "Net Amount",
+    icon:   <FiDollarSign size={15} />,
+    render: (c) => c.netAmount != null ? `₹${Number(c.netAmount).toFixed(2)}` : "—",
+  },
+  patientMobile: {
+    id:     "patientMobile",
+    label:  "Patient Mobile",
+    header: "Patient Mobile",
+    icon:   <FiPhone size={15} />,
+    render: (c) => c.patientMobile || c.customerMobile || "—",
+  },
+};
+
+const CART_SLOT_DEFAULTS = [
+  {
+    header: "Total Items",
+    render: (c) => (
+      <span className={styles.itemCountBadge}>{c.totalItems ?? 0} items</span>
+    ),
+  },
+  {
+    header: "Created Date",
+    render: (c) => {
+      if (!c.dateCreated) return "—";
+      return new Date(c.dateCreated).toLocaleDateString("en-GB", {
+        year: "numeric", month: "short", day: "numeric",
+      });
+    },
+  },
+];
+
+const CART_INITIAL_ORDER = ["netAmount", "patientMobile"];
+
+// ──────────────────────────────────────────────────
+// IDB keys  — one key per tab, value = { activeColumns, menuOrder }
+// Naming matches existing pattern: "medicineMasterColPrefs" etc.
+// ──────────────────────────────────────────────────
+const IDB_KEY_PRES = "salesCartPresColPrefs";
+const IDB_KEY_CART = "salesCartCartColPrefs";
+
+// ──────────────────────────────────────────────────
+// Component
+// ──────────────────────────────────────────────────
 const SalesCartList = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(
@@ -77,6 +218,137 @@ const SalesCartList = () => {
     searchValue: "",
     status:      "",
   });
+
+  // ── Prescription dynamic columns ──────────────────
+  const [presActiveColumns, setPresActiveColumns] = useState(new Set());
+  const [presMenuOrder,     setPresMenuOrder]     = useState(PRES_INITIAL_ORDER);
+  const presPrefsLoaded = useRef(false);
+
+  // ── Sales Cart dynamic columns ────────────────────
+  const [cartActiveColumns, setCartActiveColumns] = useState(new Set());
+  const [cartMenuOrder,     setCartMenuOrder]     = useState(CART_INITIAL_ORDER);
+  const cartPrefsLoaded = useRef(false);
+
+  // ── Load persisted prefs from IndexedDB on mount ──
+  useEffect(() => {
+    (async () => {
+      try {
+        const [presPrefs, cartPrefs] = await Promise.all([
+          idbGetPrefs(IDB_KEY_PRES),
+          idbGetPrefs(IDB_KEY_CART),
+        ]);
+
+        if (presPrefs) {
+          if (Array.isArray(presPrefs.activeColumns))
+            setPresActiveColumns(new Set(presPrefs.activeColumns));
+          if (Array.isArray(presPrefs.menuOrder))
+            setPresMenuOrder(presPrefs.menuOrder);
+        }
+
+        if (cartPrefs) {
+          if (Array.isArray(cartPrefs.activeColumns))
+            setCartActiveColumns(new Set(cartPrefs.activeColumns));
+          if (Array.isArray(cartPrefs.menuOrder))
+            setCartMenuOrder(cartPrefs.menuOrder);
+        }
+      } catch (e) {
+        console.warn("IDB load failed:", e);
+      } finally {
+        presPrefsLoaded.current = true;
+        cartPrefsLoaded.current = true;
+      }
+    })();
+  }, []);
+
+  // ── Persist prescription prefs whenever they change ──
+  useEffect(() => {
+    if (!presPrefsLoaded.current) return;
+    idbSetPrefs(IDB_KEY_PRES, {
+      activeColumns: [...presActiveColumns],
+      menuOrder:     presMenuOrder,
+    }).catch(console.warn);
+  }, [presActiveColumns, presMenuOrder]);
+
+  // ── Persist cart prefs whenever they change ──
+  useEffect(() => {
+    if (!cartPrefsLoaded.current) return;
+    idbSetPrefs(IDB_KEY_CART, {
+      activeColumns: [...cartActiveColumns],
+      menuOrder:     cartMenuOrder,
+    }).catch(console.warn);
+  }, [cartActiveColumns, cartMenuOrder]);
+
+  // ── Compute table slots (prescription) ─────────────
+  const presTableSlots = useMemo(() => {
+    return PRES_SLOT_DEFAULTS.map((def, slotIdx) => {
+      const colId  = presMenuOrder[slotIdx];
+      const dynCol = colId ? PRES_DYNAMIC_COLS_MAP[colId] : null;
+      if (dynCol && presActiveColumns.has(colId)) {
+        return { header: dynCol.header, render: dynCol.render };
+      }
+      return { header: def.header, render: def.render };
+    });
+  }, [presActiveColumns, presMenuOrder]);
+
+  const togglePresDynCol = (id) => {
+    setPresActiveColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const presMenuItems = presMenuOrder.map((id) => {
+    const col = PRES_DYNAMIC_COLS_MAP[id];
+    return {
+      id:       col.id,
+      icon:     col.icon,
+      label:    col.label,
+      checked:  presActiveColumns.has(col.id),
+      keepOpen: true,
+      onClick:  () => togglePresDynCol(col.id),
+    };
+  });
+
+  // ── Compute table slots (sales cart) ───────────────
+  const cartTableSlots = useMemo(() => {
+    return CART_SLOT_DEFAULTS.map((def, slotIdx) => {
+      const colId  = cartMenuOrder[slotIdx];
+      const dynCol = colId ? CART_DYNAMIC_COLS_MAP[colId] : null;
+      if (dynCol && cartActiveColumns.has(colId)) {
+        return { header: dynCol.header, render: dynCol.render };
+      }
+      return { header: def.header, render: def.render };
+    });
+  }, [cartActiveColumns, cartMenuOrder]);
+
+  const toggleCartDynCol = (id) => {
+    setCartActiveColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const cartMenuItems = cartMenuOrder.map((id) => {
+    const col = CART_DYNAMIC_COLS_MAP[id];
+    return {
+      id:       col.id,
+      icon:     col.icon,
+      label:    col.label,
+      checked:  cartActiveColumns.has(col.id),
+      keepOpen: true,
+      onClick:  () => toggleCartDynCol(col.id),
+    };
+  });
+
+  // ── Header menu items depend on active tab ──────────
+  const headerMenuItems    = activeTab === "prescriptions" ? presMenuItems    : cartMenuItems;
+  const handleMenuReorder  = activeTab === "prescriptions"
+    ? (newOrder) => setPresMenuOrder(newOrder)
+    : (newOrder) => setCartMenuOrder(newOrder);
 
   const [confirm, setConfirm] = useState({
     isOpen:         false,
@@ -277,11 +549,8 @@ const SalesCartList = () => {
       });
       const activeDetails = details.filter((d) => d.status === 1);
       if (!activeDetails.length) {
-        setConfirm((prev) => ({
-          ...prev,
-          loadingDetails: false,
-        }));
-        showPopup("No medicine details found for this prescription.", 'error');
+        setConfirm((prev) => ({ ...prev, loadingDetails: false }));
+        showPopup("No medicine details found for this prescription.", "error");
         return;
       }
       const uniqueMedicineIds = [...new Set(activeDetails.map((d) => d.medicineId))];
@@ -315,11 +584,8 @@ const SalesCartList = () => {
       }));
     } catch (err) {
       console.error("Error loading prescription details:", err);
-      setConfirm((prev) => ({
-        ...prev,
-        loadingDetails: false,
-      }));
-      showPopup(err.message || "Failed to load prescription details.", 'error');
+      setConfirm((prev) => ({ ...prev, loadingDetails: false }));
+      showPopup(err.message || "Failed to load prescription details.", "error");
     }
   };
 
@@ -382,7 +648,7 @@ const SalesCartList = () => {
           success:        false,
           cartId,
         }));
-        showPopup(`Cart created but some medicines failed:\n${errors.join("\n")}`, 'error');
+        showPopup(`Cart created but some medicines failed:\n${errors.join("\n")}`, "error");
       } else {
         setCartedPrescriptionIds((prev) => new Set([...prev, prescription.id]));
         setConfirm((prev) => ({
@@ -392,7 +658,6 @@ const SalesCartList = () => {
           success:        true,
           cartId,
         }));
-        // Show success MessagePopup
         showPopup(
           `Cart created! All ${details.length} medicine(s) added successfully.`,
           "success"
@@ -410,7 +675,7 @@ const SalesCartList = () => {
         submitting:     false,
         submitProgress: "",
       }));
-      showPopup(err.message || "Failed to add sales cart.", 'error');
+      showPopup(err.message || "Failed to add sales cart.", "error");
     }
   };
 
@@ -453,7 +718,7 @@ const SalesCartList = () => {
 
   if (error && (error?.status >= 400 || error?.code >= 400))
     return <ErrorHandler error={error} />;
-  if (loading) return <div className={styles.loading}><LoadingPage/></div>;
+  if (loading) return <div className={styles.loading}><LoadingPage /></div>;
   if (error)
     return <div className={styles.error}>Error: {error.message || error}</div>;
 
@@ -466,14 +731,19 @@ const SalesCartList = () => {
       (page - 1) * PAGE_SIZE + records.length,
     );
 
-  // ── Only show active prescriptions (status === 1) in the table ──
+  // Only show active prescriptions (status === 1) in the table
   const activePrescriptions = prescriptions.filter((pres) => pres.status === 1);
 
   // ────────────────────────────────────────────────
   return (
     <div className={styles.wrapper}>
       <ErrorHandler error={error} />
-      <Header title="Sales Cart Management" />
+
+      <Header
+        title="Sales Cart Management"
+        menuItems={headerMenuItems}
+        onMenuReorder={handleMenuReorder}
+      />
 
       {/* ── Tabs ── */}
       <div className={styles.tabs}>
@@ -657,15 +927,16 @@ const SalesCartList = () => {
                   <th>Doctor</th>
                   <th>Date Issued</th>
                   <th>Valid Until</th>
-                  <th>Notes</th>
-                  <th>Status</th>
+                  {presTableSlots.map((slot, i) => (
+                    <th key={i}>{slot.header}</th>
+                  ))}
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {activePrescriptions.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className={styles.noData}>
+                    <td colSpan={4 + presTableSlots.length + 1} className={styles.noData}>
                       No prescriptions found.
                     </td>
                   </tr>
@@ -694,20 +965,9 @@ const SalesCartList = () => {
                         <td>
                           <div className={styles.name}>{formatDate(pres.validUntil)}</div>
                         </td>
-                        <td>
-                          <div className={styles.notesCell}>
-                            {pres.notes && (
-                              <div className={styles.subText}>{pres.notes}</div>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <span
-                            className={`${styles.badge} ${pres.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}
-                          >
-                            {pres.statusDesc}
-                          </span>
-                        </td>
+                        {presTableSlots.map((slot, i) => (
+                          <td key={i}>{slot.render(pres)}</td>
+                        ))}
                         <td>
                           <div className={styles.actionsCell}>
                             <button
@@ -786,17 +1046,18 @@ const SalesCartList = () => {
               <thead>
                 <tr>
                   <th>Patient</th>
-                  <th>Total Items</th>
+                  {cartTableSlots.map((slot, i) => (
+                    <th key={i}>{slot.header}</th>
+                  ))}
                   <th>Total Amount</th>
                   <th>Status</th>
-                  <th>Created Date</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {salesCarts.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className={styles.noData}>
+                    <td colSpan={1 + cartTableSlots.length + 3} className={styles.noData}>
                       No sales carts found.
                     </td>
                   </tr>
@@ -806,11 +1067,9 @@ const SalesCartList = () => {
                       <td>
                         <div className={styles.name}>{cart.customerName || "—"}</div>
                       </td>
-                      <td>
-                        <span className={styles.itemCountBadge}>
-                          {cart.totalItems ?? 0} items
-                        </span>
-                      </td>
+                      {cartTableSlots.map((slot, i) => (
+                        <td key={i}>{slot.render(cart)}</td>
+                      ))}
                       <td>
                         <span className={styles.amountBadge}>
                           {formatCurrency(cart.totalAmount)}
@@ -822,9 +1081,6 @@ const SalesCartList = () => {
                         >
                           {cart.statusDesc || "Active"}
                         </span>
-                      </td>
-                      <td>
-                        <div className={styles.name}>{formatDate(cart.dateCreated)}</div>
                       </td>
                       <td>
                         <div className={styles.actionsCell}>
@@ -896,10 +1152,7 @@ const SalesCartList = () => {
 
       {/* ── CONFIRM MODAL ── */}
       {confirm.isOpen && (
-        <div
-          className={styles.modalOverlay}
-          
-        >
+        <div className={styles.modalOverlay}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <div className={styles.modalHeaderContent}>

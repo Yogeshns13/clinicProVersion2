@@ -581,6 +581,7 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
   const [submitProgress, setSubmitProgress]   = useState(null);
   const [isFinished, setIsFinished]           = useState(false);
   const [error, setError]                     = useState(null);
+  const [successToast, setSuccessToast]       = useState(null); // { message }
 
   /* ── Clinic / Branch IDs ── */
   const [clinicId, setClinicId] = useState(null);
@@ -594,6 +595,10 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
   const [externalLabsLoading, setExternalLabsLoading]     = useState(false);
   const [selectedExternalLabId, setSelectedExternalLabId] = useState(0);
   const [stagedExternalLabId, setStagedExternalLabId]     = useState(0);
+  // Ref to hold the external lab ID read from the existing order in loadAll.
+  // Using a ref means the value is available immediately regardless of the
+  // inLabMode state value at the time handleOpenLabModal runs.
+  const prefilledExternalLabIdRef = useRef(0);
 
   /* ── Load IDs + inLabMode as soon as the view becomes active ── */
   useEffect(() => {
@@ -643,6 +648,21 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     if (isFinished && hasAnythingNew) setIsFinished(false);
   }, [hasAnythingNew]);
 
+  /* ── Once externalLabList populates, re-apply the prefilled ID if the user
+     hasn't manually picked a different lab yet in this session.
+     This handles the race where fetchExternalLabs resolves after the modal
+     first renders and the <select> needs a valid option to show. ── */
+  useEffect(() => {
+    if (!externalLabList.length) return;
+    // Always re-apply the best-known ID once options are available so the
+    // <select> can match a valid <option> — even if selectedExternalLabId
+    // was already set to the correct value before the list arrived.
+    const idToApply = stagedExternalLabId || prefilledExternalLabIdRef.current || 0;
+    if (idToApply) {
+      setSelectedExternalLabId(idToApply);
+    }
+  }, [externalLabList]);
+
   /* ── Load everything ── */
   const loadAll = async (consultId) => {
     try {
@@ -682,10 +702,21 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
         setStagedLabPriority(order.priority || 1);
 
         // ── Pre-fill external lab ID from existing order ──
-        const existingExtLabId = order.externalLabId ?? order.ExternalLabID ?? order.external_lab_id ?? 0;
+        // Try all possible field-name variants the API might return
+        const existingExtLabId =
+          order.externalLabId    ??
+          order.ExternalLabID    ??
+          order.external_lab_id  ??
+          order.externalLabID    ??
+          order.ExternalLabId    ??
+          0;
+
         if (existingExtLabId) {
-          setSelectedExternalLabId(existingExtLabId);
+          // Store in ref immediately — readable by handleOpenLabModal
+          // even before inLabMode state resolves (race condition fix)
+          prefilledExternalLabIdRef.current = existingExtLabId;
           setStagedExternalLabId(existingExtLabId);
+          setSelectedExternalLabId(existingExtLabId);
         }
 
         const items = await getLabTestOrderItemList(clinicId, { OrderID: order.id, BranchID: branchId, Page: 1, PageSize: 50 });
@@ -859,9 +890,9 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
   };
 
   /* ── Submit lab items ──
-     If external lab mode (inLabMode === 0), also calls updateLabTestOrder with status 6,
-     mirroring the AddConsultation behaviour. */
-  const submitLabItems = async (clinicId, branchId, orderId, testIds, pkgIds, labOrder, externalLabIdOverride) => {
+     No longer calls updateLabTestOrder — status 6 is passed directly
+     to addLabTestOrder when creating a new order in external lab mode. */
+  const submitLabItems = async (clinicId, branchId, orderId, testIds, pkgIds, labOrder) => {
     for (const testId of testIds) {
       await addLabTestOrderItem({ clinicId, branchId, OrderID: orderId, PatientID: consultation.patientId, DoctorID: consultation.doctorId, TestID: testId, PackageID: 0 });
     }
@@ -872,21 +903,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     setSubmittedLabPkgIds(prev => [...new Set([...prev, ...pkgIds])]);
     setDeactivatedLabTestIds(prev => prev.filter(id => !testIds.includes(id)));
     setDeactivatedLabPkgIds(prev => prev.filter(id => !pkgIds.includes(id)));
-
-    // If external lab mode, update the order with external lab id + status 6
-    if (inLabMode === 0) {
-      const extLabId = externalLabIdOverride ?? selectedExternalLabId ?? 0;
-      await updateLabTestOrder({
-        orderId,
-        clinicId,
-        branchId,
-        priority: labOrder?.priority ?? labPriority ?? 1,
-        notes: consultationNotes || '',
-        externalLabId: extLabId,
-        status: 6,
-        testApprovedBy: consultation?.doctorId ?? 0,
-      });
-    }
 
     try {
       const items = await getLabTestOrderItemList(clinicId, { OrderID: orderId, BranchID: branchId, Page: 1, PageSize: 50 });
@@ -903,11 +919,16 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     setLabTestSearch(''); setLabPkgSearch('');
     setReactivateConfirm(null);
     setConfirmDelOrder(false);
-    // Restore previously staged / prefilled external lab id into selector
-    if (inLabMode === 0) {
-      setSelectedExternalLabId(stagedExternalLabId || 0);
-      if (!externalLabList.length) fetchExternalLabs();
+    // Always restore the best-known external lab ID using the ref as the
+    // source of truth — this works even if inLabMode state hasn't resolved yet.
+    // Priority: user's staged choice this session > prefilled from existing order
+    const bestExtLabId = stagedExternalLabId || prefilledExternalLabIdRef.current || 0;
+    if (bestExtLabId) {
+      setSelectedExternalLabId(bestExtLabId);
     }
+    // Fetch the list regardless of inLabMode state — the selector is only
+    // rendered when inLabMode === 0, so fetching eagerly here is safe.
+    if (!externalLabList.length) fetchExternalLabs();
     setShowLabModal(true);
     if (!labMasterItems.length && !labPackages.length) fetchLabItems();
   };
@@ -923,6 +944,8 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
       const extLabChanged    = inLabMode === 0 && labOrderId && (selectedExternalLabId !== stagedExternalLabId);
 
       if (priorityChanged || extLabChanged) {
+        setShowLabModal(false);
+        setSubmitProgress({ steps: [{ label: 'Updating lab order' }], currentStep: 0, done: false });
         try {
           const { clinicId, branchId } = await getIds();
           await updateLabTestOrder({
@@ -937,11 +960,16 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
           });
           setStagedLabPriority(labPriority);
           if (inLabMode === 0) setStagedExternalLabId(selectedExternalLabId);
+          setSubmitProgress(p => ({ ...p, done: true }));
+          setSuccessToast({ message: 'Lab order updated successfully!' });
+          setTimeout(() => { setSubmitProgress(null); setSuccessToast(null); }, 2500);
         } catch (err) {
           setError(err);
+          setSubmitProgress(null);
         }
+      } else {
+        setShowLabModal(false);
       }
-      setShowLabModal(false);
       return;
     }
 
@@ -951,7 +979,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     const steps = [];
     if (!labOrderId) steps.push({ label: 'Creating lab order' });
     steps.push({ label: `Adding ${newTestIds.length + newPkgIds.length} lab item(s)` });
-    if (inLabMode === 0) steps.push({ label: 'Sending to external lab' });
     setSubmitProgress({ steps, currentStep: 0, done: false });
 
     try {
@@ -969,6 +996,8 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
           priority:  labPriority,
           Notes:     consultationNotes,
           externalLabId: inLabMode === 0 ? selectedExternalLabId : 0,
+          // Pass status 6 directly when in external lab mode — no separate updateLabTestOrder needed
+          status: inLabMode === 0 ? 6 : 1,
         });
         if (!lr.success) throw new Error('Failed to create lab order');
         activeLabOrderId = lr.orderId;
@@ -982,7 +1011,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
         activeLabOrderId,
         newTestIds, newPkgIds,
         { priorityDesc: PRIORITY_OPTIONS.find(p => p.id === labPriority)?.label, priority: labPriority },
-        selectedExternalLabId,
       );
 
       setStagedLabTestIds([]); setStagedLabPkgIds([]);
@@ -1030,7 +1058,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     if (needAddDetails)  steps.push({ label: `Adding ${pendingContainers.length} medicine(s)` });
     if (needNewLabOrder) { steps.push({ label: 'Creating lab order' }); steps.push({ label: `Adding ${newTestIds.length + newPkgIds.length} lab item(s)` }); }
     if (needAddLabItems) steps.push({ label: `Adding ${newTestIds.length + newPkgIds.length} more lab item(s)` });
-    if (inLabMode === 0 && (needNewLabOrder || needAddLabItems)) steps.push({ label: 'Sending to external lab' });
 
     if (steps.length === 0) { setError({ message: 'Nothing new to submit.' }); return; }
 
@@ -1083,6 +1110,8 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
           VisitID: consultation.visitId, PatientID: consultation.patientId,
           doctorId: consultation.doctorId, priority: stagedLabPriority, Notes: consultationNotes,
           externalLabId: externalLabIdToUse,
+          // Pass status 6 directly when in external lab mode — no separate updateLabTestOrder needed
+          status: inLabMode === 0 ? 6 : 1,
         });
         if (!lr.success) throw new Error('Failed to create lab order');
         setLabOrderId(lr.orderId); s++;
@@ -1092,7 +1121,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
           lr.orderId,
           newTestIds, newPkgIds,
           { priorityDesc: PRIORITY_OPTIONS.find(p => p.id === stagedLabPriority)?.label, priority: stagedLabPriority },
-          externalLabIdToUse,
         ); s++;
       }
 
@@ -1103,7 +1131,6 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
           labOrderId,
           newTestIds, newPkgIds,
           { priority: stagedLabPriority },
-          externalLabIdToUse,
         ); s++;
       }
 
@@ -1221,11 +1248,12 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
     setReactivateConfirm(null); setConfirmRemoveLabId(null);
     setPatientDetails(null); setFamilyPatientData(null);
     setShowPatientModal(false); setShowFamilyModal(false); setFamilyPatientDetails(null);
-    setSubmitProgress(null); setError(null); setIsFinished(false);
+    setSubmitProgress(null); setError(null); setIsFinished(false); setSuccessToast(null);
     setIsDragOver(false); setConfirmDelOrder(false); setDeletingOrder(false);
     // Reset external lab state
     setSelectedExternalLabId(0); setStagedExternalLabId(0);
     setExternalLabList([]); setExternalLabsLoading(false);
+    prefilledExternalLabIdRef.current = 0;
     if (isRoutePage) navigate(-1);
     else if (onClose) onClose();
   };
@@ -1612,6 +1640,14 @@ const ViewConsultation = ({ consultationId: propConsultationId, isOpen, onClose 
                 {submitProgress.done && <div className="progress-done">Saved successfully!</div>}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ── SUCCESS TOAST ── */}
+        {successToast && (
+          <div className="success-toast" onClick={() => setSuccessToast(null)}>
+            <FiCheckCircle size={16} />
+            <span>{successToast.message}</span>
           </div>
         )}
 

@@ -970,6 +970,9 @@ export const getLabTestOrderList = async (clinicId = 0, options = {}) => {
       clinicAddress: order.clinic_address || null,
       branchId: order.branch_id,
       branchName: order.branch_name,
+      branchAddress: order.branch_address,
+      branchMobile: order.branch_mobile,
+      branchAltMobile: order.branch_alt_mobile,
       consultationId: order.consultation_id,
       visitId: order.visit_id,
       patientId: order.patient_id,
@@ -977,6 +980,7 @@ export const getLabTestOrderList = async (clinicId = 0, options = {}) => {
       patientMobile: order.patient_mobile,
       patientFileNo: order.patient_file_no,
       patientAge: order.patient_age || null,
+      externalLabId: order.external_lab_id || null,
       patientGender: order.patient_gender || null,
       doctorId: order.doctor_id,
       doctorFullName: order.doctor_full_name,
@@ -987,7 +991,8 @@ export const getLabTestOrderList = async (clinicId = 0, options = {}) => {
       specialization: order.specialization || null,
       doctorMobile: order.doctor_mobile || null,
       doctorAltMobile: order.doctor_alt_mobile || null,
-      fileId: order.file_id ?? null,           
+      fileId: order.file_id ?? null,   
+      logoFileId: order.logo_file_id ?? null,
       status: order.status,
       statusDesc: order.status_desc || "Unknown",
       priority: order.priority,
@@ -1044,6 +1049,7 @@ export const addLabTestOrder = async (orderData) => {
     ReportID: orderData.reportId ?? 0,
     Priority: orderData.priority ?? 1,       
     Notes: orderData.notes || "",
+    Status: orderData.status ?? 1,
   };
 
   console.log("Add Lab Test Order payload:", payload);
@@ -2077,7 +2083,7 @@ export const getLabTestReportList = async (clinicId = 0, options = {}) => {
       doctorId: report.doctor_id,
       doctorFullName: report.doctor_full_name,
       doctorCode: report.doctor_code,
-      fileId: report.file_id,                   // probably the report PDF/result file
+      fileId: report.file_id,                  // probably the report PDF/result file
       externalLabId: report.external_lab_id, 
       verifiedBy: report.verified_by,
       verifiedByName: report.verified_by_name,
@@ -2256,7 +2262,7 @@ export const updateLabTestReport = async (reportData) => {
     ReportID: reportData.reportId,
     ClinicID: finalClinicId,
     BranchID: finalBranchId,
-    VerifiedBy: reportData.verifiedBy ?? 0,
+    VerifiedBy: reportData.verifiedBy || null,
     VerifiedDateTime: verifiedDateTime,
     FileID: reportData.fileId ?? 0,
     ExternalLabID: reportData.externalLabId || 0,

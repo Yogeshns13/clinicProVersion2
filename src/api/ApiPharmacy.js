@@ -1592,6 +1592,9 @@ export const getPrescriptionList = async (clinicId = 0, options = {}) => {
       clinicName: pres.clinic_name,
       branchId: pres.branch_id,
       branchName: pres.branch_name,
+      branchAddress: pres.branch_address,
+      branchMobile: pres.branch_mobile,
+      branchAltMobile: pres.branch_alt_mobile,
       consultationId: pres.consultation_id,
       visitId: pres.visit_id,
       patientId: pres.patient_id,
@@ -1617,6 +1620,7 @@ export const getPrescriptionList = async (clinicId = 0, options = {}) => {
       notes: pres.notes || null,
       isRepeat: pres.is_repeat === 1,             // boolean for easier use
       isRepeatDesc: pres.is_repeat_desc || "Unknown",
+      logoFileId: pres.logo_file_id ?? null,
       repeatCount: pres.repeat_count ?? 0,
       status: pres.status,
       statusDesc: pres.status_desc || "Unknown",

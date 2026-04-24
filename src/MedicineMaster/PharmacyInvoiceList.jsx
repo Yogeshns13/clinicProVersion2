@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiX, FiCalendar, FiFilter, FiEye, FiFileText, FiDollarSign, FiDownload, FiPrinter, FiPackage } from 'react-icons/fi';
 import { getPharmacyInvoiceDetailList } from '../Api/ApiPharmacy.js';
+import { getInvoiceList } from '../Api/ApiInvoicePayment.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
@@ -14,8 +15,6 @@ import LoadingPage from '../Hooks/LoadingPage.jsx';
 const SEARCH_TYPE_OPTIONS = [
   { value: 'customerName', label: 'Customer Name' },
   { value: 'invoiceNo',    label: 'Invoice No'    },
-  { value: 'medicineName', label: 'Medicine Name' },
-  { value: 'batchNo',      label: 'Batch No'      },
 ];
 
 const PAGE_SIZE = 20;
@@ -24,8 +23,7 @@ const PharmacyInvoiceList = () => {
   const navigate = useNavigate();
 
   // Data States
-  const [invoiceDetails, setInvoiceDetails]       = useState([]);
-  const [allInvoiceDetails, setAllInvoiceDetails] = useState([]);
+  const [invoices, setInvoices] = useState([]);
 
   // Pagination
   const [page, setPage]       = useState(1);
@@ -52,8 +50,10 @@ const PharmacyInvoiceList = () => {
   const [error,   setError]   = useState(null);
 
   // Modal States
-  const [isInvoiceDetailsOpen,   setIsInvoiceDetailsOpen]   = useState(false);
-  const [selectedInvoiceDetail,  setSelectedInvoiceDetail]  = useState(null);
+  const [isInvoiceDetailsOpen,  setIsInvoiceDetailsOpen]  = useState(false);
+  const [selectedInvoiceDetail, setSelectedInvoiceDetail] = useState(null);
+  const [detailsLoading,        setDetailsLoading]        = useState(false);
+  const [detailsError,          setDetailsError]          = useState(null);
 
   // ── Button cooldown state (2-sec disable after click) ──────────────────────
   const [btnCooldown, setBtnCooldown] = useState({});
@@ -67,8 +67,8 @@ const PharmacyInvoiceList = () => {
   const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
   const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
 
-  // ── Fetch Pharmacy Invoice Details ─────────────────────────────────────────
-  const fetchInvoiceDetails = async (pageNum = page) => {
+  // ── Fetch Invoice List (InvoiceType = 3 for Pharmacy) ──────────────────────
+  const fetchInvoices = async (pageNum = page) => {
     try {
       setLoading(true);
       setError(null);
@@ -79,31 +79,29 @@ const PharmacyInvoiceList = () => {
         Page:         pageNum,
         PageSize:     PAGE_SIZE,
         BranchID:     branchId,
-        CustomerName: appliedFilters.searchType === 'customerName' ? appliedFilters.searchValue.trim() : '',
+        InvoiceType:  3,
+        PatientName:  appliedFilters.searchType === 'customerName' ? appliedFilters.searchValue.trim() : '',
         InvoiceNo:    appliedFilters.searchType === 'invoiceNo'    ? appliedFilters.searchValue.trim() : '',
-        MedicineName: appliedFilters.searchType === 'medicineName' ? appliedFilters.searchValue.trim() : '',
-        BatchNo:      appliedFilters.searchType === 'batchNo'      ? appliedFilters.searchValue.trim() : '',
         FromDate:     appliedFilters.dateFrom || '',
         ToDate:       appliedFilters.dateTo   || '',
       };
 
-      const data = await getPharmacyInvoiceDetailList(clinicId, options);
+      const data = await getInvoiceList(clinicId, options);
 
       const sortedData = data.sort((a, b) => {
-        const dateA = new Date(a.dateCreated);
-        const dateB = new Date(b.dateCreated);
+        const dateA = new Date(a.invoiceDate);
+        const dateB = new Date(b.invoiceDate);
         return dateB - dateA;
       });
 
-      setInvoiceDetails(sortedData);
+      setInvoices(sortedData);
       setHasNext(sortedData.length === PAGE_SIZE);
-      setAllInvoiceDetails(sortedData);
     } catch (err) {
-      console.error('fetchInvoiceDetails error:', err);
+      console.error('fetchInvoices error:', err);
       setError(
         err?.status >= 400 || err?.code >= 400
           ? err
-          : { message: err.message || 'Failed to load pharmacy invoice details' }
+          : { message: err.message || 'Failed to load pharmacy invoices' }
       );
     } finally {
       setLoading(false);
@@ -111,7 +109,7 @@ const PharmacyInvoiceList = () => {
   };
 
   useEffect(() => {
-    fetchInvoiceDetails(1);
+    fetchInvoices(1);
     setPage(1);
   }, [appliedFilters]);
 
@@ -120,55 +118,15 @@ const PharmacyInvoiceList = () => {
     if (newPage < 1) return;
     triggerCooldown(`page-${newPage}`);
     setPage(newPage);
-    fetchInvoiceDetails(newPage);
+    fetchInvoices(newPage);
   };
-
-  // ── Group invoice details by invoice ──────────────────────────────────────
-  const groupedInvoices = useMemo(() => {
-    const groups = {};
-
-    invoiceDetails.forEach(detail => {
-      const invoiceId = detail.invoiceId;
-      if (!groups[invoiceId]) {
-        groups[invoiceId] = {
-          invoiceId:     detail.invoiceId,
-          invoiceNo:     detail.invoiceNo,
-          invoiceDate:   detail.invoiceDate,
-          patientId:     detail.patientId,
-          customerName:  detail.customerName,
-          patientMobile: detail.patientMobile,
-          patientFileNo: detail.patientFileNo,
-          clinicName:    detail.clinicName,
-          branchName:    detail.branchName,
-          dateCreated:   detail.dateCreated,
-          details:          [],
-          totalQuantity:    0,
-          totalAmount:      0,
-          totalCgst:        0,
-          totalSgst:        0,
-          totalNetAmount:   0,
-        };
-      }
-
-      groups[invoiceId].details.push(detail);
-      groups[invoiceId].totalQuantity  += detail.quantity        || 0;
-      groups[invoiceId].totalAmount    += detail.amount          || 0;
-      groups[invoiceId].totalCgst      += detail.cgstAmount      || 0;
-      groups[invoiceId].totalSgst      += detail.sgstAmount      || 0;
-      groups[invoiceId].totalNetAmount += detail.totalLineAmount || 0;
-    });
-
-    return Object.values(groups);
-  }, [invoiceDetails]);
 
   // ── Summary statistics ─────────────────────────────────────────────────────
   const summaryStats = useMemo(() => {
-    const uniqueInvoices  = new Set(invoiceDetails.map(d => d.invoiceId)).size;
-    const totalRevenue    = invoiceDetails.reduce((sum, d) => sum + (d.totalLineAmount || 0), 0);
-    const totalMedicines  = invoiceDetails.reduce((sum, d) => sum + (d.quantity || 0), 0);
-    const avgInvoiceValue = uniqueInvoices > 0 ? totalRevenue / uniqueInvoices : 0;
-    return { uniqueInvoices, totalRevenue, totalMedicines, avgInvoiceValue };
-  }, [invoiceDetails]);
+    const totalRevenue    = invoices.reduce((sum, inv) => sum + (inv.netAmount || 0), 0);
+    const avgInvoiceValue = invoices.length > 0 ? totalRevenue / invoices.length : 0;
+    return { uniqueInvoices: invoices.length, totalRevenue, avgInvoiceValue };
+  }, [invoices]);
 
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
@@ -195,20 +153,64 @@ const PharmacyInvoiceList = () => {
     setPage(1);
   };
 
-  const handleViewInvoiceDetails = (invoice) => {
-    triggerCooldown(`view-${invoice.invoiceId}`);
-    setSelectedInvoiceDetail(invoice);
-    setIsInvoiceDetailsOpen(true);
+  // ── View Details: fetch detail lines for this specific invoice ─────────────
+  const handleViewInvoiceDetails = async (invoice) => {
+    triggerCooldown(`view-${invoice.id}`);
+    try {
+      setDetailsLoading(true);
+      setDetailsError(null);
+      setIsInvoiceDetailsOpen(true);
+
+      const clinicId = await getStoredClinicId();
+      const branchId = await getStoredBranchId();
+
+      const details = await getPharmacyInvoiceDetailList(clinicId, {
+        BranchID:  branchId,
+        InvoiceID: invoice.id,
+        Page:      1,
+        PageSize:  100,
+      });
+
+      // Aggregate totals from detail lines
+      const totalQuantity  = details.reduce((s, d) => s + (d.quantity        || 0), 0);
+      const totalAmount    = details.reduce((s, d) => s + (d.amount          || 0), 0);
+      const totalCgst      = details.reduce((s, d) => s + (d.cgstAmount      || 0), 0);
+      const totalSgst      = details.reduce((s, d) => s + (d.sgstAmount      || 0), 0);
+      const totalNetAmount = details.reduce((s, d) => s + (d.totalLineAmount || 0), 0);
+
+      setSelectedInvoiceDetail({
+        invoiceId:     invoice.id,
+        invoiceNo:     invoice.invoiceNo,
+        invoiceDate:   invoice.invoiceDate,
+        patientId:     invoice.patientId,
+        customerName:  invoice.patientName,
+        patientMobile: invoice.patientMobile,
+        patientFileNo: invoice.patientFileNo,
+        clinicName:    invoice.clinicName,
+        branchName:    invoice.branchName,
+        details,
+        totalQuantity,
+        totalAmount,
+        totalCgst,
+        totalSgst,
+        totalNetAmount,
+      });
+    } catch (err) {
+      console.error('fetchInvoiceDetails error:', err);
+      setDetailsError({ message: err.message || 'Failed to load invoice details' });
+    } finally {
+      setDetailsLoading(false);
+    }
   };
 
   const handlePrintInvoice = (invoice) => {
-    triggerCooldown(`print-${invoice.invoiceId}`);
+    triggerCooldown(`print-${invoice.id}`);
     console.log('Print invoice:', invoice.invoiceNo);
     showPopup(`Print functionality for Invoice ${invoice.invoiceNo} will be implemented.`, 'warning');
   };
 
   const handleDownloadInvoice = (invoice) => {
-    triggerCooldown(`download-${invoice.invoiceId}`);
+    triggerCooldown(`download-${invoice.id}`);
     console.log('Download invoice:', invoice.invoiceNo);
     showPopup(`Download functionality for Invoice ${invoice.invoiceNo} will be implemented.`, 'warning');
   };
@@ -237,8 +239,8 @@ const PharmacyInvoiceList = () => {
     );
   }
 
-  const startRecord = invoiceDetails.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-  const endRecord   = startRecord + invoiceDetails.length - 1;
+  const startRecord = invoices.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const endRecord   = startRecord + invoices.length - 1;
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -333,19 +335,19 @@ const PharmacyInvoiceList = () => {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Invoice Details</th>
+                <th>Invoice No</th>
                 <th>Customer Details</th>
-                <th>Items Count</th>
-                <th>Quantity</th>
                 <th>Amount</th>
+                <th>Discount</th>
                 <th>Tax (CGST + SGST)</th>
                 <th>Net Amount</th>
+                <th>Status</th>
                 <th>Invoice Date</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {groupedInvoices.length === 0 ? (
+              {invoices.length === 0 ? (
                 <tr>
                   <td colSpan={9} className={styles.noData}>
                     {hasActiveFilters
@@ -354,35 +356,22 @@ const PharmacyInvoiceList = () => {
                   </td>
                 </tr>
               ) : (
-                groupedInvoices.map((invoice) => (
-                  <tr key={invoice.invoiceId} className={styles.tableRow}>
+                invoices.map((invoice) => (
+                  <tr key={invoice.id} className={styles.tableRow}>
                     <td>
-                      <div>
-                        <div className={styles.name}>{invoice.invoiceNo}</div>
-                      </div>
+                      <div className={styles.name}>{invoice.invoiceNo}</div>
                     </td>
                     <td>
                       <div className={styles.nameCell}>
                         <div className={styles.avatar}>
-                          {invoice.customerName?.charAt(0).toUpperCase() || 'C'}
+                          {invoice.patientName?.charAt(0).toUpperCase() || 'C'}
                         </div>
                         <div>
-                          <div className={styles.name}>{invoice.customerName}</div>
+                          <div className={styles.name}>{invoice.patientName}</div>
                           <div className={styles.subText}>
                             {invoice.patientFileNo} • {invoice.patientMobile}
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className={styles.itemCount}>
-                        <span className={styles.badge}>{invoice.details.length}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div className={styles.quantityCell}>
-                        <div className={styles.name}>{invoice.totalQuantity}</div>
-                        <div className={styles.subText}>units</div>
                       </div>
                     </td>
                     <td>
@@ -391,17 +380,23 @@ const PharmacyInvoiceList = () => {
                       </div>
                     </td>
                     <td>
+                      <div className={styles.name}>{formatCurrency(invoice.discount)}</div>
+                    </td>
+                    <td>
                       <div className={styles.taxCell}>
-                        <div className={styles.name}>{formatCurrency(invoice.totalCgst + invoice.totalSgst)}</div>
+                        <div className={styles.name}>{formatCurrency((invoice.cgstAmount || 0) + (invoice.sgstAmount || 0))}</div>
                         <div className={styles.subText}>
-                          CGST: {formatCurrency(invoice.totalCgst)} | SGST: {formatCurrency(invoice.totalSgst)}
+                          CGST: {formatCurrency(invoice.cgstAmount)} | SGST: {formatCurrency(invoice.sgstAmount)}
                         </div>
                       </div>
                     </td>
                     <td>
                       <div className={styles.netAmountCell}>
-                        <div className={styles.name}>{formatCurrency(invoice.totalNetAmount)}</div>
+                        <div className={styles.name}>{formatCurrency(invoice.netAmount)}</div>
                       </div>
+                    </td>
+                    <td>
+                      <div className={styles.name}>{invoice.statusDesc}</div>
                     </td>
                     <td>
                       <div className={styles.dateCell}>
@@ -423,7 +418,7 @@ const PharmacyInvoiceList = () => {
                             className={styles.actionBtn}
                             onClick={() => handleViewInvoiceDetails(invoice)}
                             title="View Details"
-                            disabled={!!btnCooldown[`view-${invoice.invoiceId}`]}
+                            disabled={!!btnCooldown[`view-${invoice.id}`]}
                           >
                             View Details
                           </button>
@@ -440,7 +435,7 @@ const PharmacyInvoiceList = () => {
         {/* ── Pagination Bar ── */}
         <div className={styles.paginationBar}>
           <div className={styles.paginationInfo}>
-            {invoiceDetails.length > 0
+            {invoices.length > 0
               ? `Showing ${startRecord}–${endRecord} records`
               : 'No records'}
           </div>
@@ -485,12 +480,15 @@ const PharmacyInvoiceList = () => {
       </div>
 
       {/* ── Invoice Details Modal ── */}
-      {isInvoiceDetailsOpen && selectedInvoiceDetail && (
+      {isInvoiceDetailsOpen && (
         <InvoiceDetailsModal
           invoice={selectedInvoiceDetail}
+          loading={detailsLoading}
+          error={detailsError}
           onClose={() => {
             setIsInvoiceDetailsOpen(false);
             setSelectedInvoiceDetail(null);
+            setDetailsError(null);
           }}
           formatCurrency={formatCurrency}
           formatDate={formatDate}
@@ -511,7 +509,7 @@ const PharmacyInvoiceList = () => {
 // ──────────────────────────────────────────────────
 // Invoice Details Modal Component
 // ──────────────────────────────────────────────────
-const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) => {
+const InvoiceDetailsModal = ({ invoice, loading, error, onClose, formatCurrency, formatDate }) => {
   // ── Button cooldown state (2-sec disable) ──
   const [btnCooldown, setBtnCooldown] = useState({});
   const triggerCooldown = (key) => {
@@ -523,7 +521,7 @@ const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) =
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2>Invoice Details - {invoice.invoiceNo}</h2>
+          <h2>Invoice Details{invoice ? ` - ${invoice.invoiceNo}` : ''}</h2>
 
           <div className={styles.headerRight}>
             <div className={styles.clinicNameone}>
@@ -541,105 +539,125 @@ const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) =
         </div>
 
         <div className={styles.modalBody}>
-          {/* Invoice Header Info */}
-          <div className={styles.invoiceHeader}>
-            <div className={styles.detailsGrid}>
-              <div className={styles.detailItem}>
-                <label>Invoice No:</label>
-                <span>{invoice.invoiceNo}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <label>Invoice Date:</label>
-                <span>{formatDate(invoice.invoiceDate)}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <label>Customer Name:</label>
-                <span>{invoice.customerName}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <label>File No:</label>
-                <span>{invoice.patientFileNo}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <label>Mobile:</label>
-                <span>{invoice.patientMobile}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <label>Clinic:</label>
-                <span>{invoice.clinicName}</span>
-              </div>
-              <div className={styles.detailItem}>
-                <label>Branch:</label>
-                <span>{invoice.branchName}</span>
-              </div>
+          {/* Loading state */}
+          {loading && (
+            <div className={styles.loadingContainer}>
+              <div className={styles.spinner}></div>
+              <p>Loading invoice details...</p>
             </div>
-          </div>
+          )}
 
-          {/* Medicine Details Table */}
-          <div className={styles.medicineDetailsSection}>
-            <h3>Medicine Details</h3>
-            <table className={styles.detailsTable}>
-              <thead>
-                <tr>
-                  <th>Medicine Name</th>
-                  <th>Batch No</th>
-                  <th>Expiry</th>
-                  <th>Qty</th>
-                  <th>Unit Price</th>
-                  <th>Amount</th>
-                  <th>CGST</th>
-                  <th>SGST</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoice.details.map((detail, index) => (
-                  <tr key={index}>
-                    <td>
-                      <div>
-                        <div className={styles.medicineName}>{detail.medicineName}</div>
-                        {detail.genericName && (
-                          <div className={styles.genericName}>{detail.genericName}</div>
-                        )}
-                        {detail.manufacturer && (
-                          <div className={styles.manufacturer}>Mfr: {detail.manufacturer}</div>
-                        )}
-                      </div>
-                    </td>
-                    <td>{detail.batchNo || '—'}</td>
-                    <td>{formatDate(detail.expiryDate)}</td>
-                    <td><strong>{detail.quantity}</strong></td>
-                    <td>{formatCurrency(detail.unitPrice)}</td>
-                    <td>{formatCurrency(detail.amount)}</td>
-                    <td>
-                      <div>
-                        <div>{detail.cgstPercentage ? `${detail.cgstPercentage}%` : '—'}</div>
-                        <div className={styles.taxAmount}>{formatCurrency(detail.cgstAmount)}</div>
-                      </div>
-                    </td>
-                    <td>
-                      <div>
-                        <div>{detail.sgstPercentage ? `${detail.sgstPercentage}%` : '—'}</div>
-                        <div className={styles.taxAmount}>{formatCurrency(detail.sgstAmount)}</div>
-                      </div>
-                    </td>
-                    <td><strong>{formatCurrency(detail.totalLineAmount)}</strong></td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className={styles.totalRow}>
-                  <td colSpan="3"><strong>Total</strong></td>
-                  <td><strong>{invoice.totalQuantity}</strong></td>
-                  <td>—</td>
-                  <td><strong>{formatCurrency(invoice.totalAmount)}</strong></td>
-                  <td><strong>{formatCurrency(invoice.totalCgst)}</strong></td>
-                  <td><strong>{formatCurrency(invoice.totalSgst)}</strong></td>
-                  <td><strong>{formatCurrency(invoice.totalNetAmount)}</strong></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+          {/* Error state */}
+          {!loading && error && (
+            <div className={styles.errorMessage}>
+              {error.message || 'Failed to load invoice details.'}
+            </div>
+          )}
+
+          {/* Content */}
+          {!loading && !error && invoice && (
+            <>
+              {/* Invoice Header Info */}
+              <div className={styles.invoiceHeader}>
+                <div className={styles.detailsGrid}>
+                  <div className={styles.detailItem}>
+                    <label>Invoice No:</label>
+                    <span>{invoice.invoiceNo}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label>Invoice Date:</label>
+                    <span>{formatDate(invoice.invoiceDate)}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label>Customer Name:</label>
+                    <span>{invoice.customerName}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label>File No:</label>
+                    <span>{invoice.patientFileNo}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label>Mobile:</label>
+                    <span>{invoice.patientMobile}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label>Clinic:</label>
+                    <span>{invoice.clinicName}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label>Branch:</label>
+                    <span>{invoice.branchName}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Medicine Details Table */}
+              <div className={styles.medicineDetailsSection}>
+                <h3>Medicine Details</h3>
+                <table className={styles.detailsTable}>
+                  <thead>
+                    <tr>
+                      <th>Medicine Name</th>
+                      <th>Batch No</th>
+                      <th>Expiry</th>
+                      <th>Qty</th>
+                      <th>Unit Price</th>
+                      <th>Amount</th>
+                      <th>CGST</th>
+                      <th>SGST</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoice.details.map((detail, index) => (
+                      <tr key={index}>
+                        <td>
+                          <div>
+                            <div className={styles.medicineName}>{detail.medicineName}</div>
+                            {detail.genericName && (
+                              <div className={styles.genericName}>{detail.genericName}</div>
+                            )}
+                            {detail.manufacturer && (
+                              <div className={styles.manufacturer}>Mfr: {detail.manufacturer}</div>
+                            )}
+                          </div>
+                        </td>
+                        <td>{detail.batchNo || '—'}</td>
+                        <td>{formatDate(detail.expiryDate)}</td>
+                        <td><strong>{detail.quantity}</strong></td>
+                        <td>{formatCurrency(detail.unitPrice)}</td>
+                        <td>{formatCurrency(detail.amount)}</td>
+                        <td>
+                          <div>
+                            <div>{detail.cgstPercentage ? `${detail.cgstPercentage}%` : '—'}</div>
+                            <div className={styles.taxAmount}>{formatCurrency(detail.cgstAmount)}</div>
+                          </div>
+                        </td>
+                        <td>
+                          <div>
+                            <div>{detail.sgstPercentage ? `${detail.sgstPercentage}%` : '—'}</div>
+                            <div className={styles.taxAmount}>{formatCurrency(detail.sgstAmount)}</div>
+                          </div>
+                        </td>
+                        <td><strong>{formatCurrency(detail.totalLineAmount)}</strong></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className={styles.totalRow}>
+                      <td colSpan="3"><strong>Total</strong></td>
+                      <td><strong>{invoice.totalQuantity}</strong></td>
+                      <td>—</td>
+                      <td><strong>{formatCurrency(invoice.totalAmount)}</strong></td>
+                      <td><strong>{formatCurrency(invoice.totalCgst)}</strong></td>
+                      <td><strong>{formatCurrency(invoice.totalSgst)}</strong></td>
+                      <td><strong>{formatCurrency(invoice.totalNetAmount)}</strong></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </>
+          )}
         </div>
 
         <div className={styles.modalFooter}>
