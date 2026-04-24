@@ -2,16 +2,17 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiX, FiCalendar, FiFilter, FiEye, FiCheckCircle, FiClock, FiAlertCircle, FiFileText, FiEdit, FiPrinter, FiUpload } from 'react-icons/fi';
-import { 
-  getLabTestOrderList, 
-  updateLabTestOrder, 
+import {
+  getLabTestOrderList,
+  updateLabTestOrder,
   createWorkItemsForOrder,
   generateLabInvoice,
   addLabTestReport,
   updateLabTestReport,
   getLabTestOrderItemList,
-  getLabTestReportList
+  getLabTestReportList,
 } from '../Api/ApiLabTests.js';
+import { createLabReportFile } from '../Api/ApiPdf.js';
 import { getEmployeeList } from '../Api/Api.js';
 import { uploadFile } from '../Api/Api.js';
 import { getFile } from '../Api/Api.js';
@@ -22,7 +23,7 @@ import LabOrderPrintModal from './LabOrderPrintModal.jsx';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
 import styles from './LabOrderList.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
-import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import { getStoredClinicId, getStoredBranchId, getStoredFileAccessToken } from '../Utils/Cryptoutils.js';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 // ─── Hook: 2-second button cooldown ───────────────────────────────────────────
@@ -66,7 +67,7 @@ const LabOrderList = () => {
   // Pagination
   const [page, setPage] = useState(1);
   const pageSize = 20;
-  
+
   // Filter inputs (not applied until search)
   const [filterInputs, setFilterInputs] = useState({
     searchType: 'patientName',
@@ -90,7 +91,7 @@ const LabOrderList = () => {
   // UI States
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Modal States
   const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
   const [isUpdateOrderOpen, setIsUpdateOrderOpen] = useState(false);
@@ -137,7 +138,7 @@ const LabOrderList = () => {
 
   // ─── External Lab selection state (for External flow report) ──────────────
   const [selectedExternalLabId, setSelectedExternalLabId] = useState(0);
-  
+
   // Report Form States
   const [reportForm, setReportForm] = useState({
     verifiedBy: 0,
@@ -293,7 +294,7 @@ const LabOrderList = () => {
   };
 
   const startRecord = filteredOrders.length === 0 ? 0 : (page - 1) * pageSize + 1;
-  const endRecord   = (page - 1) * pageSize + filteredOrders.length;
+  const endRecord = (page - 1) * pageSize + filteredOrders.length;
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -353,7 +354,7 @@ const LabOrderList = () => {
     }
   };
 
-  const handleUpdateOrder      = (order) => { setSelectedOrder(order); setIsUpdateOrderOpen(true); };
+  const handleUpdateOrder = (order) => { setSelectedOrder(order); setIsUpdateOrderOpen(true); };
   const handleMakeInvoiceClick = (order) => { setSelectedOrder(order); setIsMakeInvoiceOpen(true); };
 
   // ─── Reset external file upload states ────────────────────────────────────
@@ -591,12 +592,12 @@ const LabOrderList = () => {
   // In add mode: new file must be uploaded + external lab selected
   const isExternalReportFormValid = isUpdateMode
     ? (
-        selectedExternalLabId !== 0 &&
-        (
-          (existingReportFileId > 0 && !externalFile) || // keeping existing file
-          externalFileUploaded                           // or new file uploaded
-        )
+      selectedExternalLabId !== 0 &&
+      (
+        (existingReportFileId > 0 && !externalFile) || // keeping existing file
+        externalFileUploaded                           // or new file uploaded
       )
+    )
     : (externalFileUploaded && selectedExternalLabId !== 0);
 
   // ── Normal report form validation ──
@@ -704,6 +705,8 @@ const LabOrderList = () => {
             setTimeout(resetForm, 1500);
           }
         } else {
+          // ─── Normal flow (status 2, no existing report) ───────────────────
+          // Step 1: Add the report
           const result = await addLabTestReport({
             orderId: orderDetails.id,
             consultationId: orderDetails.consultationId,
@@ -717,8 +720,39 @@ const LabOrderList = () => {
             verifiedDateTime: reportForm.verifiedDateTime,
             remarks: reportForm.remarks
           });
+
           if (result.success) {
-            showPopupMsg('Lab test report added successfully!', 'success');
+            try {
+              const fileAccessToken = await getStoredFileAccessToken();
+
+              const fileResult = await createLabReportFile({
+                labOrderId: orderDetails.id,
+                clinicId: orderDetails.clinicId,
+                branchId: orderDetails.branchId,
+                fileAccessToken: fileAccessToken
+              });
+
+              if (fileResult.success) {
+                showPopupMsg(
+                  'Lab test report added and report file created successfully!',
+                  'success'
+                );
+              } else {
+                showPopupMsg(
+                  fileResult.message || 'Report added, but file creation failed.',
+                  'warning'
+                );
+              }
+
+            } catch (fileErr) {
+              console.error('createLabReportFile failed after addLabTestReport:', fileErr);
+
+              showPopupMsg(
+                'Lab test report added successfully, but report file creation failed.',
+                'warning'
+              );
+            }
+
             setTimeout(resetForm, 1500);
           }
         }
@@ -759,7 +793,7 @@ const LabOrderList = () => {
   };
 
   const getPriorityBadgeClass = (priority) => {
-    switch(priority) {
+    switch (priority) {
       case 1: return styles.priorityNormal;
       case 2: return styles.priorityUrgent;
       case 3: return styles.priorityStat;
@@ -782,7 +816,7 @@ const LabOrderList = () => {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.spinner}></div>
-        <LoadingPage/>
+        <LoadingPage />
       </div>
     );
   }
@@ -1377,8 +1411,8 @@ const LabOrderList = () => {
                   title={
                     isExternalFlow
                       ? (!externalFileUploaded && existingReportFileId <= 0
-                          ? 'Please upload a file'
-                          : selectedExternalLabId === 0 ? 'Please select an external lab' : '')
+                        ? 'Please upload a file'
+                        : selectedExternalLabId === 0 ? 'Please select an external lab' : '')
                       : (!isReportFormValid ? 'Please fill all required fields' : '')
                   }
                 >

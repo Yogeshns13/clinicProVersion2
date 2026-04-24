@@ -8,6 +8,7 @@ import styles from './BranchList.module.css';
 
 // ─── matches backend allowedCharactersRegex exactly ───────────────────────────
 const allowedCharactersRegex = /^[A-Za-z0-9\s\-_]+$/;
+const MOBILE_REGEX           = /^\d{10}$/;
 
 // ─── Validation messages match backend updateBranchValidatorRules word-for-word ─
 const getLiveValidationMessage = (fieldName, value) => {
@@ -39,6 +40,12 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (isNaN(Number(value))) return 'Status must be a number';
       return '';
 
+    case 'mobile':
+      if (!value || !value.trim()) return 'Mobile is required';
+      if (value.trim().length !== 10) return 'Mobile length should be 10';
+      if (!MOBILE_REGEX.test(value.trim())) return 'Invalid mobile number';
+      return '';
+
     default:
       return '';
   }
@@ -48,12 +55,15 @@ const filterInput = (fieldName, value) => {
   switch (fieldName) {
     case 'branchName':
       return value.replace(/[^A-Za-z0-9\s\-_]/g, '');
+    case 'mobile':
+    case 'altMobile':
+      return value.replace(/[^0-9]/g, '');
     default:
       return value;
   }
 };
 
-const UPDATE_VALIDATED_FIELDS = ['branchName', 'address', 'location', 'branchType', 'status'];
+const UPDATE_VALIDATED_FIELDS = ['branchName', 'address', 'location', 'branchType', 'status', 'mobile'];
 
 const BRANCH_TYPES = [
   { id: 1, label: 'Main' },
@@ -85,6 +95,8 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess, onError }) => {
     location:   branch.location   || '',
     branchType: branch.branchType || 1,
     status:     branch.status === 'active' ? 1 : 2,
+    mobile:     branch.mobile     || '',
+    altMobile:  branch.altMobile  || '',
   });
 
   const [formLoading,        setFormLoading]        = useState(false);
@@ -99,7 +111,7 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess, onError }) => {
 
   // ── Is the form completely valid? ──
   const isFormValid = useMemo(() => {
-    const requiredFields = ['branchName', 'address', 'branchType', 'status'];
+    const requiredFields = ['branchName', 'address', 'branchType', 'status', 'mobile'];
     const allFilled = requiredFields.every((f) => {
       const v = formData[f];
       return v !== '' && v !== null && v !== undefined && String(v).trim() !== '';
@@ -166,6 +178,8 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess, onError }) => {
         Location:   formData.location.trim(),
         BranchType: Number(formData.branchType),
         Status:     Number(formData.status),
+        mobile:     formData.mobile.trim(),
+        altMobile:  formData.altMobile.trim(),
       });
 
       // Show success popup (inside UpdateBranch only — no parent popup)
@@ -192,7 +206,7 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess, onError }) => {
 
   // ────────────────────────────────────────────────
   return (
-    <div className={styles.detailModalOverlay} >
+    <div className={styles.detailModalOverlay}>
 
       {/* Own MessagePopup — floats above the modal at z-index 9999 */}
       <MessagePopup
@@ -261,6 +275,39 @@ const UpdateBranch = ({ branch, clinics, onClose, onSuccess, onError }) => {
                 </select>
                 {validationMessages.branchType && (
                   <span className={styles.validationMsg}>{validationMessages.branchType}</span>
+                )}
+              </div>
+
+              {/* Mobile */}
+              <div className={styles.addFormGroup}>
+                <label>Mobile <span className={styles.required}>*</span></label>
+                <input
+                  required
+                  type="tel"
+                  name="mobile"
+                  value={formData.mobile}
+                  onChange={handleInputChange}
+                  placeholder="Enter mobile number"
+                  maxLength={10}
+                />
+                {validationMessages.mobile && (
+                  <span className={styles.validationMsg}>{validationMessages.mobile}</span>
+                )}
+              </div>
+
+              {/* Alt Mobile */}
+              <div className={styles.addFormGroup}>
+                <label>Alternate Mobile</label>
+                <input
+                  type="tel"
+                  name="altMobile"
+                  value={formData.altMobile}
+                  onChange={handleInputChange}
+                  placeholder="Enter alternate mobile number"
+                  maxLength={10}
+                />
+                {validationMessages.altMobile && (
+                  <span className={styles.validationMsg}>{validationMessages.altMobile}</span>
                 )}
               </div>
 

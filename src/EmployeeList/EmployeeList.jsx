@@ -1,6 +1,6 @@
 // src/components/EmployeeList.jsx
-import React, { useState, useEffect } from 'react';
-import { FiSearch, FiPlus, FiX } from 'react-icons/fi';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { FiSearch, FiPlus, FiX, FiPhone, FiAward, FiBookOpen, FiClock } from 'react-icons/fi';
 import { getEmployeeList, getDepartmentList } from '../Api/Api.js';
 import Header from '../Header/Header.jsx';
 import AddEmployee from './AddEmployee.jsx';
@@ -49,6 +49,82 @@ const DEFAULT_FILTERS = {
   designation:  '',
 };
 
+// ──────────────────────────────────────────────────
+// INDEXEDDB PERSISTENCE HELPERS
+//
+// Persists: { activeColumns: string[], menuOrder: string[] }
+// Survives logout → login because IndexedDB is origin-scoped.
+// On every toggle / reorder the prefs are written immediately,
+// so the "last changes screen" is always restored on next login.
+// ──────────────────────────────────────────────────
+const IDB_DB_NAME    = 'AppPreferences';
+const IDB_STORE_NAME = 'columnPrefs';
+const IDB_KEY        = 'employeeListColPrefs';
+
+const openIDB = () =>
+  new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_DB_NAME, 1);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(IDB_STORE_NAME)) {
+        db.createObjectStore(IDB_STORE_NAME);
+      }
+    };
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror   = (e) => reject(e.target.error);
+  });
+
+const idbGet = async (key) => {
+  try {
+    const db = await openIDB();
+    return new Promise((resolve, reject) => {
+      const tx    = db.transaction(IDB_STORE_NAME, 'readonly');
+      const store = tx.objectStore(IDB_STORE_NAME);
+      const req   = store.get(key);
+      req.onsuccess = (e) => resolve(e.target.result);
+      req.onerror   = (e) => reject(e.target.error);
+    });
+  } catch {
+    return undefined;
+  }
+};
+
+const idbSet = async (key, value) => {
+  try {
+    const db = await openIDB();
+    return new Promise((resolve, reject) => {
+      const tx    = db.transaction(IDB_STORE_NAME, 'readwrite');
+      const store = tx.objectStore(IDB_STORE_NAME);
+      const req   = store.put(value, key);
+      req.onsuccess = () => resolve();
+      req.onerror   = (e) => reject(e.target.error);
+    });
+  } catch {
+    // Silently fail — column prefs are non-critical
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dynamic column pool
+// ─────────────────────────────────────────────────────────────────────────────
+const DYNAMIC_COLS_MAP = {
+  altMobile:      { id: 'altMobile',      label: 'Alt Mobile',     header: 'Alt Mobile',     icon: <FiPhone    size={15} />, render: (e) => e.altMobile      || '—' },
+  qualification:  { id: 'qualification',  label: 'Qualification',  header: 'Qualification',  icon: <FiBookOpen size={15} />, render: (e) => e.qualification  || '—' },
+  specialization: { id: 'specialization', label: 'Specialization', header: 'Specialization', icon: <FiAward    size={15} />, render: (e) => e.specialization || '—' },
+  experience:     { id: 'experience',     label: 'Experience',     header: 'Experience',     icon: <FiClock    size={15} />, render: (e) => (e.experienceYears !== undefined && e.experienceYears !== null) ? e.experienceYears : '—' },
+};
+
+// Mandatory slot defaults shown when a dynamic column is NOT active for that slot
+// Slot 0 → Branch | Slot 1 → Department | Slot 2 → Mobile | Slot 3 → Status
+const SLOT_DEFAULTS = [
+  { header: 'Branch',     render: (e) => e.branchName     || '—' },
+  { header: 'Department', render: (e) => e.departmentName || '—' },
+  { header: 'Mobile',     render: (e) => e.mobile         || '—' },
+  { header: 'Status',     render: (e) => e.status         || '—', isStatus: true },
+];
+
+const INITIAL_ORDER = ['altMobile', 'qualification', 'specialization', 'experience'];
+
 // ────────────────────────────────────────────────
 const EmployeeList = () => {
   // Data
@@ -57,11 +133,20 @@ const EmployeeList = () => {
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState(null);
 
+  // ── Dynamic columns state (mirrors MedicineMasterList) ──
+  const [activeColumns, setActiveColumns] = useState(new Set());
+  const [menuOrder,     setMenuOrder]     = useState(INITIAL_ORDER);
+  // Guard: don't save to IDB until we've loaded from IDB first
+  const [prefsLoaded,   setPrefsLoaded]   = useState(false);
+
   // Filter inputs (staged — not applied until Search is clicked)
   const [filterInputs, setFilterInputs] = useState(DEFAULT_FILTERS);
 
   // Applied filters (drive the API call) — start with Active
   const [appliedFilters, setAppliedFilters] = useState(DEFAULT_FILTERS);
+
+  // Tracks whether the user has actually searched with non-default filters
+  const [hasSearched, setHasSearched] = useState(false);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -82,11 +167,93 @@ const EmployeeList = () => {
   const startRecord = employees.length === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord   = (page - 1) * pageSize + employees.length;
 
-  const hasActiveFilters =
-    appliedFilters.searchValue.trim() !== '' ||
-    appliedFilters.status             !== '' ||
-    appliedFilters.departmentId       !== '' ||
-    appliedFilters.designation        !== '';
+  // Clear button shows only when user has pressed Search AND filters differ from defaults
+  const showClearBtn =
+    hasSearched && (
+      appliedFilters.searchValue.trim() !== DEFAULT_FILTERS.searchValue ||
+      appliedFilters.status             !== DEFAULT_FILTERS.status      ||
+      appliedFilters.departmentId       !== DEFAULT_FILTERS.departmentId ||
+      appliedFilters.designation        !== DEFAULT_FILTERS.designation
+    );
+
+  // ── Load column prefs from IndexedDB on mount ─────────────────────────────
+  // This runs once when the component mounts (i.e. after login).
+  // It restores whatever the user had last — surviving logout → login.
+  useEffect(() => {
+    (async () => {
+      try {
+        const saved = await idbGet(IDB_KEY);
+        if (saved) {
+          const { activeColumns: savedActive, menuOrder: savedOrder } = saved;
+          if (Array.isArray(savedActive)) {
+            setActiveColumns(new Set(savedActive));
+          }
+          if (
+            Array.isArray(savedOrder) &&
+            savedOrder.length === INITIAL_ORDER.length &&
+            savedOrder.every((id) => id in DYNAMIC_COLS_MAP)
+          ) {
+            setMenuOrder(savedOrder);
+          }
+        }
+      } catch {
+        // Use defaults — non-critical
+      } finally {
+        setPrefsLoaded(true);
+      }
+    })();
+  }, []);
+
+  // ── Save column prefs to IndexedDB whenever they change ──────────────────
+  // The prefsLoaded guard prevents overwriting saved prefs with defaults
+  // during the initial render before the IDB read completes.
+  useEffect(() => {
+    if (!prefsLoaded) return;
+    idbSet(IDB_KEY, {
+      activeColumns: [...activeColumns],
+      menuOrder,
+    });
+  }, [activeColumns, menuOrder, prefsLoaded]);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // tableSlots — mirrors MedicineMasterList's useMemo exactly
+  // ─────────────────────────────────────────────────────────────────────────────
+  const tableSlots = useMemo(() => {
+    return SLOT_DEFAULTS.map((def, slotIdx) => {
+      const colId  = menuOrder[slotIdx];
+      const dynCol = colId ? DYNAMIC_COLS_MAP[colId] : null;
+      if (dynCol && activeColumns.has(colId)) {
+        return { header: dynCol.header, render: dynCol.render, isStatus: false };
+      }
+      return { header: def.header, render: def.render, isStatus: def.isStatus || false };
+    });
+  }, [activeColumns, menuOrder]);
+
+  const toggleDynCol = useCallback((id) => {
+    setActiveColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleMenuReorder = useCallback(
+    (newOrderIds) => setMenuOrder(newOrderIds),
+    []
+  );
+
+  const employeeMenuItems = menuOrder.map((id) => {
+    const col = DYNAMIC_COLS_MAP[id];
+    return {
+      id:       col.id,
+      icon:     col.icon,
+      label:    col.label,
+      checked:  activeColumns.has(col.id),
+      keepOpen: true,
+      onClick:  () => toggleDynCol(col.id),
+    };
+  });
 
   // ────────────────────────────────────────────────
   // Fetch departments (once)
@@ -167,8 +334,16 @@ const EmployeeList = () => {
   const handleSearch = () => {
     if (searchBtnDisabled) return;
     setSearchBtnDisabled(true);
-    setAppliedFilters({ ...filterInputs });
+    const newFilters = { ...filterInputs };
+    setAppliedFilters(newFilters);
     setPage(1);
+    // Show clear only if the applied filters differ from defaults
+    const isDifferentFromDefault =
+      newFilters.searchValue.trim() !== DEFAULT_FILTERS.searchValue ||
+      newFilters.status             !== DEFAULT_FILTERS.status      ||
+      newFilters.departmentId       !== DEFAULT_FILTERS.departmentId ||
+      newFilters.designation        !== DEFAULT_FILTERS.designation;
+    setHasSearched(isDifferentFromDefault);
     setTimeout(() => setSearchBtnDisabled(false), 2000);
   };
 
@@ -178,6 +353,7 @@ const EmployeeList = () => {
     setClearBtnDisabled(true);
     setFilterInputs(DEFAULT_FILTERS);
     setAppliedFilters(DEFAULT_FILTERS);
+    setHasSearched(false);
     setPage(1);
     setTimeout(() => setClearBtnDisabled(false), 2000);
   };
@@ -217,14 +393,17 @@ const EmployeeList = () => {
 
   // ────────────────────────────────────────────────
   // Early returns
-
-  if (loading) return <div className={styles.loading}><LoadingPage/></div>;
+  if (loading) return <div className={styles.loading}><LoadingPage /></div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
   return (
     <div className={styles.listWrapper}>
-      <Header title="Employee Management" />
+      <Header
+        title="Employee Management"
+        menuItems={employeeMenuItems}
+        onMenuReorder={handleMenuReorder}
+      />
 
       {/* ── No MessagePopup here — all popups live inside AddEmployee / ViewEmployee ── */}
 
@@ -315,7 +494,7 @@ const EmployeeList = () => {
               Search
             </button>
 
-            {hasActiveFilters && (
+            {showClearBtn && (
               <button
                 onClick={handleClearFilters}
                 className={styles.clearButton}
@@ -346,27 +525,27 @@ const EmployeeList = () => {
           <table className={styles.table}>
             <thead>
               <tr>
+                {/* ── Mandatory columns ── */}
                 <th>Employee</th>
                 <th>Code</th>
                 <th>Clinic</th>
-                <th>Branch</th>
-                <th>Department</th>
                 <th>Designation</th>
-                <th>Mobile</th>
-                <th>Status</th>
+                {/* ── Dynamic slots (4 slots, each falls back to its default) ── */}
+                {tableSlots.map((slot, i) => <th key={i}>{slot.header}</th>)}
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {employees.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className={styles.noData}>
-                    {hasActiveFilters ? 'No employees found.' : 'No employees registered yet.'}
+                  <td colSpan={9} className={styles.noData}>
+                    {showClearBtn ? 'No employees found.' : 'No employees registered yet.'}
                   </td>
                 </tr>
               ) : (
                 employees.map((employee) => (
                   <tr key={employee.id}>
+                    {/* ── Mandatory: Employee name ── */}
                     <td>
                       <div className={styles.nameCell}>
                         <div className={styles.avatar}>
@@ -380,21 +559,28 @@ const EmployeeList = () => {
                         </div>
                       </div>
                     </td>
+                    {/* ── Mandatory: Code ── */}
                     <td>{employee.employeeCode || '—'}</td>
-                    <td>{employee.clinicName|| '—'}</td>
-                    <td>{employee.branchName|| '—'}</td>
-                    <td>{employee.departmentName || '—'}</td>
+                    {/* ── Mandatory: Clinic ── */}
+                    <td>{employee.clinicName || '—'}</td>
+                    {/* ── Mandatory: Designation ── */}
                     <td>
                       <span className={styles.designationBadge}>
                         {getDesignationLabel(employee.designation)}
                       </span>
                     </td>
-                    <td>{employee.mobile || '—'}</td>
-                    <td>
-                      <span className={`${styles.statusBadge} ${getStatusClass(employee.status)}`}>
-                        {employee.status.toUpperCase()}
-                      </span>
-                    </td>
+                    {/* ── Dynamic slots ── */}
+                    {tableSlots.map((slot, i) =>
+                      slot.isStatus ? (
+                        <td key={i}>
+                          <span className={`${styles.statusBadge} ${getStatusClass(employee.status)}`}>
+                            {employee.status?.toUpperCase()}
+                          </span>
+                        </td>
+                      ) : (
+                        <td key={i}>{slot.render(employee)}</td>
+                      )
+                    )}
                     <td>
                       <button
                         onClick={() => handleViewDetails(employee)}

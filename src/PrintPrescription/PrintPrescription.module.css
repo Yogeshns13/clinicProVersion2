@@ -1,0 +1,753 @@
+/* src/components/PrintPrescription.module.css */
+
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --primary-start: #222b6c;
+  --primary-end:   #225ca0;
+  --accent-start:  #207d9c;
+  --accent-end:    #30b2b5;
+  --text-light:    #ffffff;
+  --text-dark:     #1e293b;
+  --glass-bg:      rgba(255, 255, 255, 0.92);
+  --glass-border:  rgba(255, 255, 255, 0.4);
+  --status-created:   #3b82f6;
+  --status-cancelled: #ef4444;
+  --status-verified:  #22c55e;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== MAIN WRAPPER ==================== */
+.clinicListWrapper {
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  height: 100vh;
+  overflow: hidden;
+  color: var(--text-dark);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* ==================== TAB SWITCHER ==================== */
+.tabSwitcher {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+  background: white;
+  padding: 8px;
+  border-radius: 14px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  flex-shrink: 0;
+}
+
+.tabBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.94rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+.tabBtn:hover {
+  background: rgba(48, 178, 181, 0.08);
+  color: var(--accent-end);
+}
+.tabBtnActive {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.35);
+}
+.tabBtnActive:hover {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+}
+
+/* ==================== FILTERS ==================== */
+.filtersContainer {
+  background: white;
+  border-radius: 17px;
+  padding: 20px;
+  margin-bottom: 10px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+/* Prescription tab — 5-col grid */
+.filtersGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+  gap: 15px;
+  align-items: end;
+}
+
+/* Lab order tab — search + actions only */
+.filtersGridLab {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 15px;
+  align-items: end;
+}
+
+.searchGroup {
+  display: flex;
+  align-items: stretch;
+}
+
+.searchTypeSelect {
+  min-width: 140px;
+  height: 40px;
+  padding: 0 12px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.searchTypeSelect:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+.searchInput {
+  flex: 1;
+  height: 40px;
+  padding: 0 15px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0 10px 10px 0;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+.searchInput::placeholder { color: #94a3b8; }
+.searchInput:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-left: 1px solid var(--accent-end);
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.filterInput {
+  width: 100%;
+  height: 40px;
+  padding: 10px 15px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+.filterInput::placeholder { color: #94a3b8; }
+.filterInput:focus {
+  outline: none;
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+/* ── Date placeholder overlay ── */
+.dateWrapper {
+  position: relative;
+  width: 100%;
+}
+.dateWrapper .filterInput {
+  width: 100%;
+  color: var(--text-dark);
+}
+.dateEmpty::-webkit-datetime-edit-text,
+.dateEmpty::-webkit-datetime-edit-month-field,
+.dateEmpty::-webkit-datetime-edit-day-field,
+.dateEmpty::-webkit-datetime-edit-year-field {
+  color: transparent;
+}
+.datePlaceholder {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  color: #94a3b8;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.filterActions {
+  display: flex;
+  gap: 10px;
+}
+
+.searchButton,
+.clearButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 10px 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+.searchButton {
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+}
+.searchButton:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4); }
+.clearButton { background: #e2e8f0; color: #475569; }
+.clearButton:hover { background: #cbd5e1; transform: translateY(-2px); }
+
+/* ==================== TABLE SECTION ==================== */
+.tableSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.clinicTableContainer {
+  background: white;
+  border-radius: 17px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.clinicTable {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+.clinicTable th {
+  text-align: left;
+  padding: 12px 17px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.clinicTable td {
+  padding: 6px 17px;
+  border-bottom: 1px solid #e2e8f0;
+  color: var(--text-dark);
+  font-size: 0.75rem;
+  vertical-align: middle;
+}
+.clinicTable th:last-child,
+.clinicTable td:last-child { text-align: right; padding-right: 24px; }
+.clinicTable tbody tr:nth-child(even) { background-color: #d5e6ec; }
+.clinicTable tbody tr:hover {
+  background-color: rgba(48, 178, 181, 0.08) !important;
+  transition: background-color 0.25s ease;
+}
+
+/* ==================== TABLE CELLS ==================== */
+.clinicNameCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.clinicAvatar {
+  width: 33px;
+  height: 33px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  font-weight: bold;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 12px rgba(32, 125, 156, 0.35);
+  flex-shrink: 0;
+}
+.clinicAvatarLab {
+  width: 33px;
+  height: 33px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0f2057, #0d7aa8);
+  color: var(--text-light);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 12px rgba(13, 122, 168, 0.35);
+  flex-shrink: 0;
+}
+.clinicName { font-weight: 700; color: var(--text-dark); font-size: 0.87rem; }
+.clinicType { font-size: 0.72rem; color: #64748b; margin-top: 2px; }
+
+/* ==================== STATUS BADGES ==================== */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+.statusActive    { background: rgba(59, 130, 246, 0.15); color: #1e40af; border: 1px solid rgba(59, 130, 246, 0.3); }
+.statusExpired   { background: rgba(220, 38, 38, 0.12);  color: #991b1b; border: 1px solid rgba(220, 38, 38, 0.28); }
+.statusCreated   { background: rgba(59, 130, 246, 0.15); color: #1e40af; border: 1px solid rgba(59, 130, 246, 0.3); }
+.statusCancelled { background: rgba(239, 68, 68, 0.15);  color: #991b1b; border: 1px solid rgba(239, 68, 68, 0.3); }
+.statusVerified  { background: rgba(34, 197, 94, 0.15);  color: #166534; border: 1px solid rgba(34, 197, 94, 0.3); }
+.labStatusPending   { background: rgba(234, 179, 8, 0.12);   color: #92670a; border: 1px solid rgba(234, 179, 8, 0.32); }
+.labStatusCompleted { background: rgba(22, 163, 74, 0.10);   color: #166534; border: 1px solid rgba(22, 163, 74, 0.28); }
+.labStatusCancelled { background: rgba(239, 68, 68, 0.12);   color: #991b1b; border: 1px solid rgba(239, 68, 68, 0.28); }
+.labStatusInvoice   { background: rgba(13, 122, 168, 0.12);  color: #0d5e82; border: 1px solid rgba(13, 122, 168, 0.28); }
+.labStatusProgress  { background: rgba(139, 92, 246, 0.10);  color: #5b21b6; border: 1px solid rgba(139, 92, 246, 0.28); }
+
+.labPriorityBadge {
+  padding: 4px 10px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+.labPriorityNormal { background: rgba(15, 32, 87, 0.08);   color: #0f2057; border: 1px solid rgba(15, 32, 87, 0.20); }
+.labPriorityUrgent { background: rgba(234, 88, 12, 0.10);  color: #c2410c; border: 1px solid rgba(234, 88, 12, 0.28); }
+.labPriorityStat   { background: rgba(220, 38, 38, 0.13);  color: #991b1b; border: 1px solid rgba(220, 38, 38, 0.38); }
+
+/* ==================== ACTION BUTTONS ==================== */
+.actionBtns {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* ── Preview button (teal gradient) ── */
+.clinicDetailsBtn {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 90px;
+  height: 32px;
+  padding: 0 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #016183, var(--primary-end));
+  color: var(--text-light);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  z-index: 1;
+}
+.clinicDetailsBtn::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+.clinicDetailsBtn:hover::before { width: 200px; height: 200px; }
+.clinicDetailsBtn:hover { transform: translateY(-2px); box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45); }
+.clinicDetailsBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* ── Print button (teal accent) ── */
+.clinicPrintBtn {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 80px;
+  height: 32px;
+  padding: 0 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #30b2b5, #0d7aa8);
+  color: var(--text-light);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(13, 122, 168, 0.3);
+  z-index: 1;
+}
+.clinicPrintBtn::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+.clinicPrintBtn:hover::before { width: 200px; height: 200px; }
+.clinicPrintBtn:hover { transform: translateY(-2px); box-shadow: 0 5px 17px rgba(13, 122, 168, 0.45); }
+.clinicPrintBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* ── Button spinner ── */
+.btnSpinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ==================== EMPTY / ERROR STATES ==================== */
+.clinicNoData { text-align: center; padding: 68px 17px; color: #64748b; font-size: 1.1rem; }
+.prescLoading { display: flex; align-items: center; justify-content: center; min-height: 70vh; }
+.prescError   { display: flex; align-items: center; justify-content: center; min-height: 70vh; font-size: 1.1rem; color: #ef4444; }
+
+/* ==================== PAGINATION ==================== */
+.paginationBar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 14px;
+  padding: 10px 20px;
+  margin-top: 14px;
+  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  gap: 16px;
+}
+.paginationInfo { font-size: 0.8rem; color: #64748b; font-weight: 500; white-space: nowrap; }
+.paginationControls { display: flex; align-items: center; gap: 6px; }
+.paginationLabel { font-size: 0.8rem; font-weight: 700; color: var(--primary-start); margin-right: 4px; white-space: nowrap; }
+.pageBtn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: var(--primary-start);
+  font-size: 1rem; font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+.pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-color: var(--accent-end);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.3);
+}
+.pageBtn:disabled { opacity: 0.35; cursor: not-allowed; }
+.pageIndicator {
+  min-width: 36px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  color: white; font-size: 0.82rem; font-weight: 700;
+  border-radius: 8px; padding: 0 8px;
+  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
+}
+.pageSizeInfo { font-size: 0.8rem; color: #64748b; font-weight: 500; white-space: nowrap; }
+.pageSizeInfo strong { color: var(--primary-start); font-weight: 700; }
+
+/* ==================== PDF VIEWER MODAL ==================== */
+.pdfModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 10, 30, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.25s ease;
+  backdrop-filter: blur(6px);
+  padding: 20px 20px 20px 260px; /* 260px left offset for sidebar */
+}
+
+.pdfModalContent {
+  width: 100%;
+  max-width: 960px;
+  height: 92vh;
+  background: #0e1929;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(48, 178, 181, 0.18);
+  animation: slideUp 0.35s ease;
+}
+
+/* ── Header ── */
+.pdfModalHeader {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, var(--accent-start) 0%, var(--accent-end) 100%);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+.pdfHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pdfHeaderIcon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1.5px solid rgba(255, 255, 255, 0.30);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light);
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.pdfHeaderTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-light);
+  line-height: 1.2;
+}
+
+.pdfHeaderSubtitle {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.70);
+  font-weight: 500;
+  letter-spacing: 0.4px;
+}
+
+.pdfCloseBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+.pdfCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.24);
+  transform: scale(1.08);
+}
+
+/* ── Body — iframe fills all available space ── */
+.pdfModalBody {
+  flex: 1;
+  min-height: 0;
+  background: #1a2535;
+  padding: 16px;
+  display: flex;
+  align-items: stretch;
+}
+
+.pdfIframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  display: block;
+}
+
+/* ── Footer ── */
+.pdfModalFooter {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 24px;
+  background: #f8fafc;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.pdfBtnPrint,
+.pdfBtnDownload {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 28px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+.pdfBtnPrint::before,
+.pdfBtnDownload::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.55s ease, height 0.55s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+.pdfBtnPrint:hover::before,
+.pdfBtnDownload:hover::before { width: 260px; height: 260px; }
+
+.pdfBtnPrint {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 18px rgba(32, 125, 156, 0.4);
+}
+.pdfBtnPrint:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(32, 125, 156, 0.55);
+}
+
+.pdfBtnDownload {
+  background: linear-gradient(135deg, #166534, #22c55e);
+  color: var(--text-light);
+  box-shadow: 0 5px 18px rgba(34, 197, 94, 0.3);
+}
+.pdfBtnDownload:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.45);
+}
+
+.pdfBtnPrint:disabled,
+.pdfBtnDownload:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ==================== DARK MODE ==================== */
+:global(.dark-mode) .clinicListWrapper {
+  --glass-bg: rgba(30, 41, 59, 0.92);
+  --text-dark: #e2e8f0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+}
+:global(.dark-mode) .filtersContainer  { background: #1e293b; border-color: #475569; }
+:global(.dark-mode) .searchTypeSelect  { background: #0f172a; border-color: #475569; color: #e2e8f0; }
+:global(.dark-mode) .searchInput       { background: #0f172a; border-color: #475569; color: #e2e8f0; }
+:global(.dark-mode) .searchInput:focus { border-left: 1px solid var(--accent-end); }
+:global(.dark-mode) .filterInput       { background: #0f172a; border-color: #475569; color: #e2e8f0; }
+:global(.dark-mode) .datePlaceholder   { color: #64748b; }
+:global(.dark-mode) .clearButton       { background: #334155; color: #e2e8f0; }
+:global(.dark-mode) .clearButton:hover { background: #475569; }
+:global(.dark-mode) .clinicTableContainer { background: #1e293b; border-color: #475569; }
+:global(.dark-mode) .clinicTable th    { background: linear-gradient(135deg, #334155, #475569); }
+:global(.dark-mode) .clinicTable td    { border-bottom-color: #475569; color: #e2e8f0; }
+:global(.dark-mode) .clinicTable tbody tr:nth-child(even) { background-color: #334155; }
+:global(.dark-mode) .pdfModalContent   { background: #0a111e; }
+:global(.dark-mode) .pdfModalBody      { background: #111b2c; }
+:global(.dark-mode) .pdfModalFooter    { background: #060c16; border-top-color: rgba(255,255,255,0.05); }
+:global(.dark-mode) .paginationBar     { background: #1e293b; border-color: #475569; }
+:global(.dark-mode) .paginationInfo    { color: #94a3b8; }
+:global(.dark-mode) .pageSizeInfo      { color: #94a3b8; }
+:global(.dark-mode) .pageBtn           { background: #334155; border-color: #475569; color: #e2e8f0; }
+:global(.dark-mode) .tabSwitcher       { background: #1e293b; }
+:global(.dark-mode) .tabBtn            { color: #94a3b8; }
+:global(.dark-mode) .tabBtn:hover      { background: rgba(48, 178, 181, 0.15); }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 1024px) {
+  .filtersGrid { grid-template-columns: 1fr 1fr auto; }
+  .searchGroup { grid-column: 1 / -1; }
+  .filterActions { grid-column: 1 / -1; }
+  .filtersGridLab { grid-template-columns: 1fr; }
+  .filtersGridLab .filterActions { justify-content: flex-start; }
+}
+@media (max-width: 768px) {
+  .filtersGrid    { grid-template-columns: 1fr; }
+  .filtersGridLab { grid-template-columns: 1fr; }
+  .searchGroup  { flex-direction: column; }
+  .searchTypeSelect { border-radius: 10px; border-right: 1px solid #cbd5e1; }
+  .searchInput      { border-radius: 10px; }
+  .filterActions    { flex-direction: column; }
+  .searchButton, .clearButton { width: 100%; justify-content: center; }
+  .pdfModalOverlay  { padding: 12px; }
+  .pdfModalContent  { height: 96vh; border-radius: 14px; }
+  .pdfModalHeader   { padding: 12px 16px; }
+  .pdfModalBody     { padding: 10px; }
+  .pdfModalFooter   { padding: 12px 16px; flex-direction: column; }
+  .pdfBtnPrint,
+  .pdfBtnDownload   { width: 100%; justify-content: center; }
+  .tabSwitcher      { flex-direction: row; }
+  .tabBtn           { flex: 1; }
+  .clinicDetailsBtn { width: 80px; }
+  .clinicPrintBtn   { width: 70px; }
+}
+@media (max-width: 480px) {
+  .clinicListWrapper { padding: 14px; }
+}

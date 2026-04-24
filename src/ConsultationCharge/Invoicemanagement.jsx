@@ -1,16 +1,18 @@
 // src/components/InvoiceList.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiFilter, FiFileText, FiDollarSign, FiCalendar, FiUser, FiX, FiMoreVertical, FiEye } from 'react-icons/fi';
+import { FiSearch, FiFilter, FiFileText, FiDollarSign, FiCalendar, FiUser, FiX, FiMoreVertical, FiEye, FiPrinter, FiDownload, FiPercent, FiTag, FiPhone } from 'react-icons/fi';
 import { getInvoiceList, cancelInvoice, addInvoicePayment } from '../Api/ApiInvoicePayment.js';
+import { createInvoiceBillFile } from '../Api/ApiPdf.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
 import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 import ViewInvoice from './ViewInvoice.jsx';
 import styles from './InvoiceManagement.module.css';
-import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import { getStoredClinicId, getStoredBranchId, getStoredFileAccessToken } from '../Utils/Cryptoutils.js';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
+import { FaRupeeSign } from 'react-icons/fa';
 
 const INVOICE_STATUSES = [
   { id: 1, label: 'Draft'          },
@@ -91,10 +93,157 @@ const filterInput = (fieldName, value) => {
 
 const getTodayStr = () => new Date().toISOString().split('T')[0];
 
+// ──────────────────────────────────────────────────
+// INDEXEDDB PERSISTENCE HELPERS
+//
+// Persists: { activeColumns: string[], menuOrder: string[] }
+// Survives logout → login because IndexedDB is origin-scoped.
+// On every toggle / reorder the prefs are written immediately,
+// so the "last changes screen" is always restored on next login.
+// ──────────────────────────────────────────────────
+const IDB_DB_NAME    = 'AppPreferences';
+const IDB_STORE_NAME = 'columnPrefs';
+const IDB_KEY        = 'invoiceListColPrefs';
+
+const openIDB = () =>
+  new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_DB_NAME, 1);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(IDB_STORE_NAME)) {
+        db.createObjectStore(IDB_STORE_NAME);
+      }
+    };
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror   = (e) => reject(e.target.error);
+  });
+
+const idbGet = async (key) => {
+  try {
+    const db = await openIDB();
+    return new Promise((resolve, reject) => {
+      const tx    = db.transaction(IDB_STORE_NAME, 'readonly');
+      const store = tx.objectStore(IDB_STORE_NAME);
+      const req   = store.get(key);
+      req.onsuccess = (e) => resolve(e.target.result);
+      req.onerror   = (e) => reject(e.target.error);
+    });
+  } catch {
+    return undefined;
+  }
+};
+
+const idbSet = async (key, value) => {
+  try {
+    const db = await openIDB();
+    return new Promise((resolve, reject) => {
+      const tx    = db.transaction(IDB_STORE_NAME, 'readwrite');
+      const store = tx.objectStore(IDB_STORE_NAME);
+      const req   = store.put(value, key);
+      req.onsuccess = () => resolve();
+      req.onerror   = (e) => reject(e.target.error);
+    });
+  } catch {
+    // Silently fail — column prefs are non-critical
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dynamic column pool
+// ─────────────────────────────────────────────────────────────────────────────
+const formatCurrencyStatic = (amount) => amount ? `₹${Number(amount).toFixed(2)}` : '₹0.00';
+
+const DYNAMIC_COLS_MAP = {
+  discount:      { id: 'discount',      label: 'Discount',        header: 'Discount',        icon: <FiPercent size={15} />, render: (inv) => formatCurrencyStatic(inv.discountAmount) },
+  invoiceType:   { id: 'invoiceType',   label: 'Invoice Type',    header: 'Invoice Type',    icon: <FiTag     size={15} />, render: (inv) => { const t = INVOICE_TYPES.find(t => t.id === inv.invoiceType); return t ? t.label : '—'; } },
+  patientMobile: { id: 'patientMobile', label: 'Patient Mobile',  header: 'Patient Mobile',  icon: <FiPhone   size={15} />, render: (inv) => inv.patientMobile || '—' },
+};
+
+// Slot 0 → Paid Amount | Slot 1 → Balance Amount | Slot 2 → Status
+// isStatus flag lets the cell render the badge JSX instead of plain text
+const SLOT_DEFAULTS = [
+  { header: 'Paid Amount',    render: (inv) => formatCurrencyStatic(inv.paidAmount),                                                          isStatus: false },
+  { header: 'Balance Amount', render: (inv) => formatCurrencyStatic((Number(inv.netAmount) || 0) - (Number(inv.paidAmount) || 0)),             isStatus: false },
+  { header: 'Status',         render: (inv) => inv.status,                                                                                    isStatus: true  },
+];
+
+// Default order of dynamic cols in the menu
+// Index 0 → owns Paid Amount slot  ← discount starts here
+// Index 1 → owns Balance Amount slot
+// Index 2 → owns Status slot
+const INITIAL_ORDER = ['discount', 'invoiceType', 'patientMobile'];
+
+// ─── PDF Viewer Modal ─────────────────────────────────────────────────────────
+
+const PdfViewerModal = ({ pdfUrl, title, onClose, onDownload }) => {
+  const handlePrint = () => {
+    const iframe = document.getElementById('invoicePdfViewerIframe');
+    if (iframe) {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    }
+  };
+
+  return (
+    <div
+      className={styles.pdfModalOverlay}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className={styles.pdfModalContent}>
+
+        {/* Header */}
+        <div className={styles.pdfModalHeader}>
+          <div className={styles.pdfHeaderLeft}>
+            <div className={styles.pdfHeaderIcon}>
+              <FiPrinter size={22} />
+            </div>
+            <div>
+              <h2 className={styles.pdfHeaderTitle}>{title}</h2>
+              <p className={styles.pdfHeaderSubtitle}>PDF Preview</p>
+            </div>
+          </div>
+          <button className={styles.pdfCloseBtn} onClick={onClose} title="Close">
+            <FiX size={20} />
+          </button>
+        </div>
+
+        {/* Body — iframe */}
+        <div className={styles.pdfModalBody}>
+          <iframe
+            id="invoicePdfViewerIframe"
+            src={pdfUrl}
+            title={title}
+            className={styles.pdfIframe}
+          />
+        </div>
+
+        {/* Footer */}
+        <div className={styles.pdfModalFooter}>
+          <button className={styles.pdfBtnPrint} onClick={handlePrint}>
+            <FiPrinter size={16} /> Print
+          </button>
+          <button className={styles.pdfBtnDownload} onClick={onDownload}>
+            <FiDownload size={16} /> Download
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 const InvoiceList = () => {
   const navigate = useNavigate();
   const [invoices, setInvoices]       = useState([]);
   const [allInvoices, setAllInvoices] = useState([]);
+
+  // ── Dynamic columns state ──
+  const [activeColumns, setActiveColumns] = useState(new Set());
+  const [menuOrder,     setMenuOrder]     = useState(INITIAL_ORDER);
+  // Guard: don't save to IDB until we've loaded from IDB first
+  const [prefsLoaded,   setPrefsLoaded]   = useState(false);
 
   const today = getTodayStr();
 
@@ -136,9 +285,14 @@ const InvoiceList = () => {
     remarks:     '',
   });
   const [validationMessages, setValidationMessages] = useState({});
-  const [confirmCancel, setConfirmCancel]           = useState(null); // invoice to cancel
+  const [confirmCancel, setConfirmCancel]           = useState(null);
 
-  // ── Button cooldown state (2-sec disable after click) ──────────────────────
+  // ── PDF state ───────────────────────────────────────────────────────────────
+  const [pdfModal,    setPdfModal]    = useState(null);   // { url, blob, label }
+  const [printingId,  setPrintingId]  = useState(null);
+  const [printError,  setPrintError]  = useState(null);
+
+  // ── Button cooldown state ───────────────────────────────────────────────────
   const [btnCooldown, setBtnCooldown] = useState({});
   const triggerCooldown = (key) => {
     setBtnCooldown((prev) => ({ ...prev, [key]: true }));
@@ -165,6 +319,85 @@ const InvoiceList = () => {
     appliedFilters.invoiceType !== 0  ||
     appliedFilters.dateFrom    !== today ||
     appliedFilters.dateTo      !== today;
+
+  // ── Load column prefs from IndexedDB on mount ─────────────────────────────
+  // This runs once when the component mounts (i.e. after login).
+  // It restores whatever the user had last — surviving logout → login.
+  useEffect(() => {
+    (async () => {
+      try {
+        const saved = await idbGet(IDB_KEY);
+        if (saved) {
+          const { activeColumns: savedActive, menuOrder: savedOrder } = saved;
+          if (Array.isArray(savedActive)) {
+            setActiveColumns(new Set(savedActive));
+          }
+          if (
+            Array.isArray(savedOrder) &&
+            savedOrder.length === INITIAL_ORDER.length &&
+            savedOrder.every((id) => id in DYNAMIC_COLS_MAP)
+          ) {
+            setMenuOrder(savedOrder);
+          }
+        }
+      } catch {
+        // Use defaults — non-critical
+      } finally {
+        setPrefsLoaded(true);
+      }
+    })();
+  }, []);
+
+  // ── Save column prefs to IndexedDB whenever they change ──────────────────
+  // The prefsLoaded guard prevents overwriting saved prefs with defaults
+  // during the initial render before the IDB read completes.
+  useEffect(() => {
+    if (!prefsLoaded) return;
+    idbSet(IDB_KEY, {
+      activeColumns: [...activeColumns],
+      menuOrder,
+    });
+  }, [activeColumns, menuOrder, prefsLoaded]);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // tableSlots
+  // ─────────────────────────────────────────────────────────────────────────────
+  const tableSlots = useMemo(() => {
+    return SLOT_DEFAULTS.map((def, slotIdx) => {
+      const colId  = menuOrder[slotIdx];
+      const dynCol = colId ? DYNAMIC_COLS_MAP[colId] : null;
+      if (dynCol && activeColumns.has(colId)) {
+        return { header: dynCol.header, render: dynCol.render, isStatus: false };
+      }
+      return { header: def.header, render: def.render, isStatus: def.isStatus };
+    });
+  }, [activeColumns, menuOrder]);
+
+  const toggleDynCol = useCallback((id) => {
+    setActiveColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleMenuReorder = useCallback(
+    (newOrderIds) => setMenuOrder(newOrderIds),
+    []
+  );
+
+  const invoiceMenuItems = menuOrder.map((id) => {
+    const col = DYNAMIC_COLS_MAP[id];
+    return {
+      id:       col.id,
+      icon:     col.icon,
+      label:    col.label,
+      checked:  activeColumns.has(col.id),
+      keepOpen: true,
+      onClick:  () => toggleDynCol(col.id),
+    };
+  });
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchInvoices = async (filters = appliedFilters, currentPage = page) => {
@@ -295,6 +528,50 @@ const InvoiceList = () => {
     setValidationMessages({});
   };
 
+  // ── Print / PDF handlers ───────────────────────────────────────────────────
+  const handlePrintInvoice = async (invoice) => {
+    try {
+      setPrintingId(invoice.id);
+      setPrintError(null);
+
+      const clinicId        = await getStoredClinicId();
+      const branchId        = await getStoredBranchId();
+      const fileAccessToken = await getStoredFileAccessToken();
+
+      const result = await createInvoiceBillFile(
+        branchId,
+        invoice.id,
+        clinicId,
+        fileAccessToken,
+        invoice.invoiceType,
+        1
+      );
+
+      setPdfModal({
+        url:   result.url,
+        blob:  result.blob,
+        label: `Invoice #${invoice.invoiceNo || invoice.id}`,
+      });
+    } catch (err) {
+      setPrintError(err.message || 'Failed to generate invoice PDF');
+    } finally {
+      setPrintingId(null);
+    }
+  };
+
+  const handleDownloadInvoice = () => {
+    if (!pdfModal) return;
+    const a = document.createElement('a');
+    a.href     = pdfModal.url;
+    a.download = `${pdfModal.label}.pdf`;
+    a.click();
+  };
+
+  const handleClosePdfModal = () => {
+    if (pdfModal?.url) URL.revokeObjectURL(pdfModal.url);
+    setPdfModal(null);
+  };
+
   // ── Payment input handler ──────────────────────────────────────────────────
   const handlePaymentInputChange = (e) => {
     const { name, value } = e.target;
@@ -402,7 +679,49 @@ const InvoiceList = () => {
   return (
     <div className={styles.invoiceListWrapper}>
       <ErrorHandler error={error} />
-      <Header title="Invoice Management" />
+
+      <Header
+        title="Invoice Management"
+        menuItems={invoiceMenuItems}
+        onMenuReorder={handleMenuReorder}
+      />
+
+      {/* ── PDF Viewer Modal ── */}
+      {pdfModal && (
+        <PdfViewerModal
+          pdfUrl={pdfModal.url}
+          title={pdfModal.label}
+          onClose={handleClosePdfModal}
+          onDownload={handleDownloadInvoice}
+        />
+      )}
+
+      {/* ── Print error banner ── */}
+      {printError && (
+        <div
+          style={{
+            background: 'rgba(239,68,68,0.1)',
+            border: '1px solid rgba(239,68,68,0.3)',
+            borderRadius: '10px',
+            padding: '10px 16px',
+            marginBottom: '10px',
+            fontSize: '0.85rem',
+            color: '#dc2626',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            flexShrink: 0,
+          }}
+        >
+          {printError}
+          <button
+            onClick={() => setPrintError(null)}
+            style={{ marginLeft: 'auto', cursor: 'pointer', background: 'none', border: 'none', color: '#ef4444', fontWeight: 700 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* ── Filter Bar ── */}
       <div className={styles.filtersContainer}>
@@ -484,20 +803,24 @@ const InvoiceList = () => {
           <table className={styles.invoiceTable}>
             <thead>
               <tr>
+                {/* ── Mandatory columns ── */}
                 <th>Invoice No</th>
                 <th>Patient</th>
                 <th>Invoice Date</th>
                 <th>Net Amount</th>
-                <th>Paid Amount</th>
-                <th>Balance Amount</th>
-                <th>Status</th>
+                {/* ── Dynamic slots
+                    slot 0 default → Paid Amount    (discount owns this slot)
+                    slot 1 default → Balance Amount
+                    slot 2 default → Status
+                ── */}
+                {tableSlots.map((slot, i) => <th key={i}>{slot.header}</th>)}
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredInvoices.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className={styles.invoiceNoData}>
+                  <td colSpan={9} className={styles.invoiceNoData}>
                     {hasActiveFilters ? 'No invoices found.' : 'No invoices for today.'}
                   </td>
                 </tr>
@@ -506,7 +829,10 @@ const InvoiceList = () => {
                   const balanceAmount = calculateBalanceAmount(invoice.netAmount, invoice.paidAmount);
                   return (
                     <tr key={invoice.id}>
+                      {/* ── Mandatory: Invoice No ── */}
                       <td><div className={styles.invoiceNoBadge}>{invoice.invoiceNo}</div></td>
+
+                      {/* ── Mandatory: Patient ── */}
                       <td>
                         <div className={styles.patientCell}>
                           <FiUser size={16} className={styles.patientIcon} />
@@ -516,26 +842,40 @@ const InvoiceList = () => {
                           </div>
                         </div>
                       </td>
+
+                      {/* ── Mandatory: Invoice Date ── */}
                       <td><span className={styles.dateText}>{formatDate(invoice.invoiceDate)}</span></td>
+
+                      {/* ── Mandatory: Net Amount ── */}
                       <td><span className={`${styles.amountText} ${styles.total}`}>{formatCurrency(invoice.netAmount)}</span></td>
-                      <td><span className={styles.discountText}>{formatCurrency(invoice.paidAmount)}</span></td>
-                      <td><span className={styles.amountText}>{formatCurrency(balanceAmount)}</span></td>
-                      <td><span className={getStatusBadgeClass(invoice.status)}>{getStatusLabel(invoice.status)}</span></td>
+
+                      {/* ── Dynamic slots ── */}
+                      {tableSlots.map((slot, i) =>
+                        slot.isStatus ? (
+                          <td key={i}>
+                            <span className={getStatusBadgeClass(invoice.status)}>
+                              {getStatusLabel(invoice.status)}
+                            </span>
+                          </td>
+                        ) : (
+                          <td key={i}>{slot.render(invoice)}</td>
+                        )
+                      )}
+
+                      {/* ── Actions ── */}
                       <td>
                         <div className={styles.invoiceActionsCell}>
 
                           {/* ── Add Payment / Paid indicator ── */}
                           {invoice.status === 3 ? (
-                            /* Paid — show a muted "Paid" pill, no button */
                             <span className={styles.invoicePaidPill}>✓ Paid</span>
                           ) : invoice.status !== 5 ? (
-                            /* Any status except Paid (3) and Cancelled (5) */
                             <button
                               onClick={() => openPaymentModal(invoice)}
                               className={styles.invoicePaymentBtn}
                               title="Add Payment"
                             >
-                              <FiDollarSign size={14} /> Add Payment
+                              <FaRupeeSign size={14} /> Pay
                             </button>
                           ) : null}
 
@@ -547,6 +887,20 @@ const InvoiceList = () => {
                             disabled={!!btnCooldown[`view-${invoice.id}`]}
                           >
                             Details
+                          </button>
+
+                          {/* ── Print button ── */}
+                          <button
+                            onClick={() => handlePrintInvoice(invoice)}
+                            className={styles.invoicePrintBtn}
+                            title="Print Invoice"
+                            disabled={printingId === invoice.id}
+                          >
+                            {printingId === invoice.id ? (
+                              <span className={styles.btnSpinner} />
+                            ) : (
+                              <FiPrinter size={14} />
+                            )}
                           </button>
 
                         </div>

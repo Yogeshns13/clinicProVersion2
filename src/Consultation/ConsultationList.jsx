@@ -1,3 +1,4 @@
+// src/components/ConsultationList.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiX, FiPlus, FiCalendar, FiFileText } from 'react-icons/fi';

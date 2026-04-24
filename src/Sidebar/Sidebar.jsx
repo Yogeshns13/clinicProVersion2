@@ -99,9 +99,11 @@ const Sidebar = () => {
       subItems: [
         {to: "/consultation-list", label: "Consultation List", roles: ["admin", "doctor"],},
         {to: "/consulted-patient", label: "Consultation List", roles: ["nurse", "frontdesk", "accounts"],},
+        {to: "/print-prescription", label: "Prescription/Lab Order", roles: ["admin", "doctor", "nurse"],},
         {to: "/consultationcharge-config", label: "Consul Charge Config", roles: ["admin", "frontdesk", "accounts"],},
         {to: "/consultation-charge", label: "Consultation Charge", roles: ["admin", "frontdesk", "accounts"],},
         {to: "/external-lab", label: "External Lab", roles: ["admin","doctor","frontdesk"],},
+        {to: "/consultation-invoice", label: "Consultation Invoice", roles: ["admin","doctor","frontdesk", "nurse"],},
       ],
     },
     {

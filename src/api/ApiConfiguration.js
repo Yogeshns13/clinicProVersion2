@@ -12,8 +12,20 @@ export const FILE_API_URL = import.meta.env.PROD
   ? `${import.meta.env.VITE_FTP_BASE_URL}/file`
   : "/file";
 
+export const PDF_API_URL = import.meta.env.PROD
+  ? `${import.meta.env.VITE_PDF_BASE_URL}/api`
+  : "/pdf/api";
+
 export const API = axios.create({
   baseURL,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export const PDF_API = axios.create({
+  baseURL: PDF_API_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",

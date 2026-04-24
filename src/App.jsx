@@ -48,6 +48,8 @@ import InvoicePaymentManagement from "./ConsultationCharge/InvoicePaymentManagem
 import Logout from "./Logout/Logout.jsx";
 import ExternalLabList from "./ExternalLab/ExternalLabList.jsx";
 import UserList from "./UserList/UserList.jsx";
+import PrintPrescription from "./PrintPrescription/PrintPrescription.jsx";
+import ConsultationInvoice from "./ConsultationCharge/ConsultationInvoice.jsx";
 
 // Inner component so useTokenRenewal runs inside AuthProvider + Router context
 function AppInner() {
@@ -86,6 +88,9 @@ function AppInner() {
 
         <Route path="/consultation-list" element={<ConsultationList />} />
         <Route path="/consulted-patient" element={<ConsultedPatients />} />
+        <Route path="/print-prescription" element={<PrintPrescription />} />
+        <Route path="/consultation-invoice" element={<ConsultationInvoice />} />
+
         <Route path="/view-consultation/:id" element={<ViewConsultation />} />
         <Route path="/consultationcharge-config" element={<ConsultationChargeConfig />} />
         <Route path="/consultation-charge" element={<ConsultationChargeList />} />

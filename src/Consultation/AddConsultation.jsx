@@ -807,8 +807,8 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     } catch (e) { console.error(e); }
   };
 
-  // ── submitLabItems: adds items and (if external lab mode) updates order status to 6 ──
-  const submitLabItems = async (clinicId, branchId, orderId, testIds, pkgIds, labOrder, externalLabIdOverride) => {
+  // ── submitLabItems: adds items only (status is already set on the order via addLabTestOrder) ──
+  const submitLabItems = async (clinicId, branchId, orderId, testIds, pkgIds, labOrder) => {
     for (const testId of testIds) {
       await addLabTestOrderItem({ clinicId, branchId, OrderID: orderId, PatientID: selectedVisit.patientId, DoctorID: selectedVisit.doctorId, TestID: testId, PackageID: 0 });
     }
@@ -819,21 +819,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     setSubmittedLabPkgIds(prev => [...new Set([...prev, ...pkgIds])]);
     setDeactivatedLabTestIds(prev => prev.filter(id => !testIds.includes(id)));
     setDeactivatedLabPkgIds(prev => prev.filter(id => !pkgIds.includes(id)));
-
-    // If external lab mode (inLabMode === 0), update the order with status 6
-    if (inLabMode === 0) {
-      const extLabId = externalLabIdOverride ?? selectedExternalLabId ?? 0;
-      await updateLabTestOrder({
-        orderId,
-        clinicId,
-        branchId,
-        priority: labOrder?.priority ?? labPriority ?? 1,
-        notes: consultationNotes || '',
-        externalLabId: extLabId,
-        status: 6,
-        testApprovedBy: selectedVisit?.doctorId ?? 0,
-      });
-    }
 
     try {
       const items = await getLabTestOrderItemList(clinicId, { OrderID: orderId, BranchID: branchId, Page: 1, PageSize: 50 });
@@ -878,7 +863,19 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     const newTestIds = selectedTestIds.filter(id => !submittedLabTestIds.includes(id) && !deactivatedLabTestIds.includes(id));
     const newPkgIds  = selectedPkgIds.filter(id => !submittedLabPkgIds.includes(id) && !deactivatedLabPkgIds.includes(id));
 
+    // ── BUG FIX: also compute items that were staged but have now been unchecked ──
+    const removedStagedTestIds = stagedLabTestIds.filter(id => !selectedTestIds.includes(id));
+    const removedStagedPkgIds  = stagedLabPkgIds.filter(id => !selectedPkgIds.includes(id));
+
     if (newTestIds.length === 0 && newPkgIds.length === 0) {
+      // Apply removals from staged lists even when there's nothing new to add
+      if (removedStagedTestIds.length > 0) {
+        setStagedLabTestIds(prev => prev.filter(id => !removedStagedTestIds.includes(id)));
+      }
+      if (removedStagedPkgIds.length > 0) {
+        setStagedLabPkgIds(prev => prev.filter(id => !removedStagedPkgIds.includes(id)));
+      }
+
       // No new items — but still update if priority or external lab id changed on an existing order
       const priorityChanged = labOrderId && (labPriority !== stagedLabPriority);
       const extLabChanged   = inLabMode === 0 && labOrderId && (selectedExternalLabId !== stagedExternalLabId);
@@ -909,8 +906,15 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     }
 
     if (!consultationId) {
-      setStagedLabTestIds(prev => [...new Set([...prev, ...newTestIds])]);
-      setStagedLabPkgIds(prev => [...new Set([...prev, ...newPkgIds])]);
+      // Apply removals first, then add new items
+      setStagedLabTestIds(prev => {
+        const afterRemovals = prev.filter(id => !removedStagedTestIds.includes(id));
+        return [...new Set([...afterRemovals, ...newTestIds])];
+      });
+      setStagedLabPkgIds(prev => {
+        const afterRemovals = prev.filter(id => !removedStagedPkgIds.includes(id));
+        return [...new Set([...afterRemovals, ...newPkgIds])];
+      });
       setStagedLabPriority(labPriority);
       // Stage external lab id for when final submit happens
       if (inLabMode === 0) setStagedExternalLabId(selectedExternalLabId);
@@ -930,7 +934,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     const steps = [];
     if (!labOrderId) steps.push({ label: 'Creating lab order' });
     steps.push({ label: `Adding ${newTestIds.length + newPkgIds.length} lab item(s)` });
-    if (inLabMode === 0) steps.push({ label: 'Sending to external lab' });
     setSubmitProgress({ steps, currentStep: 0, done: false });
 
     try {
@@ -947,8 +950,9 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
           doctorId:       selectedVisit.doctorId,
           priority:       labPriority,
           Notes:          consultationNotes,
-          // Pass externalLabId if external lab mode
           externalLabId:  inLabMode === 0 ? selectedExternalLabId : 0,
+          // ── Pass status 6 directly when in external lab mode ──
+          status:         inLabMode === 0 ? 6 : 1,
         });
         if (!lr.success) throw new Error('Failed to create lab order');
         activeLabOrderId = lr.orderId;
@@ -962,12 +966,12 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
         activeLabOrderId,
         newTestIds, newPkgIds,
         { priorityDesc: PRIORITY_OPTIONS.find(p => p.id === labPriority)?.label, priority: labPriority },
-        selectedExternalLabId,
       );
       s++;
 
-      setStagedLabTestIds([]);
-      setStagedLabPkgIds([]);
+      // Apply removals from staged lists after successful server submission
+      setStagedLabTestIds(prev => prev.filter(id => !removedStagedTestIds.includes(id)));
+      setStagedLabPkgIds(prev => prev.filter(id => !removedStagedPkgIds.includes(id)));
       setStagedLabPriority(labPriority);
       setSavedLabPriorityDesc(PRIORITY_OPTIONS.find(p => p.id === labPriority)?.label || '');
       if (inLabMode === 0) setStagedExternalLabId(selectedExternalLabId);
@@ -1084,7 +1088,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
       if (needAddDetails)  { steps.push({ label: `Adding ${pendingContainers.length} medicine(s)` }); }
       if (needNewLabOrder) { steps.push({ label: 'Creating lab order' }); steps.push({ label: `Adding ${newTestIds.length + newPkgIds.length} lab item(s)` }); }
       if (needAddLabItems) { steps.push({ label: `Adding ${newTestIds.length + newPkgIds.length} more lab item(s)` }); }
-      if (inLabMode === 0 && (needNewLabOrder || needAddLabItems)) { steps.push({ label: 'Sending to external lab' }); }
 
       if (steps.length === 0) { setError({ message: 'Nothing new to submit.' }); return; }
 
@@ -1138,6 +1141,8 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
             priority: stagedLabPriority,
             Notes: consultationNotes,
             externalLabId: externalLabIdToUse,
+            // ── Pass status 6 directly when in external lab mode ──
+            status: inLabMode === 0 ? 6 : 1,
           });
           if (!lr.success) throw new Error('Failed to create lab order');
           setLabOrderId(lr.orderId); s++;
@@ -1147,7 +1152,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
             lr.orderId,
             newTestIds, newPkgIds,
             { priorityDesc: PRIORITY_OPTIONS.find(p => p.id === stagedLabPriority)?.label, priority: stagedLabPriority },
-            externalLabIdToUse,
           );
           s++;
         }
@@ -1158,7 +1162,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
             labOrderId,
             newTestIds, newPkgIds,
             { priority: stagedLabPriority },
-            externalLabIdToUse,
           );
           s++;
         }
@@ -1179,7 +1182,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
     if (hasLabOrder)  {
       steps.push({ label: 'Creating lab order' });
       steps.push({ label: `Adding ${stagedLabTestIds.length + stagedLabPkgIds.length} lab item(s)` });
-      if (inLabMode === 0) steps.push({ label: 'Sending to external lab' });
     }
 
     setSubmitProgress({ steps, currentStep: 0, done: false }); setError(null);
@@ -1242,6 +1244,8 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
           priority: stagedLabPriority,
           Notes: consultationNotes,
           externalLabId: externalLabIdToUse,
+          // ── Pass status 6 directly when in external lab mode ──
+          status: inLabMode === 0 ? 6 : 1,
         });
         if (!lr.success) throw new Error('Failed to create lab order');
         setLabOrderId(lr.orderId); s++;
@@ -1251,7 +1255,6 @@ const AddConsultation = ({ isOpen, onClose, onSuccess, preSelectedVisitId = null
           lr.orderId,
           stagedLabTestIds, stagedLabPkgIds,
           { priorityDesc: PRIORITY_OPTIONS.find(p => p.id === stagedLabPriority)?.label, priority: stagedLabPriority },
-          externalLabIdToUse,
         );
         s++;
       }

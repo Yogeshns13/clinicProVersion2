@@ -1,20 +1,18 @@
-// src/components/LabWork/LabInvoiceList.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+// src/components/ConsultationInvoice/ConsultationInvoice.jsx
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiX, FiCalendar, FiFilter, FiEye, FiFileText, FiDollarSign, FiDownload, FiPrinter } from 'react-icons/fi';
-import { getLabInvoiceDetailList } from '../Api/ApiLabTests.js';
-import { getInvoiceList} from '../Api/ApiInvoicePayment.js';
+import { FiSearch, FiX } from 'react-icons/fi';
+import { getInvoiceList } from '../Api/ApiInvoicePayment.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
-import styles from './LabInvoiceList.module.css';
-import { FaClinicMedical } from 'react-icons/fa';
+import styles from './ConsultationInvoice.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 const PAGE_SIZE = 20;
 
-const LabInvoiceList = () => {
+const ConsultationInvoice = () => {
   const navigate = useNavigate();
 
   // Data States
@@ -47,8 +45,6 @@ const LabInvoiceList = () => {
   // Modal States
   const [isInvoiceDetailsOpen,  setIsInvoiceDetailsOpen]  = useState(false);
   const [selectedInvoiceDetail, setSelectedInvoiceDetail] = useState(null);
-  const [modalLoading, setModalLoading] = useState(false);
-  const [modalError,   setModalError]   = useState(null);
 
   // ── Button cooldown state (2-sec disable after click) ──────────────────────
   const [btnCooldown, setBtnCooldown] = useState({});
@@ -68,7 +64,7 @@ const LabInvoiceList = () => {
     appliedFilters.dateFrom            !== '' ||
     appliedFilters.dateTo              !== '';
 
-  // ── Fetch Invoice List (InvoiceType = 2 for Lab) ───────────────────────────
+  // ── Fetch Invoice List (InvoiceType = 1 for Consultation) ─────────────────
   const fetchInvoices = async (pageNum = page) => {
     try {
       setLoading(true);
@@ -80,7 +76,7 @@ const LabInvoiceList = () => {
         Page:        pageNum,
         PageSize:    PAGE_SIZE,
         BranchID:    branchId,
-        InvoiceType: 2,
+        InvoiceType: 1,
         PatientName: appliedFilters.searchType === 'patientName' ? appliedFilters.searchValue.trim() : '',
         InvoiceNo:   appliedFilters.searchType === 'invoiceNo'   ? appliedFilters.searchValue.trim() : '',
         FromDate:    appliedFilters.dateFrom || '',
@@ -102,7 +98,7 @@ const LabInvoiceList = () => {
       setError(
         err?.status >= 400 || err?.code >= 400
           ? err
-          : { message: err.message || 'Failed to load lab invoices' }
+          : { message: err.message || 'Failed to load consultation invoices' }
       );
     } finally {
       setLoading(false);
@@ -146,66 +142,11 @@ const LabInvoiceList = () => {
     if (e.key === 'Enter') handleSearch();
   };
 
-  // ── View Details: fetch detail list for the clicked invoice ───────────────
-  const handleViewInvoiceDetails = async (invoice) => {
+  // ── View Details ──────────────────────────────────────────────────────────
+  const handleViewInvoiceDetails = (invoice) => {
     triggerCooldown(`view-${invoice.id}`);
-    try {
-      setModalLoading(true);
-      setModalError(null);
-      setIsInvoiceDetailsOpen(true);
-      setSelectedInvoiceDetail(null);
-
-      const clinicId = await getStoredClinicId();
-      const branchId = await getStoredBranchId();
-
-      const details = await getLabInvoiceDetailList(clinicId, {
-        BranchID:  branchId,
-        InvoiceID: invoice.id,
-        Page:      1,
-        PageSize:  100,
-      });
-
-      // Aggregate detail rows into the invoice object expected by the modal
-      const totalAmount    = details.reduce((sum, d) => sum + (d.amount     || 0), 0);
-      const totalCgst      = details.reduce((sum, d) => sum + (d.cgstAmount || 0), 0);
-      const totalSgst      = details.reduce((sum, d) => sum + (d.sgstAmount || 0), 0);
-      const totalNetAmount = details.reduce((sum, d) => sum + (d.netAmount  || 0), 0);
-
-      setSelectedInvoiceDetail({
-        invoiceId:      invoice.id,
-        invoiceNo:      invoice.invoiceNo,
-        invoiceDate:    invoice.invoiceDate,
-        patientId:      invoice.patientId,
-        patientName:    invoice.patientName,
-        patientMobile:  invoice.patientMobile,
-        patientFileNo:  invoice.patientFileNo,
-        clinicName:     invoice.clinicName,
-        branchName:     invoice.branchName,
-        dateCreated:    invoice.dateCreated,
-        details,
-        totalAmount,
-        totalCgst,
-        totalSgst,
-        totalNetAmount,
-      });
-    } catch (err) {
-      console.error('handleViewInvoiceDetails error:', err);
-      setModalError({ message: err.message || 'Failed to load invoice details' });
-    } finally {
-      setModalLoading(false);
-    }
-  };
-
-  const handlePrintInvoice = (invoice) => {
-    triggerCooldown(`print-${invoice.id}`);
-    console.log('Print invoice:', invoice.invoiceNo);
-    showPopup(`Print functionality for Invoice ${invoice.invoiceNo} will be implemented.`, 'warning');
-  };
-
-  const handleDownloadInvoice = (invoice) => {
-    triggerCooldown(`download-${invoice.id}`);
-    console.log('Download invoice:', invoice.invoiceNo);
-    showPopup(`Download functionality for Invoice ${invoice.invoiceNo} will be implemented.`, 'warning');
+    setSelectedInvoiceDetail(invoice);
+    setIsInvoiceDetailsOpen(true);
   };
 
   const formatDate = (dateStr) => {
@@ -231,7 +172,7 @@ const LabInvoiceList = () => {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.spinner}></div>
-        <LoadingPage/>
+        <LoadingPage />
       </div>
     );
   }
@@ -244,7 +185,7 @@ const LabInvoiceList = () => {
   return (
     <div className={styles.wrapper}>
       <ErrorHandler error={error} />
-      <Header title="Lab Invoice Management" />
+      <Header title="Consultation Invoice Management" />
 
       {/* ── Filters Container ── */}
       <div className={styles.filtersContainer}>
@@ -355,7 +296,7 @@ const LabInvoiceList = () => {
                   <td colSpan={8} className={styles.noData}>
                     {hasActiveFilters
                       ? 'No invoices found matching your search.'
-                      : 'No lab invoices found.'}
+                      : 'No consultation invoices found.'}
                   </td>
                 </tr>
               ) : (
@@ -486,19 +427,16 @@ const LabInvoiceList = () => {
       {isInvoiceDetailsOpen && (
         <InvoiceDetailsModal
           invoice={selectedInvoiceDetail}
-          loading={modalLoading}
-          error={modalError}
           onClose={() => {
             setIsInvoiceDetailsOpen(false);
             setSelectedInvoiceDetail(null);
-            setModalError(null);
           }}
           formatCurrency={formatCurrency}
           formatDate={formatDate}
         />
       )}
 
-      {/* ── MessagePopup (at root level so z-index is never blocked) ── */}
+      {/* ── MessagePopup ── */}
       <MessagePopup
         visible={popup.visible}
         message={popup.message}
@@ -512,8 +450,7 @@ const LabInvoiceList = () => {
 // ──────────────────────────────────────────────────
 // Invoice Details Modal Component
 // ──────────────────────────────────────────────────
-const InvoiceDetailsModal = ({ invoice, loading, error, onClose, formatCurrency, formatDate }) => {
-  // ── Button cooldown state (2-sec disable) ──
+const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) => {
   const [btnCooldown, setBtnCooldown] = useState({});
   const triggerCooldown = (key) => {
     setBtnCooldown((prev) => ({ ...prev, [key]: true }));
@@ -528,7 +465,6 @@ const InvoiceDetailsModal = ({ invoice, loading, error, onClose, formatCurrency,
           <h2>Invoice Details{invoice ? ` - ${invoice.invoiceNo}` : ''}</h2>
           <div className={styles.headerRight}>
             <div className={styles.clinicNameone}>
-              <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
               {localStorage.getItem('clinicName') || '—'}
             </div>
             <button
@@ -542,22 +478,7 @@ const InvoiceDetailsModal = ({ invoice, loading, error, onClose, formatCurrency,
         </div>
 
         <div className={styles.modalBody}>
-          {/* ── Loading state ── */}
-          {loading && (
-            <div className={styles.loadingContainer}>
-              <div className={styles.spinner}></div>
-            </div>
-          )}
-
-          {/* ── Error state ── */}
-          {!loading && error && (
-            <div className={styles.noData}>
-              {error.message || 'Failed to load invoice details.'}
-            </div>
-          )}
-
-          {/* ── Content ── */}
-          {!loading && !error && invoice && (
+          {invoice && (
             <>
               {/* Invoice Header Info */}
               <div className={styles.invoiceHeader}>
@@ -590,55 +511,33 @@ const InvoiceDetailsModal = ({ invoice, loading, error, onClose, formatCurrency,
                     <label>Branch:</label>
                     <span>{invoice.branchName}</span>
                   </div>
+                  <div className={styles.detailItem}>
+                    <label>Status:</label>
+                    <span>{invoice.statusDesc}</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Test Details Table */}
-              <div className={styles.testDetailsSection}>
-                <h3>Test Details</h3>
+              {/* Amount Summary Section */}
+              <div className={styles.amountSummarySection}>
+                <h3>Amount Summary</h3>
                 <table className={styles.detailsTable}>
                   <thead>
                     <tr>
-                      <th>Test Name</th>
-                      <th>Amount</th>
-                      <th>CGST %</th>
-                      <th>CGST Amt</th>
-                      <th>SGST %</th>
-                      <th>SGST Amt</th>
+                      <th>Total Amount</th>
+                      <th>CGST Amount</th>
+                      <th>SGST Amount</th>
                       <th>Net Amount</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {invoice.details.map((detail, index) => (
-                      <tr key={index}>
-                        <td>
-                          <div>
-                            <div className={styles.testName}>{detail.testName}</div>
-                            {detail.masterTestName && (
-                              <div className={styles.masterTestName}>{detail.masterTestName}</div>
-                            )}
-                          </div>
-                        </td>
-                        <td>{formatCurrency(detail.amount)}</td>
-                        <td>{detail.cgstPercentage ? `${detail.cgstPercentage}%` : '—'}</td>
-                        <td>{formatCurrency(detail.cgstAmount)}</td>
-                        <td>{detail.sgstPercentage ? `${detail.sgstPercentage}%` : '—'}</td>
-                        <td>{formatCurrency(detail.sgstAmount)}</td>
-                        <td><strong>{formatCurrency(detail.netAmount)}</strong></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr className={styles.totalRow}>
-                      <td><strong>Total</strong></td>
-                      <td><strong>{formatCurrency(invoice.totalAmount)}</strong></td>
-                      <td>—</td>
-                      <td><strong>{formatCurrency(invoice.totalCgst)}</strong></td>
-                      <td>—</td>
-                      <td><strong>{formatCurrency(invoice.totalSgst)}</strong></td>
-                      <td><strong>{formatCurrency(invoice.totalNetAmount)}</strong></td>
+                    <tr>
+                      <td>{formatCurrency(invoice.totalAmount)}</td>
+                      <td>{formatCurrency(invoice.cgstAmount)}</td>
+                      <td>{formatCurrency(invoice.sgstAmount)}</td>
+                      <td><strong>{formatCurrency(invoice.netAmount)}</strong></td>
                     </tr>
-                  </tfoot>
+                  </tbody>
                 </table>
               </div>
             </>
@@ -659,4 +558,4 @@ const InvoiceDetailsModal = ({ invoice, loading, error, onClose, formatCurrency,
   );
 };
 
-export default LabInvoiceList;
+export default ConsultationInvoice;

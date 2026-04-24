@@ -6,6 +6,8 @@ import {
   FiX,
   FiChevronDown,
   FiCheckCircle,
+  FiMapPin,
+  FiCalendar,
 } from 'react-icons/fi';
 import { addBranch, getBranchList, getClinicList, deleteBranch } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
@@ -18,6 +20,7 @@ import LoadingPage from '../Hooks/LoadingPage.jsx';
 
 // ─── matches backend allowedCharactersRegex exactly ───────────────────────────
 const allowedCharactersRegex = /^[A-Za-z0-9\s\-_]+$/;
+const MOBILE_REGEX           = /^\d{10}$/;
 
 // ─── Validation messages match backend addBranchValidatorRules word-for-word ──
 const getLiveValidationMessage = (fieldName, value) => {
@@ -66,6 +69,12 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (lng < -180 || lng > 180) return 'Longitude must be between -180 and 180';
       return '';
 
+    case 'mobile':
+      if (!value || !value.trim()) return 'Mobile is required';
+      if (value.trim().length !== 10) return 'Mobile length should be 10';
+      if (!MOBILE_REGEX.test(value.trim())) return 'Invalid mobile number';
+      return '';
+
     default:
       return '';
   }
@@ -81,12 +90,15 @@ const filterInput = (fieldName, value) => {
         .replace(/[^0-9.-]/g, '')
         .replace(/(\..*)\./g, '$1')
         .replace(/(?!^)-/g, '');
+    case 'mobile':
+    case 'altMobile':
+      return value.replace(/[^0-9]/g, '');
     default:
       return value;
   }
 };
 
-const ADD_VALIDATED_FIELDS = ['clinicId', 'branchName', 'address', 'branchType'];
+const ADD_VALIDATED_FIELDS = ['clinicId', 'branchName', 'address', 'branchType', 'mobile', 'altMobile'];
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -120,23 +132,86 @@ const buildStatusParam = (status) => {
   return -1;
 };
 
+// ──────────────────────────────────────────────────────────────────────────────
+// INDEXEDDB PERSISTENCE HELPERS
+// ──────────────────────────────────────────────────────────────────────────────
+const IDB_DB_NAME    = 'AppPreferences';
+const IDB_STORE_NAME = 'columnPrefs';
+const IDB_KEY        = 'branchListColPrefs';
+
+const openIDB = () =>
+  new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_DB_NAME, 1);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(IDB_STORE_NAME)) {
+        db.createObjectStore(IDB_STORE_NAME);
+      }
+    };
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror   = (e) => reject(e.target.error);
+  });
+
+const idbGet = async (key) => {
+  try {
+    const db = await openIDB();
+    return new Promise((resolve, reject) => {
+      const tx    = db.transaction(IDB_STORE_NAME, 'readonly');
+      const store = tx.objectStore(IDB_STORE_NAME);
+      const req   = store.get(key);
+      req.onsuccess = (e) => resolve(e.target.result);
+      req.onerror   = (e) => reject(e.target.error);
+    });
+  } catch {
+    return undefined;
+  }
+};
+
+const idbSet = async (key, value) => {
+  try {
+    const db = await openIDB();
+    return new Promise((resolve, reject) => {
+      const tx    = db.transaction(IDB_STORE_NAME, 'readwrite');
+      const store = tx.objectStore(IDB_STORE_NAME);
+      const req   = store.put(value, key);
+      req.onsuccess = () => resolve();
+      req.onerror   = (e) => reject(e.target.error);
+    });
+  } catch {
+    // Silently fail — column prefs are non-critical
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dynamic column pool
+// ─────────────────────────────────────────────────────────────────────────────
+const DYNAMIC_COLS_MAP = {
+  address:     { id: 'address',     label: 'Address',      header: 'Address',      icon: <FiMapPin   size={15} />, render: (b) => b.address     || '—' },
+  dateCreated: { id: 'dateCreated', label: 'Created Date', header: 'Created Date', icon: <FiCalendar size={15} />, render: (b) => b.dateCreated ? new Date(b.dateCreated).toLocaleDateString('en-IN') : '—' },
+};
+
+// Default cells shown when the dynamic col for that slot is NOT active
+const SLOT_DEFAULTS = [
+  { header: 'Type',     render: (b) => b.branchType ? (BRANCH_TYPES.find(t => t.id === b.branchType)?.label || '—') : '—' },
+  { header: 'Location', render: (b) => b.location || b.address?.split(',')[0] || '—' },
+];
+
+const INITIAL_ORDER = ['address', 'dateCreated'];
+
 // ────────────────────────────────────────────────
 // Reusable Searchable Clinic Dropdown
-// Used in both the filter bar and the Add Branch form
-// Only shows active clinics (status === 'active')
 // ────────────────────────────────────────────────
 const ClinicSearchableDropdown = ({
   clinics,
-  value,           // selected clinic id string, or 'all' (filter), or '' (form)
-  onChange,        // (idString) => void
-  placeholder,     // e.g. 'All Clinics' or 'Select Clinic'
-  showAllOption,   // true → render "All Clinics" first option (filter bar only)
+  value,
+  onChange,
+  placeholder,
+  showAllOption,
 }) => {
   const [query, setQuery] = useState('');
   const [open, setOpen]   = useState(false);
   const wrapperRef        = useRef(null);
 
-  // ── Only show active clinics ──
   const activeClinics = clinics.filter(c => c.status === 'active');
 
   const noneValue      = showAllOption ? 'all' : '';
@@ -209,7 +284,6 @@ const ClinicSearchableDropdown = ({
 
       {open && (
         <div className={styles.clinicDropdownMenu}>
-          {/* "All Clinics" option — only for filter bar */}
           {showAllOption && (
             <div
               className={`${styles.clinicDropdownOption} ${value === 'all' ? styles.clinicDropdownOptionSelected : ''}`}
@@ -250,25 +324,29 @@ const BranchList = () => {
   const [branches, setBranches] = useState([]);
   const [clinics,  setClinics]  = useState([]);
 
-  // ── Central popup — used for fetch / delete actions ONLY ──
+  // ── Dynamic columns state ──
+  const [activeColumns, setActiveColumns] = useState(new Set());
+  const [menuOrder,     setMenuOrder]     = useState(INITIAL_ORDER);
+  const [prefsLoaded,   setPrefsLoaded]   = useState(false);
+
+  // ── Central popup ──
   const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
   const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
   const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
 
-  // ── Add form popup — shown ONLY inside the add modal ──
+  // ── Add form popup ──
   const [addPopup, setAddPopup] = useState({ visible: false, message: '', type: 'success' });
   const showAddPopup  = (message, type = 'success') => setAddPopup({ visible: true, message, type });
   const closeAddPopup = () => setAddPopup({ visible: false, message: '', type: 'success' });
 
   // ── ConfirmPopup for delete ──
-  const [deleteConfirm,    setDeleteConfirm]    = useState(null);
-  const [deleteLoading,    setDeleteLoading]    = useState(false);
+  const [deleteConfirm,     setDeleteConfirm]     = useState(null);
+  const [deleteLoading,     setDeleteLoading]     = useState(false);
   const [deleteBtnCooldown, setDeleteBtnCooldown] = useState(false);
 
   const [filterInputs,   setFilterInputs]   = useState({ ...DEFAULT_FILTERS });
   const [appliedFilters, setAppliedFilters] = useState({ ...DEFAULT_FILTERS });
 
-  // Pagination
   const [page, setPage] = useState(1);
   const [pageSize]      = useState(20);
 
@@ -277,7 +355,6 @@ const BranchList = () => {
   const [error, setError]                   = useState(null);
   const [isAddFormOpen, setIsAddFormOpen]   = useState(false);
 
-  // ── Button 2-sec cooldowns ──
   const [searchBtnDisabled, setSearchBtnDisabled] = useState(false);
   const [clearBtnDisabled,  setClearBtnDisabled]  = useState(false);
 
@@ -289,6 +366,8 @@ const BranchList = () => {
     latitude:   '',
     longitude:  '',
     branchType: 1,
+    mobile:     '',
+    altMobile:  '',
   });
 
   const [formLoading,        setFormLoading]        = useState(false);
@@ -304,9 +383,80 @@ const BranchList = () => {
     appliedFilters.branchType  !== '0'       ||
     appliedFilters.status      !== '1';
 
-  // ── isFormValid: all required add fields filled with no errors ──
+  // ── Load column prefs from IndexedDB on mount ──
+  useEffect(() => {
+    (async () => {
+      try {
+        const saved = await idbGet(IDB_KEY);
+        if (saved) {
+          const { activeColumns: savedActive, menuOrder: savedOrder } = saved;
+          if (Array.isArray(savedActive)) {
+            setActiveColumns(new Set(savedActive));
+          }
+          if (
+            Array.isArray(savedOrder) &&
+            savedOrder.length === INITIAL_ORDER.length &&
+            savedOrder.every((id) => id in DYNAMIC_COLS_MAP)
+          ) {
+            setMenuOrder(savedOrder);
+          }
+        }
+      } catch {
+        // Use defaults — non-critical
+      } finally {
+        setPrefsLoaded(true);
+      }
+    })();
+  }, []);
+
+  // ── Save column prefs to IndexedDB whenever they change ──
+  useEffect(() => {
+    if (!prefsLoaded) return;
+    idbSet(IDB_KEY, {
+      activeColumns: [...activeColumns],
+      menuOrder,
+    });
+  }, [activeColumns, menuOrder, prefsLoaded]);
+
+  // ── tableSlots ──
+  const tableSlots = useMemo(() => {
+    return SLOT_DEFAULTS.map((def, slotIdx) => {
+      const colId  = menuOrder[slotIdx];
+      const dynCol = colId ? DYNAMIC_COLS_MAP[colId] : null;
+      if (dynCol && activeColumns.has(colId)) {
+        return { header: dynCol.header, render: dynCol.render };
+      }
+      return { header: def.header, render: def.render };
+    });
+  }, [activeColumns, menuOrder]);
+
+  const toggleDynCol = (id) => {
+    setActiveColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleMenuReorder = (newOrderIds) => setMenuOrder(newOrderIds);
+
+  // Menu items passed to Header
+  const branchMenuItems = menuOrder.map((id) => {
+    const col = DYNAMIC_COLS_MAP[id];
+    return {
+      id:       col.id,
+      icon:     col.icon,
+      label:    col.label,
+      checked:  activeColumns.has(col.id),
+      keepOpen: true,
+      onClick:  () => toggleDynCol(col.id),
+    };
+  });
+
+  // ── isFormValid ──
   const isFormValid = useMemo(() => {
-    const requiredFields = ['clinicId', 'branchName', 'address', 'branchType'];
+    const requiredFields = ['clinicId', 'branchName', 'address', 'branchType', 'mobile'];
     const allFilled = requiredFields.every((f) => {
       const v = formData[f];
       return v !== '' && v !== null && v !== undefined && String(v).trim() !== '';
@@ -317,8 +467,7 @@ const BranchList = () => {
     return true;
   }, [formData, validationMessages]);
 
-  // ────────────────────────────────────────────────
-  // Load ACTIVE clinic dropdown once (Status: 1)
+  // ── Load active clinics once ──
   useEffect(() => {
     const fetchClinics = async () => {
       try {
@@ -385,12 +534,10 @@ const BranchList = () => {
     setFilterInputs((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handler for clinic searchable dropdown in filter bar
   const handleClinicFilterChange = (clinicId) => {
     setFilterInputs((prev) => ({ ...prev, clinicId }));
   };
 
-  // Search button — 2-sec cooldown
   const handleSearch = async () => {
     if (searchBtnDisabled) return;
     setSearchBtnDisabled(true);
@@ -401,7 +548,6 @@ const BranchList = () => {
     setTimeout(() => setSearchBtnDisabled(false), 2000);
   };
 
-  // Clear button — 2-sec cooldown
   const handleClearFilters = async () => {
     if (clearBtnDisabled) return;
     setClearBtnDisabled(true);
@@ -423,8 +569,15 @@ const BranchList = () => {
 
   const openAddForm = () => {
     setFormData({
-      clinicId: '', branchName: '', address: '',
-      location: '', latitude: '', longitude: '', branchType: 1,
+      clinicId:   '',
+      branchName: '',
+      address:    '',
+      location:   '',
+      latitude:   '',
+      longitude:  '',
+      branchType: 1,
+      mobile:     '',
+      altMobile:  '',
     });
     setValidationMessages({});
     setSubmitAttempted(false);
@@ -460,7 +613,6 @@ const BranchList = () => {
     setValidationMessages((prev) => ({ ...prev, [name]: validationMessage }));
   };
 
-  // Handler for clinic searchable dropdown in the Add form
   const handleFormClinicChange = (clinicId) => {
     setFormData((prev) => ({ ...prev, clinicId }));
     const validationMessage = getLiveValidationMessage('clinicId', clinicId);
@@ -484,7 +636,6 @@ const BranchList = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Guard: form not valid — show popup ONLY inside the add modal
     if (!isFormValid) {
       setSubmitAttempted(true);
       validateAllAddFields();
@@ -507,12 +658,12 @@ const BranchList = () => {
         address:    formData.address.trim(),
         location:   formData.location.trim(),
         branchType: Number(formData.branchType),
+        mobile:     formData.mobile.trim(),
+        altMobile:  formData.altMobile.trim(),
       });
 
-      // Show success popup ONLY inside the add modal
       showAddPopup('Branch added successfully!', 'success');
 
-      // After 1s close the form and refresh — no central popup triggered
       setTimeout(() => {
         closeAddForm();
         fetchBranches(appliedFilters, page, true);
@@ -520,7 +671,6 @@ const BranchList = () => {
     } catch (err) {
       console.error('Add branch failed:', err);
       const errMsg = err.message || 'Failed to add branch.';
-      // Show error popup ONLY inside the add modal
       showAddPopup(errMsg, 'error');
     } finally {
       setFormLoading(false);
@@ -538,19 +688,16 @@ const BranchList = () => {
     setUpdateBranchData(null);
   };
 
-  // onSuccess: close modal + refresh ONLY — UpdateBranch shows its own popup
   const handleUpdateSuccess = () => {
     setIsUpdateFormOpen(false);
     setUpdateBranchData(null);
     fetchBranches(appliedFilters, page, true);
   };
 
-  // onError: log only — UpdateBranch already shows its own error popup
   const handleUpdateError = (message) => {
     console.error('Update branch error (handled by UpdateBranch popup):', message);
   };
 
-  // ── Delete: open ConfirmPopup ──
   const handleDeleteClick = (branch) => {
     if (deleteBtnCooldown) return;
     setDeleteBtnCooldown(true);
@@ -559,7 +706,6 @@ const BranchList = () => {
   };
   const handleDeleteCancel = () => setDeleteConfirm(null);
 
-  // ── Delete: perform after confirmation ──
   const handleDeleteConfirm = async () => {
     if (!deleteConfirm) return;
     setDeleteLoading(true);
@@ -584,7 +730,7 @@ const BranchList = () => {
     return <ErrorHandler error={error} />;
   }
 
-  if (loading) return <div className={styles.clinicLoading}><LoadingPage/></div>;
+  if (loading) return <div className={styles.clinicLoading}><LoadingPage /></div>;
 
   if (error) return <div className={styles.clinicError}>Error: {error.message || error}</div>;
 
@@ -595,9 +741,14 @@ const BranchList = () => {
   return (
     <div className={styles.clinicListWrapper}>
       <ErrorHandler error={error} />
-      <Header title="Branch Management" />
 
-      {/* ── Central MessagePopup (fetch / delete actions ONLY) ── */}
+      <Header
+        title="Branch Management"
+        menuItems={branchMenuItems}
+        onMenuReorder={handleMenuReorder}
+      />
+
+      {/* ── Central MessagePopup ── */}
       <MessagePopup
         visible={popup.visible}
         message={popup.message}
@@ -647,7 +798,6 @@ const BranchList = () => {
             />
           </div>
 
-          {/* ── Clinic Searchable Dropdown (filter bar) ── */}
           <div className={styles.filterGroup}>
             <ClinicSearchableDropdown
               clinics={clinics}
@@ -729,8 +879,7 @@ const BranchList = () => {
               <tr>
                 <th>Branch Name</th>
                 <th>Clinic</th>
-                <th>Type</th>
-                <th>Location</th>
+                {tableSlots.map((slot, i) => <th key={i}>{slot.header}</th>)}
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -738,7 +887,7 @@ const BranchList = () => {
             <tbody>
               {branches.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className={styles.clinicNoData}>
+                  <td colSpan={6 + tableSlots.length} className={styles.clinicNoData}>
                     {hasActiveFilters ? 'No branches found.' : 'No branches registered yet.'}
                   </td>
                 </tr>
@@ -752,23 +901,13 @@ const BranchList = () => {
                         </div>
                         <div>
                           <div className={styles.clinicName}>{branch.name}</div>
-                          <div className={styles.clinicType}>
-                            {getBranchTypeLabel(branch.branchType)}
-                          </div>
                         </div>
                       </div>
                     </td>
                     <td>{branch.clinicName || '—'}</td>
+                    {tableSlots.map((slot, i) => <td key={i}>{slot.render(branch)}</td>)}
                     <td>
-                      <span className={styles.statusBadge}>
-                        {getBranchTypeLabel(branch.branchType)}
-                      </span>
-                    </td>
-                    <td>{branch.location || branch.address?.split(',')[0] || '—'}</td>
-                    <td>
-                      <span
-                        className={`${styles.statusBadge} ${getStatusClass(branch.status)}`}
-                      >
+                      <span className={`${styles.statusBadge} ${getStatusClass(branch.status)}`}>
                         {branch.status.toUpperCase()}
                       </span>
                     </td>
@@ -881,6 +1020,14 @@ const BranchList = () => {
                       </span>
                     </div>
                     <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Mobile</span>
+                      <span className={styles.infoValue}>{selectedBranch.mobile || '—'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Alt Mobile</span>
+                      <span className={styles.infoValue}>{selectedBranch.altMobile || '—'}</span>
+                    </div>
+                    <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Full Address</span>
                       <span className={styles.infoValue}>{selectedBranch.address || '—'}</span>
                     </div>
@@ -892,7 +1039,6 @@ const BranchList = () => {
                 </div>
               </div>
 
-              {/* Footer — Delete Branch (left) | Update Branch (right) */}
               <div className={styles.detailModalFooter}>
                 <button
                   onClick={() => handleDeleteClick(selectedBranch)}
@@ -915,12 +1061,11 @@ const BranchList = () => {
 
       {/* ──────────────── Add Form Modal ──────────────── */}
       {isAddFormOpen && (
-        <div className={styles.detailModalOverlay} >
+        <div className={styles.detailModalOverlay}>
           <div
             className={styles.addModalContent}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* ── Add form's own MessagePopup — renders inside the modal overlay ── */}
             <MessagePopup
               visible={addPopup.visible}
               message={addPopup.message}
@@ -943,7 +1088,6 @@ const BranchList = () => {
                 </div>
                 <div className={styles.addFormGrid}>
 
-                  {/* ── Clinic — Searchable Dropdown (same style as filter bar) ── */}
                   <div className={styles.addFormGroup}>
                     <label>Clinic <span className={styles.required}>*</span></label>
                     <div className={styles.addFormClinicDropdown}>
@@ -990,6 +1134,37 @@ const BranchList = () => {
                     </select>
                     {validationMessages.branchType && (
                       <span className={styles.validationMsg}>{validationMessages.branchType}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.addFormGroup}>
+                    <label>Mobile <span className={styles.required}>*</span></label>
+                    <input
+                      required
+                      type="tel"
+                      name="mobile"
+                      value={formData.mobile}
+                      onChange={handleInputChange}
+                      placeholder="Enter mobile number"
+                      maxLength={10}
+                    />
+                    {validationMessages.mobile && (
+                      <span className={styles.validationMsg}>{validationMessages.mobile}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.addFormGroup}>
+                    <label>Alternate Mobile</label>
+                    <input
+                      type="tel"
+                      name="altMobile"
+                      value={formData.altMobile}
+                      onChange={handleInputChange}
+                      placeholder="Enter alternate mobile number"
+                      maxLength={10}
+                    />
+                    {validationMessages.altMobile && (
+                      <span className={styles.validationMsg}>{validationMessages.altMobile}</span>
                     )}
                   </div>
 
