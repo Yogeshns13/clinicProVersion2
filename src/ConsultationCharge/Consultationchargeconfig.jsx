@@ -466,6 +466,9 @@ const ConsultationChargeConfig = () => {
 
   const startRecord = chargeConfigs.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const endRecord   = startRecord + chargeConfigs.length - 1;
+  
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
 
   return (
     <div className={styles.chargeConfigWrapper}>
@@ -691,10 +694,15 @@ const ConsultationChargeConfig = () => {
               <div className={styles.detailHeaderContent}>
                 <h2>{selectedConfig.chargeName}</h2>
               </div>
-              <div className={styles.clinicNameone}>
-                <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
-                {localStorage.getItem('clinicName') || '—'}
-              </div>
+              <div className={styles.addModalHeaderCard}>
+                          <div className={styles.clinicInfoIcon}>
+                            <FaClinicMedical size={18} />
+                          </div>
+                          <div className={styles.clinicInfoText}>
+                            <span className={styles.clinicInfoName}>{clinicName}</span>
+                            <span className={styles.clinicInfoBranch}>{branchName}</span>
+                          </div>
+                          </div>
               <button onClick={closeDetails} className={styles.detailCloseBtn}>✕</button>
             </div>
 
@@ -805,10 +813,15 @@ const ConsultationChargeConfig = () => {
             <div className={styles.chargeConfigModalHeader}>
               <h2>{isEditMode ? 'Edit' : 'Add'} Charge Configuration</h2>
               <div className={styles.headerRight}>
-                <div className={styles.clinicNameone}>
-                  <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
-                  {localStorage.getItem('clinicName') || '—'}
-                </div>
+                <div className={styles.addModalHeaderCard}>
+                            <div className={styles.clinicInfoIcon}>
+                              <FaClinicMedical size={18} />
+                            </div>
+                            <div className={styles.clinicInfoText}>
+                              <span className={styles.clinicInfoName}>{clinicName}</span>
+                              <span className={styles.clinicInfoBranch}>{branchName}</span>
+                            </div>
+                            </div>
                 <button onClick={closeForm} className={styles.chargeConfigModalClose}>×</button>
               </div>
             </div>

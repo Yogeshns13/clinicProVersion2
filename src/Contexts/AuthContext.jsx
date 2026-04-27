@@ -17,10 +17,19 @@ export const AuthProvider = ({ children }) => {
   });
 
   const login = (data) => {
-    const profile = data?.PROFILE_NAME || localStorage.getItem("profileName");
+    const profile =
+      data?.PROFILE_NAME ||
+      data?.profileName ||
+      localStorage.getItem("profileName") ||
+      null;
+
     setIsAuthenticated(true);
     setProfileName(profile);
     localStorage.setItem("isLoggedIn", "true");
+
+    if (profile) {
+      localStorage.setItem("profileName", profile);
+    }
   };
 
   const logout = async () => {

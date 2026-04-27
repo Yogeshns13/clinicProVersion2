@@ -290,7 +290,9 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
   if (!isOpen) return null;
 
   const hasErrors = Object.keys(fieldErrors).length > 0;
-
+  
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
   return (
     <>
       <div className={styles.overlay}>
@@ -300,13 +302,15 @@ const AddMedicineMaster = ({ isOpen, onClose, onSuccess }) => {
             <div className={styles.headerContent}>
               <h2>Add New Medicine</h2>
             </div>
-            <div className={styles.clinicNameone}>
-              <FaClinicMedical
-                size={20}
-                style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
-              />
-              {localStorage.getItem("clinicName") || "—"}
-            </div>
+            <div className={styles.addModalHeaderCard}>
+                        <div className={styles.clinicInfoIcon}>
+                          <FaClinicMedical size={18} />
+                        </div>
+                        <div className={styles.clinicInfoText}>
+                          <span className={styles.clinicInfoName}>{clinicName}</span>
+                          <span className={styles.clinicInfoBranch}>{branchName}</span>
+                        </div>
+                        </div>
 
             <button onClick={handleClose} className={styles.closeBtn}>
               <FiX size={22} />

@@ -8,18 +8,11 @@ import ViewEmployee from './ViewEmployee.jsx';
 import styles from './EmployeeList.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
+import { getValues, initTables } from '../Api/TableService.js'; // ← NEW
 
 // ────────────────────────────────────────────────
 // CONSTANTS
 // ────────────────────────────────────────────────
-const STATUS_OPTIONS = [
-  { id: 1, label: 'Active' },
-  { id: 2, label: 'Inactive' },
-  { id: 3, label: 'Probation' },
-  { id: 4, label: 'Suspended' },
-  { id: 5, label: 'Retired' },
-  { id: 6, label: 'Deleted' },
-];
 
 const DESIGNATION_OPTIONS = [
   { id: 1,  label: 'Doctor' },
@@ -51,11 +44,6 @@ const DEFAULT_FILTERS = {
 
 // ──────────────────────────────────────────────────
 // INDEXEDDB PERSISTENCE HELPERS
-//
-// Persists: { activeColumns: string[], menuOrder: string[] }
-// Survives logout → login because IndexedDB is origin-scoped.
-// On every toggle / reorder the prefs are written immediately,
-// so the "last changes screen" is always restored on next login.
 // ──────────────────────────────────────────────────
 const IDB_DB_NAME    = 'AppPreferences';
 const IDB_STORE_NAME = 'columnPrefs';
@@ -114,8 +102,6 @@ const DYNAMIC_COLS_MAP = {
   experience:     { id: 'experience',     label: 'Experience',     header: 'Experience',     icon: <FiClock    size={15} />, render: (e) => (e.experienceYears !== undefined && e.experienceYears !== null) ? e.experienceYears : '—' },
 };
 
-// Mandatory slot defaults shown when a dynamic column is NOT active for that slot
-// Slot 0 → Branch | Slot 1 → Department | Slot 2 → Mobile | Slot 3 → Status
 const SLOT_DEFAULTS = [
   { header: 'Branch',     render: (e) => e.branchName     || '—' },
   { header: 'Department', render: (e) => e.departmentName || '—' },
@@ -133,19 +119,20 @@ const EmployeeList = () => {
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState(null);
 
-  // ── Dynamic columns state (mirrors MedicineMasterList) ──
+  // ── Status options from TableService (Table ID 6) ──
+  const [statusOptions, setStatusOptions] = useState([]);
+
+  // ── Dynamic columns state ──
   const [activeColumns, setActiveColumns] = useState(new Set());
   const [menuOrder,     setMenuOrder]     = useState(INITIAL_ORDER);
-  // Guard: don't save to IDB until we've loaded from IDB first
   const [prefsLoaded,   setPrefsLoaded]   = useState(false);
 
   // Filter inputs (staged — not applied until Search is clicked)
   const [filterInputs, setFilterInputs] = useState(DEFAULT_FILTERS);
 
-  // Applied filters (drive the API call) — start with Active
+  // Applied filters (drive the API call)
   const [appliedFilters, setAppliedFilters] = useState(DEFAULT_FILTERS);
 
-  // Tracks whether the user has actually searched with non-default filters
   const [hasSearched, setHasSearched] = useState(false);
 
   // Pagination
@@ -167,7 +154,6 @@ const EmployeeList = () => {
   const startRecord = employees.length === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord   = (page - 1) * pageSize + employees.length;
 
-  // Clear button shows only when user has pressed Search AND filters differ from defaults
   const showClearBtn =
     hasSearched && (
       appliedFilters.searchValue.trim() !== DEFAULT_FILTERS.searchValue ||
@@ -176,9 +162,28 @@ const EmployeeList = () => {
       appliedFilters.designation        !== DEFAULT_FILTERS.designation
     );
 
+  // ── Load status options from TableService (Table ID 6) ───────────────────
+  // We await initTables() first to ensure memoryCache is populated before
+  // calling getValues(), since the cache may still be empty on first render.
+  useEffect(() => {
+    const loadStatusOptions = async () => {
+      try {
+        await initTables();
+        const values = getValues(6);
+        console.log('Table 6 raw:', values); // ← remove after confirming
+        if (values && values.length > 0) {
+          setStatusOptions(
+            values.map((v) => ({ id: v.textId, label: v.textValue }))
+          );
+        }
+      } catch (err) {
+        console.error('Failed to load status options from TableService:', err);
+      }
+    };
+    loadStatusOptions();
+  }, []);
+
   // ── Load column prefs from IndexedDB on mount ─────────────────────────────
-  // This runs once when the component mounts (i.e. after login).
-  // It restores whatever the user had last — surviving logout → login.
   useEffect(() => {
     (async () => {
       try {
@@ -205,8 +210,6 @@ const EmployeeList = () => {
   }, []);
 
   // ── Save column prefs to IndexedDB whenever they change ──────────────────
-  // The prefsLoaded guard prevents overwriting saved prefs with defaults
-  // during the initial render before the IDB read completes.
   useEffect(() => {
     if (!prefsLoaded) return;
     idbSet(IDB_KEY, {
@@ -216,7 +219,7 @@ const EmployeeList = () => {
   }, [activeColumns, menuOrder, prefsLoaded]);
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // tableSlots — mirrors MedicineMasterList's useMemo exactly
+  // tableSlots
   // ─────────────────────────────────────────────────────────────────────────────
   const tableSlots = useMemo(() => {
     return SLOT_DEFAULTS.map((def, slotIdx) => {
@@ -272,7 +275,7 @@ const EmployeeList = () => {
   }, []);
 
   // ────────────────────────────────────────────────
-  // Data fetching — includes pagination
+  // Data fetching
   const fetchEmployees = async (filters = appliedFilters, currentPage = page) => {
     try {
       setLoading(true);
@@ -317,9 +320,16 @@ const EmployeeList = () => {
   const getDesignationLabel = (designationId) =>
     DESIGNATION_OPTIONS.find((d) => d.id === designationId)?.label || '—';
 
-  const getStatusClass = (status) => {
-    if (status === 'active')   return styles.active;
-    if (status === 'inactive') return styles.inactive;
+  // Resolve status label from TableService data (Table ID 6)
+  const getStatusLabel = (statusId) => {
+    if (statusId === undefined || statusId === null) return '—';
+    const found = statusOptions.find((s) => s.id === Number(statusId));
+    return found ? found.label : statusId;
+  };
+
+  // textId 1 = Active in Table 6 → active style; everything else → inactive
+  const getStatusClass = (statusId) => {
+    if (Number(statusId) === 1) return styles.active;
     return styles.inactive;
   };
 
@@ -330,14 +340,12 @@ const EmployeeList = () => {
     setFilterInputs((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Search button — 2-sec cooldown
   const handleSearch = () => {
     if (searchBtnDisabled) return;
     setSearchBtnDisabled(true);
     const newFilters = { ...filterInputs };
     setAppliedFilters(newFilters);
     setPage(1);
-    // Show clear only if the applied filters differ from defaults
     const isDifferentFromDefault =
       newFilters.searchValue.trim() !== DEFAULT_FILTERS.searchValue ||
       newFilters.status             !== DEFAULT_FILTERS.status      ||
@@ -347,7 +355,6 @@ const EmployeeList = () => {
     setTimeout(() => setSearchBtnDisabled(false), 2000);
   };
 
-  // Clear button — resets to default (Active) filters
   const handleClearFilters = () => {
     if (clearBtnDisabled) return;
     setClearBtnDisabled(true);
@@ -363,7 +370,7 @@ const EmployeeList = () => {
     setPage(newPage);
   };
 
-  const handleViewDetails = (employee) => setViewEmployeeId(employee.id);
+  const handleViewDetails    = (employee) => setViewEmployeeId(employee.id);
 
   const handleCloseViewEmployee = () => {
     setViewEmployeeId(null);
@@ -376,23 +383,12 @@ const EmployeeList = () => {
     fetchEmployees(appliedFilters);
   };
 
-  // ── All callbacks just refresh the list ──────────────────────────────────
-  // ── Every popup (success AND error) is shown inside the child component ──
-  const handleAddSuccess = () => fetchEmployees(appliedFilters);
-
-  const handleEmployeeDeleted = () => {
-    setViewEmployeeId(null);
-    fetchEmployees(appliedFilters);
-  };
-
-  const handleUpdateSuccess = () => fetchEmployees(appliedFilters);
-
-  const handleActionError = () => {
-    // intentionally empty — errors shown inside AddEmployee / ViewEmployee
-  };
+  const handleAddSuccess      = () => fetchEmployees(appliedFilters);
+  const handleEmployeeDeleted = () => { setViewEmployeeId(null); fetchEmployees(appliedFilters); };
+  const handleUpdateSuccess   = () => fetchEmployees(appliedFilters);
+  const handleActionError     = () => {};
 
   // ────────────────────────────────────────────────
-  // Early returns
   if (loading) return <div className={styles.loading}><LoadingPage /></div>;
   if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
 
@@ -404,8 +400,6 @@ const EmployeeList = () => {
         menuItems={employeeMenuItems}
         onMenuReorder={handleMenuReorder}
       />
-
-      {/* ── No MessagePopup here — all popups live inside AddEmployee / ViewEmployee ── */}
 
       {/* ── Filter Bar ── */}
       <div className={styles.filtersContainer}>
@@ -464,7 +458,7 @@ const EmployeeList = () => {
             </select>
           </div>
 
-          {/* Status — defaults to Active */}
+          {/* Status — populated from TableService Table ID 6 */}
           <div className={styles.filterGroup}>
             <select
               name="status"
@@ -473,7 +467,7 @@ const EmployeeList = () => {
               className={styles.filterInput}
             >
               <option value="">All Status</option>
-              {STATUS_OPTIONS.map((s) => (
+              {statusOptions.map((s) => (
                 <option key={s.id} value={s.id}>{s.label}</option>
               ))}
             </select>
@@ -525,12 +519,10 @@ const EmployeeList = () => {
           <table className={styles.table}>
             <thead>
               <tr>
-                {/* ── Mandatory columns ── */}
                 <th>Employee</th>
                 <th>Code</th>
                 <th>Clinic</th>
                 <th>Designation</th>
-                {/* ── Dynamic slots (4 slots, each falls back to its default) ── */}
                 {tableSlots.map((slot, i) => <th key={i}>{slot.header}</th>)}
                 <th>Actions</th>
               </tr>
@@ -545,7 +537,6 @@ const EmployeeList = () => {
               ) : (
                 employees.map((employee) => (
                   <tr key={employee.id}>
-                    {/* ── Mandatory: Employee name ── */}
                     <td>
                       <div className={styles.nameCell}>
                         <div className={styles.avatar}>
@@ -559,22 +550,18 @@ const EmployeeList = () => {
                         </div>
                       </div>
                     </td>
-                    {/* ── Mandatory: Code ── */}
                     <td>{employee.employeeCode || '—'}</td>
-                    {/* ── Mandatory: Clinic ── */}
                     <td>{employee.clinicName || '—'}</td>
-                    {/* ── Mandatory: Designation ── */}
                     <td>
                       <span className={styles.designationBadge}>
                         {getDesignationLabel(employee.designation)}
                       </span>
                     </td>
-                    {/* ── Dynamic slots ── */}
                     {tableSlots.map((slot, i) =>
                       slot.isStatus ? (
                         <td key={i}>
-                          <span className={`${styles.statusBadge} ${getStatusClass(employee.status)}`}>
-                            {employee.status?.toUpperCase()}
+                          <span className={`${styles.statusBadge} ${getStatusClass(employee.statusId ?? employee.status)}`}>
+                            {getStatusLabel(employee.statusId ?? employee.status)}
                           </span>
                         </td>
                       ) : (

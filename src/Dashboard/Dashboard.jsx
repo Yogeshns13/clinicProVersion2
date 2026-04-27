@@ -17,11 +17,25 @@ import {
 } from "recharts";
 
 import "./Dashboard.css";
-import { FiBell, FiUsers, FiCalendar, FiActivity, FiUserPlus, FiUpload, FiClock } from "react-icons/fi";
+import {
+  FiBell,
+  FiUsers,
+  FiCalendar,
+  FiActivity,
+  FiUserPlus,
+  FiUpload,
+  FiClock,
+  FiLock,
+  FiEye,
+  FiEyeOff,
+  FiX,
+  FiCheck,
+  FiAlertCircle,
+} from "react-icons/fi";
 import scope from "../assets/account.png";
 
-import { getDashboardStats } from "../Api/Api.js";
-import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
+import { getDashboardStats, updatePassword } from "../Api/Api.js";
+import { getStoredClinicId, getStoredBranchId, getStoredUserId } from "../Utils/Cryptoutils.js";
 
 const toDayLabel = (isoString) =>
   new Date(isoString).toLocaleDateString("en-US", { weekday: "short" });
@@ -33,6 +47,17 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // ---------- Change Password Modal State ----------
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  // -------------------------------------------------
 
   const getDoctorName = () => {
     try {
@@ -51,74 +76,110 @@ const Dashboard = () => {
   }, []);
 
   // Fetch Dashboard Stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
+        const clinicId = await getStoredClinicId();
+        const branchId = await getStoredBranchId();
 
-// inside fetchStats:
-useEffect(() => {
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+        if (!clinicId || !branchId) {
+          throw new Error("Clinic or Branch ID missing. Please log in again.");
+        }
 
-      // ✅ Await the async crypto utils
-      const clinicId = await getStoredClinicId();
-      const branchId = await getStoredBranchId();
-
-      console.log("Clinic ID:", clinicId);
-      console.log("Branch ID:", branchId);
-
-      if (!clinicId || !branchId) {
-        throw new Error("Clinic or Branch ID missing. Please log in again.");
+        const result = await getDashboardStats(clinicId, branchId);
+        setStats(result);
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+        setError(err.message || "Failed to load dashboard data");
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const result = await getDashboardStats(clinicId, branchId);
-      setStats(result);
-    } catch (err) {
-      console.error("Dashboard fetch error:", err);
-      setError(err.message || "Failed to load dashboard data");
-    } finally {
-      setLoading(false);
-    }
+    fetchStats();
+  }, []);
+
+  // ---------- Password Modal Handlers ----------
+  const handleCloseModal = () => {
+    setShowChangePassword(false);
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordError("");
+    setShowNewPass(false);
+    setShowConfirmPass(false);
   };
 
-  fetchStats();
-}, []);
+  const handleChangePassword = async () => {
+    setPasswordError("");
+
+    if (!newPassword.trim()) {
+      setPasswordError("New password cannot be empty.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match. Please try again.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const userId = await getStoredUserId();
+      const clinicId = await getStoredClinicId();
+
+      await updatePassword({
+        UserID: userId,
+        ClinicID: clinicId,
+        Password: newPassword.trim(),
+      });
+
+      handleCloseModal();
+      setShowSuccessPopup(true);
+    } catch (err) {
+      setPasswordError(err.message || "Failed to update password. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  // ---------------------------------------------
 
   // Prepare Chart Data
   const weeklyFlowData = stats
-    ? stats.AppointmentFlow?.map((item, i) => ({
-        day: toDayLabel(item.Date),
-        Appointments: item.Count,
-        Visits: stats.VisitFlow?.[i]?.Count ?? 0,
+    ? stats.appointmentFlow?.map((item, i) => ({
+        day: toDayLabel(item.date),
+        Appointments: item.count,
+        Visits: stats.visitFlow?.[i]?.count ?? 0,
       })) || []
     : [];
 
   const monthlyPatientData = stats
-    ? stats.PatientMonthlyFlow?.map((item) => ({
-        month: item.MonthName,
-        patients: item.Count,
+    ? stats.patientMonthlyFlow?.map((item) => ({
+        month: item.monthName,
+        patients: item.count,
       })) || []
     : [];
 
   const genderData = stats
-    ? stats.GenderBreakdown?.map((g) => ({
-        name: g.GenderDesc,
-        value: g.PatientCount,
+    ? stats.genderBreakdown?.map((g) => ({
+        name: g.genderDesc,
+        value: g.count,
       })) || []
     : [];
 
   // ---------- Dummy Records ----------
   const appointments = [
-    { id: 1, patient: "Arun Kumar",  time: "10:30 AM", type: "General Checkup", status: "Confirmed" },
+    { id: 1, patient: "Arun Kumar",   time: "10:30 AM", type: "General Checkup", status: "Confirmed" },
     { id: 2, patient: "Priya Sharma", time: "11:15 AM", type: "Follow-up",       status: "Pending"   },
     { id: 3, patient: "Ravi Patel",   time: "02:00 PM", type: "Dental",          status: "Confirmed" },
     { id: 4, patient: "Sneha Reddy",  time: "03:30 PM", type: "Vaccination",     status: "Confirmed" },
   ];
 
   const recentActivity = [
-    { icon: FiUserPlus, text: "New patient registered - Vikram Singh",       time: "2 min ago"   },
-    { icon: FiUpload,   text: "Lab report uploaded for Ravi Patel",          time: "1 hour ago"  },
-    { icon: FiClock,    text: "Appointment rescheduled - Sneha Reddy",       time: "2 hours ago" },
+    { icon: FiUserPlus, text: "New patient registered - Vikram Singh",  time: "2 min ago"   },
+    { icon: FiUpload,   text: "Lab report uploaded for Ravi Patel",     time: "1 hour ago"  },
+    { icon: FiClock,    text: "Appointment rescheduled - Sneha Reddy",  time: "2 hours ago" },
   ];
   // ------------------------------------
 
@@ -153,37 +214,37 @@ useEffect(() => {
     {
       icon: <FiUsers size={28} />,
       iconClass: "patients",
-      value: stats?.TotalActivePatients?.toLocaleString() || "0",
+      value: stats?.totalActivePatients?.toLocaleString() || "0",
       label: "Total Active Patients",
-      trend: `+${stats?.NewPatientsThisMonth || 0} new this month`,
+      trend: `+${stats?.newPatientsThisMonth || 0} new this month`,
       trendType: "up",
     },
     {
       icon: <FiCalendar size={28} />,
       iconClass: "appointments",
-      value: stats?.TodayAppointmentCount || 0,
+      value: stats?.todayAppointments || 0,
       label: "Today's Appointments",
       trend:
-        stats?.TodayAppointmentCount > 0
-          ? `${stats.TodayAppointmentCount} scheduled`
+        stats?.todayAppointments > 0
+          ? `${stats.todayAppointments} scheduled`
           : "None today",
-      trendType: stats?.TodayAppointmentCount > 0 ? "up" : "neutral",
+      trendType: stats?.todayAppointments > 0 ? "up" : "neutral",
     },
     {
       icon: <FiCalendar size={28} />,
       iconClass: "tomorrow",
-      value: stats?.TomorrowAppointmentCount || 0,
+      value: stats?.tomorrowAppointments || 0,
       label: "Tomorrow's Appointments",
       trend:
-        stats?.TomorrowAppointmentCount > 0
-          ? `${stats.TomorrowAppointmentCount} upcoming`
+        stats?.tomorrowAppointments > 0
+          ? `${stats.tomorrowAppointments} upcoming`
           : "None tomorrow",
-      trendType: stats?.TomorrowAppointmentCount > 0 ? "up" : "neutral",
+      trendType: stats?.tomorrowAppointments > 0 ? "up" : "neutral",
     },
     {
       icon: <FiActivity size={28} />,
       iconClass: "revenue",
-      value: stats?.TodayVisitCount || 0,
+      value: stats?.todayVisits || 0,
       label: "Today's Visits",
       trend: "Live count",
       trendType: "up",
@@ -191,7 +252,7 @@ useEffect(() => {
     {
       icon: <FiUserPlus size={28} />,
       iconClass: "reports",
-      value: stats?.NewPatientsThisMonth || 0,
+      value: stats?.newPatientsThisMonth || 0,
       label: "New Patients (Month)",
       trend: "This month",
       trendType: "up",
@@ -214,6 +275,15 @@ useEffect(() => {
             <FiBell className="icon" />
             <span className="badge">3</span>
           </div>
+
+          {/* Update Password Button */}
+          <button
+            className="change-password-btn"
+            onClick={() => setShowChangePassword(true)}
+          >
+            Update Password
+          </button>
+
           <div className="user-profile">
             <div className="avatar">
               <img src={scope} alt={doctorName} />
@@ -223,7 +293,7 @@ useEffect(() => {
         </div>
       </header>
 
-      {/* Stat Cards */}
+      {/* Stat Cards — single row, 5 columns */}
       <section className="stats-grid five-cards">
         {statCards.map((card, i) => (
           <div className="stat-card" key={i}>
@@ -243,7 +313,7 @@ useEffect(() => {
       <section className="charts-row">
         {/* Weekly Appointment & Visit Flow */}
         <div className="chart-card">
-          <h3>Weekly Appointment & Visit Flow</h3>
+          <h3>Weekly Appointment &amp; Visit Flow</h3>
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={weeklyFlowData}>
               <CartesianGrid strokeDasharray="4 4" stroke="rgba(34,43,108,0.08)" />
@@ -363,7 +433,7 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* ===================== BOTTOM ROW (Dummy Records) ===================== */}
+      {/* ===================== BOTTOM ROW ===================== */}
       <section className="bottom-row">
         {/* Upcoming Appointments */}
         <div className="appointments-card">
@@ -425,7 +495,133 @@ useEffect(() => {
           </div>
         </div>
       </section>
-      {/* ===================================================================== */}
+
+      {/* ===================== CHANGE PASSWORD MODAL ===================== */}
+      {showChangePassword && (
+        <div className="cp-overlay">
+          <div className="cp-modal">
+            {/* Modal Header */}
+            <div className="cp-modal-header">
+              <div className="cp-header-icon">
+                <FiLock size={22} />
+              </div>
+              <div>
+                <h2>Change Password</h2>
+                <p>Set a new secure password for your account</p>
+              </div>
+              <button className="cp-close-btn" onClick={handleCloseModal} aria-label="Close">
+                <FiX size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="cp-modal-body">
+              {/* New Password */}
+              <div className="cp-field">
+                <label>New Password</label>
+                <div className="cp-input-wrap">
+                  <input
+                    type={showNewPass ? "text" : "password"}
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      setPasswordError("");
+                    }}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    className="cp-eye-btn"
+                    onClick={() => { setShowNewPass((v) => !v); setShowConfirmPass(false); }}
+                    tabIndex={-1}
+                    aria-label="Toggle new password visibility"
+                  >
+                    {showNewPass ? <FiEyeOff size={17} /> : <FiEye size={17} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Password */}
+              <div className="cp-field">
+                <label>Confirm Password</label>
+                <div className={`cp-input-wrap ${confirmPassword && newPassword !== confirmPassword ? "mismatch" : confirmPassword && newPassword === confirmPassword ? "match" : ""}`}>
+                  <input
+                    type={showConfirmPass ? "text" : "password"}
+                    placeholder="Re-enter new password"
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      setPasswordError("");
+                    }}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    className="cp-eye-btn"
+                    onClick={() => { setShowConfirmPass((v) => !v); setShowNewPass(false); }}
+                    tabIndex={-1}
+                    aria-label="Toggle confirm password visibility"
+                  >
+                    {showConfirmPass ? <FiEyeOff size={17} /> : <FiEye size={17} />}
+                  </button>
+                  {confirmPassword && newPassword === confirmPassword && (
+                    <span className="cp-match-icon"><FiCheck size={15} /></span>
+                  )}
+                </div>
+              </div>
+
+              {/* Inline mismatch / error message */}
+              {passwordError && (
+                <div className="cp-error-msg">
+                  <FiAlertCircle size={15} />
+                  <span>{passwordError}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="cp-modal-footer">
+              <button className="cp-btn-cancel" onClick={handleCloseModal} disabled={isSubmitting}>
+                Cancel
+              </button>
+              <button
+                className="cp-btn-submit"
+                onClick={handleChangePassword}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <span className="cp-spinner" />
+                ) : (
+                  <>
+                    <FiLock size={15} />
+                    Update Password
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== SUCCESS POPUP ===================== */}
+      {showSuccessPopup && (
+        <div className="cp-overlay">
+          <div className="cp-success-popup">
+            <div className="cp-success-icon">
+              <FiCheck size={32} />
+            </div>
+            <h3>Password Updated!</h3>
+            <p>Your password has been changed successfully.</p>
+            <button
+              className="cp-btn-okay"
+              onClick={() => setShowSuccessPopup(false)}
+            >
+              Okay
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );

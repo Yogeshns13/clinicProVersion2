@@ -12,6 +12,7 @@ import styles from './ConsultationChargeList.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
+import { FaClinicMedical } from 'react-icons/fa';
 
 const ConsultationChargeList = () => {
   const [consultations,    setConsultations]    = useState([]);
@@ -77,7 +78,6 @@ const ConsultationChargeList = () => {
   };
 
   // ── Form completeness ──
-  // Required: chargeId, chargeAmount, invoiceDate
   const isFormComplete =
     !!invoiceFormData.chargeId &&
     invoiceFormData.chargeAmount !== '' &&
@@ -312,6 +312,9 @@ const ConsultationChargeList = () => {
   if (error && (error?.status >= 400 || error?.code >= 400)) return <ErrorHandler error={error} />;
   if (loading) return <div className={styles.chargeListLoading}><LoadingPage/></div>;
   if (error)   return <div className={styles.chargeListError}>Error: {error.message || error}</div>;
+  
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
 
   // ────────────────────────────────────────────────
   return (
@@ -330,7 +333,6 @@ const ConsultationChargeList = () => {
       {/* ── Filters ── */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
-
           <div className={styles.searchGroup}>
             <select
               name="searchType"
@@ -409,13 +411,11 @@ const ConsultationChargeList = () => {
               </button>
             )}
           </div>
-
         </div>
       </div>
 
       {/* ── Table + Pagination wrapper ── */}
       <div className={styles.tableSection}>
-
         <div className={styles.chargeListTableContainer}>
           <table className={styles.chargeListTable}>
             <thead>
@@ -531,112 +531,140 @@ const ConsultationChargeList = () => {
             Page Size: <strong>{pageSize}</strong>
           </div>
         </div>
-
       </div>
 
       {/* ── Generate Invoice Modal ── */}
-      {isInvoiceFormOpen && (
-        <div className={styles.chargeListModalOverlay}>
-          <div className={styles.chargeListModal}>
-            <div className={styles.chargeListModalHeader}>
-              <h2>Generate Invoice</h2>
-              <button onClick={closeForm} className={styles.chargeListModalClose}>×</button>
-            </div>
-            <form onSubmit={handleGenerateInvoice}>
-              <div className={styles.chargeListModalBody}>
-                <div className={styles.formGrid}>
-
-                  <div className={styles.formGroup}>
-                    <label>Charge Type <span className={styles.required}>*</span></label>
-                    <select
-                      name="chargeId"
-                      value={invoiceFormData.chargeId}
-                      onChange={handleInvoiceInputChange}
-                      disabled={formLoading}
-                      required
-                    >
-                      <option value="">Select charge type</option>
-                      {chargeConfigs.map(c => (
-                        <option key={c.id} value={c.id}>
-                          {c.chargeName} - {formatCurrency(c.defaultAmount)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label>Charge Amount (₹) <span className={styles.required}>*</span></label>
-                    <input
-                      type="number"
-                      name="chargeAmount"
-                      value={invoiceFormData.chargeAmount}
-                      onChange={handleInvoiceInputChange}
-                      placeholder="Amount"
-                      step="0.01"
-                      min="0"
-                      disabled={formLoading}
-                      required
-                    />
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label>Invoice Date <span className={styles.required}>*</span></label>
-                    <input
-                      type="date"
-                      name="invoiceDate"
-                      value={invoiceFormData.invoiceDate}
-                      onChange={handleInvoiceInputChange}
-                      max={today}
-                      disabled={formLoading}
-                      required
-                    />
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label>Discount (₹)</label>
-                    <input
-                      type="number"
-                      name="discount"
-                      value={invoiceFormData.discount}
-                      onChange={handleInvoiceInputChange}
-                      placeholder="0"
-                      step="0.01"
-                      min="0"
-                      disabled={formLoading}
-                    />
-                  </div>
-                </div>
-
-                {/* Incomplete hint */}
-                {submitAttempted && !isFormComplete && (
-                  <div className={styles.formIncompleteHint}>
-                    Please fill all required fields to enable submission.
-                  </div>
-                )}
-              </div>
-
-              <div className={styles.chargeListModalFooter}>
-                <button
-                  type="button"
-                  onClick={closeForm}
-                  className={styles.btnCancel}
-                  disabled={formLoading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className={styles.btnSubmit}
-                  disabled={formLoading || submitCooldown}
-                  title={!isFormComplete ? 'Please fill all required fields' : ''}
-                >
-                  {formLoading ? 'Processing...' : 'Generate Invoice'}
-                </button>
-              </div>
-            </form>
-          </div>
+{isInvoiceFormOpen && (
+  <div className={styles.chargeListModalOverlay}>
+    <div className={styles.chargeListModal}>
+      <div className={styles.chargeListModalHeader}>
+        
+        {/* Left: Title */}
+        <div className={styles.headerContent}>
+          <h2>Generate Invoice</h2>
         </div>
-      )}
+
+        {/* Right: Clinic Card + Close Button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className={styles.addModalHeaderCard}>
+            <div className={styles.clinicInfoIcon}>
+              <FaClinicMedical size={18} />
+            </div>
+            <div className={styles.clinicInfoText}>
+              <span className={styles.clinicInfoName}>
+                {clinicName}
+              </span>
+              <span className={styles.clinicInfoBranch}>
+                {branchName}
+              </span>
+            </div>
+          </div>
+
+          <button 
+            onClick={closeForm} 
+            className={styles.chargeListModalClose}
+          >
+            ×
+          </button>
+        </div>
+
+      </div>
+
+      {/* Rest of the form remains unchanged */}
+      <form onSubmit={handleGenerateInvoice}>
+        <div className={styles.chargeListModalBody}>
+          <div className={styles.formGrid}>
+            {/* ... existing form fields ... */}
+            <div className={styles.formGroup}>
+              <label>Charge Type <span className={styles.required}>*</span></label>
+              <select
+                name="chargeId"
+                value={invoiceFormData.chargeId}
+                onChange={handleInvoiceInputChange}
+                disabled={formLoading}
+                required
+              >
+                <option value="">Select charge type</option>
+                {chargeConfigs.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.chargeName} - {formatCurrency(c.defaultAmount)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Charge Amount (₹) <span className={styles.required}>*</span></label>
+              <input
+                type="number"
+                name="chargeAmount"
+                value={invoiceFormData.chargeAmount}
+                onChange={handleInvoiceInputChange}
+                placeholder="Amount"
+                step="0.01"
+                min="0"
+                disabled={formLoading}
+                required
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Invoice Date <span className={styles.required}>*</span></label>
+              <input
+                type="date"
+                name="invoiceDate"
+                value={invoiceFormData.invoiceDate}
+                onChange={handleInvoiceInputChange}
+                max={today}
+                disabled={formLoading}
+                required
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Discount (₹)</label>
+              <input
+                type="number"
+                name="discount"
+                value={invoiceFormData.discount}
+                onChange={handleInvoiceInputChange}
+                placeholder="0"
+                step="0.01"
+                min="0"
+                disabled={formLoading}
+              />
+            </div>
+          </div>
+
+          {submitAttempted && !isFormComplete && (
+            <div className={styles.formIncompleteHint}>
+              Please fill all required fields to enable submission.
+            </div>
+          )}
+        </div>
+
+        <div className={styles.chargeListModalFooter}>
+          <button
+            type="button"
+            onClick={closeForm}
+            className={styles.btnCancel}
+            disabled={formLoading}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className={styles.btnSubmit}
+            disabled={formLoading || submitCooldown}
+            title={!isFormComplete ? 'Please fill all required fields' : ''}
+          >
+            {formLoading ? 'Processing...' : 'Generate Invoice'}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
     </div>
   );
 };

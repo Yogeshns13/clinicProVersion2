@@ -5,6 +5,7 @@ import { updateExternalLab } from '../Api/ApiLabTests.js';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
 import styles from './ExternalLabList.module.css';
+import { FaClinicMedical } from 'react-icons/fa';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Validation helpers
@@ -175,6 +176,9 @@ const UpdateExternalLab = ({ lab, onClose, onSuccess, onError }) => {
     }
   };
 
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
+
   // ─────────────────────────────────────────────
   return (
     <div className={styles.detailModalOverlay}>
@@ -204,6 +208,15 @@ const UpdateExternalLab = ({ lab, onClose, onSuccess, onError }) => {
               </span>
             </div>
           </div>
+          <div className={styles.addModalHeaderCard}>
+                      <div className={styles.clinicInfoIcon}>
+                        <FaClinicMedical size={18} />
+                      </div>
+                      <div className={styles.clinicInfoText}>
+                        <span className={styles.clinicInfoName}>{clinicName}</span>
+                        <span className={styles.clinicInfoBranch}>{branchName}</span>
+                      </div>
+                      </div>
           <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
         </div>
 

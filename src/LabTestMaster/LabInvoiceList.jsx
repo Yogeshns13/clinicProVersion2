@@ -509,6 +509,9 @@ const LabInvoiceList = () => {
   );
 };
 
+const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
+
 // ──────────────────────────────────────────────────
 // Invoice Details Modal Component
 // ──────────────────────────────────────────────────
@@ -527,10 +530,15 @@ const InvoiceDetailsModal = ({ invoice, loading, error, onClose, formatCurrency,
         <div className={styles.modalHeader}>
           <h2>Invoice Details{invoice ? ` - ${invoice.invoiceNo}` : ''}</h2>
           <div className={styles.headerRight}>
-            <div className={styles.clinicNameone}>
-              <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
-              {localStorage.getItem('clinicName') || '—'}
-            </div>
+            <div className={styles.addModalHeaderCard}>
+                        <div className={styles.clinicInfoIcon}>
+                          <FaClinicMedical size={18} />
+                        </div>
+                        <div className={styles.clinicInfoText}>
+                          <span className={styles.clinicInfoName}>{clinicName}</span>
+                          <span className={styles.clinicInfoBranch}>{branchName}</span>
+                        </div>
+                        </div>
             <button
               onClick={() => { triggerCooldown('close'); onClose(); }}
               className={styles.closeBtn}

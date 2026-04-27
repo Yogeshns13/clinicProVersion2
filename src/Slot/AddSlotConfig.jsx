@@ -311,6 +311,9 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
   if (!isOpen) return null;
 
   const showDatePicker = Number(formData.duration) === 3;
+  
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
 
   return (
     <>
@@ -326,10 +329,15 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
           <div className={styles.clinicModalHeader}>
             <h2>Add Slot Configuration</h2>
             <div className={styles.headerRight}>
-              <div className={styles.clinicNameone}>
-                <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
-                {localStorage.getItem("clinicName") || "—"}
-              </div>
+            <div className={styles.addModalHeaderCard}>
+                        <div className={styles.clinicInfoIcon}>
+                          <FaClinicMedical size={18} />
+                        </div>
+                        <div className={styles.clinicInfoText}>
+                          <span className={styles.clinicInfoName}>{clinicName}</span>
+                          <span className={styles.clinicInfoBranch}>{branchName}</span>
+                        </div>
+                        </div>
               <button
                 onClick={onClose}
                 className={styles.clinicModalClose}

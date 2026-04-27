@@ -10,6 +10,7 @@ import MessagePopup from '../Hooks/MessagePopup.jsx';
 import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 import styles from './ExternalLabList.module.css';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
+import { FaClinicMedical } from 'react-icons/fa';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Validation helpers
@@ -358,7 +359,10 @@ const ExternalLabList = () => {
 
   const startRecord = labs.length === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord   = (page - 1) * pageSize + labs.length;
-
+   
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
+   
   // ─────────────────────────────────────────────
   return (
     <div className={styles.labListWrapper}>
@@ -555,6 +559,16 @@ const ExternalLabList = () => {
                   <span className={styles.workIdBadge}>External Lab</span>
                 </div>
               </div>
+              <div className={styles.addModalHeaderCard}>
+                          <div className={styles.clinicInfoIcon}>
+                            <FaClinicMedical size={18} />
+                          </div>
+                          <div className={styles.clinicInfoText}>
+                            <span className={styles.clinicInfoName}>{clinicName}</span>
+                            <span className={styles.clinicInfoBranch}>{branchName}</span>
+                          </div>
+                          </div>
+
               <button onClick={closeModal} className={styles.detailCloseBtn}>✕</button>
             </div>
 
@@ -625,6 +639,16 @@ const ExternalLabList = () => {
               <div className={styles.detailHeaderContent}>
                 <h2>Add New External Lab</h2>
               </div>
+             <div className={styles.addModalHeaderCard}>
+                         <div className={styles.clinicInfoIcon}>
+                           <FaClinicMedical size={18} />
+                         </div>
+                         <div className={styles.clinicInfoText}>
+                           <span className={styles.clinicInfoName}>{clinicName}</span>
+                           <span className={styles.clinicInfoBranch}>{branchName}</span>
+                         </div>
+                         </div>
+
               <button onClick={closeAddForm} className={styles.detailCloseBtn}>✕</button>
             </div>
 

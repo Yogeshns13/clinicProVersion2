@@ -54,12 +54,10 @@ const MedicineStockList = () => {
   const [pageSize]              = useState(20);
   const [totalRecords, setTotalRecords] = useState(0);
 
-  // Clinic Name
-  const [clinicName, setClinicName] = useState("");
-  useEffect(() => {
-    const name = localStorage.getItem("clinicName");
-    setClinicName(name || "");
-  }, []);
+  
+   
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
 
   // Filter inputs (staged, not applied until Search)
   const [filterInputs, setFilterInputs] = useState({
@@ -445,6 +443,7 @@ const MedicineStockList = () => {
   const startRecord = totalRecords === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord   = Math.min(page * pageSize, totalRecords);
   const hasActiveFilter = isFilterActive;
+  
 
   // ────────────────────────────────────────────────
   return (
@@ -714,13 +713,15 @@ const MedicineStockList = () => {
                   <h2>{selectedStock.medicineName}</h2>
                 </div>
               </div>
-              <div className={styles.clinicNameone}>
-                <FaClinicMedical
-                  size={20}
-                  style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
-                />
-                {clinicName || "—"}
-              </div>
+             <div className={styles.addModalHeaderCard}>
+                         <div className={styles.clinicInfoIcon}>
+                           <FaClinicMedical size={18} />
+                         </div>
+                         <div className={styles.clinicInfoText}>
+                           <span className={styles.clinicInfoName}>{clinicName}</span>
+                           <span className={styles.clinicInfoBranch}>{branchName}</span>
+                         </div>
+                         </div>
               <button onClick={closeModal} className={styles.detailCloseBtn}>
                 ✕
               </button>
@@ -853,13 +854,15 @@ const MedicineStockList = () => {
               <div className={styles.addHeaderContent}>
                 <h2>Add New Medicine Stock</h2>
               </div>
-              <div className={styles.clinicNameone}>
-                <FaClinicMedical
-                  size={20}
-                  style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
-                />
-                {clinicName || "—"}
-              </div>
+              <div className={styles.addModalHeaderCard}>
+                          <div className={styles.clinicInfoIcon}>
+                            <FaClinicMedical size={18} />
+                          </div>
+                          <div className={styles.clinicInfoText}>
+                            <span className={styles.clinicInfoName}>{clinicName}</span>
+                            <span className={styles.clinicInfoBranch}>{branchName}</span>
+                          </div>
+                          </div>
               <button onClick={closeAddForm} className={styles.detailCloseBtn}>
                 <FiX size={18} />
               </button>

@@ -360,6 +360,9 @@ const UpdateMedicineMaster = ({
   );
 
   const hasErrors = Object.keys(fieldErrors).length > 0;
+  
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
 
   const renderForm = () => (
     <form onSubmit={handleSubmit} className={styles.form} noValidate>
@@ -690,10 +693,15 @@ const UpdateMedicineMaster = ({
               <h2 className={styles.modalTitle}>Update Medicine</h2>
 
               <div className={styles.headerRight}>
-                <div className={styles.clinicNameone}>
-                  <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
-                  {localStorage.getItem('clinicName') || '—'}
-                </div>
+                <div className={styles.addModalHeaderCard}>
+                            <div className={styles.clinicInfoIcon}>
+                              <FaClinicMedical size={18} />
+                            </div>
+                            <div className={styles.clinicInfoText}>
+                              <span className={styles.clinicInfoName}>{clinicName}</span>
+                              <span className={styles.clinicInfoBranch}>{branchName}</span>
+                            </div>
+                            </div>
 
                 {onClose && (
                   <button onClick={onClose} className={styles.modalCloseBtn} disabled={submitLoading}>

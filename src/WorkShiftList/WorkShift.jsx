@@ -479,6 +479,9 @@ const WorkShift = () => {
       <div className={styles.clinicError}>Error: {error.message || error}</div>
     );
 
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
+
   return (
     <div className={styles.clinicListWrapper}>
       <ErrorHandler error={error} />
@@ -692,13 +695,15 @@ const WorkShift = () => {
               <div className={styles.detailHeaderContent}>
                 <h2>{selectedShift.shiftName}</h2>
               </div>
-              <div className={styles.clinicNameone}>
-                <FaClinicMedical
-                  size={20}
-                  style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
-                />
-                {localStorage.getItem("clinicName") || "—"}
-              </div>
+              <div className={styles.addModalHeaderCard}>
+                          <div className={styles.clinicInfoIcon}>
+                            <FaClinicMedical size={18} />
+                          </div>
+                          <div className={styles.clinicInfoText}>
+                            <span className={styles.clinicInfoName}>{clinicName}</span>
+                            <span className={styles.clinicInfoBranch}>{branchName}</span>
+                          </div>
+                          </div>
               <button onClick={closeModal} className={styles.detailCloseBtn}>✕</button>
             </div>
 
@@ -773,13 +778,15 @@ const WorkShift = () => {
               <div className={styles.detailHeaderContent}>
                 <h2>Add New Work Shift</h2>
               </div>
-              <div className={styles.clinicNameone}>
-                <FaClinicMedical
-                  size={20}
-                  style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
-                />
-                {localStorage.getItem("clinicName") || "—"}
-              </div>
+              <div className={styles.addModalHeaderCard}>
+                          <div className={styles.clinicInfoIcon}>
+                            <FaClinicMedical size={18} />
+                          </div>
+                          <div className={styles.clinicInfoText}>
+                            <span className={styles.clinicInfoName}>{clinicName}</span>
+                            <span className={styles.clinicInfoBranch}>{branchName}</span>
+                          </div>
+                          </div>
               <button onClick={closeAddForm} className={styles.detailCloseBtn}>✕</button>
             </div>
 

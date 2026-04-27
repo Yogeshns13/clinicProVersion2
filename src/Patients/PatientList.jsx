@@ -354,6 +354,9 @@ const PatientList = () => {
   if (listLoading) return <div className={styles.loading}><LoadingPage/></div>;
   if (listError)   return <div className={styles.error}>Error: {listError.message || listError}</div>;
 
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
+
   return (
     <div className={styles.listWrapper}>
       <MessagePopup
@@ -593,10 +596,15 @@ const PatientList = () => {
                   <h2>{selectedPatient.firstName} {selectedPatient.lastName}</h2>
                 </div>
               </div>
-              <div className={styles.clinicNameone}>
-                <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
-                {localStorage.getItem('clinicName') || '—'}
-              </div>
+              <div className={styles.addModalHeaderCard}>
+                          <div className={styles.clinicInfoIcon}>
+                            <FaClinicMedical size={18} />
+                          </div>
+                          <div className={styles.clinicInfoText}>
+                            <span className={styles.clinicInfoName}>{clinicName}</span>
+                            <span className={styles.clinicInfoBranch}>{branchName}</span>
+                          </div>
+                          </div>
 
               <button onClick={closeDetailModal} className={styles.detailCloseBtn}>✕</button>
             </div>
