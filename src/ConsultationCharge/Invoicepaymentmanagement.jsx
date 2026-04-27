@@ -528,6 +528,9 @@ const InvoicePaymentList = () => {
 
   if (loading) return <div className={styles.paymentListLoading}><LoadingPage/></div>;
 
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className={styles.paymentWrapper}>
@@ -723,10 +726,15 @@ const InvoicePaymentList = () => {
             <div className={styles.paymentModalHeader}>
               <h2>Update Payment Status</h2>
               <div className={styles.headerRight}>
-                <div className={styles.clinicNameone}>
-                  <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
-                  {localStorage.getItem('clinicName') || '—'}
-                </div>
+                <div className={styles.addModalHeaderCard}>
+                            <div className={styles.clinicInfoIcon}>
+                              <FaClinicMedical size={18} />
+                            </div>
+                            <div className={styles.clinicInfoText}>
+                              <span className={styles.clinicInfoName}>{clinicName}</span>
+                              <span className={styles.clinicInfoBranch}>{branchName}</span>
+                            </div>
+                            </div>
                 <button onClick={closeModal} className={styles.paymentModalClose} disabled={formLoading}>×</button>
               </div>
             </div>

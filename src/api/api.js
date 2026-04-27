@@ -62,8 +62,9 @@ export const loginUser = async (username, password) => {
 
   try {
     const response = await API.post("/WebUserLogin", payload);
-    console.log("myPayLoad", payload);
+    console.log("UserLogin", payload);
     const result = response.data.result;
+    checkDbError(result);
 
     if (result?.isAuthendicated) {
       localStorage.setItem("userId", result.USER_ID);
@@ -75,6 +76,13 @@ export const loginUser = async (username, password) => {
       await setEncrypted("clinicID", result.CLINIC_ID);
       await setEncrypted("branchID", result.BRANCH_ID);
       await setEncrypted("userID", result.USER_ID);
+
+      try {
+        await initTables();     // fast → loads from IndexedDB if exists
+        syncTables();           // background → fetch latest (non-blocking)
+      } catch (tableErr) {
+        console.warn("Table preload failed:", tableErr.message);
+      }
 
       try {
         const clinicList = await getClinicList({ ClinicID: result.CLINIC_ID });
@@ -99,13 +107,19 @@ export const loginUser = async (username, password) => {
         console.warn("Failed to fetch branch name:", branchErr.message);
       }
 
-      console.log("Result:", result);
+      console.log("UserLogin Result:", result);
       return { success: true, data: result };
     } else {
       throw new Error(result?.message || "Invalid credentials");
     }
   } catch (err) {
-    throw new Error(err.response?.data?.message || err.message || "Network error");
+    throw new Error(
+      extractBackendError(err) ||
+      err.response?.data?.error ||   // <-- IMPORTANT (your backend uses "error")
+      err.response?.data?.message ||
+      err.message ||
+      "Network error"
+    );
   }
 };
 
@@ -332,6 +346,7 @@ export const getClinicList = async (options = {}) => {
     GstNo: options.GstNo || "",
     Status: options.Status ?? -1
   };
+  console.log("Clinic Request:", payload);
 
   try {
     const response = await API.post("/GetClinicList", payload);
@@ -384,6 +399,59 @@ export const getClinicList = async (options = {}) => {
   }
 };
 
+export const getClinicAllowLogin = async (clinicId) => {
+  const userId = getUserId();
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: clinicId
+  };
+
+  console.log("GetClinicAllowLogin Request:", payload);
+
+  try {
+    const response = await API.post("/GetClinicAllowLogin", payload);
+
+    const result = response.data?.result;
+    checkDbError(result);
+
+    const record = Array.isArray(result) ? result[0] : null;
+
+    console.log("GetClinicAllowLogin response:", record);
+
+    if (!record) return null;
+
+    return {
+      clinicId: record.clinic_id,
+      allowLogin: record.allow_login
+    };
+  } catch (error) {
+    console.error("getClinicAllowLogin failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch clinic allow login"
+    };
+
+    throw errorWithStatus;
+  }
+};
+
 export const addClinic = async (clinicData) => {
   const userId = getUserId();
   if (!userId) {
@@ -408,15 +476,15 @@ export const addClinic = async (clinicData) => {
     CgstPercentage: clinicData.cgstPercentage ?? 0,
     SgstPercentage: clinicData.sgstPercentage ?? 0,
     OwnerName: clinicData.ownerName || "",
-    InLabAvailable: clinicData.inLabAvailable ?? 0,       
-    InPharmacyAvailable: clinicData.inPharmacyAvailable ?? 0, 
+    InLabAvailable: clinicData.inLabAvailable ?? 0,
+    InPharmacyAvailable: clinicData.inPharmacyAvailable ?? 0,
     Mobile: clinicData.mobile || "",
     AltMobile: clinicData.altMobile || "",
     Email: clinicData.email || "",
     FileNoPrefix: clinicData.fileNoPrefix || "",
     LastFileSeq: clinicData.lastFileSeq ?? 0,
     InvoicePrefix: clinicData.invoicePrefix || "",
-    ProfileName: clinicData.profileName || "admin",
+    AllowLogin: clinicData.allowLogin || 1,
   };
 
   console.log("Add Clinic:", payload)
@@ -553,8 +621,8 @@ export const updateClinic = async (clinicData) => {
     ClinicName: clinicData.ClinicName?.trim() || "",
     LogoFileID: clinicData.logoFileId || 0,
     OwnerName: clinicData.OwnerName?.trim() || "",
-    InLabAvailable: clinicData.inLabAvailable ?? 0,       
-    InPharmacyAvailable: clinicData.inPharmacyAvailable ?? 0, 
+    InLabAvailable: clinicData.inLabAvailable ?? 0,
+    InPharmacyAvailable: clinicData.inPharmacyAvailable ?? 0,
     Mobile: clinicData.Mobile?.trim() || "",
     AltMobile: clinicData.AltMobile?.trim() || "",
     Email: clinicData.Email?.trim() || "",
@@ -565,6 +633,7 @@ export const updateClinic = async (clinicData) => {
     CgstPercentage: Number(clinicData.CgstPercentage) || 0,
     SgstPercentage: Number(clinicData.SgstPercentage) || 0,
     Status: Number(clinicData.Status) || 1,
+    AllowLogin: clinicData.allowLogin || 1,
   };
   console.log("Update Clinic:", payload)
 
@@ -612,7 +681,7 @@ export const deleteClinic = async (clinicId) => {
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
-    ClinicID: Number(clinicId),     
+    ClinicID: Number(clinicId),
   };
 
   console.log("Delete Clinic Payload:", payload);
@@ -636,8 +705,8 @@ export const deleteClinic = async (clinicId) => {
 
     return {
       success: true,
-      clinicId: result.IN_CLINIC_ID || Number(clinicId), 
-      message: result.OUT_ERROR || "Clinic deleted successfully" 
+      clinicId: result.IN_CLINIC_ID || Number(clinicId),
+      message: result.OUT_ERROR || "Clinic deleted successfully"
     };
 
   } catch (error) {
@@ -694,6 +763,7 @@ export const getBranchList = async (clinicId = 0, options = {}) => {
     BranchType: options.BranchType ?? 1,
     Status: options.Status ?? -1 // -1 = All statuses
   };
+  console.log("Branch Request:", payload);
 
   try {
     const response = await API.post("/GetBranchList", payload);
@@ -707,6 +777,7 @@ export const getBranchList = async (clinicId = 0, options = {}) => {
       uniqueSeq: branch.unique_seq,
       clinicId: branch.clinic_id,
       clinicName: branch.clinic_name,
+      logoFileId: branch.logo_file_id,
       name: branch.branch_name,
       mobile: branch.mobile,
       altMobile: branch.alt_mobile,
@@ -716,6 +787,7 @@ export const getBranchList = async (clinicId = 0, options = {}) => {
       branchTypeDesc: branch.branch_type_desc || "Main",
       status: branch.status === 1 ? "active" : "inactive",
       statusDesc: branch.status_desc || "Unknown",
+      allowLogin: branch.allow_login,
       dateCreated: branch.date_created,
       dateModified: branch.date_modified
     }));
@@ -912,13 +984,12 @@ export const deleteBranch = async (branchId) => {
     throw validationError;
   }
 
-  
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
-    BranchID: Number(branchId),     
+    BranchID: Number(branchId),
   };
 
   console.log("Delete Branch Payload:", payload);
@@ -932,7 +1003,7 @@ export const deleteBranch = async (branchId) => {
 
     checkDbError(result);
 
-   
+
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
     }
@@ -941,11 +1012,11 @@ export const deleteBranch = async (branchId) => {
       throw new Error(result.OUT_ERROR || "Failed to delete branch");
     }
 
-    
+
     return {
       success: true,
-      branchId: result.IN_BRANCH_ID || Number(branchId), 
-      message: result.OUT_ERROR || "Branch deleted successfully" 
+      branchId: result.IN_BRANCH_ID || Number(branchId),
+      message: result.OUT_ERROR || "Branch deleted successfully"
     };
 
   } catch (error) {
@@ -1059,7 +1130,7 @@ export const addDepartment = async (departmentData) => {
   const finalClinicId = PRODUCTION_MODE ? getClinicId() : (departmentData.clinicId || 0);
   const finalBranchId = PRODUCTION_MODE ? getBranchId() : (departmentData.branchId || 0);
 
-  
+
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
@@ -1068,7 +1139,7 @@ export const addDepartment = async (departmentData) => {
     ClinicID: finalClinicId,
     BranchID: finalBranchId,
     DepartmentName: departmentData.departmentName || "",
-    Profile: departmentData.profile || "" 
+    Profile: departmentData.profile || ""
   };
 
   console.log("Add Department", payload)
@@ -1092,7 +1163,7 @@ export const addDepartment = async (departmentData) => {
     return {
       success: true,
       departmentId: result.OUT_DEPARTMENT_ID,
-      message: result.OUT_ERROR 
+      message: result.OUT_ERROR
     };
 
   } catch (error) {
@@ -1509,7 +1580,7 @@ export const updateEmployee = async (employeeData) => {
 
     throw formattedError;
   }
-};  
+};
 
 export const deleteEmployee = async (employeeId) => {
   const userId = getUserId();
@@ -1713,7 +1784,7 @@ export const addEmployeeProof = async (proofData) => {
     const result = response.data?.result;
 
     checkDbError(result);
-    
+
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
     }
@@ -2040,7 +2111,7 @@ export const addEmployeeBeneficiaryAccount = async (beneficiaryData) => {
 
     const result = response.data?.result;
     checkDbError(result);
-    
+
     if (!result || typeof result.OUT_OK === "undefined") {
       throw new Error("Invalid response from server");
     }
@@ -4442,15 +4513,15 @@ export const logout = async () => {
   }
 
   const payload = {
-    CHANNEL_ID: CHANNEL_ID,          
-    REF_KEY: generateRefKey(),        
+    CHANNEL_ID: CHANNEL_ID,
+    REF_KEY: generateRefKey(),
     SESSION_REF: sessionRef,
-    USER_ID: Number(userId),        
+    USER_ID: Number(userId),
   };
 
   try {
     const response = await API.post("/logout", payload);
-    
+
     console.log("Logout payload:", payload);
     console.log("Logout response:", response.data);
 
@@ -4462,8 +4533,8 @@ export const logout = async () => {
       localStorage.removeItem("userID");
       localStorage.removeItem("userId");
       localStorage.removeItem("profileName");
-      localStorage.removeItem("login_timestamp"); 
-      localStorage.removeItem("branchID"); 
+      localStorage.removeItem("login_timestamp");
+      localStorage.removeItem("branchID");
       localStorage.removeItem("clinicID");
       localStorage.removeItem("clinicName");
       localStorage.removeItem("isLoggedIn");
@@ -4477,9 +4548,9 @@ export const logout = async () => {
     localStorage.removeItem("sessionRef");
     localStorage.removeItem("login_timestamp");
     throw new Error(
-      err.response?.data?.message || 
-      err.response?.data?.result?.OUT_ERROR || 
-      err.message || 
+      err.response?.data?.message ||
+      err.response?.data?.result?.OUT_ERROR ||
+      err.message ||
       "Logout failed - network or server error"
     );
   }
@@ -5081,46 +5152,95 @@ export const updateUser = async (userData) => {
 
 export const getDashboardStats = async (clinicId, branchId) => {
   const userId = getUserId();
-  const sessionRef = getSessionRef();
 
-  const resolvedClinicId = Number(await Promise.resolve(clinicId));
-  const resolvedBranchId = Number(await Promise.resolve(branchId)); 
-
-  if (!resolvedClinicId || !resolvedBranchId) {
-    throw new Error("Clinic or Branch ID missing. Please log in again.");
+  if (!clinicId || !branchId) {
+    const error = new Error("Clinic ID and Branch ID are required.");
+    error.status = 400;
+    throw error;
   }
 
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  // Resolve IDs (ONLY from params now)
+  const finalClinicId = Number(clinicId);
+  const finalBranchId = Number(branchId);
+
   const payload = {
-    CHANNEL_ID: 1,
+    CHANNEL_ID,
     REF_KEY: generateRefKey(),
-    SESSION_REF: sessionRef || "",
-    USER_ID: parseInt(userId) || 0,
-    ClinicID: resolvedClinicId,
-    BranchID: resolvedBranchId,
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    ClinicID: finalClinicId,
+    BranchID: finalBranchId
   };
 
-  console.log("DashBoard Payload:", payload);
+  console.log("GetDashboardStats payload:", payload);
 
   try {
     const response = await API.post("/GetDashboardStats", payload);
-    return response.data?.result || response.data;
-    console.log("Dashboard Response:", response.data);
-  } catch (error) {
-    let errorMsg = "Failed to load dashboard";
-    if (error.response?.status === 422) {
-      const errors = error.response?.data?.errors;
-      errorMsg = errors && typeof errors === "object"
-        ? "Validation failed: " + Object.values(errors).flat().join(", ")
-        : "Invalid data sent to server";
-    } else if (error.response?.data?.message) {
-      errorMsg = error.response.data.message;
-    } else {
-      errorMsg = error.message;
+    const result = response.data?.result;
+
+    checkDbError(result);
+
+    if (!result || typeof result !== "object") {
+      throw new Error("Invalid dashboard response");
     }
-    throw new Error(errorMsg);
+
+    console.log("GetDashboardStats response:", result);
+
+    return {
+      totalActivePatients: result.TotalActivePatients || 0,
+      todayAppointments: result.TodayAppointmentCount || 0,
+      tomorrowAppointments: result.TomorrowAppointmentCount || 0,
+      todayVisits: result.TodayVisitCount || 0,
+      newPatientsThisMonth: result.NewPatientsThisMonth || 0,
+
+      appointmentFlow: (result.AppointmentFlow || []).map((item) => ({
+        date: item.Date,
+        count: item.Count
+      })),
+
+      visitFlow: (result.VisitFlow || []).map((item) => ({
+        date: item.Date,
+        count: item.Count
+      })),
+
+      patientMonthlyFlow: (result.PatientMonthlyFlow || []).map((item) => ({
+        monthNumber: item.MonthNumber,
+        monthName: item.MonthName,
+        count: item.Count
+      })),
+
+      genderBreakdown: (result.GenderBreakdown || []).map((item) => ({
+        gender: item.Gender,
+        genderDesc: item.GenderDesc,
+        count: item.PatientCount
+      })),
+
+      appointmentStatusSummary: result.AppointmentStatusSummary || []
+    };
+
+  } catch (error) {
+    console.error("getDashboardStats failed:", error);
+
+    const err = {
+      ...error,
+      status: error.response?.status || 500,
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch dashboard stats"
+    };
+
+    throw err;
   }
 };
-
 
 
 

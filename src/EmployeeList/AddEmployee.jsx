@@ -353,7 +353,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
   const [validationMessages,         setValidationMessages]         = useState({});
   const [beneficiaryValidationMessages, setBeneficiaryValidationMessages] = useState({});
 
-  useEffect(() => { if (isOpen) fetchShifts(); }, [isOpen]);
+  // fetchShifts is NOT called on isOpen — it's called only after Step 3 submission succeeds
   useEffect(() => { if (!isOpen) resetForm(); }, [isOpen]);
 
   const fetchShifts = async () => {
@@ -377,6 +377,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
     setIsProofUploading([false]); setProofValidationMessages([{}]);
     setBeneficiaryData({ AccountHolderName: '', AccountNo: '', IFSCCode: '', BankName: '', BankAddress: '', IsDefault: false });
     setSelectedShifts([]); setSelectedWorkDays([]);
+    setShifts([]);
     setError(null); setStepSuccess('');
     setValidationMessages({}); setBeneficiaryValidationMessages({});
     setSubmitAttempted(false);
@@ -750,6 +751,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
         if (result?.beneficiaryId) setSavedBeneficiaryId(result.beneficiaryId);
       }
 
+      // ── Fetch shifts NOW, after bank account is saved successfully ──
+      fetchShifts();
+
       showPopup('Bank account saved successfully!', 'success');
       setTimeout(() => {
         setStepSuccess('');
@@ -798,6 +802,10 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
   };
 
   const handleSkipStep = () => {
+    if (currentStep === 3) {
+      // Fetch shifts when skipping Step 3, same as submitting it
+      fetchShifts();
+    }
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
       setError(null); setStepSuccess('');
@@ -847,6 +855,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
 
   const handleClose = () => { resetForm(); onClose(); };
 
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
+
   return (
     <div className={styles.overlay}>
 
@@ -865,10 +876,15 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
           <div className={styles.headerContent}>
             <h2>Add New Employee</h2>
           </div>
-          <div className={styles.clinicNameone}>
-            <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
-            {localStorage.getItem("clinicName") || "—"}
-          </div>
+          <div className={styles.addModalHeaderCard}>
+            <div className={styles.clinicInfoIcon}>
+              <FaClinicMedical size={18} />
+            </div>
+            <div className={styles.clinicInfoText}>
+              <span className={styles.clinicInfoName}>{clinicName}</span>
+              <span className={styles.clinicInfoBranch}>{branchName}</span>
+            </div>
+            </div>
           <button onClick={handleClose} className={styles.closeBtn}><FiX size={22} /></button>
         </div>
 

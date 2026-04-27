@@ -580,6 +580,9 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
     );
   }
 
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
+
   return (
     <>
       <MessagePopup
@@ -597,10 +600,15 @@ const UpdatePatient = ({ patientId: propPatientId, onClose, onSuccess }) => {
             <div className={styles.detailHeaderContent}>
               <h2>Update Patient</h2>
             </div>
-            <div className={styles.clinicNameone}>
-              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
-              {localStorage.getItem('clinicName') || '—'}
-            </div>
+            <div className={styles.addModalHeaderCard}>
+                        <div className={styles.clinicInfoIcon}>
+                          <FaClinicMedical size={18} />
+                        </div>
+                        <div className={styles.clinicInfoText}>
+                          <span className={styles.clinicInfoName}>{clinicName}</span>
+                          <span className={styles.clinicInfoBranch}>{branchName}</span>
+                        </div>
+                        </div>
             <button onClick={handleClose} className={styles.detailCloseBtn}>✕</button>
           </div>
 

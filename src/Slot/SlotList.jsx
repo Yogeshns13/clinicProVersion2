@@ -452,6 +452,8 @@ const SlotList = () => {
 
   const startRecord = slots.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const endRecord   = startRecord + slots.length - 1;
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
 
   // ────────────────────────────────────────────────
   return (
@@ -719,11 +721,15 @@ const SlotList = () => {
             <div className={styles.modalHeader}>
               <h2>Add New Slot</h2>
               <div className={styles.headerRight}>
-                <div className={styles.clinicNameone}>
-                  <FaClinicMedical
-                    size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
-                  {localStorage.getItem("clinicName") || "—"}
-                </div>
+                <div className={styles.addModalHeaderCard}>
+                            <div className={styles.clinicInfoIcon}>
+                              <FaClinicMedical size={18} />
+                            </div>
+                            <div className={styles.clinicInfoText}>
+                              <span className={styles.clinicInfoName}>{clinicName}</span>
+                              <span className={styles.clinicInfoBranch}>{branchName}</span>
+                            </div>
+                            </div>
                 <button onClick={() => setShowAddModal(false)} className={styles.modalCloseBtn}>×</button>
               </div>
             </div>

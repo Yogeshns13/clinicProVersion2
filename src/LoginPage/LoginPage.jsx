@@ -6,9 +6,20 @@ import logo from "../assets/cplogo.png";
 import meter from "../assets/meter.svg";
 import scope from "../assets/scope.svg";
 import reff from "../assets/refresh.png";
-import { loginUser, renewToken, getClinicList, forgetPassword } from "../Api/Api";
+import { loginUser, renewToken, forgetPassword } from "../Api/Api";
 import { useAuth } from "../Contexts/AuthContext";
 import doctor from "../assets/doc.png";
+
+const ALLOWED_PROFILE_NAMES = [
+  "admin",
+  "spradmin",
+  "frontdesk",
+  "nurse",
+  "pharmacy",
+  "labtech",
+  "accounts",
+  "doctor",
+];
 
 const LockIcon = () => (
   <svg
@@ -106,7 +117,7 @@ const LoginPage = () => {
   const [isResetSuccess, setIsResetSuccess] = useState(false);
 
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
 
   // CAPTCHA state for each mode
   const [captcha, setCaptcha] = useState({
@@ -120,12 +131,56 @@ const LoginPage = () => {
     handleRefreshToken();
   }, []);
 
+  const getProfileName = (data) => {
+    return data?.PROFILE_NAME || data?.profileName || "";
+  };
+
+  const isAllowedProfile = (profileName) => {
+    return ALLOWED_PROFILE_NAMES.includes(profileName.trim().toLowerCase());
+  };
+
+  const showProfileMissingError = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.warn("Logout failed while handling missing profile name:", err);
+    }
+
+    setIsResetSuccess(false);
+    setPopupMessage("Profile Name Not defined for your Account");
+    setShowPopup(true);
+  };
+
+  const showProfileInvalidError = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.warn("Logout failed while handling invalid profile name:", err);
+    }
+
+    setIsResetSuccess(false);
+    setPopupMessage("Profile Name does not match any allowed role for your Account");
+    setShowPopup(true);
+  };
+
   const handleRefreshToken = async () => {
     setIsLoading(true);
     try {
       const result = await renewToken();
       console.log("Refresh token result:", result);
       if (result.success) {
+        const profileName = getProfileName(result);
+
+        if (!profileName.trim()) {
+          await showProfileMissingError();
+          return;
+        }
+
+        if (!isAllowedProfile(profileName)) {
+          await showProfileInvalidError();
+          return;
+        }
+
         console.log("Silent token refresh successful");
 
         localStorage.setItem("login_timestamp", Date.now().toString());
@@ -144,7 +199,7 @@ const LoginPage = () => {
   useEffect(() => {
     generateCaptcha(mode);
   }, [mode]);
-  
+
 
   const generateCaptcha = (targetMode) => {
     const num1 = Math.floor(Math.random() * 10) + 1;
@@ -217,16 +272,22 @@ const LoginPage = () => {
       );
 
       if (success) {
-        console.log("Login Successful:", data);
+        const profileName = getProfileName(data);
+
+        if (!profileName.trim()) {
+          await showProfileMissingError();
+          generateCaptcha("login");
+          return;
+        }
+
+        if (!isAllowedProfile(profileName)) {
+          await showProfileInvalidError();
+          generateCaptcha("login");
+          return;
+        }
 
         localStorage.setItem("login_timestamp", Date.now().toString());
         console.log("Saving login_timestamp:", localStorage.getItem("login_timestamp"));
-
-        // ────────────────────────────────────────────────
-        // Added: Call getClinicList() right after successful login
-        await getClinicList();
-        // ────────────────────────────────────────────────
-
         login(data);
         navigate("/dashboard", { replace: true });
       } else {
@@ -237,11 +298,19 @@ const LoginPage = () => {
       }
     } catch (err) {
       console.error("Login failed:", err);
+
       setIsResetSuccess(false);
-      setPopupMessage("Username or password is incorrect. Please try again!");
+
+      const backendMessage =
+        err?.message ||
+        err?.response?.data?.message ||
+        "Login failed";
+
+      setPopupMessage(backendMessage);
       setShowPopup(true);
+
       generateCaptcha("login");
-      setError(err.message || "Login failed");
+      setError(backendMessage);
     } finally {
       setIsLoading(false);
     }
@@ -258,11 +327,14 @@ const LoginPage = () => {
       setPopupMessage(result.message || "Mail Sent Successfully");
       setShowPopup(true);
     } catch (err) {
-      setIsResetSuccess(false);
-      setPopupMessage(err.message || "Failed to send reset email. Please try again.");
-      setShowPopup(true);
-      generateCaptcha("reset");
-    } finally {
+  const backendMsg =
+    extractBackendError?.(err) ||
+    err.response?.data?.error ||
+    err.response?.data?.message ||
+    err.message;
+
+  throw new Error(backendMsg || "Network error");
+} finally {
       setIsLoading(false);
     }
   };

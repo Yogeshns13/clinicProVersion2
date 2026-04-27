@@ -74,6 +74,10 @@ const ViewWorkItem = ({ workItem, orderData, orderStatus, onClose, employees, sh
   };
 
   const statusInfo = statusOptions.find(s => s.id === workItem.status);
+  
+   const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
+
 
   // ── View Details Panel ────────────────────────────────────────────────────
   const ViewDetailsPanel = () => (
@@ -225,10 +229,15 @@ const ViewWorkItem = ({ workItem, orderData, orderStatus, onClose, employees, sh
           <div className={vstyles.viewHeaderLeft}>
             <h2>Work Item Details</h2>
           </div>
-          <div className={vstyles.clinicName}>
-            <FaClinicMedical size={18} style={{ verticalAlign: 'middle', marginRight: 6 }} />
-            {localStorage.getItem('clinicName') || '—'}
-          </div>
+          <div className={styles.addModalHeaderCard}>
+                      <div className={styles.clinicInfoIcon}>
+                        <FaClinicMedical size={18} />
+                      </div>
+                      <div className={styles.clinicInfoText}>
+                        <span className={styles.clinicInfoName}>{clinicName}</span>
+                        <span className={styles.clinicInfoBranch}>{branchName}</span>
+                      </div>
+                      </div>
           <button onClick={() => onClose()} className={vstyles.viewCloseBtn}>
             <FiX size={22} />
           </button>

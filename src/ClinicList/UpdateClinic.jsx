@@ -1,7 +1,7 @@
 // src/components/UpdateClinic.jsx
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { FiSave, FiUpload, FiImage, FiEye } from 'react-icons/fi';
-import { updateClinic, getClinicList, uploadPhoto, getFile } from '../Api/Api.js';
+import { updateClinic, uploadPhoto, getFile } from '../Api/Api.js';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
 import styles from './ClinicList.module.css';
 
@@ -120,7 +120,7 @@ const UpdateClinic = ({ clinic, onClose, onSuccess, onError }) => {
   const [submitAttempted,    setSubmitAttempted]    = useState(false);
   const [submitBtnDisabled,  setSubmitBtnDisabled]  = useState(false);
 
-  // ── Logo state ──
+  // ── Logo state — initialised directly from the already-fetched clinic prop ──
   const [fileAccessToken,    setFileAccessToken]    = useState(clinic.fileAccessToken || '');
   const [existingLogoFileId, setExistingLogoFileId] = useState(clinic.logoFileId || 0);
   const [existingLogoUrl,    setExistingLogoUrl]    = useState(null);
@@ -141,24 +141,6 @@ const UpdateClinic = ({ clinic, onClose, onSuccess, onError }) => {
   const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
   const showPopup  = (msg, type = 'success') => setPopup({ visible: true, message: msg, type });
   const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
-
-  // ── On mount: fetch fresh fileAccessToken + logoFileId ──
-  useEffect(() => {
-    const fetchClinicDetails = async () => {
-      try {
-        const list  = await getClinicList({ ClinicID: clinic.id, Page: 1, PageSize: 1 });
-        const fresh = list?.[0];
-        if (fresh) {
-          setFileAccessToken(fresh.fileAccessToken || '');
-          setExistingLogoFileId(fresh.logoFileId   || 0);
-        }
-      } catch (err) {
-        console.error('Failed to refresh clinic details for logo:', err);
-      }
-    };
-    fetchClinicDetails();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clinic.id]);
 
   // ── View existing logo ──
   const handleViewLogo = async () => {

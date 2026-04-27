@@ -287,6 +287,42 @@
   transition: background-color 0.25s ease;
 }
 
+.addModalHeaderCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 12px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.clinicInfoName {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-light);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
+}
+
+.clinicInfoBranch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
+}
+
 /* ==================== TABLE CELLS ==================== */
 .patientCell {
   display: flex;
@@ -397,7 +433,7 @@
   background: var(--glass-bg);
   border-radius: 15px;
   width: 100%;
-  max-width: 578px;
+  max-width: 860px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.5);

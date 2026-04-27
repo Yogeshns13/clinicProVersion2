@@ -9,6 +9,7 @@ import MessagePopup from '../Hooks/MessagePopup.jsx';
 import styles from './ConsultationInvoice.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
+import { FaClinicMedical } from 'react-icons/fa';
 
 const PAGE_SIZE = 20;
 
@@ -456,6 +457,9 @@ const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) =
     setBtnCooldown((prev) => ({ ...prev, [key]: true }));
     setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
   };
+  
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -464,9 +468,15 @@ const InvoiceDetailsModal = ({ invoice, onClose, formatCurrency, formatDate }) =
         <div className={styles.modalHeader}>
           <h2>Invoice Details{invoice ? ` - ${invoice.invoiceNo}` : ''}</h2>
           <div className={styles.headerRight}>
-            <div className={styles.clinicNameone}>
-              {localStorage.getItem('clinicName') || '—'}
-            </div>
+           <div className={styles.addModalHeaderCard}>
+                       <div className={styles.clinicInfoIcon}>
+                         <FaClinicMedical size={18} />
+                       </div>
+                       <div className={styles.clinicInfoText}>
+                         <span className={styles.clinicInfoName}>{clinicName}</span>
+                         <span className={styles.clinicInfoBranch}>{branchName}</span>
+                       </div>
+                       </div>
             <button
               onClick={() => { triggerCooldown('close'); onClose(); }}
               className={styles.closeBtn}

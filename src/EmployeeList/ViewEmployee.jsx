@@ -1049,7 +1049,9 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
 
   const currentShiftNames   = existingShiftMaps.map(m => shifts.find(s => s.id === m.shiftId)?.shiftName).filter(Boolean);
   const currentWorkDayNames = existingWorkDays.map(d => WORK_DAYS.find(w => w.id === d.workDay)?.label).filter(Boolean);
-
+  
+   const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
   // ────────────────────────────────────────────────
   // Handle backdrop click to close
   const handleOverlayClick = (e) => {
@@ -1071,9 +1073,14 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
               <h2>{pageLoading ? 'Loading...' : `${formData.firstName} ${formData.lastName}`}</h2>
               </div>
               </div>
-              <div className={styles.clinicNameone}>
-                             <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-                               {localStorage.getItem('clinicName') || '—'}
+              <div className={styles.addModalHeaderCard}>
+                          <div className={styles.clinicInfoIcon}>
+                            <FaClinicMedical size={18} />
+                          </div>
+                          <div className={styles.clinicInfoText}>
+                            <span className={styles.clinicInfoName}>{clinicName}</span>
+                            <span className={styles.clinicInfoBranch}>{branchName}</span>
+                          </div>
                           </div>
           
             <button className={styles.closeBtn} onClick={onClose}>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiCalendar, FiUser, FiPhone, FiFileText, FiClock } from 'react-icons/fi';
 import { getAppointmentList, cancelAppointment } from '../Api/Api.js';
-import './ViewAppointment.css';
+import styles from './ViewAppointment.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
@@ -146,13 +146,16 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRe
   };
 
   const handleCancelCancel = () => setShowCancelConfirm(false);
+  
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
 
   // ────────────────────────────────────────────────
   if (!isOpen) return null;
 
   return (
-    <div className="appointment-modal-overlay">
-      <div className="appointment-modal">
+    <div className={styles['appointment-modal-overlay']}>
+      <div className={styles['appointment-modal']}>
 
         {/* ── MessagePopup ── */}
         <MessagePopup
@@ -174,31 +177,36 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRe
         />
 
         {/* Header */}
-        <div className="appointment-modal-header">
-          <div className="appointment-header-content">
-            <FiCalendar className="appointment-header-icon" size={24} />
+        <div className={styles['appointment-modal-header']}>
+          <div className={styles['appointment-header-content']}>
+            <FiCalendar className={styles['appointment-header-icon']} size={24} />
             <h2>Appointment Details</h2>
           </div>
-          <div className="clinicNameone">
-            <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
-            {localStorage.getItem('clinicName') || '—'}
-          </div>
-          <button onClick={onClose} className="appointment-modal-close">
+          <div className={styles.addModalHeaderCard}>
+                      <div className={styles.clinicInfoIcon}>
+                        <FaClinicMedical size={18} />
+                      </div>
+                      <div className={styles.clinicInfoText}>
+                        <span className={styles.clinicInfoName}>{clinicName}</span>
+                        <span className={styles.clinicInfoBranch}>{branchName}</span>
+                      </div>
+                      </div>
+          <button onClick={onClose} className={styles['appointment-modal-close']}>
             <FiX size={20} />
           </button>
         </div>
 
         {/* Body */}
-        <div className="appointment-modal-body">
+        <div className={styles['appointment-modal-body']}>
           {loading && (
-            <div className="appointment-loading">
-              <div className="appointment-spinner"></div>
+            <div className={styles['appointment-loading']}>
+              <div className={styles['appointment-spinner']}></div>
               <p>Loading appointment details...</p>
             </div>
           )}
 
           {error && (
-            <div className="appointment-error">
+            <div className={styles['appointment-error']}>
               <p>Error: {error.message || error}</p>
             </div>
           )}
@@ -206,79 +214,79 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRe
           {!loading && !error && appointment && (
             <>
               {/* Patient & Doctor Information */}
-              <div className="appointment-details-section">
-                <h3 className="appointment-section-title">
+              <div className={styles['appointment-details-section']}>
+                <h3 className={styles['appointment-section-title']}>
                   <FiUser size={18} />
                   Patient &amp; Doctor Information
                 </h3>
-                <div className="appointment-details-grid">
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Patient Name</span>
-                    <span className="appointment-detail-value">{appointment.patientName || '—'}</span>
+                <div className={styles['appointment-details-grid']}>
+                  <div className={styles['appointment-detail-item']}>
+                    <span className={styles['appointment-detail-label']}>Patient Name</span>
+                    <span className={styles['appointment-detail-value']}>{appointment.patientName || '—'}</span>
                   </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">File Number</span>
-                    <span className="appointment-detail-value">{appointment.patientFileNo || '—'}</span>
+                  <div className={styles['appointment-detail-item']}>
+                    <span className={styles['appointment-detail-label']}>File Number</span>
+                    <span className={styles['appointment-detail-value']}>{appointment.patientFileNo || '—'}</span>
                   </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Mobile</span>
-                    <span className="appointment-detail-value">{appointment.patientMobile || '—'}</span>
+                  <div className={styles['appointment-detail-item']}>
+                    <span className={styles['appointment-detail-label']}>Mobile</span>
+                    <span className={styles['appointment-detail-value']}>{appointment.patientMobile || '—'}</span>
                   </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Doctor Name</span>
-                    <span className="appointment-detail-value">{appointment.doctorFullName || '—'}</span>
+                  <div className={styles['appointment-detail-item']}>
+                    <span className={styles['appointment-detail-label']}>Doctor Name</span>
+                    <span className={styles['appointment-detail-value']}>{appointment.doctorFullName || '—'}</span>
                   </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Doctor Code</span>
-                    <span className="appointment-detail-value">{appointment.doctorCode || '—'}</span>
+                  <div className={styles['appointment-detail-item']}>
+                    <span className={styles['appointment-detail-label']}>Doctor Code</span>
+                    <span className={styles['appointment-detail-value']}>{appointment.doctorCode || '—'}</span>
                   </div>
                 </div>
               </div>
 
               {/* Appointment Details */}
-              <div className="appointment-details-section">
-                <h3 className="appointment-section-title">
+              <div className={styles['appointment-details-section']}>
+                <h3 className={styles['appointment-section-title']}>
                   <FiCalendar size={18} />
                   Appointment Details
                 </h3>
-                <div className="appointment-details-grid">
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Date</span>
-                    <span className="appointment-detail-value">{formatDate(appointment.appointmentDate)}</span>
+                <div className={styles['appointment-details-grid']}>
+                  <div className={styles['appointment-detail-item']}>
+                    <span className={styles['appointment-detail-label']}>Date</span>
+                    <span className={styles['appointment-detail-value']}>{formatDate(appointment.appointmentDate)}</span>
                   </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Time</span>
-                    <span className="appointment-detail-value">{formatTime(appointment.appointmentTime)}</span>
+                  <div className={styles['appointment-detail-item']}>
+                    <span className={styles['appointment-detail-label']}>Time</span>
+                    <span className={styles['appointment-detail-value']}>{formatTime(appointment.appointmentTime)}</span>
                   </div>
-                  <div className="appointment-detail-item appointment-full-width">
-                    <span className="appointment-detail-label">Reason for Visit</span>
-                    <span className="appointment-detail-value">{appointment.reason || '—'}</span>
+                  <div className={`${styles['appointment-detail-item']} ${styles['appointment-full-width']}`}>
+                    <span className={styles['appointment-detail-label']}>Reason for Visit</span>
+                    <span className={styles['appointment-detail-value']}>{appointment.reason || '—'}</span>
                   </div>
                 </div>
               </div>
 
               {/* Clinic & Record Information */}
-              <div className="appointment-details-section">
-                <h3 className="appointment-section-title">
+              <div className={styles['appointment-details-section']}>
+                <h3 className={styles['appointment-section-title']}>
                   <FiFileText size={18} />
                   Clinic &amp; Record Information
                 </h3>
-                <div className="appointment-details-grid">
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Clinic Name</span>
-                    <span className="appointment-detail-value">{appointment.clinicName || '—'}</span>
+                <div className={styles['appointment-details-grid']}>
+                  <div className={styles['appointment-detail-item']}>
+                    <span className={styles['appointment-detail-label']}>Clinic Name</span>
+                    <span className={styles['appointment-detail-value']}>{appointment.clinicName || '—'}</span>
                   </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Branch Name</span>
-                    <span className="appointment-detail-value">{appointment.branchName || '—'}</span>
+                  <div className={styles['appointment-detail-item']}>
+                    <span className={styles['appointment-detail-label']}>Branch Name</span>
+                    <span className={styles['appointment-detail-value']}>{appointment.branchName || '—'}</span>
                   </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Date Created</span>
-                    <span className="appointment-detail-value">{formatDate(appointment.dateCreated)}</span>
+                  <div className={styles['appointment-detail-item']}>
+                    <span className={styles['appointment-detail-label']}>Date Created</span>
+                    <span className={styles['appointment-detail-value']}>{formatDate(appointment.dateCreated)}</span>
                   </div>
-                  <div className="appointment-detail-item">
-                    <span className="appointment-detail-label">Last Modified</span>
-                    <span className="appointment-detail-value">{formatDate(appointment.dateModified)}</span>
+                  <div className={styles['appointment-detail-item']}>
+                    <span className={styles['appointment-detail-label']}>Last Modified</span>
+                    <span className={styles['appointment-detail-value']}>{formatDate(appointment.dateModified)}</span>
                   </div>
                 </div>
               </div>
@@ -287,17 +295,17 @@ const ViewAppointment = ({ isOpen, onClose, appointment: passedAppointment, onRe
         </div>
 
         {/* Footer */}
-        <div className="appointment-modal-footer">
+        <div className={styles['appointment-modal-footer']}>
           {appointment && appointment.status === 1 && (
             <button
               onClick={handleCancelClick}
               disabled={cancelBtnCooldown || cancelLoading}
-              className="appointment-cancel-appointment-btn"
+              className={styles['appointment-cancel-appointment-btn']}
             >
               {cancelLoading ? 'Cancelling...' : 'Cancel Appointment'}
             </button>
           )}
-          <button onClick={onClose} className="appointment-close-btn">
+          <button onClick={onClose} className={styles['appointment-close-btn']}>
             Close
           </button>
         </div>

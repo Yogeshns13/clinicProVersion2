@@ -12,7 +12,7 @@ import ViewInvoice from './ViewInvoice.jsx';
 import styles from './InvoiceManagement.module.css';
 import { getStoredClinicId, getStoredBranchId, getStoredFileAccessToken } from '../Utils/Cryptoutils.js';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
-import { FaRupeeSign } from 'react-icons/fa';
+import { FaClinicMedical, FaRupeeSign } from 'react-icons/fa';
 
 const INVOICE_STATUSES = [
   { id: 1, label: 'Draft'          },
@@ -95,11 +95,6 @@ const getTodayStr = () => new Date().toISOString().split('T')[0];
 
 // ──────────────────────────────────────────────────
 // INDEXEDDB PERSISTENCE HELPERS
-//
-// Persists: { activeColumns: string[], menuOrder: string[] }
-// Survives logout → login because IndexedDB is origin-scoped.
-// On every toggle / reorder the prefs are written immediately,
-// so the "last changes screen" is always restored on next login.
 // ──────────────────────────────────────────────────
 const IDB_DB_NAME    = 'AppPreferences';
 const IDB_STORE_NAME = 'columnPrefs';
@@ -159,18 +154,12 @@ const DYNAMIC_COLS_MAP = {
   patientMobile: { id: 'patientMobile', label: 'Patient Mobile',  header: 'Patient Mobile',  icon: <FiPhone   size={15} />, render: (inv) => inv.patientMobile || '—' },
 };
 
-// Slot 0 → Paid Amount | Slot 1 → Balance Amount | Slot 2 → Status
-// isStatus flag lets the cell render the badge JSX instead of plain text
 const SLOT_DEFAULTS = [
   { header: 'Paid Amount',    render: (inv) => formatCurrencyStatic(inv.paidAmount),                                                          isStatus: false },
   { header: 'Balance Amount', render: (inv) => formatCurrencyStatic((Number(inv.netAmount) || 0) - (Number(inv.paidAmount) || 0)),             isStatus: false },
   { header: 'Status',         render: (inv) => inv.status,                                                                                    isStatus: true  },
 ];
 
-// Default order of dynamic cols in the menu
-// Index 0 → owns Paid Amount slot  ← discount starts here
-// Index 1 → owns Balance Amount slot
-// Index 2 → owns Status slot
 const INITIAL_ORDER = ['discount', 'invoiceType', 'patientMobile'];
 
 // ─── PDF Viewer Modal ─────────────────────────────────────────────────────────
@@ -242,7 +231,6 @@ const InvoiceList = () => {
   // ── Dynamic columns state ──
   const [activeColumns, setActiveColumns] = useState(new Set());
   const [menuOrder,     setMenuOrder]     = useState(INITIAL_ORDER);
-  // Guard: don't save to IDB until we've loaded from IDB first
   const [prefsLoaded,   setPrefsLoaded]   = useState(false);
 
   const today = getTodayStr();
@@ -287,31 +275,31 @@ const InvoiceList = () => {
   const [validationMessages, setValidationMessages] = useState({});
   const [confirmCancel, setConfirmCancel]           = useState(null);
 
-  // ── PDF state ───────────────────────────────────────────────────────────────
-  const [pdfModal,    setPdfModal]    = useState(null);   // { url, blob, label }
+  // ── PDF state ──
+  const [pdfModal,    setPdfModal]    = useState(null);
   const [printingId,  setPrintingId]  = useState(null);
   const [printError,  setPrintError]  = useState(null);
 
-  // ── Button cooldown state ───────────────────────────────────────────────────
+  // ── Button cooldown state ──
   const [btnCooldown, setBtnCooldown] = useState({});
   const triggerCooldown = (key) => {
     setBtnCooldown((prev) => ({ ...prev, [key]: true }));
     setTimeout(() => setBtnCooldown((prev) => ({ ...prev, [key]: false })), 2000);
   };
 
-  // ── MessagePopup state ──────────────────────────────────────────────────────
+  // ── MessagePopup state ──
   const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
   const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
   const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
 
-  // ── Payment form required-field gating ─────────────────────────────────────
+  // ── Payment form required-field gating ──
   const paymentAllRequiredFilled =
     paymentData.paymentDate.trim().length > 0 &&
     paymentData.paymentMode !== ''           &&
     paymentData.amount.trim().length > 0     &&
     Number(paymentData.amount) > 0;
 
-  // ── Derived ────────────────────────────────────────────────────────────────
+  // ── Derived ──
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== '' ||
     appliedFilters.patientName.trim() !== '' ||
@@ -320,9 +308,7 @@ const InvoiceList = () => {
     appliedFilters.dateFrom    !== today ||
     appliedFilters.dateTo      !== today;
 
-  // ── Load column prefs from IndexedDB on mount ─────────────────────────────
-  // This runs once when the component mounts (i.e. after login).
-  // It restores whatever the user had last — surviving logout → login.
+  // ── Load column prefs from IndexedDB on mount ──
   useEffect(() => {
     (async () => {
       try {
@@ -348,9 +334,7 @@ const InvoiceList = () => {
     })();
   }, []);
 
-  // ── Save column prefs to IndexedDB whenever they change ──────────────────
-  // The prefsLoaded guard prevents overwriting saved prefs with defaults
-  // during the initial render before the IDB read completes.
+  // ── Save column prefs to IndexedDB whenever they change ──
   useEffect(() => {
     if (!prefsLoaded) return;
     idbSet(IDB_KEY, {
@@ -399,7 +383,7 @@ const InvoiceList = () => {
     };
   });
 
-  // ── Fetch ──────────────────────────────────────────────────────────────────
+  // ── Fetch ──
   const fetchInvoices = async (filters = appliedFilters, currentPage = page) => {
     try {
       setLoading(true);
@@ -433,7 +417,7 @@ const InvoiceList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedFilters]);
 
-  // ── Client-side filter ─────────────────────────────────────────────────────
+  // ── Client-side filter ──
   const filteredInvoices = useMemo(() => {
     let filtered = allInvoices;
     if (appliedFilters.searchValue.trim()) {
@@ -457,7 +441,7 @@ const InvoiceList = () => {
     return { total, paid, pending, cancelled, count: filteredInvoices.length };
   }, [filteredInvoices]);
 
-  // ── Pagination ─────────────────────────────────────────────────────────────
+  // ── Pagination ──
   const handlePageChange = (newPage) => {
     if (newPage < 1) return;
     triggerCooldown(`page-${newPage}`);
@@ -468,12 +452,12 @@ const InvoiceList = () => {
   const startRecord = filteredInvoices.length === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord   = (page - 1) * pageSize + filteredInvoices.length;
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
+  // ── Helpers ──
   const calculateBalanceAmount = (netAmount, paidAmount) => {
     return (Number(netAmount) || 0) - (Number(paidAmount) || 0);
   };
 
-  // ── Filter handlers ────────────────────────────────────────────────────────
+  // ── Filter handlers ──
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs(prev => ({ ...prev, [name]: value }));
@@ -496,7 +480,7 @@ const InvoiceList = () => {
     setAppliedFilters(defaults);
   };
 
-  // ── Modal handlers ─────────────────────────────────────────────────────────
+  // ── Modal handlers ──
   const openViewModal = (invoice) => {
     triggerCooldown(`view-${invoice.id}`);
     setSelectedInvoice(invoice);
@@ -528,7 +512,7 @@ const InvoiceList = () => {
     setValidationMessages({});
   };
 
-  // ── Print / PDF handlers ───────────────────────────────────────────────────
+  // ── Print / PDF handlers ──
   const handlePrintInvoice = async (invoice) => {
     try {
       setPrintingId(invoice.id);
@@ -572,7 +556,7 @@ const InvoiceList = () => {
     setPdfModal(null);
   };
 
-  // ── Payment input handler ──────────────────────────────────────────────────
+  // ── Payment input handler ──
   const handlePaymentInputChange = (e) => {
     const { name, value } = e.target;
     const filteredValue = filterInput(name, value);
@@ -581,7 +565,7 @@ const InvoiceList = () => {
     setValidationMessages(prev => ({ ...prev, [name]: validationMessage }));
   };
 
-  // ── Add payment ────────────────────────────────────────────────────────────
+  // ── Add payment ──
   const handleAddPayment = async (e) => {
     e.preventDefault();
 
@@ -629,7 +613,7 @@ const InvoiceList = () => {
     }
   };
 
-  // ── Cancel invoice ─────────────────────────────────────────────────────────
+  // ── Cancel invoice ──
   const handleCancelInvoice = (invoice) => {
     triggerCooldown(`cancel-${invoice.id}`);
     setConfirmCancel(invoice);
@@ -651,7 +635,7 @@ const InvoiceList = () => {
     }
   };
 
-  // ── Formatters ─────────────────────────────────────────────────────────────
+  // ── Formatters ──
   const formatCurrency = (amount) => amount ? `₹${Number(amount).toFixed(2)}` : '₹0.00';
   const formatDate     = (dateStr) => {
     if (!dateStr) return '—';
@@ -668,14 +652,17 @@ const InvoiceList = () => {
     return statusObj?.label || 'Unknown';
   };
 
-  // ── Early returns ──────────────────────────────────────────────────────────
+  // ── Early returns ──
   if (error && (error?.status >= 400 || error?.code >= 400)) {
     return <ErrorHandler error={error} />;
   }
 
   if (loading) return <div className={styles.invoiceLoading}><LoadingPage/></div>;
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
+
+  // ── Render ──
   return (
     <div className={styles.invoiceListWrapper}>
       <ErrorHandler error={error} />
@@ -803,16 +790,10 @@ const InvoiceList = () => {
           <table className={styles.invoiceTable}>
             <thead>
               <tr>
-                {/* ── Mandatory columns ── */}
                 <th>Invoice No</th>
                 <th>Patient</th>
                 <th>Invoice Date</th>
                 <th>Net Amount</th>
-                {/* ── Dynamic slots
-                    slot 0 default → Paid Amount    (discount owns this slot)
-                    slot 1 default → Balance Amount
-                    slot 2 default → Status
-                ── */}
                 {tableSlots.map((slot, i) => <th key={i}>{slot.header}</th>)}
                 <th>Actions</th>
               </tr>
@@ -829,10 +810,8 @@ const InvoiceList = () => {
                   const balanceAmount = calculateBalanceAmount(invoice.netAmount, invoice.paidAmount);
                   return (
                     <tr key={invoice.id}>
-                      {/* ── Mandatory: Invoice No ── */}
                       <td><div className={styles.invoiceNoBadge}>{invoice.invoiceNo}</div></td>
 
-                      {/* ── Mandatory: Patient ── */}
                       <td>
                         <div className={styles.patientCell}>
                           <FiUser size={16} className={styles.patientIcon} />
@@ -843,13 +822,10 @@ const InvoiceList = () => {
                         </div>
                       </td>
 
-                      {/* ── Mandatory: Invoice Date ── */}
                       <td><span className={styles.dateText}>{formatDate(invoice.invoiceDate)}</span></td>
 
-                      {/* ── Mandatory: Net Amount ── */}
                       <td><span className={`${styles.amountText} ${styles.total}`}>{formatCurrency(invoice.netAmount)}</span></td>
 
-                      {/* ── Dynamic slots ── */}
                       {tableSlots.map((slot, i) =>
                         slot.isStatus ? (
                           <td key={i}>
@@ -862,11 +838,9 @@ const InvoiceList = () => {
                         )
                       )}
 
-                      {/* ── Actions ── */}
                       <td>
                         <div className={styles.invoiceActionsCell}>
 
-                          {/* ── Add Payment / Paid indicator ── */}
                           {invoice.status === 3 ? (
                             <span className={styles.invoicePaidPill}>✓ Paid</span>
                           ) : invoice.status !== 5 ? (
@@ -879,7 +853,6 @@ const InvoiceList = () => {
                             </button>
                           ) : null}
 
-                          {/* ── Details button ── */}
                           <button
                             onClick={() => openViewModal(invoice)}
                             className={styles.invoiceViewBtn}
@@ -889,7 +862,6 @@ const InvoiceList = () => {
                             Details
                           </button>
 
-                          {/* ── Print button ── */}
                           <button
                             onClick={() => handlePrintInvoice(invoice)}
                             className={styles.invoicePrintBtn}
@@ -945,10 +917,34 @@ const InvoiceList = () => {
       {isPaymentModalOpen && (
         <div className={styles.invoiceModalOverlay}>
           <div className={styles.invoiceModal}>
+
+            {/* ─── UPDATED HEADER ─── */}
             <div className={styles.invoiceModalHeader}>
               <h2>Add Payment</h2>
-              <button onClick={closeModals} className={styles.invoiceModalClose} disabled={formLoading}>×</button>
+
+              {/* Right side: clinic pill + close button */}
+              <div className={styles.modalHeaderRight}>
+                <div className={styles.clinicPill}>
+                  <div className={styles.clinicPillIconBox}>
+                    <FaClinicMedical size={20} />
+                  </div>
+                  <div className={styles.clinicPillText}>
+                    <span className={styles.clinicPillName}>{clinicName}</span>
+                    <span className={styles.clinicPillBranch}>{branchName}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={closeModals}
+                  className={styles.invoiceModalClose}
+                  disabled={formLoading}
+                >
+                  ×
+                </button>
+              </div>
             </div>
+            {/* ─── END UPDATED HEADER ─── */}
+
             <form onSubmit={handleAddPayment} noValidate>
               <div className={styles.invoiceModalBody}>
                 <div className={styles.invoiceHeader}>

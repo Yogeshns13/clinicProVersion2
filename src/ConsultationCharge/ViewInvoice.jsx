@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiFileText, FiUser, FiDollarSign, FiCalendar, FiClock, FiInfo } from 'react-icons/fi';
 import { getInvoiceList } from '../Api/ApiInvoicePayment.js';
-import './ViewInvoice.css';
+import styles from './ViewInvoice.module.css';
 import {FaClinicMedical} from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 
@@ -111,38 +111,46 @@ const ViewInvoice = ({
   // Use fetched invoice status when available, fall back to prop
   const currentStatus = invoice?.status ?? invoiceStatus;
   const isCancelled   = currentStatus === 5;
+  
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
 
   if (!isOpen) return null;
 
   return (
-    <div className="invoice-modal-overlay">
-      <div className="invoice-modal">
+    <div className={styles.invoiceModalOverlay}>
+      <div className={styles.invoiceModal}>
         {/* Header */}
-        <div className="invoice-modal-header">
-          <div className="invoice-header-content">
-            <FiFileText className="invoice-header-icon" size={24} />
+        <div className={styles.invoiceModalHeader}>
+          <div className={styles.invoiceHeaderContent}>
+            <FiFileText className={styles.invoiceHeaderIcon} size={24} />
             <h2>Invoice Details</h2>
           </div>
-          <div className="clinicNameone">
-            <FaClinicMedical size={18} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />  
-              {localStorage.getItem('clinicName') || '—'}
-          </div>
-          <button onClick={onClose} className="invoice-modal-close">
+          <div className={styles.addModalHeaderCard}>
+                      <div className={styles.clinicInfoIcon}>
+                        <FaClinicMedical size={18} />
+                      </div>
+                      <div className={styles.clinicInfoText}>
+                        <span className={styles.clinicInfoName}>{clinicName}</span>
+                        <span className={styles.clinicInfoBranch}>{branchName}</span>
+                      </div>
+                      </div>
+          <button onClick={onClose} className={styles.invoiceModalClose}>
             <FiX size={20} />
           </button>
         </div>
 
         {/* Body */}
-        <div className="invoice-modal-body">
+        <div className={styles.invoiceModalBody}>
           {loading && (
-            <div className="invoice-loading">
-              <div className="invoice-spinner"></div>
+            <div className={styles.invoiceLoading}>
+              <div className={styles.invoiceSpinner}></div>
               <p>Loading invoice details...</p>
             </div>
           )}
 
           {error && (
-            <div className="invoice-error">
+            <div className={styles.invoiceError}>
               <p>Error: {error.message || error}</p>
             </div>
           )}
@@ -150,113 +158,113 @@ const ViewInvoice = ({
           {!loading && !error && invoice && (
             <>
               {/* Invoice Information */}
-              <div className="invoice-details-section">
-                <h3 className="invoice-section-title">
+              <div className={styles.invoiceDetailsSection}>
+                <h3 className={styles.invoiceSectionTitle}>
                   <FiFileText size={18} />
                   Invoice Information
                 </h3>
-                <div className="invoice-details-grid">
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Invoice Number</span>
-                    <span className="invoice-detail-value">{invoice.invoiceNo || '—'}</span>
+                <div className={styles.invoiceDetailsGrid}>
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>Invoice Number</span>
+                    <span className={styles.invoiceDetailValue}>{invoice.invoiceNo || '—'}</span>
                   </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Invoice Date</span>
-                    <span className="invoice-detail-value">{formatDate(invoice.invoiceDate)}</span>
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>Invoice Date</span>
+                    <span className={styles.invoiceDetailValue}>{formatDate(invoice.invoiceDate)}</span>
                   </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Invoice Type</span>
-                    <span className="invoice-detail-value">{invoice.invoiceTypeDesc || '—'}</span>
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>Invoice Type</span>
+                    <span className={styles.invoiceDetailValue}>{invoice.invoiceTypeDesc || '—'}</span>
                   </div>
                 </div>
               </div>
 
               {/* Patient Information */}
-              <div className="invoice-details-section">
-                <h3 className="invoice-section-title">
+              <div className={styles.invoiceDetailsSection}>
+                <h3 className={styles.invoiceSectionTitle}>
                   <FiUser size={18} />
                   Patient & Clinic Information
                 </h3>
-                <div className="invoice-details-grid">
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Patient Name</span>
-                    <span className="invoice-detail-value">{invoice.patientName || '—'}</span>
+                <div className={styles.invoiceDetailsGrid}>
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>Patient Name</span>
+                    <span className={styles.invoiceDetailValue}>{invoice.patientName || '—'}</span>
                   </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">File Number</span>
-                    <span className="invoice-detail-value">{invoice.patientFileNo || '—'}</span>
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>File Number</span>
+                    <span className={styles.invoiceDetailValue}>{invoice.patientFileNo || '—'}</span>
                   </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Mobile</span>
-                    <span className="invoice-detail-value">{invoice.patientMobile || '—'}</span>
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>Mobile</span>
+                    <span className={styles.invoiceDetailValue}>{invoice.patientMobile || '—'}</span>
                   </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Clinic Name</span>
-                    <span className="invoice-detail-value">{invoice.clinicName || '—'}</span>
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>Clinic Name</span>
+                    <span className={styles.invoiceDetailValue}>{invoice.clinicName || '—'}</span>
                   </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Branch Name</span>
-                    <span className="invoice-detail-value">{invoice.branchName || '—'}</span>
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>Branch Name</span>
+                    <span className={styles.invoiceDetailValue}>{invoice.branchName || '—'}</span>
                   </div>
                 </div>
               </div>
 
               {/* Amount Details */}
-              <div className="invoice-details-section">
-                <h3 className="invoice-section-title">
+              <div className={styles.invoiceDetailsSection}>
+                <h3 className={styles.invoiceSectionTitle}>
                   <FiDollarSign size={18} />
                   Amount & Record Information
                 </h3>
-                <div className="invoice-details-grid">
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Total Amount</span>
-                    <span className="invoice-detail-value invoice-amount-highlight">
+                <div className={styles.invoiceDetailsGrid}>
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>Total Amount</span>
+                    <span className={`${styles.invoiceDetailValue} ${styles.invoiceAmountHighlight}`}>
                       {formatCurrency(invoice.totalAmount)}
                     </span>
                   </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Discount</span>
-                    <span className="invoice-detail-value">
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>Discount</span>
+                    <span className={styles.invoiceDetailValue}>
                       {formatCurrency(invoice.discount)}
                     </span>
                   </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">CGST Amount</span>
-                    <span className="invoice-detail-value">
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>CGST Amount</span>
+                    <span className={styles.invoiceDetailValue}>
                       {formatCurrency(invoice.cgstAmount)}
                     </span>
                   </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">SGST Amount</span>
-                    <span className="invoice-detail-value">
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>SGST Amount</span>
+                    <span className={styles.invoiceDetailValue}>
                       {formatCurrency(invoice.sgstAmount)}
                     </span>
                   </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Net Amount</span>
-                    <span className="invoice-detail-value invoice-amount-highlight">
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>Net Amount</span>
+                    <span className={`${styles.invoiceDetailValue} ${styles.invoiceAmountHighlight}`}>
                       {formatCurrency(invoice.netAmount)}
                     </span>
                   </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Paid Amount</span>
-                    <span className="invoice-detail-value invoice-paid-amount">
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>Paid Amount</span>
+                    <span className={`${styles.invoiceDetailValue} ${styles.invoicePaidAmount}`}>
                       {formatCurrency(invoice.paidAmount)}
                     </span>
                   </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Balance Amount</span>
-                    <span className="invoice-detail-value invoice-balance-amount">
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>Balance Amount</span>
+                    <span className={`${styles.invoiceDetailValue} ${styles.invoiceBalanceAmount}`}>
                       {formatCurrency(calculateBalance(invoice.netAmount, invoice.paidAmount))}
                     </span>
                   </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Date Created</span>
-                    <span className="invoice-detail-value">{formatDate(invoice.dateCreated)}</span>
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>Date Created</span>
+                    <span className={styles.invoiceDetailValue}>{formatDate(invoice.dateCreated)}</span>
                   </div>
-                  <div className="invoice-detail-item">
-                    <span className="invoice-detail-label">Last Modified</span>
-                    <span className="invoice-detail-value">{formatDate(invoice.dateModified)}</span>
+                  <div className={styles.invoiceDetailItem}>
+                    <span className={styles.invoiceDetailLabel}>Last Modified</span>
+                    <span className={styles.invoiceDetailValue}>{formatDate(invoice.dateModified)}</span>
                   </div>
                 </div>
               </div>
@@ -265,19 +273,19 @@ const ViewInvoice = ({
         </div>
 
         {/* Footer */}
-        <div className="invoice-modal-footer">
+        <div className={styles.invoiceModalFooter}>
           {/* Cancel Invoice — only shown when invoice is NOT already cancelled */}
           {!isCancelled && !loading && !error && invoice && (
             <button
               onClick={() => onCancelInvoice && onCancelInvoice(invoice)}
-              className="invoice-cancel-btn"
+              className={styles.invoiceCancelBtn}
               disabled={!!cancelCooldown[`cancel-${invoiceId}`]}
               title="Cancel this invoice"
             >
               Cancel Invoice
             </button>
           )}
-          <button onClick={onClose} className="invoice-close-btn">
+          <button onClick={onClose} className={styles.invoiceCloseBtn}>
             Close
           </button>
         </div>

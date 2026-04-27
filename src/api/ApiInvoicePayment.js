@@ -272,7 +272,7 @@ export const getInvoicePaymentList = async (clinicId = 0, options = {}) => {
     authError.code = 401;
     throw authError;
   }
-
+  
   // Optional: stricter validation in non-production
   if (PRODUCTION_MODE !== true) {
     if (clinicId < 0 || (clinicId !== 0 && isNaN(clinicId))) {
@@ -339,7 +339,8 @@ export const getInvoicePaymentList = async (clinicId = 0, options = {}) => {
       status: payment.status,
       statusDesc: payment.status_desc || "Unknown",  
       dateCreated: payment.date_created || null,
-      dateModified: payment.date_modified || null
+      dateModified: payment.date_modified || null,
+      paymentStatus: payment.payment_status,
     }));
   } catch (error) {
     console.error("getInvoicePaymentList failed:", error);

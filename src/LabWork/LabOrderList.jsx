@@ -1479,6 +1479,9 @@ const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions
 
   const suggestedLabName = getExternalLabName(order.externalLabId);
 
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
+
   return (
     <div className={styles.detailModalOverlay} onClick={onClose}>
       <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
@@ -1493,10 +1496,15 @@ const OrderDetailsModal = ({ order, orderItems, loadingOrderItems, statusOptions
                 <h2 className={styles.detailHeaderTitle}>{order.patientName}</h2>
               </div>
             </div>
-            <div className={styles.clinicNameone}>
-              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
-              {localStorage.getItem('clinicName') || '—'}
-            </div>
+            <div className={styles.addModalHeaderCard}>
+                        <div className={styles.clinicInfoIcon}>
+                          <FaClinicMedical size={18} />
+                        </div>
+                        <div className={styles.clinicInfoText}>
+                          <span className={styles.clinicInfoName}>{clinicName}</span>
+                          <span className={styles.clinicInfoBranch}>{branchName}</span>
+                        </div>
+                        </div>
           </div>
           <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
         </div>
@@ -1680,16 +1688,24 @@ const UpdateOrderModal = ({ order, statusOptions, priorityOptions, onClose, onSu
     });
   };
 
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
+
   return (
     <div className={styles.modalOverlay} >
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h2>Update Order</h2>
           <div className={styles.headerRight}>
-            <div className={styles.clinicNameone}>
-              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
-              {localStorage.getItem('clinicName') || '—'}
-            </div>
+            <div className={styles.addModalHeaderCard}>
+                        <div className={styles.clinicInfoIcon}>
+                          <FaClinicMedical size={18} />
+                        </div>
+                        <div className={styles.clinicInfoText}>
+                          <span className={styles.clinicInfoName}>{clinicName}</span>
+                          <span className={styles.clinicInfoBranch}>{branchName}</span>
+                        </div>
+                        </div>
             <button onClick={onClose} className={styles.closeBtn}>×</button>
           </div>
         </div>

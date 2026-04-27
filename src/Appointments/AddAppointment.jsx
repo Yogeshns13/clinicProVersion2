@@ -808,6 +808,8 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
 
   const selectedSlot    = availableSlots.find(s => s.id === parseInt(formData.slotId));
   const selectedPatient = patients.find(p => String(p.id) === String(formData.patientId));
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
 
   if (!isOpen) return null;
 
@@ -829,10 +831,15 @@ const AddAppointment = ({ isOpen, onClose, onSuccess }) => {
               <FiCalendar className={styles.headerIcon} size={20} />
               <h2>Book New Appointment</h2>
             </div>
-            <div className={styles.clinicNameone}>
-              <FaClinicMedical size={20} style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }} />
-              {localStorage.getItem("clinicName") || "—"}
-            </div>
+            <div className={styles.addModalHeaderCard}>
+                        <div className={styles.clinicInfoIcon}>
+                          <FaClinicMedical size={18} />
+                        </div>
+                        <div className={styles.clinicInfoText}>
+                          <span className={styles.clinicInfoName}>{clinicName}</span>
+                          <span className={styles.clinicInfoBranch}>{branchName}</span>
+                        </div>
+                        </div>
             <button onClick={handleClose} className={styles.closeBtn} disabled={loading}>
               <FiX size={20} />
             </button>
