@@ -20,6 +20,17 @@ import styles from './AddEmployee.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
+import { useTableOptions } from '../Hooks/useTableOptions.js'; // ← NEW
+
+// ────────────────────────────────────────────────
+// TABLE IDs
+// ────────────────────────────────────────────────
+const TABLE_GENDER              = 1;
+const TABLE_BLOOD_GROUP         = 2;
+const TABLE_MARITAL_STATUS      = 3;
+const TABLE_ID_PROOF            = 4;
+const TABLE_DESIGNATION         = 5;
+const TABLE_WORK_DAYS           = 7;  // WorkShiftStatus / Work Days
 
 // ────────────────────────────────────────────────
 // HELPER — fetch fileAccessToken for a given clinicId
@@ -186,15 +197,8 @@ const getMaxBirthDate = () => {
 const getTodayDate = () => new Date().toISOString().split('T')[0];
 
 // ────────────────────────────────────────────────
-// CONSTANTS
+// CONSTANTS (static — not from tables)
 // ────────────────────────────────────────────────
-const GENDER_OPTIONS         = [{ id: 1, label: 'Male' }, { id: 2, label: 'Female' }, { id: 3, label: 'Other' }];
-const BLOOD_GROUP_OPTIONS    = [{ id: 1, label: 'A+' }, { id: 2, label: 'A-' }, { id: 3, label: 'B+' }, { id: 4, label: 'B-' }, { id: 5, label: 'AB+' }, { id: 6, label: 'AB-' }, { id: 7, label: 'O+' }, { id: 8, label: 'O-' }, { id: 9, label: 'Others' }];
-const MARITAL_STATUS_OPTIONS = [{ id: 1, label: 'Single' }, { id: 2, label: 'Married' }, { id: 3, label: 'Widowed' }, { id: 4, label: 'Divorced' }, { id: 5, label: 'Separated' }];
-const ID_PROOF_OPTIONS       = [{ id: 1, label: 'Aadhar' }, { id: 2, label: 'Passport' }, { id: 3, label: 'Driving Licence' }, { id: 4, label: 'Voter ID' }, { id: 5, label: 'PAN Card' }];
-const DESIGNATION_OPTIONS    = [{ id: 1, label: 'Doctor' }, { id: 2, label: 'Nurse' }, { id: 3, label: 'Receptionist' }, { id: 4, label: 'Pharmacist' }, { id: 5, label: 'Lab Technician' }, { id: 6, label: 'Billing Staff' }, { id: 7, label: 'Manager' }, { id: 8, label: 'Attendant' }, { id: 9, label: 'Cleaner' }, { id: 10, label: 'Others' }];
-const WORK_DAYS              = [{ id: 1, label: 'Sun' }, { id: 2, label: 'Mon' }, { id: 3, label: 'Tue' }, { id: 4, label: 'Wed' }, { id: 5, label: 'Thu' }, { id: 6, label: 'Fri' }, { id: 7, label: 'Sat' }];
-
 const BLANK_PROOF = () => ({ proofType: 0, idNumber: '', detail: '', expiryDate: '', fileId: 0 });
 
 const STEP1_FIELDS = [
@@ -204,6 +208,17 @@ const STEP1_FIELDS = [
 ];
 const STEP2_PROOF_FIELDS = ['proofType', 'idNumber', 'detail', 'expiryDate'];
 const STEP3_FIELDS       = ['AccountHolderName', 'AccountNo', 'BankName', 'IFSCCode', 'BankAddress'];
+
+// Static work days (Sun–Sat by position, not from a table)
+const WORK_DAYS = [
+  { id: 1, label: 'Sun' },
+  { id: 2, label: 'Mon' },
+  { id: 3, label: 'Tue' },
+  { id: 4, label: 'Wed' },
+  { id: 5, label: 'Thu' },
+  { id: 6, label: 'Fri' },
+  { id: 7, label: 'Sat' },
+];
 
 // ────────────────────────────────────────────────
 // SHIFT DROPDOWN COMPONENT
@@ -296,14 +311,23 @@ const ShiftDropdown = ({ shifts, selectedShifts, onToggle, disabled }) => {
 
 // ────────────────────────────────────────────────
 // AddEmployee
-//
-// Double-popup contract:
-//   • This component owns its OWN MessagePopup for step feedback.
-//   • On final success (Step 4), calls onSuccess() — EmployeeList shows its popup.
-//   • onError() is called for errors the parent needs to know about.
-//   • EmployeeList must NOT call showPopup inside closeAddForm.
 // ────────────────────────────────────────────────
 const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
+
+  // ── Load all dynamic options from TableService ──
+  const { tables } = useTableOptions([
+    TABLE_GENDER,
+    TABLE_BLOOD_GROUP,
+    TABLE_MARITAL_STATUS,
+    TABLE_ID_PROOF,
+    TABLE_DESIGNATION,
+  ]);
+  const genderOptions       = tables[TABLE_GENDER]         || [];
+  const bloodGroupOptions   = tables[TABLE_BLOOD_GROUP]    || [];
+  const maritalStatusOptions= tables[TABLE_MARITAL_STATUS] || [];
+  const idProofOptions      = tables[TABLE_ID_PROOF]       || [];
+  const designationOptions  = tables[TABLE_DESIGNATION]    || [];
+
   const [currentStep,        setCurrentStep]        = useState(1);
   const [createdEmployeeId,  setCreatedEmployeeId]  = useState(null);
   const [savedProofIds,      setSavedProofIds]      = useState([]);
@@ -350,10 +374,9 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
 
   const [selectedShifts,   setSelectedShifts]   = useState([]);
   const [selectedWorkDays, setSelectedWorkDays] = useState([]);
-  const [validationMessages,         setValidationMessages]         = useState({});
+  const [validationMessages,            setValidationMessages]            = useState({});
   const [beneficiaryValidationMessages, setBeneficiaryValidationMessages] = useState({});
 
-  // fetchShifts is NOT called on isOpen — it's called only after Step 3 submission succeeds
   useEffect(() => { if (!isOpen) resetForm(); }, [isOpen]);
 
   const fetchShifts = async () => {
@@ -751,7 +774,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
         if (result?.beneficiaryId) setSavedBeneficiaryId(result.beneficiaryId);
       }
 
-      // ── Fetch shifts NOW, after bank account is saved successfully ──
       fetchShifts();
 
       showPopup('Bank account saved successfully!', 'success');
@@ -781,7 +803,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
       }
       showPopup('Shift & workdays assigned successfully!', 'success');
       setTimeout(() => {
-        // onSuccess triggers EmployeeList's showPopup — no popup here after this
         onSuccess?.();
         onClose();
       }, 1000);
@@ -803,7 +824,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
 
   const handleSkipStep = () => {
     if (currentStep === 3) {
-      // Fetch shifts when skipping Step 3, same as submitting it
       fetchShifts();
     }
     if (currentStep < 4) {
@@ -861,7 +881,6 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
   return (
     <div className={styles.overlay}>
 
-      {/* Own MessagePopup — floats above the modal */}
       <MessagePopup
         visible={popup.visible}
         message={popup.message}
@@ -884,7 +903,7 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
               <span className={styles.clinicInfoName}>{clinicName}</span>
               <span className={styles.clinicInfoBranch}>{branchName}</span>
             </div>
-            </div>
+          </div>
           <button onClick={handleClose} className={styles.closeBtn}><FiX size={22} /></button>
         </div>
 
@@ -964,11 +983,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
                     <ValidationMsg field="lastName" msgs={validationMessages} />
                   </div>
 
+                  {/* Gender — from TableService Table ID 1 */}
                   <div className={styles.formGroup}>
                     <label>Gender <span className={styles.required}>*</span></label>
                     <select required name="gender" value={formData.gender} onChange={handleInputChange} disabled={loading}>
                       <option value="">Select Gender</option>
-                      {GENDER_OPTIONS.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
+                      {genderOptions.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
                     </select>
                     <ValidationMsg field="gender" msgs={validationMessages} />
                   </div>
@@ -979,19 +999,21 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
                     <ValidationMsg field="birthDate" msgs={validationMessages} />
                   </div>
 
+                  {/* Blood Group — from TableService Table ID 2 */}
                   <div className={styles.formGroup}>
                     <label>Blood Group</label>
                     <select name="bloodGroup" value={formData.bloodGroup} onChange={handleInputChange} disabled={loading}>
                       <option value={0}>Select Blood Group</option>
-                      {BLOOD_GROUP_OPTIONS.map(bg => <option key={bg.id} value={bg.id}>{bg.label}</option>)}
+                      {bloodGroupOptions.map(bg => <option key={bg.id} value={bg.id}>{bg.label}</option>)}
                     </select>
                   </div>
 
+                  {/* Marital Status — from TableService Table ID 3 */}
                   <div className={styles.formGroup}>
                     <label>Marital Status</label>
                     <select name="maritalStatus" value={formData.maritalStatus} onChange={handleInputChange} disabled={loading}>
                       <option value={0}>Select Status</option>
-                      {MARITAL_STATUS_OPTIONS.map(ms => <option key={ms.id} value={ms.id}>{ms.label}</option>)}
+                      {maritalStatusOptions.map(ms => <option key={ms.id} value={ms.id}>{ms.label}</option>)}
                     </select>
                   </div>
 
@@ -1044,12 +1066,13 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
                     </select>
                   </div>
 
+                  {/* Designation — from TableService Table ID 5 */}
                   <div className={styles.formGroup}>
                     <label>Designation <span className={styles.required}>*</span></label>
                     <select required name="designation" value={formData.designation} onChange={handleInputChange} disabled={loading}>
                       <ValidationMsg field="designation" msgs={validationMessages} />
                       <option value="">Select Designation</option>
-                      {DESIGNATION_OPTIONS.map(d => <option key={d.id} value={d.id}>{d.label}</option>)}
+                      {designationOptions.map(d => <option key={d.id} value={d.id}>{d.label}</option>)}
                     </select>
                   </div>
 
@@ -1174,11 +1197,12 @@ const AddEmployee = ({ isOpen, onClose, departments, onSuccess, onError }) => {
                     </div>
 
                     <div className={styles.formGrid}>
+                      {/* Proof Type — from TableService Table ID 4 */}
                       <div className={styles.formGroup}>
                         <label>Proof Type <span className={styles.required}>*</span></label>
                         <select required name="proofType" value={proof.proofType} onChange={(e) => handleProofInputChange(index, e)} disabled={loading}>
                           <option value="">Select Proof Type</option>
-                          {ID_PROOF_OPTIONS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                          {idProofOptions.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                         </select>
                         <ValidationMsg field="proofType" msgs={proofValidationMessages[index] || {}} />
                       </div>

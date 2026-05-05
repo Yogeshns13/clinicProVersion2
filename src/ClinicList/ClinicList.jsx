@@ -181,6 +181,10 @@ const INITIAL_ORDER = ['invoicePrefix', 'lastFileSeq', 'dateCreated', 'location'
 const ClinicList = () => {
   const [clinics, setClinics] = useState([]);
 
+  // ── Read profileName from localStorage ──
+  const profileName = localStorage.getItem('profileName') || '';
+  const isSprAdmin = profileName === 'spradmin';
+
   const [activeColumns, setActiveColumns] = useState(new Set());
   const [menuOrder,     setMenuOrder]     = useState(INITIAL_ORDER);
 
@@ -306,6 +310,13 @@ const ClinicList = () => {
     if (status === 'active')   return styles.active;
     if (status === 'inactive') return styles.inactive;
     return styles.inactive;
+  };
+
+  // Helper to render allow_login label (for SprAdmin view)
+  const getAllowLoginLabel = (allowLogin) => {
+    if (allowLogin === 1) return 'Yes';
+    if (allowLogin === 0) return 'No';
+    return '—';
   };
 
   const refreshClinics = () => fetchClinics(appliedFilters, page);
@@ -600,14 +611,16 @@ const ClinicList = () => {
             <thead>
               <tr>
                 <th>Clinic Name</th>
-                {tableSlots.map((slot, i) => <th key={i}>{slot.header}</th>)}
+                {tableSlots.slice(0, 3).map((slot, i) => <th key={i}>{slot.header}</th>)}
+                {isSprAdmin && <th>Allow Login</th>}
+                {tableSlots.slice(3).map((slot, i) => <th key={`tail-${i}`}>{slot.header}</th>)}
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {clinics.length === 0 ? (
-                <tr><td colSpan={7} className={styles.clinicNoData}>{hasActiveFilter ? 'No clinics found.' : 'No clinics registered yet.'}</td></tr>
+                <tr><td colSpan={isSprAdmin ? 8 : 7} className={styles.clinicNoData}>{hasActiveFilter ? 'No clinics found.' : 'No clinics registered yet.'}</td></tr>
               ) : (
                 clinics.map((clinic) => (
                   <tr key={clinic.id}>
@@ -620,7 +633,15 @@ const ClinicList = () => {
                         </div>
                       </div>
                     </td>
-                    {tableSlots.map((slot, i) => <td key={i}>{slot.render(clinic)}</td>)}
+                    {tableSlots.slice(0, 3).map((slot, i) => <td key={i}>{slot.render(clinic)}</td>)}
+                    {isSprAdmin && (
+                      <td>
+                        <span className={`${styles.statusBadge} ${clinic.allowLogin === 1 ? styles.active : styles.inactive}`}>
+                          {getAllowLoginLabel(clinic.allowLogin)}
+                        </span>
+                      </td>
+                    )}
+                    {tableSlots.slice(3).map((slot, i) => <td key={`tail-${i}`}>{slot.render(clinic)}</td>)}
                     <td>
                       <span className={`${styles.statusBadge} ${getStatusClass(clinic.status)}`}>{clinic.status.toUpperCase()}</span>
                     </td>
@@ -686,6 +707,13 @@ const ClinicList = () => {
                     <div className={styles.infoRow}><span className={styles.infoLabel}>Invoice Prefix</span><span className={styles.infoValue}>{selectedClinic.invoicePrefix || '—'}</span></div>
                     <div className={styles.infoRow}><span className={styles.infoLabel}>In-Lab Available</span><span className={styles.infoValue}>{selectedClinic.inLabAvailable === 1 ? 'Yes' : 'No'}</span></div>
                     <div className={styles.infoRow}><span className={styles.infoLabel}>In-Pharmacy Available</span><span className={styles.infoValue}>{selectedClinic.inPharmacyAvailable === 1 ? 'Yes' : 'No'}</span></div>
+                    {/* ── Allow Login — visible only to SprAdmin ── */}
+                    {isSprAdmin && (
+                      <div className={styles.infoRow}>
+                        <span className={styles.infoLabel}>Allow Login</span>
+                        <span className={styles.infoValue}>{getAllowLoginLabel(selectedClinic.allowLogin)}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -820,7 +848,13 @@ const ClinicList = () => {
 
       {/* ──────────────── Update Clinic Modal ──────────────── */}
       {isUpdateFormOpen && updateClinicData && (
-        <UpdateClinic clinic={updateClinicData} onClose={handleUpdateClose} onSuccess={handleUpdateSuccess} onError={handleUpdateError} />
+        <UpdateClinic
+          clinic={updateClinicData}
+          onClose={handleUpdateClose}
+          onSuccess={handleUpdateSuccess}
+          onError={handleUpdateError}
+          isSprAdmin={isSprAdmin}
+        />
       )}
     </div>
   );

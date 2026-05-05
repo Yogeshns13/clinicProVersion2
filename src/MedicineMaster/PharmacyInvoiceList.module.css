@@ -482,7 +482,7 @@
   z-index: 1000;
   animation: fadeIn 0.3s ease;
   backdrop-filter: blur(4px);
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
 }
 
 .modalContent {
@@ -879,4 +879,262 @@
     min-width: 32px;
     font-size: 0.78rem;
   }
+}
+
+/* ==================== DARK MODE ==================== */
+
+/* Main wrapper */
+:global(.dark-mode) .wrapper {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+}
+
+/* Loading */
+:global(.dark-mode) .loadingContainer p {
+  color: #94a3b8;
+}
+
+/* Filters container */
+:global(.dark-mode) .filtersContainer {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 5px 17px rgba(0, 0, 0, 0.3);
+}
+
+/* Search type select */
+:global(.dark-mode) .searchTypeSelect {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .searchTypeSelect:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
+}
+
+:global(.dark-mode) .searchTypeSelect option {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+/* Search input */
+:global(.dark-mode) .searchInput {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .searchInput::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+:global(.dark-mode) .searchInput:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
+  border-left-color: var(--accent-end);
+}
+
+/* Filter inputs */
+:global(.dark-mode) .filterInput {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .filterInput:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
+}
+
+:global(.dark-mode) .filterInput option {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .filterInput::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
+}
+
+:global(.dark-mode) .datePlaceholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+/* Clear button */
+:global(.dark-mode) .clearButton {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+:global(.dark-mode) .clearButton:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* Table container */
+:global(.dark-mode) .tableContainer {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 13px 38px rgba(0, 0, 0, 0.35);
+}
+
+/* Table header stays gradient — no override needed */
+
+/* Table rows & cells */
+:global(.dark-mode) .table td {
+  border-bottom-color: #334155;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .table tbody tr:nth-child(even) {
+  background-color: rgba(48, 178, 181, 0.06);
+}
+
+:global(.dark-mode) .tableRow:hover {
+  background-color: rgba(48, 178, 181, 0.1) !important;
+  box-shadow: none;
+}
+
+/* Name & sub text */
+:global(.dark-mode) .name {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .subText {
+  color: #94a3b8;
+}
+
+/* Pagination bar */
+:global(.dark-mode) .paginationBar {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark-mode) .paginationInfo {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .paginationLabel {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .pageBtn {
+  background: #0f172a;
+  border-color: #475569;
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-color: var(--accent-end);
+  color: white;
+}
+
+:global(.dark-mode) .pageSizeInfo {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .pageSizeInfo strong {
+  color: var(--accent-end);
+}
+
+/* Modal content */
+:global(.dark-mode) .modalContent {
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* Modal body */
+:global(.dark-mode) .modalBody {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+}
+
+/* Modal footer */
+:global(.dark-mode) .modalFooter {
+  background: #0f172a;
+  border-top-color: #334155;
+}
+
+/* Invoice header */
+:global(.dark-mode) .invoiceHeader {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.06), rgba(34, 211, 238, 0.03));
+  border-color: rgba(48, 178, 181, 0.2);
+}
+
+/* Detail items */
+:global(.dark-mode) .detailItem label {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .detailItem span {
+  color: #e2e8f0;
+}
+
+/* Medicine details section */
+:global(.dark-mode) .medicineDetailsSection h3 {
+  color: var(--accent-end);
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+}
+
+/* Details table */
+:global(.dark-mode) .detailsTable {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark-mode) .detailsTable thead {
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.3), rgba(48, 178, 181, 0.15));
+}
+
+:global(.dark-mode) .detailsTable th {
+  color: var(--accent-end);
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+}
+
+:global(.dark-mode) .table th {
+  background: linear-gradient(135deg, #334155, #475569);
+}
+
+:global(.dark-mode) .detailsTable td {
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+
+:global(.dark-mode) .detailsTable tbody tr:nth-child(even) {
+  background-color: rgba(48, 178, 181, 0.06);
+}
+
+:global(.dark-mode) .detailsTable tbody tr:hover {
+  background-color: rgba(48, 178, 181, 0.1);
+}
+
+:global(.dark-mode) .detailsTable tfoot {
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.3), rgba(48, 178, 181, 0.15));
+}
+
+:global(.dark-mode) .totalRow td {
+  border-top-color: rgba(48, 178, 181, 0.3);
+}
+
+/* Medicine name / generic / manufacturer / tax */
+:global(.dark-mode) .medicineName {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .genericName {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .manufacturer {
+  color: #64748b;
+}
+
+:global(.dark-mode) .taxAmount {
+  color: #94a3b8;
+}
+
+/* No data */
+:global(.dark-mode) .noData {
+  color: #94a3b8;
 }

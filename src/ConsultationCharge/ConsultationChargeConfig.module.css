@@ -426,7 +426,7 @@
   z-index: 1000;
   animation: fadeIn 0.3s ease;
   backdrop-filter: blur(4px);
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
 }
 
 .detailModalContent {
@@ -709,7 +709,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 200px;
+  padding: 20px 20px 20px 60px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -1152,6 +1152,41 @@
 
 :global(.dark-mode) .chargeConfigModalFooter {
   border-top-color: rgba(71, 85, 105, 0.5);
+}
+
+/* ==================== DARK MODE — PAGINATION BAR ==================== */
+:global(.dark-mode) .paginationBar {
+  background: #1e293b;
+  border-color: rgba(71, 85, 105, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+:global(.dark-mode) .paginationInfo {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .paginationLabel {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .pageBtn {
+  background: #0f172a;
+  border-color: #475569;
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-color: var(--accent-end);
+  color: white;
+}
+
+:global(.dark-mode) .pageSizeInfo {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .pageSizeInfo strong {
+  color: var(--accent-end);
 }
 
 /* ==================== RESPONSIVE ==================== */

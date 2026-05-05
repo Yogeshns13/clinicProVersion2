@@ -37,7 +37,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -67,6 +67,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   border-bottom: 1px solid rgba(255,255,255,0.18);
 }
 
@@ -74,7 +75,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  
+  flex: 1;
 }
 
 .avatarLarge {
@@ -95,14 +96,12 @@
   margin: 0;
   font-size: 1.2rem;
   font-weight: 700;
-  
 }
 
+/* ── Clinic/Branch card — centred in header, no auto-margins ── */
 .addModalHeaderCard {
   display: flex;
   align-items: center;
-  margin-left: auto;
-  margin-right:center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
   background: rgba(255, 255, 255, 0.18);
@@ -112,6 +111,7 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
   transition: background 0.2s ease;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .clinicInfoName {
@@ -147,6 +147,7 @@
   margin-right: 23px;
 }
 
+/* ── Close button — visually separated from the card ── */
 .modalClose {
   background: rgba(255, 255, 255, 0.25);
   border: none;
@@ -157,6 +158,8 @@
   font-size: 1.3rem;
   cursor: pointer;
   transition: all 0.25s ease;
+  flex-shrink: 0;
+  margin-left: 8px;
 }
 
 .modalClose:hover {
@@ -506,10 +509,28 @@
 }
 
 /* ==================== DARK MODE ==================== */
+
+/* Modal shell */
 :global(.dark-mode) .modal {
   background: rgba(30, 41, 59, 0.94);
-  border-color: #475569;
-  color: #e2e8f0;
+  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.6);
+}
+
+/* Body */
+:global(.dark-mode) .detailsModalBody {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+}
+
+/* Section title */
+:global(.dark-mode) .sectionTitle {
+  color: var(--accent-end);
+  border-bottom-color: rgba(48, 178, 181, 0.4);
+}
+
+
+/* Info grid */
+:global(.dark-mode) .infoGrid {
+  background: #1e293b;
 }
 
 :global(.dark-mode) .infoCell {
@@ -520,8 +541,15 @@
   color: var(--accent-end);
 }
 
+
+
 :global(.dark-mode) .infoValue {
   color: #e2e8f0;
+}
+
+/* Details table */
+:global(.dark-mode) .detailsTable tr {
+  background: rgba(30, 41, 59, 0.6);
 }
 
 :global(.dark-mode) .detailsTable td.label,
@@ -536,6 +564,7 @@
   color: #e2e8f0;
 }
 
+/* Header h2 */
 :global(.dark-mode) .detailsModalHeader h2 {
   background: linear-gradient(135deg, var(--text-light), var(--accent-end));
   -webkit-background-clip: text;
@@ -543,18 +572,69 @@
   background-clip: text;
 }
 
+/* Status badges */
 :global(.dark-mode) .statusBadge.active,
 :global(.dark-mode) .active {
-  color: #9cc14d;
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.3);
 }
 
-:global(.dark-mode) .modalFooter {
-  background: linear-gradient(135deg, #1e293b, #334155);
+:global(.dark-mode) .statusBadge.inactive,
+:global(.dark-mode) .inactive {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Package items section */
+:global(.dark-mode) .packageItemsSection {
+  border-top-color: rgba(71, 85, 105, 0.4);
+}
+
+:global(.dark-mode) .noItems {
+  color: #94a3b8;
 }
 
 :global(.dark-mode) .itemCard {
   background: #1e293b;
   border-color: #475569;
+}
+
+:global(.dark-mode) .itemCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-color: var(--accent-end);
+}
+
+:global(.dark-mode) .itemName {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .itemDetails {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .btnDeleteItem {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+:global(.dark-mode) .btnDeleteItem:hover {
+  background: rgba(239, 68, 68, 0.22);
+}
+
+/* Form error */
+:global(.dark-mode) .formError {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(239, 68, 68, 0.18));
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Footer */
+:global(.dark-mode) .modalFooter {
+  background: linear-gradient(to bottom, #1e293b, #0f172a);
+  border-top-color: rgba(71, 85, 105, 0.5);
 }
 
 /* ==================== RESPONSIVE ==================== */

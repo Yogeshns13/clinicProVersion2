@@ -19,7 +19,7 @@ const getLiveValidationMessage = (fieldName, value) => {
       return '';
 
     case 'mobile':
-      if (!value || !value.trim()) return '';               // mobile is optional in update
+      if (!value || !value.trim()) return '';
       if (value.trim().length !== 10) return 'Mobile number must be 10 digits';
       if (!/^\d{10}$/.test(value.trim())) return 'Mobile number must contain only digits';
       return '';
@@ -28,16 +28,8 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (!value || !value.trim()) return 'Profile/Role is required';
       return '';
 
-    case 'password':
-      // Password is optional for update — only validate when not blank
-      if (value && value.trim()) {
-        if (value.trim().length < 6) return 'Password must be at least 6 characters';
-        if (value.trim().length > 50) return 'Password must not exceed 50 characters';
-      }
-      return '';
-
     case 'status':
-      if (!value) return 'Status is required';
+      if (value === '' || value === null || value === undefined) return 'Status is required';
       return '';
 
     default:
@@ -45,27 +37,49 @@ const getLiveValidationMessage = (fieldName, value) => {
   }
 };
 
-const VALIDATED_FIELDS = ['email', 'mobile', 'profileName', 'password', 'status'];
+const VALIDATED_FIELDS = ['email', 'mobile', 'profileName', 'status'];
 
-const STATUS_OPTIONS = [
-  { id: 1, label: 'Active' },
-  { id: 2, label: 'Inactive' },
+const PROFILE_OPTIONS = [
+  'admin',
+  'spradmin',
+  'frontdesk',
+  'nurse',
+  'pharmacy',
+  'labtech',
+  'accounts',
+  'doctor',
 ];
+
+// Only Active (0) and Suspended (2) — no Deleted option
+const STATUS_OPTIONS = [
+  { value: 0, label: 'Active' },
+  { value: 2, label: 'Suspended' },
+];
+
+const getStatusNumeric = (status) => {
+  if (status === 0 || status === '0') return 0;
+  if (status === 1 || status === '1') return 1;
+  if (status === 2 || status === '2') return 2;
+  if (typeof status === 'string') {
+    const lower = status.toLowerCase();
+    if (lower === 'active')    return 0;
+    if (lower === 'deleted')   return 1;
+    if (lower === 'suspended') return 2;
+    if (lower === 'inactive')  return 1;
+  }
+  return 0;
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UpdateUser
-//
-// Double-popup fix (same pattern as UpdateClinic):
-// UpdateUser owns its OWN MessagePopup for ALL feedback.
-// onSuccess / onError never carry a showPopup call in ClinicList/UserList.
 // ─────────────────────────────────────────────────────────────────────────────
 const UpdateUser = ({ user, onClose, onSuccess, onError }) => {
   const [formData, setFormData] = useState({
     email:       user.email       || '',
     mobile:      user.mobile      || '',
     profileName: user.profileName || '',
-    password:    '',              // intentionally blank – only change if filled
-    status:      user.status === 'active' ? 1 : 2,
+    status:      getStatusNumeric(user.status),
+    isLocked:    user.isLocked === 1 || user.isLocked === '1' ? true : false,
   });
 
   const [formLoading,        setFormLoading]        = useState(false);
@@ -83,7 +97,7 @@ const UpdateUser = ({ user, onClose, onSuccess, onError }) => {
       (f) => formData[f] !== '' && formData[f] !== null && formData[f] !== undefined && String(formData[f]).trim() !== ''
     );
     if (!allFilled) return false;
-    if (!formData.status) return false;
+    if (formData.status === '' || formData.status === null || formData.status === undefined) return false;
     const hasErrors = Object.values(validationMessages).some((msg) => !!msg);
     if (hasErrors) return false;
     return true;
@@ -91,9 +105,14 @@ const UpdateUser = ({ user, onClose, onSuccess, onError }) => {
 
   // ── Live validation ──
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     let filtered = value;
+    if (type === 'checkbox') {
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+      return;
+    }
     if (name === 'mobile') filtered = value.replace(/[^0-9]/g, '').slice(0, 10);
+    if (name === 'status') filtered = Number(value);
     setFormData((prev) => ({ ...prev, [name]: filtered }));
     const msg = getLiveValidationMessage(name, filtered);
     setValidationMessages((prev) => ({ ...prev, [name]: msg }));
@@ -129,15 +148,20 @@ const UpdateUser = ({ user, onClose, onSuccess, onError }) => {
     setTimeout(() => setSubmitBtnDisabled(false), 2000);
     setFormLoading(true);
 
+    // If isLocked is unchecked, reset both isLocked and failedLoginAttempts to 0
+    const isLockedValue         = formData.isLocked ? 1 : 0;
+    const failedLoginAttempts   = formData.isLocked ? (user.failedLoginAttempts ?? 0) : 0;
+
     try {
       await updateUser({
-        userId:      Number(user.userId),
-        clinicId:    user.clinicId || 0,
-        email:       formData.email.trim(),
-        mobile:      formData.mobile.trim(),
-        profileName: formData.profileName.trim(),
-        password:    formData.password.trim() || '',  // empty string = no change
-        status:      Number(formData.status),
+        userId:               Number(user.userId),
+        clinicId:             user.clinicId || 0,
+        email:                formData.email.trim(),
+        mobile:               formData.mobile.trim(),
+        profileName:          formData.profileName.trim(),
+        status:               Number(formData.status),
+        isLocked:             isLockedValue,
+        failedLoginAttempts:  failedLoginAttempts,
       });
 
       showPopup('User updated successfully!', 'success');
@@ -169,9 +193,10 @@ const UpdateUser = ({ user, onClose, onSuccess, onError }) => {
           <div className={styles.detailHeaderContent}>
             <h2>Update User</h2>
             <div className={styles.detailHeaderMeta}>
-              <span className={styles.workIdBadge}>{user.userName || 'User'}</span>
-              <span className={`${styles.workIdBadge} ${formData.status === 1 ? styles.activeBadge : styles.inactiveBadge}`}>
-                {formData.status === 1 ? 'ACTIVE' : 'INACTIVE'}
+              <span className={styles.workIdBadge}>
+                {user.userName && user.employeeName
+                  ? `${user.userName} / ${user.employeeName}`
+                  : user.userName || user.employeeName || 'User'}
               </span>
             </div>
           </div>
@@ -180,59 +205,12 @@ const UpdateUser = ({ user, onClose, onSuccess, onError }) => {
 
         <form onSubmit={handleSubmit} className={styles.addModalBody}>
 
-          {/* ── Read-only Association Info ── */}
-          <div className={styles.addSection}>
-            <div className={styles.addSectionHeader}><h3>Association (Read-only)</h3></div>
-            <div className={styles.addFormGrid}>
-
-              <div className={styles.addFormGroup}>
-                <label>Clinic</label>
-                <input
-                  readOnly
-                  value={user.clinicName || '—'}
-                  className={styles.readOnlyInput}
-                  tabIndex={-1}
-                />
-              </div>
-
-              <div className={styles.addFormGroup}>
-                <label>Branch</label>
-                <input
-                  readOnly
-                  value={user.branchName || '—'}
-                  className={styles.readOnlyInput}
-                  tabIndex={-1}
-                />
-              </div>
-
-              <div className={styles.addFormGroup}>
-                <label>Employee</label>
-                <input
-                  readOnly
-                  value={user.employeeName || '—'}
-                  className={styles.readOnlyInput}
-                  tabIndex={-1}
-                />
-              </div>
-
-            </div>
-          </div>
-
           {/* ── Editable Account Details ── */}
           <div className={styles.addSection}>
             <div className={styles.addSectionHeader}><h3>Account Details</h3></div>
-            <div className={styles.addFormGrid}>
 
-              <div className={styles.addFormGroup}>
-                <label>Username</label>
-                <input
-                  readOnly
-                  value={user.userName || '—'}
-                  className={styles.readOnlyInput}
-                  tabIndex={-1}
-                />
-              </div>
-
+            {/* Row 1: Email + Mobile */}
+            <div className={styles.updateFormRow}>
               <div className={styles.addFormGroup}>
                 <label>Email <span className={styles.required}>*</span></label>
                 <input
@@ -260,50 +238,66 @@ const UpdateUser = ({ user, onClose, onSuccess, onError }) => {
                   <span className={styles.validationMsg}>{validationMessages.mobile}</span>
                 )}
               </div>
+            </div>
 
+            {/* Row 2: Profile + Status */}
+            <div className={styles.updateFormRow}>
               <div className={styles.addFormGroup}>
                 <label>Profile / Role <span className={styles.required}>*</span></label>
-                <input
+                <select
                   name="profileName"
                   value={formData.profileName}
                   onChange={handleInputChange}
-                  placeholder="e.g. Admin, Doctor, Receptionist"
-                />
+                  className={styles.addSelect}
+                >
+                  <option value="">Select Profile / Role</option>
+                  {PROFILE_OPTIONS.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
                 {validationMessages.profileName && (
                   <span className={styles.validationMsg}>{validationMessages.profileName}</span>
                 )}
               </div>
 
               <div className={styles.addFormGroup}>
-                <label>
-                  New Password{' '}
-                  
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="Enter new password (optional)"
-                  autoComplete="new-password"
-                />
-                {validationMessages.password && (
-                  <span className={styles.validationMsg}>{validationMessages.password}</span>
-                )}
-              </div>
-
-              <div className={styles.addFormGroup}>
                 <label>Status <span className={styles.required}>*</span></label>
-                <select name="status" value={formData.status} onChange={handleInputChange}>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  className={styles.addSelect}
+                >
                   {STATUS_OPTIONS.map((s) => (
-                    <option key={s.id} value={s.id}>{s.label}</option>
+                    <option key={s.value} value={s.value}>{s.label}</option>
                   ))}
                 </select>
                 {validationMessages.status && (
                   <span className={styles.validationMsg}>{validationMessages.status}</span>
                 )}
               </div>
+            </div>
 
+            {/* Row 3: Is Locked checkbox */}
+            <div className={styles.updateFormRow}>
+              <div className={styles.addFormGroup}>
+                <label>Account Lock</label>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    name="isLocked"
+                    checked={formData.isLocked}
+                    onChange={handleInputChange}
+                    className={styles.checkboxInput}
+                  />
+                  <span className={styles.checkboxText}>
+                    Account is Locked
+                  </span>
+                </label>
+                <span className={styles.checkboxHint}>
+                  Uncheck to unlock the account and reset failed login attempts to 0
+                </span>
+              </div>
             </div>
           </div>
 

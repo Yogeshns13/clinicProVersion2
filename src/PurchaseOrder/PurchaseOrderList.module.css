@@ -436,6 +436,12 @@
 :global(.dark-mode) .searchInput { background: #0f172a; border-color: #475569; color: #e2e8f0; }
 :global(.dark-mode) .searchInput:focus { border-left: 1px solid var(--po-accent-end); }
 :global(.dark-mode) .inlineFilterInput { background: #0f172a; border-color: #475569; color: #e2e8f0; }
+
+:global(.dark-mode) .inlineFilterInput::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
+}
+
 :global(.dark-mode) .inlineFilterSelect { background: #0f172a; border-color: #475569; color: #e2e8f0; }
 :global(.dark-mode) .tableContainer { background: #1e293b; border-color: #475569; }
 :global(.dark-mode) .table th { background: linear-gradient(135deg, #334155, #475569); }

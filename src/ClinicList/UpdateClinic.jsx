@@ -97,7 +97,7 @@ const STATUS_OPTIONS   = [{ id: 1, label: 'Active' }, { id: 2, label: 'Inactive'
 const VALIDATED_FIELDS = ['clinicName','address','location','clinicType','gstNo','cgstPercentage','sgstPercentage','ownerName','mobile','altMobile','email','status'];
 
 // ─────────────────────────────────────────────────────────────────────────────
-const UpdateClinic = ({ clinic, onClose, onSuccess, onError }) => {
+const UpdateClinic = ({ clinic, onClose, onSuccess, onError, isSprAdmin }) => {
   const [formData, setFormData] = useState({
     clinicName:          clinic.name           || '',
     address:             clinic.address        || '',
@@ -113,6 +113,8 @@ const UpdateClinic = ({ clinic, onClose, onSuccess, onError }) => {
     status:              clinic.status === 'active' ? 1 : 2,
     inLabAvailable:      clinic.inLabAvailable      ?? 0,
     inPharmacyAvailable: clinic.inPharmacyAvailable ?? 0,
+    // ── allowLogin: initialise from clinic data; default to 1 if not present ──
+    allowLogin:          clinic.allowLogin !== undefined && clinic.allowLogin !== null ? clinic.allowLogin : 1,
   });
 
   const [formLoading,        setFormLoading]        = useState(false);
@@ -204,6 +206,11 @@ const UpdateClinic = ({ clinic, onClose, onSuccess, onError }) => {
     setFormData((prev) => ({ ...prev, [name]: Number(value) }));
   };
 
+  // ── Handler for allowLogin dropdown (SprAdmin only) ──
+  const handleAllowLoginChange = (e) => {
+    setFormData((prev) => ({ ...prev, allowLogin: Number(e.target.value) }));
+  };
+
   const validateAllFields = () => {
     const messages = {};
     let isValid = true;
@@ -267,6 +274,8 @@ const UpdateClinic = ({ clinic, onClose, onSuccess, onError }) => {
         inLabAvailable:      formData.inLabAvailable,
         inPharmacyAvailable: formData.inPharmacyAvailable,
         logoFileId:          resolvedLogoFileId,
+        // ── allowLogin: pass the value if SprAdmin, otherwise preserve the existing clinic value ──
+        allowLogin:          isSprAdmin ? formData.allowLogin : (clinic.allowLogin !== undefined && clinic.allowLogin !== null ? clinic.allowLogin : 1),
       });
 
       showPopup('Clinic updated successfully!', 'success');
@@ -474,6 +483,16 @@ const UpdateClinic = ({ clinic, onClose, onSuccess, onError }) => {
                   <option value={1}>Yes</option>
                 </select>
               </div>
+              {/* ── Allow Login — visible and editable only for SprAdmin ── */}
+              {isSprAdmin && (
+                <div className={styles.addFormGroup}>
+                  <label>Allow Login</label>
+                  <select name="allowLogin" value={formData.allowLogin} onChange={handleAllowLoginChange}>
+                    <option value={1}>Yes</option>
+                    <option value={0}>No</option>
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 

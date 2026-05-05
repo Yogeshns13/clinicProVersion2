@@ -33,7 +33,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -539,7 +539,7 @@
   font-size: 0.9rem;
   transition: all 0.3s ease;
   resize: vertical;
-  min-height: 120px;   /* tall enough for ~200 chars */
+  min-height: 120px;
   line-height: 1.5;
   font-family: inherit;
 }
@@ -584,6 +584,170 @@
 .medicalCheckboxBox {
   display: flex;
   flex-direction: column;
+}
+
+/* ==================== READ-ONLY INPUT ==================== */
+.readOnlyInput {
+  background: rgba(34, 43, 108, 0.05) !important;
+  border-color: rgba(34, 43, 108, 0.2) !important;
+  color: #64748b !important;
+  cursor: not-allowed !important;
+}
+
+/* ==================== DARK MODE ==================== */
+
+/* Modal shell */
+:global(.dark-mode) .addModalContent {
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+}
+
+/* Scrollable body */
+:global(.dark-mode) .addModalBodyScrollable {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+}
+
+/* Sections */
+:global(.dark-mode) .addSection {
+  border-bottom-color: rgba(71, 85, 105, 0.3);
+}
+
+:global(.dark-mode) .addSectionHeader h3 {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .addSectionHeader h3 {
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+  /* gradient text stays — no override needed */
+}
+
+/* Form labels */
+:global(.dark-mode) .addFormGroup label {
+  color: var(--accent-end);
+}
+
+/* Inputs, textareas, selects */
+:global(.dark-mode) .addFormGroup input,
+:global(.dark-mode) .addFormGroup textarea,
+:global(.dark-mode) .addFormGroup select {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .addFormGroup input::placeholder,
+:global(.dark-mode) .addFormGroup textarea::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+:global(.dark-mode) .addFormGroup input::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
+}
+
+:global(.dark-mode) .addFormGroup input:focus,
+:global(.dark-mode) .addFormGroup textarea:focus,
+:global(.dark-mode) .addFormGroup select:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
+  background: #1e293b;
+}
+
+:global(.dark-mode) .addFormGroup select option {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+/* Read-only input */
+:global(.dark-mode) .readOnlyInput {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border-color: #334155 !important;
+  color: #64748b !important;
+}
+
+/* Footer */
+:global(.dark-mode) .detailModalFooter {
+  background: #0f172a;
+  border-top-color: rgba(71, 85, 105, 0.5);
+}
+
+/* Family search section */
+:global(.dark-mode) .familySearchLabel {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .familySearchInput {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .familySearchInput::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+:global(.dark-mode) .familySearchInput:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
+  background: #1e293b;
+}
+
+:global(.dark-mode) .familyResultsList {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .familyResultsHeader {
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.3), rgba(48, 178, 181, 0.15));
+  border-bottom-color: #475569;
+}
+
+:global(.dark-mode) .familyResultsHeaderCell {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .familyResultItem {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+
+:global(.dark-mode) .familyResultItem:hover {
+  background: rgba(48, 178, 181, 0.08);
+}
+
+:global(.dark-mode) .familyResultItemSelected {
+  background: rgba(34, 197, 94, 0.1) !important;
+  border-left-color: #4caf50;
+}
+
+:global(.dark-mode) .familyResultCell {
+  color: #e2e8f0;
+}
+
+/* Medical section */
+:global(.dark-mode) .medicalColLabel {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .medicalTallTextarea {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .medicalTallTextarea::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+:global(.dark-mode) .medicalTallTextarea:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
+  background: #1e293b;
+}
+
+:global(.dark-mode) .medicalCheckboxPlaceholder {
+  border-color: #334155;
+  background: rgba(15, 23, 42, 0.3);
 }
 
 /* ==================== RESPONSIVE ==================== */
@@ -660,12 +824,4 @@
     font-size: 0.88rem;
     padding: 9px 12px;
   }
-}
-
-/* ==================== READ-ONLY INPUT ==================== */
-.readOnlyInput {
-  background: rgba(34, 43, 108, 0.05) !important;
-  border-color: rgba(34, 43, 108, 0.2) !important;
-  color: #64748b !important;
-  cursor: not-allowed !important;
 }

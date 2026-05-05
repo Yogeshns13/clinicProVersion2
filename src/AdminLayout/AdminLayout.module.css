@@ -1,0 +1,183 @@
+\/* src/components/layout/AdminLayout.module.css */
+
+.dashboardContainer {
+  min-height: 100vh;
+  background: #ffffff;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #e2e8f0;
+}
+
+/* Floating Medical Icons (Stethoscope & Heart Rate) */
+.floatingIcon {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.12;
+  animation: float 18s ease-in-out infinite;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.5));
+  z-index: 1;
+}
+
+.floatingIcon.scope {
+  width: 238px;
+  top: 10%;
+  left: 75%;
+  animation-delay: 0s;
+}
+
+.floatingIcon.meter {
+  width: 187px;
+  top: 60%;
+  left: 5%;
+  animation-delay: 6s;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-26px) rotate(5deg);
+  }
+}
+
+/* Sidebar Wrapper — controls hover expand/collapse */
+.sidebarWrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 66px; /* collapsed width */
+  z-index: 100;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.sidebarWrapper.expanded {
+  width: 240px; /* expanded width — adjust to match your Sidebar's full width */
+}
+
+/* Main Layout */
+.mainContent {
+  flex: 1;
+  margin-left: 66px; /* matches collapsed sidebar width */
+  padding: 7px 10px;
+  min-height: 100vh;
+  transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+  position: relative;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+
+  /* Hide scrollbar — Chrome, Safari, Edge */
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+
+.mainContent::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+:global(.dark-mode) .mainContent {
+    background: #1e293b;
+    border-color: #475569;
+    color: #e2e8f0;
+  }
+  
+
+
+.mainContentShifted {
+  margin-left: 240px; /* matches expanded sidebar width */
+}
+
+/* Optional: Add subtle overlay glow */
+.mainContent::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 170px;
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.6), transparent);
+  pointer-events: none;
+  z-index: -1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .mainContent::before {
+    background: linear-gradient(to bottom, rgba(15, 23, 42, 0.8), transparent);
+  }
+}
+
+/* Page Title Style (used in Dashboard, Patients, etc.) */
+.pageTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 7px 0;
+  letter-spacing: -0.4px;
+}
+
+.pageSubtitle {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Add this at the very top of AdminLayout.module.css */
+
+:global(html),
+:global(body) {
+  overflow: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE */
+}
+
+:global(html::-webkit-scrollbar),
+:global(body::-webkit-scrollbar) {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: 66px;
+    padding: 17px;
+  }
+
+  .floatingIcon.scope {
+    width: 187px;
+    left: 65%;
+  }
+
+  .floatingIcon.meter {
+    width: 153px;
+    top: 70%;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboardContainer {
+    flex-direction: column;
+  }
+
+  .sidebarWrapper {
+    position: relative;
+    width: 100% !important;
+    height: auto;
+  }
+
+  .mainContent,
+  .mainContentShifted {
+    margin-left: 0 !important;
+    padding: 14px;
+  }
+
+  .floatingIcon {
+    display: none;
+  }
+}

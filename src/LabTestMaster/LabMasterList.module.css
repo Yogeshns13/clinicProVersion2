@@ -569,7 +569,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -760,7 +760,7 @@
 .formSectionTitle {
   grid-column: 1 / -1;
   margin: 14px 0 8px;
-  font-size: 0.9rem;
+  font-size: 1.0rem;
   font-weight: 700;
   color: var(--primary-start);
   border-bottom: 2px solid var(--accent-end);
@@ -922,6 +922,10 @@
   color: #e2e8f0;
 }
 
+:global(.dark-mode) .formSectionTitle {
+  color: var(--accent-end);
+}
+
 :global(.dark-mode) .tabs { background: #1e293b; }
 
 :global(.dark-mode) .tab { color: #94a3b8; }
@@ -939,6 +943,11 @@
   background: #0f172a;
   border-color: #475569;
   color: #e2e8f0;
+}
+
+:global(.dark-mode) .filterInput::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
 }
 
 :global(.dark-mode) .searchInput:focus {
@@ -1019,6 +1028,12 @@
 
 :global(.dark-mode) .testSelectionItemSelected {
   background: rgba(48, 178, 181, 0.15);
+}
+
+:global(.dark-mode) .paginationBar {
+  background: #1e293b;
+  border-color: rgba(71, 85, 105, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 /* ==================== RESPONSIVE ==================== */

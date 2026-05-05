@@ -115,11 +115,72 @@ export const loginUser = async (username, password) => {
   } catch (err) {
     throw new Error(
       extractBackendError(err) ||
-      err.response?.data?.error ||   // <-- IMPORTANT (your backend uses "error")
+      err.response?.data?.error ||   
       err.response?.data?.message ||
       err.message ||
       "Network error"
     );
+  } 
+};
+
+export const getTextTableList = async (tableId = 0) => {
+  const userId = getUserId();
+
+  if (!userId) {
+    const authError = new Error("User ID is missing. Please log in again.");
+    authError.status = 401;
+    authError.code = 401;
+    throw authError;
+  }
+
+  const payload = {
+    CHANNEL_ID,
+    REF_KEY: generateRefKey(),
+    SESSION_REF: getSessionRef(),
+    USER_ID: parseInt(userId),
+    TableID: tableId,
+  };
+
+  console.log("GetTextTableList Payload:", payload);
+
+  try {
+    const response = await API.post("/GetTextTableList", payload);
+
+    console.log("GetTextTableList response:", response.data);
+
+    const result = response.data?.result;
+
+    checkDbError(result);
+
+    if (!Array.isArray(result)) {
+      throw new Error("Invalid response from server");
+    }
+
+    const formatted = result.map(item => ({
+      textId: item.TEXT_ID,
+      textValue: item.TEXT_VALUE,
+    }));
+
+    return formatted;
+
+    console.log("GetTextTableList:", formatted);
+
+  } catch (error) {
+    console.error("getTextTableList failed:", error);
+
+    const errorWithStatus = {
+      ...error,
+      status: error.response?.status || 500,
+      code: error.response?.status || 500,
+      message:
+        extractBackendError(error) ||
+        error.response?.data?.message ||
+        error.response?.data?.result?.OUT_ERROR ||
+        error.message ||
+        "Failed to fetch text table list"
+    };
+
+    throw errorWithStatus;
   }
 };
 
@@ -381,6 +442,7 @@ export const getClinicList = async (options = {}) => {
       seqGen: clinic.seq_gen,
       status: clinic.status === 1 ? 'active' : 'inactive',
       statusDesc: clinic.status_desc,
+      allowLogin: clinic.allow_login,
       fileAccessToken: clinic.file_access_token,
       dateCreated: clinic.date_created,
       dateModified: clinic.date_modified
@@ -399,53 +461,54 @@ export const getClinicList = async (options = {}) => {
   }
 };
 
-export const getClinicAllowLogin = async (clinicId) => {
-  const userId = getUserId();
-  if (!userId) {
-    const authError = new Error("User ID is missing. Please log in again.");
-    authError.status = 401;
-    authError.code = 401;
-    throw authError;
-  }
-
-  const payload = {
-    CHANNEL_ID,
-    REF_KEY: generateRefKey(),
-    SESSION_REF: getSessionRef(),
-    USER_ID: parseInt(userId),
-    ClinicID: clinicId
-  };
-
-  console.log("GetClinicAllowLogin Request:", payload);
-
+export const checkClinicAllowLogin = async () => {
   try {
-    const response = await API.post("/GetClinicAllowLogin", payload);
+    console.log("CheckClinicAllowLogin Request (JWT based, no payload)");
 
-    const result = response.data?.result;
-    checkDbError(result);
+    const response = await API.post(
+      "/CheckAllowLogin",
+      {}, 
+      {
+        withCredentials: true, 
+        headers: {
+          "Content-Type": "application/json"
+        }
+      }
+    );
 
-    const record = Array.isArray(result) ? result[0] : null;
+    const data = response.data;
 
-    console.log("GetClinicAllowLogin response:", record);
+    console.log("CheckClinicAllowLogin response:", data);
 
-    if (!record) return null;
+    if (!data) return null;
 
     return {
-      clinicId: record.clinic_id,
-      allowLogin: record.allow_login
+      clinicId: data.clinicId,
+      allowLogin: data.allow_login,
+      message: data.message
     };
+
   } catch (error) {
-    console.error("getClinicAllowLogin failed:", error);
+    console.error("checkClinicAllowLogin failed:", error);
+
+    
+    if (error.response?.status === 403) {
+      return {
+        clinicId: error.response.data?.clinicId,
+        allowLogin: 0,
+        message:
+          error.response.data?.message ||
+          "Access to this clinic is temporarily unavailable"
+      };
+    }
 
     const errorWithStatus = {
-      ...error,
       status: error.response?.status || 500,
       code: error.response?.status || 500,
       message:
-        extractBackendError(error) ||
         error.response?.data?.message ||
         error.message ||
-        "Failed to fetch clinic allow login"
+        "Failed to check clinic access"
     };
 
     throw errorWithStatus;
@@ -484,7 +547,7 @@ export const addClinic = async (clinicData) => {
     FileNoPrefix: clinicData.fileNoPrefix || "",
     LastFileSeq: clinicData.lastFileSeq ?? 0,
     InvoicePrefix: clinicData.invoicePrefix || "",
-    AllowLogin: clinicData.allowLogin || 1,
+    AllowLogin: clinicData.allowLogin ?? 1,
   };
 
   console.log("Add Clinic:", payload)
@@ -633,7 +696,7 @@ export const updateClinic = async (clinicData) => {
     CgstPercentage: Number(clinicData.CgstPercentage) || 0,
     SgstPercentage: Number(clinicData.SgstPercentage) || 0,
     Status: Number(clinicData.Status) || 1,
-    AllowLogin: clinicData.allowLogin || 1,
+    AllowLogin: clinicData.allowLogin ?? 1,
   };
   console.log("Update Clinic:", payload)
 
@@ -760,7 +823,7 @@ export const getBranchList = async (clinicId = 0, options = {}) => {
     BranchID: finalBranchId,
     BranchName: options.BranchName || "",
     Location: options.Location || "",
-    BranchType: options.BranchType ?? 1,
+    BranchType: options.BranchType ?? 0,
     Status: options.Status ?? -1 // -1 = All statuses
   };
   console.log("Branch Request:", payload);
@@ -1351,7 +1414,7 @@ export const getEmployeeList = async (clinicId = 0, options = {}) => {
       designationDesc: emp.designation_desc || "Unknown",
       shiftId: emp.shift_id,
       shiftName: emp.shift_name || null,
-      status: emp.status === 1 ? "active" : "inactive",
+      status: emp.status,
       statusDesc: emp.status_desc || "Unknown",
       dateCreated: emp.date_created,
       dateModified: emp.date_modified
@@ -4914,7 +4977,7 @@ export const getUserList = async (clinicId = 0, options = {}) => {
 
   // Determine final IDs based on environment (exactly same logic as getEmployeeList)
   const finalClinicId = PRODUCTION_MODE ? getClinicId() : clinicId;
-  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID || 0);
+  const finalBranchId = PRODUCTION_MODE ? getBranchId() : (options.BranchID ?? 1);
 
   const payload = {
     CHANNEL_ID,
@@ -4955,9 +5018,11 @@ export const getUserList = async (clinicId = 0, options = {}) => {
       branchId: user.branch_id,
       branchName: user.branch_name,
       employeeId: user.employee_id,
+      failedLoginAttempts: user.failed_login_attempts,
+      isLocked: user.is_locked,
       employeeName: user.employee_name,
       employeeCode: user.employee_code,
-      status: user.status === 0 ? "active" : "inactive",   // based on your sample (status: 0 = Active)
+      status: user.status,  
       statusDesc: user.status_desc || "Unknown",
       dateCreated: user.date_created,
       dateModified: user.date_modified
@@ -5073,7 +5138,6 @@ export const updateUser = async (userData) => {
     throw authError;
   }
 
-  // UserID is mandatory for update (same pattern as EmployeeID in updateEmployee)
   if (!userData?.userId && userData?.userId !== 0) {
     const validationError = new Error("UserID is required to update a user.");
     validationError.status = 400;
@@ -5081,7 +5145,6 @@ export const updateUser = async (userData) => {
     throw validationError;
   }
 
-  // ClinicID is also typically required
   if (!userData?.clinicId && userData?.clinicId !== 0) {
     const validationError = new Error("ClinicID is required to update a user.");
     validationError.status = 400;
@@ -5089,28 +5152,21 @@ export const updateUser = async (userData) => {
     throw validationError;
   }
 
-  if (PRODUCTION_MODE !== true) {
-    if (userData.clinicId < 0 || (userData.clinicId !== 0 && isNaN(userData.clinicId))) {
-      const error = new Error("Invalid Clinic ID");
-      error.status = 400;
-      throw error;
-    }
-  }
-
-  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (userData.clinicId || 0);
-  // Note: UpdateUser payload does NOT include BranchID (as per your sample)
+  const finalClinicId = userData.clinicId;
 
   const payload = {
     CHANNEL_ID,
     REF_KEY: generateRefKey(),
     SESSION_REF: getSessionRef(),
     USER_ID: parseInt(userId),
+    UserID: userData.userId,
     ClinicID: finalClinicId,
-    UserID: userData.userId || 0,
     Mobile: userData.mobile?.trim() || "",
-    EMail: userData.email?.trim() || "",           // ← Backend expects exact key "EMail"
+    EMail: userData.email?.trim() || "",
     ProfileName: userData.profileName?.trim() || "",
-    Password: userData.password?.trim() || ""      // trim for safety (optional on update)
+    FailedLoginAttempts: userData.failedLoginAttempts ?? 0,
+    IsLocked: userData.isLocked ?? 0,
+    Status: userData.status ?? 0,
   };
 
   console.log("updateUser payload:", payload);
@@ -5120,6 +5176,7 @@ export const updateUser = async (userData) => {
     console.log("UpdateUser response:", response.data);
 
     const result = response.data?.result;
+
     checkDbError(result);
 
     if (!result || result.OUT_OK !== 1) {
@@ -5128,8 +5185,8 @@ export const updateUser = async (userData) => {
 
     return {
       success: true,
-      userId: result.IN_USER_ID || userData.userId,   // echo the updated ID
-      message: "User updated successfully"
+      userId: result.IN_USER_ID || userData.userId,
+      message: "User updated successfully",
     };
 
   } catch (error) {

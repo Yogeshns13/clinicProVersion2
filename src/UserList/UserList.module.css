@@ -10,6 +10,8 @@
   --text-dark: #1e293b;
   --glass-bg: rgba(255, 255, 255, 0.92);
   --glass-border: rgba(255, 255, 255, 0.4);
+  --success: #16a34a;
+  --danger: #dc2626;
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -25,6 +27,16 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes cpModalIn {
+  from { opacity: 0; transform: translateY(-28px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes cpOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ==================== MAIN WRAPPER ==================== */
@@ -327,6 +339,17 @@
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
+/* ==================== LOCKED / UNLOCKED VALUE COLORS ==================== */
+.lockedYes {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.lockedNo {
+  color: #16a34a;
+  font-weight: 700;
+}
+
 /* ==================== BUTTONS ==================== */
 .userDetailsBtn,
 .btnUpdate,
@@ -393,6 +416,51 @@
 .btnSubmitDisabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+/* ── Update Password button ── */
+.btnPassword {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: var(--text-light);
+  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.btnPassword::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(48, 178, 181, 0.35);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btnPassword:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+.btnPassword:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.45);
 }
 
 .btnCancel {
@@ -593,6 +661,7 @@
   padding: 18px 28px;
   border-top: 2px solid rgba(34, 43, 108, 0.1);
   background: #f8fafc;
+  flex-wrap: wrap;
 }
 
 /* ==================== ADD MODAL ==================== */
@@ -642,6 +711,18 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
+}
+
+/* ── Update form: explicit 2-column rows ── */
+.updateFormRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.updateFormRow:last-child {
+  margin-bottom: 0;
 }
 
 .addFormGroup {
@@ -747,6 +828,56 @@
 }
 
 .required { color: #dc2626; font-weight: 700; }
+
+/* ==================== CHECKBOX ==================== */
+.checkboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(34, 43, 108, 0.15);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  user-select: none;
+  width: fit-content;
+}
+
+.checkboxLabel:hover {
+  border-color: var(--accent-end);
+  background: white;
+}
+
+.checkboxInput {
+  width: 18px !important;
+  height: 18px !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 4px !important;
+  accent-color: var(--accent-end);
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: none !important;
+}
+
+.checkboxInput:focus {
+  outline: 2px solid var(--accent-end) !important;
+  box-shadow: none !important;
+}
+
+.checkboxText {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.checkboxHint {
+  font-size: 0.73rem;
+  color: #94a3b8;
+  font-weight: 400;
+  margin-top: 2px;
+}
 
 /* ==================== CLINIC SEARCH FIELD ==================== */
 .clinicSearchWrapper {
@@ -990,6 +1121,299 @@
 
 .userError { color: #ef4444; }
 
+/* ==================== UPDATE PASSWORD MODAL ==================== */
+
+.cpOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  animation: cpOverlayIn 0.25s ease;
+  padding: 20px 20px 20px 260px;
+}
+
+.cpModal {
+  background: white;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow:
+    0 24px 60px rgba(34, 43, 108, 0.22),
+    0 8px 24px rgba(34, 43, 108, 0.12);
+  animation: cpModalIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+}
+
+.cpModalHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 24px 20px;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  position: relative;
+}
+
+.cpHeaderIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+  backdrop-filter: blur(4px);
+}
+
+.cpModalHeader h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1.2;
+}
+
+.cpModalHeader p {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 400;
+}
+
+.cpModalHeader p strong {
+  color: white;
+  font-weight: 700;
+}
+
+.cpCloseBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  outline: none;
+}
+
+.cpCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: scale(1.08);
+}
+
+.cpModalBody {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.cpField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cpField label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary-start);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cpInputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1.5px solid rgba(34, 43, 108, 0.18);
+  border-radius: 12px;
+  background: #f8fafc;
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+
+.cpInputWrap:focus-within {
+  border-color: var(--accent-end);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.12);
+}
+
+.cpMismatch {
+  border-color: var(--danger) !important;
+  background: rgba(220, 38, 38, 0.03) !important;
+}
+
+.cpMismatch:focus-within {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+.cpMatch {
+  border-color: var(--success) !important;
+  background: rgba(22, 163, 74, 0.03) !important;
+}
+
+.cpMatch:focus-within {
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1) !important;
+}
+
+.cpInputWrap input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 13px 14px;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.cpInputWrap input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.cpEyeBtn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  transition: color 0.2s;
+  padding: 0;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.cpEyeBtn:hover {
+  color: var(--accent-end);
+}
+
+.cpMatchIcon {
+  width: 28px;
+  height: 28px;
+  background: rgba(22, 163, 74, 0.12);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--success);
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.cpErrorMsg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(220, 38, 38, 0.07);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 10px;
+  padding: 11px 14px;
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 500;
+  animation: fadeIn 0.2s ease;
+}
+
+.cpErrorMsg svg {
+  flex-shrink: 0;
+}
+
+.cpModalFooter {
+  display: flex;
+  gap: 12px;
+  padding: 0 24px 24px;
+}
+
+.cpBtnCancel {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(34, 43, 108, 0.2);
+  background: white;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  outline: none;
+}
+
+.cpBtnCancel:hover:not(:disabled) {
+  border-color: rgba(34, 43, 108, 0.4);
+  color: var(--primary-start);
+  background: rgba(34, 43, 108, 0.04);
+}
+
+.cpBtnCancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cpBtnSubmit {
+  flex: 2;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  outline: none;
+  box-shadow: 0 5px 18px rgba(32, 125, 156, 0.28);
+}
+
+.cpBtnSubmit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(32, 125, 156, 0.4);
+  filter: brightness(1.08);
+}
+
+.cpBtnSubmit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cpSpinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.7s linear infinite;
+}
+
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .userListWrapper {
   --glass-bg: rgba(30, 41, 59, 0.92);
@@ -1074,6 +1498,23 @@
 :global(.dark-mode) .statusBadge.active,
 :global(.dark-mode) .active { color: #9cc14d; }
 
+:global(.dark-mode) .checkboxLabel {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .checkboxLabel:hover {
+  border-color: var(--accent-end);
+  background: #0f172a;
+}
+
+:global(.dark-mode) .checkboxText { color: #e2e8f0; }
+
+:global(.dark-mode) .cpModal { background: #1e293b; }
+:global(.dark-mode) .cpInputWrap { background: #0f172a; border-color: #475569; }
+:global(.dark-mode) .cpInputWrap input { color: #e2e8f0; }
+:global(.dark-mode) .cpBtnCancel { background: #334155; color: #e2e8f0; border-color: #475569; }
+
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
   .filtersGrid { flex-direction: column; align-items: stretch; }
@@ -1106,13 +1547,25 @@
 
   .addFormGrid { grid-template-columns: 1fr; }
 
+  .updateFormRow { grid-template-columns: 1fr; }
+
   .detailModalOverlay { padding: 20px; }
+
+  .cpOverlay { padding: 20px; }
+
+  .cpModal { max-width: 100%; border-radius: 20px; }
 
   .paginationBar { flex-direction: column; align-items: flex-start; gap: 10px; }
   .paginationControls { align-self: center; }
+
+  .detailModalFooter { justify-content: stretch; }
+  .detailModalFooter button { flex: 1; justify-content: center; }
 }
 
 @media (max-width: 480px) {
   .userListWrapper { padding: 14px; }
-  .btnSubmit, .btnCancel { width: 100%; justify-content: center; }
+  .btnSubmit, .btnCancel, .btnPassword, .btnUpdate { width: 100%; justify-content: center; }
+
+  .cpModalFooter { flex-direction: column; }
+  .cpBtnCancel, .cpBtnSubmit { flex: unset; width: 100%; }
 }

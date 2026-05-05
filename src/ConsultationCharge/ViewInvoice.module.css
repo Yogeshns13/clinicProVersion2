@@ -39,7 +39,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -306,6 +306,99 @@
 .invoiceCloseBtn:hover {
   background: #d1d5db;
   transform: translateY(-1px);
+}
+
+/* ────────────────────────────────────────────────
+   DARK MODE
+   ──────────────────────────────────────────────── */
+
+/* Modal shell */
+:global(.dark-mode) .invoiceModal {
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* Body */
+:global(.dark-mode) .invoiceModalBody {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+}
+
+/* Detail sections */
+:global(.dark-mode) .invoiceDetailsSection {
+  background: #1e293b;
+  border-color: #475569;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Section title */
+:global(.dark-mode) .invoiceSectionTitle {
+  color: var(--accent-end);
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+}
+
+:global(.dark-mode) .invoiceSectionTitle svg {
+  color: var(--accent-end);
+}
+
+/* Detail labels & values */
+:global(.dark-mode) .invoiceDetailLabel {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .invoiceDetailValue {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .invoiceAmountHighlight {
+  color: #4ade80;
+}
+
+:global(.dark-mode) .invoicePaidAmount {
+  color: #34d399;
+}
+
+:global(.dark-mode) .invoiceBalanceAmount {
+  color: #f87171;
+}
+
+/* Loading spinner */
+:global(.dark-mode) .invoiceSpinner {
+  border-color: #334155;
+  border-top-color: var(--accent-end);
+}
+
+/* Error text */
+:global(.dark-mode) .invoiceError p {
+  color: #f87171;
+}
+
+/* Footer */
+:global(.dark-mode) .invoiceModalFooter {
+  background: #0f172a;
+  border-top-color: rgba(71, 85, 105, 0.5);
+}
+
+/* Close button */
+:global(.dark-mode) .invoiceCloseBtn {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .invoiceCloseBtn:hover {
+  background: #475569;
+}
+
+/* Cancel Invoice button — keep red, slight dark-mode tweak */
+:global(.dark-mode) .invoiceCancelBtn {
+  background: #dc2626;
+  border-color: rgba(220, 38, 38, 0.6);
+  color: #ffffff;
+}
+
+:global(.dark-mode) .invoiceCancelBtn:hover {
+  background: #b91c1c;
+  border-color: rgba(185, 28, 28, 0.8);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
 /* ────────────────────────────────────────────────

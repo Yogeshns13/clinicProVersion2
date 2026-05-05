@@ -30,7 +30,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 16px 20px 20px 260px;
+  padding: 16px 20px 20px 60px;
 }
 
 .appointment-modal {
@@ -71,7 +71,6 @@
 }
 
 .appointment-modal-header h2 {
-  
   font-size: 1.2rem;
   font-weight: 700;
 }
@@ -136,11 +135,11 @@
   padding: 16px 24px;
   overflow-y: auto;
   flex: 1;
-  background: #f8fafc;                    /* very light separator */
+  background: #f8fafc;
 }
 
 .appointment-details-section {
-  margin-bottom: 16px;                    /* very small gap between blocks */
+  margin-bottom: 16px;
   background: var(--card-bg);
   border-radius: 10px;
   padding: 14px 18px;
@@ -159,7 +158,7 @@
   font-size: 1rem;
   font-weight: 700;
   color: var(--primary-start);
-   margin-bottom: 16px;
+  margin-bottom: 16px;
   padding-bottom: 10px;
   border-bottom: 2px solid rgba(48, 178, 181, 0.25);
 }
@@ -329,4 +328,76 @@
   .appointment-section-title {
     font-size: 0.98rem;
   }
+}
+
+/* ==================== DARK MODE ==================== */
+
+/* Modal shell */
+:global(.dark-mode) .appointment-modal {
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+}
+
+/* Body */
+:global(.dark-mode) .appointment-modal-body {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+}
+
+/* Detail sections / cards */
+:global(.dark-mode) .appointment-details-section {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+/* Section titles */
+:global(.dark-mode) .appointment-section-title {
+  color: var(--accent-end);
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+}
+
+:global(.dark-mode) .appointment-section-title svg {
+  color: var(--accent-end);
+}
+
+/* Detail labels & values */
+:global(.dark-mode) .appointment-detail-label {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .appointment-detail-value {
+  color: #e2e8f0;
+}
+
+/* Cancel confirmation block */
+:global(.dark-mode) .appointment-cancel-confirmation {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+:global(.dark-mode) .cancel-warning {
+  color: #fca5a5;
+}
+
+:global(.dark-mode) .cancel-no-btn {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .cancel-no-btn:hover {
+  background: #475569;
+}
+
+/* Footer */
+:global(.dark-mode) .appointment-modal-footer {
+  background: #0f172a;
+  border-top-color: rgba(71, 85, 105, 0.5);
+}
+
+:global(.dark-mode) .appointment-close-btn {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .appointment-close-btn:hover {
+  background: #475569;
 }

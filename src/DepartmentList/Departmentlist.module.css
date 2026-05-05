@@ -30,14 +30,6 @@
 }
 
 /* ==================== MAIN WRAPPER ==================== */
-/*
-  KEY CHANGE:
-  - height: 100vh  →  hard-clamps the wrapper to the viewport height
-  - overflow: hidden  →  prevents the wrapper itself from scrolling
-  - display: flex + flex-direction: column  →  lets children fill remaining space
-  The table container gets flex:1 + overflow-y:auto, so only the table scrolls.
-  The pagination bar is flex-shrink:0, so it never moves away from the bottom.
-*/
 .clinicListWrapper {
   padding: 20px;
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
@@ -58,11 +50,10 @@
   margin-bottom: 20px;
   box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
   border: 1px solid rgba(34, 43, 108, 0.1);
-  /* overflow: visible so the clinic dropdown menu can escape the container */
   overflow: visible;
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;   /* never compress the filter bar */
+  flex-shrink: 0;
 }
 
 .filtersGrid {
@@ -225,11 +216,6 @@
 }
 
 /* ==================== TABLE SECTION ==================== */
-/*
-  flex: 1        → fills ALL remaining height after the filter bar
-  min-height: 0  → allows it to shrink below its content (required for nested scroll)
-  display:flex + flex-direction:column → so clinicTableContainer can flex:1 inside it
-*/
 .tableSection {
   flex: 1;
   min-height: 0;
@@ -238,11 +224,6 @@
 }
 
 /* ==================== TABLE CONTAINER ==================== */
-/*
-  flex: 1        → fills all space between filter bar and pagination bar
-  min-height: 0  → allows shrinking (critical for scroll to work)
-  overflow-y: auto → table scrolls here, not the page
-*/
 .clinicTableContainer {
   background: white;
   border-radius: 17px;
@@ -446,6 +427,11 @@
 .btnUpdate:active,
 .btnSubmit:active {
   transform: translateY(-1px);
+}
+
+.btnSubmitDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btnHold,
@@ -768,7 +754,7 @@
   z-index: 1000;
   animation: fadeIn 0.3s ease;
   backdrop-filter: blur(4px);
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
 }
 
 .detailModalContent {
@@ -1033,9 +1019,6 @@
   background: white;
 }
 
-/* Wrapper for the clinic dropdown inside the add form —
-   makes it full-width like the other fields but keeps
-   the exact same filter-bar look (no style overrides) */
 .addFormClinicDropdown {
   width: 100%;
 }
@@ -1095,10 +1078,6 @@
 }
 
 /* ==================== PAGINATION BAR ==================== */
-/*
-  flex-shrink: 0  → never compressed, always visible at the bottom of tableSection
-  margin-top: 14px → gap between table and bar
-*/
 .paginationBar {
   flex-shrink: 0;
   display: flex;
@@ -1191,18 +1170,53 @@
   font-weight: 700;
 }
 
-.clinicNameone {
+.addModalHeaderCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 12px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.clinicInfoIcon {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.05rem;           
-  font-weight: 600;
+  color: var(--text-light);
+  opacity: 0.9;
+}
+
+.clinicInfoText {
+  display: flex;
+  flex-direction: column;
+}
+
+.clinicInfoName {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
   color: var(--text-light);
   line-height: 1.2;
-  white-space: nowrap;          
-  text-overflow: ellipsis;      
-  max-width: 220px; 
-              
+  letter-spacing: 0.1px;
+}
+
+.clinicInfoBranch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
 }
 
 /* ==================== PROFILE HEADER ==================== */
@@ -1334,8 +1348,6 @@
 .clinicAddSection { /* keep for compatibility */ }
 
 /* ==================== CLINIC SEARCHABLE DROPDOWN ==================== */
-/* Single definition — identical style in filter bar AND add form        */
-
 .clinicDropdownWrapper {
   position: relative;
   width: 200px;
@@ -1679,6 +1691,108 @@
 
 :global(.dark-mode) .clinicDropdownOptionLabel {
   color: #e2e8f0;
+}
+
+/* ==================== DARK MODE — VIEW DETAILS MODAL ==================== */
+:global(.dark-mode) .detailModalContent {
+  background: #1e293b;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+}
+
+:global(.dark-mode) .detailModalBody {
+  background: #1e293b;
+}
+
+:global(.dark-mode) .infoSection {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+:global(.dark-mode) .infoCard {
+  background: #0f172a;
+  box-shadow: 0 5px 17px rgba(0, 0, 0, 0.3);
+  border: 1px solid #334155;
+}
+
+:global(.dark-mode) .infoHeader {
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+}
+
+:global(.dark-mode) .infoHeader h3 {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .infoRow {
+  border-bottom-color: rgba(71, 85, 105, 0.3);
+}
+
+:global(.dark-mode) .infoLabel {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .infoValue {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .detailModalFooter {
+  background: #0f172a;
+  border-top-color: #334155;
+}
+
+/* ==================== DARK MODE — ADD DEPARTMENT MODAL ==================== */
+:global(.dark-mode) .addModalContent {
+  background: #1e293b;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+}
+
+:global(.dark-mode) .addModalBody {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+:global(.dark-mode) .addSection {
+  border-bottom-color: rgba(71, 85, 105, 0.3);
+}
+
+:global(.dark-mode) .addSectionHeader {
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+}
+
+:global(.dark-mode) .addSectionHeader h3 {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .addFormGroup label {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .addFormGroup input,
+:global(.dark-mode) .addFormGroup textarea,
+:global(.dark-mode) .addFormGroup select {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .addFormGroup input::placeholder,
+:global(.dark-mode) .addFormGroup textarea::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+:global(.dark-mode) .addFormGroup input:focus,
+:global(.dark-mode) .addFormGroup textarea:focus,
+:global(.dark-mode) .addFormGroup select:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
+  background: #1e293b;
+}
+
+:global(.dark-mode) .addFormGroup select option {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .addFormGroup select:disabled {
+  background: #0f172a;
+  color: #475569;
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */

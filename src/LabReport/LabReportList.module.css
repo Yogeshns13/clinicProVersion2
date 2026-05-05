@@ -648,7 +648,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -946,7 +946,7 @@
   z-index: 1000;
   animation: fadeIn 0.3s ease;
   backdrop-filter: blur(4px);
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
 }
 
 .detailModalContent {
@@ -1226,6 +1226,18 @@
 
 :global(.dark-mode) .filtersContainer  { background: #1e293b; border-color: #475569; }
 :global(.dark-mode) .filterInput       { background: #0f172a; border-color: #475569; color: #e2e8f0; }
+
+:global(.dark-mode) .filterInput::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
+}
+
+:global(.dark-mode) .formGroup input::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
+}
+
+
 :global(.dark-mode) .searchTypeSelect  { background: #0f172a; border-color: #475569; color: #e2e8f0; }
 :global(.dark-mode) .searchInput       { background: #0f172a; border-color: #475569; color: #e2e8f0; }
 :global(.dark-mode) .searchInput:focus { border-left: 1px solid var(--accent-end); }
@@ -1274,6 +1286,12 @@
   background: rgba(30, 41, 59, 0.94);
   border-color: #475569;
   color: #e2e8f0;
+}
+
+:global(.dark-mode) .paginationBar {
+  background: #1e293b;
+  border-color: rgba(71, 85, 105, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 :global(.dark-mode) .formGroup input,
@@ -1785,7 +1803,7 @@
   justify-content: center;
   z-index: 2000;
   animation: fadeIn 0.2s ease;
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
 }
 
 .lightboxModal {

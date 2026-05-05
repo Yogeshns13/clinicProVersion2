@@ -431,7 +431,7 @@
   z-index: 1000;
   animation: fadeIn 0.3s ease;
   backdrop-filter: blur(4px);
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
 }
 
 .detailModalContent {
@@ -607,7 +607,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -690,6 +690,13 @@
   background: #f8fafc;
 }
 
+
+.dateEmpty::-webkit-datetime-edit-text,
+.dateEmpty::-webkit-datetime-edit-month-field,
+.dateEmpty::-webkit-datetime-edit-day-field,
+.dateEmpty::-webkit-datetime-edit-year-field {
+  color: transparent;
+}
 /* ==================== SHARED FORM SECTION STYLES ==================== */
 .formSection {
   background: white;
@@ -1135,8 +1142,16 @@
 :global(.dark-mode) .filterInput {
   background: #0f172a;
   border-color: #475569;
-  color: #e2e8f0;
+  color: #e2e8f0; 
 }
+
+:global(.dark-mode) .filterInput::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
+}
+
+
+:global(.dark-mode) .contextBanner { background: #1e293b; border-color: #475569; }
 
 :global(.dark-mode) .clearButton {
   background: #334155;
@@ -1229,6 +1244,14 @@
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   border-color: var(--accent-end);
   color: white;
+}
+
+/* Hide dd/mm/yyyy placeholder text on empty date inputs in dark mode */
+:global(.dark-mode) .dateEmpty::-webkit-datetime-edit-text,
+:global(.dark-mode) .dateEmpty::-webkit-datetime-edit-month-field,
+:global(.dark-mode) .dateEmpty::-webkit-datetime-edit-day-field,
+:global(.dark-mode) .dateEmpty::-webkit-datetime-edit-year-field {
+  color: transparent;
 }
 
 /* ==================== RESPONSIVE ==================== */

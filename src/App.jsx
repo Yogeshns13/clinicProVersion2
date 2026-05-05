@@ -1,10 +1,10 @@
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import React, { useState, useCallback } from "react";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider } from "./Contexts/AuthContext.jsx";
+import { useAuth } from "./Contexts/AuthContext.jsx";
 import PrivateRoute from "./Component/PrivateRoute.jsx";
 import { useTokenRenewal } from "./Hooks/TokenRenewal";
-
-//This is dummy purpos
+import MessagePopup from "./Hooks/MessagePopup.jsx";
 
 import AdminLayout from "./AdminLayout/AdminLayout.jsx";
 import LoginPage from "./LoginPage/LoginPage.jsx";
@@ -53,76 +53,102 @@ import UserList from "./UserList/UserList.jsx";
 import PrintPrescription from "./PrintPrescription/PrintPrescription.jsx";
 import ConsultationInvoice from "./ConsultationCharge/ConsultationInvoice.jsx";
 
-// Inner component so useTokenRenewal runs inside AuthProvider + Router context
 function AppInner() {
-  useTokenRenewal();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const [clinicErrorPopup, setClinicErrorPopup] = useState({
+    visible: false,
+    message: "",
+  });
+
+  const handleClinicError = useCallback((message) => {
+    setClinicErrorPopup({ visible: true, message });
+  }, []);
+
+  const handleClinicErrorClose = useCallback(() => {
+    setClinicErrorPopup({ visible: false, message: "" });
+    logout();
+    navigate("/login", { replace: true });
+  }, [logout, navigate]);
+
+  useTokenRenewal({ onClinicError: handleClinicError });
 
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={<Navigate to="/login" replace />} />
+    <>
+      <MessagePopup
+        visible={clinicErrorPopup.visible}
+        message={clinicErrorPopup.message}
+        type="error"
+        onClose={handleClinicErrorClose}
+      />
 
-      {/* Protected Routes - All use AdminLayout (Sidebar + Header) */}
-      <Route
-        element={
-          <PrivateRoute>
-            <AdminLayout />
-          </PrivateRoute>
-        }
-      >
-        <Route path="/dashboard" element={<Dashboard />} />
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-        <Route path="/clinic-list" element={<ClinicList />} />
-        <Route path="/branch-list" element={<BranchList />} />
-        <Route path="/dept-list" element={<DepartmentList />} />
+        {/* Protected Routes - All use AdminLayout (Sidebar + Header) */}
+        <Route
+          element={
+            <PrivateRoute>
+              <AdminLayout />
+            </PrivateRoute>
+          }
+        >
+          <Route path="/dashboard" element={<Dashboard />} />
 
-        <Route path="/work-shift" element={<WorkShift />} />
-        <Route path="/employee-list" element={<EmployeeList />} />
-        <Route path="/admin-employee-list" element={<AdminEmployeeList />} />
-        <Route path="/user-list" element={<UserList />} />
+          <Route path="/clinic-list" element={<ClinicList />} />
+          <Route path="/branch-list" element={<BranchList />} />
+          <Route path="/dept-list" element={<DepartmentList />} />
 
-        <Route path="/patient-list" element={<PatientList />} />
-        <Route path="/slotconfig-list" element={<SlotConfigList />} />
-        <Route path="/slot-list" element={<SlotList />} />
-        <Route path="/appointment-list" element={<AppointmentList />} />
-        <Route path="/patientvisit-list" element={<PatientVisitList />} />
+          <Route path="/work-shift" element={<WorkShift />} />
+          <Route path="/employee-list" element={<EmployeeList />} />
+          <Route path="/admin-employee-list" element={<AdminEmployeeList />} />
+          <Route path="/user-list" element={<UserList />} />
 
-        <Route path="/consultation-list" element={<ConsultationList />} />
-        <Route path="/consulted-patient" element={<ConsultedPatients />} />
-        <Route path="/print-prescription" element={<PrintPrescription />} />
-        <Route path="/consultation-invoice" element={<ConsultationInvoice />} />
+          <Route path="/patient-list" element={<PatientList />} />
+          <Route path="/slotconfig-list" element={<SlotConfigList />} />
+          <Route path="/slot-list" element={<SlotList />} />
+          <Route path="/appointment-list" element={<AppointmentList />} />
+          <Route path="/patientvisit-list" element={<PatientVisitList />} />
 
-        <Route path="/view-consultation/:id" element={<ViewConsultation />} />
-        <Route path="/consultationcharge-config" element={<ConsultationChargeConfig />} />
-        <Route path="/consultation-charge" element={<ConsultationChargeList />} />
-        <Route path="/external-lab" element={<ExternalLabList />} />
+          <Route path="/consultation-list" element={<ConsultationList />} />
+          <Route path="/consulted-patient" element={<ConsultedPatients />} />
+          <Route path="/print-prescription" element={<PrintPrescription />} />
+          <Route path="/consultation-invoice" element={<ConsultationInvoice />} />
 
-        <Route path="/labtestmaster" element={<LabMasterList />} />
-        <Route path="/laborder-list" element={<LabOrderList />} />
-        <Route path="/labwork-list" element={<LabWorkQueue />} />
-        <Route path="/lab-report-list" element={<LabReportList />} />
-        <Route path="/lab-invoice" element={<LabInvoiceList />} />
+          <Route path="/view-consultation/:id" element={<ViewConsultation />} />
+          <Route path="/consultationcharge-config" element={<ConsultationChargeConfig />} />
+          <Route path="/consultation-charge" element={<ConsultationChargeList />} />
+          <Route path="/external-lab" element={<ExternalLabList />} />
 
-        <Route path="/vendor-list" element={<VendorList />} />
-        <Route path="/medicinemaster-list" element={<MedicineMasterList />} />
-        <Route path="/medicinestock-list" element={<MedicineStockList />} />
-        <Route path="/purchaseorder-list" element={<PurchaseOrderList />} />
-        <Route path="/purchaseorderitem/:id" element={<PurchaseOrderItems />} />
-        <Route path="/salescart-list" element={<SalesCartList />} />
-        <Route path="/salescartdetail-list/:id" element={<SalesCartDetailList />} />
-        <Route path="/pharmacy-invoice" element={<PharmacyInvoiceList />} />
+          <Route path="/labtestmaster" element={<LabMasterList />} />
+          <Route path="/laborder-list" element={<LabOrderList />} />
+          <Route path="/labwork-list" element={<LabWorkQueue />} />
+          <Route path="/lab-report-list" element={<LabReportList />} />
+          <Route path="/lab-invoice" element={<LabInvoiceList />} />
 
-        <Route path="/invoice-management" element={<InvoiceManagement />} />
-        <Route path="/invoice-payment" element={<InvoicePaymentManagement />} />
-        <Route path="/logout" element={<Logout />} />
+          <Route path="/vendor-list" element={<VendorList />} />
+          <Route path="/medicinemaster-list" element={<MedicineMasterList />} />
+          <Route path="/medicinestock-list" element={<MedicineStockList />} />
+          <Route path="/purchaseorder-list" element={<PurchaseOrderList />} />
+          <Route path="/purchaseorderitem/:id" element={<PurchaseOrderItems />} />
+          <Route path="/salescart-list" element={<SalesCartList />} />
+          <Route path="/salescartdetail-list/:id" element={<SalesCartDetailList />} />
+          <Route path="/pharmacy-invoice" element={<PharmacyInvoiceList />} />
 
-        <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
-      </Route>
+          <Route path="/invoice-management" element={<InvoiceManagement />} />
+          <Route path="/invoice-payment" element={<InvoicePaymentManagement />} />
+          <Route path="/logout" element={<Logout />} />
 
-      {/* Catch-all - Redirect to login if not found */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+          <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
+        </Route>
+
+        {/* Catch-all - Redirect to login if not found */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </>
   );
 }
 

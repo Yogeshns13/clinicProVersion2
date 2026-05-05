@@ -161,6 +161,8 @@
   color: transparent;
 }
 
+
+
 .datePlaceholder {
   position: absolute;
   left: 12px;
@@ -621,6 +623,11 @@
   background: #0f172a;
   border-color: #475569;
   color: #e2e8f0;
+}
+
+:global(.dark-mode) .dateEmpty::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
 }
 
 :global(.dark-mode) .searchInput:focus {

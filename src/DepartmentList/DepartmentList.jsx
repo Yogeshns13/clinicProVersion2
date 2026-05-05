@@ -6,6 +6,7 @@ import {
   FiX,
   FiChevronDown,
   FiCheckCircle,
+  FiMapPin,
 } from 'react-icons/fi';
 import { addDepartment, getDepartmentList, getClinicList, getBranchList } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
@@ -14,6 +15,7 @@ import UpdateDepartment from './UpdateDepartment.jsx';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
 import styles from './DepartmentList.module.css';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
+import { FaClinicMedical } from 'react-icons/fa';
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
@@ -53,21 +55,18 @@ const DEFAULT_FILTERS = {
 
 // ────────────────────────────────────────────────
 // Reusable Searchable Clinic Dropdown
-// Used in both the filter bar and the Add Department form
-// Only shows active clinics (status === 'active')
 // ────────────────────────────────────────────────
 const ClinicSearchableDropdown = ({
   clinics,
-  value,          // selected clinic id string, or 'all' (filter), or '' (form)
-  onChange,       // (idString) => void
-  placeholder,    // e.g. 'All Clinics' or 'Select Clinic'
-  showAllOption,  // true → render "All Clinics" first option (filter bar only)
+  value,
+  onChange,
+  placeholder,
+  showAllOption,
 }) => {
   const [query, setQuery] = useState('');
   const [open, setOpen]   = useState(false);
   const wrapperRef        = useRef(null);
 
-  // ── Only show active clinics ──
   const activeClinics = clinics.filter(c => c.status === 'active');
 
   const noneValue      = showAllOption ? 'all' : '';
@@ -140,7 +139,6 @@ const ClinicSearchableDropdown = ({
 
       {open && (
         <div className={styles.clinicDropdownMenu}>
-          {/* "All Clinics" option — only for filter bar */}
           {showAllOption && (
             <div
               className={`${styles.clinicDropdownOption} ${value === 'all' ? styles.clinicDropdownOptionSelected : ''}`}
@@ -224,7 +222,7 @@ const DepartmentList = () => {
   const [updateDepartmentData, setUpdateDepartmentData] = useState(null);
   const [isUpdateFormOpen,     setIsUpdateFormOpen]     = useState(false);
 
-  // ── isFormValid: all required add fields filled with no errors ──
+  // ── isFormValid ──
   const isFormValid = useMemo(() => {
     const requiredFields = ['clinicId', 'branchId', 'departmentName'];
     const allFilled = requiredFields.every((f) => {
@@ -237,8 +235,7 @@ const DepartmentList = () => {
     return true;
   }, [formData, validationMessages]);
 
-  // ────────────────────────────────────────────────
-  // Load ACTIVE clinic dropdown once (Status: 1)
+  // ── Load ACTIVE clinic dropdown once ──
   useEffect(() => {
     const fetchClinics = async () => {
       try {
@@ -296,12 +293,10 @@ const DepartmentList = () => {
     setFilterInputs((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handler for clinic searchable dropdown in filter bar
   const handleClinicFilterChange = (clinicId) => {
     setFilterInputs((prev) => ({ ...prev, clinicId }));
   };
 
-  // Search button — 2-sec cooldown
   const handleSearch = async () => {
     if (searchBtnDisabled) return;
     setSearchBtnDisabled(true);
@@ -312,7 +307,6 @@ const DepartmentList = () => {
     setTimeout(() => setSearchBtnDisabled(false), 2000);
   };
 
-  // Clear button — 2-sec cooldown
   const handleClearFilters = async () => {
     if (clearBtnDisabled) return;
     setClearBtnDisabled(true);
@@ -323,7 +317,6 @@ const DepartmentList = () => {
     setTimeout(() => setClearBtnDisabled(false), 2000);
   };
 
-  // Pagination — reuse appliedFilters, only page changes
   const handlePageChange = (newPage) => {
     if (newPage < 1) return;
     setPage(newPage);
@@ -357,7 +350,6 @@ const DepartmentList = () => {
     setValidationMessages((prev) => ({ ...prev, [name]: validationMessage }));
   };
 
-  // Handler for clinic searchable dropdown in the Add form
   const handleFormClinicChange = (clinicId) => {
     setFormData((prev) => ({ ...prev, clinicId, branchId: '' }));
     setBranches([]);
@@ -384,7 +376,6 @@ const DepartmentList = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Guard: form not valid — show popup ONLY inside the add modal
     if (!isFormValid) {
       setSubmitAttempted(true);
       showAddPopup('Please fill all required fields before submitting.', 'warning');
@@ -402,10 +393,8 @@ const DepartmentList = () => {
         profile:        formData.profile.trim(),
       });
 
-      // Show success popup ONLY inside the add modal
       showAddPopup('Department added successfully!', 'success');
 
-      // After 1s close the form and refresh — no central popup triggered
       setTimeout(() => {
         closeAddForm();
         fetchDepartments(appliedFilters, page, true);
@@ -413,7 +402,6 @@ const DepartmentList = () => {
     } catch (err) {
       console.error('Add department failed:', err);
       const errMsg = err.message || 'Failed to add department.';
-      // Show error popup ONLY inside the add modal
       showAddPopup(errMsg, 'error');
     } finally {
       setFormLoading(false);
@@ -431,14 +419,12 @@ const DepartmentList = () => {
     setUpdateDepartmentData(null);
   };
 
-  // onSuccess: close modal + refresh ONLY — UpdateDepartment shows its own popup
   const handleUpdateSuccess = () => {
     setIsUpdateFormOpen(false);
     setUpdateDepartmentData(null);
     fetchDepartments(appliedFilters, page, true);
   };
 
-  // onError: log only — UpdateDepartment already shows its own error popup
   const handleUpdateError = (message) => {
     console.error('Update department error (handled by UpdateDepartment popup):', message);
   };
@@ -665,6 +651,22 @@ const DepartmentList = () => {
                   </span>
                 </div>
               </div>
+
+              {/* ── Clinic + Branch info from the API response ── */}
+              <div className={styles.addModalHeaderCard}>
+                <div className={styles.clinicInfoIcon}>
+                  <FaClinicMedical size={18} />
+                </div>
+                <div className={styles.clinicInfoText}>
+                  <span className={styles.clinicInfoName}>
+                    {selectedDepartment.clinicName || '—'}
+                  </span>
+                  <span className={styles.clinicInfoBranch}>
+                    {selectedDepartment.branchName || '—'}
+                  </span>
+                </div>
+              </div>
+
               <button onClick={closeModal} className={styles.detailCloseBtn}>✕</button>
             </div>
 
@@ -713,12 +715,11 @@ const DepartmentList = () => {
 
       {/* ──────────────── Add Form Modal ──────────────── */}
       {isAddFormOpen && (
-        <div className={styles.detailModalOverlay} >
+        <div className={styles.detailModalOverlay}>
           <div
             className={styles.addModalContent}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* ── Add form's own MessagePopup — renders ONLY inside the modal ── */}
             <MessagePopup
               visible={addPopup.visible}
               message={addPopup.message}
@@ -741,7 +742,6 @@ const DepartmentList = () => {
                 </div>
                 <div className={styles.addFormGrid}>
 
-                  {/* ── Clinic — Searchable Dropdown (same style as filter bar) ── */}
                   <div className={`${styles.addFormGroup} ${styles.fullWidth}`}>
                     <label>Clinic <span className={styles.required}>*</span></label>
                     <div className={styles.addFormClinicDropdown}>

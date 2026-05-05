@@ -722,7 +722,7 @@
   z-index: 1000;
   animation: fadeIn 0.3s ease;
   backdrop-filter: blur(4px);
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
 }
 
 .detailModalContent {
@@ -1694,6 +1694,97 @@
 }
 :global(.dark-mode) .logoCancelChangeBtn { color: #f87171; }
 :global(.dark-mode) .logoCancelChangeBtn:hover { color: #ef4444; }
+
+/* ── Dark mode: View Details popup ── */
+:global(.dark-mode) .detailModalContent {
+  background: #1e293b;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+}
+:global(.dark-mode) .detailModalBody {
+  background: #1e293b;
+}
+:global(.dark-mode) .infoSection {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+:global(.dark-mode) .infoCard {
+  background: #0f172a;
+  box-shadow: 0 5px 17px rgba(0, 0, 0, 0.3);
+}
+:global(.dark-mode) .infoHeader {
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+}
+:global(.dark-mode) .infoHeader h3 {
+  color: var(--accent-end);
+}
+:global(.dark-mode) .infoRow {
+  border-bottom-color: rgba(71, 85, 105, 0.3);
+}
+:global(.dark-mode) .infoLabel {
+  color: #94a3b8;
+}
+:global(.dark-mode) .infoValue {
+  color: #e2e8f0;
+}
+:global(.dark-mode) .detailModalFooter {
+  background: #0f172a;
+  border-top-color: rgba(71, 85, 105, 0.5);
+}
+
+/* ── Dark mode: Add Clinic popup ── */
+:global(.dark-mode) .addModalContent {
+  background: #1e293b;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+}
+:global(.dark-mode) .addModalBody {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+:global(.dark-mode) .addSection {
+  border-bottom-color: rgba(71, 85, 105, 0.3);
+  background: #1e293b;
+}
+:global(.dark-mode) .addSectionHeader {
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+}
+:global(.dark-mode) .addSectionHeader h3 {
+  color: var(--accent-end);
+}
+:global(.dark-mode) .addFormGroup label {
+  color: var(--accent-end);
+}
+:global(.dark-mode) .addFormGroup input,
+:global(.dark-mode) .addFormGroup textarea,
+:global(.dark-mode) .addFormGroup select {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+:global(.dark-mode) .addFormGroup input::placeholder,
+:global(.dark-mode) .addFormGroup textarea::placeholder {
+  color: rgba(226, 232, 240, 0.3);
+}
+:global(.dark-mode) .addFormGroup input:focus,
+:global(.dark-mode) .addFormGroup textarea:focus,
+:global(.dark-mode) .addFormGroup select:focus {
+  border-color: var(--accent-end);
+  background: #1e293b;
+  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
+}
+:global(.dark-mode) .coordField input {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+:global(.dark-mode) .coordField input::placeholder {
+  color: rgba(226, 232, 240, 0.3);
+}
+:global(.dark-mode) .coordField input:focus {
+  border-color: var(--accent-end);
+  background: #1e293b;
+  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
+}
+:global(.dark-mode) .coordHint {
+  color: #64748b;
+}
 
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {
