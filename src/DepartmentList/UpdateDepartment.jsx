@@ -160,7 +160,9 @@ const UpdateDepartment = ({ department, clinics, onClose, onSuccess, onError }) 
       setFormLoading(false);
     }
   };
-
+ 
+  
+  
   // ────────────────────────────────────────────────
   return (
     <div className={styles.detailModalOverlay} >
@@ -180,13 +182,15 @@ const UpdateDepartment = ({ department, clinics, onClose, onSuccess, onError }) 
           <div className={styles.detailHeaderContent}>
             <h2>Update Department</h2>
           </div>
-          <div className={styles.clinicNameone}>
-            <FaClinicMedical
-              size={20}
-              style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }}
-            />
-            {department.clinicName || '—'}
-          </div>
+          <div className={styles.addModalHeaderCard}>
+                      <div className={styles.clinicInfoIcon}>
+                        <FaClinicMedical size={18} />
+                      </div>
+                      <div className={styles.clinicInfoText}>
+                        <span className={styles.clinicInfoName}>{clinicName}</span>
+                        <span className={styles.clinicInfoBranch}>{branchName}</span>
+                      </div>
+                      </div>
           <button onClick={onClose} className={styles.detailCloseBtn}>✕</button>
         </div>
 

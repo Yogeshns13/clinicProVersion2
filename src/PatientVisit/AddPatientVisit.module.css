@@ -16,23 +16,6 @@
   --border-focus: rgba(34, 43, 108, 0.35);
 }
 
-/* Dark mode variables */
-:root.dark-mode {
-  --primary-start: #3b82f6;
-  --primary-end: #60a5fa;
-  --accent-start: #22d3ee;
-  --accent-end: #67e8f9;
-  --text-light: #f1f5f9;
-  --text-dark: #e2e8f0;
-  --glass-bg: rgba(30, 41, 59, 0.94);
-  --glass-border: rgba(71, 85, 105, 0.5);
-  --muted: #94a3b8;
-  --border-light: rgba(71, 85, 105, 0.45);
-  --border-focus: rgba(99, 179, 237, 0.4);
-  --success-color: #4ade80;
-  --danger-color: #f87171;
-}
-
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -87,11 +70,11 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
   animation: fadeIn 0.3s ease;
 }
 
-/* Modal – flex container with fixed header + scrollable body + fixed footer */
+/* Modal */
 .addVisitModal {
   background: var(--glass-bg);
   border-radius: 15px;
@@ -107,7 +90,7 @@
   flex-direction: column;
 }
 
-/* Header – stays at top */
+/* Header */
 .addVisitHeader {
   padding: 14px 18px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
@@ -121,7 +104,6 @@
   gap: 20px;
   top: 0;
   z-index: 10;
-  
 }
 
 .addVisitHeaderContent {
@@ -178,7 +160,6 @@
   letter-spacing: 0.1px;
 }
 
-
 .addVisitClose {
   background: rgba(255, 255, 255, 0.22);
   border: none;
@@ -200,7 +181,7 @@
   transform: scale(1.08);
 }
 
-/* Form wrapper – full height */
+/* Form wrapper */
 .addVisitForm {
   display: flex;
   flex-direction: column;
@@ -255,10 +236,9 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--primary-start);
-  min-height: 42px; /* ── alignment fix ── */
+  min-height: 42px;
 }
 
-/* Section title row variant — icon+text on left, controls on right */
 .sectionTitleRow {
   display: flex;
   align-items: center;
@@ -269,7 +249,7 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--primary-start);
-  min-height: 42px; /* ── alignment fix ── */
+  min-height: 42px;
 }
 
 .sectionTitleLeft {
@@ -278,16 +258,13 @@
   gap: 10px;
 }
 
-/* Right side of section title row — holds toggle + add button */
 .sectionTitleRight {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* ─────────────────────────────────────────────── */
-/* Emergency Patient Toggle Button                  */
-/* ─────────────────────────────────────────────── */
+/* Emergency Toggle Button */
 .emergencyToggleBtn {
   display: inline-flex;
   align-items: center;
@@ -312,7 +289,6 @@
   box-shadow: 0 3px 10px rgba(239, 68, 68, 0.18);
 }
 
-/* When emergency is ON — filled red style */
 .emergencyToggleBtnOn {
   background: linear-gradient(135deg, #dc2626, #ef4444);
   border-color: #dc2626;
@@ -388,7 +364,6 @@
   gap: 16px;
 }
 
-/* ── alignment fix: both Patient and Doctor columns stretch equally ── */
 .formRow > .formSection {
   display: flex;
   flex-direction: column;
@@ -458,7 +433,7 @@
   font-weight: 500;
 }
 
-/* Footer – stays at bottom */
+/* Footer */
 .addVisitFooter {
   display: flex;
   justify-content: flex-end;
@@ -529,13 +504,8 @@
   box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
 }
 
-.btnCancel:hover::before {
-  opacity: 1;
-}
-
-.btnCancel:hover::after {
-  background-position: 200% 0;
-}
+.btnCancel:hover::before { opacity: 1; }
+.btnCancel:hover::after { background-position: 200% 0; }
 
 .btnSubmit {
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
@@ -566,10 +536,7 @@
   font-size: 0.875rem;
 }
 
-/* ─────────────────────────────────────────────── */
-/* Doctor Searchable Dropdown                        */
-/* ─────────────────────────────────────────────── */
-
+/* Doctor Searchable Dropdown */
 .searchableWrapper {
   position: relative;
   width: 100%;
@@ -619,7 +586,7 @@
   font-style: italic;
 }
 
-.formInput::placeholder{
+.formInput::placeholder {
   opacity: 0.5;
 }
 
@@ -690,12 +657,8 @@
   animation: dropdownOpen 0.15s ease;
 }
 
-.searchableDropdown::-webkit-scrollbar {
-  width: 5px;
-}
-.searchableDropdown::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
+.searchableDropdown::-webkit-scrollbar { width: 5px; }
+.searchableDropdown::-webkit-scrollbar-track { background: #f1f5f9; }
 .searchableDropdown::-webkit-scrollbar-thumb {
   background: rgba(34, 43, 108, 0.25);
   border-radius: 10px;
@@ -718,13 +681,8 @@
   transition: background 0.15s ease;
 }
 
-.searchableOption:hover {
-  background: rgba(34, 43, 108, 0.06);
-}
-
-.searchableOptionSelected {
-  background: rgba(34, 43, 108, 0.08);
-}
+.searchableOption:hover { background: rgba(34, 43, 108, 0.06); }
+.searchableOptionSelected { background: rgba(34, 43, 108, 0.08); }
 
 .optionAvatar {
   width: 30px;
@@ -740,10 +698,7 @@
   flex-shrink: 0;
 }
 
-.optionInfo {
-  flex: 1;
-  min-width: 0;
-}
+.optionInfo { flex: 1; min-width: 0; }
 
 .optionLabel {
   display: block;
@@ -767,11 +722,7 @@
   flex-shrink: 0;
 }
 
-/* ─────────────────────────────────────────────── */
-/* Patient Search Dropdown                          */
-/* ─────────────────────────────────────────────── */
-
-/* Label row: label on left, Add Patient button on right */
+/* Patient Search Dropdown */
 .patientLabelRow {
   display: flex;
   align-items: center;
@@ -779,11 +730,8 @@
   margin-bottom: 7px;
 }
 
-.patientLabelRow .formLabel {
-  margin-bottom: 0;
-}
+.patientLabelRow .formLabel { margin-bottom: 0; }
 
-/* Add Patient inline button */
 .addPatientInlineBtn {
   display: inline-flex;
   align-items: center;
@@ -808,17 +756,10 @@
   opacity: 0.92;
 }
 
-.addPatientInlineBtn:active {
-  transform: translateY(0);
-}
+.addPatientInlineBtn:active { transform: translateY(0); }
 
-/* outer wrapper gives position:relative so the absolute
-   .searchableDropdown anchors correctly below the row */
-.patientSearchOuter {
-  position: relative;
-}
+.patientSearchOuter { position: relative; }
 
-/* Wraps tabs + input + button horizontally */
 .patientSearchRow {
   display: flex;
   align-items: center;
@@ -831,7 +772,6 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* The 3 tabs sit flush inside the left side of the row */
 .patientSearchTabs {
   display: flex;
   align-items: center;
@@ -861,7 +801,6 @@
   color: white !important;
 }
 
-/* Text input stretches to fill remaining space */
 .patientSearchInputWrap {
   display: flex;
   align-items: center;
@@ -881,11 +820,8 @@
   color: var(--text-dark);
 }
 
-.patientSearchInput::placeholder {
-  color: var(--muted);
-}
+.patientSearchInput::placeholder { color: var(--muted); }
 
-/* Small icon-only search button at the right end */
 .patientSearchIconBtn {
   display: flex;
   align-items: center;
@@ -900,17 +836,9 @@
   flex-shrink: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
-.patientSearchIconBtn:hover:not(:disabled) {
-  opacity: 0.88;
-  transform: scale(1.05);
-}
-.patientSearchIconBtn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  transform: none;
-}
+.patientSearchIconBtn:hover:not(:disabled) { opacity: 0.88; transform: scale(1.05); }
+.patientSearchIconBtn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-/* Selected patient chip shown inside the search row */
 .patientSelectedTrigger {
   display: flex;
   align-items: center;
@@ -932,10 +860,7 @@
   text-overflow: ellipsis;
 }
 
-/* ─────────────────────────────────────────────── */
-/* Quick Add Patient Modal  (Emergency / Scenario 2) */
-/* ─────────────────────────────────────────────── */
-
+/* Quick Add Patient Modal */
 .quickAddOverlay {
   position: fixed;
   inset: 0;
@@ -998,10 +923,7 @@
   transform: scale(1.08);
 }
 
-.quickAddForm {
-  display: flex;
-  flex-direction: column;
-}
+.quickAddForm { display: flex; flex-direction: column; }
 
 .quickAddBody {
   padding: 20px;
@@ -1058,10 +980,7 @@
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
 }
 
-.quickAddInput::placeholder {
-  color: var(--muted);
-  opacity: 0.7;
-}
+.quickAddInput::placeholder { color: var(--muted); opacity: 0.7; }
 
 .quickAddSelect {
   width: 100%;
@@ -1122,20 +1041,9 @@
   z-index: -1;
 }
 
-.quickAddBtnCancel:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(231, 76, 60, 0.4);
-}
-
-.quickAddBtnCancel:hover::before {
-  opacity: 1;
-}
-
-.quickAddBtnCancel:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
+.quickAddBtnCancel:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(231, 76, 60, 0.4); }
+.quickAddBtnCancel:hover::before { opacity: 1; }
+.quickAddBtnCancel:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
 .quickAddBtnSubmit {
   padding: 0 18px;
@@ -1151,148 +1059,10 @@
   box-shadow: 0 4px 14px rgba(32, 125, 156, 0.3);
 }
 
-.quickAddBtnSubmit:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 7px 18px rgba(32, 125, 156, 0.42);
-}
+.quickAddBtnSubmit:hover { transform: translateY(-2px); box-shadow: 0 7px 18px rgba(32, 125, 156, 0.42); }
+.quickAddBtnSubmit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-.quickAddBtnSubmit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Dark mode overrides */
-.dark-mode .addVisitModal h2 {
-  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.dark-mode .sectionTitle,
-.dark-mode .sectionTitleRow,
-.dark-mode .formLabel {
-  color: var(--accent-start);
-}
-
-.dark-mode .formInput,
-.dark-mode .formTextarea,
-.dark-mode .searchableInput,
-.dark-mode .patientSearchRow {
-  background: #1e293b;
-  border-color: #475569;
-  color: var(--text-light);
-}
-
-.dark-mode .patientSearchInput {
-  color: var(--text-light);
-}
-
-.dark-mode .formInput:focus,
-.dark-mode .formTextarea:focus,
-.dark-mode .searchableInputOpen,
-.dark-mode .patientSearchRow:focus-within {
-  border-color: var(--accent-start);
-  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2);
-}
-
-.dark-mode .validationMsg {
-  color: #fca5a5;
-}
-
-.dark-mode .addVisitError {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.4);
-  color: #fca5a5;
-}
-
-.dark-mode .addVisitFooter {
-  background: linear-gradient(135deg, #1e293b, #334155);
-  border-top-color: #475569;
-}
-
-.dark-mode .searchableDropdown {
-  background: #1e293b;
-  border-color: var(--accent-start);
-}
-
-.dark-mode .searchableOption:hover {
-  background: rgba(34, 211, 238, 0.1);
-}
-
-.dark-mode .searchableOptionSelected {
-  background: rgba(34, 211, 238, 0.12);
-}
-
-.dark-mode .optionLabel {
-  color: var(--text-light);
-}
-
-.dark-mode .optionSub {
-  color: #94a3b8;
-}
-
-.dark-mode .optionCheck {
-  color: var(--accent-start);
-}
-
-.dark-mode .noAppointments {
-  background: #78350f;
-  border-color: #fbbf24;
-  color: #fef3c7;
-}
-
-.dark-mode .patientSelectedTrigger {
-  background: rgba(34, 211, 238, 0.12);
-}
-
-.dark-mode .patientSelectedLabel {
-  color: var(--accent-start);
-}
-
-.dark-mode .quickAddModal {
-  background: rgba(30, 41, 59, 0.96);
-}
-
-.dark-mode .quickAddInput,
-.dark-mode .quickAddSelect {
-  background: #1e293b;
-  border-color: #475569;
-  color: var(--text-light);
-}
-
-.dark-mode .quickAddInput:focus,
-.dark-mode .quickAddSelect:focus {
-  border-color: var(--accent-start);
-  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2);
-}
-
-.dark-mode .quickAddLabel {
-  color: var(--accent-start);
-}
-
-.dark-mode .quickAddFooter {
-  background: linear-gradient(135deg, #1e293b, #334155);
-  border-top-color: #475569;
-}
-
-.dark-mode .emergencyToggleBtn {
-  border-color: rgba(248, 113, 113, 0.4);
-  background: rgba(239, 68, 68, 0.1);
-  color: #fca5a5;
-}
-
-.dark-mode .emergencyToggleBtnOn {
-  background: linear-gradient(135deg, #dc2626, #ef4444);
-  border-color: #dc2626;
-  color: white;
-}
-
-/* ────────────────────────────────────────────────
-   FAMILY SEARCH — inline button + popup
-   ──────────────────────────────────────────────── */
-
-/* Small pill button shown at the right of each Name/FileNo result row */
+/* Family search */
 .familySearchBtn {
   display: flex;
   align-items: center;
@@ -1311,19 +1081,9 @@
   transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 2px 8px rgba(34, 43, 108, 0.22);
 }
-.familySearchBtn:hover:not(:disabled) {
-  opacity: 0.88;
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(34, 43, 108, 0.32);
-}
-.familySearchBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
+.familySearchBtn:hover:not(:disabled) { opacity: 0.88; transform: scale(1.05); box-shadow: 0 4px 12px rgba(34, 43, 108, 0.32); }
+.familySearchBtn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-/* Fixed overlay behind the family popup card */
 .familyOverlay {
   position: fixed;
   inset: 0;
@@ -1336,7 +1096,6 @@
   animation: fadeIn 0.2s ease;
 }
 
-/* The family results popup card */
 .familyCard {
   background: white;
   border-radius: 16px;
@@ -1349,7 +1108,6 @@
   overflow: hidden;
 }
 
-/* Header strip inside the family card */
 .familyCardHeader {
   display: flex;
   align-items: center;
@@ -1360,14 +1118,8 @@
   flex-shrink: 0;
 }
 
-.familyCardHeader h4 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
-  flex: 1;
-}
+.familyCardHeader h4 { margin: 0; font-size: 1rem; font-weight: 700; flex: 1; }
 
-/* Close button inside the family card header */
 .familyCardCloseBtn {
   background: rgba(255, 255, 255, 0.22);
   border: none;
@@ -1382,19 +1134,10 @@
   flex-shrink: 0;
   transition: background 0.2s ease, transform 0.2s ease;
 }
-.familyCardCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.38);
-  transform: scale(1.08);
-}
+.familyCardCloseBtn:hover { background: rgba(255, 255, 255, 0.38); transform: scale(1.08); }
 
-/* Scrollable patient list inside the family card */
-.familyCardList {
-  overflow-y: auto;
-  flex: 1;
-  padding: 6px 0;
-}
+.familyCardList { overflow-y: auto; flex: 1; padding: 6px 0; }
 
-/* Empty state message inside the family card */
 .familyEmptyMsg {
   padding: 28px 20px;
   text-align: center;
@@ -1402,18 +1145,7 @@
   font-size: 0.9rem;
 }
 
-/* Dark mode overrides for family popup */
-.dark-mode .familyCard {
-  background: rgba(30, 41, 59, 0.98);
-}
-
-.dark-mode .familyEmptyMsg {
-  color: #94a3b8;
-}
-
-/* ─────────────────────────────────────────────── */
-/* Incomplete form hint                             */
-/* ─────────────────────────────────────────────── */
+/* Incomplete form hint */
 .formIncompleteHint {
   margin-top: 12px;
   padding: 10px 14px;
@@ -1426,6 +1158,271 @@
 }
 
 /* Fix: override AddPatient overlay padding when nested inside this modal */
-.addPatientWrapper > div {
-  padding: 20px !important;
+.addPatientWrapper > div { padding: 20px !important; }
+
+/* ==================== DARK MODE ==================== */
+
+/* Modal shell */
+:global(.dark-mode) .addVisitModal {
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+}
+
+/* Body */
+:global(.dark-mode) .addVisitBody {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+}
+
+/* Section titles */
+:global(.dark-mode) .sectionTitle,
+:global(.dark-mode) .sectionTitleRow {
+  color: var(--accent-end);
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+}
+
+/* Form labels */
+:global(.dark-mode) .formLabel {
+  color: var(--accent-end);
+}
+
+/* Inputs & textareas */
+:global(.dark-mode) .formInput,
+:global(.dark-mode) .formTextarea {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .formInput::placeholder,
+:global(.dark-mode) .formTextarea::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+:global(.dark-mode) .formInput::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
+}
+
+:global(.dark-mode) .formInput:focus,
+:global(.dark-mode) .formTextarea:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  background: #1e293b;
+}
+
+/* Validation */
+:global(.dark-mode) .validationMsg {
+  color: #fca5a5;
+}
+
+/* Error message */
+:global(.dark-mode) .addVisitError {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+/* Spinner */
+:global(.dark-mode) .spinner {
+  border-color: rgba(48, 178, 181, 0.15);
+  border-top-color: var(--accent-end);
+}
+
+/* Selected appointment summary */
+:global(.dark-mode) .selectedAppointmentSummary {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(34, 197, 94, 0.04));
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+:global(.dark-mode) .summaryHeader {
+  color: #6ee7b7;
+}
+
+:global(.dark-mode) .summaryLabel {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .summaryValue {
+  color: #e2e8f0;
+}
+
+/* No appointments */
+:global(.dark-mode) .noAppointments {
+  background: #78350f;
+  border-color: #fbbf24;
+  color: #fef3c7;
+}
+
+/* Footer */
+:global(.dark-mode) .addVisitFooter {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border-top-color: #475569;
+}
+
+/* Doctor searchable dropdown */
+:global(.dark-mode) .searchableInput {
+  background: #0f172a;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .searchableInputOpen {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+:global(.dark-mode) .searchableInnerInput {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .searchableSelected {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .searchablePlaceholder {
+  color: rgba(148, 163, 184, 0.6);
+}
+
+:global(.dark-mode) .searchIcon,
+:global(.dark-mode) .chevron {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .searchableDropdown {
+  background: #1e293b;
+  border-color: var(--accent-end);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+:global(.dark-mode) .searchableDropdown::-webkit-scrollbar-track { background: #0f172a; }
+:global(.dark-mode) .searchableDropdown::-webkit-scrollbar-thumb { background: #475569; }
+
+:global(.dark-mode) .searchableNoResults {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .searchableOption:hover {
+  background: rgba(48, 178, 181, 0.1);
+}
+
+:global(.dark-mode) .searchableOptionSelected {
+  background: rgba(48, 178, 181, 0.12);
+}
+
+:global(.dark-mode) .optionLabel {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .optionSub {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .optionCheck {
+  color: var(--accent-end);
+}
+
+/* Patient search row */
+:global(.dark-mode) .patientSearchRow {
+  background: #0f172a;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .patientSearchRow:focus-within {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+:global(.dark-mode) .patientSearchTabs {
+  border-right-color: #334155;
+}
+
+:global(.dark-mode) .patientSearchTab {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .patientSearchTab:hover {
+  background: rgba(48, 178, 181, 0.1);
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .patientSearchInput {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .patientSearchInput::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+:global(.dark-mode) .patientSelectedTrigger {
+  background: rgba(48, 178, 181, 0.12);
+}
+
+:global(.dark-mode) .patientSelectedLabel {
+  color: var(--accent-end);
+}
+
+/* Emergency toggle */
+:global(.dark-mode) .emergencyToggleBtn {
+  border-color: rgba(248, 113, 113, 0.4);
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+}
+
+:global(.dark-mode) .emergencyToggleBtnOn {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  border-color: #dc2626;
+  color: white;
+}
+
+/* Quick Add modal */
+:global(.dark-mode) .quickAddModal {
+  background: rgba(30, 41, 59, 0.96);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+:global(.dark-mode) .quickAddBody {
+  background: rgba(15, 23, 42, 0.3);
+}
+
+:global(.dark-mode) .quickAddLabel {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .quickAddInput,
+:global(.dark-mode) .quickAddSelect {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .quickAddInput::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+:global(.dark-mode) .quickAddInput:focus,
+:global(.dark-mode) .quickAddSelect:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  background: #1e293b;
+}
+
+:global(.dark-mode) .quickAddFooter {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border-top-color: #475569;
+}
+
+/* Family card popup */
+:global(.dark-mode) .familyCard {
+  background: rgba(30, 41, 59, 0.98);
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.5);
+}
+
+:global(.dark-mode) .familyEmptyMsg {
+  color: #94a3b8;
+}
+
+/* Incomplete hint */
+:global(.dark-mode) .formIncompleteHint {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
 }

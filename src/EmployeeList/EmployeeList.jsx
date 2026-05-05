@@ -8,25 +8,17 @@ import ViewEmployee from './ViewEmployee.jsx';
 import styles from './EmployeeList.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
-import { getValues, initTables } from '../Api/TableService.js'; // ← NEW
+import { useTableOptions } from '../Hooks/useTableOptions.js'; // ← NEW
+
+// ────────────────────────────────────────────────
+// TABLE IDs
+// ────────────────────────────────────────────────
+const TABLE_DESIGNATION     = 5;
+const TABLE_EMPLOYEE_STATUS = 6;
 
 // ────────────────────────────────────────────────
 // CONSTANTS
 // ────────────────────────────────────────────────
-
-const DESIGNATION_OPTIONS = [
-  { id: 1,  label: 'Doctor' },
-  { id: 2,  label: 'Nurse' },
-  { id: 3,  label: 'Receptionist' },
-  { id: 4,  label: 'Pharmacist' },
-  { id: 5,  label: 'Lab Technician' },
-  { id: 6,  label: 'Billing Staff' },
-  { id: 7,  label: 'Manager' },
-  { id: 8,  label: 'Attendant' },
-  { id: 9,  label: 'Cleaner' },
-  { id: 10, label: 'Others' },
-];
-
 const SEARCH_TYPE_OPTIONS = [
   { value: 'Name',         label: 'Name' },
   { value: 'Mobile',       label: 'Mobile' },
@@ -119,8 +111,10 @@ const EmployeeList = () => {
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState(null);
 
-  // ── Status options from TableService (Table ID 6) ──
-  const [statusOptions, setStatusOptions] = useState([]);
+  // ── Load dynamic options from TableService ──
+  const { tables } = useTableOptions([TABLE_DESIGNATION, TABLE_EMPLOYEE_STATUS]);
+  const designationOptions = tables[TABLE_DESIGNATION]     || [];
+  const statusOptions      = tables[TABLE_EMPLOYEE_STATUS] || [];
 
   // ── Dynamic columns state ──
   const [activeColumns, setActiveColumns] = useState(new Set());
@@ -161,27 +155,6 @@ const EmployeeList = () => {
       appliedFilters.departmentId       !== DEFAULT_FILTERS.departmentId ||
       appliedFilters.designation        !== DEFAULT_FILTERS.designation
     );
-
-  // ── Load status options from TableService (Table ID 6) ───────────────────
-  // We await initTables() first to ensure memoryCache is populated before
-  // calling getValues(), since the cache may still be empty on first render.
-  useEffect(() => {
-    const loadStatusOptions = async () => {
-      try {
-        await initTables();
-        const values = getValues(6);
-        console.log('Table 6 raw:', values); // ← remove after confirming
-        if (values && values.length > 0) {
-          setStatusOptions(
-            values.map((v) => ({ id: v.textId, label: v.textValue }))
-          );
-        }
-      } catch (err) {
-        console.error('Failed to load status options from TableService:', err);
-      }
-    };
-    loadStatusOptions();
-  }, []);
 
   // ── Load column prefs from IndexedDB on mount ─────────────────────────────
   useEffect(() => {
@@ -317,8 +290,13 @@ const EmployeeList = () => {
 
   // ────────────────────────────────────────────────
   // Helper functions
-  const getDesignationLabel = (designationId) =>
-    DESIGNATION_OPTIONS.find((d) => d.id === designationId)?.label || '—';
+
+  // Resolve designation label from TableService data (Table ID 5)
+  const getDesignationLabel = (designationId) => {
+    if (designationId === undefined || designationId === null) return '—';
+    const found = designationOptions.find((d) => d.id === Number(designationId));
+    return found ? found.label : '—';
+  };
 
   // Resolve status label from TableService data (Table ID 6)
   const getStatusLabel = (statusId) => {
@@ -443,7 +421,7 @@ const EmployeeList = () => {
             </select>
           </div>
 
-          {/* Designation */}
+          {/* Designation — populated from TableService Table ID 5 */}
           <div className={styles.filterGroup}>
             <select
               name="designation"
@@ -452,7 +430,7 @@ const EmployeeList = () => {
               className={styles.filterInput}
             >
               <option value="">All Designations</option>
-              {DESIGNATION_OPTIONS.map((d) => (
+              {designationOptions.map((d) => (
                 <option key={d.id} value={d.id}>{d.label}</option>
               ))}
             </select>

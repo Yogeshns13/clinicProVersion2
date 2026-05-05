@@ -1,12 +1,13 @@
 // src/components/UserList.jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { FiSearch, FiPlus, FiX } from 'react-icons/fi';
+import { FiSearch, FiPlus, FiX, FiEye, FiEyeOff, FiCheck, FiAlertCircle, FiLock } from 'react-icons/fi';
 import {
   getUserList,
   addUser,
   getClinicList,
   getBranchList,
   getEmployeeList,
+  updatePassword,
 } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
@@ -15,6 +16,65 @@ import MessagePopup from '../Hooks/MessagePopup.jsx';
 import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
 import styles from './UserList.module.css';
+
+import { getStoredClinicId } from '../Utils/Cryptoutils.js';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Constants
+// ─────────────────────────────────────────────────────────────────────────────
+const PROFILE_OPTIONS = [
+  'admin',
+  'spradmin',
+  'frontdesk',
+  'nurse',
+  'pharmacy',
+  'labtech',
+  'accounts',
+  'doctor',
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helper: get profileName from localStorage
+// ─────────────────────────────────────────────────────────────────────────────
+const getLocalProfileName = () => {
+  try {
+    return localStorage.getItem('profileName') || '';
+  } catch {
+    return '';
+  }
+};
+
+const isSprAdmin = () => getLocalProfileName().toLowerCase() === 'spradmin';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Status helpers
+// ─────────────────────────────────────────────────────────────────────────────
+const getStatusLabel = (status) => {
+  if (status === 0 || status === '0') return 'Active';
+  if (status === 1 || status === '1') return 'Deleted';
+  if (status === 2 || status === '2') return 'Suspended';
+  if (typeof status === 'string') {
+    const lower = status.toLowerCase();
+    if (lower === 'active')    return 'Active';
+    if (lower === 'deleted')   return 'Deleted';
+    if (lower === 'suspended') return 'Suspended';
+    if (lower === 'inactive')  return 'Deleted';
+  }
+  return String(status ?? '—').toUpperCase();
+};
+
+const getStatusClass = (status) => {
+  const label = getStatusLabel(status).toLowerCase();
+  if (label === 'active')    return styles.active;
+  if (label === 'deleted')   return styles.inactive;
+  if (label === 'suspended') return styles.inactive;
+  return styles.inactive;
+};
+
+// Check if user is deleted
+const isUserDeleted = (status) => {
+  return getStatusLabel(status).toLowerCase() === 'deleted';
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Validation helpers
@@ -55,6 +115,14 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (!value || value === 0 || value === '0') return 'Please select a clinic';
       return '';
 
+    case 'branchId':
+      if (!value || value === 0 || value === '0') return 'Please select a branch';
+      return '';
+
+    case 'employeeId':
+      if (!value || value === 0 || value === '0') return 'Please select an employee';
+      return '';
+
     default:
       return '';
   }
@@ -79,14 +147,13 @@ const buildStatusParam = (statusFilter) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Clinic Dropdown component (used inside Add User modal)
+// Clinic Dropdown component (used inside Add User modal — only for spradmin)
 // ─────────────────────────────────────────────────────────────────────────────
 const ClinicDropdownField = ({ selectedClinic, onSelect, error }) => {
   const [clinicList, setClinicList] = useState([]);
   const [loading, setLoading]       = useState(false);
   const [fetched, setFetched]       = useState(false);
 
-  // Fetch all clinics once when component mounts
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -134,6 +201,162 @@ const ClinicDropdownField = ({ selectedClinic, onSelect, error }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// UpdatePassword Modal Component
+// ─────────────────────────────────────────────────────────────────────────────
+const UpdatePasswordModal = ({ user, onClose, onSuccess }) => {
+  const [newPassword,    setNewPassword]    = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPass,    setShowNewPass]    = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
+  const [passwordError,  setPasswordError]  = useState('');
+  const [isSubmitting,   setIsSubmitting]   = useState(false);
+
+  const handleClose = () => {
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordError('');
+    setShowNewPass(false);
+    setShowConfirmPass(false);
+    onClose();
+  };
+
+  const handleSubmit = async () => {
+    setPasswordError('');
+
+    if (!newPassword.trim()) {
+      setPasswordError('New password cannot be empty.');
+      return;
+    }
+    if (newPassword.trim().length < 6) {
+      setPasswordError('Password must be at least 6 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Passwords do not match. Please try again.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await updatePassword({
+        UserID:   user.userId || user.id,
+        ClinicID: user.clinicId || 0,
+        Password: newPassword.trim(),
+      });
+      onSuccess();
+    } catch (err) {
+      setPasswordError(err.message || 'Failed to update password. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className={styles.cpOverlay}>
+      <div className={styles.cpModal}>
+        {/* Header */}
+        <div className={styles.cpModalHeader}>
+          <div className={styles.cpHeaderIcon}>
+            <FiLock size={22} />
+          </div>
+          <div>
+            <h2>Update Password</h2>
+            <p>Set a new secure password for <strong>{user.userName}</strong></p>
+          </div>
+          <button className={styles.cpCloseBtn} onClick={handleClose} aria-label="Close">
+            <FiX size={20} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className={styles.cpModalBody}>
+          {/* New Password */}
+          <div className={styles.cpField}>
+            <label>New Password</label>
+            <div className={styles.cpInputWrap}>
+              <input
+                type={showNewPass ? 'text' : 'password'}
+                placeholder="Enter new password"
+                value={newPassword}
+                onChange={(e) => { setNewPassword(e.target.value); setPasswordError(''); }}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className={styles.cpEyeBtn}
+                onClick={() => { setShowNewPass((v) => !v); setShowConfirmPass(false); }}
+                tabIndex={-1}
+                aria-label="Toggle new password visibility"
+              >
+                {showNewPass ? <FiEyeOff size={17} /> : <FiEye size={17} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Confirm Password */}
+          <div className={styles.cpField}>
+            <label>Confirm Password</label>
+            <div className={`${styles.cpInputWrap} ${
+              confirmPassword && newPassword !== confirmPassword ? styles.cpMismatch :
+              confirmPassword && newPassword === confirmPassword ? styles.cpMatch : ''
+            }`}>
+              <input
+                type={showConfirmPass ? 'text' : 'password'}
+                placeholder="Re-enter new password"
+                value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(''); }}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className={styles.cpEyeBtn}
+                onClick={() => { setShowConfirmPass((v) => !v); setShowNewPass(false); }}
+                tabIndex={-1}
+                aria-label="Toggle confirm password visibility"
+              >
+                {showConfirmPass ? <FiEyeOff size={17} /> : <FiEye size={17} />}
+              </button>
+              {confirmPassword && newPassword === confirmPassword && (
+                <span className={styles.cpMatchIcon}><FiCheck size={15} /></span>
+              )}
+            </div>
+          </div>
+
+          {/* Error */}
+          {passwordError && (
+            <div className={styles.cpErrorMsg}>
+              <FiAlertCircle size={15} />
+              <span>{passwordError}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className={styles.cpModalFooter}>
+          <button className={styles.cpBtnCancel} onClick={handleClose} disabled={isSubmitting}>
+            Cancel
+          </button>
+          <button
+            className={styles.cpBtnSubmit}
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <span className={styles.cpSpinner} />
+            ) : (
+              <>
+                <FiLock size={15} />
+                Update Password
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // UserList
 // ─────────────────────────────────────────────────────────────────────────────
 const UserList = () => {
@@ -149,7 +372,7 @@ const UserList = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // ── Filters ──
+  // ── Filters — default to Active (status 0) ──
   const [filterInputs, setFilterInputs] = useState({
     searchType: 'userName', searchValue: '', statusFilter: '0',
   });
@@ -191,15 +414,26 @@ const UserList = () => {
   const [updateUserData,   setUpdateUserData]   = useState(null);
   const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);
 
+  // ── Update Password Modal ──
+  const [passwordUser,        setPasswordUser]        = useState(null);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+
+  // ── Derived: is current logged-in user spradmin? ──
+  const sprAdmin = isSprAdmin();
+
+  // ─────────────────────────────────────────────
+  // fetchUsers: if spradmin → clinicId = 0, else → getStoredClinicId()
   // ─────────────────────────────────────────────
   const fetchUsers = async (filters, currentPage) => {
     try {
       setLoading(true);
       setError(null);
       const searchPayload = buildSearchPayload(filters.searchType, filters.searchValue);
-      const data = await getUserList(0, {
+      const clinicId = sprAdmin ? 0 : await getStoredClinicId();
+      const data = await getUserList(clinicId, {
         Page:     currentPage,
         PageSize: pageSize,
+        BranchID: 0,
         ...searchPayload,
         Status: buildStatusParam(filters.statusFilter),
       });
@@ -215,80 +449,135 @@ const UserList = () => {
   useEffect(() => { fetchUsers(appliedFilters, page); }, []);  // eslint-disable-line
 
   // ── When clinic changes → load branches ──
+  // For spradmin: uses selectedClinic.id; for others: uses getStoredClinicId()
   useEffect(() => {
-    if (!selectedClinic) {
-      setBranchList([]);
-      setSelectedBranch(null);
+    if (sprAdmin) {
+      // spradmin: clinic comes from dropdown selection
+      if (!selectedClinic) {
+        setBranchList([]);
+        setSelectedBranch(null);
+        setEmployeeList([]);
+        setSelectedEmployee(null);
+        return;
+      }
+      const load = async () => {
+        setBranchLoading(true);
+        setSelectedBranch(null);
+        setEmployeeList([]);
+        setSelectedEmployee(null);
+        try {
+          const data = await getBranchList(selectedClinic.id, { Status: 1, PageSize: 50 });
+          setBranchList(Array.isArray(data) ? data : []);
+        } catch {
+          setBranchList([]);
+        } finally {
+          setBranchLoading(false);
+        }
+      };
+      load();
+    } else {
+      // non-spradmin: clinic comes from getStoredClinicId()
+      if (!isAddFormOpen) return;
+      const load = async () => {
+        setBranchLoading(true);
+        setSelectedBranch(null);
+        setEmployeeList([]);
+        setSelectedEmployee(null);
+        try {
+          const clinicId = await getStoredClinicId();
+          const data = await getBranchList(clinicId, { Status: 1, PageSize: 50 });
+          setBranchList(Array.isArray(data) ? data : []);
+        } catch {
+          setBranchList([]);
+        } finally {
+          setBranchLoading(false);
+        }
+      };
+      load();
+    }
+  }, [selectedClinic, isAddFormOpen]); // eslint-disable-line
+
+  // ── When branch changes → load employees (branch must be selected first) ──
+  useEffect(() => {
+    // Always clear employees and reset selection when branch is cleared
+    if (!selectedBranch) {
       setEmployeeList([]);
       setSelectedEmployee(null);
       return;
     }
-    const load = async () => {
-      setBranchLoading(true);
-      setSelectedBranch(null);
-      setEmployeeList([]);
-      setSelectedEmployee(null);
-      try {
-        const data = await getBranchList(selectedClinic.id, { Status: 1, PageSize: 50 });
-        setBranchList(Array.isArray(data) ? data : []);
-      } catch {
-        setBranchList([]);
-      } finally {
-        setBranchLoading(false);
-      }
-    };
-    load();
-  }, [selectedClinic]);
 
-  // ── When branch changes → load employees ──
-  useEffect(() => {
-    if (!selectedClinic) return;
-    const load = async () => {
-      setEmployeeLoading(true);
-      setSelectedEmployee(null);
-      try {
-        const data = await getEmployeeList(selectedClinic.id, {
-          BranchID: selectedBranch?.id || 0,
-          Status: 1,
-          PageSize: 100,
-        });
-        setEmployeeList(Array.isArray(data) ? data : []);
-      } catch {
-        setEmployeeList([]);
-      } finally {
-        setEmployeeLoading(false);
-      }
-    };
-    load();
-  }, [selectedClinic, selectedBranch]);
+    if (sprAdmin) {
+      // spradmin: also requires a clinic to be selected
+      if (!selectedClinic) return;
+      const load = async () => {
+        setEmployeeLoading(true);
+        setSelectedEmployee(null);
+        try {
+          const data = await getEmployeeList(selectedClinic.id, {
+            BranchID: selectedBranch.id,
+            Status: 1,
+            PageSize: 100,
+          });
+          setEmployeeList(Array.isArray(data) ? data : []);
+        } catch {
+          setEmployeeList([]);
+        } finally {
+          setEmployeeLoading(false);
+        }
+      };
+      load();
+    } else {
+      // non-spradmin: uses getStoredClinicId()
+      if (!isAddFormOpen) return;
+      const load = async () => {
+        setEmployeeLoading(true);
+        setSelectedEmployee(null);
+        try {
+          const clinicId = await getStoredClinicId();
+          const data = await getEmployeeList(clinicId, {
+            BranchID: selectedBranch.id,
+            Status: 1,
+            PageSize: 100,
+          });
+          setEmployeeList(Array.isArray(data) ? data : []);
+        } catch {
+          setEmployeeList([]);
+        } finally {
+          setEmployeeLoading(false);
+        }
+      };
+      load();
+    }
+  }, [selectedClinic, selectedBranch, isAddFormOpen]); // eslint-disable-line
 
+  // ─────────────────────────────────────────────
+  // isFormValid: branch and employee are always required
   // ─────────────────────────────────────────────
   const isFormValid = useMemo(() => {
     const requiredFields = ['userName', 'email', 'password', 'profileName'];
     const allFilled = requiredFields.every((f) => formData[f] && String(formData[f]).trim());
     if (!allFilled) return false;
-    if (!selectedClinic) return false;
+    if (sprAdmin && !selectedClinic) return false;
+    if (!selectedBranch) return false;
+    if (!selectedEmployee) return false;
     const hasErrors = Object.values(validationMessages).some((msg) => !!msg);
     if (hasErrors) return false;
     return true;
-  }, [formData, validationMessages, selectedClinic]);
-
-  const getStatusClass = (status) => {
-    if (status === 'active')   return styles.active;
-    if (status === 'inactive') return styles.inactive;
-    return styles.inactive;
-  };
+  }, [formData, validationMessages, selectedClinic, selectedBranch, selectedEmployee, sprAdmin]);
 
   const refreshUsers = () => fetchUsers(appliedFilters, page);
 
   const validateAllFields = () => {
     const toValidate = {
-      userName: formData.userName,
-      email:    formData.email,
-      mobile:   formData.mobile,
-      password: formData.password,
+      userName:    formData.userName,
+      email:       formData.email,
+      mobile:      formData.mobile,
+      password:    formData.password,
       profileName: formData.profileName,
-      clinicId: selectedClinic?.id || 0,
+      // only validate clinicId for spradmin
+      ...(sprAdmin ? { clinicId: selectedClinic?.id || 0 } : {}),
+      branchId:   selectedBranch?.id   || 0,
+      employeeId: selectedEmployee?.id || 0,
     };
     const messages = {};
     let hasErrors = false;
@@ -391,13 +680,18 @@ const UserList = () => {
 
     setFormLoading(true);
     try {
+      // For spradmin: use selectedClinic.id; for others: use getStoredClinicId()
+      const clinicId = sprAdmin
+        ? (selectedClinic?.id || 0)
+        : await getStoredClinicId();
+
       await addUser({
         userName:    formData.userName.trim(),
         email:       formData.email.trim(),
         mobile:      formData.mobile.trim(),
         password:    formData.password.trim(),
         profileName: formData.profileName.trim(),
-        clinicId:    selectedClinic?.id    || 0,
+        clinicId:    clinicId,
         branchId:    selectedBranch?.id    || 0,
         employeeId:  selectedEmployee?.id  || 0,
       });
@@ -432,6 +726,24 @@ const UserList = () => {
 
   const handleUpdateError = (message) => {
     console.error('Update user error (handled by UpdateUser popup):', message);
+  };
+
+  // ── Update Password ──
+  const handlePasswordClick = (user) => {
+    setSelectedUser(null);
+    setPasswordUser(user);
+    setIsPasswordModalOpen(true);
+  };
+
+  const handlePasswordClose = () => {
+    setIsPasswordModalOpen(false);
+    setPasswordUser(null);
+  };
+
+  const handlePasswordSuccess = () => {
+    setIsPasswordModalOpen(false);
+    setPasswordUser(null);
+    showPopup('Password updated successfully!', 'success');
   };
 
   // ── Delete ──
@@ -614,7 +926,7 @@ const UserList = () => {
                     </td>
                     <td>
                       <span className={`${styles.statusBadge} ${getStatusClass(user.status)}`}>
-                        {user.status?.toUpperCase()}
+                        {getStatusLabel(user.status).toUpperCase()}
                       </span>
                     </td>
                     <td>
@@ -657,8 +969,8 @@ const UserList = () => {
                 <h2>{selectedUser.userName}</h2>
                 <div className={styles.detailHeaderMeta}>
                   <span className={styles.workIdBadge}>{selectedUser.profileName || 'User'}</span>
-                  <span className={`${styles.workIdBadge} ${selectedUser.status === 'active' ? styles.activeBadge : styles.inactiveBadge}`}>
-                    {selectedUser.status?.toUpperCase()}
+                  <span className={`${styles.workIdBadge} ${getStatusClass(selectedUser.status) === styles.active ? styles.activeBadge : styles.inactiveBadge}`}>
+                    {getStatusLabel(selectedUser.status).toUpperCase()}
                   </span>
                 </div>
               </div>
@@ -691,6 +1003,24 @@ const UserList = () => {
                       <span className={styles.infoLabel}>Last Login</span>
                       <span className={styles.infoValue}>
                         {selectedUser.lastLogin ? new Date(selectedUser.lastLogin).toLocaleString() : '—'}
+                      </span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Failed Login Attempts</span>
+                      <span className={styles.infoValue}>
+                        {selectedUser.failedLoginAttempts != null
+                          ? selectedUser.failedLoginAttempts
+                          : '—'}
+                      </span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLabel}>Account Locked</span>
+                      <span className={`${styles.infoValue} ${
+                        selectedUser.isLocked === 1 || selectedUser.isLocked === '1'
+                          ? styles.lockedYes
+                          : styles.lockedNo
+                      }`}>
+                        {selectedUser.isLocked === 1 || selectedUser.isLocked === '1' ? 'Yes' : 'No'}
                       </span>
                     </div>
                   </div>
@@ -727,6 +1057,7 @@ const UserList = () => {
               </div>
 
               <div className={styles.detailModalFooter}>
+                {/* Delete button — always shown */}
                 <button
                   onClick={() => handleDeleteClick(selectedUser)}
                   disabled={deleteBtnCooldown || deleteLoading}
@@ -734,12 +1065,25 @@ const UserList = () => {
                 >
                   Delete User
                 </button>
+
+                {/* Update Password button — always shown */}
                 <button
-                  onClick={() => handleUpdateClick(selectedUser)}
-                  className={styles.btnUpdate}
+                  onClick={() => handlePasswordClick(selectedUser)}
+                  className={styles.btnPassword}
                 >
-                  Update User
+                  <FiLock size={15} style={{ marginRight: 5 }} />
+                  Update Password
                 </button>
+
+                {/* Update User button — hidden for Deleted users */}
+                {!isUserDeleted(selectedUser.status) && (
+                  <button
+                    onClick={() => handleUpdateClick(selectedUser)}
+                    className={styles.btnUpdate}
+                  >
+                    Update User
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -764,53 +1108,76 @@ const UserList = () => {
                 <div className={styles.addSectionHeader}><h3>Clinic Association</h3></div>
                 <div className={styles.addFormGrid}>
 
-                  <div className={styles.addFormGroup}>
-                    <label>Clinic <span className={styles.required}>*</span></label>
-                    <ClinicDropdownField
-                      selectedClinic={selectedClinic}
-                      onSelect={handleClinicSelect}
-                      error={validationMessages.clinicId}
-                    />
-                  </div>
+                  {/* Clinic dropdown — only visible for spradmin */}
+                  {sprAdmin && (
+                    <div className={styles.addFormGroup}>
+                      <label>Clinic <span className={styles.required}>*</span></label>
+                      <ClinicDropdownField
+                        selectedClinic={selectedClinic}
+                        onSelect={handleClinicSelect}
+                        error={validationMessages.clinicId}
+                      />
+                    </div>
+                  )}
 
                   <div className={styles.addFormGroup}>
-                    <label>Branch</label>
+                    <label>Branch <span className={styles.required}>*</span></label>
                     <select
                       className={styles.addSelect}
                       value={selectedBranch?.id || ''}
                       onChange={(e) => {
                         const found = branchList.find((b) => String(b.id) === e.target.value);
                         setSelectedBranch(found || null);
+                        const msg = found ? '' : 'Please select a branch';
+                        setValidationMessages((prev) => ({ ...prev, branchId: msg }));
                       }}
-                      disabled={!selectedClinic || branchLoading}
+                      disabled={sprAdmin ? (!selectedClinic || branchLoading) : branchLoading}
                     >
                       <option value="">
-                        {branchLoading ? 'Loading branches…' : !selectedClinic ? 'Select a clinic first' : 'Select Branch (optional)'}
+                        {branchLoading
+                          ? 'Loading branches…'
+                          : sprAdmin && !selectedClinic
+                            ? 'Select a clinic first'
+                            : 'Select Branch'}
                       </option>
                       {branchList.map((b) => (
                         <option key={b.id} value={b.id}>{b.name}</option>
                       ))}
                     </select>
+                    {validationMessages.branchId && (
+                      <span className={styles.validationMsg}>{validationMessages.branchId}</span>
+                    )}
                   </div>
 
                   <div className={styles.addFormGroup}>
-                    <label>Employee</label>
+                    <label>Employee <span className={styles.required}>*</span></label>
                     <select
                       className={styles.addSelect}
                       value={selectedEmployee?.id || ''}
                       onChange={(e) => {
                         const found = employeeList.find((emp) => String(emp.id) === e.target.value);
                         setSelectedEmployee(found || null);
+                        const msg = found ? '' : 'Please select an employee';
+                        setValidationMessages((prev) => ({ ...prev, employeeId: msg }));
                       }}
-                      disabled={!selectedClinic || employeeLoading}
+                      disabled={sprAdmin ? (!selectedClinic || !selectedBranch || employeeLoading) : (!selectedBranch || employeeLoading)}
                     >
                       <option value="">
-                        {employeeLoading ? 'Loading employees…' : !selectedClinic ? 'Select a clinic first' : 'Select Employee (optional)'}
+                        {employeeLoading
+                          ? 'Loading employees…'
+                          : sprAdmin && !selectedClinic
+                            ? 'Select a clinic first'
+                            : !selectedBranch
+                              ? 'Select a branch first'
+                              : 'Select Employee'}
                       </option>
                       {employeeList.map((emp) => (
                         <option key={emp.id} value={emp.id}>{emp.name}</option>
                       ))}
                     </select>
+                    {validationMessages.employeeId && (
+                      <span className={styles.validationMsg}>{validationMessages.employeeId}</span>
+                    )}
                   </div>
 
                 </div>
@@ -881,12 +1248,17 @@ const UserList = () => {
 
                   <div className={styles.addFormGroup}>
                     <label>Profile / Role <span className={styles.required}>*</span></label>
-                    <input
+                    <select
                       name="profileName"
                       value={formData.profileName}
                       onChange={handleInputChange}
-                      placeholder="e.g. Admin, Doctor, Receptionist"
-                    />
+                      className={styles.addSelect}
+                    >
+                      <option value="">Select Profile / Role</option>
+                      {PROFILE_OPTIONS.map((p) => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                    </select>
                     {validationMessages.profileName && (
                       <span className={styles.validationMsg}>{validationMessages.profileName}</span>
                     )}
@@ -920,6 +1292,15 @@ const UserList = () => {
           onClose={handleUpdateClose}
           onSuccess={handleUpdateSuccess}
           onError={handleUpdateError}
+        />
+      )}
+
+      {/* ──────────────── Update Password Modal ──────────────── */}
+      {isPasswordModalOpen && passwordUser && (
+        <UpdatePasswordModal
+          user={passwordUser}
+          onClose={handlePasswordClose}
+          onSuccess={handlePasswordSuccess}
         />
       )}
     </div>

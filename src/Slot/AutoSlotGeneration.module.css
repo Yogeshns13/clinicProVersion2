@@ -42,7 +42,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
   animation: fadeIn 0.25s ease;
 }
 
@@ -497,6 +497,133 @@
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;
+}
+
+/* ==================== DARK MODE ==================== */
+:global(.dark-mode) .panel {
+  background: rgba(30, 41, 59, 0.97);
+}
+
+:global(.dark-mode) .body {
+  background: transparent;
+}
+
+:global(.dark-mode) .fieldLabel {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .radioCard {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .radioCard:hover {
+  background: rgba(48, 178, 181, 0.08);
+  border-color: var(--accent-end);
+}
+
+:global(.dark-mode) .radioCardActive {
+  background: rgba(48, 178, 181, 0.1);
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+:global(.dark-mode) .radioTitle {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .radioIcon {
+  background: rgba(48, 178, 181, 0.15);
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .radioCheck {
+  border-color: #475569;
+  background: #0f172a;
+}
+
+:global(.dark-mode) .counterBtn {
+  background: #1e293b;
+  border-color: #475569;
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .counterBtn:hover {
+  background: rgba(48, 178, 181, 0.1);
+  border-color: var(--accent-end);
+}
+
+:global(.dark-mode) .counterInput {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .counterInput:focus {
+  background: #1e293b;
+  border-color: var(--accent-end);
+}
+
+:global(.dark-mode) .counterUnit {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .dateInput {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .dateInput:focus {
+  background: #1e293b;
+  border-color: var(--accent-end);
+}
+
+:global(.dark-mode) .dateArrow {
+  color: #64748b;
+}
+
+:global(.dark-mode) .intervalChip {
+  background: #1e293b;
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .intervalChip:hover {
+  background: rgba(48, 178, 181, 0.1);
+  border-color: var(--accent-end);
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .intervalCustom {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .intervalCustom:focus {
+  background: #1e293b;
+  border-color: var(--accent-end);
+}
+
+:global(.dark-mode) .footer {
+  background: #0f172a;
+  border-top-color: rgba(71, 85, 105, 0.5);
+}
+
+:global(.dark-mode) .cancelBtn {
+  background: #334155;
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .cancelBtn:hover {
+  background: #475569;
+}
+
+:global(.dark-mode) .errorBanner {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
 }
 
 /* ────────────────────────────────────────────────

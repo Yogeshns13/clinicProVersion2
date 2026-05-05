@@ -1659,3 +1659,442 @@
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
+
+/* ══════════════════════════════════════════════════════
+   DARK MODE
+   ══════════════════════════════════════════════════════ */
+
+/* ── Shell & overlay ── */
+:global(.dark-mode) .acOverlay {
+  background: #0f172a;
+  box-shadow: var(--sh-xl), -4px 0 24px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Body ── */
+:global(.dark-mode) .acBody {
+  background: #0f172a;
+}
+
+:global(.dark-mode) .acHeader {
+  background: linear-gradient(135deg, #334155, #475569);
+}
+
+/* ── Patient bar ── */
+:global(.dark-mode) .patientBar {
+  background: linear-gradient(90deg, rgba(34, 43, 108, 0.25), rgba(48, 178, 181, 0.1));
+  border-bottom-color: rgba(71, 85, 105, 0.4);
+}
+:global(.dark-mode) .patientBarItem {
+  border-right-color: rgba(71, 85, 105, 0.4);
+}
+:global(.dark-mode) .patientBarItem strong { color: #cbd5e1; }
+:global(.dark-mode) .patientBarItem span   { color: #94a3b8; }
+:global(.dark-mode) .patientBarItem svg    { color: #64748b; }
+
+/* ── Saved / error banners ── */
+:global(.dark-mode) .savedBanner {
+  background: linear-gradient(90deg, rgba(5, 150, 105, 0.12), rgba(16, 185, 129, 0.05));
+  border-bottom-color: rgba(5, 150, 105, 0.22);
+}
+:global(.dark-mode) .errorBanner {
+  background: rgba(220, 38, 38, 0.1);
+  border-bottom-color: rgba(220, 38, 38, 0.25);
+}
+
+/* ── Panels ── */
+:global(.dark-mode) .panel {
+  background: #1e293b;
+  border-right-color: rgba(71, 85, 105, 0.35);
+}
+:global(.dark-mode) .panel1 { background: #1e293b; }
+:global(.dark-mode) .panel2 { background: #172032; }
+:global(.dark-mode) .panel3 { background: #1e293b; }
+
+:global(.dark-mode) .panelHead {
+  border-bottom-color: rgba(71, 85, 105, 0.35);
+}
+:global(.dark-mode) .panel1 .panelHead { background: linear-gradient(90deg, rgba(34, 43, 108, 0.2) 0%, transparent 100%); }
+:global(.dark-mode) .panel2 .panelHead { background: linear-gradient(90deg, rgba(32, 125, 156, 0.15) 0%, transparent 100%); }
+:global(.dark-mode) .panel3 .panelHead { background: linear-gradient(90deg, rgba(48, 178, 181, 0.12) 0%, transparent 100%); }
+
+:global(.dark-mode) .panelTitle { color: #e2e8f0; }
+:global(.dark-mode) .panelBody::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.5); }
+
+/* ── Visit snapshot ── */
+:global(.dark-mode) .visitSnapshot {
+  background: linear-gradient(135deg, rgba(32, 125, 156, 0.12), rgba(48, 178, 181, 0.06));
+  border-color: rgba(48, 178, 181, 0.25);
+}
+:global(.dark-mode) .snapshotLabel { color: var(--accent-end); }
+:global(.dark-mode) .snapshotMark  { color: var(--accent-end); }
+
+/* ── Form inputs / textareas ── */
+:global(.dark-mode) .formTextarea,
+:global(.dark-mode) .formInput {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+:global(.dark-mode) .formTextarea::placeholder,
+:global(.dark-mode) .formInput::placeholder { color: rgba(148, 163, 184, 0.5); }
+:global(.dark-mode) .formTextarea:focus,
+:global(.dark-mode) .formInput:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
+  background: #1e293b;
+}
+
+:global(.dark-mode) .formLabel     { color: var(--accent-end); }
+:global(.dark-mode) .formLabelOpt  { color: #94a3b8; }
+:global(.dark-mode) .mfLabel       { color: #64748b; }
+
+/* ── Med card ── */
+:global(.dark-mode) .medCard {
+  background: #1e293b;
+  border-color: #334155;
+}
+:global(.dark-mode) .medCard:hover { border-color: rgba(48, 178, 181, 0.4); }
+:global(.dark-mode) .medCardHead {
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.2), rgba(48, 178, 181, 0.08));
+  border-bottom-color: #334155;
+}
+:global(.dark-mode) .medCardName    { color: #e2e8f0; }
+:global(.dark-mode) .medCardUnnamed { color: #64748b; }
+:global(.dark-mode) .medCardSummary { color: #64748b; }
+
+/* ── mfInput ── */
+:global(.dark-mode) .mfInput {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+:global(.dark-mode) .mfInput:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 2px rgba(48, 178, 181, 0.15);
+  background: #1e293b;
+}
+:global(.dark-mode) .mfInput:read-only {
+  background: rgba(15, 23, 42, 0.6);
+  color: #64748b;
+}
+:global(.dark-mode) .mfInputQty {
+  background: rgba(48, 178, 181, 0.1);
+  border-color: rgba(48, 178, 181, 0.3);
+  color: var(--accent-end);
+}
+:global(.dark-mode) .mfTextarea {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+/* ── Timing & food pills ── */
+:global(.dark-mode) .timingPill {
+  background: #1e293b;
+  border-color: #475569;
+  color: #64748b;
+}
+:global(.dark-mode) .timingPill:hover:not(.timingPillOn):not(:disabled) {
+  border-color: rgba(48, 178, 181, 0.45);
+  color: var(--accent-end);
+  background: rgba(48, 178, 181, 0.08);
+}
+:global(.dark-mode) .medTimingSep { background: #334155; }
+
+:global(.dark-mode) .foodPill {
+  background: #1e293b;
+  border-color: #475569;
+  color: #64748b;
+}
+:global(.dark-mode) .foodPill:hover:not(.foodPillOn):not(:disabled) {
+  border-color: rgba(34, 43, 108, 0.5);
+  color: #94a3b8;
+  background: rgba(34, 43, 108, 0.15);
+}
+
+/* ── medCheckLabel ── */
+:global(.dark-mode) .medCheckLabel { color: #94a3b8; }
+
+/* ── Add medicine button ── */
+:global(.dark-mode) .btnAddMed {
+  border-color: rgba(71, 85, 105, 0.4);
+  color: #64748b;
+}
+:global(.dark-mode) .btnAddMed:hover {
+  border-color: var(--accent-end);
+  color: var(--accent-end);
+  background: rgba(48, 178, 181, 0.06);
+}
+
+/* ── Consultation update bar ── */
+:global(.dark-mode) .consultUpdateBar {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.12), rgba(245, 158, 11, 0.06));
+  border-color: rgba(217, 119, 6, 0.35);
+}
+:global(.dark-mode) .consultUpdateBarHint { color: #fbbf24; }
+
+/* ── Med search (panel 3) ── */
+:global(.dark-mode) .medSearch {
+  background: #1e293b;
+  border-color: #475569;
+}
+:global(.dark-mode) .medSearch:focus-within {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.12);
+}
+:global(.dark-mode) .medSearchInput { color: #e2e8f0; background: transparent; }
+:global(.dark-mode) .medSearchInput::placeholder { color: rgba(148, 163, 184, 0.4); }
+:global(.dark-mode) .medSearchIcon  { color: #64748b; }
+
+:global(.dark-mode) .medDragTip { color: #475569; }
+
+/* ── Med items ── */
+:global(.dark-mode) .medItem {
+  background: #1e293b;
+  border-color: transparent;
+}
+:global(.dark-mode) .medItem:hover {
+  border-color: rgba(48, 178, 181, 0.3);
+  background: rgba(48, 178, 181, 0.06);
+}
+:global(.dark-mode) .medItemSel {
+  border-color: var(--accent-end);
+  background: rgba(48, 178, 181, 0.1);
+}
+:global(.dark-mode) .medItemAdded {
+  opacity: .35;
+  background: #0f172a;
+}
+:global(.dark-mode) .medItemAdded:hover {
+  background: #0f172a;
+  border-color: transparent;
+}
+:global(.dark-mode) .medItemName  { color: #e2e8f0; }
+:global(.dark-mode) .medItemDrag  { color: #334155; }
+:global(.dark-mode) .medItem:hover .medItemDrag { color: var(--accent-end); }
+
+/* ── Tags ── */
+:global(.dark-mode) .tag { background: rgba(34, 43, 108, 0.25); color: #94a3b8; }
+
+/* ── Med list scrollbar ── */
+:global(.dark-mode) .medList::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.5); }
+
+/* ── Footer ── */
+:global(.dark-mode) .acFooter {
+  background: #0f172a;
+  border-top-color: rgba(71, 85, 105, 0.4);
+}
+
+/* ── Progress modal ── */
+:global(.dark-mode) .progressModalBody {
+  background: #1e293b;
+}
+:global(.dark-mode) .pstepWait {
+  background: #0f172a;
+  border-color: #334155;
+}
+:global(.dark-mode) .pstepActive {
+  background: rgba(48, 178, 181, 0.1);
+}
+:global(.dark-mode) .pstepDone {
+  background: rgba(5, 150, 105, 0.1);
+  border-color: rgba(5, 150, 105, 0.3);
+}
+:global(.dark-mode) .pstepLabel     { color: #e2e8f0; }
+:global(.dark-mode) .pstepWait .pstepLabel { color: #64748b; }
+:global(.dark-mode) .pstepIcon      { background: #0f172a; color: #64748b; }
+:global(.dark-mode) .progressDone {
+  border-top-color: rgba(5, 150, 105, 0.2);
+  color: #10b981;
+}
+
+/* ── Error / confirm popups ── */
+:global(.dark-mode) .errorPopup {
+  background: #1e293b;
+  border-color: rgba(220, 38, 38, 0.3);
+}
+:global(.dark-mode) .confirmPopup    { border-color: rgba(34, 43, 108, 0.3); }
+:global(.dark-mode) .errorPopupTitle { color: #e2e8f0; }
+:global(.dark-mode) .errorPopupMsg   { color: #94a3b8; }
+
+/* ── Confirm delete popup ── */
+:global(.dark-mode) .confirmDelPopupInner {
+  background: #1e293b;
+  border-color: rgba(220, 38, 38, 0.3);
+}
+:global(.dark-mode) .btnConfirmNo {
+  background: #0f172a;
+  border-color: #475569;
+  color: #94a3b8;
+}
+:global(.dark-mode) .btnConfirmNo:hover {
+  background: #1e293b;
+  border-color: #64748b;
+}
+
+/* ── Shared modal ── */
+:global(.dark-mode) .modal {
+  background: #1e293b;
+  box-shadow: var(--sh-xl), 0 0 0 1px rgba(71, 85, 105, 0.3);
+}
+
+/* ── Patient modal grid ── */
+:global(.dark-mode) .ptGrid   { background: #0f172a; }
+:global(.dark-mode) .ptCell   { background: #1e293b; }
+:global(.dark-mode) .ptCell:hover { background: #263548; }
+:global(.dark-mode) .ptCell label { color: #64748b; }
+:global(.dark-mode) .ptCell span  { color: #e2e8f0; }
+:global(.dark-mode) .ptCellAlert  { background: rgba(220, 38, 38, 0.05); }
+:global(.dark-mode) .ptCellAlert:hover { background: rgba(220, 38, 38, 0.08); }
+:global(.dark-mode) .ptCellFamily { background: rgba(34, 43, 108, 0.12); }
+:global(.dark-mode) .ptCellFamily:hover { background: rgba(34, 43, 108, 0.2); }
+:global(.dark-mode) .ptFamilyName { color: #e2e8f0; }
+:global(.dark-mode) .ptFamilyIdFallback { color: #64748b; }
+
+/* ── Confirm no sm ── */
+:global(.dark-mode) .btnConfirmNoSm {
+  background: #1e293b;
+  border-color: #475569;
+  color: #94a3b8;
+}
+:global(.dark-mode) .btnConfirmNoSm:hover { background: #263548; }
+
+/* ── Lab priority ── */
+:global(.dark-mode) .labPriority {
+  background: linear-gradient(90deg, rgba(34, 43, 108, 0.2), rgba(48, 178, 181, 0.08));
+  border-bottom-color: rgba(71, 85, 105, 0.35);
+}
+:global(.dark-mode) .labPriorityLabel { color: #94a3b8; }
+:global(.dark-mode) .priorityBtn {
+  background: #1e293b;
+  border-color: #475569;
+  color: #94a3b8;
+}
+:global(.dark-mode) .priorityBtn:hover {
+  border-color: rgba(34, 43, 108, 0.6);
+  color: #cbd5e1;
+}
+
+/* ── Lab cols ── */
+:global(.dark-mode) .labCol {
+  background: #0f172a;
+  border-color: #334155;
+}
+:global(.dark-mode) .labColHead { color: #94a3b8; }
+:global(.dark-mode) .labSearchRow {
+  background: #1e293b;
+  border-color: #475569;
+}
+:global(.dark-mode) .labSearchRow:focus-within { border-color: var(--accent-end); }
+:global(.dark-mode) .labSearchRow input { color: #e2e8f0; background: transparent; }
+
+/* ── Lab items ── */
+:global(.dark-mode) .labItem { background: transparent; }
+:global(.dark-mode) .labItem:hover {
+  background: rgba(48, 178, 181, 0.06);
+  border-color: rgba(48, 178, 181, 0.25);
+}
+:global(.dark-mode) .labItemSel {
+  background: rgba(48, 178, 181, 0.1);
+  border-color: var(--accent-end);
+}
+:global(.dark-mode) .labItemName { color: #e2e8f0; }
+:global(.dark-mode) .labItemFrozen { background: rgba(5, 150, 105, 0.08); }
+:global(.dark-mode) .labItemFrozen:hover { background: rgba(220, 38, 38, 0.08); }
+:global(.dark-mode) .labItemFrozen .labItemName { color: #10b981; }
+:global(.dark-mode) .labItemDeactivated { background: rgba(100, 116, 139, 0.08); }
+:global(.dark-mode) .labItemDeactivated .labItemName { color: #64748b; }
+:global(.dark-mode) .labItemsList::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.5); }
+
+/* ── Lab remove confirm ── */
+:global(.dark-mode) .labRemoveConfirm {
+  background: #1e293b;
+  border-color: rgba(220, 38, 38, 0.3);
+}
+:global(.dark-mode) .labRemoveConfirmReactivate { border-color: rgba(5, 150, 105, 0.35); }
+:global(.dark-mode) .labRemoveConfirmTitle { color: #e2e8f0; }
+:global(.dark-mode) .labRemoveConfirmName  { color: #94a3b8; }
+:global(.dark-mode) .labRemoveConfirmSub   { color: #64748b; }
+
+/* ── Lab footer ── */
+:global(.dark-mode) .labFooterCancel {
+  background: #1e293b;
+  border-color: #475569;
+  color: #94a3b8;
+}
+:global(.dark-mode) .labFooterCancel:hover {
+  border-color: rgba(220, 38, 38, 0.4);
+  color: var(--red);
+  background: rgba(220, 38, 38, 0.08);
+}
+
+/* ── Lab external select ── */
+:global(.dark-mode) .labExternalSection { border-top-color: rgba(71, 85, 105, 0.35); }
+:global(.dark-mode) .labExternalSectionLabel { color: #94a3b8; }
+:global(.dark-mode) .labExternalSelect {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+:global(.dark-mode) .labExternalSelect:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.12);
+}
+
+/* ── Saved prescription cards ── */
+:global(.dark-mode) .savedItemCard {
+  background: rgba(5, 150, 105, 0.06);
+  border-color: rgba(5, 150, 105, 0.2);
+}
+:global(.dark-mode) .savedItemCard:hover { border-color: rgba(5, 150, 105, 0.38); }
+:global(.dark-mode) .savedItemCardHead {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.12), rgba(5, 150, 105, 0.04));
+  border-bottom-color: rgba(5, 150, 105, 0.15);
+}
+:global(.dark-mode) .savedItemCardName { color: #e2e8f0; }
+:global(.dark-mode) .savedItemCardCollapsedSummary { color: #64748b; }
+:global(.dark-mode) .savedItemCardEditing {
+  background: rgba(32, 125, 156, 0.06);
+  border-color: rgba(32, 125, 156, 0.35);
+}
+:global(.dark-mode) .savedItemCardEditHead {
+  background: rgba(32, 125, 156, 0.12);
+  border-bottom-color: rgba(32, 125, 156, 0.22);
+}
+:global(.dark-mode) .savedItemCardEditHead strong { color: #e2e8f0; }
+:global(.dark-mode) .btnItemCancel {
+  background: #1e293b;
+  border-color: #475569;
+  color: #94a3b8;
+}
+:global(.dark-mode) .btnItemCancel:hover:not(:disabled) {
+  background: #263548;
+  border-color: #64748b;
+}
+
+/* ── Saved lab order section ── */
+:global(.dark-mode) .modalLabSavedSection {
+  background: rgba(32, 125, 156, 0.06);
+  border-color: rgba(32, 125, 156, 0.22);
+}
+:global(.dark-mode) .modalLabSavedSectionHead {
+  background: linear-gradient(135deg, rgba(32, 125, 156, 0.15), rgba(48, 178, 181, 0.07));
+  border-bottom-color: rgba(32, 125, 156, 0.2);
+}
+:global(.dark-mode) .modalLabSavedSectionTitle { color: var(--accent-end); }
+:global(.dark-mode) .savedLabItem {
+  background: #1e293b;
+  border-color: transparent;
+}
+:global(.dark-mode) .savedLabItem:hover { border-color: rgba(48, 178, 181, 0.28); }
+:global(.dark-mode) .savedLabItemInactive { background: #0f172a; opacity: .45; }
+:global(.dark-mode) .savedLabItemName { color: #e2e8f0; }
+
+/* ── State: empty / loading ── */
+:global(.dark-mode) .stateEmpty h4  { color: #94a3b8; }
+:global(.dark-mode) .stateEmpty p   { color: #64748b; }
+:global(.dark-mode) .stateEmptyIcon { color: #334155; }
+:global(.dark-mode) .panelEmpty p   { color: #94a3b8; }
+:global(.dark-mode) .panelEmpty span { color: #64748b; }
+:global(.dark-mode) .panelEmptyIcon { color: #334155; }
+:global(.dark-mode) .stateLoading   { color: #64748b; }

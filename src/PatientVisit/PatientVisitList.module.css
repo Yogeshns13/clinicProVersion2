@@ -582,7 +582,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
   animation: fadeIn 0.25s ease;
 }
 
@@ -919,4 +919,248 @@
     min-width: 32px;
     font-size: 0.78rem;
   }
+}
+
+/* ==================== DARK MODE ==================== */
+
+/* Main wrapper */
+:global(.dark-mode) .listWrapper {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+}
+
+/* Filters container */
+:global(.dark-mode) .filtersContainer {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 5px 17px rgba(0, 0, 0, 0.3);
+}
+
+/* Search inputs */
+:global(.dark-mode) .searchTypeSelect {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .searchTypeSelect:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
+}
+
+:global(.dark-mode) .searchTypeSelect option {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .searchInput {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .searchInput::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+:global(.dark-mode) .searchInput:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
+  border-left-color: var(--accent-end);
+}
+
+/* Filter inputs */
+:global(.dark-mode) .filterInput {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .filterInput:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
+}
+
+:global(.dark-mode) .filterInput option {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .datePlaceholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+:global(.dark-mode) .filterInput::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
+}
+
+/* Clear button */
+:global(.dark-mode) .clearButton {
+  background: #334155;
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .clearButton:hover {
+  background: #475569;
+}
+
+/* Table container */
+:global(.dark-mode) .tableContainer {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 13px 38px rgba(0, 0, 0, 0.35);
+}
+
+:global(.dark-mode) .table th {
+  background: linear-gradient(135deg, #334155, #475569);
+}
+
+/* Table rows & cells */
+:global(.dark-mode) .table td {
+  border-bottom-color: #334155;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .table tbody tr:nth-child(even) {
+  background-color: rgba(48, 178, 181, 0.06);
+}
+
+:global(.dark-mode) .table tbody tr:hover {
+  background-color: rgba(48, 178, 181, 0.1) !important;
+}
+
+/* Name & sub info */
+:global(.dark-mode) .name {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .subInfo {
+  color: #94a3b8;
+}
+
+/* Pagination bar */
+:global(.dark-mode) .paginationBar {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark-mode) .paginationInfo {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .paginationLabel {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .pageBtn {
+  background: #0f172a;
+  border-color: #475569;
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-color: var(--accent-end);
+  color: white;
+}
+
+:global(.dark-mode) .pageSizeInfo {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .pageSizeInfo strong {
+  color: var(--accent-end);
+}
+
+/* Initialize visit modal */
+:global(.dark-mode) .updateModal {
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: 0 24px 68px rgba(0, 0, 0, 0.6);
+}
+
+/* Modal body */
+:global(.dark-mode) .updateBody {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+}
+
+/* Info section */
+:global(.dark-mode) .updateInfoSection {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.06), rgba(34, 211, 238, 0.03));
+  border-color: rgba(48, 178, 181, 0.2);
+}
+
+:global(.dark-mode) .updateInfoSection h4 {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .infoItem label {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .infoItem span {
+  color: #e2e8f0;
+}
+
+/* Form section */
+:global(.dark-mode) .updateFormSection h4 {
+  color: var(--accent-end);
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+}
+
+:global(.dark-mode) .formGroup label {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .unitLabel {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .formInput,
+:global(.dark-mode) .formTextarea {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .formInput::placeholder,
+:global(.dark-mode) .formTextarea::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+:global(.dark-mode) .formInput:focus,
+:global(.dark-mode) .formTextarea:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
+  background: #1e293b;
+}
+
+/* Modal footer */
+:global(.dark-mode) .updateFooter {
+  background: #0f172a;
+  border-top-color: #334155;
+}
+
+:global(.dark-mode) .updateBtnCancel {
+  background: #334155;
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .updateBtnCancel:hover {
+  background: #475569;
+}
+
+/* Modal error box */
+:global(.dark-mode) .modalErrorBox {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+:global(.dark-mode) .modalErrorTitle {
+  color: #fca5a5;
+}
+
+:global(.dark-mode) .modalErrorItem {
+  color: #fca5a5;
 }

@@ -518,7 +518,7 @@
   z-index: 1000;
   animation: fadeIn 0.25s ease;
   backdrop-filter: blur(6px);
-  padding: 20px 20px 20px 260px; /* 260px left offset for sidebar */
+  padding: 20px 20px 20px 60px; /* 260px left offset for sidebar */
 }
 
 .pdfModalContent {
@@ -702,6 +702,12 @@
 :global(.dark-mode) .searchInput       { background: #0f172a; border-color: #475569; color: #e2e8f0; }
 :global(.dark-mode) .searchInput:focus { border-left: 1px solid var(--accent-end); }
 :global(.dark-mode) .filterInput       { background: #0f172a; border-color: #475569; color: #e2e8f0; }
+
+:global(.dark-mode) .filterInput::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
+}
+
 :global(.dark-mode) .datePlaceholder   { color: #64748b; }
 :global(.dark-mode) .clearButton       { background: #334155; color: #e2e8f0; }
 :global(.dark-mode) .clearButton:hover { background: #475569; }

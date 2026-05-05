@@ -234,8 +234,8 @@
   text-align: left;
   padding: 12px 17px;
   background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  position: sticky;   /* ← new */
-  top: 0;             /* ← new */
+  position: sticky;
+  top: 0;
   z-index: 2;
   color: var(--text-light);
   font-weight: 600;
@@ -414,6 +414,11 @@
 .btnUpdate:active,
 .btnSubmit:active {
   transform: translateY(-1px);
+}
+
+.btnSubmitDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btnHold,
@@ -734,7 +739,7 @@
   z-index: 1000;
   animation: fadeIn 0.3s ease;
   backdrop-filter: blur(4px);
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
 }
 
 .detailModalContent {
@@ -781,6 +786,19 @@
   white-space: nowrap;
 }
 
+.clinicInfoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light);
+  opacity: 0.9;
+}
+
+.clinicInfoText {
+  display: flex;
+  flex-direction: column;
+}
+
 .clinicInfoName {
   display: flex;
   align-items: center;
@@ -802,7 +820,6 @@
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
-
 
 .workIdBadge {
   display: inline-block;
@@ -920,7 +937,7 @@
   background: #f8fafc;
 }
 
-/* ==================== ADD CLINIC MODAL ==================== */
+/* ==================== ADD SHIFT MODAL ==================== */
 .addModalContent {
   background: white;
   border-radius: 20px;
@@ -939,7 +956,7 @@
   flex: 1;
   display: flex;
   background-color: rgba(0, 0, 0, 0.05);
-  flex-direction: column; 
+  flex-direction: column;
   gap: 0;
 }
 
@@ -1334,6 +1351,108 @@
   color: #e2e8f0;
 }
 
+/* ==================== DARK MODE — VIEW DETAILS MODAL ==================== */
+:global(.dark-mode) .detailModalContent {
+  background: #1e293b;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+}
+
+:global(.dark-mode) .detailModalBody {
+  background: #1e293b;
+}
+
+:global(.dark-mode) .infoSection {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+:global(.dark-mode) .infoCard {
+  background: #0f172a;
+  box-shadow: 0 5px 17px rgba(0, 0, 0, 0.3);
+  border: 1px solid #334155;
+}
+
+:global(.dark-mode) .infoHeader {
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+}
+
+:global(.dark-mode) .infoHeader h3 {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .infoRow {
+  border-bottom-color: rgba(71, 85, 105, 0.3);
+}
+
+:global(.dark-mode) .infoLabel {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .infoValue {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .detailModalFooter {
+  background: #0f172a;
+  border-top-color: #334155;
+}
+
+/* ==================== DARK MODE — ADD WORK SHIFT MODAL ==================== */
+:global(.dark-mode) .addModalContent {
+  background: #1e293b;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+}
+
+:global(.dark-mode) .addModalBody {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+:global(.dark-mode) .addSection {
+  border-bottom-color: rgba(71, 85, 105, 0.3);
+}
+
+:global(.dark-mode) .addSectionHeader {
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+}
+
+:global(.dark-mode) .addSectionHeader h3 {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .addFormGroup label {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .addFormGroup input,
+:global(.dark-mode) .addFormGroup textarea,
+:global(.dark-mode) .addFormGroup select {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .addFormGroup input::placeholder,
+:global(.dark-mode) .addFormGroup textarea::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+:global(.dark-mode) .addFormGroup input:focus,
+:global(.dark-mode) .addFormGroup textarea:focus,
+:global(.dark-mode) .addFormGroup select:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
+  background: #1e293b;
+}
+
+:global(.dark-mode) .addFormGroup select option {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .addFormGroup select:disabled {
+  background: #0f172a;
+  color: #475569;
+}
+
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {
   .filtersGrid {
@@ -1395,7 +1514,6 @@
   .btnHold,
   .btnUpdate { width: 100%; }
 
-  /* Stack 3-col layout on small screens */
   .addFormGridThreeCol {
     grid-template-columns: 1fr;
   }
@@ -1425,7 +1543,6 @@
   gap: 16px;
 }
 
-/* ── Info text (Showing X–Y records) ── */
 .paginationInfo {
   font-size: 0.8rem;
   color: #64748b;
@@ -1433,14 +1550,12 @@
   white-space: nowrap;
 }
 
-/* ── Controls container ── */
 .paginationControls {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-/* ── "Page" label ── */
 .paginationLabel {
   font-size: 0.8rem;
   font-weight: 700;
@@ -1449,7 +1564,6 @@
   white-space: nowrap;
 }
 
-/* ── Arrow / page buttons ── */
 .pageBtn {
   width: 32px;
   height: 32px;
@@ -1480,7 +1594,6 @@
   cursor: not-allowed;
 }
 
-/* ── Current page indicator ── */
 .pageIndicator {
   min-width: 36px;
   height: 32px;
@@ -1496,7 +1609,6 @@
   box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
 }
 
-/* ── Page size text ── */
 .pageSizeInfo {
   font-size: 0.8rem;
   color: #64748b;
@@ -1509,7 +1621,6 @@
   font-weight: 700;
 }
 
-/* ── Dark mode support ── */
 :global(.dark-mode) .paginationBar {
   background: #1e293b;
   border-color: #475569;
@@ -1536,23 +1647,92 @@
   color: white;
 }
 
-/* ── Optional: make pagination sticky at bottom of table container ── */
-.clinicTableContainer {
-  position: relative;
+/* ==================== TABLE SECTION LAYOUT ==================== */
+.clinicListWrapper {
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  height: 100vh;
+  overflow: hidden;
+  color: var(--text-dark);
+  font-family: 'Inter', system-ui, sans-serif;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+}
+
+.filtersContainer {
+  background: white;
+  border-radius: 17px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  flex-shrink: 0;
+}
+
+.tableSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.clinicTableContainer {
+  background: white;
+  border-radius: 17px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+}
+
+.clinicTable thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
 }
 
 .paginationBar {
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
-  margin-top: 0;
-  border-radius: 0 0 14px 14px;
-  border-top: none;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 14px;
+  padding: 10px 20px;
+  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
+  border: 1px solid rgba(34, 43, 108, 0.1);
+  gap: 16px;
 }
 
-/* Responsive adjustments */
+:global(.dark-mode) .paginationBar {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .paginationInfo,
+:global(.dark-mode) .pageSizeInfo {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .paginationLabel {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .pageBtn {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: white;
+}
+
 @media (max-width: 768px) {
   .paginationBar {
     flex-direction: column;
@@ -1566,187 +1746,162 @@
   }
 }
 
-/* =====================================================================
-   WorkShift.module.css - Layout + Pagination styling
-   Goal: Pagination bar always stays at the bottom, table scrolls independently
-   ===================================================================== */
+/* ==================== DARK MODE — TIMEPICKER (Add & Update modals) ==================== */
 
-/* ── Root variables (keep your existing ones) ── */
-:root {
-  --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
+/* Trigger button — the visible input-like element */
+:global(.dark-mode) .tp-trigger,
+:global(.dark-mode) [class*="tp-trigger"],
+:global(.dark-mode) [class*="timePicker"] button,
+:global(.dark-mode) [class*="time-picker"] button,
+:global(.dark-mode) [class*="timepicker"] button {
+  background: #0f172a !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
 }
 
-/* ── Main wrapper ── full height + flex column + no outer scroll */
-.clinicListWrapper {
-  padding: 20px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
-  height: 100vh;                    /* Full viewport height */
-  overflow: hidden;                 /* Prevent whole page scrolling */
-  color: var(--text-dark);
-  font-family: 'Inter', system-ui, sans-serif;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+:global(.dark-mode) .tp-trigger:focus,
+:global(.dark-mode) [class*="tp-trigger"]:focus {
+  border-color: var(--accent-end) !important;
+  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15) !important;
 }
 
-/* ── Filters section ── never shrinks, stays at top */
-.filtersContainer {
-  background: white;
-  border-radius: 17px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
-  flex-shrink: 0;                   /* Very important */
+/* Dropdown panel */
+:global(.dark-mode) .tp-panel,
+:global(.dark-mode) [class*="tp-panel"],
+:global(.dark-mode) [class*="timePicker"] [class*="panel"],
+:global(.dark-mode) [class*="timePicker"] [class*="dropdown"],
+:global(.dark-mode) [class*="timePicker"] [class*="popup"],
+:global(.dark-mode) [class*="time-picker"] [class*="panel"],
+:global(.dark-mode) [class*="time-picker"] [class*="dropdown"],
+:global(.dark-mode) [class*="timepicker"] [class*="panel"],
+:global(.dark-mode) [class*="timepicker"] [class*="dropdown"] {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+  color: #e2e8f0 !important;
 }
 
-/* ── Container for table + pagination ── takes all remaining space */
-.tableSection {
-  flex: 1;                          /* Fills remaining height */
-  min-height: 0;                    /* Critical for nested scroll */
-  display: flex;
-  flex-direction: column;
-  gap: 14px;                        /* Space between table and pagination */
+/* Column headers (AM / PM / hour / minute labels) */
+:global(.dark-mode) .tp-col-header,
+:global(.dark-mode) [class*="tp-col-header"],
+:global(.dark-mode) [class*="timePicker"] [class*="header"],
+:global(.dark-mode) [class*="timePicker"] [class*="label"],
+:global(.dark-mode) [class*="time-picker"] [class*="header"] {
+  background: #0f172a !important;
+  color: var(--accent-end) !important;
+  border-color: #334155 !important;
 }
 
-/* ── Table container ── scrolls when content overflows */
-.clinicTableContainer {
-  background: white;
-  border-radius: 17px;
-  flex: 1;                          /* Grows to fill available space */
-  min-height: 0;                    /* Allows it to shrink properly */
-  overflow-y: auto;                 /* Only the table scrolls */
-  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+/* Individual time option items */
+:global(.dark-mode) .tp-item,
+:global(.dark-mode) [class*="tp-item"],
+:global(.dark-mode) [class*="timePicker"] li,
+:global(.dark-mode) [class*="timePicker"] [class*="item"],
+:global(.dark-mode) [class*="timePicker"] [class*="option"],
+:global(.dark-mode) [class*="time-picker"] li,
+:global(.dark-mode) [class*="time-picker"] [class*="item"],
+:global(.dark-mode) [class*="timepicker"] li,
+:global(.dark-mode) [class*="timepicker"] [class*="item"] {
+  color: #e2e8f0 !important;
+  background: transparent !important;
 }
 
-/* ── Make table headers sticky (optional but nice) */
-.clinicTable thead th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+/* Hover state on items */
+:global(.dark-mode) .tp-item:hover,
+:global(.dark-mode) [class*="tp-item"]:hover,
+:global(.dark-mode) [class*="timePicker"] li:hover,
+:global(.dark-mode) [class*="timePicker"] [class*="item"]:hover,
+:global(.dark-mode) [class*="time-picker"] li:hover,
+:global(.dark-mode) [class*="timepicker"] li:hover {
+  background: rgba(48, 178, 181, 0.18) !important;
+  color: var(--accent-end) !important;
 }
 
-/* ── Pagination bar ── always at bottom, never scrolls away */
-.paginationBar {
-  flex-shrink: 0;                   /* Prevents it from being compressed */
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: white;
-  border-radius: 14px;
-  padding: 10px 20px;
-  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
-  gap: 16px;
+/* Selected / active item */
+:global(.dark-mode) .tp-item.selected,
+:global(.dark-mode) .tp-item.active,
+:global(.dark-mode) [class*="tp-item"][class*="selected"],
+:global(.dark-mode) [class*="tp-item"][class*="active"],
+:global(.dark-mode) [class*="timePicker"] li[class*="selected"],
+:global(.dark-mode) [class*="timePicker"] li[class*="active"],
+:global(.dark-mode) [class*="timePicker"] [class*="item"][class*="selected"],
+:global(.dark-mode) [class*="timePicker"] [class*="item"][class*="active"],
+:global(.dark-mode) [class*="time-picker"] li[class*="selected"],
+:global(.dark-mode) [class*="time-picker"] [class*="item"][class*="selected"],
+:global(.dark-mode) [class*="timepicker"] li[class*="selected"],
+:global(.dark-mode) [class*="timepicker"] [class*="item"][class*="selected"] {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end)) !important;
+  color: #ffffff !important;
+  border-radius: 6px !important;
 }
 
-/* ── Pagination inner parts ── */
-.paginationInfo {
-  font-size: 0.8rem;
-  color: #64748b;
-  font-weight: 500;
-  white-space: nowrap;
+/* Scrollable column containers */
+:global(.dark-mode) .tp-col,
+:global(.dark-mode) [class*="tp-col"],
+:global(.dark-mode) [class*="timePicker"] [class*="col"],
+:global(.dark-mode) [class*="timePicker"] [class*="column"],
+:global(.dark-mode) [class*="time-picker"] [class*="col"] {
+  border-color: #334155 !important;
+  background: #1e293b !important;
 }
 
-.paginationControls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+/* Scrollbar styling inside picker */
+:global(.dark-mode) .tp-col::-webkit-scrollbar,
+:global(.dark-mode) [class*="tp-col"]::-webkit-scrollbar,
+:global(.dark-mode) [class*="timePicker"] [class*="col"]::-webkit-scrollbar {
+  width: 4px;
 }
 
-.paginationLabel {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--primary-start);
-  margin-right: 4px;
-  white-space: nowrap;
-}
-
-.pageBtn {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  color: var(--primary-start);
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  border-color: var(--accent-end);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.3);
-}
-
-.pageBtn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.pageIndicator {
-  min-width: 36px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: white;
-  font-size: 0.82rem;
-  font-weight: 700;
-  border-radius: 8px;
-  padding: 0 8px;
-  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
-}
-
-.pageSizeInfo {
-  font-size: 0.8rem;
-  color: #64748b;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.pageSizeInfo strong {
-  color: var(--primary-start);
-  font-weight: 700;
-}
-
-/* ── Dark mode support (optional) ── */
-:global(.dark-mode) .paginationBar {
-  background: #1e293b;
-  border-color: #475569;
-}
-
-:global(.dark-mode) .paginationInfo,
-:global(.dark-mode) .pageSizeInfo {
-  color: #94a3b8;
-}
-
-:global(.dark-mode) .paginationLabel {
-  color: var(--accent-end);
-}
-
-:global(.dark-mode) .pageBtn {
+:global(.dark-mode) .tp-col::-webkit-scrollbar-track,
+:global(.dark-mode) [class*="tp-col"]::-webkit-scrollbar-track,
+:global(.dark-mode) [class*="timePicker"] [class*="col"]::-webkit-scrollbar-track {
   background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
 }
 
-:global(.dark-mode) .pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
+:global(.dark-mode) .tp-col::-webkit-scrollbar-thumb,
+:global(.dark-mode) [class*="tp-col"]::-webkit-scrollbar-thumb,
+:global(.dark-mode) [class*="timePicker"] [class*="col"]::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+/* AM / PM toggle buttons */
+:global(.dark-mode) .tp-ampm,
+:global(.dark-mode) [class*="tp-ampm"],
+:global(.dark-mode) [class*="timePicker"] [class*="ampm"],
+:global(.dark-mode) [class*="timePicker"] [class*="meridiem"],
+:global(.dark-mode) [class*="time-picker"] [class*="ampm"] {
+ 
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
+}
+
+:global(.dark-mode) .tp-ampm.active,
+:global(.dark-mode) [class*="tp-ampm"][class*="active"],
+:global(.dark-mode) [class*="timePicker"] [class*="ampm"][class*="active"],
+:global(.dark-mode) [class*="timePicker"] [class*="meridiem"][class*="active"] {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end)) !important;
+  color: #ffffff !important;
+  border-color: var(--accent-end) !important;
+}
+
+/* Confirm / OK button inside picker panel */
+:global(.dark-mode) .tp-confirm,
+:global(.dark-mode) [class*="tp-confirm"],
+:global(.dark-mode) [class*="timePicker"] [class*="confirm"],
+:global(.dark-mode) [class*="timePicker"] [class*="ok"],
+:global(.dark-mode) [class*="time-picker"] [class*="confirm"] {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end)) !important;
+  color: #ffffff !important;
+  border-color: var(--accent-end) !important;
+}
+
+/* Divider / separator lines inside panel */
+:global(.dark-mode) .tp-separator,
+:global(.dark-mode) [class*="tp-separator"],
+:global(.dark-mode) [class*="timePicker"] [class*="separator"],
+:global(.dark-mode) [class*="timePicker"] hr,
+:global(.dark-mode) [class*="time-picker"] [class*="separator"] {
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
 }

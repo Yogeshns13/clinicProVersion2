@@ -625,6 +625,11 @@
   background: linear-gradient(135deg, #334155, #475569);
 }
 
+:global(.dark-mode) .filterInput::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
+}
+
 :global(.dark-mode) .table td {
   border-bottom-color: #475569;
   color: #e2e8f0;

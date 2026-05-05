@@ -329,3 +329,72 @@
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
+
+/* ==================== DARK MODE ==================== */
+:global(.dark-mode) .viewModal {
+  background: #1e293b;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+}
+
+:global(.dark-mode) .viewBody {
+  background: transparent;
+}
+
+:global(.dark-mode) .infoCard {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.7), rgba(30, 41, 59, 0.7));
+  border-color: rgba(71, 85, 105, 0.4);
+}
+
+:global(.dark-mode) .infoCardHeader {
+  color: var(--accent-end);
+  border-bottom-color: rgba(71, 85, 105, 0.4);
+}
+
+:global(.dark-mode) .infoRow {
+  border-bottom-color: rgba(71, 85, 105, 0.2);
+}
+
+:global(.dark-mode) .infoLabel {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .infoValue {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .detailSection {
+  background: #0f172a;
+  border-color: rgba(71, 85, 105, 0.4);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark-mode) .detailSectionHeader {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(48, 178, 181, 0.08));
+  color: var(--accent-end);
+  border-bottom-color: rgba(71, 85, 105, 0.4);
+}
+
+:global(.dark-mode) .detailField {
+  border-right-color: rgba(71, 85, 105, 0.2);
+  border-bottom-color: rgba(71, 85, 105, 0.2);
+}
+
+:global(.dark-mode) .fieldLabel {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .fieldValue {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .unitTag {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .notSet {
+  color: #475569;
+}
+
+:global(.dark-mode) .viewActions {
+  border-top-color: rgba(71, 85, 105, 0.4);
+}

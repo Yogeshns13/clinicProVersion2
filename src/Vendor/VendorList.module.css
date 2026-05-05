@@ -150,6 +150,13 @@
   color: transparent;
 }
 
+.dateEmpty::-webkit-datetime-edit-text,
+.dateEmpty::-webkit-datetime-edit-month-field,
+.dateEmpty::-webkit-datetime-edit-day-field,
+.dateEmpty::-webkit-datetime-edit-year-field {
+  color: transparent;
+}
+
 .dateEmpty::-webkit-calendar-picker-indicator {
   opacity: 0.5;
 }
@@ -566,6 +573,19 @@
   background: #0f172a;
   border-color: #475569;
   color: #e2e8f0;
+}
+
+:global(.dark-mode) .filterInput::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
+}
+
+/* Hide dd/mm/yyyy placeholder text on empty date inputs in dark mode */
+:global(.dark-mode) .dateEmpty::-webkit-datetime-edit-text,
+:global(.dark-mode) .dateEmpty::-webkit-datetime-edit-month-field,
+:global(.dark-mode) .dateEmpty::-webkit-datetime-edit-day-field,
+:global(.dark-mode) .dateEmpty::-webkit-datetime-edit-year-field {
+  color: transparent;
 }
 
 :global(.dark-mode) .clearButton {

@@ -11,7 +11,7 @@ const ROUTE_PERMISSIONS = {
   "/work-shift": ["admin", "doctor", "nurse", "frontdesk"],
   "/employee-list": ["admin", "nurse","frontdesk","nurse"],
   "/admin-employee-list": ["spradmin"],
-  "/user-list": ["spradmin"],
+  "/user-list": ["spradmin", "admin"],
 
   "/patient-list": ["admin", "frontdesk","nurse","accounts","doctor",],
   "/slotconfig-list": ["admin", "frontdesk"],

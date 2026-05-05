@@ -1,26 +1,36 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Contexts/AuthContext";
-import { renewToken } from "../Api/Api";
+import { renewToken, checkClinicAllowLogin } from "../Api/Api";
 import { getIsRenewing, renewalChannel } from "../Api/ApiConfiguration";
 
-const TOKEN_RENEWAL_INTERVAL = 13 * 60 * 1000;
+const TOKEN_RENEWAL_INTERVAL = Number(import.meta.env.VITE_TOKEN_RENEWAL_INTERVAL);
+const CLINIC_CHECK_BEFORE_RENEWAL = Number(import.meta.env.VITE_CLINIC_CHECK_BEFORE_RENEWAL);
 
-export const useTokenRenewal = () => {
+export const useTokenRenewal = ({ onClinicError } = {}) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const timeoutRef = useRef(null);
+  const clinicCheckTimeoutRef = useRef(null);
   const [nextRenewalTime, setNextRenewalTime] = useState(null);
-  // Guards against the timer and the axios interceptor renewing simultaneously
   const isLocalRenewing = useRef(false);
 
   const scheduleRef = useRef(null);
   const renewRef = useRef(null);
+  const onClinicErrorRef = useRef(onClinicError);
+  useEffect(() => { onClinicErrorRef.current = onClinicError; });
 
   const clearTimer = () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
+    }
+  };    
+
+  const clearClinicCheckTimer = () => {
+    if (clinicCheckTimeoutRef.current) {
+      clearTimeout(clinicCheckTimeoutRef.current);
+      clinicCheckTimeoutRef.current = null;
     }
   };
 
@@ -29,8 +39,30 @@ export const useTokenRenewal = () => {
     navigate("/login", { replace: true });
   };
 
+  const doClinicCheck = async () => {
+    try {
+      const result = await checkClinicAllowLogin();
+      if (result && result.allowLogin === 0) {
+        const message = result.message || "Access to this clinic is temporarily unavailable";
+        if (onClinicErrorRef.current) {
+          onClinicErrorRef.current(message);
+        } else {
+          doLogout();
+        }
+      }
+    } catch (err) {
+      const message = err?.message || "Failed to check clinic access";
+      if (onClinicErrorRef.current) {
+        onClinicErrorRef.current(message);
+      } else {
+        doLogout();
+      }
+    }
+  };
+
   scheduleRef.current = (baseTimestamp) => {
     clearTimer();
+    clearClinicCheckTimer();
     const now = Date.now();
     const elapsed = now - baseTimestamp;
     const intervalsPassed = Math.floor(elapsed / TOKEN_RENEWAL_INTERVAL);
@@ -38,6 +70,11 @@ export const useTokenRenewal = () => {
     const delay = Math.max(nextTime - now, 100);
     setNextRenewalTime(new Date(now + delay));
     timeoutRef.current = setTimeout(() => renewRef.current?.(), delay);
+
+    const clinicCheckDelay = delay - CLINIC_CHECK_BEFORE_RENEWAL;
+    if (clinicCheckDelay > 0) {
+      clinicCheckTimeoutRef.current = setTimeout(() => doClinicCheck(), clinicCheckDelay);
+    }
   };
 
   renewRef.current = async () => {
@@ -69,9 +106,6 @@ export const useTokenRenewal = () => {
 
     scheduleRef.current?.(parseInt(stored, 10));
 
-    // ── Cross-tab coordination ──────────────────────────────────────────────
-    // Another tab successfully renewed: reset our timer so we don't double-renew
-    // Another tab failed renewal / logged out: log this tab out too
     const handleChannelMessage = (event) => {
       if (event.data?.type === "RENEWED") {
         const ts = parseInt(event.data.timestamp, 10);
@@ -84,9 +118,6 @@ export const useTokenRenewal = () => {
       }
     };
 
-    // ── Tab visibility ──────────────────────────────────────────────────────
-    // When the user returns to a backgrounded tab the timer may have fired at
-    // the wrong time or the token may already be overdue — check and act
     const handleVisibilityChange = () => {
       if (document.visibilityState !== "visible") return;
       const ts = localStorage.getItem("login_timestamp");
@@ -97,13 +128,10 @@ export const useTokenRenewal = () => {
       if (elapsed >= TOKEN_RENEWAL_INTERVAL) {
         renewRef.current?.();
       } else {
-        // Reschedule in case the timer fired while the tab was hidden
         scheduleRef.current?.(base);
       }
     };
 
-    // ── Network reconnect ───────────────────────────────────────────────────
-    // After a network drop the token may have expired — treat same as visibility
     const handleOnline = () => handleVisibilityChange();
 
     renewalChannel?.addEventListener("message", handleChannelMessage);
@@ -112,6 +140,7 @@ export const useTokenRenewal = () => {
 
     return () => {
       clearTimer();
+      clearClinicCheckTimer();
       renewalChannel?.removeEventListener("message", handleChannelMessage);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("online", handleOnline);

@@ -35,7 +35,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
   animation: fadeIn 0.25s ease;
 }
 
@@ -43,7 +43,7 @@
   background: var(--glass-bg);
   border-radius: 20px;
   width: 100%;
-  max-width: 720px;                    /* Slightly narrower than AddAppointment for form focus */
+  max-width: 720px;
   max-height: 92vh;
   overflow: hidden;
   display: flex;
@@ -189,7 +189,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-   margin-bottom: 16px;
+  margin-bottom: 16px;
   padding-bottom: 10px;
   border-bottom: 2px solid rgba(48, 178, 181, 0.25);
 }
@@ -315,4 +315,81 @@
   .addVisitModalFooter {
     padding: 16px 22px;
   }
+}
+
+/* ==================== DARK MODE ==================== */
+
+/* Modal shell */
+:global(.dark-mode) .addVisitModal {
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+}
+
+/* Body */
+:global(.dark-mode) .addVisitModalBody {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+}
+
+/* Appointment info card */
+:global(.dark-mode) .addVisitAppointmentInfo {
+  background: linear-gradient(135deg, rgba(34, 43, 108, 0.2), rgba(48, 178, 181, 0.1));
+  border-color: #475569;
+}
+
+:global(.dark-mode) .addVisitAppointmentInfo h3 {
+  color: var(--accent-end);
+}
+
+/* Info grid labels & values */
+:global(.dark-mode) .infoLabel {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .infoValue {
+  color: #e2e8f0;
+}
+
+/* Error message */
+:global(.dark-mode) .addVisitErrorMessage {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+/* Form labels (section-style) */
+:global(.dark-mode) .addVisitLabel {
+  color: var(--accent-end);
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+}
+
+/* Textareas */
+:global(.dark-mode) .addVisitTextarea {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .addVisitTextarea::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+:global(.dark-mode) .addVisitTextarea:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  background: #1e293b;
+}
+
+/* Footer */
+:global(.dark-mode) .addVisitModalFooter {
+  background: #0f172a;
+  border-top-color: rgba(71, 85, 105, 0.5);
+}
+
+:global(.dark-mode) .addVisitCancelBtn {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .addVisitCancelBtn:hover {
+  background: #475569;
 }

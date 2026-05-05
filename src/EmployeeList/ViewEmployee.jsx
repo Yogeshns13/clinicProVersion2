@@ -28,13 +28,24 @@ import {
   deleteWorkDays,
   getShiftList,
   getDepartmentList,
-  getClinicList,                           // ← NEW IMPORT
+  getClinicList,
 } from '../Api/Api.js';
 import styles from './ViewEmployee.module.css';
-import { FaClinicMedical } from 'react-icons/fa'; 
+import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
 import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
+import { useTableOptions } from '../Hooks/useTableOptions.js'; // ← NEW
+
+// ────────────────────────────────────────────────
+// TABLE IDs
+// ────────────────────────────────────────────────
+const TABLE_GENDER              = 1;
+const TABLE_BLOOD_GROUP         = 2;
+const TABLE_MARITAL_STATUS      = 3;
+const TABLE_ID_PROOF            = 4;
+const TABLE_DESIGNATION         = 5;
+const TABLE_EMPLOYEE_STATUS     = 6;
 
 const NAME_REGEX       = /^[A-Za-z\s\.\-']+$/;
 const MOBILE_REGEX     = /^[6-9]\d{9}$/;
@@ -43,7 +54,6 @@ const ACCOUNT_NO_REGEX = /^\d{9,18}$/;
 
 // ────────────────────────────────────────────────
 // HELPER — fetch fileAccessToken for a given clinicId
-// via getClinicList (no localStorage token needed)
 // ────────────────────────────────────────────────
 const fetchFileAccessToken = async (clinicId) => {
   const clinicList = await getClinicList({ ClinicID: clinicId });
@@ -56,78 +66,62 @@ const fetchFileAccessToken = async (clinicId) => {
 
 const getLiveValidationMessage = (fieldName, value) => {
   switch (fieldName) {
-
-    // ── Step 1 : Employee fields ──
     case 'employeeCode':
       if (value && value.trim()) {
         if (value.trim().length > 20) return 'EmployeeCode cannot exceed 20 characters';
         if (!/^[A-Za-z0-9\-_]+$/.test(value.trim())) return 'EmployeeCode contains invalid characters';
       }
       return '';
-
     case 'firstName':
       if (!value || !value.trim()) return 'FirstName is required';
       if (value.trim().length > 50) return 'FirstName too long';
       if (!NAME_REGEX.test(value.trim())) return 'FirstName contains invalid characters';
       return '';
-
     case 'lastName':
       if (!value || !value.trim()) return 'LastName is required';
       if (value.trim().length > 50) return 'LastName too long';
       if (!NAME_REGEX.test(value.trim())) return 'LastName contains invalid characters';
       return '';
-
     case 'department':
       if (!value || !value.trim()) return 'Department is required';
       return '';
-
     case 'designation':
       if (!value || !value.trim()) return 'Designation is required';
       return '';
-
     case 'gender':
       if (!value || Number(value) < 1) return 'Gender is required';
       return '';
-
     case 'birthDate':
       if (!value) return 'BirthDate is required';
       if (isNaN(new Date(value).getTime())) return 'BirthDate must be a valid date (YYYY-MM-DD)';
       return '';
-
     case 'address':
       if (!value || !value.trim()) return 'Address is required';
       if (value.length > 1000) return 'Address too long';
       return '';
-
     case 'mobile':
       if (!value || !value.trim()) return 'Mobile is required';
       if (value.trim().length < 10 || value.trim().length > 10) return 'Mobile length should be 10';
       if (!MOBILE_REGEX.test(value.trim())) return 'Invalid mobile number';
       return '';
-
     case 'altMobile':
       if (!value || !value.trim()) return 'Alternate Mobile is required';
       if (value.trim().length < 10 || value.trim().length > 10) return 'AltMobile length should be 10';
       if (!MOBILE_REGEX.test(value.trim())) return 'Invalid alternate mobile number';
       return '';
-
     case 'email':
       if (value && value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()))
         return 'Invalid email format';
       return '';
-
     case 'qualification':
     case 'specialization':
       return value && value.length > 100 ? 'Field must not exceed 100 characters' : '';
-
     case 'universityName':
       if (value && value.trim() && value.trim().length < 3) return 'University name must be at least 3 characters';
       if (value && value.length > 100) return 'University name must not exceed 100 characters';
       return '';
-
     case 'licenseNo': case 'pfNo': case 'esiNo':
       return value && value.length > 50 ? 'Field must not exceed 50 characters' : '';
-
     case 'licenseExpiryDate':
       if (value) {
         const expiry = new Date(value);
@@ -135,7 +129,6 @@ const getLiveValidationMessage = (fieldName, value) => {
         if (expiry < today) return 'Expiry date must be in the future';
       }
       return '';
-
     case 'experienceYears':
       if (value !== '' && value !== null && value !== undefined) {
         const y = Number(value);
@@ -144,52 +137,40 @@ const getLiveValidationMessage = (fieldName, value) => {
         if (y > 50) return 'Experience cannot exceed 50 years';
       }
       return '';
-
-    // ── Step 2 : Proof fields ──
     case 'proofType':
       if (!value || Number(value) < 1) return 'ProofType is required';
       return '';
-
     case 'idNumber':
       if (!value || !value.trim()) return 'IdNumber is required';
       if (value.trim().length > 20) return 'IdNumber cannot exceed 20 characters';
       if (!/^[ A-Za-z0-9\/\-]+$/.test(value.trim())) return 'Invalid characters in IdNumber';
       return '';
-
     case 'detail':
       if (value && value.length > 500) return 'Detail too long';
       return '';
-
     case 'expiryDate':
       if (value && isNaN(new Date(value).getTime())) return 'ExpiryDate must be valid date';
       return '';
-
-    // ── Step 3 : Beneficiary fields ──
     case 'AccountHolderName':
       if (!value || !value.trim()) return 'AccountHolderName is required';
       if (value.trim().length > 100) return 'AccountHolderName too long';
       if (!/^[A-Za-z\s\.\-']+$/.test(value.trim())) return 'Invalid characters in AccountHolderName';
       return '';
-
     case 'AccountNo':
       if (!value || !value.trim()) return 'AccountNo is required';
       if (!ACCOUNT_NO_REGEX.test(value.trim())) return 'AccountNo must be 9–18 digits';
       return '';
-
     case 'BankName':
       if (!value || !value.trim()) return 'BankName is required';
       if (value.trim().length > 100) return 'BankName too long';
       return '';
-
     case 'IFSCCode':
       if (value && value.trim() && !IFSC_REGEX.test(value.trim()))
         return 'Invalid IFSC code format (e.g., SBIN0001234)';
       return '';
-
     case 'BankAddress':
       if (value && value.length > 500) return 'BankAddress too long';
       return '';
-
     default:
       return '';
   }
@@ -227,14 +208,17 @@ const getMaxBirthDate = () => {
 const getTodayDate = () => new Date().toISOString().split('T')[0];
 
 // ────────────────────────────────────────────────
-// CONSTANTS
+// CONSTANTS (static)
 // ────────────────────────────────────────────────
-const GENDER_OPTIONS         = [{ id: 1, label: 'Male' }, { id: 2, label: 'Female' }, { id: 3, label: 'Other' }];
-const BLOOD_GROUP_OPTIONS    = [{ id: 1, label: 'A+' }, { id: 2, label: 'A-' }, { id: 3, label: 'B+' }, { id: 4, label: 'B-' }, { id: 5, label: 'AB+' }, { id: 6, label: 'AB-' }, { id: 7, label: 'O+' }, { id: 8, label: 'O-' }, { id: 9, label: 'Others' }];
-const MARITAL_STATUS_OPTIONS = [{ id: 1, label: 'Single' }, { id: 2, label: 'Married' }, { id: 3, label: 'Widowed' }, { id: 4, label: 'Divorced' }, { id: 5, label: 'Separated' }];
-const ID_PROOF_OPTIONS       = [{ id: 1, label: 'Aadhar' }, { id: 2, label: 'Passport' }, { id: 3, label: 'Driving Licence' }, { id: 4, label: 'Voter ID' }, { id: 5, label: 'PAN Card' }];
-const DESIGNATION_OPTIONS    = [{ id: 1, label: 'Doctor' }, { id: 2, label: 'Nurse' }, { id: 3, label: 'Receptionist' }, { id: 4, label: 'Pharmacist' }, { id: 5, label: 'Lab Technician' }, { id: 6, label: 'Billing Staff' }, { id: 7, label: 'Manager' }, { id: 8, label: 'Attendant' }, { id: 9, label: 'Cleaner' }, { id: 10, label: 'Others' }];
-const WORK_DAYS              = [{ id: 1, label: 'Sun' }, { id: 2, label: 'Mon' }, { id: 3, label: 'Tue' }, { id: 4, label: 'Wed' }, { id: 5, label: 'Thu' }, { id: 6, label: 'Fri' }, { id: 7, label: 'Sat' }];
+const WORK_DAYS = [
+  { id: 1, label: 'Sun' },
+  { id: 2, label: 'Mon' },
+  { id: 3, label: 'Tue' },
+  { id: 4, label: 'Wed' },
+  { id: 5, label: 'Thu' },
+  { id: 6, label: 'Fri' },
+  { id: 7, label: 'Sat' },
+];
 
 const TABS = [
   { key: 'basic', label: 'Basic Info',       icon: <FiUser size={14} /> },
@@ -326,7 +310,7 @@ const ShiftDropdown = ({ shifts, selectedShifts, onToggle, disabled }) => {
 };
 
 // ────────────────────────────────────────────────
-// DELETE CONFIRM MODAL (kept for proof & beneficiary deletes)
+// DELETE CONFIRM MODAL
 // ────────────────────────────────────────────────
 const DeleteConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, loading }) => {
   if (!isOpen) return null;
@@ -350,11 +334,26 @@ const DeleteConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, loadi
 };
 
 // ────────────────────────────────────────────────
-// MAIN COMPONENT — now a popup, receives props instead of useParams
-// Props: isOpen, employeeId, onClose, onDeleted
+// MAIN COMPONENT
 // ────────────────────────────────────────────────
 const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
-  const id = employeeId; // alias for minimal diff with original logic
+  const id = employeeId;
+
+  // ── Load all dynamic options from TableService ──
+  const { tables } = useTableOptions([
+    TABLE_GENDER,
+    TABLE_BLOOD_GROUP,
+    TABLE_MARITAL_STATUS,
+    TABLE_ID_PROOF,
+    TABLE_DESIGNATION,
+    TABLE_EMPLOYEE_STATUS,
+  ]);
+  const genderOptions        = tables[TABLE_GENDER]           || [];
+  const bloodGroupOptions    = tables[TABLE_BLOOD_GROUP]      || [];
+  const maritalStatusOptions = tables[TABLE_MARITAL_STATUS]   || [];
+  const idProofOptions       = tables[TABLE_ID_PROOF]         || [];
+  const designationOptions   = tables[TABLE_DESIGNATION]      || [];
+  const statusOptions        = tables[TABLE_EMPLOYEE_STATUS]  || [];
 
   const [activeTab, setActiveTab]     = useState('basic');
   const [pageLoading, setPageLoading] = useState(true);
@@ -363,34 +362,27 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
   const [error, setError]             = useState(null);
   const [successMsg, setSuccessMsg]   = useState('');
 
-  // ── MessagePopup state ──
   const [msgPopup, setMsgPopup] = useState({ visible: false, message: '', type: 'success' });
 
-  // Edit mode per section
   const [editMode, setEditMode] = useState({ basic: false, proof: false, bank: false, shift: false });
 
-  // ── Employee delete: uses ConfirmPopup ──
   const [empDeleteConfirmOpen, setEmpDeleteConfirmOpen] = useState(false);
   const [empDeleteLoading, setEmpDeleteLoading]         = useState(false);
 
-  // ── Proof / Beneficiary delete: uses inline DeleteConfirmModal ──
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, type: '', targetId: null, title: '', message: '' });
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Departments & Shifts
   const [departments, setDepartments] = useState([]);
   const [shifts, setShifts]           = useState([]);
 
-  // ── Employee's own ClinicID (used for file access token when viewing files) ──
   const [employeeClinicId, setEmployeeClinicId] = useState(0);
 
-  // ── Basic Info ──
   const [formData, setFormData] = useState({
     employeeCode: '', firstName: '', lastName: '', gender: 0, birthDate: '',
     bloodGroup: 0, maritalStatus: 0, address: '', mobile: '', altMobile: '',
     email: '', departmentId: 0, designation: 0, qualification: '', specialization: '',
     licenseNo: '', licenseExpiryDate: '', experienceYears: 0, universityName: '',
-    pfNo: '', esiNo: '', shiftId: 0, photoFileId: 0,
+    pfNo: '', esiNo: '', shiftId: 0, photoFileId: 0, status: 1,
   });
   const [validationMessages, setValidationMessages] = useState({});
   const [photo, setPhoto]                           = useState(null);
@@ -399,18 +391,14 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
   const [photoUploadStatus, setPhotoUploadStatus]   = useState('');
   const [isPhotoUploading, setIsPhotoUploading]     = useState(false);
 
-  // ── Fetched photo (view mode) ──
   const [fetchedPhotoUrl, setFetchedPhotoUrl]       = useState(null);
   const [photoFetchLoading, setPhotoFetchLoading]   = useState(false);
 
-  // ── Fetched proof images (view mode, per index) ──
   const [fetchedProofUrls, setFetchedProofUrls]     = useState([]);
   const [proofFetchLoading, setProofFetchLoading]   = useState([]);
 
-  // ── Lightbox ──
   const [lightbox, setLightbox] = useState({ open: false, url: null, title: '' });
 
-  // ── Proofs ──
   const [proofList, setProofList]                             = useState([]);
   const [savedProofIds, setSavedProofIds]                     = useState([]);
   const [proofFiles, setProofFiles]                           = useState([]);
@@ -420,22 +408,18 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
   const [isProofUploading, setIsProofUploading]               = useState([]);
   const [proofValidationMessages, setProofValidationMessages] = useState([]);
 
-  // ── Bank ──
   const [beneficiaryList, setBeneficiaryList]                             = useState([]);
   const [savedBeneficiaryIds, setSavedBeneficiaryIds]                     = useState([]);
   const [beneficiaryValidationMessages, setBeneficiaryValidationMessages] = useState([]);
 
-  // ── Shifts & Workdays ──
   const [selectedShifts, setSelectedShifts]       = useState([]);
   const [selectedWorkDays, setSelectedWorkDays]   = useState([]);
   const [existingShiftMaps, setExistingShiftMaps] = useState([]);
   const [existingWorkDays, setExistingWorkDays]   = useState([]);
 
   // ────────────────────────────────────────────────
-  // Reset & load when popup opens or employeeId changes
   useEffect(() => {
     if (!isOpen || !id) return;
-    // Reset tab & edit mode on open
     setActiveTab('basic');
     setEditMode({ basic: false, proof: false, bank: false, shift: false });
     setError(null);
@@ -450,7 +434,6 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, id]);
 
-  // ── Auto-fetch photo when entering Basic edit mode ──
   useEffect(() => {
     if (editMode.basic && formData.photoFileId > 0 && !fetchedPhotoUrl && !photoFetchLoading) {
       (async () => {
@@ -470,7 +453,6 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editMode.basic]);
 
-  // ── Auto-fetch proof files when entering Proof edit mode ──
   useEffect(() => {
     if (editMode.proof) {
       proofList.forEach((proof, index) => {
@@ -494,14 +476,12 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editMode.proof]);
 
-  // Close on Escape key
   useEffect(() => {
     const handleEsc = (e) => { if (e.key === 'Escape' && isOpen) onClose(); };
     document.addEventListener('keydown', handleEsc);
     return () => document.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
 
-  // Prevent body scroll when open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -535,9 +515,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
       const emp = empList.find(e => e.id === employeeId) || empList[0];
       if (!emp) throw new Error('Employee not found');
 
-      // Store the employee's own clinicId for use when fetching files
       setEmployeeClinicId(emp.clinicId || clinicId);
-
       setDepartments(deptList);
       setShifts(shiftList);
 
@@ -565,10 +543,10 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
         esiNo:             emp.esiNo             || '',
         shiftId:           emp.shiftId           || 0,
         photoFileId:       emp.photoFileId       || 0,
+        status:            emp.status,
       });
       if (emp.photoFileId) setPhotoUploaded(true);
 
-      // Proofs
       const pList = proofs.length > 0
         ? proofs.map(p => ({
             proofType:  p.proofType,
@@ -588,7 +566,6 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
       setIsProofUploading(pList.map(() => false));
       setProofValidationMessages(pList.map(() => ({})));
 
-      // Beneficiaries
       const bList = beneficiaries.length > 0
         ? beneficiaries.map(b => ({
             AccountHolderName: b.accountHolderName || '',
@@ -604,7 +581,6 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
       setSavedBeneficiaryIds(bIds);
       setBeneficiaryValidationMessages(bList.map(() => ({})));
 
-      // Shifts & workdays
       setExistingShiftMaps(empShifts.map(s => ({ shiftMapId: s.shiftMapId, shiftId: s.shiftId })));
       setSelectedShifts(empShifts.map(s => s.shiftId));
       setExistingWorkDays(workDays.map(d => ({ id: d.id, workDay: d.workDay })));
@@ -622,7 +598,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     setTimeout(() => setSuccessMsg(''), 3000);
   };
 
-  // ── Photo Upload ──
+  // ── Photo ──
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -632,20 +608,16 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     setPhotoUploadStatus('File selected. Click "Upload Photo" to submit.');
     setPhotoUploaded(false);
     setFormData(prev => ({ ...prev, photoFileId: 0 }));
-    // Clear fetched photo so new selection takes visual priority
     setFetchedPhotoUrl(null);
   };
 
-  // ── MODIFIED: fetch fileAccessToken via getClinicList before uploading photo ──
   const handlePhotoUploadSubmit = async () => {
     if (!photo) return;
     setIsPhotoUploading(true); setPhotoUploadStatus('Uploading...');
     try {
       const clinicId = await getStoredClinicId();
-
       const fileAccessToken = await fetchFileAccessToken(clinicId);
       const res = await uploadPhoto(clinicId, photo, fileAccessToken);
-
       setFormData(prev => ({ ...prev, photoFileId: res.fileId }));
       setPhotoUploadStatus('Photo uploaded!'); setPhotoUploaded(true);
     } catch (err) { setPhotoUploadStatus(`Failed: ${err.message}`); }
@@ -658,17 +630,13 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     setFormData(prev => ({ ...prev, photoFileId: 0 }));
   };
 
-  // ── MODIFIED: fetch fileAccessToken using the employee's own clinicId (not localStorage) ──
   const handleViewPhoto = async () => {
     if (!formData.photoFileId || formData.photoFileId <= 0) return;
     setPhotoFetchLoading(true);
     try {
       const clinicId = await getStoredClinicId();
-
       const fileAccessToken = await fetchFileAccessToken(employeeClinicId);
-
       const res = await getFile(clinicId, formData.photoFileId, fileAccessToken);
-
       setFetchedPhotoUrl(res.url);
       setLightbox({ open: true, url: res.url, title: 'Employee Photo' });
     } catch (err) {
@@ -678,17 +646,13 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     }
   };
 
-  // ── MODIFIED: fetch fileAccessToken using the employee's own clinicId (not localStorage) ──
   const handleViewProofFile = async (index, fileId) => {
     if (!fileId || fileId <= 0) return;
     setProofFetchLoading(prev => { const a = [...prev]; a[index] = true; return a; });
     try {
       const clinicId = await getStoredClinicId();
-
       const fileAccessToken = await fetchFileAccessToken(employeeClinicId);
-
       const res = await getFile(clinicId, fileId, fileAccessToken);
-
       setFetchedProofUrls(prev => { const a = [...prev]; a[index] = res.url; return a; });
       setLightbox({ open: true, url: res.url, title: `Proof ${index + 1}` });
     } catch (err) {
@@ -727,39 +691,27 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
         experienceYears: Number(formData.experienceYears), universityName: formData.universityName.trim(),
         pfNo: formData.pfNo.trim(), esiNo: formData.esiNo.trim(),
         shiftId: 0, photoFileId: Number(formData.photoFileId),
+        status: Number(formData.status),
       });
       setEditMode(prev => ({ ...prev, basic: false }));
       showSuccess('Basic information updated successfully!');
     } catch (err) {
       setError(err);
-      setMsgPopup({
-        visible: true,
-        message: err?.message || 'Failed to save basic information. Please try again.',
-        type: 'error',
-      });
+      setMsgPopup({ visible: true, message: err?.message || 'Failed to save basic information. Please try again.', type: 'error' });
     }
     finally { setLoading(false); }
   };
 
-  // ── Delete Employee — opens ConfirmPopup ──
-  const handleDeleteEmployee = () => {
-    setEmpDeleteConfirmOpen(true);
-  };
+  const handleDeleteEmployee = () => setEmpDeleteConfirmOpen(true);
 
-  // ── Delete Employee — actual API call, triggered by ConfirmPopup "Yes, Delete" ──
   const performDeleteEmployee = async () => {
     setEmpDeleteConfirmOpen(false);
     setEmpDeleteLoading(true);
     try {
       await deleteEmployee(Number(id));
-      setMsgPopup({
-        visible: true,
-        message: `${formData.firstName} ${formData.lastName} has been deleted successfully.`,
-        type: 'success',
-      });
+      setMsgPopup({ visible: true, message: `${formData.firstName} ${formData.lastName} has been deleted successfully.`, type: 'success' });
     } catch (err) {
-      const errMessage = err?.message || 'Something went wrong. Please try again.';
-      setMsgPopup({ visible: true, message: errMessage, type: 'error' });
+      setMsgPopup({ visible: true, message: err?.message || 'Something went wrong. Please try again.', type: 'error' });
     } finally {
       setEmpDeleteLoading(false);
     }
@@ -818,12 +770,10 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     setProofFileUrls(prev => prev.map((u, i) => i === index ? (file.type.startsWith('image/') ? URL.createObjectURL(file) : null) : u));
     setProofFilesUploaded(prev => prev.map((v, i) => i === index ? false : v));
     setProofList(prev => prev.map((p, i) => i === index ? { ...p, fileId: 0 } : p));
-    // Clear fetched proof url so new selection takes priority
     setFetchedProofUrls(prev => prev.map((u, i) => i === index ? null : u));
     updateProofStatus(index, 'File selected. Click upload to submit.');
   };
 
-  // ── MODIFIED: fetch fileAccessToken via getClinicList before uploading ID proof ──
   const handleProofFileUploadSubmit = async (index) => {
     const file = proofFiles[index];
     if (!file) return;
@@ -833,7 +783,6 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
       const clinicId = await getStoredClinicId();
       const fileAccessToken = await fetchFileAccessToken(clinicId);
       const res = await uploadFile(clinicId, file, fileAccessToken);
-
       setProofList(prev => prev.map((p, i) => i === index ? { ...p, fileId: res.fileId } : p));
       setProofFilesUploaded(prev => prev.map((v, i) => i === index ? true : v));
       updateProofStatus(index, 'Uploaded successfully!');
@@ -878,11 +827,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
       showSuccess('ID proof(s) updated successfully!');
     } catch (err) {
       setError(err);
-      setMsgPopup({
-        visible: true,
-        message: err?.message || 'Failed to save ID proof. Please try again.',
-        type: 'error',
-      });
+      setMsgPopup({ visible: true, message: err?.message || 'Failed to save ID proof. Please try again.', type: 'error' });
     }
     finally { setLoading(false); }
   };
@@ -948,11 +893,7 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
       showSuccess('Bank account(s) updated successfully!');
     } catch (err) {
       setError(err);
-      setMsgPopup({
-        visible: true,
-        message: err?.message || 'Failed to save bank account. Please try again.',
-        type: 'error',
-      });
+      setMsgPopup({ visible: true, message: err?.message || 'Failed to save bank account. Please try again.', type: 'error' });
     }
     finally { setLoading(false); }
   };
@@ -989,16 +930,11 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
       showSuccess('Shift & workdays updated successfully!');
     } catch (err) {
       setError(err);
-      setMsgPopup({
-        visible: true,
-        message: err?.message || 'Failed to save shift & workdays. Please try again.',
-        type: 'error',
-      });
+      setMsgPopup({ visible: true, message: err?.message || 'Failed to save shift & workdays. Please try again.', type: 'error' });
     }
     finally { setLoading(false); }
   };
 
-  // ── Proof / Beneficiary delete confirm (inline DeleteConfirmModal) ──
   const handleDeleteConfirm = async () => {
     const { type, targetId } = deleteConfirm;
     setDeleteLoading(true);
@@ -1018,15 +954,12 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
       setDeleteConfirm({ open: false });
     } catch (err) {
       setDeleteConfirm({ open: false });
-      const errMessage = err?.message || 'Something went wrong. Please try again.';
-      setMsgPopup({ visible: true, message: errMessage, type: 'error' });
+      setMsgPopup({ visible: true, message: err?.message || 'Something went wrong. Please try again.', type: 'error' });
     } finally {
       setDeleteLoading(false);
     }
   };
 
-  // ── MessagePopup close handler ──
-  // For success on employee delete: close popup then call onDeleted to navigate away
   const handleMsgPopupClose = () => {
     const wasEmployeeDeleteSuccess =
       msgPopup.type === 'success' &&
@@ -1043,27 +976,20 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
     setError(null);
   };
 
-  // ── Inline validation message component ──
   const ValidationMsg = ({ field, msgs }) =>
     msgs[field] ? <span className={styles.validationMsg}>{msgs[field]}</span> : null;
 
   const currentShiftNames   = existingShiftMaps.map(m => shifts.find(s => s.id === m.shiftId)?.shiftName).filter(Boolean);
   const currentWorkDayNames = existingWorkDays.map(d => WORK_DAYS.find(w => w.id === d.workDay)?.label).filter(Boolean);
-  
-   const clinicName = localStorage.getItem('clinicName') || '—';
-  const branchName = localStorage.getItem('branchName') || '—';
-  // ────────────────────────────────────────────────
-  // Handle backdrop click to close
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) onClose();
-  };
 
-  // ────────────────────────────────────────────────
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
+
   return (
-    <div className={styles.overlay} >
+    <div className={styles.overlay}>
       <div className={styles.modal}>
 
-        {/* ── Gradient Header ── */}
+        {/* ── Header ── */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.empAvatar}>
@@ -1071,23 +997,21 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
             </div>
             <div className={styles.headerContent}>
               <h2>{pageLoading ? 'Loading...' : `${formData.firstName} ${formData.lastName}`}</h2>
-              </div>
-              </div>
-              <div className={styles.addModalHeaderCard}>
-                          <div className={styles.clinicInfoIcon}>
-                            <FaClinicMedical size={18} />
-                          </div>
-                          <div className={styles.clinicInfoText}>
-                            <span className={styles.clinicInfoName}>{clinicName}</span>
-                            <span className={styles.clinicInfoBranch}>{branchName}</span>
-                          </div>
-                          </div>
-          
-            <button className={styles.closeBtn} onClick={onClose}>
-              <FiX size={18} />
-            </button>
+            </div>
           </div>
-        
+          <div className={styles.addModalHeaderCard}>
+            <div className={styles.clinicInfoIcon}>
+              <FaClinicMedical size={18} />
+            </div>
+            <div className={styles.clinicInfoText}>
+              <span className={styles.clinicInfoName}>{clinicName}</span>
+              <span className={styles.clinicInfoBranch}>{branchName}</span>
+            </div>
+          </div>
+          <button className={styles.closeBtn} onClick={onClose}>
+            <FiX size={18} />
+          </button>
+        </div>
 
         {/* ── Tab Bar ── */}
         {!pageLoading && !pageError && (
@@ -1102,28 +1026,25 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                 <span>{tab.label}</span>
               </button>
             ))}
-          
-        <div className={styles.headerRight}>
-            {!pageLoading && !pageError && (
-              <button
-                className={styles.deleteEmpBtn}
-                onClick={handleDeleteEmployee}
-                disabled={empDeleteLoading}
-              >
-                <FiTrash2 size={14} /> {empDeleteLoading ? 'Deleting...' : 'Delete'}
-              </button>
-            )}
+            <div className={styles.headerRight}>
+              {!pageLoading && !pageError && (
+                <button
+                  className={styles.deleteEmpBtn}
+                  onClick={handleDeleteEmployee}
+                  disabled={empDeleteLoading}
+                >
+                  <FiTrash2 size={14} /> {empDeleteLoading ? 'Deleting...' : 'Delete'}
+                </button>
+              )}
             </div>
-            </div>
+          </div>
         )}
 
-        {/* ── Success Banner ── */}
         {successMsg && <div className={styles.successBanner}>{successMsg}</div>}
 
         {/* ── Content Area ── */}
         <div className={styles.contentArea}>
 
-          {/* Loading State */}
           {pageLoading && (
             <div className={styles.loadingState}>
               <div className={styles.loadingSpinner} />
@@ -1154,7 +1075,6 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                   <div className={styles.formSectionHeader}><h3><FiUpload size={15} /> Photo</h3></div>
                   <div className={styles.photoUploadContainer}>
                     <div className={styles.photoPreviewSection}>
-                      {/* ── FIX: Show fetchedPhotoUrl in BOTH view and edit mode, with click-to-lightbox ── */}
                       {fetchedPhotoUrl ? (
                         <div
                           className={styles.photoPreview}
@@ -1192,7 +1112,6 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                       )}
                     </div>
 
-                    {/* ── FIX: "View Photo" button only in view mode when photo not yet fetched ── */}
                     {!editMode.basic && formData.photoFileId > 0 && !fetchedPhotoUrl && (
                       <div className={styles.photoUploadControls}>
                         <button
@@ -1242,11 +1161,12 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                       <ValidationMsg field="lastName" msgs={validationMessages} />
                     </div>
 
+                    {/* Gender — from TableService Table ID 1 */}
                     <div className={styles.formGroup}>
                       <label>Gender <span className={styles.required}>*</span></label>
                       <select required name="gender" value={formData.gender} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''}>
                         <option value="">Select Gender</option>
-                        {GENDER_OPTIONS.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
+                        {genderOptions.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
                       </select>
                       <ValidationMsg field="gender" msgs={validationMessages} />
                     </div>
@@ -1257,19 +1177,21 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                       <ValidationMsg field="birthDate" msgs={validationMessages} />
                     </div>
 
+                    {/* Blood Group — from TableService Table ID 2 */}
                     <div className={styles.formGroup}>
                       <label>Blood Group</label>
                       <select name="bloodGroup" value={formData.bloodGroup} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''}>
                         <option value={0}>Select Blood Group</option>
-                        {BLOOD_GROUP_OPTIONS.map(bg => <option key={bg.id} value={bg.id}>{bg.label}</option>)}
+                        {bloodGroupOptions.map(bg => <option key={bg.id} value={bg.id}>{bg.label}</option>)}
                       </select>
                     </div>
 
+                    {/* Marital Status — from TableService Table ID 3 */}
                     <div className={styles.formGroup}>
                       <label>Marital Status</label>
                       <select name="maritalStatus" value={formData.maritalStatus} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''}>
                         <option value={0}>Select Status</option>
-                        {MARITAL_STATUS_OPTIONS.map(ms => <option key={ms.id} value={ms.id}>{ms.label}</option>)}
+                        {maritalStatusOptions.map(ms => <option key={ms.id} value={ms.id}>{ms.label}</option>)}
                       </select>
                     </div>
 
@@ -1322,11 +1244,12 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                       <ValidationMsg field="department" msgs={validationMessages} />
                     </div>
 
+                    {/* Designation — from TableService Table ID 5 */}
                     <div className={styles.formGroup}>
                       <label>Designation <span className={styles.required}>*</span></label>
                       <select required name="designation" value={formData.designation} onChange={handleInputChange} disabled={!editMode.basic || loading} className={!editMode.basic ? styles.inputReadOnly : ''}>
                         <option value={0}>Select Designation</option>
-                        {DESIGNATION_OPTIONS.map(d => <option key={d.id} value={d.id}>{d.label}</option>)}
+                        {designationOptions.map(d => <option key={d.id} value={d.id}>{d.label}</option>)}
                       </select>
                       <ValidationMsg field="designation" msgs={validationMessages} />
                     </div>
@@ -1379,6 +1302,23 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                       <ValidationMsg field="esiNo" msgs={validationMessages} />
                     </div>
 
+                    {/* Status — from TableService Table ID 6 */}
+                    <div className={styles.formGroup}>
+                      <label>Status <span className={styles.required}>*</span></label>
+                      <select
+                        name="status"
+                        value={formData.status}
+                        onChange={handleInputChange}
+                        disabled={!editMode.basic || loading}
+                        className={!editMode.basic ? styles.inputReadOnly : ''}
+                      >
+                        <option value={0}>Select Status</option>
+                        {statusOptions.map(s => (
+                          <option key={s.id} value={s.id}>{s.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
                   </div>
                 </div>
               </div>
@@ -1412,7 +1352,6 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                         {editMode.proof && <button type="button" className={styles.btnRemoveProof} onClick={() => handleRemoveProofRow(index)} disabled={loading}><FiTrash2 size={14} /></button>}
                       </div>
 
-                      {/* ── View mode: show proof thumbnail with click-to-lightbox ── */}
                       {!editMode.proof && proof.fileId > 0 && (
                         <div className={styles.proofViewRow}>
                           {fetchedProofUrls[index] ? (
@@ -1439,11 +1378,9 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
                         </div>
                       )}
 
-                      {/* ── Edit mode: show file preview (fetched or newly selected) ── */}
                       {editMode.proof && (
                         <div className={styles.photoUploadContainer}>
                           <div className={styles.photoPreviewSection}>
-                            {/* ── FIX: show newly selected file first, then fetched proof, then placeholder ── */}
                             {proofFileUrls[index] ? (
                               <div className={styles.photoPreview}>
                                 <img src={proofFileUrls[index]} alt="Proof" />
@@ -1492,11 +1429,12 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
 
                       <div className={styles.formGrid}>
 
+                        {/* Proof Type — from TableService Table ID 4 */}
                         <div className={styles.formGroup}>
                           <label>Proof Type <span className={styles.required}>*</span></label>
                           <select required name="proofType" value={proof.proofType} onChange={(e) => handleProofInputChange(index, e)} disabled={!editMode.proof || loading} className={!editMode.proof ? styles.inputReadOnly : ''}>
                             <option value="">Select Proof Type</option>
-                            {ID_PROOF_OPTIONS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                            {idProofOptions.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                           </select>
                           <ValidationMsg field="proofType" msgs={proofValidationMessages[index] || {}} />
                         </div>
@@ -1697,7 +1635,6 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
           </div>
         )}
 
-        {/* Proof / Beneficiary Delete Confirm (nested inside modal, uses inline DeleteConfirmModal) */}
         <DeleteConfirmModal
           isOpen={deleteConfirm.open}
           title={deleteConfirm.title}
@@ -1708,7 +1645,6 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
         />
       </div>
 
-      {/* ── ConfirmPopup for Employee Delete ── */}
       <ConfirmPopup
         visible={empDeleteConfirmOpen}
         message={`Delete ${formData.firstName} ${formData.lastName}?`}
@@ -1719,7 +1655,6 @@ const ViewEmployee = ({ isOpen, employeeId, onClose, onDeleted }) => {
         onCancel={() => setEmpDeleteConfirmOpen(false)}
       />
 
-      {/* ── MessagePopup for Save Errors / Delete Success & Error ── */}
       <MessagePopup
         visible={msgPopup.visible}
         message={msgPopup.message}

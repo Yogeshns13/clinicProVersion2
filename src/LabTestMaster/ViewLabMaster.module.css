@@ -36,7 +36,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -131,7 +131,6 @@
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
-
 
 .subtitle {
   margin: 4px 0 0 0;
@@ -265,6 +264,62 @@
 .btnUpdate:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+}
+
+/* ────────────────────────────────────────────────
+   DARK MODE
+   ──────────────────────────────────────────────── */
+
+/* Modal shell */
+:global(.dark-mode) .modal,
+:global(.dark-mode) .detailsModal {
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* Body */
+:global(.dark-mode) .detailsModalBody {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+}
+
+/* Table rows */
+:global(.dark-mode) .detailsTable tr {
+  border-bottom-color: rgba(71, 85, 105, 0.35);
+}
+
+/* Table label cells */
+:global(.dark-mode) .detailsTable td.label {
+  color: #94a3b8;
+}
+
+/* Table value cells */
+:global(.dark-mode) .detailsTable td.value {
+  color: #e2e8f0;
+}
+
+/* Footer */
+:global(.dark-mode) .modalFooter {
+  background: #0f172a;
+  border-top-color: rgba(71, 85, 105, 0.5);
+}
+
+/* Status badges */
+:global(.dark-mode) .active {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+:global(.dark-mode) .inactive {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+:global(.dark-mode) .deprecated {
+  background: rgba(100, 116, 139, 0.15);
+  color: #94a3b8;
+  border-color: rgba(100, 116, 139, 0.3);
 }
 
 /* ────────────────────────────────────────────────

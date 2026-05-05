@@ -36,7 +36,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -417,4 +417,88 @@
   .visit-details-section {
     padding: 14px 16px;
   }
+}
+
+/* ==================== DARK MODE ==================== */
+
+/* Modal shell */
+:global(.dark-mode) .visit-details-modal {
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* Body */
+:global(.dark-mode) .visit-details-body {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+}
+
+/* Sections */
+:global(.dark-mode) .visit-details-section {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+:global(.dark-mode) .visit-details-section-title {
+  color: var(--accent-end);
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+}
+
+:global(.dark-mode) .visit-details-section-title svg {
+  color: var(--accent-end);
+}
+
+/* Labels & values */
+:global(.dark-mode) .visit-detail-label {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .visit-detail-value {
+  color: #e2e8f0;
+}
+
+/* Vitals cards */
+:global(.dark-mode) .vital-card {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+:global(.dark-mode) .vital-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+:global(.dark-mode) .vital-label {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .vital-value {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .vital-unit {
+  color: #64748b;
+}
+
+/* Footer */
+:global(.dark-mode) .visit-details-footer {
+  background: #0f172a;
+  border-top-color: rgba(71, 85, 105, 0.5);
+}
+
+:global(.dark-mode) .visit-details-close-btn {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .visit-details-close-btn:hover {
+  background: #475569;
+}
+
+/* Loading & error */
+:global(.dark-mode) .visit-details-spinner {
+  border-color: #334155;
+  border-top-color: var(--accent-end);
+}
+
+:global(.dark-mode) .visit-details-error p {
+  color: #f87171;
 }

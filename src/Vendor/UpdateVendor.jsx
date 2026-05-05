@@ -211,6 +211,9 @@ const UpdateVendor = ({ vendor, onClose, onUpdateSuccess }) => {
       setFormLoading(false);
     }
   };
+ 
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
 
   // ────────────────────────────────────────────────
   return (
@@ -223,10 +226,15 @@ const UpdateVendor = ({ vendor, onClose, onUpdateSuccess }) => {
             <div className={styles.updateHeaderContent}>
               <h2>Update Vendor</h2>
             </div>
-            <div className={styles.clinicNameone}>
-              <FaClinicMedical size={20} style={{ verticalAlign: 'middle', margin: '6px', marginTop: '0px' }} />
-              {localStorage.getItem('clinicName') || '—'}
-            </div>
+            <div className={styles.addModalHeaderCard}>
+                        <div className={styles.clinicInfoIcon}>
+                          <FaClinicMedical size={18} />
+                        </div>
+                        <div className={styles.clinicInfoText}>
+                          <span className={styles.clinicInfoName}>{clinicName}</span>
+                          <span className={styles.clinicInfoBranch}>{branchName}</span>
+                        </div>
+                        </div>
             <button onClick={onClose} className={styles.updateCloseBtn}>✕</button>
           </div>
 

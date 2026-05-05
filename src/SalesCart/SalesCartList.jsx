@@ -733,6 +733,9 @@ const SalesCartList = () => {
 
   // Only show active prescriptions (status === 1) in the table
   const activePrescriptions = prescriptions.filter((pres) => pres.status === 1);
+  
+  const clinicName = localStorage.getItem('clinicName') || '—';
+  const branchName = localStorage.getItem('branchName') || '—';
 
   // ────────────────────────────────────────────────
   return (
@@ -1162,13 +1165,15 @@ const SalesCartList = () => {
                 <h2>Add to Sales Cart</h2>
               </div>
 
-              <div className={styles.clinicNameone}>
-                <FaClinicMedical
-                  size={20}
-                  style={{ verticalAlign: "middle", margin: "6px", marginTop: "0px" }}
-                />
-                {localStorage.getItem("clinicName") || "—"}
-              </div>
+              <div className={styles.addModalHeaderCard}>
+                          <div className={styles.clinicInfoIcon}>
+                            <FaClinicMedical size={18} />
+                          </div>
+                          <div className={styles.clinicInfoText}>
+                            <span className={styles.clinicInfoName}>{clinicName}</span>
+                            <span className={styles.clinicInfoBranch}>{branchName}</span>
+                          </div>
+                          </div>
 
               {!confirm.submitting && !confirm.success && (
                 <button onClick={closeConfirm} className={styles.modalClose}>

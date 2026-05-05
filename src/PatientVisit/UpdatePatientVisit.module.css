@@ -16,23 +16,6 @@
   --border-focus: rgba(34, 43, 108, 0.35);
 }
 
-/* Dark mode variables */
-:root.dark-mode {
-  --primary-start: #3b82f6;
-  --primary-end: #60a5fa;
-  --accent-start: #22d3ee;
-  --accent-end: #67e8f9;
-  --text-light: #f1f5f9;
-  --text-dark: #e2e8f0;
-  --glass-bg: rgba(30, 41, 59, 0.94);
-  --glass-border: rgba(71, 85, 105, 0.5);
-  --muted: #94a3b8;
-  --border-light: rgba(71, 85, 105, 0.45);
-  --border-focus: rgba(99, 179, 237, 0.4);
-  --success-color: #4ade80;
-  --danger-color: #f87171;
-}
-
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -65,7 +48,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
   animation: fadeIn 0.3s ease;
 }
 
@@ -523,73 +506,119 @@
   transform: none;
 }
 
-/* ── Dark mode overrides ─────────────────────────────────── */
+/* ==================== DARK MODE ==================== */
 
-.dark-mode .updateVisitModal h2 {
-  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Modal shell */
+:global(.dark-mode) .updateVisitModal {
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.05);
 }
 
-.dark-mode .sectionTitle,
-.dark-mode .formLabel {
-  color: var(--accent-start);
+/* Scrollable body */
+:global(.dark-mode) .updateVisitBody {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
 }
 
-.dark-mode .formInput,
-.dark-mode .formTextarea,
-.dark-mode .formSelect {
-  background: #1e293b;
+/* Section title */
+:global(.dark-mode) .sectionTitle {
+  color: var(--accent-end);
+  border-bottom-color: var(--accent-start);
+}
+
+/* Form labels */
+:global(.dark-mode) .formLabel {
+  color: var(--accent-end);
+}
+
+/* Inputs, textareas, selects */
+:global(.dark-mode) .formInput,
+:global(.dark-mode) .formTextarea,
+:global(.dark-mode) .formSelect {
+  background: #0f172a;
   border-color: #475569;
-  color: var(--text-light);
+  color: #e2e8f0;
 }
 
-.dark-mode .formInput:disabled,
-.dark-mode .formSelect:disabled {
+:global(.dark-mode) .formInput::placeholder,
+:global(.dark-mode) .formTextarea::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+:global(.dark-mode) .formInput:focus,
+:global(.dark-mode) .formTextarea:focus,
+:global(.dark-mode) .formSelect:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
+  background: #1e293b;
+}
+
+:global(.dark-mode) .formInput:disabled,
+:global(.dark-mode) .formSelect:disabled {
   background: #0f172a;
   color: #475569;
 }
 
-.dark-mode .formInput:focus,
-.dark-mode .formTextarea:focus,
-.dark-mode .formSelect:focus {
-  border-color: var(--accent-start);
-  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2);
+:global(.dark-mode) .formSelect option {
+  background: #1e293b;
+  color: #e2e8f0;
 }
 
-.dark-mode .validationMsg {
+/* Validation */
+:global(.dark-mode) .validationMsg {
   color: #fca5a5;
 }
 
-.dark-mode .updateVisitError {
+/* Error banner */
+:global(.dark-mode) .updateVisitError {
   background: rgba(239, 68, 68, 0.2);
   border-color: rgba(239, 68, 68, 0.4);
   color: #fca5a5;
 }
 
-.dark-mode .updateVisitFooter {
+/* Spinner */
+:global(.dark-mode) .spinner {
+  border-color: #334155;
+  border-top-color: var(--accent-end);
+}
+
+/* Footer */
+:global(.dark-mode) .updateVisitFooter {
   background: linear-gradient(135deg, #1e293b, #334155);
   border-top-color: #475569;
 }
 
-.dark-mode .patientInfoBanner {
+/* Patient info banner */
+:global(.dark-mode) .patientInfoBanner {
   background: linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(34, 211, 238, 0.04));
   border-color: rgba(34, 211, 238, 0.2);
 }
 
-.dark-mode .patientInfoValue {
-  color: var(--accent-start);
+:global(.dark-mode) .patientInfoLabel {
+  color: #94a3b8;
 }
 
-.dark-mode .patientInfoDivider {
+:global(.dark-mode) .patientInfoValue {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .patientInfoDivider {
   background: rgba(71, 85, 105, 0.6);
 }
 
-.dark-mode .appointmentInfoBanner {
+/* Appointment info banner */
+:global(.dark-mode) .appointmentInfoBanner {
   background: rgba(74, 222, 128, 0.08);
   border-color: rgba(74, 222, 128, 0.25);
 }
 
-.dark-mode .appointmentBannerItem {
-  color: var(--text-light);
+:global(.dark-mode) .appointmentBannerHeader {
+  color: #4ade80;
+}
+
+:global(.dark-mode) .appointmentBannerItem {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .appointmentBannerItem strong {
+  color: #94a3b8;
 }

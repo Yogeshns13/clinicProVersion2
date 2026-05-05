@@ -234,17 +234,40 @@
   gap: 8px;
 }
 
-.clinicNameone {
+.addModalHeaderCard {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.05rem;           
-  font-weight: 600;
+  gap: 10px;
+  padding: 8px 16px 8px 12px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.clinicInfoName {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
   color: var(--text-light);
   line-height: 1.2;
-  white-space: nowrap;          
-  text-overflow: ellipsis;      
-  max-width: 220px;             
+  letter-spacing: 0.1px;
+}
+
+.clinicInfoBranch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
 }
 
 
@@ -635,7 +658,7 @@
 }
 
 /* ==================== MODAL ==================== */
-.modalOverlay { position: fixed; inset: 0; background: rgba(15,22,41,0.82); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px 20px 20px 260px; animation: fadeIn 0.25s ease; }
+.modalOverlay { position: fixed; inset: 0; background: rgba(15,22,41,0.82); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px 20px 20px 60px; animation: fadeIn 0.25s ease; }
 .modal { background: var(--sc-glass-bg); border-radius: 18px; width: 100%; max-width: 768px; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.32), inset 0 1px 2px rgba(255,255,255,0.5); backdrop-filter: blur(14px); display: flex; flex-direction: column; animation: slideUp 0.35s cubic-bezier(0.4,0,0.2,1); }
 .modal::-webkit-scrollbar { width: 5px; }
 .modal::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -658,6 +681,11 @@
 .presInfoSub { font-size: 0.7rem; font-weight: 500; color: #64748b; }
 .medicineSection { margin-top: 4px; }
 .medicineSectionTitle { display: flex; align-items: center; gap: 7px; font-size: 0.9rem; font-weight: 700; color: var(--sc-primary-start); margin: 0 0 10px; border-bottom: 2px solid rgba(48,178,181,0.3); padding-bottom: 6px; }
+
+:global(.dark-mode) .medicineSectionTitle {
+  color: var(--accent-end);
+}
+
 .medicineTableWrapper { overflow-x: auto; border-radius: 10px; border: 1px solid rgba(34,43,108,0.1); }
 .medicineTable { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
 .medicineTable thead tr { background: linear-gradient(135deg, rgba(34,43,108,0.08), rgba(48,178,181,0.1)); }
@@ -702,6 +730,12 @@
 :global(.dark-mode) .searchInput { background: #0f172a; border-color: #475569; color: #e2e8f0; }
 :global(.dark-mode) .searchInput:focus { border-left: 1px solid var(--sc-accent-end); }
 :global(.dark-mode) .inlineFilterInput { background: #0f172a; border-color: #475569; color: #e2e8f0; }
+
+:global(.dark-mode) .inlineFilterInput::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
+}
+
 :global(.dark-mode) .inlineFilterSelect { background: #0f172a; border-color: #475569; color: #e2e8f0; }
 :global(.dark-mode) .datePlaceholder { color: #64748b; }
 :global(.dark-mode) .tableContainer { background: #1e293b; border-color: #475569; }
@@ -716,6 +750,13 @@
 :global(.dark-mode) .medicineTable td { color: #e2e8f0; }
 :global(.dark-mode) .modalFooter { background: linear-gradient(135deg, #1e293b, #334155); }
 :global(.dark-mode) .btnCancel { background: rgba(255,255,255,0.07); border-color: #475569; color: #94a3b8; }
+
+
+:global(.dark-mode) .paginationBar {
+  background: #1e293b;
+  border-color: rgba(71, 85, 105, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 1100px) {

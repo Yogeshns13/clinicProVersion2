@@ -30,7 +30,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px 20px 20px 260px;
+  padding: 20px 20px 20px 60px;
   animation: fadeIn 0.25s ease;
 }
 
@@ -491,17 +491,12 @@
 
 /* ────────────────────────────────────────────────
    PATIENT SEARCH DROPDOWN
-   Tabs + input + search button all in one row,
-   results appear in a floating dropdown below.
    ──────────────────────────────────────────────── */
 
-/* outer wrapper gives position:relative so the absolute
-   .searchableDropdown anchors correctly below the row */
 .patientSearchOuter {
   position: relative;
 }
 
-/* Wraps tabs + input + button horizontally */
 .patientSearchRow {
   display: flex;
   align-items: center;
@@ -519,7 +514,6 @@
   box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
 }
 
-/* The 3 tabs sit flush inside the left side of the row */
 .patientSearchTabs {
   display: flex;
   align-items: center;
@@ -549,7 +543,6 @@
   color: white !important;
 }
 
-/* Text input stretches to fill remaining space */
 .patientSearchInputWrap {
   display: flex;
   align-items: center;
@@ -568,7 +561,6 @@
   min-width: 0;
 }
 
-/* Small icon-only search button at the right end */
 .patientSearchIconBtn {
   display: flex;
   align-items: center;
@@ -593,7 +585,7 @@
   transform: none;
 }
 
-/* ── Add Patient Button (in Patient Information heading) ── */
+/* ── Add Patient Button ── */
 .addPatientBtn {
   display: flex;
   align-items: center;
@@ -646,7 +638,6 @@
    FAMILY SEARCH — inline button + popup
    ──────────────────────────────────────────────── */
 
-/* Small pill button shown at the right of each Name/FileNo result row */
 .familySearchBtn {
   display: flex;
   align-items: center;
@@ -677,7 +668,6 @@
   box-shadow: none;
 }
 
-/* Fixed overlay behind the family popup card */
 .familyOverlay {
   position: fixed;
   inset: 0;
@@ -690,7 +680,6 @@
   animation: fadeIn 0.2s ease;
 }
 
-/* The family results popup card */
 .familyCard {
   background: white;
   border-radius: 16px;
@@ -703,7 +692,6 @@
   overflow: hidden;
 }
 
-/* Header strip inside the family card */
 .familyCardHeader {
   display: flex;
   align-items: center;
@@ -721,7 +709,6 @@
   flex: 1;
 }
 
-/* Close button inside the family card header */
 .familyCardCloseBtn {
   background: rgba(255, 255, 255, 0.22);
   border: none;
@@ -741,17 +728,251 @@
   transform: scale(1.08);
 }
 
-/* Scrollable patient list inside the family card */
 .familyCardList {
   overflow-y: auto;
   flex: 1;
   padding: 6px 0;
 }
 
-/* Empty state message inside the family card */
 .familyEmptyMsg {
   padding: 28px 20px;
   text-align: center;
   color: #64748b;
   font-size: 0.9rem;
+}
+
+/* ==================== DARK MODE ==================== */
+
+/* Modal shell */
+:global(.dark-mode) .modal {
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+}
+
+/* Body */
+:global(.dark-mode) .body {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+}
+
+/* Section divider */
+:global(.dark-mode) .section {
+  border-bottom-color: rgba(71, 85, 105, 0.3);
+}
+
+/* Section titles */
+:global(.dark-mode) .sectionTitle {
+  color: var(--accent-end);
+  border-bottom-color: rgba(48, 178, 181, 0.25);
+}
+
+:global(.dark-mode) .sectionTitle svg {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .sectionTitleSub {
+  color: #94a3b8;
+}
+
+/* Form labels */
+:global(.dark-mode) .formLabel {
+  color: var(--accent-end);
+}
+
+/* Inputs & textareas */
+:global(.dark-mode) .formInput,
+:global(.dark-mode) .formTextarea {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .formInput::placeholder,
+:global(.dark-mode) .formTextarea::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+:global(.dark-mode) .formInput::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
+}
+
+:global(.dark-mode) .formInput:focus,
+:global(.dark-mode) .formTextarea:focus {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  background: #1e293b;
+}
+
+/* Footer */
+:global(.dark-mode) .footer {
+  background: #0f172a;
+  border-top-color: rgba(71, 85, 105, 0.5);
+}
+
+:global(.dark-mode) .btnCancel {
+  background: #334155;
+  color: #e2e8f0;
+}
+:global(.dark-mode) .btnCancel:hover {
+  background: #475569;
+}
+
+/* Searchable dropdown — doctor picker */
+:global(.dark-mode) .searchableInput {
+  background: #0f172a;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .searchableInput:focus-within,
+:global(.dark-mode) .searchableInputOpen {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+:global(.dark-mode) .searchableInputDisabled {
+  background: #1e293b;
+  opacity: 0.6;
+}
+
+:global(.dark-mode) .searchableInnerInput {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .searchableSelected {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .searchablePlaceholder {
+  color: rgba(148, 163, 184, 0.6);
+}
+
+:global(.dark-mode) .searchIcon,
+:global(.dark-mode) .chevron,
+:global(.dark-mode) .clearBtn {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .searchableDropdown {
+  background: #1e293b;
+  border-color: #475569;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+:global(.dark-mode) .searchableNoResults {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .searchableOption:hover,
+:global(.dark-mode) .searchableOptionSelected {
+  background: rgba(48, 178, 181, 0.12);
+}
+
+:global(.dark-mode) .optionLabel {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .optionSub {
+  color: #94a3b8;
+}
+
+/* Patient info card */
+:global(.dark-mode) .infoCard {
+  background: #1e293b;
+  border-color: #475569;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark-mode) .infoCardKey {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .infoCardValue {
+  color: #e2e8f0;
+}
+
+/* Slots */
+:global(.dark-mode) .slotsLoading {
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .spinner {
+  border-color: rgba(48, 178, 181, 0.15);
+  border-top-color: var(--accent-end);
+}
+
+:global(.dark-mode) .noSlots {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+}
+
+:global(.dark-mode) .slotBtn {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .slotBtn:hover {
+  background: #334155;
+}
+
+:global(.dark-mode) .slotBtnSelected {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  color: white;
+  border-color: transparent;
+}
+
+:global(.dark-mode) .slotSelectedBadge {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+}
+
+/* Patient search row */
+:global(.dark-mode) .patientSearchRow {
+  background: #0f172a;
+  border-color: #475569;
+}
+
+:global(.dark-mode) .patientSearchRow:focus-within {
+  border-color: var(--accent-end);
+  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+}
+
+:global(.dark-mode) .patientSearchTabs {
+  border-right-color: #334155;
+}
+
+:global(.dark-mode) .patientSearchTab {
+  color: #94a3b8;
+}
+
+:global(.dark-mode) .patientSearchTab:hover {
+  background: rgba(48, 178, 181, 0.1);
+  color: var(--accent-end);
+}
+
+:global(.dark-mode) .patientSearchInput {
+  color: #e2e8f0;
+}
+
+:global(.dark-mode) .patientSearchInput::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+/* searchableDropdown inside patient search */
+:global(.dark-mode) .patientSearchOuter .searchableDropdown {
+  background: #1e293b;
+  border-color: #475569;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Family card popup */
+:global(.dark-mode) .familyCard {
+  background: #1e293b;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.5);
+}
+
+:global(.dark-mode) .familyEmptyMsg {
+  color: #94a3b8;
 }
