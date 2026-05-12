@@ -1,30 +1,36 @@
 /* ViewLabPackage.module.css */
 
+/* ==================== ROOT VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
-  --glass-bg: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(255, 255, 255, 0.4);
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10: #166534;
+  --TC11: #991b1b;
+  --TC12: #64748b;
+  --TC13: #e2e8f0;
+  --TC14: #ef4444;
+  --TC15: #475569;
+  --TC16: rgba(34, 43, 108, 0.10);
+  --TC17: rgba(32, 125, 156, 0.30);
+  --TC18: rgba(48, 178, 181, 0.15);
 }
 
+/* ==================== ANIMATIONS ==================== */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ==================== MODAL OVERLAY ==================== */
@@ -43,13 +49,13 @@
 
 /* ==================== MODAL ==================== */
 .modal {
-  background: var(--glass-bg);
+  background: var(--TC6);
   border-radius: 15px;
   width: 100%;
   max-width: 850px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 17px 43px var(--TC16), inset 0 1px 2px var(--TC6);
   backdrop-filter: blur(14px);
   animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -62,13 +68,13 @@
 /* ==================== MODAL HEADER ==================== */
 .detailsModalHeader {
   padding: 12px 14px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.18);
+  border-bottom: 1px solid var(--TC16);
 }
 
 .detailsHeaderContent {
@@ -82,14 +88,14 @@
   width: 42px;
   height: 42px;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-size: 1.2rem;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 4px 14px var(--TC17);
 }
 
 .detailsModalHeader h2 {
@@ -98,20 +104,33 @@
   font-weight: 700;
 }
 
-/* ── Clinic/Branch card — centred in header, no auto-margins ── */
+/* ==================== ADD MODAL HEADER CARD ==================== */
 .addModalHeaderCard {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.clinicInfoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC6);
+  opacity: 0.9;
+}
+
+.clinicInfoText {
+  display: flex;
+  flex-direction: column;
 }
 
 .clinicInfoName {
@@ -120,7 +139,7 @@
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -131,14 +150,14 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
 
 .subtitle {
   margin: 3px 0 0;
-  color: var(--text-light);
+  color: var(--TC6);
   font-size: 0.6rem;
   font-weight: 500;
 }
@@ -147,11 +166,11 @@
   margin-right: 23px;
 }
 
-/* ── Close button — visually separated from the card ── */
+/* ==================== MODAL CLOSE ==================== */
 .modalClose {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--TC18);
   border: none;
-  color: white;
+  color: var(--TC6);
   width: 44px;
   height: 44px;
   border-radius: 12px;
@@ -160,10 +179,13 @@
   transition: all 0.25s ease;
   flex-shrink: 0;
   margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .modalClose:hover {
-  background: rgba(255, 255, 255, 0.45);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
@@ -177,18 +199,18 @@
 .sectionTitle {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
   margin: 20px 0 12px;
   padding-bottom: 8px;
-  border-bottom: 2px solid var(--accent-end);
+  border-bottom: 2px solid var(--TC5);
 }
 
-/* ==================== INFO GRID (2-column layout) ==================== */
+/* ==================== INFO GRID ==================== */
 .infoGrid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 10px;
-  background: var(--card-bg);
+  background: var(--TC6);
   padding: 14px 18px;
   border-radius: 10px;
 }
@@ -205,18 +227,18 @@
 
 .infoLabel {
   font-size: 0.78rem;
-  color: #6b7280;
+  color: var(--TC12);
   font-weight: 600;
 }
 
 .infoValue {
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--text-dark);
+  color: var(--TC9);
   line-height: 1.35;
 }
 
-/* ==================== DETAILS TABLE (kept for backward compat) ==================== */
+/* ==================== DETAILS TABLE ==================== */
 .detailsTable {
   width: 100%;
   border-collapse: separate;
@@ -224,7 +246,7 @@
 }
 
 .detailsTable tr {
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--TC18);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -237,34 +259,34 @@
 .detailsTable td.label {
   width: 35%;
   font-weight: 1000;
-  color: #475569;
-  background: rgba(34, 43, 108, 0.05);
+  color: var(--TC15);
+  background: var(--TC16);
   font-size: 0.8rem;
 }
 
 .detailsTable td.value {
   font-weight: 1000;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.8rem;
-  background: rgba(34, 43, 108, 0.05);
+  background: var(--TC16);
 }
 
 .label {
   width: 35%;
   font-weight: 1000;
-  color: #475569;
-  background: rgba(34, 43, 108, 0.05);
+  color: var(--TC15);
+  background: var(--TC16);
   font-size: 0.8rem;
 }
 
 .value {
   font-weight: 1000;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.8rem;
-  background: rgba(34, 43, 108, 0.05);
+  background: var(--TC16);
 }
 
-/* ==================== STATUS BADGE ==================== */
+/* ==================== STATUS BADGES ==================== */
 .statusBadge {
   padding: 5px 12px;
   border-radius: 26px;
@@ -274,45 +296,29 @@
   letter-spacing: 0.7px;
 }
 
-.statusBadge.active {
-  background: rgba(34, 197, 94, 0.15);
-  color: #166534;
-  border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
-.statusBadge.inactive {
-  background: rgba(239, 68, 68, 0.15);
-  color: #991b1b;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-.statusBadge.large {
-  padding: 9px 17px;
-  font-size: 0.77rem;
-}
+.statusBadge.active   { color: var(--TC10); }
+.statusBadge.inactive { color: var(--TC11); }
+.statusBadge.large    { padding: 9px 17px; font-size: 0.77rem; }
 
 .active {
-  background: rgba(34, 197, 94, 0.15);
-  color: #166534;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
 }
 
 .inactive {
-  background: rgba(239, 68, 68, 0.15);
-  color: #991b1b;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
 }
 
-.large {
-  padding: 9px 17px;
-  font-size: 0.77rem;
-}
+.large { padding: 9px 17px; font-size: 0.77rem; }
 
 /* ==================== PACKAGE ITEMS SECTION ==================== */
 .packageItemsSection {
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 2px solid rgba(34, 43, 108, 0.1);
+  border-top: 2px solid var(--TC16);
 }
 
 .packageItemsHeader {
@@ -344,25 +350,25 @@
 }
 
 .btnAddItem {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-  color: white;
-  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.3);
+  background: linear-gradient(135deg, var(--TC10), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 3px 10px var(--TC17);
 }
 
 .btnAddItem:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(22, 163, 74, 0.45);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .btnRebuild {
-  background: linear-gradient(135deg, #f59e0b, #fbbf24);
-  color: white;
-  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.3);
+  background: linear-gradient(135deg, var(--TC4), var(--TC2));
+  color: var(--TC6);
+  box-shadow: 0 3px 10px var(--TC17);
 }
 
 .btnRebuild:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(245, 158, 11, 0.45);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .btnRebuild:disabled {
@@ -373,7 +379,7 @@
 .noItems {
   text-align: center;
   padding: 40px 20px;
-  color: #64748b;
+  color: var(--TC12);
   font-size: 0.95rem;
   font-style: italic;
 }
@@ -390,15 +396,15 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: white;
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  background: var(--TC6);
+  border: 1px solid var(--TC16);
   border-radius: 10px;
   transition: all 0.3s ease;
 }
 
 .itemCard:hover {
-  box-shadow: 0 4px 12px rgba(34, 43, 108, 0.1);
-  border-color: var(--accent-end);
+  box-shadow: 0 4px 12px var(--TC16);
+  border-color: var(--TC5);
 }
 
 .itemInfo {
@@ -407,21 +413,21 @@
 
 .itemName {
   font-weight: 700;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.9rem;
   margin-bottom: 4px;
 }
 
 .itemDetails {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
 }
 
 .btnDeleteItem {
   padding: 8px 12px;
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -431,7 +437,7 @@
 }
 
 .btnDeleteItem:hover {
-  background: rgba(239, 68, 68, 0.2);
+  background: var(--TC16);
   transform: scale(1.05);
 }
 
@@ -440,13 +446,12 @@
   padding: 9px 12px;
   border-radius: 9px;
   margin-bottom: 14px;
-  border: 2px solid;
+  border: 2px solid var(--TC16);
   font-size: 0.65rem;
   font-weight: 600;
-  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.1);
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
-  color: #dc2626;
-  border-color: rgba(239, 68, 68, 0.3);
+  box-shadow: 0 3px 9px var(--TC16);
+  background: var(--TC16);
+  color: var(--TC14);
 }
 
 /* ==================== MODAL FOOTER ==================== */
@@ -455,21 +460,21 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 17px 23px;
-  border-top: 2px solid rgba(34, 43, 108, 0.15);
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+  border-top: 2px solid var(--TC16);
+  background: linear-gradient(to bottom, var(--TC6), var(--TC13));
 }
 
 /* ==================== BUTTON STYLES ==================== */
 .btnUpdate {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   border: none;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 3px 10px var(--TC17);
   padding: 10px 31px;
   font-size: 0.85rem;
   border-radius: 26px;
@@ -486,7 +491,7 @@
   left: 50%;
   width: 0;
   height: 0;
-  background: rgba(48, 178, 181, 0.35);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -494,147 +499,137 @@
   pointer-events: none;
 }
 
-.btnUpdate:hover::before {
-  width: 170px;
-  height: 170px;
-}
+.btnUpdate:hover::before { width: 170px; height: 170px; }
 
 .btnUpdate:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+  box-shadow: 0 5px 17px var(--TC18);
 }
 
-.btnUpdate:active {
-  transform: translateY(-1px);
-}
+.btnUpdate:active { transform: translateY(-1px); }
 
 /* ==================== DARK MODE ==================== */
 
-/* Modal shell */
 :global(.dark-mode) .modal {
-  background: rgba(30, 41, 59, 0.94);
-  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.6);
+  background: var(--TC9);
+  box-shadow: 0 17px 43px var(--TC16);
 }
 
-/* Body */
-:global(.dark-mode) .detailsModalBody {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+:global(.dark-mode) .detailsModalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
 }
 
-/* Section title */
-:global(.dark-mode) .sectionTitle {
-  color: var(--accent-end);
-  border-bottom-color: rgba(48, 178, 181, 0.4);
-}
-
-
-/* Info grid */
-:global(.dark-mode) .infoGrid {
-  background: #1e293b;
-}
-
-:global(.dark-mode) .infoCell {
-  background: #1e293b;
-}
-
-:global(.dark-mode) .infoLabel {
-  color: var(--accent-end);
-}
-
-
-
-:global(.dark-mode) .infoValue {
-  color: #e2e8f0;
-}
-
-/* Details table */
-:global(.dark-mode) .detailsTable tr {
-  background: rgba(30, 41, 59, 0.6);
-}
-
-:global(.dark-mode) .detailsTable td.label,
-:global(.dark-mode) .label {
-  color: var(--accent-end);
-  background-color: #1e293b;
-}
-
-:global(.dark-mode) .detailsTable td.value,
-:global(.dark-mode) .value {
-  background-color: #1e293b;
-  color: #e2e8f0;
-}
-
-/* Header h2 */
 :global(.dark-mode) .detailsModalHeader h2 {
-  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
+  background: linear-gradient(135deg, var(--TC6), var(--TC5));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Status badges */
+:global(.dark-mode) .detailsModalBody {
+  background: var(--TC9);
+}
+
+:global(.dark-mode) .sectionTitle {
+  color: var(--TC5);
+  border-bottom-color: var(--TC18);
+}
+
+:global(.dark-mode) .infoGrid {
+  background: var(--TC9);
+}
+
+:global(.dark-mode) .infoCell {
+  background: var(--TC9);
+}
+
+:global(.dark-mode) .infoLabel {
+  color: var(--TC5);
+}
+
+:global(.dark-mode) .infoValue {
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .detailsTable tr {
+  background: var(--TC7);
+}
+
+:global(.dark-mode) .detailsTable td.label,
+:global(.dark-mode) .label {
+  color: var(--TC5);
+  background-color: var(--TC9);
+}
+
+:global(.dark-mode) .detailsTable td.value,
+:global(.dark-mode) .value {
+  background-color: var(--TC9);
+  color: var(--TC13);
+}
+
 :global(.dark-mode) .statusBadge.active,
 :global(.dark-mode) .active {
-  background: rgba(34, 197, 94, 0.12);
-  color: #4ade80;
-  border-color: rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC5);
+  border: 1px solid var(--TC16);
 }
 
 :global(.dark-mode) .statusBadge.inactive,
 :global(.dark-mode) .inactive {
-  background: rgba(239, 68, 68, 0.12);
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.3);
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
 }
 
-/* Package items section */
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+}
+
 :global(.dark-mode) .packageItemsSection {
-  border-top-color: rgba(71, 85, 105, 0.4);
+  border-top-color: var(--TC15);
 }
 
 :global(.dark-mode) .noItems {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .itemCard {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .itemCard:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  border-color: var(--accent-end);
+  box-shadow: 0 4px 12px var(--TC16);
+  border-color: var(--TC5);
 }
 
 :global(.dark-mode) .itemName {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .itemDetails {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .btnDeleteItem {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #f87171;
+  background: var(--TC18);
+  border-color: var(--TC16);
+  color: var(--TC14);
 }
 
 :global(.dark-mode) .btnDeleteItem:hover {
-  background: rgba(239, 68, 68, 0.22);
+  background: var(--TC16);
 }
 
-/* Form error */
 :global(.dark-mode) .formError {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(239, 68, 68, 0.18));
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.3);
+  background: var(--TC16);
+  color: var(--TC14);
+  border-color: var(--TC16);
 }
 
-/* Footer */
 :global(.dark-mode) .modalFooter {
-  background: linear-gradient(to bottom, #1e293b, #0f172a);
-  border-top-color: rgba(71, 85, 105, 0.5);
+  background: var(--TC9);
+  border-top-color: var(--TC15);
 }
 
 /* ==================== RESPONSIVE ==================== */

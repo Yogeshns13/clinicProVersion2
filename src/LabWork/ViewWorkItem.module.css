@@ -1,8 +1,36 @@
 /* ==================== ViewWorkItem.module.css ==================== */
 
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ── Modal Container ── */
 .viewModal {
-  background: white;
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-width: 900px;
@@ -10,20 +38,15 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 70px var(--TC16);
   animation: slideUp 0.4s ease;
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(22px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ── Modal Header ── */
 .viewHeader {
   padding: 14px 18px;
-  background: linear-gradient(135deg, #225ca0, #30b2b5);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -35,16 +58,14 @@
 
 .viewHeaderLeft h2 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: 700;
 }
 
-
-
 .viewCloseBtn {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border: none;
-  color: #ffffff;
+  color: var(--TC6);
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -57,8 +78,8 @@
 }
 
 .viewCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.35);
-  transform: scale(1.05);
+  background: var(--TC17);
+  transform: scale(1.08);
 }
 
 /* ── View Body ── */
@@ -69,6 +90,26 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-height: 0;
+}
+
+/* ── Scrollbar ── */
+.viewBody::-webkit-scrollbar {
+  width: 6px;
+}
+
+.viewBody::-webkit-scrollbar-track {
+  background: var(--TC13);
+  border-radius: 10px;
+}
+
+.viewBody::-webkit-scrollbar-thumb {
+  background: var(--TC8);
+  border-radius: 10px;
+}
+
+.viewBody::-webkit-scrollbar-thumb:hover {
+  background: var(--TC5);
 }
 
 /* ── Info Grid ── */
@@ -79,10 +120,10 @@
 }
 
 .infoCard {
-  background: linear-gradient(135deg, rgba(240, 247, 255, 0.6), rgba(230, 242, 255, 0.6));
+  background: linear-gradient(135deg, var(--TC18), var(--TC16));
   border-radius: 12px;
   padding: 16px;
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  border: 1px solid var(--TC16);
 }
 
 .infoCardHeader {
@@ -91,13 +132,13 @@
   gap: 8px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: #222b6c;
+  color: var(--TC1);
   margin-bottom: 12px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(34, 43, 108, 0.1);
+  border-bottom: 2px solid var(--TC16);
 }
 
-.infoCardHeader svg { color: #30b2b5; }
+.infoCardHeader svg { color: var(--TC5); }
 
 .infoRows { display: flex; flex-direction: column; gap: 6px; }
 
@@ -106,31 +147,31 @@
   justify-content: space-between;
   align-items: center;
   padding: 5px 0;
-  border-bottom: 1px solid rgba(34, 43, 108, 0.05);
+  border-bottom: 1px solid var(--TC16);
 }
 
 .infoRow:last-child { border-bottom: none; }
 
 .infoLabel {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 600;
 }
 
 .infoValue {
   font-size: 0.82rem;
-  color: #1e293b;
+  color: var(--TC9);
   font-weight: 600;
   text-align: right;
 }
 
 /* ── Detail Section ── */
 .detailSection {
-  background: white;
+  background: var(--TC6);
   border-radius: 12px;
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  border: 1px solid var(--TC16);
   overflow: visible;
-  box-shadow: 0 3px 12px rgba(34, 43, 108, 0.06);
+  box-shadow: 0 3px 12px var(--TC16);
 }
 
 .detailSectionHeader {
@@ -138,14 +179,14 @@
   align-items: center;
   gap: 8px;
   padding: 12px 18px;
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
+  background: linear-gradient(135deg, var(--TC16), var(--TC18));
   font-size: 0.88rem;
   font-weight: 700;
-  color: #222b6c;
-  border-bottom: 1px solid rgba(34, 43, 108, 0.1);
+  color: var(--TC1);
+  border-bottom: 1px solid var(--TC16);
 }
 
-.detailSectionHeader svg { color: #30b2b5; }
+.detailSectionHeader svg { color: var(--TC5); }
 
 .detailGrid {
   display: grid;
@@ -155,8 +196,8 @@
 
 .detailField {
   padding: 14px 18px;
-  border-right: 1px solid rgba(34, 43, 108, 0.07);
-  border-bottom: 1px solid rgba(34, 43, 108, 0.07);
+  border-right: 1px solid var(--TC16);
+  border-bottom: 1px solid var(--TC16);
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -166,7 +207,7 @@
 
 .fieldLabel {
   font-size: 0.73rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.4px;
@@ -174,7 +215,7 @@
 
 .fieldValue {
   font-size: 0.9rem;
-  color: #1e293b;
+  color: var(--TC9);
   font-weight: 600;
   display: block;
   min-height: 1.2em;
@@ -182,13 +223,13 @@
 
 .unitTag {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 500;
   margin-left: 4px;
 }
 
 .notSet {
-  color: #94a3b8;
+  color: var(--TC8);
   font-style: italic;
   font-weight: 400;
   font-size: 0.82rem;
@@ -201,7 +242,7 @@
   justify-content: flex-end;
   gap: 12px;
   padding-top: 8px;
-  border-top: 2px solid rgba(34, 43, 108, 0.08);
+  border-top: 2px solid var(--TC16);
   margin-top: 4px;
 }
 
@@ -210,25 +251,25 @@
   align-items: center;
   gap: 8px;
   padding: 11px 26px;
-  background: linear-gradient(135deg, #207d9c, #30b2b5);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-weight: 700;
   font-size: 0.9rem;
   border: none;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .updateBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(32, 125, 156, 0.45);
+  box-shadow: 0 8px 22px var(--TC17);
 }
 
 .closeActionBtn {
-  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   border: none;
   border-radius: 14px;
   height: 40px;
@@ -239,14 +280,39 @@
   position: relative;
   overflow: hidden;
   transition: all 0.4s ease;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 7px 24px var(--TC17);
   white-space: nowrap;
   z-index: 0;
 }
 
-.closeActionBtn:hover {
-  transform: translateY(-3px); box-shadow: 0 14px 34px;
+.closeActionBtn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
 }
+
+.closeActionBtn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, var(--TC18) 50%, transparent 60%);
+  background-size: 200% 100%;
+  background-position: -100% 0;
+  transition: background-position 0.5s ease;
+  z-index: -1;
+}
+
+.closeActionBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px var(--TC17);
+}
+
+.closeActionBtn:hover::before { opacity: 1; }
+.closeActionBtn:hover::after  { background-position: 200% 0; }
 
 /* ── Update Wrapper ── */
 .updateWrapper {
@@ -269,14 +335,14 @@
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-  background: linear-gradient(135deg, #222b6c, #225ca0);
-  color: #ffffff;
-  box-shadow: 0 5px 15px rgba(34, 43, 108, 0.3);
+  background: linear-gradient(135deg, var(--TC1), var(--TC2));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC16);
 }
 
 .nextBtn:hover:not(:disabled) {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.4);
+  box-shadow: 0 8px 24px var(--TC17);
 }
 
 .nextBtn:disabled {
@@ -284,28 +350,32 @@
   cursor: not-allowed;
 }
 
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .viewBody { padding: 16px; }
-  .infoGrid { grid-template-columns: 1fr; }
-  .detailGrid { grid-template-columns: 1fr; }
-  .detailField { border-right: none; }
-  .viewActions { flex-direction: column; }
-  .updateBtn, .closeActionBtn { width: 100%; justify-content: center; }
-}
-
+/* ── Add Modal Header Card ── */
 .addModalHeaderCard {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
+}
+
+.clinicInfoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC6);
+  opacity: 0.9;
+}
+
+.clinicInfoText {
+  display: flex;
+  flex-direction: column;
 }
 
 .clinicInfoName {
@@ -314,7 +384,7 @@
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -325,76 +395,160 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
 
+/* ==================== STATUS BADGES ==================== */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  display: inline-block;
+  border: 1px solid var(--TC16);
+  background: var(--TC18);
+  color: var(--TC10);
+}
+
+.statusBadge.active {
+  background: var(--TC18);
+  color: var(--TC10);
+  border-color: var(--TC16);
+}
+
+.statusBadge.inactive {
+  background: var(--TC16);
+  color: var(--TC11);
+  border-color: var(--TC16);
+}
+
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .viewModal {
-  background: #1e293b;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+  background: var(--TC9);
+  box-shadow: 0 25px 70px var(--TC16);
+}
+
+:global(.dark-mode) .viewHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+:global(.dark-mode) .viewCloseBtn {
+  background: var(--TC18);
+}
+
+:global(.dark-mode) .viewCloseBtn:hover {
+  background: var(--TC17);
 }
 
 :global(.dark-mode) .viewBody {
   background: transparent;
 }
 
+:global(.dark-mode) .viewBody::-webkit-scrollbar-track {
+  background: var(--TC9);
+}
+
+:global(.dark-mode) .viewBody::-webkit-scrollbar-thumb {
+  background: var(--TC15);
+}
+
+:global(.dark-mode) .viewBody::-webkit-scrollbar-thumb:hover {
+  background: var(--TC5);
+}
+
 :global(.dark-mode) .infoCard {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.7), rgba(30, 41, 59, 0.7));
-  border-color: rgba(71, 85, 105, 0.4);
+  background: linear-gradient(135deg, var(--TC9), var(--TC7));
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .infoCardHeader {
-  color: var(--accent-end);
-  border-bottom-color: rgba(71, 85, 105, 0.4);
+  color: var(--TC5);
+  border-bottom-color: var(--TC15);
 }
 
 :global(.dark-mode) .infoRow {
-  border-bottom-color: rgba(71, 85, 105, 0.2);
+  border-bottom-color: var(--TC15);
 }
 
 :global(.dark-mode) .infoLabel {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .infoValue {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .detailSection {
-  background: #0f172a;
-  border-color: rgba(71, 85, 105, 0.4);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+  background: var(--TC9);
+  border-color: var(--TC15);
+  box-shadow: 0 3px 12px var(--TC16);
 }
 
 :global(.dark-mode) .detailSectionHeader {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(48, 178, 181, 0.08));
-  color: var(--accent-end);
-  border-bottom-color: rgba(71, 85, 105, 0.4);
+  background:var(--TC7);
+  color: var(--TC5);
+  border-bottom-color: var(--TC15);
 }
 
 :global(.dark-mode) .detailField {
-  border-right-color: rgba(71, 85, 105, 0.2);
-  border-bottom-color: rgba(71, 85, 105, 0.2);
+  border-right-color: var(--TC15);
+  border-bottom-color: var(--TC15);
 }
 
 :global(.dark-mode) .fieldLabel {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .fieldValue {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .unitTag {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .notSet {
-  color: #475569;
+  color: var(--TC15);
 }
 
 :global(.dark-mode) .viewActions {
-  border-top-color: rgba(71, 85, 105, 0.4);
+  border-top-color: var(--TC15);
+}
+
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+}
+
+:global(.dark-mode) .clinicInfoName {
+  color: var(--TC6);
+}
+
+:global(.dark-mode) .clinicInfoBranch {
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .statusBadge.active {
+  background: var(--TC18);
+  color: var(--TC5);
+  border-color: var(--TC16);
+}
+
+:global(.dark-mode) .statusBadge.inactive {
+  background: var(--TC18);
+  color: var(--TC14);
+  border-color: var(--TC16);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .viewBody { padding: 16px; }
+  .infoGrid { grid-template-columns: 1fr; }
+  .detailGrid { grid-template-columns: 1fr; }
+  .detailField { border-right: none; }
+  .viewActions { flex-direction: column; }
+  .updateBtn, .closeActionBtn { width: 100%; justify-content: center; }
 }

@@ -2,15 +2,24 @@
 /* Matches GenerateSlots colour theme — class names matched exactly to AutoSlotGeneration.jsx */
 
 :root {
-  --primary-start: #222b6c;
-  --primary-end:   #225ca0;
-  --accent-start:  #207d9c;
-  --accent-end:    #30b2b5;
-  --text-light:    #ffffff;
-  --text-dark:     #1e293b;
-  --glass-bg:      rgba(255, 255, 255, 0.92);
-  --danger-color:  #ef4444;
-  --success-color: #10b981;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
 /* Animations */
@@ -51,7 +60,7 @@
    ──────────────────────────────────────────────── */
 
 .panel {
-  background: var(--glass-bg);
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-width: 560px;
@@ -59,7 +68,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 68px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 24px 68px var(--TC16);
   animation: slideUp 0.35s ease;
 }
 
@@ -70,12 +79,12 @@
 
 .header {
   padding: 22px 28px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid var(--TC16);
 }
 
 .headerLeft {
@@ -88,7 +97,7 @@
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--TC18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -100,19 +109,19 @@
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--text-light);
+  color: var(--TC6);
 }
 
 .headerSub {
   margin: 0;
   font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--TC13);
 }
 
 .closeBtn {
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--TC18);
   border: none;
-  color: white;
+  color: var(--TC6);
   width: 42px;
   height: 42px;
   border-radius: 12px;
@@ -125,8 +134,97 @@
 }
 
 .closeBtn:hover {
-  background: rgba(255, 255, 255, 0.38);
+  background: var(--TC17);
   transform: scale(1.08);
+}
+
+/* ────────────────────────────────────────────────
+   CLINIC NAME & STATUS BADGE (WorkShift style)
+   ──────────────────────────────────────────────── */
+
+.clinicName {
+  font-weight: 700;
+  color: var(--TC9);
+  opacity: 0.9;
+  font-size: 0.87rem;
+}
+
+.clinicType {
+  font-size: 0.72rem;
+  color: var(--TC12);
+  margin-top: 2px;
+}
+
+.detailModalHeader {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.statusBadge.active {
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
+}
+
+.statusBadge.inactive {
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
+}
+
+.statusBadge.large {
+  padding: 9px 17px;
+  font-size: 0.77rem;
+}
+
+.addModalHeaderCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 12px;
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px var(--TC16);
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.clinicInfoName {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--TC6);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
+}
+
+.clinicInfoBranch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--TC13);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
 }
 
 /* ────────────────────────────────────────────────
@@ -140,6 +238,8 @@
   display: flex;
   flex-direction: column;
   gap: 22px;
+  background-color: var(--TC6);
+  color: var(--TC9);
 }
 
 /* ────────────────────────────────────────────────
@@ -155,7 +255,7 @@
 .fieldLabel {
   font-size: 0.86rem;
   font-weight: 600;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 /* ────────────────────────────────────────────────
@@ -175,23 +275,23 @@
   align-items: center;
   gap: 10px;
   padding: 14px 16px;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid var(--TC8);
   border-radius: 12px;
-  background: white;
+  background: var(--TC6);
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
 }
 
 .radioCard:hover {
-  border-color: var(--accent-end);
-  background: rgba(48, 178, 181, 0.04);
+  border-color: var(--TC5);
+  background: var(--TC18);
 }
 
 .radioCardActive {
-  border-color: var(--accent-end);
-  background: rgba(48, 178, 181, 0.07);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.14);
+  border-color: var(--TC5);
+  background: var(--TC18);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .hiddenRadio {
@@ -206,8 +306,8 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: rgba(48, 178, 181, 0.1);
-  color: var(--accent-start);
+  background: var(--TC18);
+  color: var(--TC4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -216,14 +316,14 @@
 }
 
 .radioCardActive .radioIcon {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
 }
 
 .radioTitle {
   font-size: 0.92rem;
   font-weight: 600;
-  color: var(--text-dark);
+  color: var(--TC9);
   flex: 1;
 }
 
@@ -231,15 +331,15 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 2px solid #cbd5e1;
+  border: 2px solid var(--TC8);
   flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
 .radioCardActive .radioCheck {
-  border-color: var(--accent-end);
-  background: var(--accent-end);
-  box-shadow: inset 0 0 0 3px white;
+  border-color: var(--TC5);
+  background: var(--TC5);
+  box-shadow: inset 0 0 0 3px var(--TC6);
 }
 
 /* ────────────────────────────────────────────────
@@ -257,9 +357,9 @@
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  border: 1.5px solid #cbd5e1;
-  background: white;
-  color: var(--accent-start);
+  border: 1.5px solid var(--TC8);
+  background: var(--TC6);
+  color: var(--TC4);
   font-size: 1.2rem;
   font-weight: 700;
   cursor: pointer;
@@ -271,8 +371,8 @@
 }
 
 .counterBtn:hover {
-  border-color: var(--accent-end);
-  background: rgba(48, 178, 181, 0.08);
+  border-color: var(--TC5);
+  background: var(--TC18);
   transform: translateY(-1px);
 }
 
@@ -283,26 +383,26 @@
 .counterInput {
   width: 72px;
   padding: 9px 12px;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid var(--TC8);
   border-radius: 10px;
   font-size: 1rem;
   font-weight: 600;
   text-align: center;
-  color: var(--text-dark);
-  background: white;
+  color: var(--TC9);
+  background: var(--TC6);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .counterInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .counterUnit {
   font-size: 0.88rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--TC12);
 }
 
 /* ────────────────────────────────────────────────
@@ -323,7 +423,7 @@
 .dateArrow {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--TC8);
   padding-bottom: 10px;
   flex-shrink: 0;
 }
@@ -331,19 +431,19 @@
 .dateInput {
   width: 100%;
   padding: 11px 14px;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid var(--TC8);
   border-radius: 10px;
   font-size: 0.92rem;
-  background: white;
-  color: var(--text-dark);
+  background: var(--TC6);
+  color: var(--TC9);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
 }
 
 .dateInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 /* ────────────────────────────────────────────────
@@ -361,9 +461,9 @@
 .intervalChip {
   padding: 8px 14px;
   border-radius: 10px;
-  border: 1.5px solid #cbd5e1;
-  background: white;
-  color: #475569;
+  border: 1.5px solid var(--TC8);
+  background: var(--TC6);
+  color: var(--TC15);
   font-size: 0.86rem;
   font-weight: 600;
   cursor: pointer;
@@ -371,38 +471,38 @@
 }
 
 .intervalChip:hover {
-  border-color: var(--accent-end);
-  color: var(--accent-start);
-  background: rgba(48, 178, 181, 0.06);
+  border-color: var(--TC5);
+  color: var(--TC4);
+  background: var(--TC18);
 }
 
 .intervalChipActive {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
   border-color: transparent;
-  color: white;
-  box-shadow: 0 4px 12px rgba(32, 125, 156, 0.28);
+  color: var(--TC6);
+  box-shadow: 0 4px 12px var(--TC17);
 }
 
 .intervalCustom {
   width: 80px;
   padding: 9px 12px;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid var(--TC8);
   border-radius: 10px;
   font-size: 0.88rem;
   text-align: center;
-  color: var(--text-dark);
-  background: white;
+  color: var(--TC9);
+  background: var(--TC6);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .intervalCustom:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .intervalCustom::placeholder {
-  color: #94a3b8;
+  color: var(--TC8);
   font-size: 0.82rem;
 }
 
@@ -415,10 +515,10 @@
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  background: rgba(239, 68, 68, 0.1);
-  color: #991b1b;
+  background: var(--TC16);
+  color: var(--TC11);
   border-radius: 10px;
-  border: 1px solid rgba(239, 68, 68, 0.28);
+  border: 1px solid var(--TC16);
   font-size: 0.88rem;
   font-weight: 500;
 }
@@ -433,8 +533,8 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 18px 28px;
-  border-top: 1px solid rgba(34, 43, 108, 0.1);
-  background: #f8fafc;
+  border-top: 1px solid var(--TC16);
+  background: linear-gradient(to bottom, var(--TC6), var(--TC13));
 }
 
 .cancelBtn {
@@ -444,13 +544,13 @@
   font-size: 0.94rem;
   cursor: pointer;
   border: none;
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--TC13);
+  color: var(--TC15);
   transition: all 0.3s ease;
 }
 
 .cancelBtn:hover {
-  background: #cbd5e1;
+  background: var(--TC8);
   transform: translateY(-1px);
 }
 
@@ -467,9 +567,9 @@
   font-size: 0.94rem;
   cursor: pointer;
   border: none;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.28);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -478,7 +578,7 @@
 
 .saveBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 9px 22px rgba(32, 125, 156, 0.42);
+  box-shadow: 0 9px 22px var(--TC17);
 }
 
 .saveBtn:disabled {
@@ -492,8 +592,8 @@
   display: inline-block;
   width: 15px;
   height: 15px;
-  border: 2.5px solid rgba(255, 255, 255, 0.4);
-  border-top-color: white;
+  border: 2.5px solid var(--TC18);
+  border-top-color: var(--TC6);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;
@@ -501,129 +601,168 @@
 
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .panel {
-  background: rgba(30, 41, 59, 0.97);
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .header {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
 }
 
 :global(.dark-mode) .body {
   background: transparent;
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .fieldLabel {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
 :global(.dark-mode) .radioCard {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .radioCard:hover {
-  background: rgba(48, 178, 181, 0.08);
-  border-color: var(--accent-end);
+  background: var(--TC18);
+  border-color: var(--TC5);
 }
 
 :global(.dark-mode) .radioCardActive {
-  background: rgba(48, 178, 181, 0.1);
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  background: var(--TC18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 :global(.dark-mode) .radioTitle {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .radioIcon {
-  background: rgba(48, 178, 181, 0.15);
-  color: var(--accent-end);
+  background: var(--TC18);
+  color: var(--TC5);
 }
 
 :global(.dark-mode) .radioCheck {
-  border-color: #475569;
-  background: #0f172a;
+  border-color: var(--TC15);
+  background: var(--TC9);
 }
 
 :global(.dark-mode) .counterBtn {
-  background: #1e293b;
-  border-color: #475569;
-  color: var(--accent-end);
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC5);
 }
 
 :global(.dark-mode) .counterBtn:hover {
-  background: rgba(48, 178, 181, 0.1);
-  border-color: var(--accent-end);
+  background: var(--TC18);
+  border-color: var(--TC5);
 }
 
 :global(.dark-mode) .counterInput {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .counterInput:focus {
-  background: #1e293b;
-  border-color: var(--accent-end);
+  background: var(--TC9);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 :global(.dark-mode) .counterUnit {
-  color: #94a3b8;
+  color: var(--TC8);
 }
 
 :global(.dark-mode) .dateInput {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .dateInput:focus {
-  background: #1e293b;
-  border-color: var(--accent-end);
+  background: var(--TC9);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 :global(.dark-mode) .dateArrow {
-  color: #64748b;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .intervalChip {
-  background: #1e293b;
-  border-color: #475569;
-  color: #94a3b8;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC8);
 }
 
 :global(.dark-mode) .intervalChip:hover {
-  background: rgba(48, 178, 181, 0.1);
-  border-color: var(--accent-end);
-  color: var(--accent-end);
+  background: var(--TC18);
+  border-color: var(--TC5);
+  color: var(--TC5);
 }
 
 :global(.dark-mode) .intervalCustom {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .intervalCustom:focus {
-  background: #1e293b;
-  border-color: var(--accent-end);
+  background: var(--TC9);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 :global(.dark-mode) .footer {
-  background: #0f172a;
-  border-top-color: rgba(71, 85, 105, 0.5);
+  background: linear-gradient(135deg, var(--TC9), var(--TC7));
+  border-top-color: var(--TC15);
 }
 
 :global(.dark-mode) .cancelBtn {
-  background: #334155;
-  color: #94a3b8;
+  background: var(--TC7);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .cancelBtn:hover {
-  background: #475569;
+  background: var(--TC15);
 }
 
 :global(.dark-mode) .errorBanner {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
+  background: var(--TC16);
+  border-color: var(--TC16);
+  color: var(--TC14);
+}
+
+/* dark mode: clinicName & type */
+:global(.dark-mode) .clinicName {
+  font-weight: 500;
+  color: var(--TC6);
+  font-size: 0.87rem;
+}
+
+:global(.dark-mode) .clinicType {
+  font-size: 0.72rem;
+  color: var(--TC8);
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+/* dark mode: detailModalHeader */
+:global(.dark-mode) .detailModalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+/* dark mode: statusBadge */
+:global(.dark-mode) .statusBadge.active {
+  color: var(--TC5);
+}
+
+/* dark mode: addModalHeaderCard */
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
 }
 
 /* ────────────────────────────────────────────────

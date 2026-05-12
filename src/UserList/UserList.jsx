@@ -1,49 +1,34 @@
 // src/components/UserList.jsx
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { FiSearch, FiPlus, FiX, FiEye, FiEyeOff, FiCheck, FiAlertCircle, FiLock } from 'react-icons/fi';
+import React, { useState, useEffect, useMemo } from 'react';
+import { FiSearch, FiPlus, FiX, FiLock, FiUnlock } from 'react-icons/fi';
 import {
-  getUserList,
-  addUser,
-  getClinicList,
-  getBranchList,
-  getEmployeeList,
-  updatePassword,
+  getUserList, addUser, getClinicList, getBranchList,
+  getEmployeeList, updatePassword, updateUser,
 } from '../Api/Api.js';
-import ErrorHandler from '../Hooks/ErrorHandler.jsx';
-import Header from '../Header/Header.jsx';
-import UpdateUser from './UpdateUser.jsx';
-import MessagePopup from '../Hooks/MessagePopup.jsx';
-import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
-import LoadingPage from '../Hooks/LoadingPage.jsx';
-import styles from './UserList.module.css';
-
+import ErrorHandler   from '../Hooks/ErrorHandler.jsx';
+import Header         from '../Header/Header.jsx';
+import UpdateUser     from './UpdateUser.jsx';
+import MessagePopup   from '../Hooks/MessagePopup.jsx';
+import ConfirmPopup   from '../Hooks/ConfirmPopup.jsx';
+import LoadingPage    from '../Hooks/LoadingPage.jsx';
+import styles         from './UserList.module.css';
 import { getStoredClinicId } from '../Utils/Cryptoutils.js';
+
+// ── Shared reusable password modal ──
+import UpdatePassword from '../UpdatePassword/UpdatePassword';
+
+import { FaLock, FaLockOpen, FaUnlockAlt } from 'react-icons/fa';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 const PROFILE_OPTIONS = [
-  'admin',
-  'spradmin',
-  'frontdesk',
-  'nurse',
-  'pharmacy',
-  'labtech',
-  'accounts',
-  'doctor',
+  'admin','spradmin','frontdesk','nurse','pharmacy','labtech','accounts','doctor',
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper: get profileName from localStorage
-// ─────────────────────────────────────────────────────────────────────────────
 const getLocalProfileName = () => {
-  try {
-    return localStorage.getItem('profileName') || '';
-  } catch {
-    return '';
-  }
+  try { return localStorage.getItem('profileName') || ''; } catch { return ''; }
 };
-
 const isSprAdmin = () => getLocalProfileName().toLowerCase() === 'spradmin';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -65,16 +50,11 @@ const getStatusLabel = (status) => {
 
 const getStatusClass = (status) => {
   const label = getStatusLabel(status).toLowerCase();
-  if (label === 'active')    return styles.active;
-  if (label === 'deleted')   return styles.inactive;
-  if (label === 'suspended') return styles.inactive;
+  if (label === 'active') return styles.active;
   return styles.inactive;
 };
 
-// Check if user is deleted
-const isUserDeleted = (status) => {
-  return getStatusLabel(status).toLowerCase() === 'deleted';
-};
+const isUserDeleted = (status) => getStatusLabel(status).toLowerCase() === 'deleted';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Validation helpers
@@ -86,49 +66,38 @@ const getLiveValidationMessage = (fieldName, value) => {
       if (value.trim().length > 100) return 'Username should not exceed 100 characters';
       if (/\s/.test(value.trim())) return 'Username should not contain spaces';
       return '';
-
     case 'email':
       if (!value || !value.trim()) return 'Email is required';
       if (!value.includes('@')) return 'Email must contain @';
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()))
-        return 'Please enter a valid email address';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) return 'Please enter a valid email address';
       if (value.trim().length > 100) return 'Email must not exceed 100 characters';
       return '';
-
     case 'mobile':
       if (!value || !value.trim()) return '';
       if (value.trim().length !== 10) return 'Mobile number must be 10 digits';
       if (!/^\d{10}$/.test(value.trim())) return 'Mobile number must contain only digits';
       return '';
-
     case 'password':
       if (!value || !value.trim()) return 'Password is required';
-      if (value.trim().length < 6) return 'Password must be at least 6 characters';
+      if (value.trim().length < 6)  return 'Password must be at least 6 characters';
       if (value.trim().length > 50) return 'Password must not exceed 50 characters';
       return '';
-
     case 'profileName':
       if (!value || !value.trim()) return 'Profile/Role is required';
       return '';
-
     case 'clinicId':
       if (!value || value === 0 || value === '0') return 'Please select a clinic';
       return '';
-
     case 'branchId':
       if (!value || value === 0 || value === '0') return 'Please select a branch';
       return '';
-
     case 'employeeId':
       if (!value || value === 0 || value === '0') return 'Please select an employee';
       return '';
-
-    default:
-      return '';
+    default: return '';
   }
 };
 
-// ── Search payload builder ──
 const buildSearchPayload = (searchType, searchValue) => {
   const val = searchValue.trim();
   switch (searchType) {
@@ -147,7 +116,7 @@ const buildStatusParam = (statusFilter) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Clinic Dropdown component (used inside Add User modal — only for spradmin)
+// Clinic Dropdown (only for spradmin)
 // ─────────────────────────────────────────────────────────────────────────────
 const ClinicDropdownField = ({ selectedClinic, onSelect, error }) => {
   const [clinicList, setClinicList] = useState([]);
@@ -160,198 +129,31 @@ const ClinicDropdownField = ({ selectedClinic, onSelect, error }) => {
       try {
         const data = await getClinicList({ Page: 1, PageSize: 200, Status: 1 });
         setClinicList(Array.isArray(data) ? data : []);
-      } catch {
-        setClinicList([]);
-      } finally {
-        setLoading(false);
-        setFetched(true);
-      }
+      } catch { setClinicList([]); }
+      finally { setLoading(false); setFetched(true); }
     };
     load();
   }, []);
-
-  const handleChange = (e) => {
-    const id = e.target.value;
-    if (!id) {
-      onSelect(null);
-      return;
-    }
-    const found = clinicList.find((c) => String(c.id) === id);
-    onSelect(found || null);
-  };
 
   return (
     <div>
       <select
         className={styles.addSelect}
         value={selectedClinic?.id || ''}
-        onChange={handleChange}
+        onChange={(e) => {
+          const id = e.target.value;
+          if (!id) { onSelect(null); return; }
+          const found = clinicList.find((c) => String(c.id) === id);
+          onSelect(found || null);
+        }}
         disabled={loading}
       >
         <option value="">
           {loading ? 'Loading clinics…' : fetched && clinicList.length === 0 ? 'No clinics available' : 'Select Clinic'}
         </option>
-        {clinicList.map((c) => (
-          <option key={c.id} value={c.id}>{c.name}</option>
-        ))}
+        {clinicList.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
       </select>
       {error && <span className={styles.validationMsg}>{error}</span>}
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// UpdatePassword Modal Component
-// ─────────────────────────────────────────────────────────────────────────────
-const UpdatePasswordModal = ({ user, onClose, onSuccess }) => {
-  const [newPassword,    setNewPassword]    = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showNewPass,    setShowNewPass]    = useState(false);
-  const [showConfirmPass, setShowConfirmPass] = useState(false);
-  const [passwordError,  setPasswordError]  = useState('');
-  const [isSubmitting,   setIsSubmitting]   = useState(false);
-
-  const handleClose = () => {
-    setNewPassword('');
-    setConfirmPassword('');
-    setPasswordError('');
-    setShowNewPass(false);
-    setShowConfirmPass(false);
-    onClose();
-  };
-
-  const handleSubmit = async () => {
-    setPasswordError('');
-
-    if (!newPassword.trim()) {
-      setPasswordError('New password cannot be empty.');
-      return;
-    }
-    if (newPassword.trim().length < 6) {
-      setPasswordError('Password must be at least 6 characters.');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordError('Passwords do not match. Please try again.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await updatePassword({
-        UserID:   user.userId || user.id,
-        ClinicID: user.clinicId || 0,
-        Password: newPassword.trim(),
-      });
-      onSuccess();
-    } catch (err) {
-      setPasswordError(err.message || 'Failed to update password. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className={styles.cpOverlay}>
-      <div className={styles.cpModal}>
-        {/* Header */}
-        <div className={styles.cpModalHeader}>
-          <div className={styles.cpHeaderIcon}>
-            <FiLock size={22} />
-          </div>
-          <div>
-            <h2>Update Password</h2>
-            <p>Set a new secure password for <strong>{user.userName}</strong></p>
-          </div>
-          <button className={styles.cpCloseBtn} onClick={handleClose} aria-label="Close">
-            <FiX size={20} />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className={styles.cpModalBody}>
-          {/* New Password */}
-          <div className={styles.cpField}>
-            <label>New Password</label>
-            <div className={styles.cpInputWrap}>
-              <input
-                type={showNewPass ? 'text' : 'password'}
-                placeholder="Enter new password"
-                value={newPassword}
-                onChange={(e) => { setNewPassword(e.target.value); setPasswordError(''); }}
-                autoComplete="new-password"
-              />
-              <button
-                type="button"
-                className={styles.cpEyeBtn}
-                onClick={() => { setShowNewPass((v) => !v); setShowConfirmPass(false); }}
-                tabIndex={-1}
-                aria-label="Toggle new password visibility"
-              >
-                {showNewPass ? <FiEyeOff size={17} /> : <FiEye size={17} />}
-              </button>
-            </div>
-          </div>
-
-          {/* Confirm Password */}
-          <div className={styles.cpField}>
-            <label>Confirm Password</label>
-            <div className={`${styles.cpInputWrap} ${
-              confirmPassword && newPassword !== confirmPassword ? styles.cpMismatch :
-              confirmPassword && newPassword === confirmPassword ? styles.cpMatch : ''
-            }`}>
-              <input
-                type={showConfirmPass ? 'text' : 'password'}
-                placeholder="Re-enter new password"
-                value={confirmPassword}
-                onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(''); }}
-                autoComplete="new-password"
-              />
-              <button
-                type="button"
-                className={styles.cpEyeBtn}
-                onClick={() => { setShowConfirmPass((v) => !v); setShowNewPass(false); }}
-                tabIndex={-1}
-                aria-label="Toggle confirm password visibility"
-              >
-                {showConfirmPass ? <FiEyeOff size={17} /> : <FiEye size={17} />}
-              </button>
-              {confirmPassword && newPassword === confirmPassword && (
-                <span className={styles.cpMatchIcon}><FiCheck size={15} /></span>
-              )}
-            </div>
-          </div>
-
-          {/* Error */}
-          {passwordError && (
-            <div className={styles.cpErrorMsg}>
-              <FiAlertCircle size={15} />
-              <span>{passwordError}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className={styles.cpModalFooter}>
-          <button className={styles.cpBtnCancel} onClick={handleClose} disabled={isSubmitting}>
-            Cancel
-          </button>
-          <button
-            className={styles.cpBtnSubmit}
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <span className={styles.cpSpinner} />
-            ) : (
-              <>
-                <FiLock size={15} />
-                Update Password
-              </>
-            )}
-          </button>
-        </div>
-      </div>
     </div>
   );
 };
@@ -360,19 +162,18 @@ const UpdatePasswordModal = ({ user, onClose, onSuccess }) => {
 // UserList
 // ─────────────────────────────────────────────────────────────────────────────
 const UserList = () => {
-  // ── Data ──
   const [users, setUsers] = useState([]);
 
-  // ── Popup ──
   const [popup, setPopup] = useState({ visible: false, message: '', type: 'success' });
   const showPopup  = (message, type = 'success') => setPopup({ visible: true, message, type });
   const closePopup = () => setPopup({ visible: false, message: '', type: 'success' });
 
-  // ── Delete confirm ──
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // ── Filters — default to Active (status 0) ──
+  const [lockConfirm, setLockConfirm] = useState(null);
+  const [lockLoading, setLockLoading] = useState(false);
+
   const [filterInputs, setFilterInputs] = useState({
     searchType: 'userName', searchValue: '', statusFilter: '0',
   });
@@ -380,21 +181,16 @@ const UserList = () => {
     searchType: 'userName', searchValue: '', statusFilter: '0',
   });
 
-  // ── Pagination ──
-  const [page, setPage]       = useState(1);
-  const [pageSize]            = useState(20);
-
-  // ── Table state ──
+  const [page, setPage]   = useState(1);
+  const [pageSize]        = useState(20);
   const [selectedUser, setSelectedUser]   = useState(null);
   const [loading, setLoading]             = useState(true);
   const [error, setError]                 = useState(null);
 
-  // ── Button cooldowns ──
   const [searchBtnDisabled, setSearchBtnDisabled] = useState(false);
   const [clearBtnDisabled,  setClearBtnDisabled]  = useState(false);
   const [deleteBtnCooldown, setDeleteBtnCooldown] = useState(false);
 
-  // ── Add Form ──
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [formData, setFormData] = useState({
     userName: '', email: '', mobile: '', password: '', profileName: '',
@@ -410,20 +206,16 @@ const UserList = () => {
   const [validationMessages, setValidationMessages] = useState({});
   const [submitAttempted,    setSubmitAttempted]    = useState(false);
 
-  // ── Update Modal ──
   const [updateUserData,   setUpdateUserData]   = useState(null);
   const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);
 
-  // ── Update Password Modal ──
+  // ── Update Password Modal state ──
   const [passwordUser,        setPasswordUser]        = useState(null);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
-  // ── Derived: is current logged-in user spradmin? ──
   const sprAdmin = isSprAdmin();
 
-  // ─────────────────────────────────────────────
-  // fetchUsers: if spradmin → clinicId = 0, else → getStoredClinicId()
-  // ─────────────────────────────────────────────
+  // ── Fetch users ──
   const fetchUsers = async (filters, currentPage) => {
     try {
       setLoading(true);
@@ -431,9 +223,7 @@ const UserList = () => {
       const searchPayload = buildSearchPayload(filters.searchType, filters.searchValue);
       const clinicId = sprAdmin ? 0 : await getStoredClinicId();
       const data = await getUserList(clinicId, {
-        Page:     currentPage,
-        PageSize: pageSize,
-        BranchID: 0,
+        Page: currentPage, PageSize: pageSize, BranchID: 0,
         ...searchPayload,
         Status: buildStatusParam(filters.statusFilter),
       });
@@ -441,143 +231,67 @@ const UserList = () => {
     } catch (err) {
       console.error('fetchUsers error:', err);
       showPopup('Failed to fetch users. Please try again.', 'error');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchUsers(appliedFilters, page); }, []);  // eslint-disable-line
+  useEffect(() => { fetchUsers(appliedFilters, page); }, []); // eslint-disable-line
 
-  // ── When clinic changes → load branches ──
-  // For spradmin: uses selectedClinic.id; for others: uses getStoredClinicId()
+  // ── Clinic → branches ──
   useEffect(() => {
     if (sprAdmin) {
-      // spradmin: clinic comes from dropdown selection
-      if (!selectedClinic) {
-        setBranchList([]);
-        setSelectedBranch(null);
-        setEmployeeList([]);
-        setSelectedEmployee(null);
-        return;
-      }
+      if (!selectedClinic) { setBranchList([]); setSelectedBranch(null); setEmployeeList([]); setSelectedEmployee(null); return; }
       const load = async () => {
         setBranchLoading(true);
-        setSelectedBranch(null);
-        setEmployeeList([]);
-        setSelectedEmployee(null);
-        try {
-          const data = await getBranchList(selectedClinic.id, { Status: 1, PageSize: 50 });
-          setBranchList(Array.isArray(data) ? data : []);
-        } catch {
-          setBranchList([]);
-        } finally {
-          setBranchLoading(false);
-        }
+        setSelectedBranch(null); setEmployeeList([]); setSelectedEmployee(null);
+        try { const data = await getBranchList(selectedClinic.id, { Status: 1, PageSize: 50 }); setBranchList(Array.isArray(data) ? data : []); }
+        catch { setBranchList([]); }
+        finally { setBranchLoading(false); }
       };
       load();
     } else {
-      // non-spradmin: clinic comes from getStoredClinicId()
       if (!isAddFormOpen) return;
       const load = async () => {
         setBranchLoading(true);
-        setSelectedBranch(null);
-        setEmployeeList([]);
-        setSelectedEmployee(null);
-        try {
-          const clinicId = await getStoredClinicId();
-          const data = await getBranchList(clinicId, { Status: 1, PageSize: 50 });
-          setBranchList(Array.isArray(data) ? data : []);
-        } catch {
-          setBranchList([]);
-        } finally {
-          setBranchLoading(false);
-        }
+        setSelectedBranch(null); setEmployeeList([]); setSelectedEmployee(null);
+        try { const clinicId = await getStoredClinicId(); const data = await getBranchList(clinicId, { Status: 1, PageSize: 50 }); setBranchList(Array.isArray(data) ? data : []); }
+        catch { setBranchList([]); }
+        finally { setBranchLoading(false); }
       };
       load();
     }
   }, [selectedClinic, isAddFormOpen]); // eslint-disable-line
 
-  // ── When branch changes → load employees (branch must be selected first) ──
+  // ── Branch → employees ──
   useEffect(() => {
-    // Always clear employees and reset selection when branch is cleared
-    if (!selectedBranch) {
-      setEmployeeList([]);
-      setSelectedEmployee(null);
-      return;
-    }
-
-    if (sprAdmin) {
-      // spradmin: also requires a clinic to be selected
-      if (!selectedClinic) return;
-      const load = async () => {
-        setEmployeeLoading(true);
-        setSelectedEmployee(null);
-        try {
-          const data = await getEmployeeList(selectedClinic.id, {
-            BranchID: selectedBranch.id,
-            Status: 1,
-            PageSize: 100,
-          });
-          setEmployeeList(Array.isArray(data) ? data : []);
-        } catch {
-          setEmployeeList([]);
-        } finally {
-          setEmployeeLoading(false);
-        }
-      };
-      load();
-    } else {
-      // non-spradmin: uses getStoredClinicId()
-      if (!isAddFormOpen) return;
-      const load = async () => {
-        setEmployeeLoading(true);
-        setSelectedEmployee(null);
-        try {
-          const clinicId = await getStoredClinicId();
-          const data = await getEmployeeList(clinicId, {
-            BranchID: selectedBranch.id,
-            Status: 1,
-            PageSize: 100,
-          });
-          setEmployeeList(Array.isArray(data) ? data : []);
-        } catch {
-          setEmployeeList([]);
-        } finally {
-          setEmployeeLoading(false);
-        }
-      };
-      load();
-    }
+    if (!selectedBranch) { setEmployeeList([]); setSelectedEmployee(null); return; }
+    const load = async () => {
+      setEmployeeLoading(true); setSelectedEmployee(null);
+      try {
+        const clinicId = sprAdmin ? selectedClinic?.id : await getStoredClinicId();
+        const data = await getEmployeeList(clinicId, { BranchID: selectedBranch.id, Status: 1, PageSize: 100 });
+        setEmployeeList(Array.isArray(data) ? data : []);
+      } catch { setEmployeeList([]); }
+      finally { setEmployeeLoading(false); }
+    };
+    if (sprAdmin ? selectedClinic : isAddFormOpen) load();
   }, [selectedClinic, selectedBranch, isAddFormOpen]); // eslint-disable-line
 
-  // ─────────────────────────────────────────────
-  // isFormValid: branch and employee are always required
-  // ─────────────────────────────────────────────
   const isFormValid = useMemo(() => {
     const requiredFields = ['userName', 'email', 'password', 'profileName'];
-    const allFilled = requiredFields.every((f) => formData[f] && String(formData[f]).trim());
-    if (!allFilled) return false;
+    if (!requiredFields.every((f) => formData[f] && String(formData[f]).trim())) return false;
     if (sprAdmin && !selectedClinic) return false;
-    if (!selectedBranch) return false;
-    if (!selectedEmployee) return false;
-    const hasErrors = Object.values(validationMessages).some((msg) => !!msg);
-    if (hasErrors) return false;
-    return true;
+    if (!selectedBranch || !selectedEmployee) return false;
+    return !Object.values(validationMessages).some(Boolean);
   }, [formData, validationMessages, selectedClinic, selectedBranch, selectedEmployee, sprAdmin]);
 
   const refreshUsers = () => fetchUsers(appliedFilters, page);
 
   const validateAllFields = () => {
     const toValidate = {
-      userName:    formData.userName,
-      email:       formData.email,
-      mobile:      formData.mobile,
-      password:    formData.password,
-      profileName: formData.profileName,
-      // only validate clinicId for spradmin
+      userName: formData.userName, email: formData.email, mobile: formData.mobile,
+      password: formData.password, profileName: formData.profileName,
       ...(sprAdmin ? { clinicId: selectedClinic?.id || 0 } : {}),
-      branchId:   selectedBranch?.id   || 0,
-      employeeId: selectedEmployee?.id || 0,
+      branchId: selectedBranch?.id || 0, employeeId: selectedEmployee?.id || 0,
     };
     const messages = {};
     let hasErrors = false;
@@ -590,7 +304,6 @@ const UserList = () => {
     return !hasErrors;
   };
 
-  // ── Filter handlers ──
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilterInputs((prev) => ({ ...prev, [name]: value }));
@@ -610,9 +323,7 @@ const UserList = () => {
     if (clearBtnDisabled) return;
     setClearBtnDisabled(true);
     const def = { searchType: 'userName', searchValue: '', statusFilter: '0' };
-    setFilterInputs(def);
-    setAppliedFilters(def);
-    setPage(1);
+    setFilterInputs(def); setAppliedFilters(def); setPage(1);
     await fetchUsers(def, 1);
     setTimeout(() => setClearBtnDisabled(false), 2000);
   };
@@ -625,28 +336,20 @@ const UserList = () => {
     fetchUsers(appliedFilters, newPage);
   };
 
-  // ── Details modal ──
   const openDetails = (user) => setSelectedUser(user);
   const closeModal  = ()     => setSelectedUser(null);
 
-  // ── Add form ──
   const openAddForm = () => {
     setFormData({ userName: '', email: '', mobile: '', password: '', profileName: '' });
-    setSelectedClinic(null);
-    setSelectedBranch(null);
-    setSelectedEmployee(null);
-    setBranchList([]);
-    setEmployeeList([]);
-    setValidationMessages({});
-    setSubmitAttempted(false);
+    setSelectedClinic(null); setSelectedBranch(null); setSelectedEmployee(null);
+    setBranchList([]); setEmployeeList([]);
+    setValidationMessages({}); setSubmitAttempted(false);
     setIsAddFormOpen(true);
   };
 
   const closeAddForm = () => {
-    setIsAddFormOpen(false);
-    setFormLoading(false);
-    setValidationMessages({});
-    setSubmitAttempted(false);
+    setIsAddFormOpen(false); setFormLoading(false);
+    setValidationMessages({}); setSubmitAttempted(false);
   };
 
   const handleInputChange = (e) => {
@@ -666,100 +369,43 @@ const UserList = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isFormValid) {
-      setSubmitAttempted(true);
-      validateAllFields();
-      showPopup('Please fill all required fields before submitting.', 'warning');
-      return;
-    }
+    if (!isFormValid) { setSubmitAttempted(true); validateAllFields(); showPopup('Please fill all required fields before submitting.', 'warning'); return; }
     const isValid = validateAllFields();
-    if (!isValid) {
-      showPopup('Please fill all required fields before submitting.', 'warning');
-      return;
-    }
-
+    if (!isValid) { showPopup('Please fill all required fields before submitting.', 'warning'); return; }
     setFormLoading(true);
     try {
-      // For spradmin: use selectedClinic.id; for others: use getStoredClinicId()
-      const clinicId = sprAdmin
-        ? (selectedClinic?.id || 0)
-        : await getStoredClinicId();
-
+      const clinicId = sprAdmin ? (selectedClinic?.id || 0) : await getStoredClinicId();
       await addUser({
-        userName:    formData.userName.trim(),
-        email:       formData.email.trim(),
-        mobile:      formData.mobile.trim(),
-        password:    formData.password.trim(),
+        userName: formData.userName.trim(), email: formData.email.trim(),
+        mobile: formData.mobile.trim(), password: formData.password.trim(),
         profileName: formData.profileName.trim(),
-        clinicId:    clinicId,
-        branchId:    selectedBranch?.id    || 0,
-        employeeId:  selectedEmployee?.id  || 0,
+        clinicId, branchId: selectedBranch?.id || 0, employeeId: selectedEmployee?.id || 0,
       });
-      closeAddForm();
-      refreshUsers();
+      closeAddForm(); refreshUsers();
       showPopup('User added successfully!', 'success');
     } catch (err) {
       console.error('Add user failed:', err);
       showPopup(err.message || 'Failed to add user. Please try again.', 'error');
-    } finally {
-      setFormLoading(false);
-    }
+    } finally { setFormLoading(false); }
   };
 
   // ── Update ──
-  const handleUpdateClick = (user) => {
-    setUpdateUserData(user);
-    setSelectedUser(null);
-    setIsUpdateFormOpen(true);
-  };
+  const handleUpdateClick  = (user) => { setUpdateUserData(user); setSelectedUser(null); setIsUpdateFormOpen(true); };
+  const handleUpdateClose  = ()     => { setIsUpdateFormOpen(false); setUpdateUserData(null); };
+  const handleUpdateSuccess = ()    => { setIsUpdateFormOpen(false); setUpdateUserData(null); refreshUsers(); };
+  const handleUpdateError   = (msg) => console.error('Update user error:', msg);
 
-  const handleUpdateClose = () => {
-    setIsUpdateFormOpen(false);
-    setUpdateUserData(null);
-  };
-
-  const handleUpdateSuccess = () => {
-    setIsUpdateFormOpen(false);
-    setUpdateUserData(null);
-    refreshUsers();
-  };
-
-  const handleUpdateError = (message) => {
-    console.error('Update user error (handled by UpdateUser popup):', message);
-  };
-
-  // ── Update Password ──
-  const handlePasswordClick = (user) => {
-    setSelectedUser(null);
-    setPasswordUser(user);
-    setIsPasswordModalOpen(true);
-  };
-
-  const handlePasswordClose = () => {
-    setIsPasswordModalOpen(false);
-    setPasswordUser(null);
-  };
-
-  const handlePasswordSuccess = () => {
-    setIsPasswordModalOpen(false);
-    setPasswordUser(null);
-    showPopup('Password updated successfully!', 'success');
-  };
+  // ── Update Password (now via shared component) ──
+  const handlePasswordClick = (user) => { setSelectedUser(null); setPasswordUser(user); setIsPasswordModalOpen(true); };
+  const handlePasswordClose = ()     => { setIsPasswordModalOpen(false); setPasswordUser(null); };
+  const handlePasswordSuccess = ()   => { setIsPasswordModalOpen(false); setPasswordUser(null); showPopup('Password updated successfully!', 'success'); };
 
   // ── Delete ──
-  const handleDeleteClick = (user) => {
-    if (deleteBtnCooldown) return;
-    setDeleteBtnCooldown(true);
-    setTimeout(() => setDeleteBtnCooldown(false), 2000);
-    setDeleteConfirm(user);
-  };
-  const handleDeleteCancel  = () => setDeleteConfirm(null);
-
+  const handleDeleteClick   = (user) => { if (deleteBtnCooldown) return; setDeleteBtnCooldown(true); setTimeout(() => setDeleteBtnCooldown(false), 2000); setDeleteConfirm(user); };
+  const handleDeleteCancel  = ()     => setDeleteConfirm(null);
   const handleDeleteConfirm = async () => {
     if (!deleteConfirm) return;
-    setDeleteLoading(true);
-    setDeleteConfirm(null);
-    setSelectedUser(null);
+    setDeleteLoading(true); setDeleteConfirm(null); setSelectedUser(null);
     try {
       setLoading(true);
       await deleteUser(deleteConfirm.id);
@@ -768,109 +414,105 @@ const UserList = () => {
     } catch (err) {
       console.error('Delete user failed:', err);
       showPopup(err.message || 'Failed to delete user.', 'error');
-    } finally {
-      setDeleteLoading(false);
-      setLoading(false);
-    }
+    } finally { setDeleteLoading(false); setLoading(false); }
   };
 
-  // ─────────────────────────────────────────────
+  // ── Lock / Unlock ──
+  const handleLockIconClick = (user, e) => {
+    e.stopPropagation();
+    const isLocked = user.isLocked === 1 || user.isLocked === '1';
+    setLockConfirm({ user, action: isLocked ? 'unlock' : 'lock' });
+  };
+  const handleLockCancel  = () => setLockConfirm(null);
+  const handleLockConfirm = async () => {
+    if (!lockConfirm) return;
+    const { user, action } = lockConfirm;
+    setLockConfirm(null); setLockLoading(true);
+    try {
+      await updateUser({
+        userId: Number(user.userId || user.id), clinicId: user.clinicId || 0,
+        email: user.email || '', mobile: user.mobile || '', profileName: user.profileName || '',
+        status: Number(user.status ?? 0),
+        isLocked: action === 'lock' ? 1 : 0,
+        failedLoginAttempts: action === 'lock' ? (user.failedLoginAttempts ?? 0) : 0,
+      });
+      showPopup(action === 'lock' ? 'User account locked successfully!' : 'User account unlocked successfully!', 'success');
+      refreshUsers();
+    } catch (err) {
+      console.error('Lock/Unlock failed:', err);
+      showPopup(err.message || 'Failed to update lock status. Please try again.', 'error');
+    } finally { setLockLoading(false); }
+  };
+
   if (error && (error?.status >= 400 || error?.code >= 400)) return <ErrorHandler error={error} />;
   if (loading) return <div className={styles.userLoading}><LoadingPage /></div>;
   if (error)   return <div className={styles.userError}>Error: {error.message || error}</div>;
 
-  const hasActiveFilter =
-    appliedFilters.searchValue.trim() !== '' || appliedFilters.statusFilter !== '0';
-
+  const hasActiveFilter = appliedFilters.searchValue.trim() !== '' || appliedFilters.statusFilter !== '0';
   const startRecord = users.length === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRecord   = (page - 1) * pageSize + users.length;
 
-  // ─────────────────────────────────────────────
   return (
     <div className={styles.userListWrapper}>
       <ErrorHandler error={error} />
       <Header title="User Management" />
 
-      <MessagePopup
-        visible={popup.visible}
-        message={popup.message}
-        type={popup.type}
-        onClose={closePopup}
-      />
+      <MessagePopup visible={popup.visible} message={popup.message} type={popup.type} onClose={closePopup} />
 
       <ConfirmPopup
         visible={!!deleteConfirm}
         message={`Delete user "${deleteConfirm?.userName || 'this user'}"?`}
-        subMessage="This action cannot be undone. The user account will be permanently removed."
+        subMessage="This action cannot be undone."
         confirmLabel={deleteLoading ? 'Deleting...' : 'Yes, Delete'}
         cancelLabel="Cancel"
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
 
+      <ConfirmPopup
+        visible={!!lockConfirm}
+        message={lockConfirm?.action === 'unlock' ? `Unlock account for "${lockConfirm?.user?.userName}"?` : `Lock account for "${lockConfirm?.user?.userName}"?`}
+        subMessage={lockConfirm?.action === 'unlock' ? 'This will unlock the account and reset failed login attempts to 0.' : 'This will lock the user account immediately.'}
+        confirmLabel={lockConfirm?.action === 'unlock' ? 'Yes, Unlock' : 'Yes, Lock'}
+        cancelLabel="No, Cancel"
+        onConfirm={handleLockConfirm}
+        onCancel={handleLockCancel}
+      />
+
       {/* ── Filters ── */}
       <div className={styles.filtersContainer}>
         <div className={styles.filtersGrid}>
           <div className={styles.searchGroup}>
-            <select
-              name="searchType"
-              value={filterInputs.searchType}
-              onChange={handleFilterChange}
-              className={styles.searchTypeSelect}
-            >
+            <select name="searchType" value={filterInputs.searchType} onChange={handleFilterChange} className={styles.searchTypeSelect}>
               <option value="userName">Username</option>
               <option value="mobile">Mobile</option>
               <option value="email">Email</option>
             </select>
             <input
-              type="text"
-              name="searchValue"
-              placeholder={`Search by ${
-                filterInputs.searchType === 'userName' ? 'Username' :
-                filterInputs.searchType === 'mobile'   ? 'Mobile'   : 'Email'
-              }`}
+              type="text" name="searchValue"
+              placeholder={`Search by ${filterInputs.searchType === 'userName' ? 'Username' : filterInputs.searchType === 'mobile' ? 'Mobile' : 'Email'}`}
               value={filterInputs.searchValue}
-              onChange={handleFilterChange}
-              onKeyPress={handleKeyPress}
+              onChange={handleFilterChange} onKeyPress={handleKeyPress}
               className={styles.searchInput}
             />
           </div>
-
           <div className={styles.filterGroup}>
-            <select
-              name="statusFilter"
-              value={filterInputs.statusFilter}
-              onChange={handleFilterChange}
-              className={styles.statusFilterSelect}
-            >
+            <select name="statusFilter" value={filterInputs.statusFilter} onChange={handleFilterChange} className={styles.statusFilterSelect}>
               <option value="-1">All Status</option>
               <option value="0">Active</option>
               <option value="1">Deleted</option>
               <option value="2">Suspended</option>
             </select>
           </div>
-
           <div className={styles.filterActions}>
-            <button
-              onClick={handleSearch}
-              className={styles.searchButton}
-              disabled={searchBtnDisabled}
-              style={{ opacity: searchBtnDisabled ? 0.6 : 1, cursor: searchBtnDisabled ? 'not-allowed' : 'pointer' }}
-            >
+            <button onClick={handleSearch} className={styles.searchButton} disabled={searchBtnDisabled} style={{ opacity: searchBtnDisabled ? 0.6 : 1, cursor: searchBtnDisabled ? 'not-allowed' : 'pointer' }}>
               <FiSearch size={18} /> Search
             </button>
-
             {hasActiveFilter && (
-              <button
-                onClick={handleClearFilters}
-                className={styles.clearButton}
-                disabled={clearBtnDisabled}
-                style={{ opacity: clearBtnDisabled ? 0.6 : 1, cursor: clearBtnDisabled ? 'not-allowed' : 'pointer' }}
-              >
+              <button onClick={handleClearFilters} className={styles.clearButton} disabled={clearBtnDisabled} style={{ opacity: clearBtnDisabled ? 0.6 : 1, cursor: clearBtnDisabled ? 'not-allowed' : 'pointer' }}>
                 <FiX size={18} /> Clear
               </button>
             )}
-
             <button onClick={openAddForm} className={styles.addUserBtn}>
               <FiPlus size={18} /> Add User
             </button>
@@ -878,67 +520,63 @@ const UserList = () => {
         </div>
       </div>
 
-      {/* ── Table + Pagination ── */}
+      {/* ── Table ── */}
       <div className={styles.tableSection}>
         <div className={styles.userTableContainer}>
           <table className={styles.userTable}>
             <thead>
               <tr>
-                <th>User</th>
-                <th>Clinic</th>
-                <th>Branch</th>
-                <th>Employee</th>
-                <th>Profile</th>
-                <th>Last Login</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>User</th><th>Clinic</th><th>Branch</th><th>Employee</th>
+                <th>Profile</th><th>Last Login</th><th>Status</th><th>Lock</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {users.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className={styles.userNoData}>
-                    {hasActiveFilter ? 'No users found.' : 'No users registered yet.'}
-                  </td>
-                </tr>
+                <tr><td colSpan={9} className={styles.userNoData}>{hasActiveFilter ? 'No users found.' : 'No users registered yet.'}</td></tr>
               ) : (
-                users.map((user) => (
-                  <tr key={user.id}>
-                    <td>
-                      <div className={styles.userNameCell}>
-                        <div className={styles.userAvatar}>
-                          {user.userName?.charAt(0).toUpperCase() || 'U'}
+                users.map((user) => {
+                  const isLocked = user.isLocked === 1 || user.isLocked === '1';
+                  return (
+                    <tr key={user.id}>
+                      <td>
+                        <div className={styles.userNameCell}>
+                          <div className={styles.userAvatar}>{user.userName?.charAt(0).toUpperCase() || 'U'}</div>
+                          <div>
+                            <div className={styles.userName}>{user.userName}</div>
+                            <div className={styles.userSub}>{user.email || '—'}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className={styles.userName}>{user.userName}</div>
-                          <div className={styles.userSub}>{user.email || '—'}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>{user.clinicName || '—'}</td>
-                    <td>{user.branchName || '—'}</td>
-                    <td>{user.employeeName || '—'}</td>
-                    <td>{user.profileName || '—'}</td>
-                    <td>
-                      {user.lastLogin
-                        ? new Date(user.lastLogin).toLocaleDateString()
-                        : '—'}
-                    </td>
-                    <td>
-                      <span className={`${styles.statusBadge} ${getStatusClass(user.status)}`}>
-                        {getStatusLabel(user.status).toUpperCase()}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        onClick={() => openDetails(user)}
-                        className={styles.userDetailsBtn}
-                      >
-                        View Details
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td>{user.clinicName || '—'}</td>
+                      <td>{user.branchName || '—'}</td>
+                      <td>{user.employeeName || '—'}</td>
+                      <td>{user.profileName || '—'}</td>
+                      <td>{user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : '—'}</td>
+                      <td>
+                        <span className={`${styles.statusBadge} ${getStatusClass(user.status)}`}>
+                          {getStatusLabel(user.status).toUpperCase()}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className={styles.lockIconBtn}
+                          onClick={(e) => handleLockIconClick(user, e)}
+                          disabled={lockLoading}
+                          title={isLocked ? 'Click to Unlock account' : 'Click to Lock account'}
+                        >
+                          {isLocked
+                            ? <FaLock size={17} color="#ef4444" className={styles.lockIconRed}   />
+                            : <FaLockOpen size={20} color="#22c55e" className={styles.lockIconGreen} />}
+                        </button>
+                      </td>
+                      <td>
+                        <button onClick={() => openDetails(user)} className={styles.userDetailsBtn}>
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -946,9 +584,7 @@ const UserList = () => {
 
         {/* ── Pagination ── */}
         <div className={styles.paginationBar}>
-          <div className={styles.paginationInfo}>
-            {users.length > 0 ? `Showing ${startRecord}–${endRecord} records` : 'No records'}
-          </div>
+          <div className={styles.paginationInfo}>{users.length > 0 ? `Showing ${startRecord}–${endRecord} records` : 'No records'}</div>
           <div className={styles.paginationControls}>
             <span className={styles.paginationLabel}>Page</span>
             <button className={styles.pageBtn} onClick={() => handlePageChange(1)} disabled={page === 1} title="First page">«</button>
@@ -960,7 +596,7 @@ const UserList = () => {
         </div>
       </div>
 
-      {/* ──────────────── Details Modal ──────────────── */}
+      {/* ── Details Modal ── */}
       {selectedUser && (
         <div className={styles.detailModalOverlay} onClick={closeModal}>
           <div className={styles.detailModalContent} onClick={(e) => e.stopPropagation()}>
@@ -976,113 +612,57 @@ const UserList = () => {
               </div>
               <button onClick={closeModal} className={styles.detailCloseBtn}>✕</button>
             </div>
-
             <div className={styles.detailModalBody}>
               <div className={styles.infoSection}>
-
                 <div className={styles.infoCard}>
                   <div className={styles.infoHeader}><h3>Account Information</h3></div>
                   <div className={styles.infoContent}>
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Username</span>
-                      <span className={styles.infoValue}>{selectedUser.userName || '—'}</span>
-                    </div>
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Email</span>
-                      <span className={styles.infoValue}>{selectedUser.email || '—'}</span>
-                    </div>
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Mobile</span>
-                      <span className={styles.infoValue}>{selectedUser.mobile || '—'}</span>
-                    </div>
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Profile / Role</span>
-                      <span className={styles.infoValue}>{selectedUser.profileName || '—'}</span>
-                    </div>
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Last Login</span>
-                      <span className={styles.infoValue}>
-                        {selectedUser.lastLogin ? new Date(selectedUser.lastLogin).toLocaleString() : '—'}
-                      </span>
-                    </div>
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Failed Login Attempts</span>
-                      <span className={styles.infoValue}>
-                        {selectedUser.failedLoginAttempts != null
-                          ? selectedUser.failedLoginAttempts
-                          : '—'}
-                      </span>
-                    </div>
+                    {[
+                      ['Username', selectedUser.userName],
+                      ['Email', selectedUser.email],
+                      ['Mobile', selectedUser.mobile],
+                      ['Profile / Role', selectedUser.profileName],
+                      ['Last Login', selectedUser.lastLogin ? new Date(selectedUser.lastLogin).toLocaleString() : null],
+                      ['Failed Login Attempts', selectedUser.failedLoginAttempts],
+                    ].map(([label, val]) => (
+                      <div className={styles.infoRow} key={label}>
+                        <span className={styles.infoLabel}>{label}</span>
+                        <span className={styles.infoValue}>{val ?? '—'}</span>
+                      </div>
+                    ))}
                     <div className={styles.infoRow}>
                       <span className={styles.infoLabel}>Account Locked</span>
-                      <span className={`${styles.infoValue} ${
-                        selectedUser.isLocked === 1 || selectedUser.isLocked === '1'
-                          ? styles.lockedYes
-                          : styles.lockedNo
-                      }`}>
+                      <span className={`${styles.infoValue} ${selectedUser.isLocked === 1 || selectedUser.isLocked === '1' ? styles.lockedYes : styles.lockedNo}`}>
                         {selectedUser.isLocked === 1 || selectedUser.isLocked === '1' ? 'Yes' : 'No'}
                       </span>
                     </div>
                   </div>
                 </div>
-
                 <div className={styles.infoCard}>
                   <div className={styles.infoHeader}><h3>Association Details</h3></div>
                   <div className={styles.infoContent}>
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Clinic</span>
-                      <span className={styles.infoValue}>{selectedUser.clinicName || '—'}</span>
-                    </div>
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Branch</span>
-                      <span className={styles.infoValue}>{selectedUser.branchName || '—'}</span>
-                    </div>
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Employee</span>
-                      <span className={styles.infoValue}>{selectedUser.employeeName || '—'}</span>
-                    </div>
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Employee Code</span>
-                      <span className={styles.infoValue}>{selectedUser.employeeCode || '—'}</span>
-                    </div>
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Date Created</span>
-                      <span className={styles.infoValue}>
-                        {selectedUser.dateCreated ? new Date(selectedUser.dateCreated).toLocaleDateString() : '—'}
-                      </span>
-                    </div>
+                    {[
+                      ['Clinic', selectedUser.clinicName],
+                      ['Branch', selectedUser.branchName],
+                      ['Employee', selectedUser.employeeName],
+                      ['Employee Code', selectedUser.employeeCode],
+                      ['Date Created', selectedUser.dateCreated ? new Date(selectedUser.dateCreated).toLocaleDateString() : null],
+                    ].map(([label, val]) => (
+                      <div className={styles.infoRow} key={label}>
+                        <span className={styles.infoLabel}>{label}</span>
+                        <span className={styles.infoValue}>{val ?? '—'}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-
               </div>
-
               <div className={styles.detailModalFooter}>
-                {/* Delete button — always shown */}
-                <button
-                  onClick={() => handleDeleteClick(selectedUser)}
-                  disabled={deleteBtnCooldown || deleteLoading}
-                  className={styles.btnCancel}
-                >
-                  Delete User
+                <button onClick={() => handleDeleteClick(selectedUser)} disabled={deleteBtnCooldown || deleteLoading} className={styles.btnCancel}>Delete User</button>
+                <button onClick={() => handlePasswordClick(selectedUser)} className={styles.btnPassword}>
+                  <FiLock size={15} style={{ marginRight: 5 }} /> Update Password
                 </button>
-
-                {/* Update Password button — always shown */}
-                <button
-                  onClick={() => handlePasswordClick(selectedUser)}
-                  className={styles.btnPassword}
-                >
-                  <FiLock size={15} style={{ marginRight: 5 }} />
-                  Update Password
-                </button>
-
-                {/* Update User button — hidden for Deleted users */}
                 {!isUserDeleted(selectedUser.status) && (
-                  <button
-                    onClick={() => handleUpdateClick(selectedUser)}
-                    className={styles.btnUpdate}
-                  >
-                    Update User
-                  </button>
+                  <button onClick={() => handleUpdateClick(selectedUser)} className={styles.btnUpdate}>Update User</button>
                 )}
               </div>
             </div>
@@ -1090,36 +670,24 @@ const UserList = () => {
         </div>
       )}
 
-      {/* ──────────────── Add Form Modal ──────────────── */}
+      {/* ── Add Form Modal ── */}
       {isAddFormOpen && (
         <div className={styles.detailModalOverlay}>
           <div className={styles.addModalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.detailModalHeader}>
-              <div className={styles.detailHeaderContent}>
-                <h2>Add New User</h2>
-              </div>
+              <div className={styles.detailHeaderContent}><h2>Add New User</h2></div>
               <button onClick={closeAddForm} className={styles.detailCloseBtn}>✕</button>
             </div>
-
             <form onSubmit={handleSubmit} className={styles.addModalBody}>
-
-              {/* ── Clinic & Branch & Employee ── */}
               <div className={styles.addSection}>
                 <div className={styles.addSectionHeader}><h3>Clinic Association</h3></div>
                 <div className={styles.addFormGrid}>
-
-                  {/* Clinic dropdown — only visible for spradmin */}
                   {sprAdmin && (
                     <div className={styles.addFormGroup}>
                       <label>Clinic <span className={styles.required}>*</span></label>
-                      <ClinicDropdownField
-                        selectedClinic={selectedClinic}
-                        onSelect={handleClinicSelect}
-                        error={validationMessages.clinicId}
-                      />
+                      <ClinicDropdownField selectedClinic={selectedClinic} onSelect={handleClinicSelect} error={validationMessages.clinicId} />
                     </div>
                   )}
-
                   <div className={styles.addFormGroup}>
                     <label>Branch <span className={styles.required}>*</span></label>
                     <select
@@ -1128,27 +696,15 @@ const UserList = () => {
                       onChange={(e) => {
                         const found = branchList.find((b) => String(b.id) === e.target.value);
                         setSelectedBranch(found || null);
-                        const msg = found ? '' : 'Please select a branch';
-                        setValidationMessages((prev) => ({ ...prev, branchId: msg }));
+                        setValidationMessages((prev) => ({ ...prev, branchId: found ? '' : 'Please select a branch' }));
                       }}
                       disabled={sprAdmin ? (!selectedClinic || branchLoading) : branchLoading}
                     >
-                      <option value="">
-                        {branchLoading
-                          ? 'Loading branches…'
-                          : sprAdmin && !selectedClinic
-                            ? 'Select a clinic first'
-                            : 'Select Branch'}
-                      </option>
-                      {branchList.map((b) => (
-                        <option key={b.id} value={b.id}>{b.name}</option>
-                      ))}
+                      <option value="">{branchLoading ? 'Loading branches…' : sprAdmin && !selectedClinic ? 'Select a clinic first' : 'Select Branch'}</option>
+                      {branchList.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                     </select>
-                    {validationMessages.branchId && (
-                      <span className={styles.validationMsg}>{validationMessages.branchId}</span>
-                    )}
+                    {validationMessages.branchId && <span className={styles.validationMsg}>{validationMessages.branchId}</span>}
                   </div>
-
                   <div className={styles.addFormGroup}>
                     <label>Employee <span className={styles.required}>*</span></label>
                     <select
@@ -1157,126 +713,45 @@ const UserList = () => {
                       onChange={(e) => {
                         const found = employeeList.find((emp) => String(emp.id) === e.target.value);
                         setSelectedEmployee(found || null);
-                        const msg = found ? '' : 'Please select an employee';
-                        setValidationMessages((prev) => ({ ...prev, employeeId: msg }));
+                        setValidationMessages((prev) => ({ ...prev, employeeId: found ? '' : 'Please select an employee' }));
                       }}
                       disabled={sprAdmin ? (!selectedClinic || !selectedBranch || employeeLoading) : (!selectedBranch || employeeLoading)}
                     >
-                      <option value="">
-                        {employeeLoading
-                          ? 'Loading employees…'
-                          : sprAdmin && !selectedClinic
-                            ? 'Select a clinic first'
-                            : !selectedBranch
-                              ? 'Select a branch first'
-                              : 'Select Employee'}
-                      </option>
-                      {employeeList.map((emp) => (
-                        <option key={emp.id} value={emp.id}>{emp.name}</option>
-                      ))}
+                      <option value="">{employeeLoading ? 'Loading employees…' : sprAdmin && !selectedClinic ? 'Select a clinic first' : !selectedBranch ? 'Select a branch first' : 'Select Employee'}</option>
+                      {employeeList.map((emp) => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
                     </select>
-                    {validationMessages.employeeId && (
-                      <span className={styles.validationMsg}>{validationMessages.employeeId}</span>
-                    )}
+                    {validationMessages.employeeId && <span className={styles.validationMsg}>{validationMessages.employeeId}</span>}
                   </div>
-
                 </div>
               </div>
-
-              {/* ── Account Details ── */}
               <div className={styles.addSection}>
                 <div className={styles.addSectionHeader}><h3>Account Details</h3></div>
                 <div className={styles.addFormGrid}>
-
-                  <div className={styles.addFormGroup}>
-                    <label>Username <span className={styles.required}>*</span></label>
-                    <input
-                      name="userName"
-                      value={formData.userName}
-                      onChange={handleInputChange}
-                      placeholder="Enter username"
-                      autoComplete="off"
-                    />
-                    {validationMessages.userName && (
-                      <span className={styles.validationMsg}>{validationMessages.userName}</span>
-                    )}
-                  </div>
-
-                  <div className={styles.addFormGroup}>
-                    <label>Email <span className={styles.required}>*</span></label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="user@example.com"
-                      autoComplete="off"
-                    />
-                    {validationMessages.email && (
-                      <span className={styles.validationMsg}>{validationMessages.email}</span>
-                    )}
-                  </div>
-
-                  <div className={styles.addFormGroup}>
-                    <label>Mobile</label>
-                    <input
-                      name="mobile"
-                      value={formData.mobile}
-                      onChange={handleInputChange}
-                      placeholder="10-digit mobile"
-                      maxLength={10}
-                    />
-                    {validationMessages.mobile && (
-                      <span className={styles.validationMsg}>{validationMessages.mobile}</span>
-                    )}
-                  </div>
-
-                  <div className={styles.addFormGroup}>
-                    <label>Password <span className={styles.required}>*</span></label>
-                    <input
-                      type="text"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      placeholder="Enter password"
-                      autoComplete="new-password"
-                    />
-                    {validationMessages.password && (
-                      <span className={styles.validationMsg}>{validationMessages.password}</span>
-                    )}
-                  </div>
-
+                  {[
+                    { name: 'userName', label: 'Username', placeholder: 'Enter username', required: true },
+                    { name: 'email',    label: 'Email',    placeholder: 'user@example.com', type: 'email', required: true },
+                    { name: 'mobile',   label: 'Mobile',   placeholder: '10-digit mobile', maxLength: 10 },
+                    { name: 'password', label: 'Password', placeholder: 'Enter password', type: 'text', required: true },
+                  ].map(({ name, label, placeholder, type = 'text', required, maxLength }) => (
+                    <div className={styles.addFormGroup} key={name}>
+                      <label>{label} {required && <span className={styles.required}>*</span>}</label>
+                      <input type={type} name={name} value={formData[name]} onChange={handleInputChange} placeholder={placeholder} autoComplete="off" maxLength={maxLength} />
+                      {validationMessages[name] && <span className={styles.validationMsg}>{validationMessages[name]}</span>}
+                    </div>
+                  ))}
                   <div className={styles.addFormGroup}>
                     <label>Profile / Role <span className={styles.required}>*</span></label>
-                    <select
-                      name="profileName"
-                      value={formData.profileName}
-                      onChange={handleInputChange}
-                      className={styles.addSelect}
-                    >
+                    <select name="profileName" value={formData.profileName} onChange={handleInputChange} className={styles.addSelect}>
                       <option value="">Select Profile / Role</option>
-                      {PROFILE_OPTIONS.map((p) => (
-                        <option key={p} value={p}>{p}</option>
-                      ))}
+                      {PROFILE_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
                     </select>
-                    {validationMessages.profileName && (
-                      <span className={styles.validationMsg}>{validationMessages.profileName}</span>
-                    )}
+                    {validationMessages.profileName && <span className={styles.validationMsg}>{validationMessages.profileName}</span>}
                   </div>
-
                 </div>
               </div>
-
               <div className={styles.detailModalFooter}>
-                <button type="button" onClick={closeAddForm} className={styles.btnCancel}>
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={formLoading}
-                  className={`${styles.btnSubmit} ${!isFormValid ? styles.btnSubmitDisabled : ''}`}
-                  title={!isFormValid ? 'Please fill all required fields' : ''}
-                >
+                <button type="button" onClick={closeAddForm} className={styles.btnCancel}>Cancel</button>
+                <button type="submit" disabled={formLoading} className={`${styles.btnSubmit} ${!isFormValid ? styles.btnSubmitDisabled : ''}`}>
                   {formLoading ? 'Adding…' : 'Add User'}
                 </button>
               </div>
@@ -1285,20 +760,19 @@ const UserList = () => {
         </div>
       )}
 
-      {/* ──────────────── Update User Modal ──────────────── */}
+      {/* ── Update User Modal ── */}
       {isUpdateFormOpen && updateUserData && (
-        <UpdateUser
-          user={updateUserData}
-          onClose={handleUpdateClose}
-          onSuccess={handleUpdateSuccess}
-          onError={handleUpdateError}
-        />
+        <UpdateUser user={updateUserData} onClose={handleUpdateClose} onSuccess={handleUpdateSuccess} onError={handleUpdateError} />
       )}
 
-      {/* ──────────────── Update Password Modal ──────────────── */}
+      {/* ── Update Password Modal (shared component) ── */}
       {isPasswordModalOpen && passwordUser && (
-        <UpdatePasswordModal
+        <UpdatePassword
+          mode="admin"
           user={passwordUser}
+          updatePasswordApi={updatePassword}
+          getStoredUserId={async () => passwordUser.userId || passwordUser.id}
+          getStoredClinicId={async () => passwordUser.clinicId || 0}
           onClose={handlePasswordClose}
           onSuccess={handlePasswordSuccess}
         />

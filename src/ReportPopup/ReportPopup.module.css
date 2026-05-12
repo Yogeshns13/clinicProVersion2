@@ -1,0 +1,377 @@
+/* src/components/ReportPopup.module.css */
+/* Uses only root CSS variables from the project theme */
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== OVERLAY ==================== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--TC16);
+  backdrop-filter: blur(9px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 20px 20px 20px 60px;
+  animation: fadeIn 0.25s ease;
+}
+
+/* ==================== MODAL ==================== */
+.modal {
+  background: var(--TC6);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 88vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 28px 72px var(--TC16);
+  animation: slideUp 0.35s ease;
+}
+
+/* ==================== HEADER ==================== */
+.header {
+  padding: 14px 20px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--TC16);
+  flex-shrink: 0;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.headerIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--TC18);
+  border: 1.5px solid var(--TC16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC6);
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px var(--TC17);
+}
+
+.headerTitle {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--TC6);
+  line-height: 1.2;
+}
+
+.headerSubtitle {
+  margin: 2px 0 0;
+  font-size: 0.74rem;
+  color: var(--TC13);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.closeBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--TC18);
+  border: none;
+  color: var(--TC6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  background: var(--TC17);
+  transform: scale(1.08);
+}
+
+.closeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==================== BODY ==================== */
+.body {
+  padding: 24px 28px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ==================== ERROR BANNER ==================== */
+.errorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  background: var(--TC16);
+  border: 1px solid var(--TC14);
+  border-radius: 10px;
+  color: var(--TC14);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.errorClose {
+  background: none;
+  border: none;
+  color: var(--TC14);
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  margin-left: 12px;
+  padding: 0;
+}
+
+/* ==================== FILTERS GRID ==================== */
+.filtersGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+}
+
+/* ==================== FORM GROUP ==================== */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--TC1);
+}
+
+.input,
+.select {
+  height: 42px;
+  padding: 0 14px;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
+  border-radius: 10px;
+  color: var(--TC9);
+  font-size: 0.88rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
+}
+
+.input:disabled,
+.select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ==================== FOOTER ==================== */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 28px;
+  border-top: 2px solid var(--TC16);
+  background: var(--TC6);
+  flex-shrink: 0;
+}
+
+.generateBtns {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btnCancel,
+.btnExcel,
+.btnPdf {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 20px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btnCancel {
+  background: var(--TC13);
+  color: var(--TC15);
+  border: 1px solid var(--TC8);
+}
+
+.btnCancel:hover {
+  background: var(--TC8);
+  transform: translateY(-2px);
+}
+
+.btnCancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Excel button — green tones using TC10 (success/active color) */
+.btnExcel {
+  background: linear-gradient(135deg, var(--TC10), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 5px 14px var(--TC17);
+}
+
+.btnExcel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px var(--TC17);
+}
+
+.btnExcel:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* PDF button — primary gradient */
+.btnPdf {
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
+  box-shadow: 0 5px 14px var(--TC17);
+}
+
+.btnPdf:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px var(--TC17);
+}
+
+.btnPdf:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ==================== SPINNER ==================== */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--TC18);
+  border-top-color: var(--TC6);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ==================== DARK MODE ==================== */
+:global(.dark-mode) .modal {
+  background: var(--TC9);
+}
+
+:global(.dark-mode) .header {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+:global(.dark-mode) .body {
+  background: var(--TC9);
+}
+
+:global(.dark-mode) .label {
+  color: var(--TC5);
+}
+
+:global(.dark-mode) .input,
+:global(.dark-mode) .select {
+  background: var(--TC7);
+  border-color: var(--TC15);
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .footer {
+  background: var(--TC9);
+  border-top-color: var(--TC15);
+}
+
+:global(.dark-mode) .btnCancel {
+  background: var(--TC7);
+  color: var(--TC13);
+  border-color: var(--TC15);
+}
+
+:global(.dark-mode) .btnCancel:hover {
+  background: var(--TC15);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 600px) {
+  .overlay {
+    padding: 12px;
+  }
+
+  .modal {
+    max-width: 100%;
+    border-radius: 16px;
+  }
+
+  .filtersGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .generateBtns {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btnCancel,
+  .btnExcel,
+  .btnPdf {
+    width: 100%;
+    justify-content: center;
+  }
+}

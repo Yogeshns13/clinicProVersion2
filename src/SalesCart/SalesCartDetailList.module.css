@@ -1,19 +1,25 @@
 /* src/components/SalesCartDetailList.module.css */
 
-/* ==================== VARIABLES ==================== */
+/* ==================== CSS VARIABLES (WorkShift) ==================== */
 :root {
-  --sd-primary:       #222b6c;
-  --sd-primary-end:   #225ca0;
-  --sd-accent:        #207d9c;
-  --sd-accent-end:    #30b2b5;
-  --sd-green:         #16a34a;
-  --sd-green-end:     #22c55e;
-  --sd-orange:        #ea580c;
-  --sd-purple:        #7c3aed;
-  --sd-white:         #ffffff;
-  --sd-dark:          #1e293b;
-  --sd-teal:          #0d9488;
-  --sd-teal-end:      #14b8a6;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -39,10 +45,10 @@
 /* ==================== WRAPPER ==================== */
 .wrapper {
   padding: 20px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  background: linear-gradient(135deg, var(--TC6) 0%, var(--TC13) 100%);
   min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: var(--sd-dark);
+  color: var(--TC9);
 }
 
 /* ==================== PAGE HEADER ==================== */
@@ -55,19 +61,19 @@
   flex-wrap: wrap;
 }
 
+/* clinicNameone updated to WorkShift clinicInfoName style */
 .clinicNameone {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.05rem;           
-  font-weight: 600;
-  color: var(--text-light);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--TC6);
   line-height: 1.2;
-  white-space: nowrap;          
-  text-overflow: ellipsis;      
-  max-width: 220px;             
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
-
 
 .pageHeaderLeft {
   display: flex;
@@ -82,21 +88,21 @@
   gap: 7px;
   height: 40px;
   padding: 0 16px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   font-weight: 600;
   font-size: 0.87rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--TC8);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 4px 12px rgba(34, 43, 108, 0.07);
+  box-shadow: 0 4px 12px var(--TC16);
   white-space: nowrap;
 }
 
 .backBtn:hover {
-  border-color: var(--sd-accent-end);
-  color: white;
+  border-color: var(--TC5);
+  color: var(--TC6);
   transform: translateX(-3px);
 }
 
@@ -110,12 +116,12 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--sd-accent), var(--sd-accent-end));
-  color: var(--sd-white);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 18px rgba(32, 125, 156, 0.32);
+  box-shadow: 0 6px 18px var(--TC17);
   flex-shrink: 0;
 }
 
@@ -123,7 +129,7 @@
   font-size: 1.25rem;
   font-weight: 800;
   margin: 0;
-  background: linear-gradient(135deg, var(--sd-primary), var(--sd-accent-end));
+  background: linear-gradient(135deg, var(--TC1), var(--TC5));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -133,7 +139,7 @@
 .pageSubtitle {
   margin: 3px 0 0;
   font-size: 0.77rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 500;
 }
 
@@ -143,21 +149,21 @@
   gap: 8px;
   height: 40px;
   padding: 0 20px;
-  background: linear-gradient(135deg, var(--sd-green), var(--sd-green-end));
-  color: var(--sd-white);
+  background: linear-gradient(135deg, var(--TC10), var(--TC5));
+  color: var(--TC6);
   font-weight: 700;
   font-size: 0.87rem;
   border: none;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 18px rgba(22, 163, 74, 0.3);
+  box-shadow: 0 5px 18px var(--TC17);
   white-space: nowrap;
 }
 
 .exportBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 9px 26px rgba(22, 163, 74, 0.4);
+  box-shadow: 0 9px 26px var(--TC17);
 }
 
 /* ==================== INFO CARD ==================== */
@@ -166,12 +172,12 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 0;
-  background: white;
+  background: var(--TC6);
   border-radius: 14px;
   padding: 14px 22px;
   margin-bottom: 20px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.06);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC16);
   animation: slideUp 0.3s ease;
 }
 
@@ -181,7 +187,7 @@
   gap: 8px;
   padding: 4px 22px 4px 0;
   margin-right: 22px;
-  border-right: 1px solid rgba(34, 43, 108, 0.1);
+  border-right: 1px solid var(--TC16);
 }
 
 .infoItem:last-child {
@@ -191,7 +197,7 @@
 }
 
 .infoIcon {
-  color: var(--sd-accent-end);
+  color: var(--TC5);
   flex-shrink: 0;
 }
 
@@ -201,7 +207,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #94a3b8;
+  color: var(--TC12);
   margin-bottom: 2px;
 }
 
@@ -209,7 +215,7 @@
   display: block;
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--sd-dark);
+  color: var(--TC9);
 }
 
 /* ==================== CENTER STATES ==================== */
@@ -220,22 +226,22 @@
   justify-content: center;
   min-height: 42vh;
   gap: 14px;
-  color: #64748b;
+  color: var(--TC12);
   font-size: 0.95rem;
   text-align: center;
 }
 
 .centerState p { margin: 0; }
 
-.errorState { color: #dc2626; }
+.errorState { color: var(--TC14); }
 
-.emptyIcon { color: #cbd5e1; }
+.emptyIcon { color: var(--TC8); }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid rgba(32, 125, 156, 0.18);
-  border-top-color: var(--sd-accent-end);
+  border: 3px solid var(--TC17);
+  border-top-color: var(--TC5);
   border-radius: 50%;
   animation: spin 0.75s linear infinite;
 }
@@ -245,9 +251,9 @@
   align-items: center;
   gap: 6px;
   padding: 9px 20px;
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.28);
+  background: var(--TC16);
+  color: var(--TC14);
+  border: 1px solid var(--TC14);
   border-radius: 9px;
   cursor: pointer;
   font-weight: 600;
@@ -256,30 +262,29 @@
 }
 
 .retryBtn:hover {
-  background: rgba(239, 68, 68, 0.18);
+  background: var(--TC16);
   transform: translateY(-1px);
 }
 
 /* ==================== TABLE CARD ==================== */
 .tableCard {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   overflow: hidden;
-  box-shadow: 0 12px 36px rgba(34, 43, 108, 0.11);
-  border: 1px solid rgba(34, 43, 108, 0.08);
+  box-shadow: 0 12px 36px var(--TC16);
+  border: 1px solid var(--TC16);
   margin-bottom: 20px;
   animation: slideUp 0.35s ease;
 }
 
+/* ==================== TABLE CARD HEADER (WorkShift detailModalHeader style) ==================== */
 .tableCardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  border-bottom: 1px solid rgba(34, 43, 108, 0.08);
-  background: linear-gradient(135deg,
-    rgba(32, 125, 156, 0.05) 0%,
-    rgba(48, 178, 181, 0.03) 100%);
+  border-bottom: 1px solid var(--TC16);
+  background: linear-gradient(135deg, var(--TC16), var(--TC18));
 }
 
 .tableCardTitle {
@@ -289,27 +294,26 @@
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--sd-primary);
+  color: var(--TC1);
 }
 
 .itemCountBadge {
   padding: 3px 12px;
-  background: rgba(32, 125, 156, 0.1);
-  color: var(--sd-accent);
+  background: var(--TC18);
+  color: var(--TC4);
   border-radius: 20px;
   font-size: 0.72rem;
   font-weight: 700;
-  border: 1px solid rgba(32, 125, 156, 0.2);
+  border: 1px solid var(--TC17);
 }
 
-/* ── Scroll wrapper ── */
 .tableScroll {
   overflow-x: auto;
 }
 
 .tableScroll::-webkit-scrollbar       { height: 5px; }
-.tableScroll::-webkit-scrollbar-track { background: #f1f5f9; }
-.tableScroll::-webkit-scrollbar-thumb { background: var(--sd-accent-end); border-radius: 4px; }
+.tableScroll::-webkit-scrollbar-track { background: var(--TC13); }
+.tableScroll::-webkit-scrollbar-thumb { background: var(--TC5); border-radius: 4px; }
 
 /* ==================== TABLE ==================== */
 .table {
@@ -319,9 +323,8 @@
   font-size: 0.8rem;
 }
 
-/* head */
 .table thead tr {
-  background: linear-gradient(135deg, var(--sd-primary-end), var(--sd-accent-end));
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
 }
 
 .table th {
@@ -331,30 +334,29 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: var(--sd-white);
+  color: var(--TC6);
   border: none;
   white-space: nowrap;
 }
 
-/* body */
 .table td {
   padding: 10px 14px;
-  border-bottom: 1px solid #e2e8f0;
-  color: var(--sd-dark);
+  border-bottom: 1px solid var(--TC13);
+  color: var(--TC9);
   vertical-align: middle;
 }
 
-.table tbody tr:nth-child(even) { background: #f0f8fb; }
+.table tbody tr:nth-child(even) { background: var(--TC18); }
 
 .table tbody tr:hover {
-  background: rgba(48, 178, 181, 0.07) !important;
+  background: var(--TC18) !important;
   transition: background 0.2s ease;
 }
 
 /* ── Cells ── */
 .idxCell {
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--TC12);
   font-size: 0.7rem;
   text-align: center;
   width: 32px;
@@ -362,7 +364,7 @@
 
 .medName {
   font-weight: 700;
-  color: var(--sd-dark);
+  color: var(--TC9);
   font-size: 0.83rem;
   line-height: 1.3;
   min-width: 160px;
@@ -370,13 +372,13 @@
 
 .medSub {
   font-size: 0.68rem;
-  color: #64748b;
+  color: var(--TC12);
   margin-top: 2px;
 }
 
 .medManuf {
   font-size: 0.63rem;
-  color: #94a3b8;
+  color: var(--TC12);
   margin-top: 1px;
   font-style: italic;
 }
@@ -384,8 +386,8 @@
 .batchBadge {
   display: inline-block;
   padding: 3px 9px;
-  background: rgba(34, 43, 108, 0.07);
-  color: var(--sd-primary);
+  background: var(--TC16);
+  color: var(--TC1);
   border-radius: 6px;
   font-size: 0.7rem;
   font-weight: 700;
@@ -396,19 +398,19 @@
 .dateCell {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--TC15);
   white-space: nowrap;
 }
 
 .qtyBadge {
   display: inline-block;
   padding: 3px 12px;
-  background: rgba(32, 125, 156, 0.1);
-  color: var(--sd-accent);
+  background: var(--TC18);
+  color: var(--TC4);
   border-radius: 20px;
   font-size: 0.72rem;
   font-weight: 800;
-  border: 1px solid rgba(32, 125, 156, 0.2);
+  border: 1px solid var(--TC17);
 }
 
 .numCell {
@@ -427,55 +429,57 @@
 .discPct {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--sd-orange);
+  color: var(--TC14);
 }
 
 .discAmt {
   font-size: 0.62rem;
-  color: #94a3b8;
+  color: var(--TC12);
   font-weight: 500;
 }
 
 .totalAmt {
   font-weight: 700;
-  color: var(--sd-dark);
+  color: var(--TC9);
 }
 
 .taxAmt {
   font-weight: 600;
-  color: var(--sd-purple);
+  color: var(--TC1);
   font-size: 0.75rem;
 }
 
 .netAmt {
   font-weight: 800;
-  color: var(--sd-green);
+  color: var(--TC10);
   font-size: 0.85rem;
 }
 
-.dash { color: #cbd5e1; }
+.dash { color: var(--TC8); }
 
-/* ── Status badge ── */
+/* ==================== STATUS BADGE (WorkShift style) ==================== */
 .statusBadge {
   display: inline-block;
-  padding: 3px 10px;
-  border-radius: 20px;
+  padding: 5px 12px;
+  border-radius: 26px;
   font-size: 0.67rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
   border: 1px solid;
   white-space: nowrap;
 }
 
 .statusActive {
-  background: rgba(34, 197, 94, 0.1);
-  color: #166534;
-  border-color: rgba(34, 197, 94, 0.28);
+  background: var(--TC18);
+  color: var(--TC10);
+  border-color: var(--TC17);
 }
 
 .statusInactive {
-  background: rgba(100, 116, 139, 0.1);
-  color: #475569;
-  border-color: rgba(100, 116, 139, 0.22);
+  background: var(--TC16);
+  color: var(--TC15);
+  border-color: var(--TC8);
 }
 
 /* ── Action cell ── */
@@ -491,35 +495,33 @@
   gap: 5px;
   padding: 5px 12px;
   height: 30px;
-  background: linear-gradient(135deg, var(--sd-teal), var(--sd-teal-end));
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-size: 0.72rem;
   font-weight: 700;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 3px 10px rgba(13, 148, 136, 0.28);
+  box-shadow: 0 3px 10px var(--TC17);
   white-space: nowrap;
   letter-spacing: 0.2px;
 }
 
 .updateQtyBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(13, 148, 136, 0.4);
+  box-shadow: 0 6px 16px var(--TC17);
   filter: brightness(1.08);
 }
 
 .updateQtyBtn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3);
+  box-shadow: 0 2px 6px var(--TC17);
 }
 
 /* ── Subtotals footer ── */
 .table tfoot tr {
-  background: linear-gradient(135deg,
-    rgba(34, 43, 108, 0.05),
-    rgba(48, 178, 181, 0.07));
+  background: linear-gradient(135deg, var(--TC16), var(--TC18));
 }
 
 .footerLabel {
@@ -528,8 +530,8 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--sd-primary);
-  border-top: 2px solid rgba(34, 43, 108, 0.1);
+  color: var(--TC1);
+  border-top: 2px solid var(--TC16);
   text-align: right;
 }
 
@@ -537,8 +539,8 @@
   padding: 11px 14px;
   font-weight: 800;
   font-size: 0.82rem;
-  color: var(--sd-dark);
-  border-top: 2px solid rgba(34, 43, 108, 0.1);
+  color: var(--TC9);
+  border-top: 2px solid var(--TC16);
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
@@ -550,11 +552,11 @@
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 0;
-  background: white;
+  background: var(--TC6);
   border-radius: 14px;
   padding: 14px 24px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.06);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC16);
   animation: slideUp 0.4s ease;
 }
 
@@ -570,7 +572,7 @@
 .summaryDivider {
   width: 1px;
   height: 32px;
-  background: rgba(34, 43, 108, 0.12);
+  background: var(--TC16);
 }
 
 .summaryLabel {
@@ -578,72 +580,76 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 .summaryValue {
   font-size: 0.92rem;
   font-weight: 800;
-  color: var(--sd-dark);
+  color: var(--TC9);
   font-variant-numeric: tabular-nums;
 }
 
-.discountValue { color: var(--sd-orange); }
+.discountValue { color: var(--TC14); }
 
 .grandTotalItem {}
 
 .grandTotalValue {
   font-size: 1.05rem !important;
-  color: var(--sd-green) !important;
+  color: var(--TC10) !important;
 }
 
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .wrapper {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #e2e8f0;
+  background: linear-gradient(135deg, var(--TC9) 0%, var(--TC7) 100%);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .backBtn {
-  background: #1e293b;
-  border-color: #475569;
-  color: #94a3b8;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .infoCard,
 :global(.dark-mode) .summaryStrip {
-  background: #1e293b;
-  border-color: #334155;
+  background: var(--TC9);
+  border-color: var(--TC7);
 }
 
-:global(.dark-mode) .infoItem      { border-right-color: #334155; }
-:global(.dark-mode) .infoValue     { color: #e2e8f0; }
-:global(.dark-mode) .summaryValue  { color: #e2e8f0; }
-:global(.dark-mode) .summaryDivider { background: #334155; }
+:global(.dark-mode) .infoItem      { border-right-color: var(--TC7); }
+:global(.dark-mode) .infoValue     { color: var(--TC13); }
+:global(.dark-mode) .summaryValue  { color: var(--TC13); }
+:global(.dark-mode) .summaryDivider { background: var(--TC7); }
 
 :global(.dark-mode) .tableCard {
-  background: #1e293b;
-  border-color: #334155;
+  background: var(--TC9);
+  border-color: var(--TC7);
 }
 
-:global(.dark-mode) .tableCardHeader { border-bottom-color: #334155; }
-:global(.dark-mode) .tableCardTitle  { color: var(--sd-accent-end); }
+:global(.dark-mode) .tableCardHeader { border-bottom-color: var(--TC7); background: linear-gradient(135deg, var(--TC7), var(--TC15)); }
+:global(.dark-mode) .tableCardTitle  { color: var(--TC5); }
 
-:global(.dark-mode) .table td { border-bottom-color: #334155; color: #e2e8f0; }
-:global(.dark-mode) .table tbody tr:nth-child(even) { background: #243044; }
+:global(.dark-mode) .table td { border-bottom-color: var(--TC7); color: var(--TC13); }
+:global(.dark-mode) .table tbody tr:nth-child(even) { background: var(--TC7); }
 
-:global(.dark-mode) .medName    { color: #e2e8f0; }
-:global(.dark-mode) .totalAmt   { color: #e2e8f0; }
+:global(.dark-mode) .medName    { color: var(--TC13); }
+:global(.dark-mode) .totalAmt   { color: var(--TC13); }
 
-:global(.dark-mode) .batchBadge { background: rgba(255,255,255,0.07); color: #94a3b8; }
+:global(.dark-mode) .batchBadge { background: var(--TC16); color: var(--TC12); }
 
 :global(.dark-mode) .table tfoot tr {
-  background: linear-gradient(135deg, #1e293b, #1a2e3c);
+  background: linear-gradient(135deg, var(--TC9), var(--TC7));
 }
 :global(.dark-mode) .footerLabel,
 :global(.dark-mode) .footerCell {
-  border-top-color: #334155;
-  color: #e2e8f0;
+  border-top-color: var(--TC7);
+  color: var(--TC13);
 }
+
+/* dark mode: status badges */
+:global(.dark-mode) .statusActive   { background: var(--TC18); color: var(--TC5); border-color: var(--TC16); }
+:global(.dark-mode) .statusInactive { background: var(--TC18); color: var(--TC14); border-color: var(--TC16); }
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
@@ -680,21 +686,21 @@
   gap: 8px;
   height: 40px;
   padding: 0 20px;
-  background: linear-gradient(135deg, #016183, var(--sd-primary-end));
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   font-weight: 700;
   font-size: 0.87rem;
   border: none;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 18px rgba(34, 43, 108, 0.32);
+  box-shadow: 0 5px 18px var(--TC16);
   white-space: nowrap;
 }
 
 .invoiceBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 9px 26px rgba(34, 43, 108, 0.45);
+  box-shadow: 0 9px 26px var(--TC16);
 }
 
 /* ==================== SHARED MODAL OVERLAY ==================== */
@@ -712,10 +718,8 @@
 }
 
 /* ==================== GENERATE INVOICE MODAL ==================== */
-/* Matches the uqModal / Add to Cart visual style exactly           */
-
 .ivModal {
-  background: white;
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-width: 552px;
@@ -723,15 +727,15 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 70px var(--TC16);
   animation: scaleIn 0.3s ease;
 }
 
-/* ── Invoice Header — same gradient as uqModalHeader ── */
+/* ── Invoice Header (WorkShift detailModalHeader style) ── */
 .ivModalHeader {
   padding: 24px 28px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -746,7 +750,7 @@
   margin: 0 0 8px 0;
   font-size: 1.4rem;
   font-weight: 700;
-  color: white;
+  color: var(--TC6);
 }
 
 .ivHeaderMeta {
@@ -756,32 +760,34 @@
   align-items: center;
 }
 
+/* ── Invoice Add Modal Header Card (WorkShift style) ── */
 .ivCartBadge {
   display: inline-block;
   padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--TC18);
   border-radius: 6px;
   font-size: 0.78rem;
   font-weight: 700;
   backdrop-filter: blur(10px);
-  color: white;
+  color: var(--TC6);
 }
 
 .ivPatientBadge {
   display: inline-block;
   padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: var(--TC16);
+  border: 1px solid var(--TC16);
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--TC6);
 }
 
+/* ── Invoice Close (WorkShift detailCloseBtn style) ── */
 .ivCloseBtn {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border: none;
-  color: white;
+  color: var(--TC6);
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -794,7 +800,7 @@
 }
 
 .ivCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--TC17);
   transform: scale(1.05);
 }
 
@@ -808,15 +814,12 @@
   gap: 18px;
 }
 
-/* Summary info strip — mirrors uqInfoStrip */
 .ivInfoStrip {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
   gap: 12px;
-  background: linear-gradient(135deg,
-    rgba(34, 43, 108, 0.04),
-    rgba(48, 178, 181, 0.04));
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  background: linear-gradient(135deg, var(--TC16), var(--TC18));
+  border: 1px solid var(--TC16);
   border-radius: 12px;
   padding: 14px 18px;
 }
@@ -832,46 +835,44 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 .ivInfoVal {
   font-size: 0.88rem;
   font-weight: 800;
-  color: var(--sd-dark);
+  color: var(--TC9);
   font-variant-numeric: tabular-nums;
 }
 
 .ivNetAmt {
-  color: var(--sd-green) !important;
+  color: var(--TC10) !important;
   font-size: 1rem !important;
 }
 
-/* Warning strip */
 .ivWarningStrip {
   display: flex;
   align-items: flex-start;
   gap: 10px;
   padding: 12px 16px;
-  background: rgba(251, 191, 36, 0.08);
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: var(--TC16);
+  border: 1px solid var(--TC8);
   border-radius: 11px;
 }
 
 .ivWarningIcon {
-  color: #d97706;
+  color: var(--TC14);
   flex-shrink: 0;
   margin-top: 1px;
 }
 
 .ivWarningStrip span {
   font-size: 0.82rem;
-  color: #78350f;
+  color: var(--TC11);
   font-weight: 500;
   line-height: 1.5;
 }
 
-/* Form section — mirrors uqFormSection */
 .ivFormSection {
   display: flex;
   flex-direction: column;
@@ -887,13 +888,12 @@
 .ivFormGroup label {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--sd-primary);
+  color: var(--TC1);
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-/* Input — mirrors uqInput exactly */
 .ivInputWrapper {
   position: relative;
 }
@@ -901,10 +901,10 @@
 .ivInput {
   width: 100%;
   padding: 12px 44px 12px 16px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid rgba(34, 43, 108, 0.15);
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
   border-radius: 10px;
-  color: var(--sd-dark);
+  color: var(--TC9);
   font-size: 0.94rem;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -914,15 +914,15 @@
 }
 
 .ivInput:focus {
-  border-color: var(--sd-accent-end);
-  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
-  background: white;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 4px var(--TC18);
+  background: var(--TC6);
 }
 
 .ivInput:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-  background: #f1f5f9;
+  background: var(--TC13);
 }
 
 .ivInputSuffix {
@@ -932,40 +932,38 @@
   transform: translateY(-50%);
   font-size: 1rem;
   font-weight: 700;
-  color: var(--sd-accent);
+  color: var(--TC4);
   pointer-events: none;
 }
 
 .ivInputHint {
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: var(--TC12);
   font-weight: 500;
 }
 
-/* Error banner */
 .ivErrorBanner {
   display: flex;
   align-items: center;
   gap: 9px;
   padding: 11px 14px;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: var(--TC16);
+  border: 1px solid var(--TC14);
   border-radius: 10px;
-  color: #dc2626;
+  color: var(--TC14);
   font-size: 0.82rem;
   font-weight: 600;
 }
 
-/* Progress banner */
 .ivProgressBanner {
   display: flex;
   align-items: center;
   gap: 11px;
   padding: 11px 14px;
-  background: rgba(32, 125, 156, 0.07);
-  border: 1px solid rgba(32, 125, 156, 0.22);
+  background: var(--TC18);
+  border: 1px solid var(--TC17);
   border-radius: 10px;
-  color: var(--sd-accent);
+  color: var(--TC4);
   font-size: 0.82rem;
   font-weight: 600;
 }
@@ -973,14 +971,13 @@
 .ivSpinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(32, 125, 156, 0.2);
-  border-top-color: var(--sd-accent-end);
+  border: 2px solid var(--TC17);
+  border-top-color: var(--TC5);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;
 }
 
-/* Success state — mirrors uqSuccessState */
 .ivSuccessState {
   display: flex;
   flex-direction: column;
@@ -990,86 +987,81 @@
   gap: 10px;
 }
 
-.ivSuccessIcon {
-  color: var(--sd-green);
-  margin-bottom: 4px;
-}
+.ivSuccessIcon { color: var(--TC10); margin-bottom: 4px; }
 
 .ivSuccessState h3 {
   font-size: 1.1rem;
   font-weight: 800;
-  color: var(--sd-green);
+  color: var(--TC10);
   margin: 0;
 }
 
 .ivSuccessState p {
   font-size: 0.88rem;
-  color: var(--sd-dark);
+  color: var(--TC9);
   margin: 0;
   font-weight: 600;
 }
 
 .ivSuccessMsg {
-  color: #64748b !important;
+  color: var(--TC12) !important;
   font-size: 0.78rem !important;
   font-weight: 500 !important;
 }
 
-/* ── Invoice Footer — mirrors uqModalFooter ── */
+/* ── Invoice Footer ── */
 .ivModalFooter {
   padding: 16px 24px;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background: var(--TC6);
+  border-top: 1px solid var(--TC13);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
 }
 
-/* Cancel — mirrors uqCancelBtn */
 .ivCancelBtn {
   display: flex;
   align-items: center;
   gap: 7px;
   height: 42px;
   padding: 0 20px;
-  background: rgba(100, 116, 139, 0.1);
-  color: #475569;
+  background: var(--TC16);
+  color: var(--TC15);
   font-weight: 700;
   font-size: 0.87rem;
-  border: 2px solid rgba(100, 116, 139, 0.3);
+  border: 2px solid var(--TC8);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.25s ease;
 }
 
 .ivCancelBtn:hover:not(:disabled) {
-  background: rgba(100, 116, 139, 0.2);
+  background: var(--TC16);
   transform: translateY(-1px);
 }
 
 .ivCancelBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Confirm — mirrors uqConfirmBtn with primary gradient */
 .ivConfirmBtn {
   display: flex;
   align-items: center;
   gap: 8px;
   height: 42px;
   padding: 0 24px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-weight: 700;
   font-size: 0.87rem;
   border: none;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.35);
+  box-shadow: 0 5px 17px var(--TC17);
 }
 
 .ivConfirmBtn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(48, 178, 181, 0.45);
+  box-shadow: 0 8px 24px var(--TC18);
 }
 
 .ivConfirmBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
@@ -1077,54 +1069,54 @@
 .ivBtnSpinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
+  border: 2px solid var(--TC18);
+  border-top-color: var(--TC6);
   border-radius: 50%;
   animation: spinBtn 0.7s linear infinite;
 }
 
 /* ── Invoice dark mode ── */
 :global(.dark-mode) .ivModal {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--TC9);
+  border: 1px solid var(--TC7);
 }
 
-:global(.dark-mode) .ivModalBody { background: #1e293b; }
+:global(.dark-mode) .ivModalBody { background: var(--TC9); }
 
 :global(.dark-mode) .ivInfoStrip {
-  background: rgba(34, 43, 108, 0.12);
-  border-color: #334155;
+  background: var(--TC16);
+  border-color: var(--TC7);
 }
 
-:global(.dark-mode) .ivInfoVal { color: #e2e8f0; }
+:global(.dark-mode) .ivInfoVal { color: var(--TC13); }
 
 :global(.dark-mode) .ivWarningStrip {
-  background: rgba(251, 191, 36, 0.06);
-  border-color: rgba(251, 191, 36, 0.2);
+  background: var(--TC16);
+  border-color: var(--TC8);
 }
 
-:global(.dark-mode) .ivWarningStrip span { color: #fde68a; }
+:global(.dark-mode) .ivWarningStrip span { color: var(--TC8); }
 
 :global(.dark-mode) .ivInput {
-  background: #0f172a;
-  border-color: rgba(48, 178, 181, 0.25);
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC17);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .ivInput:focus { background: #1e293b; }
+:global(.dark-mode) .ivInput:focus { background: var(--TC9); }
 
 :global(.dark-mode) .ivModalFooter {
-  background: #1a2535;
-  border-top-color: #334155;
+  background: var(--TC9);
+  border-top-color: var(--TC7);
 }
 
 :global(.dark-mode) .ivCancelBtn {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: #475569;
-  color: #94a3b8;
+  background: var(--TC16);
+  border-color: var(--TC15);
+  color: var(--TC12);
 }
 
-:global(.dark-mode) .ivSuccessState p { color: #e2e8f0; }
+:global(.dark-mode) .ivSuccessState p { color: var(--TC13); }
 
 /* ── Invoice responsive ── */
 @media (max-width: 768px) {
@@ -1149,7 +1141,7 @@
 /* ==================== UPDATE QUANTITY MODAL ==================== */
 
 .uqModal {
-  background: white;
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-width: 672px;
@@ -1157,15 +1149,15 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 70px var(--TC16);
   animation: scaleIn 0.3s ease;
 }
 
-/* ── UQ Header ── */
+/* ── UQ Header (WorkShift detailModalHeader style) ── */
 .uqModalHeader {
   padding: 12px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1177,25 +1169,61 @@
 }
 
 .uqHeaderContent h2 {
-  
   font-size: 1.2rem;
   font-weight: 700;
-  color: white;
+  color: var(--TC6);
 }
 
-.clinicNameone {
+/* ── Add Modal Header Card (WorkShift style) ── */
+.addModalHeaderCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 12px;
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px var(--TC16);
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.clinicInfoIcon {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.05rem;           
-  font-weight: 800;
-  color: var(--text-light);
-  line-height: 1.2;
-  white-space: nowrap;          
-  text-overflow: ellipsis;      
-  max-width: 220px;             
+  color: var(--TC6);
+  opacity: 0.9;
 }
 
+.clinicInfoText {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Clinic Info Name / Branch (WorkShift style) ── */
+.clinicInfoName {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--TC6);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
+}
+
+.clinicInfoBranch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--TC13);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
+}
 
 .uqHeaderMeta {
   display: flex;
@@ -1206,18 +1234,19 @@
 .uqMedBadge {
   display: inline-block;
   padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--TC18);
   border-radius: 6px;
   font-size: 0.78rem;
   font-weight: 600;
   backdrop-filter: blur(10px);
-  color: white;
+  color: var(--TC6);
 }
 
+/* ── UQ Close (WorkShift detailCloseBtn style) ── */
 .uqCloseBtn {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border: none;
-  color: white;
+  color: var(--TC6);
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -1230,7 +1259,7 @@
 }
 
 .uqCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--TC17);
   transform: scale(1.05);
 }
 
@@ -1244,15 +1273,12 @@
   gap: 20px;
 }
 
-/* Info strip */
 .uqInfoStrip {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 3fr));
   gap: 12px;
-  background: linear-gradient(135deg,
-    rgba(13, 148, 136, 0.06),
-    rgba(20, 184, 166, 0.04));
-  border: 1px solid rgba(13, 148, 136, 0.18);
+  background: linear-gradient(135deg, var(--TC18), var(--TC17));
+  border: 1px solid var(--TC17);
   border-radius: 12px;
   padding: 14px 18px;
 }
@@ -1268,26 +1294,25 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 .uqInfoVal {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--sd-dark);
+  color: var(--TC9);
 }
 
 .uqCurrQty {
-  color: var(--sd-teal) !important;
+  color: var(--TC5) !important;
   font-size: 1rem !important;
 }
 
 .uqCurrDiscount {
-  color: var(--sd-orange) !important;
+  color: var(--TC14) !important;
   font-size: 0.95rem !important;
 }
 
-/* Form section */
 .uqFormSection {
   display: flex;
   flex-direction: column;
@@ -1309,7 +1334,7 @@
 .uqFormGroup label {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--sd-primary);
+  color: var(--TC1);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1318,10 +1343,10 @@
 .uqInput {
   width: 100%;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid rgba(13, 148, 136, 0.2);
+  background: var(--TC6);
+  border: 2px solid var(--TC17);
   border-radius: 10px;
-  color: var(--sd-dark);
+  color: var(--TC9);
   font-size: 0.94rem;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -1331,15 +1356,15 @@
 }
 
 .uqInput:focus {
-  border-color: var(--sd-teal-end);
-  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15);
-  background: white;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 4px var(--TC18);
+  background: var(--TC6);
 }
 
 .uqInput:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-  background: #f1f5f9;
+  background: var(--TC13);
 }
 
 .uqInputWrapper {
@@ -1357,13 +1382,13 @@
   transform: translateY(-50%);
   font-size: 1rem;
   font-weight: 700;
-  color: var(--sd-teal);
+  color: var(--TC5);
   pointer-events: none;
 }
 
 .uqInputHint {
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: var(--TC12);
   font-weight: 500;
 }
 
@@ -1372,10 +1397,10 @@
   align-items: center;
   gap: 9px;
   padding: 11px 14px;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: var(--TC16);
+  border: 1px solid var(--TC14);
   border-radius: 10px;
-  color: #dc2626;
+  color: var(--TC14);
   font-size: 0.82rem;
   font-weight: 600;
 }
@@ -1385,10 +1410,10 @@
   align-items: center;
   gap: 11px;
   padding: 11px 14px;
-  background: rgba(13, 148, 136, 0.07);
-  border: 1px solid rgba(13, 148, 136, 0.22);
+  background: var(--TC18);
+  border: 1px solid var(--TC17);
   border-radius: 10px;
-  color: var(--sd-teal);
+  color: var(--TC5);
   font-size: 0.82rem;
   font-weight: 600;
 }
@@ -1396,8 +1421,8 @@
 .uqSpinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(13, 148, 136, 0.2);
-  border-top-color: var(--sd-teal);
+  border: 2px solid var(--TC17);
+  border-top-color: var(--TC5);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;
@@ -1406,8 +1431,8 @@
 /* ── UQ Footer ── */
 .uqModalFooter {
   padding: 16px 24px;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background: var(--TC6);
+  border-top: 1px solid var(--TC13);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
@@ -1419,18 +1444,18 @@
   gap: 7px;
   height: 42px;
   padding: 0 20px;
-  background: rgba(100, 116, 139, 0.1);
-  color: #475569;
+  background: var(--TC16);
+  color: var(--TC15);
   font-weight: 700;
   font-size: 0.87rem;
-  border: 2px solid rgba(100, 116, 139, 0.3);
+  border: 2px solid var(--TC8);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.25s ease;
 }
 
 .uqCancelBtn:hover:not(:disabled) {
-  background: rgba(100, 116, 139, 0.2);
+  background: var(--TC16);
   transform: translateY(-1px);
 }
 
@@ -1442,20 +1467,20 @@
   gap: 8px;
   height: 42px;
   padding: 0 24px;
-  background: linear-gradient(135deg, var(--sd-accent), var(--sd-accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-weight: 700;
   font-size: 0.87rem;
   border: none;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 17px rgba(13, 148, 136, 0.35);
+  box-shadow: 0 5px 17px var(--TC17);
 }
 
 .uqConfirmBtn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.45);
+  box-shadow: 0 8px 24px var(--TC17);
 }
 
 .uqConfirmBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
@@ -1463,8 +1488,8 @@
 .uqBtnSpinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
+  border: 2px solid var(--TC18);
+  border-top-color: var(--TC6);
   border-radius: 50%;
   animation: spinBtn 0.7s linear infinite;
 }
@@ -1479,63 +1504,78 @@
   gap: 10px;
 }
 
-.uqSuccessIcon { color: #16a34a; margin-bottom: 4px; }
+.uqSuccessIcon { color: var(--TC10); margin-bottom: 4px; }
 
 .uqSuccessState h3 {
   font-size: 1.1rem;
   font-weight: 800;
-  color: #16a34a;
+  color: var(--TC10);
   margin: 0;
 }
 
 .uqSuccessState p {
   font-size: 0.88rem;
-  color: var(--sd-dark);
+  color: var(--TC9);
   margin: 0;
   font-weight: 600;
 }
 
 .uqSuccessMsg {
-  color: #64748b !important;
+  color: var(--TC12) !important;
   font-size: 0.78rem !important;
   font-weight: 500 !important;
 }
 
 /* ── UQ dark mode ── */
 :global(.dark-mode) .uqModal {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--TC9);
+  border: 1px solid var(--TC7);
 }
 
-:global(.dark-mode) .uqModalBody { background: #1e293b; }
+:global(.dark-mode) .uqModalBody { background: var(--TC9); }
 
 :global(.dark-mode) .uqInfoStrip {
-  background: rgba(13, 148, 136, 0.08);
-  border-color: rgba(13, 148, 136, 0.2);
+  background: var(--TC18);
+  border-color: var(--TC17);
 }
 
-:global(.dark-mode) .uqInfoVal { color: #e2e8f0; }
+:global(.dark-mode) .taxAmt {
+  font-weight: 600;
+  color: var(--TC13);
+  font-size: 0.75rem;
+}
+
+:global(.dark-mode) .qtyBadge {color: var(--TC5);}
+
+:global(.dark-mode) .uqInfoVal { color: var(--TC13); }
 
 :global(.dark-mode) .uqInput {
-  background: #0f172a;
-  border-color: rgba(13, 148, 136, 0.3);
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC17);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .uqInput:focus { background: #1e293b; }
+:global(.dark-mode) .itemCountBadge {color: var(--TC13);}
+
+:global(.dark-mode) .uqInput:focus { background: var(--TC9); }
 
 :global(.dark-mode) .uqModalFooter {
-  background: #1a2535;
-  border-top-color: #334155;
+  background: var(--TC9);
+  border-top-color: var(--TC7);
 }
 
 :global(.dark-mode) .uqCancelBtn {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: #475569;
-  color: #94a3b8;
+  background: var(--TC16);
+  border-color: var(--TC15);
+  color: var(--TC12);
 }
 
-:global(.dark-mode) .uqSuccessState p { color: #e2e8f0; }
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+  border-color: var(--TC15);
+}
+
+:global(.dark-mode) .uqSuccessState p { color: var(--TC13); }
 
 /* ── UQ responsive ── */
 @media (max-width: 768px) {
@@ -1555,34 +1595,31 @@
   .uqModalBody { padding: 16px; }
 }
 
-/* ==================== ADDITIONS TO SalesCartDetailList.module.css ==================== */
-/* Append these styles to the bottom of your existing SalesCartDetailList.module.css     */
+/* ==================== DELETE CART / DETAIL BUTTONS ==================== */
 
-/* ── Delete Cart header button ── */
 .deleteCartBtn {
   display: flex;
   align-items: center;
   gap: 8px;
   height: 40px;
   padding: 0 20px;
-  background: linear-gradient(135deg, #dc2626, #ef4444);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
+  color: var(--TC6);
   font-weight: 700;
   font-size: 0.87rem;
   border: none;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 18px rgba(220, 38, 38, 0.32);
+  box-shadow: 0 5px 18px var(--TC16);
   white-space: nowrap;
 }
 
 .deleteCartBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 9px 26px rgba(220, 38, 38, 0.45);
+  box-shadow: 0 9px 26px var(--TC16);
 }
 
-/* ── Delete detail row button ── */
 .deleteDetailBtn {
   display: inline-flex;
   align-items: center;
@@ -1590,9 +1627,9 @@
   width: 30px;
   height: 30px;
   margin-left: 6px;
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.28);
+  background: var(--TC16);
+  color: var(--TC14);
+  border: 1px solid var(--TC14);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.25s ease;
@@ -1600,10 +1637,10 @@
 }
 
 .deleteDetailBtn:hover {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.5);
+  background: var(--TC16);
+  border-color: var(--TC14);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+  box-shadow: 0 4px 12px var(--TC16);
 }
 
 .deleteDetailBtn:active {
@@ -1613,22 +1650,22 @@
 /* ==================== SHARED DELETE CONFIRM MODAL ==================== */
 
 .delModal {
-  background: white;
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-width: 480px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 70px var(--TC16);
   animation: scaleIn 0.3s ease;
 }
 
-/* ── Del Header ── */
+/* ── Del Header (WorkShift detailModalHeader with danger gradient) ── */
 .delModalHeader {
   padding: 22px 26px;
-  background: linear-gradient(135deg, #b91c1c, #dc2626);
-  color: white;
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1646,25 +1683,26 @@
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: white;
+  color: var(--TC6);
 }
 
 .delBadge {
   display: inline-block;
   padding: 3px 10px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--TC6);
   width: fit-content;
 }
 
+/* ── Del Close (WorkShift detailCloseBtn style) ── */
 .delCloseBtn {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border: none;
-  color: white;
+  color: var(--TC6);
   width: 36px;
   height: 36px;
   border-radius: 9px;
@@ -1677,7 +1715,7 @@
 }
 
 .delCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.32);
+  background: var(--TC17);
   transform: scale(1.06);
 }
 
@@ -1694,20 +1732,20 @@
   align-items: flex-start;
   gap: 10px;
   padding: 14px 16px;
-  background: rgba(254, 202, 202, 0.35);
-  border: 1px solid rgba(239, 68, 68, 0.28);
+  background: var(--TC16);
+  border: 1px solid var(--TC14);
   border-radius: 11px;
 }
 
 .delWarningIcon {
-  color: #dc2626;
+  color: var(--TC14);
   flex-shrink: 0;
   margin-top: 1px;
 }
 
 .delWarningStrip span {
   font-size: 0.84rem;
-  color: #7f1d1d;
+  color: var(--TC11);
   font-weight: 500;
   line-height: 1.55;
 }
@@ -1717,10 +1755,10 @@
   align-items: center;
   gap: 9px;
   padding: 11px 14px;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: var(--TC16);
+  border: 1px solid var(--TC14);
   border-radius: 10px;
-  color: #dc2626;
+  color: var(--TC14);
   font-size: 0.82rem;
   font-weight: 600;
 }
@@ -1730,10 +1768,10 @@
   align-items: center;
   gap: 11px;
   padding: 11px 14px;
-  background: rgba(239, 68, 68, 0.06);
-  border: 1px solid rgba(239, 68, 68, 0.18);
+  background: var(--TC16);
+  border: 1px solid var(--TC14);
   border-radius: 10px;
-  color: #dc2626;
+  color: var(--TC14);
   font-size: 0.82rem;
   font-weight: 600;
 }
@@ -1741,8 +1779,8 @@
 .delSpinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(220, 38, 38, 0.2);
-  border-top-color: #dc2626;
+  border: 2px solid var(--TC16);
+  border-top-color: var(--TC14);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;
@@ -1751,8 +1789,8 @@
 /* ── Del Footer ── */
 .delModalFooter {
   padding: 16px 24px;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background: var(--TC6);
+  border-top: 1px solid var(--TC13);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
@@ -1764,18 +1802,18 @@
   gap: 7px;
   height: 42px;
   padding: 0 20px;
-  background: rgba(100, 116, 139, 0.1);
-  color: #475569;
+  background: var(--TC16);
+  color: var(--TC15);
   font-weight: 700;
   font-size: 0.87rem;
-  border: 2px solid rgba(100, 116, 139, 0.3);
+  border: 2px solid var(--TC8);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.25s ease;
 }
 
 .delCancelBtn:hover:not(:disabled) {
-  background: rgba(100, 116, 139, 0.2);
+  background: var(--TC16);
   transform: translateY(-1px);
 }
 
@@ -1787,20 +1825,20 @@
   gap: 8px;
   height: 42px;
   padding: 0 22px;
-  background: linear-gradient(135deg, #dc2626, #ef4444);
-  color: white;
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
+  color: var(--TC6);
   font-weight: 700;
   font-size: 0.87rem;
   border: none;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 17px rgba(220, 38, 38, 0.35);
+  box-shadow: 0 5px 17px var(--TC16);
 }
 
 .delConfirmBtn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.48);
+  box-shadow: 0 8px 24px var(--TC16);
 }
 
 .delConfirmBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
@@ -1808,36 +1846,36 @@
 .delBtnSpinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
+  border: 2px solid var(--TC18);
+  border-top-color: var(--TC6);
   border-radius: 50%;
   animation: spinBtn 0.7s linear infinite;
 }
 
 /* ── Del dark mode ── */
 :global(.dark-mode) .delModal {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--TC9);
+  border: 1px solid var(--TC7);
 }
 
-:global(.dark-mode) .delModalBody { background: #1e293b; }
+:global(.dark-mode) .delModalBody { background: var(--TC9); }
 
 :global(.dark-mode) .delWarningStrip {
-  background: rgba(220, 38, 38, 0.1);
-  border-color: rgba(220, 38, 38, 0.25);
+  background: var(--TC16);
+  border-color: var(--TC14);
 }
 
-:global(.dark-mode) .delWarningStrip span { color: #fca5a5; }
+:global(.dark-mode) .delWarningStrip span { color: var(--TC13); }
 
 :global(.dark-mode) .delModalFooter {
-  background: #1a2535;
-  border-top-color: #334155;
+  background: var(--TC9);
+  border-top-color: var(--TC7);
 }
 
 :global(.dark-mode) .delCancelBtn {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: #475569;
-  color: #94a3b8;
+  background: var(--TC16);
+  border-color: var(--TC15);
+  color: var(--TC12);
 }
 
 /* ── Del responsive ── */

@@ -277,3 +277,94 @@ export const createInvoiceBillFile = async (
   }
 };
 
+export const createReportFile = async (reportData) => {
+  try {
+    if (!reportData?.ReportType) {
+      throw new Error("ReportType is required");
+    }
+
+    if (!reportData?.Format) {
+      throw new Error("Format is required");
+    }
+
+    const payload = {
+      ClinicID: reportData.ClinicID,
+      FileAccessToken: reportData.FileAccessToken,
+      ReportType: reportData.ReportType,
+      Format: reportData.Format,
+      Filters: reportData.Filters,
+    };
+
+    console.log("Report Request:", payload);
+
+    const response = await PDF_API.post(
+      "/reports",
+      payload,
+      {
+        headers: {
+          ...(PRODUCTION_MODE === 1 ? { "API-Key": API_KEY } : {}),
+        },
+        responseType: "blob",
+      }
+    );
+
+    const fileBlob = response.data;
+
+    const fileType =
+      reportData.Format === 1
+        ? "application/pdf"
+        : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+    const blob = new Blob([fileBlob], { type: fileType });
+
+    const fileUrl = URL.createObjectURL(blob);
+
+    return {
+      url: fileUrl,
+      blob,
+      reportType: reportData.ReportType,
+      format: reportData.Format,
+    };
+
+  } catch (error) {
+    console.error("Report Error:", error);
+
+    let backendError = "";
+
+    try {
+      if (error.response?.data instanceof Blob) {
+        const errorText = await error.response.data.text();
+        const errorJson = JSON.parse(errorText);
+
+        // express-validator errors array
+        if (Array.isArray(errorJson?.errors)) {
+          backendError = errorJson.errors
+            .map((err) => err.msg)
+            .join("\n");
+        } else {
+          backendError =
+            errorJson?.result?.OUT_ERROR ||
+            errorJson?.message ||
+            errorJson?.error ||
+            "";
+        }
+      }
+    } catch (parseError) {
+      console.error("Error parsing backend error:", parseError);
+    }
+
+    const errorMessage =
+      backendError ||
+      error.response?.data?.result?.OUT_ERROR ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to generate report";
+
+    const formattedError = new Error(errorMessage);
+    formattedError.status = error.response?.status || 500;
+    formattedError.code = error.response?.status || 500;
+
+    throw formattedError;
+  }
+};
+

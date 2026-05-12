@@ -1,7 +1,7 @@
 // src/pages/AuthPage.jsx (or LoginPage.jsx)
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import "./LoginPage.css";
+import styles from "./LoginPage.module.css";
 import logo from "../assets/cplogo.png";
 import meter from "../assets/meter.svg";
 import scope from "../assets/scope.svg";
@@ -32,7 +32,7 @@ const LockIcon = () => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className="icon"
+    className={styles.icon}
   >
     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -50,7 +50,7 @@ const EyeIcon = () => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className="icon"
+    className={styles.icon}
   >
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
     <circle cx="12" cy="12" r="3" />
@@ -68,17 +68,57 @@ const EyeOffIcon = () => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className="icon"
+    className={styles.icon}
   >
     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a21.5 21.5 0 0 1 5.06-6.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a21.5 21.5 0 0 1-2.16 3.19m-6.84-1A3 3 0 0 0 9 12a3 3 0 0 0 3 3 3 3 0 0 0 3-3" />
     <line x1="1" y1="1" x2="23" y2="23" />
   </svg>
 );
 
+const SunIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="5" />
+    <line x1="12" y1="1" x2="12" y2="3" />
+    <line x1="12" y1="21" x2="12" y2="23" />
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+    <line x1="1" y1="12" x2="3" y2="12" />
+    <line x1="21" y1="12" x2="23" y2="12" />
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+  </svg>
+);
+
+const MoonIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+);
+
 // Reusable CAPTCHA Component
 const Captcha = ({ canvasRef, answer, setAnswer, onRefresh, isLoading, refreshIcon }) => (
-  <div className="captcha-container">
-    <canvas ref={canvasRef} width={150} height={60} className="captcha" />
+  <div className={styles.captchaContainer}>
+    <canvas ref={canvasRef} width={150} height={60} className={styles.captcha} />
     <input
       type="number"
       value={answer}
@@ -86,11 +126,11 @@ const Captcha = ({ canvasRef, answer, setAnswer, onRefresh, isLoading, refreshIc
       required
       placeholder="Enter answer"
     />
-    <div className="reff">
+    <div className={styles.reff}>
       <img
         src={refreshIcon}
         alt="Refresh CAPTCHA"
-        className="refresh-captcha"
+        className={styles.refreshCaptcha}
         onClick={onRefresh}
         style={{
           cursor: isLoading ? "not-allowed" : "pointer",
@@ -116,8 +156,25 @@ const LoginPage = () => {
   const [popupMessage, setPopupMessage] = useState("");
   const [isResetSuccess, setIsResetSuccess] = useState(false);
 
+  // Dark mode state — reads from localStorage on mount
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem("darkMode") === "true";
+  });
+
   const navigate = useNavigate();
   const { login, logout } = useAuth();
+
+  // Apply / remove dark-mode class on body whenever darkMode changes
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add("dark-mode");
+    } else {
+      document.body.classList.remove("dark-mode");
+    }
+    localStorage.setItem("darkMode", darkMode);
+  }, [darkMode]);
+
+  const toggleDarkMode = () => setDarkMode((prev) => !prev);
 
   // CAPTCHA state for each mode
   const [captcha, setCaptcha] = useState({
@@ -199,7 +256,6 @@ const LoginPage = () => {
   useEffect(() => {
     generateCaptcha(mode);
   }, [mode]);
-
 
   const generateCaptcha = (targetMode) => {
     const num1 = Math.floor(Math.random() * 10) + 1;
@@ -327,14 +383,11 @@ const LoginPage = () => {
       setPopupMessage(result.message || "Mail Sent Successfully");
       setShowPopup(true);
     } catch (err) {
-  const backendMsg =
-    extractBackendError?.(err) ||
-    err.response?.data?.error ||
-    err.response?.data?.message ||
-    err.message;
-
-  throw new Error(backendMsg || "Network error");
-} finally {
+      setIsResetSuccess(false);
+      setPopupMessage(err.message || "Failed to send reset email. Please try again.");
+      setShowPopup(true);
+      generateCaptcha("reset");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -352,12 +405,22 @@ const LoginPage = () => {
   const goToReset = () => setMode("reset");
 
   return (
-    <div className="main">
-      <div className="login-container">
-        <div className="login-card">
+    <div className={styles.main}>
+      <div className={styles.loginContainer}>
+        {/* Dark Mode Toggle Button */}
+        <button
+          className={styles.darkToggleBtn}
+          onClick={toggleDarkMode}
+          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          aria-label={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {darkMode ? <SunIcon /> : <MoonIcon />}
+        </button>
+
+        <div className={styles.loginCard}>
           {/* LEFT FORM PANEL */}
-          <div className="form-panel">
-            <div className="form-header">
+          <div className={styles.formPanel}>
+            <div className={styles.formHeader}>
               <h1>Clinic Pro</h1>
               <p>
                 {mode === "login" && "Welcome back. Sign in to continue."}
@@ -366,12 +429,12 @@ const LoginPage = () => {
             </div>
 
             {mode === "login" && (
-              <form onSubmit={handleLoginSubmit} className="login-form">
-                <div className="input-group">
+              <form onSubmit={handleLoginSubmit} className={styles.loginForm}>
+                <div className={styles.inputGroup}>
                   <input type="text" name="username" value={loginData.username} onChange={handleLoginChange} required placeholder="User Name" />
                 </div>
 
-                <div className="input-group password-wrapper">
+                <div className={`${styles.inputGroup} ${styles.passwordWrapper}`}>
                   <input
                     type={showPassword.login ? "text" : "password"}
                     name="password"
@@ -382,7 +445,7 @@ const LoginPage = () => {
                   />
                   <button
                     type="button"
-                    className="eye-toggle"
+                    className={styles.eyeToggle}
                     onClick={() => setShowPassword({ ...showPassword, login: !showPassword.login })}
                     onMouseDown={(e) => e.preventDefault()}
                   >
@@ -404,20 +467,20 @@ const LoginPage = () => {
                   refreshIcon={reff}
                 />
 
-                <button type="submit" className="login-btn" disabled={isLoading}>
+                <button type="submit" className={styles.loginBtn} disabled={isLoading}>
                   <LockIcon />
                   <span>{isLoading ? "Signing in..." : "Login Securely"}</span>
                 </button>
 
-                <p className="forgot-link" onClick={goToReset} style={{ cursor: "pointer", marginTop: "22px" }}>
+                <p className={styles.forgotLink} onClick={goToReset} style={{ cursor: "pointer", marginTop: "22px" }}>
                   Forgot password?
                 </p>
               </form>
             )}
 
             {mode === "reset" && (
-              <form onSubmit={handleResetSubmit} className="login-form">
-                <div className="input-group">
+              <form onSubmit={handleResetSubmit} className={styles.loginForm}>
+                <div className={styles.inputGroup}>
                   <input
                     type="email"
                     name="email"
@@ -442,22 +505,22 @@ const LoginPage = () => {
                   refreshIcon={reff}
                 />
 
-                <button type="submit" className="login-btn" disabled={isLoading}>
+                <button type="submit" className={styles.loginBtn} disabled={isLoading}>
                   <span>{isLoading ? "Sending..." : "Get Password"}</span>
                 </button>
 
-                <p className="forgot-link" style={{ marginTop: "16px" }}>
-                  Remembered? <span onClick={goToLogin} className="toggle-link">Back to Login</span>
+                <p className={styles.forgotLink} style={{ marginTop: "16px" }}>
+                  Remembered? <span onClick={goToLogin} className={styles.toggleLink}>Back to Login</span>
                 </p>
               </form>
             )}
-            <img src={doctor} alt="doctor" className="doctor"></img>
+            <img src={doctor} alt="doctor" className={styles.doctor} />
           </div>
 
           {/* RIGHT PROMO PANEL */}
-          <div className="promo-panel">
-            <div className="promo-content">
-              <img src={logo} alt="Clinic Pro" className="logo" />
+          <div className={styles.promoPanel}>
+            <div className={styles.promoContent}>
+              <img src={logo} alt="Clinic Pro" className={styles.logo} />
               <h2>
                 {mode === "login" && "Welcome to Clinic Pro"}
                 {mode === "reset" && "Need help?"}
@@ -467,21 +530,21 @@ const LoginPage = () => {
                 {mode === "reset" && "Enter your email and we'll send you a reset link."}
               </p>
             </div>
-            <div className="circle-1"></div>
-            <div className="circle-2"></div>
+            <div className={styles.circle1}></div>
+            <div className={styles.circle2}></div>
           </div>
         </div>
       </div>
 
-      <img src={scope} className="scope" alt="scope decoration" />
-      <img src={meter} className="meter" alt="meter decoration" />
+      <img src={scope} className={styles.scope} alt="scope decoration" />
+      <img src={meter} className={styles.meter} alt="meter decoration" />
 
       {showPopup && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
             <p>{popupMessage}</p>
             <button
-              className="modal-button"
+              className={styles.modalButton}
               onClick={handlePopupOk}
               onMouseOver={(e) => (e.target.style.backgroundColor = "#218838")}
               onMouseOut={(e) => (e.target.style.backgroundColor = "#28a745")}

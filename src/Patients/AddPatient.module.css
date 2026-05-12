@@ -1,17 +1,4 @@
 /* AddPatient.module.css - Exact match to Clinic Add/Update Popup Style */
-
-/* ==================== ROOT VARIABLES ==================== */
-:root {
-  --primary-start: #222b6c;
-  --primary-end:   #225ca0;
-  --accent-start:  #207d9c;
-  --accent-end:    #30b2b5;
-  --text-light:    #ffffff;
-  --text-dark:     #1e293b;
-  --glass-bg:      rgba(255, 255, 255, 0.92);
-  --glass-border:  rgba(255, 255, 255, 0.4);
-}
-
 /* ==================== ANIMATIONS ==================== */
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -38,7 +25,7 @@
 }
 
 .addModalContent {
-  background: var(--glass-bg);
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-width: 1200px;
@@ -46,7 +33,7 @@
   flex-direction: column;
   height: 90vh;
   overflow: hidden;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 70px var(--TC16);
   animation: slideUp 0.4s ease;
 }
 
@@ -56,10 +43,10 @@
   top: 0;
   z-index: 20;
   flex-shrink: 0;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
   padding: 14px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  color: var(--text-light);
+  border-bottom: 1px solid var(--TC16);
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -85,29 +72,34 @@
 
 .workIdBadge {
   padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--TC18);
   border-radius: 6px;
   font-size: 0.85rem;
   font-weight: 600;
   backdrop-filter: blur(10px);
-  color: var(--text-light);
+  color: var(--TC6);
 }
 
 .detailCloseBtn {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border: none;
-  color: var(--text-light);
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  font-size: 1.4rem;
+  color: var(--TC6);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .detailCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.35);
-  transform: scale(1.1);
+  background: var(--TC17);
+  transform: scale(1.08);
 }
 
 /* ==================== FORM BODY ==================== */
@@ -128,11 +120,11 @@
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
 }
@@ -143,7 +135,7 @@
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -154,7 +146,7 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -162,26 +154,23 @@
 /* ==================== SECTIONS ==================== */
 .addSection {
   padding: 20px 24px;
-  border-bottom: 1px solid rgba(34, 43, 108, 0.08);
+  border-bottom: 1px solid var(--TC16);
 }
 
-.addSection:last-child {
-  border-bottom: none;
-}
+.addSection:last-child { border-bottom: none; }
 
 .addSectionHeader {
   margin-bottom: 16px;
 }
 
 .addSectionHeader h3 {
-  margin: 0;
+  margin: 0 0 16px;
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--primary-start);
-  margin-bottom: 16px;
+  color: var(--TC1);
   padding-bottom: 10px;
-  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
-  border-bottom: 2px solid rgba(48, 178, 181, 0.25);
+  background: linear-gradient(135deg, var(--TC1), var(--TC5));
+  border-bottom: 2px solid var(--TC18);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -200,49 +189,41 @@
   gap: 6px;
 }
 
-.addFormGroup.fullWidth {
-  grid-column: 1 / -1;
-}
+.addFormGroup.fullWidth { grid-column: 1 / -1; }
 
 .addFormGroup label {
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
-.addFormGroup .required {
-  color: #dc2626;
-  font-weight: 700;
-}
+.addFormGroup .required { color: var(--TC14); font-weight: 700; }
 
-.required {
-  color: #dc2626;
-  font-weight: 700;
-}
+.required { color: var(--TC14); font-weight: 700; }
 
 .addFormGroup input,
 .addFormGroup textarea,
 .addFormGroup select {
   width: 100%;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid rgba(34, 43, 108, 0.15);
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
   border-radius: 10px;
-  color: var(--text-dark);
-  font-size: 0.85rem;
-  font-weight: 500;
+  color: var(--TC9);
   font-size: 0.9rem;
+  font-weight: 500;
   font-family: inherit;
   transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .addFormGroup input:focus,
 .addFormGroup textarea:focus,
 .addFormGroup select:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
-  background: white;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 4px var(--TC18);
+  background: var(--TC6);
 }
 
 .addFormGroup textarea {
@@ -252,7 +233,7 @@
 
 .validationMsg {
   font-size: 0.75rem;
-  color: red;
+  color: var(--TC14);
   margin-top: 2px;
 }
 
@@ -261,7 +242,6 @@
 .formSuccess {
   padding: 10px 14px;
   border-radius: 10px;
-  margin-bottom: 16px;
   font-size: 0.9rem;
   font-weight: 600;
   border: 2px solid;
@@ -269,15 +249,15 @@
 }
 
 .formError {
-  background: rgba(239, 68, 68, 0.12);
-  color: #dc2626;
-  border-color: rgba(239, 68, 68, 0.3);
+  background: var(--TC16);
+  color: var(--TC14);
+  border-color: var(--TC16);
 }
 
 .formSuccess {
-  background: rgba(34, 197, 94, 0.12);
-  color: #059669;
-  border-color: rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC10);
+  border-color: var(--TC18);
 }
 
 /* ==================== FOOTER ==================== */
@@ -287,14 +267,14 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 20px 28px;
-  border-top: 2px solid rgba(34, 43, 108, 0.1);
-  background: #f8fafc;
+  border-top: 2px solid var(--TC16);
+  background: linear-gradient(to bottom, var(--TC6), var(--TC13));
   flex-shrink: 0;
 }
 
 .btnCancel {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   border: none;
   border-radius: 14px;
   height: 40px;
@@ -305,7 +285,7 @@
   position: relative;
   overflow: hidden;
   transition: all 0.4s ease;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 7px 24px var(--TC17);
   white-space: nowrap;
   z-index: 0;
 }
@@ -314,7 +294,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
   opacity: 0;
   transition: opacity 0.4s ease;
   z-index: -1;
@@ -324,7 +304,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
+  background: linear-gradient(105deg, transparent 40%, var(--TC18) 50%, transparent 60%);
   background-size: 200% 100%;
   background-position: -100% 0;
   transition: background-position 0.5s ease;
@@ -333,15 +313,19 @@
 
 .btnCancel:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
+  box-shadow: 0 14px 34px var(--TC17);
+}
+.btnCancel:hover::before { opacity: 1; }
+.btnCancel:hover::after  { background-position: 200% 0; }
+.btnCancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.btnCancel:hover::before { opacity: 1; }
-.btnCancel:hover::after { background-position: 200% 0; }
-
 .btnSubmit {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   border: none;
   border-radius: 14px;
   height: 40px;
@@ -352,7 +336,7 @@
   position: relative;
   overflow: hidden;
   transition: all 0.4s ease;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 7px 24px var(--TC17);
   white-space: nowrap;
   z-index: 0;
   display: inline-flex;
@@ -362,7 +346,7 @@
 
 .btnSubmit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(1, 97, 131, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 .btnSubmit:disabled {
@@ -371,9 +355,7 @@
   transform: none;
 }
 
-/* ==================== FAMILY PATIENT LINK — NEW LAYOUT ==================== */
-
-/* Single row: 40% search | 60% results */
+/* ==================== FAMILY PATIENT LINK ==================== */
 .familySearchRow {
   display: flex;
   gap: 16px;
@@ -381,7 +363,6 @@
   width: 100%;
 }
 
-/* Left panel: 40% */
 .familySearchLeft {
   flex: 0 0 40%;
   max-width: 40%;
@@ -390,7 +371,6 @@
   gap: 8px;
 }
 
-/* Right panel: 60% — results list */
 .familyResultsRight {
   flex: 0 0 calc(60% - 16px);
   max-width: calc(60% - 16px);
@@ -399,15 +379,12 @@
   gap: 6px;
 }
 
-.familyResultsEmpty {
-  /* placeholder to keep layout stable when no results */
-  min-height: 40px;
-}
+.familyResultsEmpty { min-height: 40px; }
 
 .familySearchLabel {
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 .familySearchInputRow {
@@ -419,10 +396,10 @@
 .familySearchInput {
   flex: 1;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid rgba(34, 43, 108, 0.15);
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
   border-radius: 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.9rem;
   transition: all 0.3s ease;
   height: 40px;
@@ -430,26 +407,24 @@
 
 .familySearchInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
-  background: white;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 4px var(--TC18);
+  background: var(--TC6);
 }
 
-/* Results list — table style */
 .familyResultsList {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--TC13);
   border-radius: 10px;
   overflow: hidden;
-  background: #f8fafc;
+  background: var(--TC13);
 }
 
-/* Header row */
 .familyResultsHeader {
   display: flex;
   align-items: center;
   padding: 8px 12px;
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.07), rgba(48, 178, 181, 0.1));
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, var(--TC16), var(--TC18));
+  border-bottom: 1px solid var(--TC13);
 }
 
 .familyResultsHeaderSelect {
@@ -460,32 +435,27 @@
 .familyResultsHeaderCell {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-/* Each result row */
 .familyResultItem {
   display: flex;
   align-items: center;
   padding: 9px 12px;
-  background: white;
-  border-bottom: 1px solid #f1f5f9;
+  background: var(--TC6);
+  border-bottom: 1px solid var(--TC13);
   transition: background 0.15s ease;
 }
 
-.familyResultItem:last-child {
-  border-bottom: none;
-}
+.familyResultItem:last-child { border-bottom: none; }
 
-.familyResultItem:hover {
-  background: #f0f9ff;
-}
+.familyResultItem:hover { background: var(--TC18); }
 
 .familyResultItemSelected {
-  background: #e8f5e9 !important;
-  border-left: 3px solid #4caf50;
+  background: var(--TC18) !important;
+  border-left: 3px solid var(--TC5);
 }
 
 .familyResultSelectCell {
@@ -498,22 +468,20 @@
 .familyRadio {
   width: 15px;
   height: 15px;
-  accent-color: var(--accent-end);
+  accent-color: var(--TC5);
   cursor: pointer;
 }
 
 .familyResultCell {
   font-size: 0.85rem;
-  color: var(--text-dark);
+  color: var(--TC9);
   padding-right: 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ==================== MEDICAL INFORMATION — NEW LAYOUT ==================== */
-
-/* Row 1: Three equal columns (30% each) for Allergies, Past Surgeries, Family Medical History */
+/* ==================== MEDICAL INFORMATION ==================== */
 .medicalThreeColRow {
   display: flex;
   gap: 16px;
@@ -528,14 +496,13 @@
   gap: 6px;
 }
 
-/* Tall textarea — enough for ~200 characters */
 .medicalTallTextarea {
   width: 100%;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid rgba(34, 43, 108, 0.15);
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
   border-radius: 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.9rem;
   transition: all 0.3s ease;
   resize: vertical;
@@ -546,17 +513,15 @@
 
 .medicalTallTextarea:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
-  background: white;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 4px var(--TC18);
+  background: var(--TC6);
 }
 
-/* Row 2 — same .medicalThreeColRow + .medicalColGroup as Row 1 */
-/* Label with checkbox inline */
 .medicalColLabel {
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--primary-start);
+  color: var(--TC1);
   display: flex;
   align-items: center;
   gap: 7px;
@@ -567,30 +532,26 @@
 .medicalCheckbox {
   width: 15px;
   height: 15px;
-  accent-color: var(--accent-end);
+  accent-color: var(--TC5);
   cursor: pointer;
   flex-shrink: 0;
 }
 
-/* Placeholder box — same height as tall textarea, dashed border, no content */
 .medicalCheckboxPlaceholder {
   width: 100%;
   min-height: 120px;
-  border: 2px dashed rgba(34, 43, 108, 0.15);
+  border: 2px dashed var(--TC16);
   border-radius: 10px;
-  background: rgba(34, 43, 108, 0.02);
+  background: var(--TC16);
 }
 
-.medicalCheckboxBox {
-  display: flex;
-  flex-direction: column;
-}
+.medicalCheckboxBox { display: flex; flex-direction: column; }
 
 /* ==================== READ-ONLY INPUT ==================== */
 .readOnlyInput {
-  background: rgba(34, 43, 108, 0.05) !important;
-  border-color: rgba(34, 43, 108, 0.2) !important;
-  color: #64748b !important;
+  background: var(--TC16) !important;
+  border-color: var(--TC16) !important;
+  color: var(--TC12) !important;
   cursor: not-allowed !important;
 }
 
@@ -598,47 +559,55 @@
 
 /* Modal shell */
 :global(.dark-mode) .addModalContent {
-  background: rgba(30, 41, 59, 0.95);
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+  background: var(--TC9);
+  box-shadow: 0 25px 70px var(--TC16);
 }
+
+/* Header */
+:global(.dark-mode) .detailModalHeader { background: linear-gradient(135deg, var(--TC7), var(--TC15)); }
+
+/* addModalHeaderCard */
+:global(.dark-mode) .addModalHeaderCard { background: var(--TC12); }
 
 /* Scrollable body */
 :global(.dark-mode) .addModalBodyScrollable {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+  background: linear-gradient(135deg, var(--TC9), var(--TC7));
 }
 
 /* Sections */
 :global(.dark-mode) .addSection {
-  border-bottom-color: rgba(71, 85, 105, 0.3);
+  border-bottom-color: var(--TC15);
+  background: var(--TC9);
 }
 
-:global(.dark-mode) .addSectionHeader h3 {
-  color: var(--accent-end);
-}
-
-:global(.dark-mode) .addSectionHeader h3 {
-  border-bottom-color: rgba(48, 178, 181, 0.25);
-  /* gradient text stays — no override needed */
+:global(.dark-mode) .h3 {
+  margin: 0 0 16px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--TC6);
+  padding-bottom: 10px;
+  background: linear-gradient(135deg, var(--TC1), var(--TC5));
+  border-bottom: 2px solid var(--TC18);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  border-bottom-color: var(--TC18);
 }
 
 /* Form labels */
-:global(.dark-mode) .addFormGroup label {
-  color: var(--accent-end);
-}
+:global(.dark-mode) .addFormGroup label { color: var(--TC5); }
 
 /* Inputs, textareas, selects */
 :global(.dark-mode) .addFormGroup input,
 :global(.dark-mode) .addFormGroup textarea,
 :global(.dark-mode) .addFormGroup select {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .addFormGroup input::placeholder,
-:global(.dark-mode) .addFormGroup textarea::placeholder {
-  color: rgba(148, 163, 184, 0.5);
-}
+:global(.dark-mode) .addFormGroup textarea::placeholder { color: var(--TC12); }
 
 :global(.dark-mode) .addFormGroup input::-webkit-calendar-picker-indicator {
   filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
@@ -648,117 +617,99 @@
 :global(.dark-mode) .addFormGroup input:focus,
 :global(.dark-mode) .addFormGroup textarea:focus,
 :global(.dark-mode) .addFormGroup select:focus {
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
-  background: #1e293b;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 4px var(--TC18);
+  background: var(--TC9);
 }
 
 :global(.dark-mode) .addFormGroup select option {
-  background: #1e293b;
-  color: #e2e8f0;
+  background: var(--TC9);
+  color: var(--TC13);
 }
 
 /* Read-only input */
 :global(.dark-mode) .readOnlyInput {
-  background: rgba(15, 23, 42, 0.6) !important;
-  border-color: #334155 !important;
-  color: #64748b !important;
+  background: var(--TC9) !important;
+  border-color: var(--TC7) !important;
+  color: var(--TC12) !important;
 }
 
 /* Footer */
 :global(.dark-mode) .detailModalFooter {
-  background: #0f172a;
-  border-top-color: rgba(71, 85, 105, 0.5);
+  background: linear-gradient(135deg, var(--TC9), var(--TC7));
+  border-top-color: var(--TC15);
 }
 
 /* Family search section */
-:global(.dark-mode) .familySearchLabel {
-  color: var(--accent-end);
-}
+:global(.dark-mode) .familySearchLabel { color: var(--TC5); }
 
 :global(.dark-mode) .familySearchInput {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .familySearchInput::placeholder {
-  color: rgba(148, 163, 184, 0.5);
-}
+:global(.dark-mode) .familySearchInput::placeholder { color: var(--TC12); }
 
 :global(.dark-mode) .familySearchInput:focus {
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
-  background: #1e293b;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 4px var(--TC18);
+  background: var(--TC9);
 }
 
 :global(.dark-mode) .familyResultsList {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .familyResultsHeader {
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.3), rgba(48, 178, 181, 0.15));
-  border-bottom-color: #475569;
+  background: linear-gradient(135deg, var(--TC16), var(--TC18));
+  border-bottom-color: var(--TC15);
 }
 
-:global(.dark-mode) .familyResultsHeaderCell {
-  color: var(--accent-end);
-}
+:global(.dark-mode) .familyResultsHeaderCell { color: var(--TC5); }
 
 :global(.dark-mode) .familyResultItem {
-  background: #1e293b;
-  border-bottom-color: #334155;
+  background: var(--TC9);
+  border-bottom-color: var(--TC7);
 }
 
-:global(.dark-mode) .familyResultItem:hover {
-  background: rgba(48, 178, 181, 0.08);
-}
+:global(.dark-mode) .familyResultItem:hover { background: var(--TC18); }
 
 :global(.dark-mode) .familyResultItemSelected {
-  background: rgba(34, 197, 94, 0.1) !important;
-  border-left-color: #4caf50;
+  background: var(--TC18) !important;
+  border-left-color: var(--TC5);
 }
 
-:global(.dark-mode) .familyResultCell {
-  color: #e2e8f0;
-}
+:global(.dark-mode) .familyResultCell { color: var(--TC13); }
 
 /* Medical section */
-:global(.dark-mode) .medicalColLabel {
-  color: var(--accent-end);
-}
+:global(.dark-mode) .medicalColLabel { color: var(--TC5); }
 
 :global(.dark-mode) .medicalTallTextarea {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .medicalTallTextarea::placeholder {
-  color: rgba(148, 163, 184, 0.5);
-}
+:global(.dark-mode) .medicalTallTextarea::placeholder { color: var(--TC12); }
 
 :global(.dark-mode) .medicalTallTextarea:focus {
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
-  background: #1e293b;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 4px var(--TC18);
+  background: var(--TC9);
 }
 
 :global(.dark-mode) .medicalCheckboxPlaceholder {
-  border-color: #334155;
-  background: rgba(15, 23, 42, 0.3);
+  border-color: var(--TC7);
+  background: var(--TC16);
 }
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
-  .addModalContent {
-    max-width: 95%;
-  }
+  .addModalContent { max-width: 95%; }
 
-  .addFormGrid {
-    grid-template-columns: 1fr;
-  }
+  .addFormGrid { grid-template-columns: 1fr; }
 
   .detailModalFooter {
     flex-direction: column;
@@ -766,14 +717,9 @@
   }
 
   .btnCancel,
-  .btnSubmit {
-    width: 100%;
-  }
+  .btnSubmit { width: 100%; }
 
-  /* Family search stacks on mobile */
-  .familySearchRow {
-    flex-direction: column;
-  }
+  .familySearchRow { flex-direction: column; }
 
   .familySearchLeft,
   .familyResultsRight {
@@ -781,10 +727,7 @@
     max-width: 100%;
   }
 
-  /* Medical three cols stack on mobile */
-  .medicalThreeColRow {
-    flex-direction: column;
-  }
+  .medicalThreeColRow { flex-direction: column; }
 
   .medicalCheckboxRow {
     flex-direction: column;
@@ -793,30 +736,20 @@
 
   .medicalCheckboxItem {
     border-right: none;
-    border-bottom: 1px solid rgba(34, 43, 108, 0.1);
+    border-bottom: 1px solid var(--TC16);
   }
 
-  .medicalCheckboxItem:last-child {
-    border-bottom: none;
-  }
+  .medicalCheckboxItem:last-child { border-bottom: none; }
 }
 
 @media (max-width: 480px) {
-  .detailModalHeader {
-    padding: 16px 18px;
-  }
+  .detailModalHeader { padding: 16px 18px; }
 
-  .detailHeaderContent h2 {
-    font-size: 1.3rem;
-  }
+  .detailHeaderContent h2 { font-size: 1.3rem; }
 
-  .addSectionHeader h3 {
-    font-size: 1rem;
-  }
+  .addSectionHeader h3 { font-size: 1rem; }
 
-  .addFormGroup label {
-    font-size: 0.85rem;
-  }
+  .addFormGroup label { font-size: 0.85rem; }
 
   .addFormGroup input,
   .addFormGroup textarea,

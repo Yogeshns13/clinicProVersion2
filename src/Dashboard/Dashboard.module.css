@@ -1,0 +1,1467 @@
+/* Dashboard.module.css - Medical Dashboard with Unified Color Theme */
+
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10: #166534;
+  --TC11: #991b1b;
+  --TC12: #64748b;
+  --TC13: #e2e8f0;
+  --TC14: #ef4444;
+  --TC15: #475569;
+  --TC16: rgba(34, 43, 108, 0.10);
+  --TC17: rgba(32, 125, 156, 0.30);
+  --TC18: rgba(48, 178, 181, 0.15);
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes cpModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(-28px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes cpOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cpSuccessIn {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes cpSpinner {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fcp-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ==================== GLOBAL BOX SIZING ==================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ==================== MAIN WRAPPER ==================== */
+.dashboardWrapper {
+  padding: 24px;
+  background: linear-gradient(135deg, var(--TC6) 0%, var(--TC13) 100%);
+  min-height: 100vh;
+  color: var(--TC9);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* ==================== LOADING / ERROR STATES ==================== */
+.loadingState,
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  color: var(--TC12);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--TC16);
+  border-top-color: var(--TC5);
+  border-radius: 50%;
+  animation: cpSpinner 0.8s linear infinite;
+}
+
+.retryBtn {
+  padding: 10px 24px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.25s ease;
+}
+
+.retryBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px var(--TC17);
+}
+
+/* ==================== HEADER ==================== */
+.dashboardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+  animation: slideUp 0.4s ease;
+}
+
+.headerLeft h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(135deg, var(--TC1), var(--TC2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.headerLeft p {
+  margin: 4px 0 0;
+  color: var(--TC12);
+  font-size: 1.55rem;
+  font-weight: 700;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.clock {
+  background: var(--TC6);
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--TC1);
+  border: 1px solid var(--TC16);
+  box-shadow: 0 5px 17px var(--TC16);
+}
+
+.notifications {
+  position: relative;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+  background: var(--TC6);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--TC16);
+  box-shadow: 0 5px 17px var(--TC16);
+  transition: all 0.3s ease;
+}
+
+.notifications:hover {
+  background: var(--TC18);
+  border-color: var(--TC5);
+  transform: translateY(-2px);
+}
+
+.notifications .icon {
+  font-size: 20px;
+  color: var(--TC12);
+  transition: color 0.3s;
+}
+
+.notifications:hover .icon {
+  color: var(--TC5);
+}
+
+.notifications .badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: linear-gradient(135deg, var(--TC14), var(--TC11));
+  color: var(--TC6);
+  font-size: 11px;
+  font-weight: bold;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--TC13);
+  box-shadow: 0 3px 10px var(--TC17);
+}
+
+/* ==================== CHANGE PASSWORD BUTTON ==================== */
+.changePasswordBtn {
+  height: 44px;
+  padding: 0 18px;
+  background: var(--TC6);
+  border: 1px solid var(--TC16);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 5px 17px var(--TC16);
+  transition: all 0.3s ease;
+  color: var(--TC1);
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: inherit;
+  white-space: nowrap;
+  outline: none;
+  letter-spacing: 0.2px;
+}
+
+.changePasswordBtn:hover {
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: transparent;
+  color: var(--TC6);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px var(--TC17);
+}
+
+/* ==================== USER PROFILE ==================== */
+.userProfile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--TC6);
+  padding: 8px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--TC16);
+  box-shadow: 0 5px 17px var(--TC16);
+  transition: all 0.3s ease;
+}
+
+.userProfile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--TC17);
+}
+
+.userProfile .avatar img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--TC5);
+  box-shadow: 0 3px 12px var(--TC17);
+}
+
+.userProfile span {
+  font-weight: 600;
+  color: var(--TC9);
+}
+
+/* ==================== STATS GRID ==================== */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+  animation: slideUp 0.5s ease;
+}
+
+.statsGrid.fiveCards {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.statCard {
+  background: var(--TC6);
+  border-radius: 16px;
+  padding: 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--TC16);
+  box-shadow: 0 8px 24px var(--TC16);
+  transition: all 0.3s ease;
+  min-width: 0;
+}
+
+.statCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 32px var(--TC17);
+}
+
+.statCard .icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--TC6);
+  flex-shrink: 0;
+}
+
+.statCard .icon.patients {
+  background: linear-gradient(135deg, var(--TC1), var(--TC2));
+  box-shadow: 0 5px 17px var(--TC17);
+}
+
+.statCard .icon.appointments {
+  background: linear-gradient(135deg, var(--TC2), var(--TC4));
+  box-shadow: 0 5px 17px var(--TC17);
+}
+
+.statCard .icon.tomorrow {
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  box-shadow: 0 5px 17px var(--TC17);
+}
+
+.statCard .icon.revenue {
+  background: linear-gradient(135deg, var(--TC3), var(--TC4));
+  box-shadow: 0 5px 17px var(--TC17);
+}
+
+.statCard .icon.reports {
+  background: linear-gradient(135deg, var(--TC2), var(--TC3));
+  box-shadow: 0 5px 17px var(--TC17);
+}
+
+.statCard .info {
+  flex: 1;
+  min-width: 0;
+}
+
+.statCard .info h3 {
+  font-size: 1.5rem;
+  margin: 0;
+  font-weight: 800;
+  color: var(--TC9);
+  line-height: 1;
+}
+
+.statCard .info p {
+  margin: 6px 0 8px;
+  color: var(--TC12);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trend {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.trend.up {
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
+}
+
+.trend.down {
+  background: var(--TC16);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+.trend.neutral {
+  background: var(--TC16);
+  color: var(--TC12);
+  border: 1px solid var(--TC16);
+}
+
+/* ==================== CHARTS ROW ==================== */
+.chartsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+  animation: slideUp 0.6s ease;
+}
+
+.chartCard {
+  background: var(--TC6);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid var(--TC16);
+  box-shadow: 0 8px 24px var(--TC16);
+  transition: all 0.3s ease;
+}
+
+.chartCard:hover {
+  box-shadow: 0 12px 32px var(--TC17);
+}
+
+.chartCard h3 {
+  margin: 0 0 20px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--TC1);
+}
+
+/* ==================== GENDER SECTION ==================== */
+.genderSection {
+  margin-bottom: 32px;
+  animation: slideUp 0.65s ease;
+}
+
+.genderCard {
+  width: 100%;
+}
+
+.genderChartWrap {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.genderLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.genderLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.genderLegendDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.genderLegendInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.genderLegendLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--TC9);
+}
+
+.genderLegendCount {
+  font-size: 0.8rem;
+  color: var(--TC12);
+}
+
+.genderLegendPct {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--TC1);
+}
+
+.emptyStateBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 12px;
+  color: var(--TC8);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* ==================== BOTTOM ROW ==================== */
+.bottomRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  animation: slideUp 0.7s ease;
+}
+
+.appointmentsCard,
+.activityCard {
+  background: var(--TC6);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid var(--TC16);
+  box-shadow: 0 8px 24px var(--TC16);
+  transition: all 0.3s ease;
+}
+
+.appointmentsCard:hover,
+.activityCard:hover {
+  box-shadow: 0 12px 32px var(--TC17);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--TC16);
+}
+
+.cardHeader h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--TC1);
+}
+
+.viewAll {
+  color: var(--TC5);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.viewAll:hover {
+  color: var(--TC4);
+  text-decoration: underline;
+}
+
+/* ==================== APPOINTMENTS TABLE ==================== */
+.appointmentsTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.appointmentsTable th {
+  text-align: left;
+  padding: 12px 0;
+  color: var(--TC1);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid var(--TC16);
+}
+
+.appointmentsTable td {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--TC13);
+  color: var(--TC9);
+  font-size: 0.9rem;
+}
+
+.appointmentsTable tbody tr {
+  transition: all 0.25s ease;
+}
+
+.appointmentsTable tbody tr:hover {
+  background-color: var(--TC18);
+}
+
+.patientCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatarSm {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9rem;
+  box-shadow: 0 3px 12px var(--TC17);
+  flex-shrink: 0;
+}
+
+/* ==================== STATUS BADGES ==================== */
+.status {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  display: inline-block;
+  border: 1px solid var(--TC16);
+}
+
+.status.confirmed {
+  background: var(--TC18);
+  color: var(--TC10);
+  border-color: var(--TC16);
+}
+
+.status.pending {
+  background: var(--TC16);
+  color: var(--TC11);
+  border-color: var(--TC16);
+}
+
+/* ==================== RECENT ACTIVITY ==================== */
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ==================== ADD MODAL HEADER CARD ==================== */
+.activityItem {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 16px 8px 12px;
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px var(--TC16);
+  transition: background 0.2s ease;
+}
+
+.activityItem:hover {
+  background: var(--TC18);
+  transform: translateX(8px);
+}
+
+.activityIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  box-shadow: 0 3px 12px var(--TC17);
+}
+
+.activityContent {
+  flex: 1;
+}
+
+.activityContent p {
+  margin: 0 0 4px 0;
+  color: var(--TC9);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.1px;
+}
+
+.activityContent span {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--TC13);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
+}
+
+/* ==================== DETAIL MODAL HEADER ==================== */
+.detailModalHeader {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.detailHeaderContent {
+  flex: 1;
+}
+
+.detailHeaderContent h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--TC6);
+  margin: 0;
+}
+
+.detailHeaderMeta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.workIdBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--TC18);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  color: var(--TC6);
+}
+
+.stepBadge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: var(--TC16);
+  border: 1px solid var(--TC18);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--TC6);
+  letter-spacing: 0.3px;
+}
+
+/* ==================== CHANGE PASSWORD MODAL ==================== */
+.cpOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: cpOverlayIn 0.25s ease;
+  padding: 20px;
+}
+
+.cpModal {
+  background: var(--TC6);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 24px 60px var(--TC17), 0 8px 24px var(--TC16);
+  animation: cpModalIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+}
+
+.cpModalHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 24px 20px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  position: relative;
+}
+
+.cpHeaderIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--TC18);
+  border: 1.5px solid var(--TC16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC6);
+  flex-shrink: 0;
+  backdrop-filter: blur(4px);
+}
+
+.cpModalHeader h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--TC6);
+  line-height: 1.2;
+}
+
+.cpModalHeader p {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: var(--TC13);
+  font-weight: 400;
+}
+
+.cpCloseBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
+  color: var(--TC6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  outline: none;
+}
+
+.cpCloseBtn:hover {
+  background: var(--TC17);
+  transform: scale(1.08);
+}
+
+.cpModalBody {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background-color: var(--TC6);
+}
+
+.cpField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cpField label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--TC1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cpInputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--TC16);
+  border-radius: 12px;
+  background: var(--TC13);
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+
+.cpInputWrap:focus-within {
+  border-color: var(--TC5);
+  background: var(--TC6);
+  box-shadow: 0 0 0 3px var(--TC18);
+}
+
+.cpInputWrap.mismatch {
+  border-color: var(--TC14);
+  background: var(--TC16);
+}
+
+.cpInputWrap.mismatch:focus-within {
+  box-shadow: 0 0 0 3px var(--TC16);
+}
+
+.cpInputWrap.match {
+  border-color: var(--TC5);
+  background: var(--TC18);
+}
+
+.cpInputWrap.match:focus-within {
+  box-shadow: 0 0 0 3px var(--TC18);
+}
+
+.cpInputWrap input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 13px 14px;
+  font-size: 0.95rem;
+  color: var(--TC9);
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.cpInputWrap input::placeholder {
+  color: var(--TC8);
+  font-weight: 400;
+}
+
+.cpEyeBtn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--TC8);
+  transition: color 0.2s;
+  padding: 0;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.cpEyeBtn:hover {
+  color: var(--TC5);
+}
+
+.cpMatchIcon {
+  width: 28px;
+  height: 28px;
+  background: var(--TC18);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC10);
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.cpErrorMsg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--TC16);
+  border: 1px solid var(--TC16);
+  border-radius: 10px;
+  padding: 11px 14px;
+  color: var(--TC14);
+  font-size: 0.85rem;
+  font-weight: 500;
+  animation: fadeIn 0.2s ease;
+}
+
+.cpErrorMsg svg {
+  flex-shrink: 0;
+}
+
+.cpModalFooter {
+  display: flex;
+  gap: 12px;
+  padding: 0 24px 24px;
+  background-color: var(--TC6);
+}
+
+.cpBtnCancel {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1.5px solid var(--TC16);
+  background: var(--TC6);
+  color: var(--TC12);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  outline: none;
+}
+
+.cpBtnCancel:hover:not(:disabled) {
+  border-color: var(--TC8);
+  color: var(--TC1);
+  background: var(--TC16);
+}
+
+.cpBtnCancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cpBtnSubmit {
+  flex: 2;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  outline: none;
+  box-shadow: 0 5px 18px var(--TC17);
+}
+
+.cpBtnSubmit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--TC17);
+  filter: brightness(1.08);
+}
+
+.cpBtnSubmit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cpSpinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid var(--TC18);
+  border-top-color: var(--TC6);
+  border-radius: 50%;
+  display: inline-block;
+  animation: cpSpinner 0.7s linear infinite;
+}
+
+/* ==================== SUCCESS POPUP ==================== */
+.cpSuccessPopup {
+  background: var(--TC6);
+  border-radius: 24px;
+  padding: 44px 36px 36px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 60px var(--TC17), 0 8px 24px var(--TC16);
+  border: 1px solid var(--TC16);
+  animation: cpSuccessIn 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cpSuccessIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 8px 28px var(--TC17);
+}
+
+.cpSuccessPopup h3 {
+  margin: 0 0 10px;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--TC1);
+}
+
+.cpSuccessPopup p {
+  margin: 0 0 28px;
+  color: var(--TC12);
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.cpBtnOkay {
+  width: 100%;
+  padding: 13px 20px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, var(--TC1), var(--TC2), var(--TC4));
+  color: var(--TC6);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  outline: none;
+  box-shadow: 0 6px 20px var(--TC17);
+  letter-spacing: 0.3px;
+}
+
+.cpBtnOkay:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px var(--TC17);
+  filter: brightness(1.08);
+}
+
+/* ==================== FORCE CHANGE PASSWORD ==================== */
+.fcpOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fcp-fade-in 0.25s ease;
+}
+
+.fcpNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--TC16);
+  border: 1px solid var(--TC8);
+  border-radius: 10px;
+  color: var(--TC9);
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.fcpNotice svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--TC4);
+}
+
+/* ==================== DARK MODE ==================== */
+:global(.dark-mode) .dashboardWrapper {
+  background: linear-gradient(135deg, var(--TC9) 0%, var(--TC7) 100%);
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .headerLeft h1 {
+  background: linear-gradient(135deg, var(--TC6), var(--TC5));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+:global(.dark-mode) .headerLeft p { color: var(--TC12); }
+
+:global(.dark-mode) .clock {
+  background: var(--TC9);
+  color: var(--TC5);
+  border-color: var(--TC15);
+}
+
+:global(.dark-mode) .notifications {
+  background: var(--TC9);
+  border-color: var(--TC15);
+}
+:global(.dark-mode) .notifications:hover {
+  background: var(--TC18);
+  border-color: var(--TC5);
+}
+:global(.dark-mode) .notifications .icon { color: var(--TC12); }
+:global(.dark-mode) .notifications:hover .icon { color: var(--TC5); }
+:global(.dark-mode) .notifications .badge { border-color: var(--TC9); }
+
+:global(.dark-mode) .changePasswordBtn {
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC5);
+}
+:global(.dark-mode) .changePasswordBtn:hover {
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+}
+
+:global(.dark-mode) .userProfile {
+  background: var(--TC9);
+  border-color: var(--TC15);
+}
+:global(.dark-mode) .userProfile span { color: var(--TC13); }
+
+:global(.dark-mode) .statCard {
+  background: var(--TC9);
+  border-color: var(--TC15);
+}
+:global(.dark-mode) .statCard .info h3 { color: var(--TC13); }
+:global(.dark-mode) .statCard .info p  { color: var(--TC12); }
+
+:global(.dark-mode) .trend.up      { background: var(--TC18); color: var(--TC5); }
+:global(.dark-mode) .trend.down    { background: var(--TC16); color: var(--TC14); }
+:global(.dark-mode) .trend.neutral { background: var(--TC16); color: var(--TC12); }
+
+:global(.dark-mode) .chartCard {
+  background: var(--TC9);
+  border-color: var(--TC15);
+}
+:global(.dark-mode) .chartCard h3 { color: var(--TC5); }
+
+:global(.dark-mode) .genderLegendLabel { color: var(--TC13); }
+:global(.dark-mode) .genderLegendCount { color: var(--TC12); }
+:global(.dark-mode) .genderLegendPct   { color: var(--TC5); }
+:global(.dark-mode) .emptyStateBox     { color: var(--TC15); }
+
+:global(.dark-mode) .appointmentsCard,
+:global(.dark-mode) .activityCard {
+  background: var(--TC9);
+  border-color: var(--TC15);
+}
+
+:global(.dark-mode) .cardHeader { border-bottom-color: var(--TC15); }
+:global(.dark-mode) .cardHeader h3 { color: var(--TC5); }
+:global(.dark-mode) .viewAll    { color: var(--TC5); }
+:global(.dark-mode) .viewAll:hover { color: var(--TC4); }
+
+:global(.dark-mode) .appointmentsTable th {
+  color: var(--TC5);
+  border-bottom-color: var(--TC15);
+}
+:global(.dark-mode) .appointmentsTable td {
+  color: var(--TC13);
+  border-bottom-color: var(--TC15);
+}
+:global(.dark-mode) .appointmentsTable tbody tr:hover { background-color: var(--TC18); }
+
+/* dark mode: detail modal header */
+:global(.dark-mode) .detailModalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+/* dark mode: status badges */
+:global(.dark-mode) .status.confirmed {
+  background: var(--TC18);
+  color: var(--TC5);
+  border-color: var(--TC16);
+}
+:global(.dark-mode) .status.pending {
+  background: var(--TC16);
+  color: var(--TC14);
+  border-color: var(--TC16);
+}
+
+/* dark mode: activity items (addModalHeaderCard pattern) */
+:global(.dark-mode) .activityItem {
+  background: var(--TC7);
+  border-color: var(--TC15);
+}
+:global(.dark-mode) .activityItem:hover { background: var(--TC12); }
+:global(.dark-mode) .activityContent p  { color: var(--TC6); }
+:global(.dark-mode) .activityContent span { color: var(--TC13); }
+
+:global(.dark-mode) .cpModal {
+  background: var(--TC9);
+  border-color: var(--TC15);
+}
+:global(.dark-mode) .cpModalHeader { background: linear-gradient(135deg, var(--TC7), var(--TC15)); }
+:global(.dark-mode) .cpModalBody   { background-color: var(--TC9); }
+:global(.dark-mode) .cpModalFooter { background-color: var(--TC9); }
+
+:global(.dark-mode) .cpField label { color: var(--TC5); }
+
+:global(.dark-mode) .cpInputWrap {
+  background: var(--TC9);
+  border-color: var(--TC15);
+}
+:global(.dark-mode) .cpInputWrap:focus-within {
+  border-color: var(--TC5);
+  background: var(--TC9);
+  box-shadow: 0 0 0 3px var(--TC18);
+}
+:global(.dark-mode) .cpInputWrap.mismatch {
+  border-color: var(--TC14);
+  background: var(--TC9);
+}
+:global(.dark-mode) .cpInputWrap.match {
+  border-color: var(--TC5);
+  background: var(--TC9);
+}
+:global(.dark-mode) .cpInputWrap input {
+  color: var(--TC13);
+  background: transparent;
+}
+:global(.dark-mode) .cpInputWrap input::placeholder { color: var(--TC15); }
+:global(.dark-mode) .cpEyeBtn     { color: var(--TC15); }
+:global(.dark-mode) .cpEyeBtn:hover { color: var(--TC5); }
+:global(.dark-mode) .cpMatchIcon  { background: var(--TC18); color: var(--TC5); }
+:global(.dark-mode) .cpErrorMsg   { background: var(--TC16); border-color: var(--TC16); color: var(--TC14); }
+
+:global(.dark-mode) .cpBtnCancel {
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC12);
+}
+:global(.dark-mode) .cpBtnCancel:hover:not(:disabled) {
+  border-color: var(--TC8);
+  color: var(--TC5);
+  background: var(--TC7);
+}
+
+:global(.dark-mode) .cpSuccessPopup {
+  background: var(--TC9);
+  border-color: var(--TC15);
+}
+:global(.dark-mode) .cpSuccessPopup h3 { color: var(--TC5); }
+:global(.dark-mode) .cpSuccessPopup p  { color: var(--TC12); }
+
+:global(.dark-mode) .fcpNotice {
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
+}
+:global(.dark-mode) .fcpNotice svg { color: var(--TC5); }
+
+:global(.dark-mode) .loadingState,
+:global(.dark-mode) .errorState { color: var(--TC12); }
+
+/* ==================== RESPONSIVE ADJUSTMENTS ==================== */
+@media (max-width: 1280px) {
+  .statsGrid.fiveCards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .statsGrid.fiveCards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .bottomRow {
+    grid-template-columns: 1fr;
+  }
+
+  .chartsRow {
+    grid-template-columns: 1fr;
+  }
+
+  .genderChartWrap {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboardWrapper {
+    padding: 16px;
+  }
+
+  .dashboardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .headerRight {
+    width: 100%;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .statsGrid.fiveCards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .userProfile span {
+    display: none;
+  }
+
+  .chartsRow {
+    grid-template-columns: 1fr;
+  }
+
+  .bottomRow {
+    grid-template-columns: 1fr;
+  }
+
+  .appointmentsTable th,
+  .appointmentsTable td {
+    padding: 10px 0;
+    font-size: 0.8rem;
+  }
+
+  .cpModal {
+    max-width: 100%;
+    border-radius: 20px;
+  }
+
+  .cpSuccessPopup {
+    max-width: 100%;
+    padding: 36px 24px 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboardWrapper {
+    padding: 14px;
+  }
+
+  .headerLeft h1 {
+    font-size: 1.5rem;
+  }
+
+  .statsGrid.fiveCards {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .statCard {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .statCard .icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .statCard .info h3 {
+    font-size: 1.4rem;
+  }
+
+  .chartCard {
+    padding: 18px;
+  }
+
+  .appointmentsCard,
+  .activityCard {
+    padding: 18px;
+  }
+
+  .patientCell {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .activityItem {
+    padding: 12px;
+  }
+
+  .clock {
+    font-size: 0.95rem;
+    padding: 8px 12px;
+  }
+
+  .cpModalBody {
+    padding: 20px 18px;
+  }
+
+  .cpModalFooter {
+    padding: 0 18px 20px;
+    flex-direction: column;
+  }
+
+  .cpBtnCancel,
+  .cpBtnSubmit {
+    flex: unset;
+    width: 100%;
+  }
+}

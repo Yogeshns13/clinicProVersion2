@@ -2,16 +2,24 @@
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end:   #225ca0;
-  --accent-start:  #207d9c;
-  --accent-end:    #30b2b5;
-  --text-light:    #ffffff;
-  --text-dark:     #1e293b;
-  --glass-bg:      rgba(255, 255, 255, 0.92);
-
-  --modal-header-h: 72px;
-  --modal-footer-h: 76px;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -28,7 +36,7 @@
 /* ==================== PAGE WRAPPER (page mode) ==================== */
 .wrapper {
   min-height: 100vh;
-  background: linear-gradient(135deg, rgba(240, 247, 255, 0.5), rgba(230, 242, 255, 0.5));
+  background: linear-gradient(135deg, var(--TC16), var(--TC18));
 }
 
 .container {
@@ -45,8 +53,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   border: none;
   border-radius: 12px;
   padding: 10px 18px;
@@ -56,12 +64,12 @@
   transition: all 0.3s ease;
   font-family: inherit;
   width: fit-content;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.25);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .backBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 /* ==================== MODAL OVERLAY ==================== */
@@ -80,7 +88,7 @@
 
 /* ==================== MODAL CONTAINER ==================== */
 .modalContainer {
-  background: var(--glass-bg);
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-width: 1200px;
@@ -88,16 +96,16 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 25px 70px var(--TC16);
   animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ==================== MODAL HEADER ==================== */
+/* ==================== MODAL HEADER (WorkShift detailModalHeader style) ==================== */
 .modalHeader {
   flex-shrink: 0;
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -108,7 +116,7 @@
   margin: 0;
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
 }
 
 .headerRight {
@@ -117,27 +125,42 @@
   gap: 15px;
 }
 
+/* ==================== ADD MODAL HEADER CARD (WorkShift style) ==================== */
 .addModalHeaderCard {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
 }
 
+.clinicInfoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC6);
+  opacity: 0.9;
+}
+
+.clinicInfoText {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== CLINIC NAME (WorkShift style) ==================== */
 .clinicInfoName {
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -148,15 +171,15 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
 
 .modalCloseBtn {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border: none;
-  color: var(--text-light);
+  color: var(--TC6);
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -170,7 +193,7 @@
 }
 
 .modalCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
@@ -182,7 +205,7 @@
 
 .validationMsg {
   font-size: 0.75rem;
-  color: red;
+  color: var(--TC14);
   margin-top: 2px;
 }
 
@@ -192,20 +215,19 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  max-height: calc(90vh - var(--modal-header-h));
-  background: linear-gradient(135deg, rgba(240, 247, 255, 0.5), rgba(230, 242, 255, 0.5));
+  background: linear-gradient(135deg, var(--TC16), var(--TC18));
   scrollbar-width: thin;
-  scrollbar-color: rgba(48, 178, 181, 0.4) transparent;
+  scrollbar-color: var(--TC5) transparent;
 }
 
 .modalBody::-webkit-scrollbar { width: 6px; }
 .modalBody::-webkit-scrollbar-track { background: transparent; }
 .modalBody::-webkit-scrollbar-thumb {
-  background: rgba(48, 178, 181, 0.4);
+  background: var(--TC17);
   border-radius: 10px;
 }
 .modalBody::-webkit-scrollbar-thumb:hover {
-  background: rgba(48, 178, 181, 0.7);
+  background: var(--TC5);
 }
 
 /* ==================== FORM ==================== */
@@ -218,10 +240,10 @@
 
 /* ==================== FORM SECTIONS ==================== */
 .formSection {
-  background: white;
+  background: var(--TC6);
   border-radius: 12px;
   padding: 18px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  box-shadow: 0 5px 17px var(--TC16);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -230,10 +252,10 @@
 .formSectionTitle {
   margin: 0 0 4px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
+  border-bottom: 2px solid var(--TC18);
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -252,12 +274,6 @@
   gap: 6px;
 }
 
-/* Timing pill group spans 2 grid columns */
-.colSpan2 {
-  grid-column: span 2;
-}
-
-/* Spans 2 columns in the 4-col grid */
 .colSpan2 {
   grid-column: span 2;
 }
@@ -265,10 +281,10 @@
 .formLabel {
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
-.required { color: #dc2626; font-weight: 700; }
+.required { color: var(--TC14); font-weight: 700; }
 
 /* ==================== INPUTS ==================== */
 .formInput,
@@ -276,10 +292,10 @@
 .formSelect {
   width: 100%;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid rgba(34, 43, 108, 0.15);
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
   border-radius: 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -295,16 +311,16 @@
 
 .formInput::placeholder,
 .formTextarea::placeholder {
-  color: rgba(30, 41, 59, 0.35);
+  color: var(--TC12);
 }
 
 .formInput:focus,
 .formTextarea:focus,
 .formSelect:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
-  background: white;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 4px var(--TC18);
+  background: var(--TC6);
 }
 
 .formInput:disabled,
@@ -316,9 +332,37 @@
 
 .formHint {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--TC12);
   margin-top: 2px;
 }
+
+/* ==================== STATUS BADGES (WorkShift style) ==================== */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.statusBadge.active   { color: var(--TC10); }
+.statusBadge.inactive { color: var(--TC11); }
+.statusBadge.large    { padding: 9px 17px; font-size: 0.77rem; }
+
+.active {
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
+}
+
+.inactive {
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
+}
+
+.large { padding: 9px 17px; font-size: 0.77rem; }
 
 /* ==================== TIMING PILLS ==================== */
 .timingGroup {
@@ -331,9 +375,9 @@
 .timingBtn {
   padding: 8px 18px;
   border-radius: 26px;
-  background: #f1f5f9;
-  border: 2px solid rgba(34, 43, 108, 0.15);
-  color: #475569;
+  background: var(--TC13);
+  border: 2px solid var(--TC16);
+  color: var(--TC15);
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
@@ -345,15 +389,15 @@
 }
 
 .timingBtnActive {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light) !important;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6) !important;
   border-color: transparent !important;
-  box-shadow: 0 4px 12px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 4px 12px var(--TC17);
   transform: translateY(-1px);
 }
 
 .timingBtnActive:hover {
-  box-shadow: 0 6px 18px rgba(32, 125, 156, 0.5);
+  box-shadow: 0 6px 18px var(--TC17);
   transform: translateY(-2px);
 }
 
@@ -377,14 +421,14 @@
   align-items: center;
   gap: 12px;
   padding: 18px 0 4px;
-  border-top: 2px solid rgba(34, 43, 108, 0.1);
+  border-top: 2px solid var(--TC16);
   margin-top: 4px;
 }
 
 /* ── Cancel ── */
 .btnCancel {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   border: none;
   border-radius: 14px;
   height: 40px;
@@ -395,7 +439,7 @@
   position: relative;
   overflow: hidden;
   transition: all 0.4s ease;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 7px 24px var(--TC17);
   white-space: nowrap;
   z-index: 0;
   font-family: inherit;
@@ -405,23 +449,34 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
   opacity: 0;
   transition: opacity 0.4s ease;
   z-index: -1;
 }
 
-.btnCancel:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
+.btnCancel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, var(--TC18) 50%, transparent 60%);
+  background-size: 200% 100%;
+  background-position: -100% 0;
+  transition: background-position 0.5s ease;
+  z-index: -1;
 }
 
+.btnCancel:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px var(--TC17);
+}
 .btnCancel:hover::before { opacity: 1; }
+.btnCancel:hover::after  { background-position: 200% 0; }
 
 .btnCancel:active { transform: translateY(-1px); }
 
 .btnCancel:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none;
 }
@@ -436,9 +491,9 @@
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
   white-space: nowrap;
   position: relative;
   overflow: hidden;
@@ -456,7 +511,7 @@
   left: 50%;
   width: 0;
   height: 0;
-  background: rgba(48, 178, 181, 0.35);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -471,13 +526,13 @@
 
 .btnSave:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 .btnSave:active { transform: translateY(-1px); }
 
 .btnSave:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none;
 }
@@ -491,60 +546,118 @@
   padding: 48px 28px;
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
-.error { color: #dc2626; }
+.error { color: var(--TC14); }
 
 /* ==================== DARK MODE ==================== */
+:global(.dark-mode) .wrapper {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+}
+
 :global(.dark-mode) .modalContainer {
-  background: rgba(30, 41, 59, 0.95);
+  background: var(--TC9);
+  border-color: var(--TC15);
+}
+
+:global(.dark-mode) .modalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+}
+
+:global(.dark-mode) .clinicInfoName {
+  color: var(--TC6);
+}
+
+:global(.dark-mode) .clinicInfoBranch {
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .modalBody {
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
 }
 
-:global(.dark-mode) .formSection {
-  background: #1e293b;
-  box-shadow: 0 5px 17px rgba(0, 0, 0, 0.25);
+:global(.dark-mode) .modalBody::-webkit-scrollbar-thumb {
+  background: var(--TC5);
 }
 
-:global(.dark-mode) .formSectionTitle { color: var(--accent-end); }
+:global(.dark-mode) .formSection {
+  background: var(--TC9);
+  box-shadow: 0 5px 17px var(--TC16);
+}
 
-:global(.dark-mode) .formLabel { color: var(--accent-end); }
+:global(.dark-mode) .formSectionTitle {
+  color: var(--TC5);
+  border-bottom-color: var(--TC18);
+}
+
+:global(.dark-mode) .formLabel { color: var(--TC5); }
 
 :global(.dark-mode) .formInput,
 :global(.dark-mode) .formTextarea,
 :global(.dark-mode) .formSelect {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
+:global(.dark-mode) .formInput::placeholder,
+:global(.dark-mode) .formTextarea::placeholder { color: var(--TC12); }
+
+:global(.dark-mode) .formInput:focus,
+:global(.dark-mode) .formTextarea:focus,
+:global(.dark-mode) .formSelect:focus {
+  border-color: var(--TC5);
+  background: var(--TC9);
+  box-shadow: 0 0 0 4px var(--TC18);
+}
+
+:global(.dark-mode) .formSelect option { background: var(--TC9); color: var(--TC13); }
+:global(.dark-mode) .formSelect:disabled { background: var(--TC9); color: var(--TC15); }
+
 :global(.dark-mode) .timingBtn {
-  background: #334155;
-  border-color: #475569;
-  color: #94a3b8;
+  background: var(--TC7);
+  border-color: var(--TC15);
+  color: var(--TC8);
 }
 
 :global(.dark-mode) .timingBtn:hover {
-  border-color: var(--accent-end);
-  color: var(--accent-end);
-  background: rgba(48, 178, 181, 0.1);
+  border-color: var(--TC5);
+  color: var(--TC5);
+  background: var(--TC18);
+}
+
+/* ── dark mode: status badges (WorkShift style) ── */
+:global(.dark-mode) .statusBadge.active,
+:global(.dark-mode) .active { color: var(--TC5); }
+
+:global(.dark-mode) .statusBadge.inactive {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
 }
 
 :global(.dark-mode) .actions {
-  border-top-color: rgba(71, 85, 105, 0.5);
+  border-top-color: var(--TC15);
 }
 
-:global(.dark-mode) .modalBody::-webkit-scrollbar-thumb {
-  background: rgba(48, 178, 181, 0.5);
+:global(.dark-mode) .btnCancel {
+  background: linear-gradient(135deg, var(--TC2));
+  color: var(--TC6);
+  border-color: var(--TC2);
+}
+:global(.dark-mode) .btnCancel:hover { background: var(--TC14); transform: translateY(-2px); }
+
+:global(.dark-mode) .btnSave {
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
-:global(.dark-mode) .wrapper {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
-}
+:global(.dark-mode) .loading { color: var(--TC5); }
+:global(.dark-mode) .error   { color: var(--TC14); }
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 1024px) {
@@ -553,10 +666,6 @@
 }
 
 @media (max-width: 768px) {
-  :root {
-    --modal-header-h: 80px;
-  }
-
   .formRow { grid-template-columns: 1fr; }
   .colSpan2 { grid-column: span 1; }
 
@@ -572,10 +681,6 @@
 }
 
 @media (max-width: 480px) {
-  :root {
-    --modal-header-h: 90px;
-  }
-
   .modalOverlay { padding: 12px; }
 
   .modalHeader { padding: 18px 20px; }

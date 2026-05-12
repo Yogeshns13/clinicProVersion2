@@ -1,21 +1,36 @@
 /* ViewAppointment.module.css - Optimized: Minimum groups, zero wasted space */
 
+/* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end:   #225ca0;
-  --accent-start:  #207d9c;
-  --accent-end:    #30b2b5;
-  --text-light:    #ffffff;
-  --text-dark:     #1e293b;
-  --card-bg:       #ffffff;
-  --border-light:  #e2e8f0;
-  --danger-color:  #ef4444;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
-/* Animations (kept minimal) */
+/* ==================== ANIMATIONS ==================== */
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ────────────────────────────────────────────────
@@ -25,34 +40,37 @@
 .appointment-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(15, 22, 41, 0.85);
+  backdrop-filter: blur(9px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 16px 20px 20px 60px;
+  animation: fadeIn 0.3s ease;
 }
 
 .appointment-modal {
-  background: #ffffff;
-  border-radius: 12px;
+  background: var(--TC6);
+  border-radius: 20px;
   width: 100%;
   max-width: 980px;
   max-height: 94vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 25px 70px var(--TC16);
+  animation: slideUp 0.4s ease;
 }
 
 /* ────────────────────────────────────────────────
-   HEADER – slimmed down
+   HEADER – matches detailModalHeader from WorkShift
    ──────────────────────────────────────────────── */
 
 .appointment-modal-header {
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -68,34 +86,38 @@
 
 .appointment-header-icon {
   opacity: 0.95;
+  color: var(--TC6);
 }
 
 .appointment-modal-header h2 {
   font-size: 1.2rem;
   font-weight: 700;
+  color: var(--TC6);
 }
 
+/* addModalHeaderCard — matches WorkShift exactly */
 .addModalHeaderCard {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
 }
 
+/* clinicName — matches WorkShift clinicInfoName */
 .clinicInfoName {
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -106,25 +128,31 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
 
 .appointment-modal-close {
-  background: rgba(255, 255, 255, 0.28);
+  background: var(--TC18);
   border: none;
-  color: white;
-  width: 36px;
-  height: 36px;
+  color: var(--TC6);
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .appointment-modal-close:hover {
-  background: rgba(255, 255, 255, 0.45);
+  background: var(--TC17);
+  transform: scale(1.08);
 }
 
 /* ────────────────────────────────────────────────
@@ -135,36 +163,63 @@
   padding: 16px 24px;
   overflow-y: auto;
   flex: 1;
-  background: #f8fafc;
+  background: var(--TC16);
 }
 
 .appointment-details-section {
   margin-bottom: 16px;
-  background: var(--card-bg);
+  background: var(--TC6);
   border-radius: 10px;
   padding: 14px 18px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--TC13);
+  box-shadow: 0 5px 17px var(--TC16);
 }
 
 .appointment-details-section:last-child {
   margin-bottom: 0;
 }
 
+/* statusBadge — matches WorkShift exactly */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.statusBadge.active {
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
+}
+
+.statusBadge.inactive {
+  background: var(--TC15);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+.statusBadge.large {
+  padding: 9px 17px;
+  font-size: 0.77rem;
+}
+
 .appointment-section-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 0 10px 0;
+  margin: 0 0 16px 0;
   font-size: 1rem;
   font-weight: 700;
-  color: var(--primary-start);
-  margin-bottom: 16px;
+  color: var(--TC1);
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.25);
+  border-bottom: 2px solid var(--TC5);
 }
 
 .appointment-section-title svg {
-  color: var(--accent-start);
+  color: var(--TC4);
   flex-shrink: 0;
 }
 
@@ -182,14 +237,14 @@
 
 .appointment-detail-label {
   font-size: 0.78rem;
-  color: #6b7280;
+  color: var(--TC12);
   font-weight: 600;
 }
 
 .appointment-detail-value {
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--text-dark);
+  color: var(--TC9);
   line-height: 1.35;
 }
 
@@ -202,8 +257,8 @@
    ──────────────────────────────────────────────── */
 
 .appointment-cancel-confirmation {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--TC16);
+  border: 1px solid var(--TC16);
   border-radius: 10px;
   padding: 14px 18px;
   margin: 16px 0;
@@ -211,7 +266,7 @@
 }
 
 .cancel-warning {
-  color: #991b1b;
+  color: var(--TC11);
   font-size: 0.95rem;
   font-weight: 600;
   margin-bottom: 12px;
@@ -235,18 +290,23 @@
 }
 
 .cancel-no-btn {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--TC13);
+  color: var(--TC15);
 }
 
-.cancel-no-btn:hover { background: #d1d5db; }
+.cancel-no-btn:hover {
+  background: var(--TC8);
+  transform: translateY(-2px);
+}
 
 .cancel-yes-btn {
-  background: #ef4444;
-  color: white;
+  background: var(--TC14);
+  color: var(--TC6);
 }
 
-.cancel-yes-btn:hover { background: #dc2626; }
+.cancel-yes-btn:hover {
+  background: var(--TC11);
+}
 
 /* ────────────────────────────────────────────────
    FOOTER – slim
@@ -257,8 +317,8 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 14px 24px;
-  border-top: 1px solid #e5e7eb;
-  background: #ffffff;
+  border-top: 2px solid var(--TC16);
+  background: linear-gradient(to bottom, var(--TC6), var(--TC13));
 }
 
 .appointment-cancel-appointment-btn,
@@ -268,26 +328,28 @@
   font-weight: 600;
   font-size: 0.92rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   border: none;
 }
 
 .appointment-cancel-appointment-btn {
-  background: #ef4444;
-  color: white;
+  background: var(--TC14);
+  color: var(--TC6);
 }
 
 .appointment-cancel-appointment-btn:hover {
-  background: #dc2626;
+  background: var(--TC11);
+  transform: translateY(-2px);
 }
 
 .appointment-close-btn {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--TC13);
+  color: var(--TC15);
 }
 
 .appointment-close-btn:hover {
-  background: #d1d5db;
+  background: var(--TC8);
+  transform: translateY(-2px);
 }
 
 /* ────────────────────────────────────────────────
@@ -334,70 +396,99 @@
 
 /* Modal shell */
 :global(.dark-mode) .appointment-modal {
-  background: rgba(30, 41, 59, 0.95);
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+  background: var(--TC9);
+  box-shadow: 0 25px 70px var(--TC16);
+}
+
+/* Header — matches WorkShift detailModalHeader dark mode */
+:global(.dark-mode) .appointment-modal-header {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+/* addModalHeaderCard dark mode — matches WorkShift */
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+}
+
+/* clinicInfoName dark mode — matches WorkShift clinicName dark mode */
+:global(.dark-mode) .clinicInfoName {
+  font-weight: 500;
+  color: var(--TC6);
+}
+
+:global(.dark-mode) .clinicInfoBranch {
+  color: var(--TC8);
+  opacity: 0.8;
 }
 
 /* Body */
 :global(.dark-mode) .appointment-modal-body {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+  background: var(--TC7);
+  opacity: 0.7;
 }
 
 /* Detail sections / cards */
 :global(.dark-mode) .appointment-details-section {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  box-shadow: 0 5px 17px var(--TC16);
+  opacity: 1;
 }
 
 /* Section titles */
 :global(.dark-mode) .appointment-section-title {
-  color: var(--accent-end);
-  border-bottom-color: rgba(48, 178, 181, 0.25);
+  color: var(--TC5);
+  border-bottom-color: var(--TC18);
 }
 
 :global(.dark-mode) .appointment-section-title svg {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
 /* Detail labels & values */
 :global(.dark-mode) .appointment-detail-label {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .appointment-detail-value {
-  color: #e2e8f0;
+  color: var(--TC13);
+}
+
+/* statusBadge dark mode — matches WorkShift */
+:global(.dark-mode) .statusBadge.active {
+  color: var(--TC5);
 }
 
 /* Cancel confirmation block */
 :global(.dark-mode) .appointment-cancel-confirmation {
-  background: rgba(239, 68, 68, 0.08);
-  border-color: rgba(239, 68, 68, 0.3);
+  background: var(--TC16);
+  border-color: var(--TC16);
 }
 
 :global(.dark-mode) .cancel-warning {
-  color: #fca5a5;
+  color: var(--TC14);
 }
 
 :global(.dark-mode) .cancel-no-btn {
-  background: #334155;
-  color: #e2e8f0;
+  background: var(--TC7);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .cancel-no-btn:hover {
-  background: #475569;
+  background: var(--TC15);
 }
 
 /* Footer */
 :global(.dark-mode) .appointment-modal-footer {
-  background: #0f172a;
-  border-top-color: rgba(71, 85, 105, 0.5);
+  background: linear-gradient(135deg, var(--TC9), var(--TC7));
+  border-top-color: var(--TC15);
 }
 
 :global(.dark-mode) .appointment-close-btn {
-  background: #334155;
-  color: #e2e8f0;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .appointment-close-btn:hover {
-  background: #475569;
+  background: var(--TC5);
 }

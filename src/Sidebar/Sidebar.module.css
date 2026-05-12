@@ -1,11 +1,33 @@
 /* src/components/layout/Sidebar.module.css */
 /* FULL COMPLETE SIDEBAR CSS - HOVER TO EXPAND */
 
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
+}
+
 .sidebar {
   width: 238px;
   height: 100vh;
-  background: linear-gradient(180deg, var(--accent-start), var(--primary-end));
-  color: #e2e8f0;
+  background: linear-gradient(180deg, var(--TC4), var(--TC2));
+  color: var(--TC13);
   position: fixed;
   left: 0;
   top: 0;
@@ -13,7 +35,7 @@
   display: flex;
   flex-direction: column;
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 3px 0 26px rgba(0, 0, 0, 0.4);
+  box-shadow: 3px 0 26px var(--TC16);
   overflow: hidden;
 }
 
@@ -27,11 +49,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
   position: relative;
 }
 
-/* Collapsed logo: small square */
 .collapsed .sidebarTop {
   padding: 12px 0;
 }
@@ -44,13 +65,12 @@
   gap: 12px;
   overflow: hidden;
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  background: white;
+  background: var(--TC6);
   padding: 10px;
-  box-shadow: 0 3px 13px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 3px 13px var(--TC16);
   border-radius: 20px;
 }
 
-/* Collapsed: shrink logo wrap to a small circle/square */
 .collapsed .logoWrap {
   padding: 6px;
   border-radius: 12px;
@@ -64,13 +84,12 @@
   height: 100px;
   border-radius: 10px;
   object-fit: contain;
-  background: white;
+  background: var(--TC6);
   padding: 3px;
   flex-shrink: 0;
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Collapsed: shrink the logo image */
 .collapsed .logoImg {
   width: 34px;
   height: 34px;
@@ -80,7 +99,7 @@
 .brandName {
   font-size: 17px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--TC6);
   white-space: nowrap;
 }
 
@@ -108,16 +127,16 @@
   gap: 14px;
   padding: 12px 16px;
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255,255,255,0.7);
   text-decoration: none;
   font-weight: 500;
   transition: all 0.3s ease;
   cursor: pointer;
   text-align: left;
   white-space: nowrap;
+  
 }
 
-/* Collapsed nav items: centre the icon */
 .collapsed .navItem {
   justify-content: center;
   padding: 14px 0;
@@ -128,39 +147,39 @@
 }
 
 .navItem:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--TC4);
+  color: var(--TC6);
   transform: translateX(3px);
 }
 
 .collapsed .navItem:hover {
   transform: none;
-  border-left-color: rgba(48, 178, 181, 0.55);
+  border-left-color: var(--TC17);
 }
 
 .navItem.active {
-  background: linear-gradient(135deg, #30b2b5, #207d9c);
-  color: white;
+  background: linear-gradient(135deg, var(--TC5), var(--TC4));
+  color: var(--TC6);
   font-weight: 600;
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.4);
+  box-shadow: 0 5px 17px var(--TC17);
   transform: translateX(2px);
 }
 
 .collapsed .navItem.active {
   transform: none;
-  background: rgba(48, 178, 181, 0.22) !important;
-  border-left-color: #30b2b5;
-  box-shadow: inset 0 0 14px rgba(48, 178, 181, 0.1);
+  background: var(--TC18) !important;
+  border-left-color: var(--TC5);
+  box-shadow: inset 0 0 14px var(--TC18);
 }
 
-/* Active section: highlight parent dropdown icon when collapsed */
 .navItem.activeSection {
-  color: white;
+  color: var(--TC6);
+  background: var(--TC2);
 }
 
 .collapsed .navItem.activeSection {
-  border-left-color: #30b2b5;
-  background: rgba(48, 178, 181, 0.15);
+  border-left-color: var(--TC5);
+  background: var(--TC5);
 }
 
 .navLabel {
@@ -169,7 +188,7 @@
   text-align: left;
   font-size: 13px;
   font-weight: 500;
-  color: #ffffff;
+  color: var(--TC6);
 }
 
 /* Dropdown */
@@ -193,22 +212,22 @@
 .dropdownArrow {
   margin-left: auto;
   transition: transform 0.35s ease;
-  color: #94a3b8;
+  color: var(--TC8);
 }
 
 .dropdownToggle.open .dropdownArrow {
   transform: rotate(180deg);
-  color: #30b2b5;
+  color: var(--TC5);
 }
 
 .dropdownToggle:hover .dropdownArrow {
-  color: white;
+  color: var(--TC6);
 }
 
 .dropdownMenu {
   margin-top: 7px;
   padding-left: 10px;
-  border-left: 3px solid #30b2b5;
+  border-left: 3px solid var(--TC5);
   animation: slideDown 0.35s ease-out;
   overflow: hidden;
 }
@@ -226,7 +245,6 @@
   }
 }
 
-/* Hide dropdown menu when collapsed */
 .collapsed .dropdownMenu {
   display: none;
 }
@@ -239,7 +257,7 @@
   align-items: center;
   padding: 10px 17px;
   border-radius: 10px;
-  color: #ffffff;
+  color: var(--TC6);
   font-size: 12.5px;
   font-weight: 500;
   text-decoration: none;
@@ -255,7 +273,7 @@
   left: 50%;
   width: 0;
   height: 0;
-  background: rgba(48, 178, 181, 0.4);
+  background: var(--TC17);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -270,7 +288,7 @@
   top: 50%;
   width: 7px;
   height: 7px;
-  background: #30b2b5;
+  background: var(--TC5);
   border-radius: 50%;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -284,11 +302,11 @@
 }
 
 .dropdownItem:hover {
-  background: rgba(48, 178, 181, 0.18);
-  color: white;
+  background: var(--TC18);
+  color: var(--TC6);
   padding-left: 24px;
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+  box-shadow: 0 5px 17px var(--TC17);
 }
 
 .dropdownItem:hover::before {
@@ -305,17 +323,17 @@
 }
 
 .dropdownItem.active {
-  background: rgba(48, 178, 181, 0.3);
-  color: #ffffff;
+  background: var(--TC5);
+  color: var(--TC6);
   font-weight: 600;
   padding-left: 27px;
-  border-left: 3px solid #30b2b5;
+  border-left: 3px solid var(--TC5);
 }
 
 .dropdownItem.active::after {
   opacity: 1;
-  background: #30b2b5;
-  box-shadow: 0 0 13px rgba(48, 178, 181, 0.6);
+  background: var(--TC5);
+  box-shadow: 0 0 13px var(--TC17);
 }
 
 .dropdownLabel {
@@ -325,13 +343,13 @@
 /* Logout Button */
 .navItem.logout {
   margin-top: auto;
-  color: #fca5a5;
-  border-top: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--TC8);
+  border-top: 1px solid rgba(239,68,68,0.2);
 }
 
 .navItem.logout:hover {
-  background: rgba(239, 68, 68, 0.25);
-  color: #ff6b6b;
+  background: rgba(239,68,68,0.25);
+  color: var(--TC14);
   transform: translateX(3px);
 }
 
@@ -340,11 +358,11 @@
 }
 
 .navItem.logout .navIcon {
-  color: #fca5a5;
+  color: var(--TC8);
 }
 
 .navItem.logout:hover .navIcon {
-  color: #ff6b6b;
+  color: var(--TC14);
   transform: rotate(10deg) scale(1.2);
 }
 
@@ -353,8 +371,8 @@
   padding: 17px;
   text-align: center;
   font-size: 10.5px;
-  color: rgba(255, 255, 255, 0.5);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255,255,255,0.5);
+  border-top: 1px solid rgba(255,255,255,0.08);
   transition: all 0.3s ease;
   min-height: 40px;
 }
@@ -379,129 +397,211 @@
 }
 
 .nav::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border-radius: 2.5px;
 }
 
 .nav::-webkit-scrollbar-thumb:hover {
-  background: #30b2b5;
+  background: var(--TC5);
 }
+
+/* ==================== ADD MODAL HEADER CARD (WorkShift style) ==================== */
+.addModalHeaderCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 12px;
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px var(--TC16);
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+/* ==================== CLINIC NAME (WorkShift style) ==================== */
+.clinicInfoName {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--TC6);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
+}
+
+.clinicInfoBranch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--TC13);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
+}
+
+/* ==================== DETAIL MODAL HEADER (WorkShift style) ==================== */
+.detailModalHeader {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ==================== STATUS BADGES (WorkShift style) ==================== */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+.statusBadge.active   { color: var(--TC10); }
+.statusBadge.inactive { color: var(--TC11); }
+.statusBadge.large    { padding: 9px 17px; font-size: 0.77rem; }
+
+.active {
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
+}
+.inactive {
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
+}
+.large { padding: 9px 17px; font-size: 0.77rem; }
 
 /* ============================================= */
 /*               DARK MODE SUPPORT               */
 /* ============================================= */
 
-:root {
-  --sidebar-bg-start: #207d9c;
-  --sidebar-bg-end:   #225ca0;
-  --text-primary:     #e2e8f0;
-  --text-secondary:   rgba(255,255,255,0.7);
-  --hover-bg:         rgba(255,255,255,0.1);
-  --active-bg-start:  #30b2b5;
-  --active-bg-end:    #207d9c;
-  --border-light:     rgba(255,255,255,0.08);
-  --tooltip-bg:       #1e293b;
-  --logout-color:     #fca5a5;
-  --logout-hover:     #ff6b6b;
-}
-
 :global(html.dark-mode) .sidebar {
-  --sidebar-bg-start: #0f172a;
-  --sidebar-bg-end:   #1e293b;
-  --text-primary:     #f1f5f9;
-  --text-secondary:   rgba(241,245,249,0.8);
-  --hover-bg:         rgba(241,245,249,0.08);
-  --active-bg-start:  #334155;
-  --active-bg-end:    #475569;
-  --border-light:     rgba(241,245,249,0.06);
-  --tooltip-bg:       #0f172a;
-  --logout-color:     #f87171;
-  --logout-hover:     #ef4444;
-}
-
-:global(html.dark-mode) .sidebar {
-  background: linear-gradient(180deg, var(--sidebar-bg-start), var(--sidebar-bg-end));
+  background: linear-gradient(180deg, var(--TC16), var(--TC9));
 }
 
 :global(html.dark-mode) .sidebarTop {
-  border-bottom-color: var(--border-light);
+  border-bottom-color: var(--TC16);
 }
 
 :global(html.dark-mode) .logoWrap {
-  background: #ffffff;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+  background: var(--TC6);
+  box-shadow: 0 4px 14px var(--TC16);
 }
 
 :global(html.dark-mode) .navItem {
-  color: var(--text-secondary);
+  color: var(--TC8);
 }
 
 :global(html.dark-mode) .navItem:hover {
-  background: var(--hover-bg);
-  color: var(--text-primary);
+  background: var(--TC16);
+  color: var(--TC13);
 }
 
 :global(html.dark-mode) .navItem.active {
-  background: linear-gradient(135deg, var(--active-bg-start), var(--active-bg-end));
-  color: white;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+  color: var(--TC6);
+  box-shadow: 0 4px 14px var(--TC16);
+}
+
+:global(html.dark-mode) .collapsed .navItem.active {
+  background: var(--TC16) !important;
+  border-left-color: var(--TC5);
+}
+
+:global(html.dark-mode) .navItem.activeSection {
+  color: var(--TC13);
+  background: var(--TC7);
+}
+
+:global(html.dark-mode) .collapsed .navItem.activeSection {
+  border-left-color: var(--TC5);
+  background: var(--TC7);
 }
 
 :global(html.dark-mode) .navLabel {
-  color: var(--text-primary);
+  color: var(--TC13);
 }
 
 :global(html.dark-mode) .dropdownArrow {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(html.dark-mode) .dropdownToggle.open .dropdownArrow {
-  color: #60a5fa;
+  color: var(--TC5);
 }
 
 :global(html.dark-mode) .dropdownMenu {
-  border-left-color: #60a5fa;
+  border-left-color: var(--TC5);
 }
 
 :global(html.dark-mode) .dropdownItem {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 :global(html.dark-mode) .dropdownItem:hover {
-  background: rgba(96,165,250,0.12);
-  color: white;
+  background: var(--TC18);
+  color: var(--TC6);
 }
 
 :global(html.dark-mode) .dropdownItem.active {
-  background: rgba(96,165,250,0.18);
-  border-left-color: #60a5fa;
+  background: var(--TC18);
+  border-left-color: var(--TC5);
+  color: var(--TC6);
 }
 
-:global(html.dark-mode) .tooltip {
-  background: #0f172a;
-  border: 1px solid #334155;
-  color: #f1f5f9;
+:global(html.dark-mode) .dropdownItem.active::after {
+  background: var(--TC5);
+  box-shadow: 0 0 13px var(--TC17);
 }
 
 :global(html.dark-mode) .sidebarFooter {
-  color: rgba(241,245,249,0.45);
-  border-top-color: var(--border-light);
+  color: var(--TC12);
+  border-top-color: var(--TC16);
 }
 
 :global(html.dark-mode) .navItem.logout {
-  color: var(--logout-color);
+  color: var(--TC8);
   border-top-color: rgba(239,68,68,0.15);
 }
 
 :global(html.dark-mode) .navItem.logout:hover {
   background: rgba(239,68,68,0.18);
-  color: var(--logout-hover);
+  color: var(--TC14);
 }
 
 :global(html.dark-mode) .navItem.logout .navIcon {
-  color: var(--logout-color);
+  color: var(--TC8);
 }
 
 :global(html.dark-mode) .navItem.logout:hover .navIcon {
-  color: var(--logout-hover);
+  color: var(--TC14);
+}
+
+/* ── addModalHeaderCard dark (WorkShift style) ── */
+:global(html.dark-mode) .addModalHeaderCard { background: var(--TC12); }
+
+:global(html.dark-mode) .clinicInfoName   { color: var(--TC6); }
+:global(html.dark-mode) .clinicInfoBranch { color: var(--TC13); }
+
+/* ── detailModalHeader dark (WorkShift style) ── */
+:global(html.dark-mode) .detailModalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+/* ── status badges dark (WorkShift style) ── */
+:global(html.dark-mode) .statusBadge.active,
+:global(html.dark-mode) .active { color: var(--TC5); }
+
+:global(html.dark-mode) .statusBadge.inactive {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
 }

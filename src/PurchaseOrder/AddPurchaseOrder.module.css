@@ -1,17 +1,28 @@
 /* AddPurchaseOrder.module.css - Exact same styling & alignment as Add Clinic popup */
 
+/* ==================== CSS VARIABLES (from WorkShift) ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end:   #225ca0;
-  --accent-start:  #207d9c;
-  --accent-end:    #30b2b5;
-  --text-light:    #ffffff;
-  --text-dark:     #1e293b;
-  --glass-bg:      rgba(255, 255, 255, 0.92);
-  --glass-border:  rgba(255, 255, 255, 0.4);
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
-/* Animations */
+/* ==================== ANIMATIONS ==================== */
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -22,7 +33,7 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Overlay */
+/* ==================== OVERLAY ==================== */
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -36,28 +47,29 @@
   animation: fadeIn 0.3s ease;
 }
 
-/* Modal shell */
+/* ==================== MODAL SHELL ==================== */
 .modal {
-  background: var(--glass-bg);
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
-  max-width: 720px;               /* same as most clinic add forms */
+  max-width: 720px;
   max-height: 92vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 68px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 24px 68px var(--TC16);
   animation: slideUp 0.35s ease;
 }
 
+/* ==================== MODAL HEADER (WorkShift detailModalHeader style) ==================== */
 .modalHeader {
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.18);
+  gap: 20px;
 }
 
 .modalHeader h2 {
@@ -65,6 +77,7 @@
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: -0.01em;
+  color: var(--TC6);
 }
 
 .headerRight {
@@ -73,27 +86,42 @@
   gap: 15px;
 }
 
+/* ==================== ADD MODAL HEADER CARD (WorkShift style) ==================== */
 .addModalHeaderCard {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
 }
 
+.clinicInfoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC6);
+  opacity: 0.9;
+}
+
+.clinicInfoText {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== CLINIC INFO NAME / BRANCH (WorkShift style) ==================== */
 .clinicInfoName {
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -104,39 +132,43 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
 
+/* ==================== MODAL CLOSE (WorkShift detailCloseBtn style) ==================== */
 .modalClose {
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--TC18);
   border: none;
-  color: white;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  font-size: 1.5rem;
+  color: var(--TC6);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.25s ease;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .modalClose:hover {
-  background: rgba(255, 255, 255, 0.38);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
-/* Body */
+/* ==================== MODAL BODY ==================== */
 .modalBody {
   padding: 24px 28px;
   overflow-y: auto;
   flex: 1;
-  background: #f9fafb;
+  background: var(--TC13);
 }
 
+/* ==================== FORM GRID ==================== */
 .formGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -156,22 +188,24 @@
 .formGroup label {
   font-size: 0.86rem;
   font-weight: 600;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 .required {
-  color: #ef4444;
+  color: var(--TC14);
   margin-left: 4px;
+  font-weight: 700;
 }
 
 .formGroup input,
 .formGroup select {
   width: 100%;
   padding: 11px 14px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--TC8);
   border-radius: 10px;
   font-size: 0.92rem;
-  background: white;
+  background: var(--TC6);
+  color: var(--TC9);
   transition: all 0.2s ease;
   box-sizing: border-box;
 }
@@ -179,47 +213,75 @@
 .formGroup input:focus,
 .formGroup select:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .formGroup select:disabled {
-  background: #f1f5f9;
+  background: var(--TC13);
   cursor: not-allowed;
   opacity: 0.7;
 }
 
-/* Note/info box - aligned perfectly */
+/* ==================== NOTE / INFO BOX ==================== */
 .formGroup .note {
   padding: 12px 16px;
-  background: rgba(48, 178, 181, 0.08);
+  background: var(--TC18);
   border-radius: 10px;
-  border: 1px solid rgba(48, 178, 181, 0.2);
+  border: 1px solid var(--TC17);
   font-size: 0.85rem;
-  color: #475569;
+  color: var(--TC15);
   line-height: 1.5;
   grid-column: 1 / -1;
 }
 
 .formGroup .note strong {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
 .formGroup .note .required {
-  color: #dc2626;
-  font-weight: bold;
+  color: var(--TC14);
+  font-weight: 700;
 }
 
-/* Footer - exact alignment */
+/* ==================== STATUS BADGES (WorkShift style) ==================== */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.statusBadge.active {
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
+}
+
+.statusBadge.inactive {
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
+}
+
+.statusBadge.large {
+  padding: 9px 17px;
+  font-size: 0.77rem;
+}
+
+/* ==================== MODAL FOOTER ==================== */
 .modalFooter {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   padding: 18px 28px;
-  border-top: 1px solid rgba(34, 43, 108, 0.1);
-  background: #f8fafc;
+  border-top: 1px solid var(--TC16);
+  background: var(--TC6);
 }
 
+/* ==================== BUTTONS ==================== */
 .btnCancel,
 .btnSubmit {
   padding: 11px 26px;
@@ -229,28 +291,28 @@
   cursor: pointer;
   transition: all 0.3s ease;
   border: none;
-  min-width: 140px;               /* ensures buttons align nicely */
+  min-width: 140px;
 }
 
 .btnCancel {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--TC13);
+  color: var(--TC15);
 }
 
 .btnCancel:hover {
-  background: #cbd5e1;
+  background: var(--TC8);
   transform: translateY(-2px);
 }
 
 .btnSubmit {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .btnSubmit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 9px 22px rgba(32, 125, 156, 0.42);
+  box-shadow: 0 9px 22px var(--TC17);
 }
 
 .btnCancel:disabled,
@@ -261,62 +323,70 @@
   box-shadow: none;
 }
 
+/* ==================== FORM MESSAGES ==================== */
 .formError {
-  padding: 6px 8px;
+  padding: 9px 12px;
   border-radius: 10px;
-  border: 2px solid rgba(239, 68, 68, 0.3);
+  border: 2px solid var(--TC16);
   font-size: 0.85rem;
   font-weight: 600;
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
-  color: #dc2626;
+  background: var(--TC16);
+  color: var(--TC14);
   margin-bottom: 12px;
+  box-shadow: 0 3px 9px var(--TC16);
 }
 
 .formSuccess {
-  padding: 6px 8px;
+  padding: 9px 12px;
   border-radius: 10px;
-  border: 2px solid rgba(34, 197, 94, 0.3);
+  border: 2px solid var(--TC18);
   font-size: 0.85rem;
   font-weight: 600;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.2));
-  color: #059669;
+  background: var(--TC18);
+  color: var(--TC10);
   margin-bottom: 12px;
+  box-shadow: 0 3px 9px var(--TC16);
 }
 
 /* ==================== DARK MODE ==================== */
 
 /* Modal shell */
 :global(.dark-mode) .modal {
-  background: rgba(30, 41, 59, 0.95);
-  box-shadow: 0 24px 68px rgba(0, 0, 0, 0.6);
+  background: var(--TC9);
+  box-shadow: 0 24px 68px var(--TC16);
+}
+
+/* Modal header */
+:global(.dark-mode) .modalHeader {
+  background:  var(--TC7);
 }
 
 /* Modal body */
 :global(.dark-mode) .modalBody {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+  background: var(--TC15 );
 }
 
 /* Modal footer */
 :global(.dark-mode) .modalFooter {
-  background: #0f172a;
-  border-top-color: rgba(71, 85, 105, 0.5);
+  background: var(--TC9);
+  border-top-color: var(--TC15);
 }
 
 /* Form labels */
 :global(.dark-mode) .formGroup label {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
 /* Inputs and selects */
 :global(.dark-mode) .formGroup input,
 :global(.dark-mode) .formGroup select {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .formGroup input::placeholder {
-  color: rgba(148, 163, 184, 0.5);
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .formGroup input::-webkit-calendar-picker-indicator {
@@ -326,40 +396,59 @@
 
 :global(.dark-mode) .formGroup input:focus,
 :global(.dark-mode) .formGroup select:focus {
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
-  background: #1e293b;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
+  background: var(--TC9);
 }
 
 :global(.dark-mode) .formGroup select option {
-  background: #1e293b;
-  color: #e2e8f0;
+  background: var(--TC9);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .formGroup select:disabled {
-  background: rgba(15, 23, 42, 0.6);
-  border-color: #334155;
-  color: #64748b;
+  background: var(--TC9);
+  border-color: var(--TC7);
+  color: var(--TC15);
 }
 
 /* Note/info box */
 :global(.dark-mode) .formGroup .note {
-  background: rgba(48, 178, 181, 0.08);
-  border-color: rgba(48, 178, 181, 0.2);
-  color: #94a3b8;
+  background: var(--TC18);
+  border-color: var(--TC17);
+  color: var(--TC12);
 }
 
 /* Cancel button */
 :global(.dark-mode) .btnCancel {
-  background: #334155;
-  color: #e2e8f0;
+  background: var(--TC7);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .btnCancel:hover {
-  background: #475569;
+  background: var(--TC15);
 }
 
-/* Responsive - same as Add Clinic */
+/* Add modal header card */
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+  border-color: var(--TC15);
+}
+
+/* Status badges */
+:global(.dark-mode) .statusBadge.active {
+  background: var(--TC18);
+  color: var(--TC5);
+  border: 1px solid var(--TC16);
+}
+
+:global(.dark-mode) .statusBadge.inactive {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {
   .modal {
     max-width: 96%;

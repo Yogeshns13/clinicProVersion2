@@ -2,12 +2,24 @@
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -25,7 +37,7 @@
 .detailModalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--TC16);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -37,7 +49,7 @@
 
 /* ==================== MODAL SHELL ==================== */
 .detailModalContent {
-  background: white;
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-width: 860px;
@@ -45,15 +57,15 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 70px var(--TC16);
   animation: slideUp 0.4s ease;
 }
 
 /* ==================== GRADIENT HEADER ==================== */
 .detailModalHeader {
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -63,15 +75,16 @@
 .detailHeaderContent { flex: 1; }
 
 .detailHeaderContent h2 {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
 }
 
 .detailHeaderMeta {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  margin-top: 4px;
 }
 
 .addModalHeaderCard {
@@ -79,13 +92,26 @@
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
+}
+
+.clinicInfoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC6);
+  opacity: 0.9;
+}
+
+.clinicInfoText {
+  display: flex;
+  flex-direction: column;
 }
 
 .clinicInfoName {
@@ -94,7 +120,7 @@
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -105,7 +131,7 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -113,28 +139,28 @@
 .workIdBadge {
   display: inline-block;
   padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--TC18);
   border-radius: 6px;
   font-size: 0.8rem;
   font-weight: 600;
   backdrop-filter: blur(10px);
-  color: var(--text-light);
+  color: var(--TC6);
 }
 
 .activeBadge {
-  background: rgba(22, 163, 74, 0.35) !important;
-  border: 1px solid rgba(22, 163, 74, 0.5);
+  background: var(--TC18) !important;
+  border: 1px solid var(--TC16);
 }
 
 .inactiveBadge {
-  background: rgba(220, 38, 38, 0.35) !important;
-  border: 1px solid rgba(220, 38, 38, 0.5);
+  background: var(--TC16) !important;
+  border: 1px solid var(--TC16);
 }
 
 .detailCloseBtn {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border: none;
-  color: var(--text-light);
+  color: var(--TC6);
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -149,7 +175,7 @@
 }
 
 .detailCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
@@ -167,28 +193,28 @@
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
   padding: 24px 28px;
-  background: linear-gradient(135deg, rgba(240, 247, 255, 0.5), rgba(230, 242, 255, 0.5));
+  background-color: var(--TC16);
   flex: 1;
 }
 
 .infoCard {
-  background: white;
+  background: var(--TC6);
   border-radius: 12px;
   padding: 18px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  box-shadow: 0 5px 17px var(--TC16);
 }
 
 .infoHeader {
   margin-bottom: 14px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
+  border-bottom: 2px solid var(--TC18);
 }
 
 .infoHeader h3 {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 .infoContent {
@@ -202,14 +228,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(34, 43, 108, 0.06);
+  border-bottom: 1px solid var(--TC16);
 }
 
 .infoRow:last-child { border-bottom: none; }
 
 .infoLabel {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 600;
   flex-shrink: 0;
   margin-right: 12px;
@@ -217,7 +243,7 @@
 
 .infoValue {
   font-size: 0.85rem;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-weight: 600;
   text-align: right;
   word-break: break-word;
@@ -225,7 +251,7 @@
 
 /* ==================== INLINE STATUS BADGES ==================== */
 .statusBadge {
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 26px;
   font-size: 0.68rem;
   font-weight: 700;
@@ -234,27 +260,27 @@
 }
 
 .active {
-  background: rgba(34, 197, 94, 0.15);
-  color: #166534;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
 }
 
 .inactive {
-  background: rgba(239, 68, 68, 0.15);
-  color: #991b1b;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
 }
 
 .blacklisted {
-  background: rgba(30, 30, 30, 0.12);
-  color: #1e1e1e;
-  border: 1px solid rgba(30, 30, 30, 0.25);
+  background: var(--TC16);
+  color: var(--TC9);
+  border: 1px solid var(--TC16);
 }
 
 .suspended {
-  background: rgba(234, 179, 8, 0.15);
-  color: #854d0e;
-  border: 1px solid rgba(234, 179, 8, 0.3);
+  background: var(--TC16);
+  color: var(--TC15);
+  border: 1px solid var(--TC16);
 }
 
 /* ==================== MODAL FOOTER ==================== */
@@ -264,16 +290,16 @@
   align-items: center;
   gap: 12px;
   padding: 18px 28px;
-  border-top: 2px solid rgba(34, 43, 108, 0.1);
-  background: #f8fafc;
+  border-top: 2px solid var(--TC16);
+  background: var(--TC6);
 }
 
 /* ==================== FOOTER BUTTONS ==================== */
 
 /* ── Close / Cancel ── */
 .btnCancel {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   border: none;
   border-radius: 14px;
   height: 40px;
@@ -284,7 +310,7 @@
   position: relative;
   overflow: hidden;
   transition: all 0.4s ease;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 7px 24px var(--TC17);
   white-space: nowrap;
   z-index: 0;
 }
@@ -293,7 +319,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
   opacity: 0;
   transition: opacity 0.4s ease;
   z-index: -1;
@@ -301,7 +327,7 @@
 
 .btnCancel:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
+  box-shadow: 0 14px 34px var(--TC17);
 }
 
 .btnCancel:hover::before { opacity: 1; }
@@ -318,9 +344,9 @@
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: linear-gradient(135deg, #dc2626, #ef4444);
-  color: var(--text-light);
-  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC16);
   white-space: nowrap;
   position: relative;
   overflow: hidden;
@@ -334,7 +360,7 @@
   left: 50%;
   width: 0;
   height: 0;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -349,7 +375,7 @@
 
 .btnDelete:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.45);
+  box-shadow: 0 8px 20px var(--TC16);
 }
 
 .btnDelete:active { transform: translateY(-1px); }
@@ -364,9 +390,9 @@
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
   white-space: nowrap;
   position: relative;
   overflow: hidden;
@@ -380,7 +406,7 @@
   left: 50%;
   width: 0;
   height: 0;
-  background: rgba(48, 178, 181, 0.35);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -395,37 +421,72 @@
 
 .btnUpdate:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 .btnUpdate:active { transform: translateY(-1px); }
 
 /* ==================== DARK MODE ==================== */
-:global(.dark-mode) .detailModalContent { background: #1e293b; }
+:global(.dark-mode) .detailModalContent { background: var(--TC9); box-shadow: 0 25px 70px var(--TC16); }
+
+:global(.dark-mode) .detailModalHeader  { background: var(--TC15); }
 
 :global(.dark-mode) .detailModalFooter {
-  background: #0f172a;
-  border-top-color: rgba(71, 85, 105, 0.5);
+  background: var(--TC9);
+  border-top-color: var(--TC15);
 }
 
-:global(.dark-mode) .infoSection {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
-}
+:global(.dark-mode) .infoSection { background-color: var(--TC7); opacity: 0.7; }
 
 :global(.dark-mode) .infoCard {
-  background: #1e293b;
-  box-shadow: 0 5px 17px rgba(0, 0, 0, 0.25);
+  background: var(--TC9);
+  box-shadow: 0 5px 17px var(--TC16);
 }
 
-:global(.dark-mode) .infoHeader h3 { color: var(--accent-end); }
+:global(.dark-mode) .infoHeader { border-bottom-color: var(--TC18); }
 
-:global(.dark-mode) .infoLabel { color: #94a3b8; }
+:global(.dark-mode) .infoHeader h3 { color: var(--TC5); }
 
-:global(.dark-mode) .infoValue { color: #e2e8f0; }
+:global(.dark-mode) .infoLabel { color: var(--TC12); }
 
-:global(.dark-mode) .infoRow { border-bottom-color: rgba(71, 85, 105, 0.4); }
+:global(.dark-mode) .infoValue { color: var(--TC13); }
 
-:global(.dark-mode) .active { color: #9cc14d; }
+:global(.dark-mode) .infoRow { border-bottom-color: var(--TC15); }
+
+:global(.dark-mode) .addModalHeaderCard { background: var(--TC12); }
+
+:global(.dark-mode) .active {
+  background: var(--TC18);
+  color: var(--TC5);
+  border: 1px solid var(--TC16);
+}
+
+:global(.dark-mode) .inactive {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+:global(.dark-mode) .blacklisted {
+  background: var(--TC16);
+  color: var(--TC13);
+  border: 1px solid var(--TC15);
+}
+
+:global(.dark-mode) .suspended {
+  background: var(--TC16);
+  color: var(--TC8);
+  border: 1px solid var(--TC15);
+}
+
+:global(.dark-mode) .btnCancel,
+:global(.dark-mode) .btnDelete {
+  background: linear-gradient(135deg, var(--TC2));
+  color: var(--TC6);
+  border-color: var(--TC2);
+}
+:global(.dark-mode) .btnCancel:hover,
+:global(.dark-mode) .btnDelete:hover { background: var(--TC14); transform: translateY(-2px); }
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {

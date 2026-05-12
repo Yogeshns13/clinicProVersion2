@@ -1,17 +1,60 @@
 // src/components/MessagePopup.jsx
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+
+const getIsDark = () => {
+  const stored = localStorage.getItem('darkMode') || localStorage.getItem('theme') || localStorage.getItem('color-theme');
+  if (stored !== null) {
+    return stored === 'true' || stored === 'dark';
+  }
+  // Fallback: <html> class / data-theme / OS preference
+  return (
+    document.documentElement.classList.contains('dark') ||
+    document.documentElement.getAttribute('data-theme') === 'dark' ||
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+};
 
 const MessagePopup = ({ visible, message, type = 'success', onClose }) => {
 
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; });
 
+  const [isDark, setIsDark] = useState(getIsDark);
+
+  useEffect(() => {
+    const update = () => setIsDark(getIsDark());
+
+    // Watch localStorage changes from other tabs
+    window.addEventListener('storage', update);
+
+    // Watch <html> class / data-theme attribute changes
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+
+    // Watch OS preference changes
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    mq.addEventListener('change', update);
+
+    update();
+
+    return () => {
+      window.removeEventListener('storage', update);
+      observer.disconnect();
+      mq.removeEventListener('change', update);
+    };
+  }, []);
+
+  // Re-check every time the popup becomes visible
+  useEffect(() => {
+    if (visible) setIsDark(getIsDark());
+  }, [visible]);
+
   useEffect(() => {
     if (visible && type === 'success') {
       const timer = setTimeout(() => onCloseRef.current(), 1000);
       return () => clearTimeout(timer);
     }
-  }, [visible, type]); // ← intentionally excludes onClose
+  }, [visible, type]);
 
   if (!visible || !message) return null;
 
@@ -98,7 +141,7 @@ const MessagePopup = ({ visible, message, type = 'success', onClose }) => {
           position: 'fixed',
           padding: '20px 20px 20px 260px',
           inset: 0,
-          backgroundColor: 'rgba(34, 43, 108, 0.32)',
+          backgroundColor: isDark ? 'rgba(0, 0, 0, 0.55)' : 'rgba(34, 43, 108, 0.32)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -108,16 +151,18 @@ const MessagePopup = ({ visible, message, type = 'success', onClose }) => {
         {/* ── Card ── */}
         <div
           style={{
-            background: 'rgba(255, 255, 255, 0.92)',
+            background: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.92)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
             borderRadius: '14px',
-            border: '1px solid rgba(255, 255, 255, 0.4)',
+            border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(255, 255, 255, 0.4)',
             width: '100%',
             maxWidth: '420px',
             margin: '0 1rem',
             overflow: 'hidden',
-            boxShadow: '0 8px 32px rgba(34, 43, 108, 0.18)',
+            boxShadow: isDark
+              ? '0 8px 32px rgba(0, 0, 0, 0.45)'
+              : '0 8px 32px rgba(34, 43, 108, 0.18)',
             animation: 'mp-fadein 0.22s ease-out forwards',
           }}
         >
@@ -153,7 +198,7 @@ const MessagePopup = ({ visible, message, type = 'success', onClose }) => {
                   style={{
                     fontSize: '15px',
                     fontWeight: 600,
-                    color: '#1e293b',
+                    color: isDark ? '#f1f5f9' : '#1e293b',
                     margin: '0 0 4px',
                     lineHeight: 1.4,
                   }}
@@ -163,7 +208,7 @@ const MessagePopup = ({ visible, message, type = 'success', onClose }) => {
                 <p
                   style={{
                     fontSize: '13.5px',
-                    color: '#475569',
+                    color: isDark ? '#94a3b8' : '#475569',
                     margin: 0,
                     lineHeight: 1.55,
                   }}
@@ -179,7 +224,7 @@ const MessagePopup = ({ visible, message, type = 'success', onClose }) => {
                 style={{
                   marginTop: '1rem',
                   height: '3px',
-                  background: 'rgba(34, 43, 108, 0.08)',
+                  background: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(34, 43, 108, 0.08)',
                   borderRadius: '2px',
                   overflow: 'hidden',
                 }}
@@ -219,7 +264,9 @@ const MessagePopup = ({ visible, message, type = 'success', onClose }) => {
                     cursor: 'pointer',
                     letterSpacing: '0.02em',
                     transition: 'opacity 0.15s',
-                    boxShadow: '0 2px 8px rgba(34,43,108,0.18)',
+                    boxShadow: isDark
+                      ? '0 2px 8px rgba(0, 0, 0, 0.35)'
+                      : '0 2px 8px rgba(34,43,108,0.18)',
                   }}
                 >
                   OK, got it

@@ -35,7 +35,7 @@ import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
 import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
-import { useTableOptions } from '../Hooks/useTableOptions.js'; // ← NEW
+import { useTableOptions } from '../Hooks/UseTableOptions.js'; // ← NEW
 
 // ────────────────────────────────────────────────
 // TABLE IDs

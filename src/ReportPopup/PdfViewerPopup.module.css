@@ -1,0 +1,242 @@
+/* src/components/PdfViewerPopup.module.css */
+/* Uses only root CSS variables from the project theme */
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== OVERLAY ==================== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--TC16);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1300;
+  padding: 20px 20px 20px 60px;
+  animation: fadeIn 0.25s ease;
+}
+
+/* ==================== MODAL ==================== */
+.modal {
+  width: 100%;
+  max-width: 980px;
+  height: 92vh;
+  background: var(--TC9);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow:
+    0 32px 80px var(--TC16),
+    0 0 0 1px var(--TC8);
+  animation: slideUp 0.35s ease;
+}
+
+/* ==================== HEADER ==================== */
+.header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  border-bottom: 2px solid var(--TC16);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.headerIcon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: var(--TC18);
+  border: 1.5px solid var(--TC16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC6);
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px var(--TC17);
+}
+
+.headerTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--TC6);
+  line-height: 1.2;
+}
+
+.headerSubtitle {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  color: var(--TC13);
+  font-weight: 500;
+  letter-spacing: 0.4px;
+}
+
+.closeBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
+  color: var(--TC6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  background: var(--TC17);
+  transform: scale(1.08);
+}
+
+/* ==================== BODY ==================== */
+.body {
+  flex: 1;
+  min-height: 0;
+  background: var(--TC7);
+  padding: 16px;
+  display: flex;
+  align-items: stretch;
+}
+
+.iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 10px;
+  background: var(--TC6);
+  box-shadow: 0 4px 24px var(--TC16);
+  display: block;
+}
+
+/* ==================== FOOTER ==================== */
+.footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 24px;
+  background: var(--TC9);
+  border-top: 1px solid var(--TC8);
+}
+
+.btnPrint,
+.btnDownload {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 28px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.btnPrint::before,
+.btnDownload::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  background: var(--TC18);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.55s ease, height 0.55s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btnPrint:hover::before,
+.btnDownload:hover::before {
+  width: 260px;
+  height: 260px;
+}
+
+/* Print — uses accent/secondary gradient */
+.btnPrint {
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 5px 18px var(--TC17);
+}
+
+.btnPrint:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--TC17);
+}
+
+/* Download — uses primary gradient */
+.btnDownload {
+  background: linear-gradient(135deg, var(--TC10), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 5px 18px var(--TC17);
+}
+
+.btnDownload:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--TC17);
+}
+
+.btnPrint:disabled,
+.btnDownload:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .overlay {
+    padding: 12px;
+  }
+
+  .modal {
+    height: 96vh;
+    border-radius: 14px;
+  }
+
+  .header {
+    padding: 12px 16px;
+  }
+
+  .body {
+    padding: 10px;
+  }
+
+  .footer {
+    padding: 12px 16px;
+    flex-direction: column;
+  }
+
+  .btnPrint,
+  .btnDownload {
+    width: 100%;
+    justify-content: center;
+  }
+}

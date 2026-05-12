@@ -1,18 +1,28 @@
 /* ViewPatientVisit.module.css - Clean white cards, minimum groups, zero wasted space */
 
+/* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end:   #225ca0;
-  --accent-start:  #207d9c;
-  --accent-end:    #30b2b5;
-  --text-light:    #ffffff;
-  --text-dark:     #1e293b;
-  --card-bg:       #ffffff;
-  --border-light:  #e2e8f0;
-  --danger-color:  #ef4444;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
-/* Animations */
+/* ==================== ANIMATIONS ==================== */
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -21,6 +31,10 @@
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ────────────────────────────────────────────────
@@ -41,7 +55,7 @@
 }
 
 .visit-details-modal {
-  background: #ffffff;
+  background: var(--TC6);
   border-radius: 16px;
   width: 100%;
   max-width: 1200px;
@@ -49,18 +63,18 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 20px 60px var(--TC16);
   animation: slideUp 0.35s ease;
 }
 
 /* ────────────────────────────────────────────────
-   HEADER
+   HEADER  (WorkShift detailModalHeader style)
    ──────────────────────────────────────────────── */
 
 .visit-details-header {
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -79,32 +93,33 @@
 }
 
 .visit-details-header h2 {
- 
   font-size: 1.2rem;
   font-weight: 700;
 }
 
+/* ==================== HEADER CARD (WorkShift addModalHeaderCard style) ==================== */
 .addModalHeaderCard {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
 }
 
+/* clinicInfoName — WorkShift clinicName style */
 .clinicInfoName {
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -115,15 +130,15 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
 
 .visit-details-close {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--TC18);
   border: none;
-  color: white;
+  color: var(--TC6);
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -133,7 +148,7 @@
 }
 
 .visit-details-close:hover {
-  background: rgba(255, 255, 255, 0.45);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
@@ -145,16 +160,16 @@
   padding: 20px 28px;
   overflow-y: auto;
   flex: 1;
-  background: #f9fafb;
+  background: var(--TC13);
 }
 
 .visit-details-section {
   margin-bottom: 16px;
-  background: var(--card-bg);
+  background: var(--TC6);
   border-radius: 12px;
   padding: 16px 20px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid var(--TC13);
+  box-shadow: 0 2px 8px var(--TC16);
 }
 
 .visit-details-section:last-child {
@@ -168,14 +183,14 @@
   margin: 0 0 12px 0;
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--primary-start);
-   margin-bottom: 16px;
+  color: var(--TC1);
+  margin-bottom: 16px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.25);
+  border-bottom: 2px solid var(--TC18);
 }
 
 .visit-details-section-title svg {
-  color: var(--accent-start);
+  color: var(--TC4);
 }
 
 .visit-details-grid {
@@ -192,14 +207,14 @@
 
 .visit-detail-label {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 600;
 }
 
 .visit-detail-value {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--text-dark);
+  color: var(--TC9);
   line-height: 1.4;
 }
 
@@ -207,9 +222,35 @@
   grid-column: 1 / -1;
 }
 
+/* ==================== STATUS BADGES (WorkShift style) ==================== */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.statusBadge.active   { color: var(--TC10); }
+.statusBadge.inactive { color: var(--TC11); }
+.statusBadge.large    { padding: 9px 17px; font-size: 0.77rem; }
+
+.active {
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
+}
+
+.inactive {
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
+}
+
 /* ==================== VITALS CARDS ==================== */
 .vitals-cards-grid {
-  grid-column: 1 / -1;           /* Span full width of parent grid */
+  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
@@ -218,7 +259,7 @@
 }
 
 .vital-card {
-  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  background: linear-gradient(135deg, var(--TC13) 0%, var(--TC6) 100%);
   border-radius: 14px;
   padding: 20px 24px;
   display: flex;
@@ -226,24 +267,24 @@
   gap: 18px;
   border: 2px solid;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px var(--TC16);
 }
 
 .vital-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 .vital-card.bp-card {
-  border-color: rgba(220, 38, 38, 0.3);
+  border-color: var(--TC14);
 }
 
 .vital-card.temp-card {
-  border-color: rgba(234, 88, 12, 0.3);
+  border-color: var(--TC4);
 }
 
 .vital-card.weight-card {
-  border-color: rgba(22, 163, 74, 0.3);
+  border-color: var(--TC5);
 }
 
 .vital-icon {
@@ -257,18 +298,18 @@
 }
 
 .bp-card .vital-icon {
-  background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
+  background: var(--TC18);
+  color: var(--TC14);
 }
 
 .temp-card .vital-icon {
-  background: rgba(234, 88, 12, 0.1);
-  color: #ea580c;
+  background: var(--TC18);
+  color: var(--TC4);
 }
 
 .weight-card .vital-icon {
-  background: rgba(22, 163, 74, 0.1);
-  color: #16a34a;
+  background: var(--TC18);
+  color: var(--TC10);
 }
 
 .vital-content {
@@ -278,7 +319,7 @@
 .vital-label {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--TC12);
   text-transform: uppercase;
   letter-spacing: 0.6px;
   margin-bottom: 6px;
@@ -287,7 +328,7 @@
 .vital-value {
   font-size: 1.9rem;
   font-weight: 800;
-  color: #1e293b;
+  color: var(--TC9);
   line-height: 1;
   margin-bottom: 6px;
 }
@@ -295,7 +336,7 @@
 .vital-unit {
   font-size: 0.75rem;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--TC8);
 }
 
 /* ────────────────────────────────────────────────
@@ -307,8 +348,8 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 28px;
-  border-top: 1px solid #e5e7eb;
-  background: #ffffff;
+  border-top: 1px solid var(--TC13);
+  background: var(--TC6);
 }
 
 .visit-details-edit-btn,
@@ -326,23 +367,23 @@
 }
 
 .visit-details-edit-btn {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
-  box-shadow: 0 4px 12px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 4px 12px var(--TC17);
 }
 
 .visit-details-edit-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 .visit-details-close-btn {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--TC2);
+  color: var(--TC6);
 }
 
 .visit-details-close-btn:hover {
-  background: #d1d5db;
+  background: var(--TC14);
 }
 
 /* ────────────────────────────────────────────────
@@ -358,19 +399,15 @@
 .visit-details-spinner {
   width: 36px;
   height: 36px;
-  border: 4px solid #e2e8f0;
-  border-top-color: var(--accent-end);
+  border: 4px solid var(--TC13);
+  border-top-color: var(--TC5);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 12px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 .visit-details-error p {
-  color: var(--danger-color);
+  color: var(--TC14);
   font-size: 1rem;
 }
 
@@ -423,82 +460,112 @@
 
 /* Modal shell */
 :global(.dark-mode) .visit-details-modal {
-  background: rgba(30, 41, 59, 0.95);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  background: var(--TC9);
+  box-shadow: 0 20px 60px var(--TC16);
+}
+
+/* Header — WorkShift detailModalHeader dark format */
+:global(.dark-mode) .visit-details-header {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+/* addModalHeaderCard — WorkShift dark format */
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+}
+
+/* clinicInfoName / clinicInfoBranch — WorkShift dark format */
+:global(.dark-mode) .clinicInfoName {
+  color: var(--TC6);
+}
+
+:global(.dark-mode) .clinicInfoBranch {
+  color: var(--TC13);
 }
 
 /* Body */
 :global(.dark-mode) .visit-details-body {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+  background: linear-gradient(135deg, var(--TC9), var(--TC7));
 }
 
 /* Sections */
 :global(.dark-mode) .visit-details-section {
-  background: #1e293b;
-  border-color: #334155;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  background: var(--TC9);
+  border-color: var(--TC7);
+  box-shadow: 0 2px 8px var(--TC16);
 }
 
 :global(.dark-mode) .visit-details-section-title {
-  color: var(--accent-end);
-  border-bottom-color: rgba(48, 178, 181, 0.25);
+  color: var(--TC5);
+  border-bottom-color: var(--TC18);
 }
 
 :global(.dark-mode) .visit-details-section-title svg {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
 /* Labels & values */
 :global(.dark-mode) .visit-detail-label {
-  color: #94a3b8;
+  color: var(--TC8);
 }
 
 :global(.dark-mode) .visit-detail-value {
-  color: #e2e8f0;
+  color: var(--TC13);
+}
+
+/* Status badges — WorkShift dark format */
+:global(.dark-mode) .statusBadge.active,
+:global(.dark-mode) .active { color: var(--TC5); }
+
+:global(.dark-mode) .statusBadge.inactive,
+:global(.dark-mode) .inactive {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
 }
 
 /* Vitals cards */
 :global(.dark-mode) .vital-card {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  background: linear-gradient(135deg, var(--TC9) 0%, var(--TC7) 100%);
 }
 
 :global(.dark-mode) .vital-card:hover {
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 20px var(--TC16);
 }
 
 :global(.dark-mode) .vital-label {
-  color: #94a3b8;
+  color: var(--TC8);
 }
 
 :global(.dark-mode) .vital-value {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .vital-unit {
-  color: #64748b;
+  color: var(--TC12);
 }
 
 /* Footer */
 :global(.dark-mode) .visit-details-footer {
-  background: #0f172a;
-  border-top-color: rgba(71, 85, 105, 0.5);
+  background: var(--TC9);
+  border-top-color: var(--TC15);
 }
 
 :global(.dark-mode) .visit-details-close-btn {
-  background: #334155;
-  color: #e2e8f0;
+  background: var(--TC7);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .visit-details-close-btn:hover {
-  background: #475569;
+  background: var(--TC15);
 }
 
 /* Loading & error */
 :global(.dark-mode) .visit-details-spinner {
-  border-color: #334155;
-  border-top-color: var(--accent-end);
+  border-color: var(--TC7);
+  border-top-color: var(--TC5);
 }
 
 :global(.dark-mode) .visit-details-error p {
-  color: #f87171;
+  color: var(--TC14);
 }

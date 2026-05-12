@@ -2,17 +2,24 @@
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end:   #225ca0;
-  --accent-start:  #207d9c;
-  --accent-end:    #30b2b5;
-  --text-light:    #ffffff;
-  --text-dark:     #1e293b;
-  --glass-bg:      rgba(255, 255, 255, 0.92);
-  --glass-border:  rgba(255, 255, 255, 0.4);
-  --status-created:   #3b82f6;
-  --status-cancelled: #ef4444;
-  --status-verified:  #22c55e;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -31,10 +38,10 @@
 /* ==================== MAIN WRAPPER ==================== */
 .clinicListWrapper {
   padding: 20px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  background: linear-gradient(135deg, var(--TC6) 0%, var(--TC13) 100%);
   height: 100vh;
   overflow: hidden;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   display: flex;
   flex-direction: column;
@@ -46,10 +53,10 @@
   display: flex;
   gap: 12px;
   margin-bottom: 10px;
-  background: white;
+  background: var(--TC6);
   padding: 8px;
   border-radius: 14px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  box-shadow: 0 5px 17px var(--TC16);
   flex-shrink: 0;
 }
 
@@ -61,7 +68,7 @@
   gap: 8px;
   padding: 12px 20px;
   background: transparent;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 600;
   font-size: 0.94rem;
   border: none;
@@ -71,27 +78,27 @@
   white-space: nowrap;
 }
 .tabBtn:hover {
-  background: rgba(48, 178, 181, 0.08);
-  color: var(--accent-end);
+  background: var(--TC18);
+  color: var(--TC5);
 }
 .tabBtnActive {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.35);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 .tabBtnActive:hover {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
 }
 
 /* ==================== FILTERS ==================== */
 .filtersContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   padding: 20px;
   margin-bottom: 10px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC16);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -123,11 +130,11 @@
   min-width: 140px;
   height: 40px;
   padding: 0 12px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-right: none;
   border-radius: 10px 0 0 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -135,27 +142,27 @@
 }
 .searchTypeSelect:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .searchInput {
   flex: 1;
   height: 40px;
   padding: 0 15px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 0 10px 10px 0;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   transition: all 0.3s ease;
 }
-.searchInput::placeholder { color: #94a3b8; }
+.searchInput::placeholder { color: var(--TC12); }
 .searchInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
-  border-left: 1px solid var(--accent-end);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
+  border-left: 1px solid var(--TC5);
 }
 
 .filterGroup {
@@ -167,18 +174,18 @@
   width: 100%;
   height: 40px;
   padding: 10px 15px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   transition: all 0.3s ease;
 }
-.filterInput::placeholder { color: #94a3b8; }
+.filterInput::placeholder { color: var(--TC12); }
 .filterInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 /* ── Date placeholder overlay ── */
@@ -188,7 +195,7 @@
 }
 .dateWrapper .filterInput {
   width: 100%;
-  color: var(--text-dark);
+  color: var(--TC9);
 }
 .dateEmpty::-webkit-datetime-edit-text,
 .dateEmpty::-webkit-datetime-edit-month-field,
@@ -202,7 +209,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--TC12);
   pointer-events: none;
   z-index: 1;
 }
@@ -228,13 +235,13 @@
   white-space: nowrap;
 }
 .searchButton {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
 }
-.searchButton:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4); }
-.clearButton { background: #e2e8f0; color: #475569; }
-.clearButton:hover { background: #cbd5e1; transform: translateY(-2px); }
+.searchButton:hover { transform: translateY(-2px); box-shadow: 0 8px 20px var(--TC17); }
+.clearButton { background: var(--TC13); color: var(--TC15); }
+.clearButton:hover { background: var(--TC8); transform: translateY(-2px); }
 
 /* ==================== TABLE SECTION ==================== */
 .tableSection {
@@ -245,13 +252,13 @@
 }
 
 .clinicTableContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 13px 38px var(--TC16);
+  border: 1px solid var(--TC16);
 }
 
 .clinicTable {
@@ -262,8 +269,8 @@
 .clinicTable th {
   text-align: left;
   padding: 12px 17px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   font-weight: 600;
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -275,16 +282,16 @@
 }
 .clinicTable td {
   padding: 6px 17px;
-  border-bottom: 1px solid #e2e8f0;
-  color: var(--text-dark);
+  border-bottom: 1px solid var(--TC13);
+  color: var(--TC9);
   font-size: 0.75rem;
   vertical-align: middle;
 }
 .clinicTable th:last-child,
 .clinicTable td:last-child { text-align: right; padding-right: 24px; }
-.clinicTable tbody tr:nth-child(even) { background-color: #d5e6ec; }
+.clinicTable tbody tr:nth-child(even) { background-color: var(--TC18); }
 .clinicTable tbody tr:hover {
-  background-color: rgba(48, 178, 181, 0.08) !important;
+  background-color: var(--TC18) !important;
   transition: background-color 0.25s ease;
 }
 
@@ -298,31 +305,36 @@
   width: 33px;
   height: 33px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-weight: bold;
   font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 3px 12px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 3px 12px var(--TC17);
   flex-shrink: 0;
 }
 .clinicAvatarLab {
   width: 33px;
   height: 33px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #0f2057, #0d7aa8);
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC1), var(--TC4));
+  color: var(--TC6);
   font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 3px 12px rgba(13, 122, 168, 0.35);
+  box-shadow: 0 3px 12px var(--TC17);
   flex-shrink: 0;
 }
-.clinicName { font-weight: 700; color: var(--text-dark); font-size: 0.87rem; }
-.clinicType { font-size: 0.72rem; color: #64748b; margin-top: 2px; }
+.clinicName {
+  font-weight: 700;
+  color: var(--TC9);
+  opacity: 0.9;
+  font-size: 0.87rem;
+}
+.clinicType { font-size: 0.72rem; color: var(--TC12); margin-top: 2px; }
 
 /* ==================== STATUS BADGES ==================== */
 .statusBadge {
@@ -333,16 +345,16 @@
   text-transform: uppercase;
   letter-spacing: 0.7px;
 }
-.statusActive    { background: rgba(59, 130, 246, 0.15); color: #1e40af; border: 1px solid rgba(59, 130, 246, 0.3); }
-.statusExpired   { background: rgba(220, 38, 38, 0.12);  color: #991b1b; border: 1px solid rgba(220, 38, 38, 0.28); }
-.statusCreated   { background: rgba(59, 130, 246, 0.15); color: #1e40af; border: 1px solid rgba(59, 130, 246, 0.3); }
-.statusCancelled { background: rgba(239, 68, 68, 0.15);  color: #991b1b; border: 1px solid rgba(239, 68, 68, 0.3); }
-.statusVerified  { background: rgba(34, 197, 94, 0.15);  color: #166534; border: 1px solid rgba(34, 197, 94, 0.3); }
-.labStatusPending   { background: rgba(234, 179, 8, 0.12);   color: #92670a; border: 1px solid rgba(234, 179, 8, 0.32); }
-.labStatusCompleted { background: rgba(22, 163, 74, 0.10);   color: #166534; border: 1px solid rgba(22, 163, 74, 0.28); }
-.labStatusCancelled { background: rgba(239, 68, 68, 0.12);   color: #991b1b; border: 1px solid rgba(239, 68, 68, 0.28); }
-.labStatusInvoice   { background: rgba(13, 122, 168, 0.12);  color: #0d5e82; border: 1px solid rgba(13, 122, 168, 0.28); }
-.labStatusProgress  { background: rgba(139, 92, 246, 0.10);  color: #5b21b6; border: 1px solid rgba(139, 92, 246, 0.28); }
+.statusActive    { background: var(--TC18); color: var(--TC10); border: 1px solid var(--TC16); }
+.statusExpired   { background: var(--TC16); color: var(--TC11); border: 1px solid var(--TC16); }
+.statusCreated   { background: var(--TC18); color: var(--TC10); border: 1px solid var(--TC16); }
+.statusCancelled { background: var(--TC16); color: var(--TC11); border: 1px solid var(--TC16); }
+.statusVerified  { background: var(--TC18); color: var(--TC10); border: 1px solid var(--TC16); }
+.labStatusPending   { background: var(--TC16); color: var(--TC12); border: 1px solid var(--TC16); }
+.labStatusCompleted { background: var(--TC18); color: var(--TC10); border: 1px solid var(--TC16); }
+.labStatusCancelled { background: var(--TC16); color: var(--TC11); border: 1px solid var(--TC16); }
+.labStatusInvoice   { background: var(--TC18); color: var(--TC4);  border: 1px solid var(--TC17); }
+.labStatusProgress  { background: var(--TC16); color: var(--TC2);  border: 1px solid var(--TC16); }
 
 .labPriorityBadge {
   padding: 4px 10px;
@@ -352,9 +364,9 @@
   text-transform: uppercase;
   letter-spacing: 0.7px;
 }
-.labPriorityNormal { background: rgba(15, 32, 87, 0.08);   color: #0f2057; border: 1px solid rgba(15, 32, 87, 0.20); }
-.labPriorityUrgent { background: rgba(234, 88, 12, 0.10);  color: #c2410c; border: 1px solid rgba(234, 88, 12, 0.28); }
-.labPriorityStat   { background: rgba(220, 38, 38, 0.13);  color: #991b1b; border: 1px solid rgba(220, 38, 38, 0.38); }
+.labPriorityNormal { background: var(--TC16); color: var(--TC1);  border: 1px solid var(--TC16); }
+.labPriorityUrgent { background: var(--TC17); color: var(--TC3);  border: 1px solid var(--TC17); }
+.labPriorityStat   { background: var(--TC16); color: var(--TC11); border: 1px solid var(--TC16); }
 
 /* ==================== ACTION BUTTONS ==================== */
 .actionBtns {
@@ -364,7 +376,7 @@
   gap: 6px;
 }
 
-/* ── Preview button (teal gradient) ── */
+/* ── Preview button ── */
 .clinicDetailsBtn {
   position: relative;
   overflow: hidden;
@@ -378,13 +390,13 @@
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 3px 10px var(--TC17);
   z-index: 1;
 }
 .clinicDetailsBtn::before {
@@ -392,7 +404,7 @@
   position: absolute;
   top: 50%; left: 50%;
   width: 0; height: 0;
-  background: rgba(48, 178, 181, 0.35);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -400,10 +412,10 @@
   pointer-events: none;
 }
 .clinicDetailsBtn:hover::before { width: 200px; height: 200px; }
-.clinicDetailsBtn:hover { transform: translateY(-2px); box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45); }
+.clinicDetailsBtn:hover { transform: translateY(-2px); box-shadow: 0 5px 17px var(--TC18); }
 .clinicDetailsBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-/* ── Print button (teal accent) ── */
+/* ── Print button ── */
 .clinicPrintBtn {
   position: relative;
   overflow: hidden;
@@ -417,13 +429,13 @@
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
-  background: linear-gradient(135deg, #30b2b5, #0d7aa8);
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC5), var(--TC4));
+  color: var(--TC6);
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(13, 122, 168, 0.3);
+  box-shadow: 0 3px 10px var(--TC17);
   z-index: 1;
 }
 .clinicPrintBtn::before {
@@ -431,7 +443,7 @@
   position: absolute;
   top: 50%; left: 50%;
   width: 0; height: 0;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -439,7 +451,7 @@
   pointer-events: none;
 }
 .clinicPrintBtn:hover::before { width: 200px; height: 200px; }
-.clinicPrintBtn:hover { transform: translateY(-2px); box-shadow: 0 5px 17px rgba(13, 122, 168, 0.45); }
+.clinicPrintBtn:hover { transform: translateY(-2px); box-shadow: 0 5px 17px var(--TC17); }
 .clinicPrintBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
 /* ── Button spinner ── */
@@ -447,17 +459,34 @@
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #ffffff;
+  border: 2px solid var(--TC18);
+  border-top-color: var(--TC6);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;
 }
 
 /* ==================== EMPTY / ERROR STATES ==================== */
-.clinicNoData { text-align: center; padding: 68px 17px; color: #64748b; font-size: 1.1rem; }
-.prescLoading { display: flex; align-items: center; justify-content: center; min-height: 70vh; }
-.prescError   { display: flex; align-items: center; justify-content: center; min-height: 70vh; font-size: 1.1rem; color: #ef4444; }
+.clinicNoData {
+  text-align: center;
+  padding: 68px 17px;
+  color: var(--TC12);
+  font-size: 1.1rem;
+}
+.prescLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+}
+.prescError {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  font-size: 1.1rem;
+  color: var(--TC14);
+}
 
 /* ==================== PAGINATION ==================== */
 .paginationBar {
@@ -465,74 +494,82 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: white;
+  background: var(--TC6);
   border-radius: 14px;
   padding: 10px 20px;
   margin-top: 14px;
-  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 4px 14px var(--TC16);
+  border: 1px solid var(--TC16);
   gap: 16px;
 }
-.paginationInfo { font-size: 0.8rem; color: #64748b; font-weight: 500; white-space: nowrap; }
+.paginationInfo { font-size: 0.8rem; color: var(--TC12); font-weight: 500; white-space: nowrap; }
 .paginationControls { display: flex; align-items: center; gap: 6px; }
-.paginationLabel { font-size: 0.8rem; font-weight: 700; color: var(--primary-start); margin-right: 4px; white-space: nowrap; }
+.paginationLabel { font-size: 0.8rem; font-weight: 700; color: var(--TC1); margin-right: 4px; white-space: nowrap; }
 .pageBtn {
-  width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  background: white;
-  border: 1px solid #cbd5e1;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 8px;
-  color: var(--primary-start);
-  font-size: 1rem; font-weight: 700;
+  color: var(--TC1);
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
   line-height: 1;
 }
 .pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  border-color: var(--accent-end);
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 3px 8px var(--TC17);
 }
 .pageBtn:disabled { opacity: 0.35; cursor: not-allowed; }
 .pageIndicator {
-  min-width: 36px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: white; font-size: 0.82rem; font-weight: 700;
-  border-radius: 8px; padding: 0 8px;
-  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
+  min-width: 36px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0 8px;
+  box-shadow: 0 3px 8px var(--TC17);
 }
-.pageSizeInfo { font-size: 0.8rem; color: #64748b; font-weight: 500; white-space: nowrap; }
-.pageSizeInfo strong { color: var(--primary-start); font-weight: 700; }
+.pageSizeInfo { font-size: 0.8rem; color: var(--TC12); font-weight: 500; white-space: nowrap; }
+.pageSizeInfo strong { color: var(--TC1); font-weight: 700; }
 
 /* ==================== PDF VIEWER MODAL ==================== */
 .pdfModalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(5, 10, 30, 0.82);
+  background: rgba(15, 22, 41, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   animation: fadeIn 0.25s ease;
   backdrop-filter: blur(6px);
-  padding: 20px 20px 20px 60px; /* 260px left offset for sidebar */
+  padding: 20px 20px 20px 60px;
 }
 
 .pdfModalContent {
   width: 100%;
   max-width: 960px;
   height: 92vh;
-  background: #0e1929;
+  background: var(--TC9);
   border-radius: 20px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow:
-    0 32px 80px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(48, 178, 181, 0.18);
+  box-shadow: 0 32px 80px var(--TC16), 0 0 0 1px var(--TC17);
   animation: slideUp 0.35s ease;
 }
 
@@ -543,8 +580,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
-  background: linear-gradient(135deg, var(--accent-start) 0%, var(--accent-end) 100%);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-bottom: 2px solid var(--TC17);
 }
 
 .pdfHeaderLeft {
@@ -557,28 +594,28 @@
   width: 46px;
   height: 46px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.30);
+  background: var(--TC18);
+  border: 1.5px solid var(--TC17);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-light);
+  color: var(--TC6);
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 14px var(--TC16);
 }
 
 .pdfHeaderTitle {
   margin: 0;
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
 }
 
 .pdfHeaderSubtitle {
   margin: 2px 0 0;
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.70);
+  color: var(--TC13);
   font-weight: 500;
   letter-spacing: 0.4px;
 }
@@ -587,9 +624,9 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.20);
-  color: var(--text-light);
+  background: var(--TC18);
+  border: 1px solid var(--TC17);
+  color: var(--TC6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -598,15 +635,15 @@
   flex-shrink: 0;
 }
 .pdfCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.24);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
-/* ── Body — iframe fills all available space ── */
+/* ── Body ── */
 .pdfModalBody {
   flex: 1;
   min-height: 0;
-  background: #1a2535;
+  background: var(--TC7);
   padding: 16px;
   display: flex;
   align-items: stretch;
@@ -617,8 +654,8 @@
   height: 100%;
   border: none;
   border-radius: 10px;
-  background: white;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  background: var(--TC6);
+  box-shadow: 0 4px 24px var(--TC16);
   display: block;
 }
 
@@ -630,8 +667,8 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 14px 24px;
-  background: #f8fafc;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--TC6);
+  border-top: 1px solid var(--TC16);
 }
 
 .pdfBtnPrint,
@@ -657,7 +694,7 @@
   position: absolute;
   top: 50%; left: 50%;
   width: 0; height: 0;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.55s ease, height 0.55s ease;
@@ -668,23 +705,23 @@
 .pdfBtnDownload:hover::before { width: 260px; height: 260px; }
 
 .pdfBtnPrint {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
-  box-shadow: 0 5px 18px rgba(32, 125, 156, 0.4);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 5px 18px var(--TC17);
 }
 .pdfBtnPrint:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(32, 125, 156, 0.55);
+  box-shadow: 0 8px 24px var(--TC17);
 }
 
 .pdfBtnDownload {
-  background: linear-gradient(135deg, #166534, #22c55e);
-  color: var(--text-light);
-  box-shadow: 0 5px 18px rgba(34, 197, 94, 0.3);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
+  box-shadow: 0 5px 18px var(--TC17);
 }
 .pdfBtnDownload:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.45);
+  box-shadow: 0 8px 24px var(--TC17);
 }
 
 .pdfBtnPrint:disabled,
@@ -692,39 +729,76 @@
 
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .clinicListWrapper {
-  --glass-bg: rgba(30, 41, 59, 0.92);
-  --text-dark: #e2e8f0;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #e2e8f0;
+  --glass-bg: var(--TC9);
+  --text-dark: var(--TC13);
+  background: linear-gradient(135deg, var(--TC9) 0%, var(--TC7) 100%);
+  color: var(--TC13);
 }
-:global(.dark-mode) .filtersContainer  { background: #1e293b; border-color: #475569; }
-:global(.dark-mode) .searchTypeSelect  { background: #0f172a; border-color: #475569; color: #e2e8f0; }
-:global(.dark-mode) .searchInput       { background: #0f172a; border-color: #475569; color: #e2e8f0; }
-:global(.dark-mode) .searchInput:focus { border-left: 1px solid var(--accent-end); }
-:global(.dark-mode) .filterInput       { background: #0f172a; border-color: #475569; color: #e2e8f0; }
+:global(.dark-mode) .filtersContainer    { background: var(--TC9); border-color: var(--TC15); }
+:global(.dark-mode) .searchTypeSelect    { background: var(--TC9); border-color: var(--TC15); color: var(--TC13); }
+:global(.dark-mode) .searchInput         { background: var(--TC9); border-color: var(--TC15); color: var(--TC13); }
+:global(.dark-mode) .searchInput:focus   { border-left: 1px solid var(--TC5); }
+:global(.dark-mode) .filterInput         { background: var(--TC9); border-color: var(--TC15); color: var(--TC13); }
 
 :global(.dark-mode) .filterInput::-webkit-calendar-picker-indicator {
   filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
   cursor: pointer;
 }
 
-:global(.dark-mode) .datePlaceholder   { color: #64748b; }
-:global(.dark-mode) .clearButton       { background: #334155; color: #e2e8f0; }
-:global(.dark-mode) .clearButton:hover { background: #475569; }
-:global(.dark-mode) .clinicTableContainer { background: #1e293b; border-color: #475569; }
-:global(.dark-mode) .clinicTable th    { background: linear-gradient(135deg, #334155, #475569); }
-:global(.dark-mode) .clinicTable td    { border-bottom-color: #475569; color: #e2e8f0; }
-:global(.dark-mode) .clinicTable tbody tr:nth-child(even) { background-color: #334155; }
-:global(.dark-mode) .pdfModalContent   { background: #0a111e; }
-:global(.dark-mode) .pdfModalBody      { background: #111b2c; }
-:global(.dark-mode) .pdfModalFooter    { background: #060c16; border-top-color: rgba(255,255,255,0.05); }
-:global(.dark-mode) .paginationBar     { background: #1e293b; border-color: #475569; }
-:global(.dark-mode) .paginationInfo    { color: #94a3b8; }
-:global(.dark-mode) .pageSizeInfo      { color: #94a3b8; }
-:global(.dark-mode) .pageBtn           { background: #334155; border-color: #475569; color: #e2e8f0; }
-:global(.dark-mode) .tabSwitcher       { background: #1e293b; }
-:global(.dark-mode) .tabBtn            { color: #94a3b8; }
-:global(.dark-mode) .tabBtn:hover      { background: rgba(48, 178, 181, 0.15); }
+:global(.dark-mode) .datePlaceholder    { color: var(--TC12); }
+:global(.dark-mode) .clearButton        { background: var(--TC7); color: var(--TC13); }
+:global(.dark-mode) .clearButton:hover  { background: var(--TC15); }
+
+:global(.dark-mode) .clinicTableContainer { background: var(--TC9); border-color: var(--TC15); }
+:global(.dark-mode) .clinicTable th     { background: linear-gradient(135deg, var(--TC7), var(--TC15)); }
+:global(.dark-mode) .clinicTable td     { border-bottom-color: var(--TC15); color: var(--TC13); }
+:global(.dark-mode) .clinicTable tbody tr:nth-child(even) { background-color: var(--TC7); }
+
+:global(.dark-mode) .clinicName {
+  font-weight: 500;
+  color: var(--TC6);
+  font-size: 0.87rem;
+}
+:global(.dark-mode) .clinicType {
+  font-size: 0.72rem;
+  color: var(--TC8);
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+:global(.dark-mode) .statusActive,
+:global(.dark-mode) .statusCreated,
+:global(.dark-mode) .statusVerified  { color: var(--TC5); }
+:global(.dark-mode) .statusExpired,
+:global(.dark-mode) .statusCancelled { background: var(--TC18); color: var(--TC14); border: 1px solid var(--TC16); }
+
+
+:global(.dark-mode) .labPriorityNormal { background: var(--TC15); color: var(--TC8);  border: 1px solid var(--TC16); }
+
+:global(.dark-mode) .labStatusCompleted { color: var(--TC5); }
+:global(.dark-mode) .labStatusCancelled { background: var(--TC18); color: var(--TC14); border: 1px solid var(--TC16); }
+:global(.dark-mode) .labStatusInvoice   { color: var(--TC5); }
+:global(.dark-mode) .labStatusProgress  { color: var(--TC5); }
+:global(.dark-mode) .labStatusPending   {background: var(--TC15); color: var(--TC8); }
+
+:global(.dark-mode) .tabSwitcher     { background: var(--TC9); }
+:global(.dark-mode) .tabBtn          { color: var(--TC12); }
+:global(.dark-mode) .tabBtn:hover    { background: var(--TC18); }
+
+:global(.dark-mode) .pdfModalContent  { background: var(--TC9); }
+:global(.dark-mode) .pdfModalBody     { background: var(--TC7); }
+:global(.dark-mode) .pdfModalFooter   { background: var(--TC9); border-top-color: var(--TC15); }
+
+:global(.dark-mode) .paginationBar    { background: var(--TC9); border-color: var(--TC15); }
+:global(.dark-mode) .paginationInfo   { color: var(--TC12); }
+:global(.dark-mode) .pageSizeInfo     { color: var(--TC12); }
+:global(.dark-mode) .paginationLabel  { color: var(--TC5); }
+:global(.dark-mode) .pageBtn          { background: var(--TC9); border-color: var(--TC15); color: var(--TC13); }
+:global(.dark-mode) .pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
+}
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 1024px) {
@@ -738,7 +812,7 @@
   .filtersGrid    { grid-template-columns: 1fr; }
   .filtersGridLab { grid-template-columns: 1fr; }
   .searchGroup  { flex-direction: column; }
-  .searchTypeSelect { border-radius: 10px; border-right: 1px solid #cbd5e1; }
+  .searchTypeSelect { border-radius: 10px; border-right: 1px solid var(--TC8); }
   .searchInput      { border-radius: 10px; }
   .filterActions    { flex-direction: column; }
   .searchButton, .clearButton { width: 100%; justify-content: center; }

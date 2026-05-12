@@ -1,7 +1,50 @@
 // src/components/ConfirmPopup.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+
+const getIsDark = () => {
+  const stored = localStorage.getItem('darkMode') || localStorage.getItem('theme') || localStorage.getItem('color-theme');
+  if (stored !== null) {
+    return stored === 'true' || stored === 'dark';
+  }
+  // Fallback: check <html> class / data-theme / OS preference
+  return (
+    document.documentElement.classList.contains('dark') ||
+    document.documentElement.getAttribute('data-theme') === 'dark' ||
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+};
 
 const ConfirmPopup = ({ visible, message, subMessage, onConfirm, onCancel, confirmLabel = 'Yes, Delete', cancelLabel = 'Cancel' }) => {
+  const [isDark, setIsDark] = useState(getIsDark);
+
+  useEffect(() => {
+    const update = () => setIsDark(getIsDark());
+
+    // Watch localStorage changes from other tabs
+    window.addEventListener('storage', update);
+
+    // Watch <html> class / data-theme changes
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+
+    // Watch OS preference changes
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    mq.addEventListener('change', update);
+
+    update();
+
+    return () => {
+      window.removeEventListener('storage', update);
+      observer.disconnect();
+      mq.removeEventListener('change', update);
+    };
+  }, []);
+
+  // Re-check every time the popup opens
+  useEffect(() => {
+    if (visible) setIsDark(getIsDark());
+  }, [visible]);
+
   if (!visible) return null;
 
   return (
@@ -26,7 +69,7 @@ const ConfirmPopup = ({ visible, message, subMessage, onConfirm, onCancel, confi
           transform: translateY(-1px);
         }
         .cp-btn-cancel:hover {
-          background: rgba(34, 43, 108, 0.08) !important;
+          background: ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(34, 43, 108, 0.08)'} !important;
         }
         .cp-btn-confirm, .cp-btn-cancel {
           transition: all 0.16s ease;
@@ -39,7 +82,7 @@ const ConfirmPopup = ({ visible, message, subMessage, onConfirm, onCancel, confi
           position: 'fixed',
           inset: 0,
           padding: '20px 20px 20px 260px',
-          backgroundColor: 'rgba(15, 23, 42, 0.45)',
+          backgroundColor: isDark ? 'rgba(0, 0, 0, 0.60)' : 'rgba(15, 23, 42, 0.45)',
           backdropFilter: 'blur(3px)',
           WebkitBackdropFilter: 'blur(3px)',
           display: 'flex',
@@ -54,13 +97,15 @@ const ConfirmPopup = ({ visible, message, subMessage, onConfirm, onCancel, confi
           className="cp-card"
           onClick={(e) => e.stopPropagation()}
           style={{
-            background: '#ffffff',
+            background: isDark ? '#1e293b' : '#ffffff',
             borderRadius: '16px',
             width: '100%',
             maxWidth: '400px',
             margin: '0 1rem',
             overflow: 'hidden',
-            boxShadow: '0 20px 60px rgba(15, 23, 42, 0.22), 0 4px 16px rgba(15, 23, 42, 0.10)',
+            boxShadow: isDark
+              ? '0 20px 60px rgba(0, 0, 0, 0.50), 0 4px 16px rgba(0, 0, 0, 0.30)'
+              : '0 20px 60px rgba(15, 23, 42, 0.22), 0 4px 16px rgba(15, 23, 42, 0.10)',
           }}
         >
           {/* Top accent bar — red for danger */}
@@ -86,7 +131,6 @@ const ConfirmPopup = ({ visible, message, subMessage, onConfirm, onCancel, confi
                   flexShrink: 0,
                 }}
               >
-                {/* Trash SVG */}
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path
                     d="M3 5H17M8 5V3H12V5M6 5L7 16H13L14 5H6Z"
@@ -110,7 +154,7 @@ const ConfirmPopup = ({ visible, message, subMessage, onConfirm, onCancel, confi
                   margin: '0 0 5px',
                   fontSize: '15.5px',
                   fontWeight: 700,
-                  color: '#0f172a',
+                  color: isDark ? '#f1f5f9' : '#0f172a',
                   lineHeight: 1.35,
                 }}>
                   {message || 'Are you sure?'}
@@ -119,7 +163,7 @@ const ConfirmPopup = ({ visible, message, subMessage, onConfirm, onCancel, confi
                   <p style={{
                     margin: 0,
                     fontSize: '13px',
-                    color: '#64748b',
+                    color: isDark ? '#94a3b8' : '#64748b',
                     lineHeight: 1.55,
                   }}>
                     {subMessage}
@@ -129,7 +173,7 @@ const ConfirmPopup = ({ visible, message, subMessage, onConfirm, onCancel, confi
             </div>
 
             {/* Divider */}
-            <div style={{ height: '1px', background: '#f1f5f9', margin: '0 0 1.1rem' }} />
+            <div style={{ height: '1px', background: isDark ? '#334155' : '#f1f5f9', margin: '0 0 1.1rem' }} />
 
             {/* Action buttons */}
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
@@ -141,8 +185,8 @@ const ConfirmPopup = ({ visible, message, subMessage, onConfirm, onCancel, confi
                 style={{
                   padding: '8px 20px',
                   background: 'transparent',
-                  color: '#475569',
-                  border: '1.5px solid #e2e8f0',
+                  color: isDark ? '#94a3b8' : '#475569',
+                  border: `1.5px solid ${isDark ? '#334155' : '#e2e8f0'}`,
                   borderRadius: '9px',
                   fontSize: '13.5px',
                   fontWeight: 600,

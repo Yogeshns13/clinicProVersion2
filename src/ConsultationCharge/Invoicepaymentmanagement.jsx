@@ -6,6 +6,8 @@ import { createInvoiceBillFile } from '../Api/ApiPdf.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
+import ReportPopup from '../ReportPopup/ReportPopup.jsx';
+import PdfViewerPopup from '../ReportPopup/PdfViewerPopup.jsx';
 import styles from './InvoicePaymentManagement.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId, getStoredFileAccessToken } from '../Utils/Cryptoutils.js';
@@ -107,7 +109,7 @@ const SLOT_DEFAULTS = [
     header: 'Mode',
     render: (p) => (
       <div className={styles.paymentModeCell}>
-        <FiCreditCard size={16} style={{ color: '#9333ea', marginRight: '6px' }} />
+        <FiCreditCard size={16} style={{ color: '#207d9c', marginRight: '6px' }} />
         <span className={styles.paymentModeText}>
           {PAYMENT_MODES.find(m => m.id === p.paymentMode)?.label || 'Unknown'}
         </span>
@@ -125,6 +127,49 @@ const SLOT_DEFAULTS = [
 // Index 0 → owns Mode slot      ← invoiceDate starts here
 // Index 1 → owns Reference slot ← patientMobile starts here
 const INITIAL_ORDER = ['invoiceDate', 'patientMobile'];
+
+// ─── Report filter config for PaymentList ────────────────────────────────────
+const PAYMENT_REPORT_FILTER_CONFIG = [
+  {
+    name:    'FromDate',
+    label:   'From Date',
+    type:    'date',
+    apiKey:  'FromDate',
+    default: '',
+  },
+  {
+    name:    'ToDate',
+    label:   'To Date',
+    type:    'date',
+    apiKey:  'ToDate',
+    default: '',
+  },
+  {
+    name:     'PaymentMode',
+    label:    'Payment Mode',
+    type:     'select-table',
+    tableId:  33,
+    apiKey:   'PaymentMode',
+    allLabel: 'All Modes',
+    default:  0,
+  },
+  {
+    name:     'Status',
+    label:    'Payment Status',
+    type:     'select-table',
+    tableId:  34,
+    apiKey:   'Status',
+    allLabel: 'All Statuses',
+    default:  -1,
+  },
+];
+
+const PAYMENT_REPORT_DEFAULT_FILTERS = {
+  FromDate:    new Date().toISOString().split('T')[0],
+  ToDate:      new Date().toISOString().split('T')[0],
+  PaymentMode: 0,
+  Status:      -1,
+};
 
 // ─── PDF Viewer Modal ─────────────────────────────────────────────────────────
 
@@ -215,6 +260,10 @@ const InvoicePaymentList = () => {
   const [pdfModal,    setPdfModal]    = useState(null);   // { url, blob, label }
   const [printingId,  setPrintingId]  = useState(null);
   const [printError,  setPrintError]  = useState(null);
+
+  // ── Report state ──
+  const [isReportPopupOpen, setIsReportPopupOpen] = useState(false);
+  const [reportPdf,         setReportPdf]         = useState(null); // { url, blob, label }
 
   // Filter inputs
   const [filterInputs, setFilterInputs] = useState({
@@ -507,6 +556,16 @@ const InvoicePaymentList = () => {
     setPdfModal(null);
   };
 
+  // ── Report handlers ────────────────────────────────────────────────────────
+  const handleReportPdfReady = ({ url, blob, label }) => {
+    setReportPdf({ url, blob, label });
+  };
+
+  const handleCloseReportPdf = () => {
+    if (reportPdf?.url) URL.revokeObjectURL(reportPdf.url);
+    setReportPdf(null);
+  };
+
   // ── Formatters ─────────────────────────────────────────────────────────────
   const formatCurrency      = (amount)  => amount ? `₹${Number(amount).toFixed(2)}` : '₹0.00';
   const formatDate          = (dateStr) => {
@@ -551,6 +610,26 @@ const InvoicePaymentList = () => {
           onDownload={handleDownloadInvoice}
         />
       )}
+
+      {/* ── Report Popup ── */}
+      <ReportPopup
+        isOpen={isReportPopupOpen}
+        onClose={() => setIsReportPopupOpen(false)}
+        onPdfReady={handleReportPdfReady}
+        reportType="PaymentList"
+        title="Payment List Report"
+        filterConfig={PAYMENT_REPORT_FILTER_CONFIG}
+        defaultFilters={PAYMENT_REPORT_DEFAULT_FILTERS}
+      />
+
+      {/* ── Report PDF Viewer ── */}
+      <PdfViewerPopup
+        isOpen={!!reportPdf}
+        onClose={handleCloseReportPdf}
+        pdfUrl={reportPdf?.url}
+        title={reportPdf?.label || 'Payment List Report'}
+        fileName={reportPdf?.label || 'PaymentList_Report'}
+      />
 
       {/* ── Print Error Banner ── */}
       {printError && (
@@ -613,6 +692,12 @@ const InvoicePaymentList = () => {
                 <FiX size={16} /> Clear
               </button>
             )}
+            <button
+              onClick={() => setIsReportPopupOpen(true)}
+              className={styles.reportBtn}
+            >
+              <FiPrinter size={16} /> Print Report
+            </button>
           </div>
 
         </div>

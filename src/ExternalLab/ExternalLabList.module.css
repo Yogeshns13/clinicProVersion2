@@ -1,16 +1,6 @@
 /* src/components/ExternalLabList.module.css */
 
 /* ==================== CSS VARIABLES ==================== */
-:root {
-  --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
-  --glass-bg: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(255, 255, 255, 0.4);
-}
 
 /* ==================== ANIMATIONS ==================== */
 @keyframes fadeIn {
@@ -26,26 +16,27 @@
 /* ==================== MAIN WRAPPER ==================== */
 .labListWrapper {
   padding: 20px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  background: linear-gradient(135deg, var(--TC6) 0%, var(--TC13) 100%);
   height: 100vh;
   overflow: hidden;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
 }
 
+/* addModalHeaderCard — same style as WorkShift */
 .addModalHeaderCard {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
 }
@@ -56,7 +47,7 @@
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -67,19 +58,19 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
 
 /* ==================== FILTERS CONTAINER ==================== */
 .filtersContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC16);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -108,21 +99,21 @@
   flex: 1;
   height: 40px;
   padding: 0 15px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   transition: all 0.3s ease;
   min-width: 0;
 }
 
-.searchInput::placeholder { color: #94a3b8; }
+.searchInput::placeholder { color: var(--TC12); }
 
 .searchInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .filterActions {
@@ -137,10 +128,10 @@
   width: 160px;
   height: 40px;
   padding: 0 12px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -148,8 +139,8 @@
 
 .statusFilterSelect:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .searchButton {
@@ -158,8 +149,8 @@
   gap: 8px;
   height: 40px;
   padding: 0 20px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   font-weight: 600;
   font-size: 0.85rem;
   border: none;
@@ -167,12 +158,12 @@
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .searchButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 .clearButton {
@@ -181,8 +172,8 @@
   gap: 8px;
   height: 40px;
   padding: 0 20px;
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--TC13);
+  color: var(--TC15);
   font-weight: 600;
   font-size: 0.85rem;
   border: none;
@@ -193,7 +184,7 @@
 }
 
 .clearButton:hover {
-  background: #cbd5e1;
+  background: var(--TC8);
   transform: translateY(-2px);
 }
 
@@ -203,8 +194,8 @@
   gap: 8px;
   height: 40px;
   padding: 0 20px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-weight: 700;
   font-size: 0.85rem;
   border: none;
@@ -212,12 +203,12 @@
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .addLabBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 /* ==================== TABLE SECTION ==================== */
@@ -230,13 +221,13 @@
 
 /* ==================== TABLE CONTAINER ==================== */
 .labTableContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 13px 38px var(--TC16);
+  border: 1px solid var(--TC16);
 }
 
 .labTable {
@@ -248,11 +239,11 @@
 .labTable th {
   text-align: left;
   padding: 12px 17px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
   position: sticky;
   top: 0;
   z-index: 2;
-  color: var(--text-light);
+  color: var(--TC6);
   font-weight: 600;
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -262,8 +253,8 @@
 
 .labTable td {
   padding: 6px 17px;
-  border-bottom: 1px solid #e2e8f0;
-  color: var(--text-dark);
+  border-bottom: 1px solid var(--TC13);
+  color: var(--TC9);
   font-size: 0.75rem;
   vertical-align: middle;
 }
@@ -274,10 +265,10 @@
   padding-right: 24px;
 }
 
-.labTable tbody tr:nth-child(even) { background-color: #d5e6ec; }
+.labTable tbody tr:nth-child(even) { background-color: var(--TC18); }
 
 .labTable tbody tr:hover {
-  background-color: rgba(48, 178, 181, 0.08) !important;
+  background-color: var(--TC18) !important;
   transition: background-color 0.25s ease;
 }
 
@@ -292,26 +283,28 @@
   width: 33px;
   height: 33px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-weight: bold;
   font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 3px 12px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 3px 12px var(--TC17);
   flex-shrink: 0;
 }
 
+/* labName — same style as WorkShift .clinicName */
 .labName {
   font-weight: 700;
-  color: var(--text-dark);
+  color: var(--TC9);
+  opacity: 0.9;
   font-size: 0.87rem;
 }
 
 .labDetail {
   font-size: 0.72rem;
-  color: #64748b;
+  color: var(--TC12);
   margin-top: 2px;
 }
 
@@ -322,7 +315,7 @@
   text-overflow: ellipsis;
 }
 
-/* ==================== STATUS BADGES ==================== */
+/* ==================== STATUS BADGES — same style as WorkShift ==================== */
 .statusBadge {
   padding: 5px 12px;
   border-radius: 26px;
@@ -333,15 +326,15 @@
 }
 
 .active {
-  background: rgba(34, 197, 94, 0.15);
-  color: #166534;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
 }
 
 .inactive {
-  background: rgba(239, 68, 68, 0.15);
-  color: #991b1b;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--TC16);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
 }
 
 /* ==================== BUTTONS ==================== */
@@ -350,18 +343,18 @@
 .btnSubmit {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   border: none;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 3px 10px var(--TC17);
   z-index: 1;
 }
 
 .labDetailsBtn {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
   padding: 7px 15px;
   font-size: 0.75rem;
   border-radius: 9px;
@@ -373,7 +366,7 @@
   padding: 10px 24px;
   font-size: 0.85rem;
   border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .labDetailsBtn::before,
@@ -385,7 +378,7 @@
   left: 50%;
   width: 0;
   height: 0;
-  background: rgba(48, 178, 181, 0.35);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -404,7 +397,7 @@
 .btnUpdate:hover,
 .btnSubmit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+  box-shadow: 0 5px 17px var(--TC18);
 }
 
 .labDetailsBtn:active,
@@ -419,8 +412,8 @@
 }
 
 .btnCancel {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   border: none;
   border-radius: 14px;
   height: 40px;
@@ -431,7 +424,7 @@
   position: relative;
   overflow: hidden;
   transition: all 0.4s ease;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 7px 24px var(--TC17);
   white-space: nowrap;
   z-index: 0;
 }
@@ -440,7 +433,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
   opacity: 0;
   transition: opacity 0.4s ease;
   z-index: -1;
@@ -448,7 +441,7 @@
 
 .btnCancel:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
+  box-shadow: 0 14px 34px var(--TC17);
 }
 
 .btnCancel:hover::before { opacity: 1; }
@@ -459,7 +452,7 @@
 .detailModalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--TC16);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -470,7 +463,7 @@
 }
 
 .detailModalContent {
-  background: white;
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-width: 760px;
@@ -478,14 +471,15 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 70px var(--TC16);
   animation: slideUp 0.4s ease;
 }
 
+/* detailModalHeader — same style as WorkShift */
 .detailModalHeader {
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -497,6 +491,7 @@
 .detailHeaderContent h2 {
   font-size: 1.4rem;
   font-weight: 700;
+  color: var(--TC6);
 }
 
 .detailHeaderMeta {
@@ -508,28 +503,28 @@
 .workIdBadge {
   display: inline-block;
   padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--TC18);
   border-radius: 6px;
   font-size: 0.8rem;
   font-weight: 600;
   backdrop-filter: blur(10px);
-  color: var(--text-light);
+  color: var(--TC6);
 }
 
 .activeBadge {
-  background: rgba(22, 163, 74, 0.35) !important;
-  border: 1px solid rgba(22, 163, 74, 0.5);
+  background: var(--TC18) !important;
+  border: 1px solid var(--TC16);
 }
 
 .inactiveBadge {
-  background: rgba(220, 38, 38, 0.35) !important;
-  border: 1px solid rgba(220, 38, 38, 0.5);
+  background: var(--TC16) !important;
+  border: 1px solid var(--TC16);
 }
 
 .detailCloseBtn {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border: none;
-  color: var(--text-light);
+  color: var(--TC6);
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -544,7 +539,7 @@
 }
 
 .detailCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
@@ -560,28 +555,28 @@
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
   padding: 24px 28px;
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--TC16);
   flex: 1;
 }
 
 .infoCard {
-  background: white;
+  background: var(--TC6);
   border-radius: 12px;
   padding: 18px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  box-shadow: 0 5px 17px var(--TC16);
 }
 
 .infoHeader {
   margin-bottom: 14px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
+  border-bottom: 2px solid var(--TC18);
 }
 
 .infoHeader h3 {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 .infoContent { display: flex; flex-direction: column; gap: 2px; }
@@ -591,14 +586,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(34, 43, 108, 0.06);
+  border-bottom: 1px solid var(--TC16);
 }
 
 .infoRow:last-child { border-bottom: none; }
 
 .infoLabel {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 600;
   flex-shrink: 0;
   margin-right: 12px;
@@ -606,7 +601,7 @@
 
 .infoValue {
   font-size: 0.85rem;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-weight: 600;
   text-align: right;
   word-break: break-word;
@@ -617,13 +612,13 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 18px 28px;
-  border-top: 2px solid rgba(34, 43, 108, 0.1);
-  background: #f8fafc;
+  border-top: 2px solid var(--TC16);
+  background: var(--TC6);
 }
 
 /* ==================== ADD / UPDATE MODAL ==================== */
 .addModalContent {
-  background: white;
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-width: 760px;
@@ -631,7 +626,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 70px var(--TC16);
   animation: slideUp 0.4s ease;
 }
 
@@ -640,13 +635,13 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--TC16);
   gap: 0;
 }
 
 .addSection {
   padding: 20px 28px;
-  border-bottom: 1px solid rgba(34, 43, 108, 0.08);
+  border-bottom: 1px solid var(--TC16);
 }
 
 .addSection:last-of-type { border-bottom: none; }
@@ -654,14 +649,14 @@
 .addSectionHeader {
   margin-bottom: 16px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.25);
+  border-bottom: 2px solid var(--TC18);
 }
 
 .addSectionHeader h3 {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 .addFormGrid {
@@ -682,7 +677,7 @@
 .addFormGroup label {
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 .addFormGroup input,
@@ -690,10 +685,10 @@
 .addFormGroup select {
   width: 100%;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid rgba(34, 43, 108, 0.15);
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
   border-radius: 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -708,24 +703,24 @@
 }
 
 .addFormGroup input::placeholder,
-.addFormGroup textarea::placeholder { color: rgba(30, 41, 59, 0.35); }
+.addFormGroup textarea::placeholder { color: var(--TC12); }
 
 .addFormGroup input:focus,
 .addFormGroup textarea:focus,
 .addFormGroup select:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
-  background: white;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 4px var(--TC18);
+  background: var(--TC6);
 }
 
 .validationMsg {
   font-size: 0.75rem;
-  color: red;
+  color: var(--TC14);
   margin-top: 2px;
 }
 
-.required { color: #dc2626; font-weight: 700; }
+.required { color: var(--TC14); font-weight: 700; }
 
 /* ==================== PAGINATION BAR ==================== */
 .paginationBar {
@@ -733,18 +728,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: white;
+  background: var(--TC6);
   border-radius: 14px;
   padding: 10px 20px;
   margin-top: 14px;
-  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 4px 14px var(--TC16);
+  border: 1px solid var(--TC16);
   gap: 16px;
 }
 
 .paginationInfo {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -758,7 +753,7 @@
 .paginationLabel {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
   margin-right: 4px;
   white-space: nowrap;
 }
@@ -769,10 +764,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 8px;
-  color: var(--primary-start);
+  color: var(--TC1);
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
@@ -781,11 +776,11 @@
 }
 
 .pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  border-color: var(--accent-end);
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 3px 8px var(--TC17);
 }
 
 .pageBtn:disabled {
@@ -799,24 +794,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   font-size: 0.82rem;
   font-weight: 700;
   border-radius: 8px;
   padding: 0 8px;
-  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
+  box-shadow: 0 3px 8px var(--TC17);
 }
 
 .pageSizeInfo {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 500;
   white-space: nowrap;
 }
 
 .pageSizeInfo strong {
-  color: var(--primary-start);
+  color: var(--TC1);
   font-weight: 700;
 }
 
@@ -824,7 +819,7 @@
 .labNoData {
   text-align: center;
   padding: 68px 17px;
-  color: #64748b;
+  color: var(--TC12);
   font-size: 1.1rem;
 }
 
@@ -835,109 +830,194 @@
   justify-content: center;
   min-height: 70vh;
   font-size: 1.3rem;
-  color: #64748b;
+  color: var(--TC12);
 }
 
-.labError { color: #ef4444; }
+.labError { color: var(--TC14); }
 
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .labListWrapper {
-  --glass-bg: rgba(30, 41, 59, 0.92);
-  --text-dark: #e2e8f0;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #e2e8f0;
+  background: linear-gradient(135deg, var(--TC9) 0%, var(--TC7) 100%);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .filtersContainer {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .searchInput {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .statusFilterSelect {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .clearButton {
-  background: #334155;
-  color: #e2e8f0;
+  background: var(--TC7);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .clearButton:hover { background: #475569; }
+:global(.dark-mode) .clearButton:hover { background: var(--TC15); }
 
 :global(.dark-mode) .labTableContainer {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .labTable th {
-  background: linear-gradient(135deg, #334155, #475569);
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
 }
 
 :global(.dark-mode) .labTable td {
-  border-bottom-color: #475569;
-  color: #e2e8f0;
+  border-bottom-color: var(--TC15);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .labTable tbody tr:nth-child(even) { background-color: #334155; }
+:global(.dark-mode) .labTable tbody tr:nth-child(even) { background-color: var(--TC7); }
 
-:global(.dark-mode) .addFormGroup label { color: var(--accent-end); }
+/* labName dark — same as WorkShift .clinicName dark */
+:global(.dark-mode) .labName {
+  font-weight: 500;
+  color: var(--TC6);
+  font-size: 0.87rem;
+}
+
+:global(.dark-mode) .labDetail {
+  color: var(--TC8);
+  opacity: 0.8;
+}
+
+/* statusBadge dark — same as WorkShift */
+:global(.dark-mode) .statusBadge.active,
+:global(.dark-mode) .active {
+  background: var(--TC18);
+  color: var(--TC5);
+  border: 1px solid var(--TC16);
+}
+
+:global(.dark-mode) .statusBadge.inactive,
+:global(.dark-mode) .inactive {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+/* addModalHeaderCard dark — same as WorkShift */
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+}
+
+:global(.dark-mode) .addFormGroup label { color: var(--TC5); }
 
 :global(.dark-mode) .addFormGroup input,
 :global(.dark-mode) .addFormGroup textarea,
 :global(.dark-mode) .addFormGroup select {
-  background: #1e293b;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .addFormGroup input::placeholder,
+:global(.dark-mode) .addFormGroup textarea::placeholder { color: var(--TC12); }
+
+:global(.dark-mode) .addFormGroup input:focus,
+:global(.dark-mode) .addFormGroup textarea:focus,
+:global(.dark-mode) .addFormGroup select:focus {
+  border-color: var(--TC5);
+  background: var(--TC9);
+  box-shadow: 0 0 0 4px var(--TC18);
+}
+
+:global(.dark-mode) .addFormGroup select option {
+  background: var(--TC9);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .paginationBar {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .paginationInfo,
-:global(.dark-mode) .pageSizeInfo { color: #94a3b8; }
+:global(.dark-mode) .pageSizeInfo { color: var(--TC12); }
 
-:global(.dark-mode) .paginationLabel { color: var(--accent-end); }
+:global(.dark-mode) .paginationLabel { color: var(--TC5); }
 
 :global(.dark-mode) .pageBtn {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  border-color: var(--accent-end);
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
+}
+
+:global(.dark-mode) .pageSizeInfo strong { color: var(--TC5); }
+
+/* detailModalHeader dark — same as WorkShift */
+:global(.dark-mode) .detailModalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+:global(.dark-mode) .detailHeaderContent h2 {
+  background: linear-gradient(135deg, var(--TC6), var(--TC5));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 :global(.dark-mode) .infoCard {
-  background: #1e293b;
-  color: #e2e8f0;
+  background: var(--TC9);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .infoLabel { color: var(--accent-end); }
-:global(.dark-mode) .infoValue { color: #e2e8f0; }
+:global(.dark-mode) .infoLabel { color: var(--TC5); }
+:global(.dark-mode) .infoValue { color: var(--TC13); }
+
+:global(.dark-mode) .infoRow { border-bottom-color: var(--TC15); }
+
+:global(.dark-mode) .infoHeader { border-bottom-color: var(--TC18); }
+:global(.dark-mode) .infoHeader h3 { color: var(--TC5); }
 
 :global(.dark-mode) .detailModalContent,
 :global(.dark-mode) .addModalContent {
-  background: #1e293b;
-  color: #e2e8f0;
+  background: var(--TC9);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .detailModalFooter { background: #0f172a; }
+:global(.dark-mode) .infoSection { background-color: var(--TC7); opacity: 0.7; }
 
-:global(.dark-mode) .addSectionHeader h3 { color: var(--accent-end); }
-:global(.dark-mode) .infoHeader h3       { color: var(--accent-end); }
+:global(.dark-mode) .detailModalFooter {
+  background: var(--TC9);
+  border-top-color: var(--TC15);
+}
+
+:global(.dark-mode) .addModalBody { background-color: var(--TC7); }
+
+:global(.dark-mode) .addSection { border-bottom-color: var(--TC15); background: var(--TC9); }
+
+:global(.dark-mode) .addSectionHeader { border-bottom-color: var(--TC18); }
+:global(.dark-mode) .addSectionHeader h3 { color: var(--TC5); }
+
+:global(.dark-mode) .btnCancel {
+  background: linear-gradient(135deg, var(--TC2));
+  color: var(--TC6);
+  border-color: var(--TC2);
+}
+
+:global(.dark-mode) .btnCancel:hover {
+  background: var(--TC14);
+  transform: translateY(-2px);
+}
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {

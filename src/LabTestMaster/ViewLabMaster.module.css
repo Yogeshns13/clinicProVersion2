@@ -1,18 +1,28 @@
-/* ViewLabMaster.module.css - Exact match to View Clinic popup style */
+/* ViewLabMaster.module.css */
 
+/* ==================== ROOT VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end:   #225ca0;
-  --accent-start:  #207d9c;
-  --accent-end:    #30b2b5;
-  --text-light:    #ffffff;
-  --text-dark:     #1e293b;
-  --card-bg:       #ffffff;
-  --border-light:  #e2e8f0;
-  --danger-color:  #ef4444;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10: #166534;
+  --TC11: #991b1b;
+  --TC12: #64748b;
+  --TC13: #e2e8f0;
+  --TC14: #ef4444;
+  --TC15: #475569;
+  --TC16: rgba(34, 43, 108, 0.10);
+  --TC17: rgba(32, 125, 156, 0.30);
+  --TC18: rgba(48, 178, 181, 0.15);
 }
 
-/* Animations */
+/* ==================== ANIMATIONS ==================== */
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -42,7 +52,7 @@
 
 .modal,
 .detailsModal {
-  background: #ffffff;
+  background: var(--TC6);
   border-radius: 16px;
   width: 100%;
   max-width: 860px;
@@ -50,7 +60,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 20px 60px var(--TC16);
   animation: slideUp 0.35s ease;
 }
 
@@ -60,8 +70,8 @@
 
 .detailsModalHeader {
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -79,14 +89,14 @@
   width: 42px;
   height: 42px;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-size: 1.2rem;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px var(--TC16);
   flex-shrink: 0;
 }
 
@@ -96,18 +106,32 @@
   font-weight: 700;
 }
 
+/* ==================== ADD MODAL HEADER CARD ==================== */
 .addModalHeaderCard {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
+}
+
+.clinicInfoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC6);
+  opacity: 0.9;
+}
+
+.clinicInfoText {
+  display: flex;
+  flex-direction: column;
 }
 
 .clinicInfoName {
@@ -116,7 +140,7 @@
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -127,7 +151,7 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -143,38 +167,63 @@
   align-items: center;
 }
 
+/* ==================== STATUS BADGES ==================== */
 .statusBadge {
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 0.85rem;
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.7px;
 }
 
 .statusBadge.large {
-  padding: 8px 16px;
-  font-size: 0.9rem;
+  padding: 9px 17px;
+  font-size: 0.77rem;
 }
 
-.active   { background: rgba(34, 197, 94, 0.2); color: #166534; border: 1px solid rgba(34, 197, 94, 0.4); }
-.inactive { background: rgba(239, 68, 68, 0.15); color: #991b1b; border: 1px solid rgba(239, 68, 68, 0.3); }
-.deprecated { background: rgba(100, 116, 139, 0.2); color: #475569; border: 1px solid rgba(100, 116, 139, 0.4); }
+.statusBadge.active   { color: var(--TC10); }
+.statusBadge.inactive { color: var(--TC11); }
+.statusBadge.deprecated { color: var(--TC11); }
 
+.active {
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
+}
+
+.inactive {
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
+}
+
+.deprecated {
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
+}
+
+.large { padding: 9px 17px; font-size: 0.77rem; }
+
+/* ==================== MODAL CLOSE ==================== */
 .modalClose {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--TC18);
   border: none;
-  color: white;
+  color: var(--TC6);
   width: 44px;
   height: 44px;
   border-radius: 12px;
   font-size: 1.4rem;
   cursor: pointer;
   transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .modalClose:hover {
-  background: rgba(255, 255, 255, 0.45);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
@@ -186,7 +235,7 @@
   padding: 24px 28px;
   overflow-y: auto;
   flex: 1;
-  background: #f9fafb;
+  background: var(--TC13);
 }
 
 .detailsTable {
@@ -195,7 +244,7 @@
 }
 
 .detailsTable tr {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--TC8);
 }
 
 .detailsTable tr:last-child {
@@ -207,7 +256,7 @@
   padding: 12px 0;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--TC12);
   vertical-align: top;
 }
 
@@ -215,7 +264,7 @@
   padding: 12px 0;
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--text-dark);
+  color: var(--TC9);
 }
 
 /* ────────────────────────────────────────────────
@@ -227,8 +276,8 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 18px 28px;
-  border-top: 1px solid #e5e7eb;
-  background: #ffffff;
+  border-top: 1px solid var(--TC8);
+  background: var(--TC6);
 }
 
 .btnDelete,
@@ -246,80 +295,114 @@
 }
 
 .btnDelete {
-  background: #ef4444;
-  color: white;
+  background: var(--TC14);
+  color: var(--TC6);
 }
 
 .btnDelete:hover {
-  background: #dc2626;
+  background: var(--TC11);
   transform: translateY(-1px);
 }
 
 .btnUpdate {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
-  box-shadow: 0 4px 12px rgba(32, 125, 156, 0.3);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 4px 12px var(--TC17);
+  z-index: 1;
 }
+
+.btnUpdate::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: var(--TC18);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btnUpdate:hover::before { width: 170px; height: 170px; }
 
 .btnUpdate:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
+
+.btnUpdate:active { transform: translateY(-1px); }
 
 /* ────────────────────────────────────────────────
    DARK MODE
    ──────────────────────────────────────────────── */
 
-/* Modal shell */
 :global(.dark-mode) .modal,
 :global(.dark-mode) .detailsModal {
-  background: rgba(30, 41, 59, 0.95);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  background: var(--TC9);
+  box-shadow: 0 20px 60px var(--TC16);
 }
 
-/* Body */
+:global(.dark-mode) .detailsModalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+:global(.dark-mode) .detailsHeaderContent h2 {
+  background: linear-gradient(135deg, var(--TC6), var(--TC5));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 :global(.dark-mode) .detailsModalBody {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+  background: var(--TC9);
+  opacity: 0.95;
 }
 
-/* Table rows */
 :global(.dark-mode) .detailsTable tr {
-  border-bottom-color: rgba(71, 85, 105, 0.35);
+  border-bottom-color: var(--TC15);
 }
 
-/* Table label cells */
 :global(.dark-mode) .detailsTable td.label {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
-/* Table value cells */
 :global(.dark-mode) .detailsTable td.value {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
-/* Footer */
 :global(.dark-mode) .modalFooter {
-  background: #0f172a;
-  border-top-color: rgba(71, 85, 105, 0.5);
+  background: var(--TC9);
+  border-top-color: var(--TC15);
 }
 
-/* Status badges */
+:global(.dark-mode) .statusBadge.active,
 :global(.dark-mode) .active {
-  background: rgba(34, 197, 94, 0.12);
-  color: #4ade80;
-  border-color: rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC5);
+  border: 1px solid var(--TC16);
 }
 
+:global(.dark-mode) .statusBadge.inactive,
 :global(.dark-mode) .inactive {
-  background: rgba(239, 68, 68, 0.12);
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.3);
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
 }
 
+:global(.dark-mode) .statusBadge.deprecated,
 :global(.dark-mode) .deprecated {
-  background: rgba(100, 116, 139, 0.15);
-  color: #94a3b8;
-  border-color: rgba(100, 116, 139, 0.3);
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
 }
 
 /* ────────────────────────────────────────────────

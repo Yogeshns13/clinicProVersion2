@@ -9,6 +9,8 @@ import Header from '../Header/Header.jsx';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
 import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
 import ViewInvoice from './ViewInvoice.jsx';
+import ReportPopup from '../ReportPopup/ReportPopup.jsx';
+import PdfViewerPopup from '../ReportPopup/PdfViewerPopup.jsx';
 import styles from './InvoiceManagement.module.css';
 import { getStoredClinicId, getStoredBranchId, getStoredFileAccessToken } from '../Utils/Cryptoutils.js';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
@@ -162,6 +164,49 @@ const SLOT_DEFAULTS = [
 
 const INITIAL_ORDER = ['discount', 'invoiceType', 'patientMobile'];
 
+// ─── Report filter config for InvoiceList ────────────────────────────────────
+const INVOICE_REPORT_FILTER_CONFIG = [
+  {
+    name:     'FromDate',
+    label:    'From Date',
+    type:     'date',
+    apiKey:   'FromDate',
+    default:  '',
+  },
+  {
+    name:     'ToDate',
+    label:    'To Date',
+    type:     'date',
+    apiKey:   'ToDate',
+    default:  '',
+  },
+  {
+    name:     'InvoiceType',
+    label:    'Invoice Type',
+    type:     'select-table',
+    tableId:  41,
+    apiKey:   'InvoiceType',
+    allLabel: 'All Types',
+    default:  0,
+  },
+  {
+    name:     'Status',
+    label:    'Invoice Status',
+    type:     'select-table',
+    tableId:  32,
+    apiKey:   'Status',
+    allLabel: 'All Statuses',
+    default:  -1,
+  },
+];
+
+const INVOICE_REPORT_DEFAULT_FILTERS = {
+  FromDate:    new Date().toISOString().split('T')[0],
+  ToDate:      new Date().toISOString().split('T')[0],
+  InvoiceType: 0,
+  Status:      -1,
+};
+
 // ─── PDF Viewer Modal ─────────────────────────────────────────────────────────
 
 const PdfViewerModal = ({ pdfUrl, title, onClose, onDownload }) => {
@@ -279,6 +324,10 @@ const InvoiceList = () => {
   const [pdfModal,    setPdfModal]    = useState(null);
   const [printingId,  setPrintingId]  = useState(null);
   const [printError,  setPrintError]  = useState(null);
+
+  // ── Report state ──
+  const [isReportPopupOpen,  setIsReportPopupOpen]  = useState(false);
+  const [reportPdf,          setReportPdf]          = useState(null); // { url, blob, label }
 
   // ── Button cooldown state ──
   const [btnCooldown, setBtnCooldown] = useState({});
@@ -556,6 +605,16 @@ const InvoiceList = () => {
     setPdfModal(null);
   };
 
+  // ── Report handlers ──
+  const handleReportPdfReady = ({ url, blob, label }) => {
+    setReportPdf({ url, blob, label });
+  };
+
+  const handleCloseReportPdf = () => {
+    if (reportPdf?.url) URL.revokeObjectURL(reportPdf.url);
+    setReportPdf(null);
+  };
+
   // ── Payment input handler ──
   const handlePaymentInputChange = (e) => {
     const { name, value } = e.target;
@@ -683,6 +742,26 @@ const InvoiceList = () => {
         />
       )}
 
+      {/* ── Report Popup ── */}
+      <ReportPopup
+        isOpen={isReportPopupOpen}
+        onClose={() => setIsReportPopupOpen(false)}
+        onPdfReady={handleReportPdfReady}
+        reportType="InvoiceList"
+        title="Invoice List Report"
+        filterConfig={INVOICE_REPORT_FILTER_CONFIG}
+        defaultFilters={INVOICE_REPORT_DEFAULT_FILTERS}
+      />
+
+      {/* ── Report PDF Viewer ── */}
+      <PdfViewerPopup
+        isOpen={!!reportPdf}
+        onClose={handleCloseReportPdf}
+        pdfUrl={reportPdf?.url}
+        title={reportPdf?.label || 'Invoice List Report'}
+        fileName={reportPdf?.label || 'InvoiceList_Report'}
+      />
+
       {/* ── Print error banner ── */}
       {printError && (
         <div
@@ -779,6 +858,12 @@ const InvoiceList = () => {
                 <FiX size={16} /> Clear
               </button>
             )}
+            <button
+              onClick={() => setIsReportPopupOpen(true)}
+              className={styles.reportBtn}
+            >
+              <FiPrinter size={16} /> Print Report
+            </button>
           </div>
 
         </div>

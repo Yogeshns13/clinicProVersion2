@@ -5,17 +5,24 @@
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
-  --glass-bg: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(255, 255, 255, 0.4);
-  --success-color: #22c55e;
-  --success-dark: #16a34a;
-  --danger-color: #ef4444;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -42,7 +49,7 @@
   background: rgba(15, 22, 41, 0.85);
   backdrop-filter: blur(9px);
   display: flex;
-  align-items: center;  
+  align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 20px 20px 20px 60px;
@@ -51,13 +58,13 @@
 
 /* ==================== MODAL ==================== */
 .modal {
-  background: var(--glass-bg);
+  background: var(--TC6);
   border-radius: 15px;
   width: 100%;
   max-width: 850px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 17px 43px var(--TC16), inset 0 1px 2px var(--TC6);
   backdrop-filter: blur(14px);
   animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -65,8 +72,8 @@
 /* ==================== MODAL HEADER ==================== */
 .modalHeader {
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -77,7 +84,7 @@
 .modalHeader h2 {
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
 }
 
 .headerRight {
@@ -86,19 +93,32 @@
   gap: 15px;
 }
 
-
+/* ==================== ADD MODAL HEADER CARD ==================== */
 .addModalHeaderCard {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
+}
+
+.clinicInfoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC6);
+  opacity: 0.9;
+}
+
+.clinicInfoText {
+  display: flex;
+  flex-direction: column;
 }
 
 .clinicInfoName {
@@ -107,7 +127,7 @@
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -118,15 +138,16 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
 
+/* ==================== MODAL CLOSE ==================== */
 .modalClose {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border: none;
-  color: var(--text-light);
+  color: var(--TC6);
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -141,13 +162,13 @@
 }
 
 .modalClose:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
 /* ==================== MODAL BODY ==================== */
 .modalBody {
-  color: var(--text-dark);
+  color: var(--TC9);
 }
 
 /* ==================== MODAL FOOTER ==================== */
@@ -156,8 +177,8 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 17px 23px;
-  border-top: 2px solid rgba(34, 43, 108, 0.15);
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+  border-top: 2px solid var(--TC16);
+  background: linear-gradient(to bottom, var(--TC6), var(--TC13));
 }
 
 /* ==================== FORMS ==================== */
@@ -173,10 +194,10 @@
   margin: 10px 0 10px 0;
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
   padding-bottom: 8px;
-  border-bottom: 2px solid rgba(34, 43, 108, 0.15);
-  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  border-bottom: 2px solid var(--TC16);
+  background: linear-gradient(135deg, var(--TC1), var(--TC5));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -197,14 +218,14 @@
 .formGroup label {
   display: block;
   margin-bottom: 4px;
-  color: var(--primary-start);
+  color: var(--TC1);
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.17px;
 }
 
 .formGroup .required {
-  color: #dc2626;
+  color: var(--TC14);
   font-weight: 700;
 }
 
@@ -213,29 +234,29 @@
 .formGroup select {
   width: 100%;
   padding: 9px 12px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 2px solid rgba(34, 43, 108, 0.2);
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
   border-radius: 9px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.9rem;
   font-weight: 500;
   font-family: inherit;
   transition: all 0.3s ease;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 3px var(--TC16);
 }
 
 .formGroup input::placeholder,
 .formGroup textarea::placeholder {
-  color: rgba(30, 41, 59, 0.4);
+  color: var(--TC12);
 }
 
 .formGroup input:focus,
 .formGroup textarea:focus,
 .formGroup select:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15), inset 0 1px 3px rgba(0, 0, 0, 0.05);
-  background: rgba(255, 255, 255, 0.9);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18), inset 0 1px 3px var(--TC16);
+  background: var(--TC6);
 }
 
 .formGroup textarea {
@@ -245,7 +266,138 @@
 
 .validationMsg {
   font-size: 0.75rem;
-  color: red;
+  color: var(--TC14);
+  margin-top: 2px;
+}
+
+/* ==================== STATUS BADGE ==================== */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.statusBadge.active {
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
+}
+
+.statusBadge.inactive {
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
+}
+
+.statusBadge.large {
+  padding: 9px 17px;
+  font-size: 0.77rem;
+}
+
+/* ==================== DETAIL MODAL HEADER ==================== */
+.detailModalHeader {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.detailHeaderContent { flex: 1; }
+.detailHeaderContent h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--TC6);
+}
+
+.detailHeaderMeta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.workIdBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--TC18);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  color: var(--TC6);
+}
+
+.stepBadge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: var(--TC16);
+  border: 1px solid var(--TC18);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--TC6);
+  letter-spacing: 0.3px;
+}
+
+.detailCloseBtn {
+  background: var(--TC18);
+  border: none;
+  color: var(--TC6);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+.detailCloseBtn:hover {
+  background: var(--TC17);
+  transform: scale(1.08);
+}
+
+/* ==================== CLINIC NAME CELL ==================== */
+.clinicNameCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.clinicAvatar {
+  width: 33px;
+  height: 33px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  font-weight: bold;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 12px var(--TC17);
+  flex-shrink: 0;
+}
+
+.clinicName {
+  font-weight: 700;
+  color: var(--TC9);
+  opacity: 0.9;
+  font-size: 0.87rem;
+}
+
+.clinicType {
+  font-size: 0.72rem;
+  color: var(--TC12);
   margin-top: 2px;
 }
 
@@ -258,27 +410,25 @@
   border: 2px solid;
   font-size: 0.85rem;
   font-weight: 600;
-  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 9px var(--TC16);
 }
 
 .formError {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
-  color: #dc2626;
-  border-color: rgba(239, 68, 68, 0.3);
+  background: var(--TC16);
+  color: var(--TC14);
+  border-color: var(--TC16);
 }
 
 .formSuccess {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.2));
-  color: #059669;
-  border-color: rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC10);
+  border-color: var(--TC18);
 }
 
 /* ==================== BUTTONS ==================== */
-
-
 .btnCancel {
-  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   border: none;
   border-radius: 14px;
   height: 40px;
@@ -289,7 +439,7 @@
   position: relative;
   overflow: hidden;
   transition: all 0.4s ease;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 7px 24px var(--TC17);
   white-space: nowrap;
   z-index: 0;
 }
@@ -298,7 +448,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
   opacity: 0;
   transition: opacity 0.4s ease;
   z-index: -1;
@@ -308,7 +458,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
+  background: linear-gradient(105deg, transparent 40%, var(--TC18) 50%, transparent 60%);
   background-size: 200% 100%;
   background-position: -100% 0;
   transition: background-position 0.5s ease;
@@ -317,7 +467,7 @@
 
 .btnCancel:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
+  box-shadow: 0 14px 34px var(--TC17);
 }
 
 .btnCancel:hover::before {
@@ -328,22 +478,28 @@
   background-position: 200% 0;
 }
 
+.btnCancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .btnSubmit {
   padding: 10px 24px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   border: none;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .btnSubmit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.45);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 .btnSubmit:active {
@@ -360,48 +516,61 @@
 
 /* Modal shell */
 :global(.dark-mode) .modal {
-  background: rgba(30, 41, 59, 0.95);
-  border-color: #475569;
-  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.05);
+  background: var(--TC9);
+  border-color: var(--TC15);
+  box-shadow: 0 17px 43px var(--TC16), inset 0 1px 2px var(--TC6);
+}
+
+/* Modal header */
+:global(.dark-mode) .modalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
 }
 
 /* Modal body */
 :global(.dark-mode) .modalBody {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 /* Modal footer */
 :global(.dark-mode) .modalFooter {
-  background: #0f172a;
-  border-top-color: rgba(71, 85, 105, 0.5);
+  background: linear-gradient(135deg, var(--TC9), var(--TC7));
+  border-top-color: var(--TC15);
 }
 
 
-
-/* Section titles */
 :global(.dark-mode) .formSectionTitle {
-  border-bottom-color: #475569;
-  /* gradient text stays — no override needed */
+  grid-column: 1 / -1;
+  margin: 10px 0 10px 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--TC1);
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--TC15);
+  background:  var(--TC5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
+
 
 /* Form labels */
 :global(.dark-mode) .formGroup label {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
 /* Inputs, textareas, selects */
 :global(.dark-mode) .formGroup input,
 :global(.dark-mode) .formGroup textarea,
 :global(.dark-mode) .formGroup select {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
+  box-shadow: inset 0 1px 3px var(--TC16);
 }
 
 :global(.dark-mode) .formGroup input::placeholder,
 :global(.dark-mode) .formGroup textarea::placeholder {
-  color: rgba(148, 163, 184, 0.5);
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .formGroup input::-webkit-calendar-picker-indicator {
@@ -412,14 +581,62 @@
 :global(.dark-mode) .formGroup input:focus,
 :global(.dark-mode) .formGroup textarea:focus,
 :global(.dark-mode) .formGroup select:focus {
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15), inset 0 1px 3px rgba(0, 0, 0, 0.3);
-  background: #1e293b;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18), inset 0 1px 3px var(--TC16);
+  background: var(--TC9);
 }
 
 :global(.dark-mode) .formGroup select option {
-  background: #1e293b;
-  color: #e2e8f0;
+  background: var(--TC9);
+  color: var(--TC13);
+}
+
+/* Status badges */
+:global(.dark-mode) .statusBadge.active {
+  background: var(--TC18);
+  color: var(--TC5);
+  border: 1px solid var(--TC16);
+}
+
+:global(.dark-mode) .statusBadge.inactive {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+/* Detail modal header */
+:global(.dark-mode) .detailModalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+/* Clinic name cell */
+:global(.dark-mode) .clinicName {
+  font-weight: 500;
+  color: var(--TC6);
+  font-size: 0.87rem;
+}
+
+:global(.dark-mode) .clinicType {
+  font-size: 0.72rem;
+  color: var(--TC8);
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+/* Add modal header card */
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+}
+
+/* Buttons */
+:global(.dark-mode) .btnCancel {
+  background: linear-gradient(135deg, var(--TC2));
+  color: var(--TC6);
+  border-color: var(--TC2);
+}
+:global(.dark-mode) .btnCancel:hover {
+  background: var(--TC14);
+  transform: translateY(-2px);
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */
@@ -484,19 +701,19 @@
 }
 
 .modal::-webkit-scrollbar-track {
-  background: rgba(226, 232, 240, 0.3);
+  background: var(--TC13);
   border-radius: 10px;
 }
 
 .modal::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
   border-radius: 10px;
 }
 
 .modal::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+  background: linear-gradient(135deg, var(--TC1), var(--TC2));
 }
 
 :global(.dark-mode) .modal::-webkit-scrollbar-track {
-  background: rgba(51, 65, 85, 0.3);
+  background: var(--TC7);
 }

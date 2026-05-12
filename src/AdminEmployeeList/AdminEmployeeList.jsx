@@ -21,43 +21,43 @@ const STATUS_OPTIONS = [
 ];
 
 const DESIGNATION_OPTIONS = [
-  { id: 1,  label: 'Doctor' },
-  { id: 2,  label: 'Nurse' },
-  { id: 3,  label: 'Receptionist' },
-  { id: 4,  label: 'Pharmacist' },
-  { id: 5,  label: 'Lab Technician' },
-  { id: 6,  label: 'Billing Staff' },
-  { id: 7,  label: 'Manager' },
-  { id: 8,  label: 'Attendant' },
-  { id: 9,  label: 'Cleaner' },
+  { id: 1, label: 'Doctor' },
+  { id: 2, label: 'Nurse' },
+  { id: 3, label: 'Receptionist' },
+  { id: 4, label: 'Pharmacist' },
+  { id: 5, label: 'Lab Technician' },
+  { id: 6, label: 'Billing Staff' },
+  { id: 7, label: 'Manager' },
+  { id: 8, label: 'Attendant' },
+  { id: 9, label: 'Cleaner' },
   { id: 10, label: 'Others' },
 ];
 
 const SEARCH_TYPE_OPTIONS = [
-  { value: 'Name',         label: 'Name' },
-  { value: 'Mobile',       label: 'Mobile' },
+  { value: 'Name', label: 'Name' },
+  { value: 'Mobile', label: 'Mobile' },
   { value: 'EmployeeCode', label: 'Emp Code' },
 ];
 
 // ── Default to status = 1 (Active) ───────────────
 const DEFAULT_FILTERS = {
-  searchType:   'Name',
-  searchValue:  '',
-  status:       '1',
-  clinicId:     '',
-  branchId:     '',
+  searchType: 'Name',
+  searchValue: '',
+  status: '1',
+  clinicId: '',
+  branchId: '',
   departmentId: '',
-  designation:  '',
+  designation: '',
 };
 
 // ────────────────────────────────────────────────
 const EmployeeList = () => {
   // Data
-  const [employees,   setEmployees]   = useState([]);
-  const [branches,    setBranches]    = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [departments, setDepartments] = useState([]);
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Filter inputs (staged — not applied until Search is clicked)
   const [filterInputs, setFilterInputs] = useState(DEFAULT_FILTERS);
@@ -66,8 +66,8 @@ const EmployeeList = () => {
   const [appliedFilters, setAppliedFilters] = useState(DEFAULT_FILTERS);
 
   // ── Clinic search-input state ──
-  const [clinicSearchText,    setClinicSearchText]    = useState('');  // what user typed
-  const [clinicDropdownOpen,  setClinicDropdownOpen]  = useState(false);
+  const [clinicSearchText, setClinicSearchText] = useState('');  // what user typed
+  const [clinicDropdownOpen, setClinicDropdownOpen] = useState(false);
   const [selectedClinicLabel, setSelectedClinicLabel] = useState(''); // display label of chosen clinic
   const [clinicDropdownStyle, setClinicDropdownStyle] = useState({}); // fixed positioning coords
   const clinicSearchRef = useRef(null);
@@ -78,7 +78,7 @@ const EmployeeList = () => {
 
   // ── Button 2-sec cooldowns ──
   const [searchBtnDisabled, setSearchBtnDisabled] = useState(false);
-  const [clearBtnDisabled,  setClearBtnDisabled]  = useState(false);
+  const [clearBtnDisabled, setClearBtnDisabled] = useState(false);
 
   // Add Form Modal
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
@@ -89,15 +89,15 @@ const EmployeeList = () => {
   // ────────────────────────────────────────────────
   // Derived: pagination display values
   const startRecord = employees.length === 0 ? 0 : (page - 1) * pageSize + 1;
-  const endRecord   = (page - 1) * pageSize + employees.length;
+  const endRecord = (page - 1) * pageSize + employees.length;
 
   const hasActiveFilters =
     appliedFilters.searchValue.trim() !== DEFAULT_FILTERS.searchValue ||
-    appliedFilters.status             !== DEFAULT_FILTERS.status      ||
-    appliedFilters.clinicId           !== DEFAULT_FILTERS.clinicId    ||
-    appliedFilters.branchId           !== DEFAULT_FILTERS.branchId    ||
-    appliedFilters.departmentId       !== DEFAULT_FILTERS.departmentId||
-    appliedFilters.designation        !== DEFAULT_FILTERS.designation;
+    appliedFilters.status !== DEFAULT_FILTERS.status ||
+    appliedFilters.clinicId !== DEFAULT_FILTERS.clinicId ||
+    appliedFilters.branchId !== DEFAULT_FILTERS.branchId ||
+    appliedFilters.departmentId !== DEFAULT_FILTERS.departmentId ||
+    appliedFilters.designation !== DEFAULT_FILTERS.designation;
 
   // ── Clinic list shown in dropdown (fetched from API by name) ──
   const [filteredClinics, setFilteredClinics] = useState([]);
@@ -107,8 +107,8 @@ const EmployeeList = () => {
     if (clinicSearchRef.current) {
       const rect = clinicSearchRef.current.getBoundingClientRect();
       setClinicDropdownStyle({
-        top:   rect.bottom + 4,
-        left:  rect.left,
+        top: rect.bottom + 4,
+        left: rect.left,
         width: rect.width,
       });
     }
@@ -190,17 +190,17 @@ const EmployeeList = () => {
       setError(null);
 
       const options = {
-        ClinicID:     filters.clinicId     !== '' ? Number(filters.clinicId)     : 0,
-        BranchID:     filters.branchId     !== '' ? Number(filters.branchId)     : 0,
-        EmployeeID:   0,
-        Name:         filters.searchType === 'Name'         ? filters.searchValue : '',
-        Mobile:       filters.searchType === 'Mobile'       ? filters.searchValue : '',
+        ClinicID: filters.clinicId !== '' ? Number(filters.clinicId) : 0,
+        BranchID: filters.branchId !== '' ? Number(filters.branchId) : 0,
+        EmployeeID: 0,
+        Name: filters.searchType === 'Name' ? filters.searchValue : '',
+        Mobile: filters.searchType === 'Mobile' ? filters.searchValue : '',
         EmployeeCode: filters.searchType === 'EmployeeCode' ? filters.searchValue : '',
         DepartmentID: filters.departmentId !== '' ? Number(filters.departmentId) : 0,
-        Designation:  filters.designation  !== '' ? Number(filters.designation)  : 0,
-        Status:       filters.status       !== '' ? Number(filters.status)        : -1,
-        Page:         currentPage,
-        PageSize:     pageSize,
+        Designation: filters.designation !== '' ? Number(filters.designation) : 0,
+        Status: filters.status !== '' ? Number(filters.status) : -1,
+        Page: currentPage,
+        PageSize: pageSize,
       };
 
       const data = await getEmployeeList(0, options);
@@ -227,9 +227,34 @@ const EmployeeList = () => {
     DESIGNATION_OPTIONS.find((d) => d.id === designationId)?.label || '—';
 
   const getStatusClass = (status) => {
-    if (status === 'active')   return styles.active;
-    if (status === 'inactive') return styles.inactive;
-    return styles.inactive;
+    switch (Number(status)) {
+      case 1:
+        return styles.active;
+
+      case 2:
+        return styles.inactive;
+
+      case 3:
+        return styles.probation;
+
+      case 4:
+        return styles.suspended;
+
+      case 5:
+        return styles.retired;
+
+      case 6:
+        return styles.deleted;
+
+      default:
+        return styles.inactive;
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    return (
+      STATUS_OPTIONS.find((s) => s.id === Number(status))?.label || 'Unknown'
+    );
   };
 
   // ────────────────────────────────────────────────
@@ -313,7 +338,7 @@ const EmployeeList = () => {
     fetchEmployees(appliedFilters);
   };
 
-  const openAddForm  = () => setIsAddFormOpen(true);
+  const openAddForm = () => setIsAddFormOpen(true);
   const closeAddForm = () => {
     setIsAddFormOpen(false);
     fetchEmployees(appliedFilters);
@@ -337,8 +362,8 @@ const EmployeeList = () => {
   // ────────────────────────────────────────────────
   // Early returns
 
-  if (loading) return <div className={styles.loading}><LoadingPage/></div>;
-  if (error)   return <div className={styles.error}>Error: {error.message || error}</div>;
+  if (loading) return <div className={styles.loading}><LoadingPage /></div>;
+  if (error) return <div className={styles.error}>Error: {error.message || error}</div>;
 
   // ────────────────────────────────────────────────
   return (
@@ -467,7 +492,7 @@ const EmployeeList = () => {
               disabled={searchBtnDisabled}
               style={{
                 opacity: searchBtnDisabled ? 0.6 : 1,
-                cursor:  searchBtnDisabled ? 'not-allowed' : 'pointer',
+                cursor: searchBtnDisabled ? 'not-allowed' : 'pointer',
               }}
             >
               <FiSearch size={16} />
@@ -481,7 +506,7 @@ const EmployeeList = () => {
                 disabled={clearBtnDisabled}
                 style={{
                   opacity: clearBtnDisabled ? 0.6 : 1,
-                  cursor:  clearBtnDisabled ? 'not-allowed' : 'pointer',
+                  cursor: clearBtnDisabled ? 'not-allowed' : 'pointer',
                 }}
               >
                 <FiX size={16} />
@@ -579,7 +604,7 @@ const EmployeeList = () => {
                     <td>{employee.mobile || '—'}</td>
                     <td>
                       <span className={`${styles.statusBadge} ${getStatusClass(employee.status)}`}>
-                        {employee.status.toUpperCase()}
+                        {getStatusLabel(employee.status)}
                       </span>
                     </td>
                     <td>

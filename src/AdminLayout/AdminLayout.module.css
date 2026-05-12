@@ -1,13 +1,35 @@
-\/* src/components/layout/AdminLayout.module.css */
+/* src/components/layout/AdminLayout.module.css */
+
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
+}
 
 .dashboardContainer {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--TC6);
   display: flex;
   position: relative;
   overflow: hidden;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 /* Floating Medical Icons (Stethoscope & Heart Rate) */
@@ -16,7 +38,7 @@
   pointer-events: none;
   opacity: 0.12;
   animation: float 18s ease-in-out infinite;
-  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 10px 30px var(--TC16));
   z-index: 1;
 }
 
@@ -50,47 +72,45 @@
   top: 0;
   left: 0;
   height: 100vh;
-  width: 66px; /* collapsed width */
+  width: 66px;
   z-index: 100;
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
 
 .sidebarWrapper.expanded {
-  width: 240px; /* expanded width — adjust to match your Sidebar's full width */
+  width: 240px;
 }
 
 /* Main Layout */
 .mainContent {
   flex: 1;
-  margin-left: 66px; /* matches collapsed sidebar width */
+  margin-left: 66px;
   padding: 7px 10px;
   min-height: 100vh;
+  height: 100vh;
   transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 2;
   position: relative;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
-
-  /* Hide scrollbar — Chrome, Safari, Edge */
+  background: linear-gradient(135deg, var(--TC16) 0%, var(--TC18) 100%);
   overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE 10+ */
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .mainContent::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge */
+  display: none;
 }
 
 :global(.dark-mode) .mainContent {
-    background: #1e293b;
-    border-color: #475569;
-    color: #e2e8f0;
-  }
-  
-
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
+}
 
 .mainContentShifted {
-  margin-left: 240px; /* matches expanded sidebar width */
+  margin-left: 240px;
 }
 
 /* Optional: Add subtle overlay glow */
@@ -101,14 +121,14 @@
   left: 0;
   right: 0;
   height: 170px;
-  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.6), transparent);
+  background: linear-gradient(to bottom, var(--TC16), transparent);
   pointer-events: none;
   z-index: -1;
 }
 
 @media (prefers-color-scheme: dark) {
   .mainContent::before {
-    background: linear-gradient(to bottom, rgba(15, 23, 42, 0.8), transparent);
+    background: linear-gradient(to bottom, var(--TC16), transparent);
   }
 }
 
@@ -116,33 +136,135 @@
 .pageTitle {
   font-size: 24px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--TC6);
   margin: 0 0 7px 0;
   letter-spacing: -0.4px;
 }
 
 .pageSubtitle {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--TC12);
   margin: 0;
   font-weight: 500;
 }
 
-/* Add this at the very top of AdminLayout.module.css */
-
+/* Allow body/html to be scrollable */
 :global(html),
 :global(body) {
-  overflow: hidden;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 :global(html::-webkit-scrollbar),
 :global(body::-webkit-scrollbar) {
-  display: none; /* Chrome, Safari, Edge */
+  display: none;
 }
 
-/* Responsive */
+/* ==================== ADD MODAL HEADER CARD (WorkShift style) ==================== */
+.addModalHeaderCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 12px;
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px var(--TC16);
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+/* ==================== CLINIC NAME (WorkShift style) ==================== */
+.clinicInfoName {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--TC6);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
+}
+
+.clinicInfoBranch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--TC13);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
+}
+
+/* ==================== DETAIL MODAL HEADER (WorkShift style) ==================== */
+.detailModalHeader {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ==================== STATUS BADGES (WorkShift style) ==================== */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+.statusBadge.active   { color: var(--TC10); }
+.statusBadge.inactive { color: var(--TC11); }
+.statusBadge.large    { padding: 9px 17px; font-size: 0.77rem; }
+
+.active {
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
+}
+.inactive {
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
+}
+.large { padding: 9px 17px; font-size: 0.77rem; }
+
+/* ==================== DARK MODE ==================== */
+:global(.dark-mode) .dashboardContainer {
+  background: var(--TC9);
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .pageTitle    { color: var(--TC13); }
+:global(.dark-mode) .pageSubtitle { color: var(--TC8); }
+
+/* ── addModalHeaderCard dark (WorkShift style) ── */
+:global(.dark-mode) .addModalHeaderCard { background: var(--TC12); }
+
+:global(.dark-mode) .clinicInfoName   { color: var(--TC6); }
+:global(.dark-mode) .clinicInfoBranch { color: var(--TC13); }
+
+/* ── detailModalHeader dark (WorkShift style) ── */
+:global(.dark-mode) .detailModalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+/* ── status badges dark (WorkShift style) ── */
+:global(.dark-mode) .statusBadge.active,
+:global(.dark-mode) .active { color: var(--TC5); }
+
+:global(.dark-mode) .statusBadge.inactive {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+/* ==================== RESPONSIVE ==================== */
 @media (max-width: 1024px) {
   .mainContent {
     margin-left: 66px;
@@ -175,6 +297,8 @@
   .mainContentShifted {
     margin-left: 0 !important;
     padding: 14px;
+    height: auto;
+    min-height: 100vh;
   }
 
   .floatingIcon {
