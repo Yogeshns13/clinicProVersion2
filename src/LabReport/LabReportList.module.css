@@ -2,18 +2,24 @@
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
-  --glass-bg: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(255, 255, 255, 0.4);
-  --status-created: #3b82f6;
-  --status-cancelled: #ef4444;
-  --status-verified: #22c55e;
-  --delete-color: #dc2626;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -36,10 +42,10 @@
 /* ==================== MAIN WRAPPER ==================== */
 .clinicListWrapper {
   padding: 20px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  background: linear-gradient(135deg, var(--TC6) 0%, var(--TC13) 100%);
   height: 100vh;
   overflow: hidden;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   display: flex;
   flex-direction: column;
@@ -48,12 +54,12 @@
 
 /* ==================== FILTERS ==================== */
 .filtersContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC16);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -75,11 +81,11 @@
   min-width: 140px;
   height: 40px;
   padding: 0 12px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-right: none;
   border-radius: 10px 0 0 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -88,29 +94,29 @@
 
 .searchTypeSelect:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .searchInput {
   flex: 1;
   height: 40px;
   padding: 0 15px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 0 10px 10px 0;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   transition: all 0.3s ease;
 }
 
-.searchInput::placeholder { color: #94a3b8; }
+.searchInput::placeholder { color: var(--TC12); }
 
 .searchInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
-  border-left: 1px solid var(--accent-end);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
+  border-left: 1px solid var(--TC5);
 }
 
 .filterGroup {
@@ -122,20 +128,20 @@
   width: 100%;
   height: 40px;
   padding: 10px 15px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   transition: all 0.3s ease;
 }
 
-.filterInput::placeholder { color: #94a3b8; }
+.filterInput::placeholder { color: var(--TC12); }
 
 .filterInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 /* ── Date placeholder overlay ── */
@@ -146,7 +152,7 @@
 
 .dateWrapper .filterInput {
   width: 100%;
-  color: var(--text-dark);
+  color: var(--TC9);
 }
 
 .dateEmpty::-webkit-datetime-edit-text,
@@ -162,7 +168,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--TC12);
   pointer-events: none;
   z-index: 1;
 }
@@ -189,23 +195,23 @@
 }
 
 .searchButton {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .searchButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 .clearButton {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--TC13);
+  color: var(--TC15);
 }
 
 .clearButton:hover {
-  background: #cbd5e1;
+  background: var(--TC8);
   transform: translateY(-2px);
 }
 
@@ -227,21 +233,21 @@
   width: 80%;
   height: 40px;
   padding: 15px 60px 15px 20px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 14px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.94rem;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  box-shadow: 0 5px 17px var(--TC16);
   transition: all 0.3s ease;
 }
 
-.clinicSearchInput::placeholder { color: #94a3b8; }
+.clinicSearchInput::placeholder { color: var(--TC12); }
 
 .clinicSearchInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18), 0 8px 25px rgba(34, 43, 108, 0.12);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18), 0 8px 25px var(--TC16);
 }
 
 .clinicSearchBtn {
@@ -251,8 +257,8 @@
   transform: translateY(-50%);
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   border: none;
   border-radius: 12px;
   cursor: pointer;
@@ -260,12 +266,12 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .clinicSearchBtn:hover {
   transform: translateY(-50%) scale(1.08);
-  box-shadow: 0 8px 24px rgba(32, 125, 156, 0.45);
+  box-shadow: 0 8px 24px var(--TC17);
 }
 
 .clinicAddBtn {
@@ -275,21 +281,21 @@
   width: 150px;
   gap: 10px;
   padding: 10px 10px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   font-weight: 700;
   font-size: 0.94rem;
   border: none;
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.4s ease;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 7px 24px var(--TC17);
   white-space: nowrap;
 }
 
 .clinicAddBtn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 34px rgba(32, 125, 156, 0.45);
+  box-shadow: 0 14px 34px var(--TC17);
 }
 
 .clinicBackBtn {
@@ -299,21 +305,21 @@
   width: 150px;
   gap: 10px;
   padding: 10px 10px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   font-weight: 700;
   font-size: 0.94rem;
   border: none;
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.4s ease;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 7px 24px var(--TC17);
   white-space: nowrap;
 }
 
 .clinicBackBtn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 34px rgba(32, 125, 156, 0.45);
+  box-shadow: 0 14px 34px var(--TC17);
 }
 
 /* ==================== TABLE ==================== */
@@ -325,13 +331,13 @@
 }
 
 .clinicTableContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 13px 38px var(--TC16);
+  border: 1px solid var(--TC16);
 }
 
 .updateEmployeeContainer { padding: 20px; border-radius: 17px; }
@@ -345,8 +351,8 @@
 .clinicTable th {
   text-align: left;
   padding: 12px 17px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   font-weight: 600;
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -359,8 +365,8 @@
 
 .clinicTable td {
   padding: 6px 17px;
-  border-bottom: 1px solid #e2e8f0;
-  color: var(--text-dark);
+  border-bottom: 1px solid var(--TC13);
+  color: var(--TC9);
   font-size: 0.75rem;
   vertical-align: middle;
 }
@@ -371,10 +377,10 @@
   padding-right: 24px;
 }
 
-.clinicTable tbody tr:nth-child(even) { background-color: #d5e6ec; }
+.clinicTable tbody tr:nth-child(even) { background-color: var(--TC18); }
 
 .clinicTable tbody tr:hover {
-  background-color: rgba(48, 178, 181, 0.08) !important;
+  background-color: var(--TC18) !important;
   transition: background-color 0.25s ease;
 }
 
@@ -389,19 +395,25 @@
   width: 33px;
   height: 33px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-weight: bold;
   font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 3px 12px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 3px 12px var(--TC17);
   flex-shrink: 0;
 }
 
-.clinicName { font-weight: 700; color: var(--text-dark); font-size: 0.87rem; }
-.clinicType { font-size: 0.72rem; color: #64748b; margin-top: 2px; }
+.clinicName {
+  font-weight: 700;
+  color: var(--TC9);
+  opacity: 0.9;
+  font-size: 0.87rem;
+}
+
+.clinicType { font-size: 0.72rem; color: var(--TC12); margin-top: 2px; }
 
 /* ==================== TABLE ACTION BUTTONS ==================== */
 .tableActionBtns {
@@ -422,14 +434,30 @@
   letter-spacing: 0.7px;
 }
 
-.statusBadge.created  { background: rgba(59, 130, 246, 0.15); color: #1e40af; border: 1px solid rgba(59, 130, 246, 0.3); }
-.statusBadge.cancelled{ background: rgba(239, 68, 68, 0.15);  color: #991b1b; border: 1px solid rgba(239, 68, 68, 0.3);  }
-.statusBadge.verified { background: rgba(34, 197, 94, 0.15);  color: #166534; border: 1px solid rgba(34, 197, 94, 0.3);  }
+.statusBadge.active   { color: var(--TC10); }
+.statusBadge.inactive { color: var(--TC11); }
 .statusBadge.large    { padding: 9px 17px; font-size: 0.77rem; }
 
-.created   { background: rgba(59, 130, 246, 0.15); color: #1e40af; border: 1px solid rgba(59, 130, 246, 0.3); }
-.cancelled { background: rgba(239, 68, 68, 0.15);  color: #991b1b; border: 1px solid rgba(239, 68, 68, 0.3); }
-.verified  { background: rgba(34, 197, 94, 0.15);  color: #166534; border: 1px solid rgba(34, 197, 94, 0.3); }
+.active {
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
+}
+
+.inactive {
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
+}
+
+.statusBadge.created  { background: var(--TC18); color: var(--TC2); border: 1px solid var(--TC16); }
+.statusBadge.cancelled{ background: var(--TC16); color: var(--TC11); border: 1px solid var(--TC16); }
+.statusBadge.verified { background: var(--TC18); color: var(--TC10); border: 1px solid var(--TC16); }
+.statusBadge.large    { padding: 9px 17px; font-size: 0.77rem; }
+
+.created   { background: var(--TC18); color: var(--TC2); border: 1px solid var(--TC16); }
+.cancelled { background: var(--TC16); color: var(--TC11); border: 1px solid var(--TC16); }
+.verified  { background: var(--TC18); color: var(--TC10); border: 1px solid var(--TC16); }
 .large     { padding: 9px 17px; font-size: 0.77rem; }
 
 /* ==================== BUTTONS ==================== */
@@ -438,18 +466,18 @@
 .btnSubmit {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   border: none;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 3px 10px var(--TC17);
   z-index: 1;
 }
 
 .btnSubmit {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
 }
 
 .clinicDetailsBtn {
@@ -464,14 +492,14 @@
   padding: 10px 24px;
   font-size: 0.85rem;
   border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 5px 15px var(--TC17);
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.btnUpdate{
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+.btnUpdate {
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
 }
 
 .clinicModalFooter .btnUpdate { padding: 10px 31px; border-radius: 26px; }
@@ -483,15 +511,15 @@
   align-items: center;
   gap: 8px;
   padding: 10px 24px;
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC14), var(--TC11));
+  color: var(--TC6);
   border: none;
   font-weight: 600;
   font-size: 0.85rem;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
+  box-shadow: 0 5px 15px var(--TC17);
   z-index: 1;
 }
 
@@ -500,7 +528,7 @@
   position: absolute;
   top: 50%; left: 50%;
   width: 0; height: 0;
-  background: rgba(239, 68, 68, 0.35);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -512,7 +540,7 @@
 
 .btnDelete:hover {
   transform: translateY(-2px);
-  box-shadow: 0 7px 20px rgba(220, 38, 38, 0.45);
+  box-shadow: 0 7px 20px var(--TC17);
 }
 
 .btnDeleteConfirm {
@@ -522,20 +550,20 @@
   align-items: center;
   gap: 8px;
   padding: 10px 24px;
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC14), var(--TC11));
+  color: var(--TC6);
   border: none;
   font-weight: 600;
   font-size: 0.85rem;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .btnDeleteConfirm:hover {
   transform: translateY(-2px);
-  box-shadow: 0 7px 20px rgba(220, 38, 38, 0.45);
+  box-shadow: 0 7px 20px var(--TC17);
 }
 
 .btnDeleteConfirm:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -547,7 +575,7 @@
   position: absolute;
   top: 50%; left: 50%;
   width: 0; height: 0;
-  background: rgba(48, 178, 181, 0.35);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -563,7 +591,7 @@
 .btnUpdate:hover,
 .btnSubmit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+  box-shadow: 0 5px 17px var(--TC17);
 }
 
 .clinicDetailsBtn:active,
@@ -584,17 +612,17 @@
 
 .btnHold {
   padding: 10px 31px;
-  background: linear-gradient(135deg, var(--primary-start));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC1));
+  color: var(--TC6);
   border: none;
   border-radius: 26px;
 }
 
-.btnHold:hover { background: rgba(239, 68, 68); transform: translateY(-2px); }
+.btnHold:hover { background: var(--TC14); transform: translateY(-2px); }
 
 .btnCancel {
-  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   border: none;
   border-radius: 14px;
   height: 40px;
@@ -605,7 +633,7 @@
   position: relative;
   overflow: hidden;
   transition: all 0.4s ease;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 7px 24px var(--TC17);
   white-space: nowrap;
   z-index: 0;
 }
@@ -614,7 +642,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
   opacity: 0;
   transition: opacity 0.4s ease;
   z-index: -1;
@@ -624,14 +652,14 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
+  background: linear-gradient(105deg, transparent 40%, var(--TC18) 50%, transparent 60%);
   background-size: 200% 100%;
   background-position: -100% 0;
   transition: background-position 0.5s ease;
   z-index: -1;
 }
 
-.btnCancel:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45); }
+.btnCancel:hover { transform: translateY(-3px); box-shadow: 0 14px 34px var(--TC17); }
 .btnCancel:hover::before { opacity: 1; }
 .btnCancel:hover::after  { background-position: 200% 0; }
 .btnCancel:disabled      { opacity: 0.6; cursor: not-allowed; }
@@ -654,13 +682,13 @@
 
 /* ==================== LEGACY MODAL ==================== */
 .clinicModal {
-  background: var(--glass-bg);
+  background: var(--TC6);
   border-radius: 15px;
   width: 100%;
   max-width: 578px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 17px 43px var(--TC16), inset 0 1px 2px var(--TC6);
   backdrop-filter: blur(14px);
   animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -674,8 +702,8 @@
 
 .clinicModalHeader {
   padding: 12px 16px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -692,9 +720,9 @@
 }
 
 .clinicModalClose {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border: none;
-  color: var(--text-light);
+  color: var(--TC6);
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -708,19 +736,19 @@
 }
 
 .clinicModalClose:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--TC17);
   transform: scale(1.05);
 }
 
-.clinicModalBody {color: var(--text-dark); }
+.clinicModalBody { color: var(--TC9); }
 
 .clinicModalFooter {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   padding: 17px 23px;
-  border-top: 2px solid rgba(34, 43, 108, 0.15);
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+  border-top: 2px solid var(--TC16);
+  background: linear-gradient(to bottom, var(--TC6), var(--TC13));
 }
 
 .updateEmployeeFooter {
@@ -728,8 +756,8 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 17px 23px;
-  border-top: 2px solid rgba(34, 43, 108, 0.15);
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+  border-top: 2px solid var(--TC16);
+  background: linear-gradient(to bottom, var(--TC6), var(--TC13));
 }
 
 /* ==================== FORMS ==================== */
@@ -745,8 +773,8 @@
   margin: 14px 0 8px;
   font-size: 0.9rem;
   font-weight: 700;
-  color: var(--primary-start);
-  border-bottom: 2px solid var(--accent-end);
+  color: var(--TC1);
+  border-bottom: 2px solid var(--TC5);
   padding-bottom: 5px;
 }
 
@@ -755,47 +783,47 @@
 .formGroup label {
   display: block;
   margin-bottom: 4px;
-  color: var(--primary-start);
+  color: var(--TC1);
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.17px;
 }
 
-.formGroup .required { color: #dc2626; font-weight: 700; }
+.formGroup .required { color: var(--TC14); font-weight: 700; }
 
 .formGroup input,
 .formGroup textarea,
 .formGroup select {
   width: 100%;
   padding: 9px 12px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 2px solid rgba(34, 43, 108, 0.2);
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
   border-radius: 9px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.8rem;
   font-weight: 500;
   transition: all 0.3s ease;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 3px var(--TC16);
 }
 
 .disabledInput {
-  background: rgba(226, 232, 240, 0.5) !important;
-  color: #64748b !important;
+  background: var(--TC13) !important;
+  color: var(--TC12) !important;
   cursor: not-allowed !important;
 }
 
 .fullWidth { grid-column: 1 / -1; }
 
 .formGroup input::placeholder,
-.formGroup textarea::placeholder { color: rgba(30, 41, 59, 0.4); }
+.formGroup textarea::placeholder { color: var(--TC12); }
 
 .formGroup input:focus,
 .formGroup textarea:focus,
 .formGroup select:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15), inset 0 1px 3px rgba(0, 0, 0, 0.05);
-  background: rgba(255, 255, 255, 0.9);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18), inset 0 1px 3px var(--TC16);
+  background: var(--TC6);
 }
 
 .formError,
@@ -806,26 +834,26 @@
   border: 2px solid;
   font-size: 0.8rem;
   font-weight: 600;
-  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 9px var(--TC16);
   grid-column: 1 / -1;
 }
 
 .formError {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
-  color: #dc2626;
-  border-color: rgba(239, 68, 68, 0.3);
+  background: var(--TC16);
+  color: var(--TC14);
+  border-color: var(--TC16);
 }
 
 .formSuccess {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.2));
-  color: #059669;
-  border-color: rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC10);
+  border-color: var(--TC18);
 }
 
-.required { color: #dc2626; font-weight: 700; }
-.loadingText { font-size: 0.7rem; color: #64748b; margin-top: 4px; }
-.warningText { color: #dc2626; font-weight: 600; margin-top: 10px; }
-.validationMsg { font-size: 0.75rem; color: red; margin-top: 2px; }
+.required { color: var(--TC14); font-weight: 700; }
+.loadingText { font-size: 0.7rem; color: var(--TC12); margin-top: 4px; }
+.warningText { color: var(--TC14); font-weight: 600; margin-top: 10px; }
+.validationMsg { font-size: 0.75rem; color: var(--TC14); margin-top: 2px; }
 
 /* ==================== LEGACY INFO SECTION ==================== */
 .infoSection {
@@ -833,32 +861,32 @@
   display: flex;
   gap: 8px;
   padding: 10px 12px;
-  background: rgba(34, 43, 108, 0.05);
+  background: var(--TC16);
   border-radius: 8px;
-  border-left: 3px solid var(--accent-end);
+  border-left: 3px solid var(--TC5);
 }
 
-.infoLabel { font-weight: 700; color: var(--primary-start); font-size: 0.8rem; }
-.infoValue { color: var(--text-dark); font-size: 0.8rem; font-weight: 500; }
+.infoLabel { font-weight: 700; color: var(--TC1); font-size: 0.8rem; }
+.infoValue { color: var(--TC9); font-size: 0.8rem; font-weight: 500; }
 
 /* ==================== LEGACY DETAILS MODAL ==================== */
 .detailsModal {
-  background: var(--glass-bg);
+  background: var(--TC6);
   backdrop-filter: blur(10px);
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--TC16);
   width: 100%;
   max-width: 544px;
   overflow: hidden;
-  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 10px 34px var(--TC16);
   display: flex;
   flex-direction: column;
 }
 
 .detailsModalHeader {
   padding: 14px 20px 12px;
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
-  border-bottom: 1px solid rgba(34, 43, 108, 0.1);
+  background: linear-gradient(135deg, var(--TC16), var(--TC18));
+  border-bottom: 1px solid var(--TC16);
   position: relative;
   display: flex;
   align-items: center;
@@ -871,27 +899,27 @@
 .clinicAvatarLarge {
   width: 37px; height: 37px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-size: 16px;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 4px 14px var(--TC17);
 }
 
 .detailsModalHeader h2 {
   font-size: 1.02rem;
   font-weight: 800;
   margin: 0;
-  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  background: linear-gradient(135deg, var(--TC1), var(--TC5));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.clinicSubtitle { margin: 3px 0 0; color: var(--primary-end); font-size: 0.6rem; font-weight: 500; }
+.clinicSubtitle { margin: 3px 0 0; color: var(--TC2); font-size: 0.6rem; font-weight: 500; }
 .statusBadgeLargeWrapper { margin-right: 23px; }
 
 .detailsModalBody { padding: 20px; flex: 1; overflow-y: auto; }
@@ -903,24 +931,24 @@
   flex-direction: column;
   gap: 4px;
   padding: 12px;
-  background: rgba(34, 43, 108, 0.03);
+  background: var(--TC16);
   border-radius: 8px;
-  border: 1px solid rgba(34, 43, 108, 0.08);
+  border: 1px solid var(--TC16);
 }
 
 .detailLabel {
   font-size: 0.7rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--TC12);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.detailValue { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); word-break: break-word; }
+.detailValue { font-size: 0.85rem; font-weight: 600; color: var(--TC9); word-break: break-word; }
 .detailItem.fullWidth { grid-column: 1 / -1; }
 
 /* ==================== UTILITY STATES ==================== */
-.clinicNoData { text-align: center; padding: 68px 17px; color: #64748b; font-size: 1.1rem; }
+.clinicNoData { text-align: center; padding: 68px 17px; color: var(--TC12); font-size: 1.1rem; }
 
 .clinicLoading,
 .clinicError {
@@ -929,17 +957,17 @@
   justify-content: center;
   min-height: 70vh;
   font-size: 1.3rem;
-  color: #64748b;
+  color: var(--TC12);
 }
 
-.clinicError { color: #ef4444; }
+.clinicError { color: var(--TC14); }
 
 /* ==================== CLINIC-STYLE DETAIL MODAL ==================== */
 
 .detailModalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--TC16);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -950,7 +978,7 @@
 }
 
 .detailModalContent {
-  background: white;
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-width: 900px;
@@ -958,18 +986,18 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 70px var(--TC16);
   animation: slideUp 0.4s ease;
 }
 
 /* ── Gradient Header ── */
 .detailModalHeader {
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 20px;
   flex-shrink: 0;
 }
@@ -986,23 +1014,23 @@
   width: 42px;
   height: 42px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.25);
-  color: var(--text-light);
+  background: var(--TC18);
+  color: var(--TC6);
   font-weight: 800;
   font-size: 1.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 14px var(--TC16);
   backdrop-filter: blur(8px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid var(--TC17);
 }
 
 .detailHeaderTitle {
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
 }
 
 .detailHeaderMeta {
@@ -1015,13 +1043,13 @@
 .detailBadge {
   display: inline-block;
   padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--TC18);
   border-radius: 6px;
   font-size: 0.78rem;
   font-weight: 600;
   backdrop-filter: blur(10px);
-  color: var(--text-light);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--TC6);
+  border: 1px solid var(--TC17);
 }
 
 .detailHeaderContent {
@@ -1062,13 +1090,26 @@
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
+}
+
+.clinicInfoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC6);
+  opacity: 0.9;
+}
+
+.clinicInfoText {
+  display: flex;
+  flex-direction: column;
 }
 
 .clinicInfoName {
@@ -1077,7 +1118,7 @@
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -1088,21 +1129,21 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
 
 /* Badge colour variants */
-.detailBadgeSuccess  { background: rgba(22, 163, 74, 0.4)   !important; border-color: rgba(22, 163, 74, 0.6)   !important; }
-.detailBadgeDanger   { background: rgba(220, 38, 38, 0.4)   !important; border-color: rgba(220, 38, 38, 0.6)   !important; }
-.detailBadgeInfo     { background: rgba(59, 130, 246, 0.4)  !important; border-color: rgba(59, 130, 246, 0.6)  !important; }
-.detailBadgeNeutral  { background: rgba(234, 179, 8, 0.35)  !important; border-color: rgba(234, 179, 8, 0.5)   !important; }
+.detailBadgeSuccess  { background: var(--TC18) !important; border-color: var(--TC17) !important; }
+.detailBadgeDanger   { background: var(--TC16) !important; border-color: var(--TC16) !important; color: var(--TC14) !important; }
+.detailBadgeInfo     { background: var(--TC18) !important; border-color: var(--TC17) !important; color: var(--TC2) !important; }
+.detailBadgeNeutral  { background: var(--TC16) !important; border-color: var(--TC16) !important; }
 
 .detailCloseBtn {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border: none;
-  color: var(--text-light);
+  color: var(--TC6);
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -1117,7 +1158,7 @@
 }
 
 .detailCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
@@ -1135,7 +1176,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   padding: 24px 28px;
-  background: linear-gradient(135deg, rgba(240, 247, 255, 0.5), rgba(230, 242, 255, 0.5));
+  background: linear-gradient(135deg, var(--TC18), var(--TC16));
   flex: 1;
 }
 
@@ -1144,24 +1185,24 @@
 }
 
 .detailInfoCard {
-  background: white;
+  background: var(--TC6);
   border-radius: 14px;
   padding: 18px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.07);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC16);
 }
 
 .detailInfoHeader {
   margin-bottom: 14px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
+  border-bottom: 2px solid var(--TC17);
 }
 
 .detailInfoHeader h3 {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 .detailInfoContent { display: flex; flex-direction: column; gap: 2px; }
@@ -1171,14 +1212,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(34, 43, 108, 0.06);
+  border-bottom: 1px solid var(--TC16);
 }
 
 .detailInfoRow:last-child { border-bottom: none; }
 
 .detailInfoLabel {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 600;
   flex-shrink: 0;
   margin-right: 12px;
@@ -1186,7 +1227,7 @@
 
 .detailInfoValue {
   font-size: 0.85rem;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-weight: 600;
   text-align: right;
   word-break: break-word;
@@ -1201,7 +1242,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--text-light);
+  color: var(--TC6);
   border: 1px solid transparent;
 }
 
@@ -1211,21 +1252,19 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 18px 28px;
-  border-top: 2px solid rgba(34, 43, 108, 0.1);
-  background: #f8fafc;
+  border-top: 2px solid var(--TC16);
+  background: var(--TC13);
   flex-shrink: 0;
 }
 
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .clinicListWrapper {
-  --glass-bg: rgba(30, 41, 59, 0.92);
-  --text-dark: #e2e8f0;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #e2e8f0;
+  background: linear-gradient(135deg, var(--TC9) 0%, var(--TC7) 100%);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .filtersContainer  { background: #1e293b; border-color: #475569; }
-:global(.dark-mode) .filterInput       { background: #0f172a; border-color: #475569; color: #e2e8f0; }
+:global(.dark-mode) .filtersContainer  { background: var(--TC9); border-color: var(--TC15); }
+:global(.dark-mode) .filterInput       { background: var(--TC9); border-color: var(--TC15); color: var(--TC13); }
 
 :global(.dark-mode) .filterInput::-webkit-calendar-picker-indicator {
   filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
@@ -1237,87 +1276,621 @@
   cursor: pointer;
 }
 
-
-:global(.dark-mode) .searchTypeSelect  { background: #0f172a; border-color: #475569; color: #e2e8f0; }
-:global(.dark-mode) .searchInput       { background: #0f172a; border-color: #475569; color: #e2e8f0; }
-:global(.dark-mode) .searchInput:focus { border-left: 1px solid var(--accent-end); }
-:global(.dark-mode) .datePlaceholder   { color: #64748b; }
-:global(.dark-mode) .clearButton       { background: #334155; color: #e2e8f0; }
-:global(.dark-mode) .clearButton:hover { background: #475569; }
-:global(.dark-mode) .clinicModalFooter { background: linear-gradient(135deg, #1e293b, #334155); }
-:global(.dark-mode) .clinicSearchInput { background: #1e293b; border-color: #475569; color: #e2e8f0; }
-:global(.dark-mode) .clinicTableContainer { background: #1e293b; border-color: #475569; }
-:global(.dark-mode) .clinicTable th   { background: linear-gradient(135deg, #334155, #475569); }
-:global(.dark-mode) .clinicTable td   { border-bottom-color: #475569; color: #e2e8f0; }
-:global(.dark-mode) .clinicTable tbody tr:nth-child(even) { background-color: #334155; }
-:global(.dark-mode) .formGroup label  { color: var(--accent-end); }
-:global(.dark-mode) .btnCancel        { background: #334155; color: #e2e8f0; border-color: #475569; }
-:global(.dark-mode) .btnCancel:hover  { background: #475569; }
-:global(.dark-mode) .btnHold          { background: linear-gradient(135deg, var(--primary-end)); color: var(--text-light); }
-:global(.dark-mode) .btnHold:hover    { background: rgba(239, 68, 68); transform: translateY(-2px); }
+:global(.dark-mode) .searchTypeSelect  { background: var(--TC9); border-color: var(--TC15); color: var(--TC13); }
+:global(.dark-mode) .searchInput       { background: var(--TC9); border-color: var(--TC15); color: var(--TC13); }
+:global(.dark-mode) .searchInput:focus { border-left: 1px solid var(--TC5); }
+:global(.dark-mode) .datePlaceholder   { color: var(--TC12); }
+:global(.dark-mode) .clearButton       { background: var(--TC7); color: var(--TC13); }
+:global(.dark-mode) .clearButton:hover { background: var(--TC15); }
+:global(.dark-mode) .clinicModalFooter { background: linear-gradient(135deg, var(--TC9), var(--TC7)); }
+:global(.dark-mode) .clinicSearchInput { background: var(--TC9); border-color: var(--TC15); color: var(--TC13); }
+:global(.dark-mode) .clinicTableContainer { background: var(--TC9); border-color: var(--TC15); }
+:global(.dark-mode) .clinicTable th   { background: linear-gradient(135deg, var(--TC7), var(--TC15)); }
+:global(.dark-mode) .clinicTable td   { border-bottom-color: var(--TC15); color: var(--TC13); }
+:global(.dark-mode) .clinicTable tbody tr:nth-child(even) { background-color: var(--TC7); }
+:global(.dark-mode) .formGroup label  { color: var(--TC5); }
+:global(.dark-mode) .btnCancel        { background: var(--TC7); color: var(--TC13); border-color: var(--TC15); }
+:global(.dark-mode) .btnCancel:hover  { background: var(--TC15); }
+:global(.dark-mode) .btnHold          { background: linear-gradient(135deg, var(--TC2)); color: var(--TC6); }
+:global(.dark-mode) .btnHold:hover    { background: var(--TC14); transform: translateY(-2px); }
 
 :global(.dark-mode) .detailsTable td.label,
-:global(.dark-mode) .label { color: var(--accent-end); background-color: #1e293b; }
+:global(.dark-mode) .label { color: var(--TC5); background-color: var(--TC9); }
 
 :global(.dark-mode) .detailsTable td.value,
-:global(.dark-mode) .value { background-color: #1e293b; }
+:global(.dark-mode) .value { background-color: var(--TC9); }
 
-:global(.dark-mode) .detailItem   { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); }
-:global(.dark-mode) .detailValue  { color: #e2e8f0; }
-:global(.dark-mode) .infoSection  { background: rgba(48, 178, 181, 0.1); }
-:global(.dark-mode) .infoLabel    { color: var(--accent-end); }
-:global(.dark-mode) .infoValue    { color: #e2e8f0; }
+:global(.dark-mode) .detailItem   { background: var(--TC7); border-color: var(--TC15); }
+:global(.dark-mode) .detailValue  { color: var(--TC13); }
+:global(.dark-mode) .infoSection  { background: var(--TC18); }
+:global(.dark-mode) .infoLabel    { color: var(--TC5); }
+:global(.dark-mode) .infoValue    { color: var(--TC13); }
 
 :global(.dark-mode) .clinicModalHeader h2,
 :global(.dark-mode) .detailsModalHeader h2 {
-  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
+  background: linear-gradient(135deg, var(--TC6), var(--TC5));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
+:global(.dark-mode) .clinicName {
+  font-weight: 500;
+  color: var(--TC6);
+  font-size: 0.87rem;
+}
+
+:global(.dark-mode) .clinicType {
+  font-size: 0.72rem;
+  color: var(--TC8);
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+:global(.dark-mode) .statusBadge.active,
+:global(.dark-mode) .active { color: var(--TC5); }
+
+:global(.dark-mode) .statusBadge.inactive,
+:global(.dark-mode) .inactive {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
 :global(.dark-mode) .statusBadge.created,
-:global(.dark-mode) .created { background: rgba(59, 130, 246, 0.25); color: #93c5fd; }
+:global(.dark-mode) .created { background: var(--TC18); color: var(--TC5); border: 1px solid var(--TC16); }
 
 :global(.dark-mode) .statusBadge.verified,
-:global(.dark-mode) .verified { background: rgba(34, 197, 94, 0.25); color: #86efac; }
+:global(.dark-mode) .verified { background: var(--TC18); color: var(--TC5); border: 1px solid var(--TC16); }
+
+:global(.dark-mode) .statusBadge.cancelled,
+:global(.dark-mode) .cancelled { background: var(--TC18); color: var(--TC14); border: 1px solid var(--TC16); }
 
 :global(.dark-mode) .clinicModal {
-  background: rgba(30, 41, 59, 0.94);
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+}
+
+:global(.dark-mode) .clinicInfoName {
+  color: var(--TC6);
+}
+
+:global(.dark-mode) .clinicInfoBranch {
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .paginationBar {
-  background: #1e293b;
-  border-color: rgba(71, 85, 105, 0.4);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  background: var(--TC9);
+  border-color: var(--TC15);
+  box-shadow: 0 4px 14px var(--TC16);
 }
 
 :global(.dark-mode) .formGroup input,
 :global(.dark-mode) .formGroup textarea,
-:global(.dark-mode) .formGroup select { background: #1e293b; border-color: #475569; color: #e2e8f0; }
+:global(.dark-mode) .formGroup select { background: var(--TC9); border-color: var(--TC15); color: var(--TC13); }
 
-:global(.dark-mode) .disabledInput { background: rgba(51, 65, 85, 0.5) !important; color: #94a3b8 !important; }
+:global(.dark-mode) .disabledInput { background: var(--TC7) !important; color: var(--TC12) !important; }
 
 /* Clinic-style modal dark mode */
-:global(.dark-mode) .detailModalContent { background: #1e293b; }
+:global(.dark-mode) .detailModalContent { background: var(--TC9); box-shadow: 0 25px 70px var(--TC16); }
+
+:global(.dark-mode) .detailModalHeader { background: linear-gradient(135deg, var(--TC7), var(--TC15)); }
 
 :global(.dark-mode) .detailInfoSection {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+  background: var(--TC7);
 }
 
 :global(.dark-mode) .detailInfoCard {
-  background: #0f172a;
-  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
-:global(.dark-mode) .detailInfoHeader { border-bottom-color: rgba(48, 178, 181, 0.25); }
-:global(.dark-mode) .detailInfoHeader h3 { color: var(--accent-end); }
-:global(.dark-mode) .detailInfoRow    { border-bottom-color: rgba(255, 255, 255, 0.05); }
-:global(.dark-mode) .detailInfoLabel  { color: #94a3b8; }
-:global(.dark-mode) .detailInfoValue  { color: #e2e8f0; }
-:global(.dark-mode) .detailModalFooter { background: #0f172a; border-top-color: rgba(255, 255, 255, 0.08); }
+:global(.dark-mode) .detailInfoHeader { border-bottom-color: var(--TC17); }
+:global(.dark-mode) .detailInfoHeader h3 { color: var(--TC5); }
+:global(.dark-mode) .detailInfoRow    { border-bottom-color: var(--TC15); }
+:global(.dark-mode) .detailInfoLabel  { color: var(--TC12); }
+:global(.dark-mode) .detailInfoValue  { color: var(--TC13); }
+:global(.dark-mode) .detailModalFooter { background: var(--TC9); border-top-color: var(--TC15); }
+
+/* ==================== PAGINATION BAR ==================== */
+.paginationBar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--TC6);
+  border-radius: 14px;
+  padding: 10px 20px;
+  margin-top: 14px;
+  box-shadow: 0 4px 14px var(--TC16);
+  border: 1px solid var(--TC16);
+  gap: 16px;
+}
+
+.paginationInfo {
+  font-size: 0.8rem;
+  color: var(--TC12);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.paginationLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--TC1);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.pageBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
+  border-radius: 8px;
+  color: var(--TC1);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px var(--TC17);
+}
+
+.pageBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pageIndicator {
+  min-width: 36px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0 8px;
+  box-shadow: 0 3px 8px var(--TC17);
+}
+
+.pageSizeInfo {
+  font-size: 0.8rem;
+  color: var(--TC12);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pageSizeInfo strong {
+  color: var(--TC1);
+  font-weight: 700;
+}
+
+:global(.dark-mode) .paginationInfo,
+:global(.dark-mode) .pageSizeInfo     { color: var(--TC12); }
+:global(.dark-mode) .paginationLabel  { color: var(--TC5); }
+:global(.dark-mode) .pageBtn          { background: var(--TC9); border-color: var(--TC15); color: var(--TC13); }
+:global(.dark-mode) .pageBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
+}
+:global(.dark-mode) .pageSizeInfo strong { color: var(--TC5); }
+
+/* ==================== VIEW REPORT BUTTON (table action) ==================== */
+.btnViewReport {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  border: none;
+  font-weight: 600;
+  font-size: 0.72rem;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px var(--TC17);
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.btnViewReport::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  background: var(--TC18);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.5s ease, height 0.5s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btnViewReport:hover::before { width: 140px; height: 140px; }
+
+.btnViewReport:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px var(--TC17);
+}
+
+.btnViewReport:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==================== VIEW FILE BUTTON (modal footer) ==================== */
+.btnViewFile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  border: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px var(--TC17);
+  white-space: nowrap;
+}
+
+.btnViewFile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px var(--TC17);
+}
+
+.btnViewFile:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==================== FILE SECTION (in update modal form) ==================== */
+.fileSection {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: var(--TC18);
+  border: 1.5px solid var(--TC17);
+  border-radius: 12px;
+  margin-top: 2px;
+}
+
+.fileSectionTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--TC1);
+  padding-bottom: 8px;
+  border-bottom: 1.5px dashed var(--TC17);
+}
+
+.fileUploadContainer {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* ── Preview square ── */
+.filePreviewSection {
+  flex-shrink: 0;
+  width: 110px;
+  height: 110px;
+}
+
+.filePreview {
+  width: 110px;
+  height: 110px;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  border: 2px solid var(--TC17);
+  box-shadow: 0 4px 12px var(--TC17);
+}
+
+.filePreview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.filePlaceholder {
+  width: 110px;
+  height: 110px;
+  border-radius: 12px;
+  border: 2px dashed var(--TC16);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC12);
+  gap: 7px;
+  text-align: center;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.filePlaceholder p {
+  font-size: 0.7rem;
+  margin: 0;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.removeFileBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: var(--TC11);
+  border: none;
+  color: var(--TC6);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  padding: 0;
+}
+
+.removeFileBtn:hover { background: var(--TC14); }
+.removeFileBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Upload controls column ── */
+.fileUploadControls {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  justify-content: center;
+  min-width: 0;
+}
+
+.btnSelectFile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC4));
+  color: var(--TC6);
+  border: none;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  width: fit-content;
+  white-space: nowrap;
+}
+
+.btnSelectFile:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.btnUploadFile {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  border: none;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  width: fit-content;
+  white-space: nowrap;
+}
+
+.btnUploadFile:hover { opacity: 0.9; transform: translateY(-1px); }
+.btnUploadFile:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.btnClearFile {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: var(--TC13);
+  color: var(--TC15);
+  border: none;
+  border-radius: 9px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  width: fit-content;
+  white-space: nowrap;
+}
+
+.btnClearFile:hover { background: var(--TC8); transform: translateY(-1px); }
+.btnClearFile:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.fileStatus { font-size: 0.78rem; font-weight: 500; margin: 0; }
+.fileStatusSuccess { color: var(--TC10); }
+.fileStatusInfo    { color: var(--TC3); }
+.fileHint { font-size: 0.73rem; color: var(--TC12); margin: 0; }
+
+/* Dark mode for file section */
+:global(.dark-mode) .fileSection {
+  background: var(--TC9);
+  border-color: var(--TC17);
+}
+:global(.dark-mode) .fileSectionTitle { color: var(--TC5); }
+:global(.dark-mode) .filePlaceholder  { border-color: var(--TC15); color: var(--TC12); }
+:global(.dark-mode) .btnClearFile     { background: var(--TC7); color: var(--TC12); }
+:global(.dark-mode) .btnClearFile:hover { background: var(--TC15); }
+
+/* ── Same-row action buttons (View + Replace) ── */
+.fileActionRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Both View Current File and Replace/Select File share this class — identical size */
+.btnFileAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  border: none;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  white-space: nowrap;
+  box-sizing: border-box;
+  box-shadow: 0 3px 10px var(--TC17);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.btnFileAction:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px var(--TC17);
+  opacity: 0.93;
+}
+.btnFileAction:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+:global(.dark-mode) .btnFileAction { box-shadow: 0 3px 10px var(--TC16); }
+
+/* ==================== LIGHTBOX ==================== */
+.lightboxOverlay {
+  position: fixed;
+  inset: 0;
+  background: var(--TC16);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease;
+  padding: 20px 20px 20px 60px;
+}
+
+.lightboxModal {
+  background: var(--TC9);
+  border-radius: 16px;
+  overflow: hidden;
+  max-width: 85vw;
+  max-height: 88vh;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 70px var(--TC16);
+  animation: slideUp 0.25s ease;
+}
+
+.lightboxHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  flex-shrink: 0;
+  gap: 20px;
+}
+
+.lightboxTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--TC6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lightboxCloseBtn {
+  background: var(--TC18);
+  border: none;
+  color: var(--TC6);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.lightboxCloseBtn:hover { background: var(--TC17); }
+
+.lightboxBody {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--TC9);
+}
+
+.lightboxImg {
+  max-width: 100%;
+  max-height: 72vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px var(--TC16);
+}
+
+.lightboxPdf {
+  width: 75vw;
+  height: 72vh;
+  border: none;
+  border-radius: 8px;
+}
 
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 1200px) {
@@ -1334,8 +1907,8 @@
   .filtersGrid { grid-template-columns: 1fr; }
 
   .searchGroup { flex-direction: column; }
-  .searchTypeSelect { border-radius: 10px; border-right: 1px solid #cbd5e1; }
-  .searchInput      { border-radius: 10px; border-left: 1px solid #cbd5e1; }
+  .searchTypeSelect { border-radius: 10px; border-right: 1px solid var(--TC8); }
+  .searchInput      { border-radius: 10px; border-left: 1px solid var(--TC8); }
   .filterActions    { flex-direction: column; }
   .searchButton,
   .clearButton      { width: 100%; justify-content: center; }
@@ -1359,7 +1932,6 @@
   .btnHold, .btnUpdate, .btnDelete { width: 100%; justify-content: center; }
   .formGrid { grid-template-columns: 1fr; }
 
-  /* Clinic-style modal responsive */
   .detailModalContent {
     width: 95%;
     max-height: 92vh;
@@ -1367,9 +1939,7 @@
   }
 
   .detailModalHeader { padding: 18px 20px; }
-
   .detailHeaderTop { flex-direction: column; align-items: flex-start; gap: 10px; }
-
   .detailHeaderTitle { font-size: 1.15rem; }
 
   .detailInfoSection {
@@ -1397,488 +1967,4 @@
   .clinicModalFooter { flex-direction: column; }
   .btnSubmit, .btnCancel { width: 100%; justify-content: center; }
   .detailHeaderAvatar { width: 42px; height: 42px; font-size: 1.1rem; }
-}
-
-/* ==================== PAGINATION BAR ==================== */
-.paginationBar {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: white;
-  border-radius: 14px;
-  padding: 10px 20px;
-  margin-top: 14px;
-  box-shadow: 0 4px 14px rgba(34,43,108,0.08);
-  border: 1px solid rgba(34,43,108,0.1);
-  gap: 16px;
-}
-
-.paginationInfo {
-  font-size: 0.8rem;
-  color: #64748b;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.paginationControls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.paginationLabel {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--primary-start);
-  margin-right: 4px;
-  white-space: nowrap;
-}
-
-.pageBtn {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  color: var(--primary-start);
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  line-height: 1;
-}
-
-.pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  border-color: var(--accent-end);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(32,125,156,0.3);
-}
-
-.pageBtn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.pageIndicator {
-  min-width: 36px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: white;
-  font-size: 0.82rem;
-  font-weight: 700;
-  border-radius: 8px;
-  padding: 0 8px;
-  box-shadow: 0 3px 8px rgba(32,125,156,0.25);
-}
-
-.pageSizeInfo {
-  font-size: 0.8rem;
-  color: #64748b;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.pageSizeInfo strong {
-  color: var(--primary-start);
-  font-weight: 700;
-}
-
-/* ==================== VIEW REPORT BUTTON (table action) ==================== */
-.btnViewReport {
-  position: relative;
-  overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 12px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
-  border: none;
-  font-weight: 600;
-  font-size: 0.72rem;
-  border-radius: 9px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
-  white-space: nowrap;
-  z-index: 1;
-}
-
-.btnViewReport::before {
-  content: '';
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 0; height: 0;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.5s ease, height 0.5s ease;
-  z-index: -1;
-  pointer-events: none;
-}
-
-.btnViewReport:hover::before { width: 140px; height: 140px; }
-
-.btnViewReport:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.45);
-}
-
-.btnViewReport:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* ==================== VIEW FILE BUTTON (modal footer) ==================== */
-.btnViewFile {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
-  border: none;
-  font-weight: 600;
-  font-size: 0.85rem;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
-  white-space: nowrap;
-}
-
-.btnViewFile:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 7px 20px rgba(32, 125, 156, 0.45);
-}
-
-.btnViewFile:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* ==================== FILE SECTION (in update modal form) ==================== */
-.fileSection {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 14px;
-  background: rgba(240, 247, 255, 0.7);
-  border: 1.5px solid rgba(48, 178, 181, 0.22);
-  border-radius: 12px;
-  margin-top: 2px;
-}
-
-.fileSectionTitle {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--primary-start);
-  padding-bottom: 8px;
-  border-bottom: 1.5px dashed rgba(48, 178, 181, 0.3);
-}
-
-.fileUploadContainer {
-  display: flex;
-  gap: 18px;
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-
-/* ── Preview square ── */
-.filePreviewSection {
-  flex-shrink: 0;
-  width: 110px;
-  height: 110px;
-}
-
-.filePreview {
-  width: 110px;
-  height: 110px;
-  border-radius: 12px;
-  overflow: hidden;
-  position: relative;
-  border: 2px solid rgba(48, 178, 181, 0.35);
-  box-shadow: 0 4px 12px rgba(32, 125, 156, 0.15);
-}
-
-.filePreview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.filePlaceholder {
-  width: 110px;
-  height: 110px;
-  border-radius: 12px;
-  border: 2px dashed rgba(34, 43, 108, 0.2);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #94a3b8;
-  gap: 7px;
-  text-align: center;
-  padding: 10px;
-  box-sizing: border-box;
-}
-
-.filePlaceholder p {
-  font-size: 0.7rem;
-  margin: 0;
-  word-break: break-word;
-  line-height: 1.3;
-}
-
-.removeFileBtn {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  background: rgba(220, 38, 38, 0.85);
-  border: none;
-  color: white;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  padding: 0;
-}
-
-.removeFileBtn:hover { background: #dc2626; }
-.removeFileBtn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* ── Upload controls column ── */
-.fileUploadControls {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  justify-content: center;
-  min-width: 0;
-}
-
-.btnSelectFile {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-start));
-  color: white;
-  border: none;
-  border-radius: 9px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: inherit;
-  width: fit-content;
-  white-space: nowrap;
-}
-
-.btnSelectFile:hover { opacity: 0.9; transform: translateY(-1px); }
-
-.btnUploadFile {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
-  border: none;
-  border-radius: 9px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: inherit;
-  width: fit-content;
-  white-space: nowrap;
-}
-
-.btnUploadFile:hover { opacity: 0.9; transform: translateY(-1px); }
-.btnUploadFile:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-.btnClearFile {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  background: #e2e8f0;
-  color: #475569;
-  border: none;
-  border-radius: 9px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  font-family: inherit;
-  width: fit-content;
-  white-space: nowrap;
-}
-
-.btnClearFile:hover { background: #cbd5e1; transform: translateY(-1px); }
-.btnClearFile:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-.fileStatus { font-size: 0.78rem; font-weight: 500; margin: 0; }
-.fileStatusSuccess { color: #059669; }
-.fileStatusInfo    { color: #0284c7; }
-.fileHint { font-size: 0.73rem; color: #94a3b8; margin: 0; }
-
-/* Dark mode for file section */
-:global(.dark-mode) .fileSection {
-  background: rgba(15, 23, 42, 0.5);
-  border-color: rgba(48, 178, 181, 0.2);
-}
-:global(.dark-mode) .fileSectionTitle { color: var(--accent-end); }
-:global(.dark-mode) .filePlaceholder  { border-color: #475569; color: #64748b; }
-:global(.dark-mode) .btnClearFile     { background: #334155; color: #94a3b8; }
-:global(.dark-mode) .btnClearFile:hover { background: #475569; }
-
-/* ── Same-row action buttons (View + Replace) ── */
-.fileActionRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-/* Both View Current File and Replace/Select File share this class — identical size */
-.btnFileAction {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 9px 18px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
-  border: none;
-  border-radius: 9px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  line-height: 1;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: inherit;
-  white-space: nowrap;
-  box-sizing: border-box;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
-  text-align: center;
-  vertical-align: middle;
-}
-
-.btnFileAction:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.45);
-  opacity: 0.93;
-}
-.btnFileAction:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-:global(.dark-mode) .btnFileAction { box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3); }
-
-/* ==================== LIGHTBOX ==================== */
-.lightboxOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(10, 15, 30, 0.88);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  animation: fadeIn 0.2s ease;
-  padding: 20px 20px 20px 60px;
-}
-
-.lightboxModal {
-  background: #1e293b;
-  border-radius: 16px;
-  overflow: hidden;
-  max-width: 85vw;
-  max-height: 88vh;
-  width: auto;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.55);
-  animation: slideUp 0.25s ease;
-}
-
-.lightboxHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  flex-shrink: 0;
-  gap: 20px;
-}
-
-.lightboxTitle {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: white;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.lightboxCloseBtn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  font-size: 1rem;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.lightboxCloseBtn:hover { background: rgba(255, 255, 255, 0.35); }
-
-.lightboxBody {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: #0f172a;
-}
-
-.lightboxImg {
-  max-width: 100%;
-  max-height: 72vh;
-  object-fit: contain;
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-}
-
-.lightboxPdf {
-  width: 75vw;
-  height: 72vh;
-  border: none;
-  border-radius: 8px;
 }

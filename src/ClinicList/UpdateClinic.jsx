@@ -320,9 +320,6 @@ const UpdateClinic = ({ clinic, onClose, onSuccess, onError, isSprAdmin }) => {
 
             {existingLogoFileId > 0 && !isChangingLogo ? (
               <div className={styles.logoExistingRow}>
-                <span className={styles.logoExistingLabel}>
-                  Logo on file (ID: {existingLogoFileId})
-                </span>
                 <div className={styles.logoActionBtns}>
                   <button type="button" className={styles.logoViewBtn} onClick={handleViewLogo} disabled={logoFetching}>
                     <FiEye size={14} />{logoFetching ? 'Loading...' : 'View Logo'}

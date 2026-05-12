@@ -2,14 +2,24 @@
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end:   #225ca0;
-  --accent-start:  #207d9c;
-  --accent-end:    #30b2b5;
-  --text-light:    #ffffff;
-  --text-dark:     #1e293b;
-  --glass-bg:      rgba(255, 255, 255, 0.92);
-  --glass-border:  rgba(255, 255, 255, 0.4);
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -26,9 +36,9 @@
 /* ==================== PAGE WRAPPER (page mode) ==================== */
 .wrapper {
   padding: 20px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  background: linear-gradient(135deg, var(--TC6) 0%, var(--TC13) 100%);
   min-height: 100vh;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -46,21 +56,21 @@
   gap: 8px;
   height: 40px;
   padding: 0 20px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   font-weight: 700;
   font-size: 0.94rem;
   border: none;
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.4s ease;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 7px 24px var(--TC17);
   white-space: nowrap;
 }
 
 .backBtn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 34px rgba(32, 125, 156, 0.45);
+  box-shadow: 0 14px 34px var(--TC17);
 }
 
 /* ==================== UTILITY STATES ==================== */
@@ -71,17 +81,16 @@
   justify-content: center;
   min-height: 70vh;
   font-size: 1.3rem;
-  color: #64748b;
+  color: var(--TC12);
 }
 
-.error { color: #ef4444; }
+.error { color: var(--TC14); }
 
 /* ==================== MODAL OVERLAY (modal mode) ==================== */
-/* Mirrors .detailModalOverlay */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--TC16);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -101,25 +110,23 @@
 }
 
 /* ==================== DETAILS CARD ==================== */
-/* Mirrors .detailModalContent */
 .detailsCard {
-  background: white;
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-height: 90vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 70px var(--TC16);
   animation: slideUp 0.4s ease;
 }
 
 /* ==================== GRADIENT HEADER ==================== */
-/* Mirrors .detailModalHeader */
 .cardHeader {
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -127,40 +134,42 @@
   flex-shrink: 0;
 }
 
-/* Mirrors .detailHeaderContent */
 .headerInfo {
   flex: 1;
   min-width: 0;
 }
 
-/* Mirrors .detailHeaderTitle */
 .headerInfo h2 {
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--text-light);
-  
+  color: var(--TC6);
 }
+
+/* ==================== ADD MODAL HEADER CARD ==================== */
+/* Styled like WorkShift .addModalHeaderCard */
 .addModalHeaderCard {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
 }
 
+/* ==================== CLINIC NAME ==================== */
+/* Styled like WorkShift .clinicName / .clinicInfoName */
 .clinicInfoName {
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -171,14 +180,14 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
 
 .subtitle {
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   margin: 0 0 6px;
 }
 
@@ -190,26 +199,26 @@
   margin-top: 4px;
 }
 
-/* LOW STOCK badge — mirrors .detailBadgeDanger */
+/* LOW STOCK badge */
 .lowStockBadge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 4px 12px;
-  background: rgba(220, 38, 38, 0.4);
-  border: 1px solid rgba(220, 38, 38, 0.6);
+  background: var(--TC16);
+  border: 1px solid var(--TC16);
   border-radius: 6px;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.5px;
-  color: var(--text-light);
+  color: var(--TC14);
 }
 
-/* ✕ close button — mirrors .detailCloseBtn */
+/* ✕ close button */
 .headerCloseBtn {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border: none;
-  color: var(--text-light);
+  color: var(--TC6);
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -224,12 +233,11 @@
 }
 
 .headerCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
 /* ==================== SCROLLABLE BODY ==================== */
-/* Mirrors .detailModalBody + .detailInfoSection (2-col grid) */
 .cardBody {
   overflow-y: auto;
   flex: 1;
@@ -237,77 +245,69 @@
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   padding: 24px 28px;
-  background: linear-gradient(135deg, rgba(240, 247, 255, 0.5), rgba(230, 242, 255, 0.5));
+  background-color: var(--TC16);
   align-content: start;
 }
 
 /* ==================== SECTION CARDS ==================== */
-/* Mirrors .detailInfoCard */
 .detailsSection {
-  background: white;
-  border-radius: 14px;
+  background: var(--TC6);
+  border-radius: 12px;
   padding: 18px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.07);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC16);
 }
 
-/* 3rd section (Stock & System) spans both columns — mirrors .detailInfoCard:nth-child(3) */
 .detailsSection:nth-child(3) {
   grid-column: 1 / -1;
 }
 
 /* ==================== SECTION HEADER ==================== */
-/* Mirrors .detailInfoHeader */
 .sectionHeader {
   margin-bottom: 14px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
+  border-bottom: 2px solid var(--TC18);
 }
 
-/* Mirrors .detailInfoHeader h3 — NOTE: JSX uses .sectionTitle directly on <h3> */
 .sectionTitle {
   margin: 0 0 14px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
+  border-bottom: 2px solid var(--TC18);
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 /* ==================== ROWS INSIDE EACH CARD ==================== */
-/* Mirrors .detailInfoContent — vertical flex column */
 .detailsGrid {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-/* Mirrors .detailInfoRow exactly */
 .detailItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(34, 43, 108, 0.06);
+  border-bottom: 1px solid var(--TC16);
 }
 
 .detailItem:last-child {
   border-bottom: none;
 }
 
-/* Mirrors .detailInfoLabel */
 .detailLabel {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 600;
   flex-shrink: 0;
   margin-right: 12px;
 }
 
-/* Mirrors .detailInfoValue */
 .detailValue {
   font-size: 0.85rem;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-weight: 600;
   text-align: right;
   word-break: break-word;
@@ -316,13 +316,12 @@
   gap: 5px;
 }
 
-/* Full-width row (Timing, Composition) — mirrors .detailInfoRow */
 .fullWidthDetail {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(34, 43, 108, 0.06);
+  border-bottom: 1px solid var(--TC16);
   gap: 12px;
 }
 
@@ -346,22 +345,21 @@
   border-radius: 26px;
   font-size: 0.72rem;
   font-weight: 700;
-  background: rgba(48, 178, 181, 0.15);
-  color: var(--accent-start);
-  border: 1px solid rgba(48, 178, 181, 0.3);
+  background: var(--TC18);
+  color: var(--TC4);
+  border: 1px solid var(--TC17);
   white-space: nowrap;
 }
 
 .timingPillKey {
   font-weight: 900;
   font-size: 0.78rem;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 /* ==================== STATUS BADGES ==================== */
-/* Mirrors .detailInlineBadge */
+/* Styled like WorkShift .statusBadge */
 .statusBadge {
-  display: inline-block;
   padding: 5px 12px;
   border-radius: 26px;
   font-size: 0.68rem;
@@ -371,47 +369,45 @@
 }
 
 .active {
-  background: rgba(34, 197, 94, 0.15);
-  color: #166534;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
 }
 
 .inactive {
-  background: rgba(100, 116, 139, 0.15);
-  color: #475569;
-  border: 1px solid rgba(100, 116, 139, 0.3);
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
 }
 
 .discontinued {
-  background: rgba(239, 68, 68, 0.15);
-  color: #991b1b;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--TC16);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
 }
 
 .outofstock {
-  background: rgba(234, 179, 8, 0.15);
-  color: #92400e;
-  border: 1px solid rgba(234, 179, 8, 0.3);
+  background: var(--TC16);
+  color: var(--TC15);
+  border: 1px solid var(--TC16);
 }
 
 .lowStockText {
-  color: #dc2626 !important;
+  color: var(--TC14) !important;
 }
 
 /* ==================== FOOTER ==================== */
-/* Mirrors .detailModalFooter */
 .cardFooter {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   padding: 18px 28px;
-  border-top: 2px solid rgba(34, 43, 108, 0.1);
-  background: #f8fafc;
+  border-top: 2px solid var(--TC16);
+  background: var(--TC6);
   flex-shrink: 0;
 }
 
 /* ==================== BUTTONS ==================== */
-/* Update — mirrors .btnUpdate */
 .btnUpdate {
   position: relative;
   overflow: hidden;
@@ -419,15 +415,15 @@
   align-items: center;
   gap: 8px;
   padding: 10px 24px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   border: none;
   font-weight: 600;
   font-size: 0.85rem;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 5px 15px var(--TC17);
   z-index: 1;
 }
 
@@ -436,7 +432,7 @@
   position: absolute;
   top: 50%; left: 50%;
   width: 0; height: 0;
-  background: rgba(48, 178, 181, 0.35);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -445,10 +441,9 @@
 }
 
 .btnUpdate:hover::before { width: 200px; height: 200px; }
-.btnUpdate:hover  { transform: translateY(-2px); box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45); }
+.btnUpdate:hover  { transform: translateY(-2px); box-shadow: 0 5px 17px var(--TC18); }
 .btnUpdate:active { transform: translateY(-1px); }
 
-/* Delete base — mirrors .btnHold + .btnDelete */
 .btnHold {
   position: relative;
   overflow: hidden;
@@ -466,9 +461,9 @@
 }
 
 .btnDelete {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  color: var(--text-light);
-  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
+  background: linear-gradient(135deg, var(--TC14), var(--TC11));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC16);
 }
 
 .btnDelete::before {
@@ -476,7 +471,7 @@
   position: absolute;
   top: 50%; left: 50%;
   width: 0; height: 0;
-  background: rgba(239, 68, 68, 0.35);
+  background: var(--TC16);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -485,48 +480,98 @@
 }
 
 .btnDelete:hover::before { width: 200px; height: 200px; }
-.btnDelete:hover { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(220, 38, 38, 0.45); }
+.btnDelete:hover { transform: translateY(-2px); box-shadow: 0 7px 20px var(--TC16); }
 
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .wrapper {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #e2e8f0;
+  background: linear-gradient(135deg, var(--TC9) 0%, var(--TC7) 100%);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .detailsCard  { background: #1e293b; }
+:global(.dark-mode) .detailsCard  { background: var(--TC9); }
 
 :global(.dark-mode) .cardBody {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+  background-color: var(--TC7);
 }
 
 :global(.dark-mode) .detailsSection {
-  background: #0f172a;
-  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
-:global(.dark-mode) .sectionTitle    { color: var(--accent-end); border-bottom-color: rgba(48, 178, 181, 0.25); }
-:global(.dark-mode) .detailItem      { border-bottom-color: rgba(255, 255, 255, 0.05); }
-:global(.dark-mode) .fullWidthDetail { border-bottom-color: rgba(255, 255, 255, 0.05); }
-:global(.dark-mode) .detailLabel     { color: #94a3b8; }
-:global(.dark-mode) .detailValue     { color: #e2e8f0; }
+:global(.dark-mode) .sectionTitle    { color: var(--TC5); border-bottom-color: var(--TC18); }
+:global(.dark-mode) .detailItem      { border-bottom-color: var(--TC15); }
+:global(.dark-mode) .fullWidthDetail { border-bottom-color: var(--TC15); }
+:global(.dark-mode) .detailLabel     { color: var(--TC12); }
+:global(.dark-mode) .detailValue     { color: var(--TC13); }
 
 :global(.dark-mode) .cardFooter {
-  background: #0f172a;
-  border-top-color: rgba(255, 255, 255, 0.08);
+  background: var(--TC9);
+  border-top-color: var(--TC15);
 }
 
-:global(.dark-mode) .active       { background: rgba(34,  197, 94,  0.25); color: #86efac; }
-:global(.dark-mode) .inactive     { background: rgba(100, 116, 139, 0.25); color: #94a3b8; }
-:global(.dark-mode) .discontinued { background: rgba(239, 68,  68,  0.25); color: #fca5a5; }
-:global(.dark-mode) .outofstock   { background: rgba(234, 179, 8,   0.25); color: #fde68a; }
+/* dark mode: statusBadge — mirrors WorkShift */
+:global(.dark-mode) .active {
+  background: var(--TC18);
+  color: var(--TC5);
+  border: 1px solid var(--TC16);
+}
+
+:global(.dark-mode) .inactive {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+:global(.dark-mode) .discontinued {
+  background: var(--TC16);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+:global(.dark-mode) .outofstock {
+  background: var(--TC16);
+  color: var(--TC8);
+  border: 1px solid var(--TC16);
+}
 
 :global(.dark-mode) .timingPill {
-  background: rgba(48, 178, 181, 0.2);
-  border-color: rgba(48, 178, 181, 0.4);
-  color: var(--accent-end);
+  background: var(--TC18);
+  border-color: var(--TC17);
+  color: var(--TC5);
 }
 
-:global(.dark-mode) .timingPillKey { color: var(--accent-end); }
+:global(.dark-mode) .timingPillKey { color: var(--TC5); }
+
+/* dark mode: addModalHeaderCard — mirrors WorkShift */
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+}
+
+/* dark mode: clinicInfoName / clinicInfoBranch — mirrors WorkShift */
+:global(.dark-mode) .clinicInfoName {
+  font-weight: 500;
+  color: var(--TC6);
+  font-size: 0.88rem;
+}
+
+:global(.dark-mode) .clinicInfoBranch {
+  font-size: 0.74rem;
+  color: var(--TC8);
+  opacity: 0.8;
+}
+
+/* dark mode: cardHeader gradient — mirrors WorkShift .detailModalHeader dark */
+:global(.dark-mode) .cardHeader {
+  background: var(--TC15);
+}
+
+/* dark mode: lowStockBadge */
+:global(.dark-mode) .lowStockBadge {
+  background: var(--TC16);
+  color: var(--TC14);
+  border-color: var(--TC16);
+}
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
@@ -540,7 +585,6 @@
   .cardHeader { padding: 18px 20px; }
   .headerInfo h2 { font-size: 1.15rem; }
 
-  /* Single column on mobile */
   .cardBody {
     grid-template-columns: 1fr;
     padding: 16px;

@@ -21,16 +21,6 @@ const STATUS_OPTIONS = [
 // ── Mirrors backend timeRegex: HH:MM or HH:MM:SS ──
 const TIME_REGEX = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
 
-// ── Convert "HH:MM" or "HH:MM:SS" to total minutes from midnight ──
-const toMinutes = (time) => {
-  if (!time) return null;
-  const [h, m] = time.split(":").map(Number);
-  return h * 60 + m;
-};
-
-// ── 11:55 PM in minutes = 23 * 60 + 55 = 1435 ──
-const MAX_END_MINUTES = 23 * 60 + 55; // 11:55 PM
-
 const WorkShift = () => {
   const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -230,49 +220,11 @@ const WorkShift = () => {
       case "timeStart": {
         if (!value || value.trim() === "") return "ShiftTimeStart is required";
         if (!TIME_REGEX.test(value)) return "ShiftTimeStart must be a valid time (HH:MM or HH:MM:SS)";
-
-        // ── If end time is already set, validate the range ──
-        if (allData.timeEnd && TIME_REGEX.test(allData.timeEnd)) {
-          const startMins = toMinutes(value);
-          const endMins   = toMinutes(allData.timeEnd);
-
-          // End must not be midnight (00:00)
-          if (endMins === 0) {
-            return ""; // end-time field will show its own error
-          }
-
-          // Start must be strictly before end (no overnight crossing)
-          if (startMins >= endMins) {
-            return "Start time must be earlier than end time (shifts cannot cross midnight (12AM))";
-          }
-        }
-
         return "";
       }
       case "timeEnd": {
         if (!value || value.trim() === "") return "ShiftTimeEnd is required";
         if (!TIME_REGEX.test(value)) return "ShiftTimeEnd must be a valid time (HH:MM or HH:MM:SS)";
-
-        const endMins = toMinutes(value);
-
-        // End time cannot be 12:00 AM (midnight = 0 minutes)
-        if (endMins === 0) {
-          return "End time cannot be 12:00 AM. Shifts must end by 11:55 PM at the latest";
-        }
-
-        // End time cannot exceed 11:55 PM
-        if (endMins > MAX_END_MINUTES) {
-          return "End time cannot exceed 11:55 PM";
-        }
-
-        // End must be strictly after start (no overnight crossing)
-        if (allData.timeStart && TIME_REGEX.test(allData.timeStart)) {
-          const startMins = toMinutes(allData.timeStart);
-          if (endMins <= startMins) {
-            return "End time must be later than start time (shifts cannot cross midnight (12AM))";
-          }
-        }
-
         return "";
       }
       case "workingHours": {
@@ -325,7 +277,7 @@ const WorkShift = () => {
           if (hours !== null && hours > 0) {
             updated.workingHours = hours.toFixed(2);
           } else {
-            // If crossing midnight or invalid range, clear working hours
+            // If invalid range, clear working hours
             updated.workingHours = "";
           }
         }

@@ -1,17 +1,28 @@
+/* src/components/AddAppointmentVisit.module.css */
+
+/* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end:   #225ca0;
-  --accent-start:  #207d9c;
-  --accent-end:    #30b2b5;
-  --text-light:    #ffffff;
-  --text-dark:     #1e293b;
-  --glass-bg:      rgba(255, 255, 255, 0.92);
-  --glass-border:  rgba(255, 255, 255, 0.4);
-  --danger-color:  #ef4444;
-  --success-color: #10b981;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
-/* Animations */
+/* ==================== ANIMATIONS ==================== */
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -20,6 +31,10 @@
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(22px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ────────────────────────────────────────────────
@@ -40,7 +55,7 @@
 }
 
 .addVisitModal {
-  background: var(--glass-bg);
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-width: 720px;
@@ -48,63 +63,104 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 68px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 24px 68px var(--TC16);
   animation: slideUp 0.35s ease;
 }
 
 /* ────────────────────────────────────────────────
-   HEADER (exact match to AddAppointment)
+   HEADER
    ──────────────────────────────────────────────── */
 
 .addVisitModalHeader {
-  padding: 22px 28px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.18);
+  border-bottom: 1px solid var(--TC18);
 }
 
 .addVisitHeaderContent {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 
 .addVisitHeaderIcon {
   opacity: 0.9;
-}
-
-.addVisitTextarea{
-  font-family: inherit;
+  color: var(--TC6);
 }
 
 .addVisitModalHeader h2 {
   margin: 0;
-  font-size: 1.48rem;
+  font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: -0.01em;
+  color: var(--TC6);
+}
+
+/* addModalHeaderCard — matches WorkShift pattern */
+.addVisitHeaderCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 12px;
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px var(--TC16);
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.addVisitHeaderInfoText {
+  display: flex;
+  flex-direction: column;
+}
+
+.addVisitHeaderInfoName {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--TC6);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
+}
+
+.addVisitHeaderInfoBranch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--TC13);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
 }
 
 .addVisitModalClose {
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--TC18);
   border: none;
-  color: white;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  font-size: 1.5rem;
-  font-weight: 500;
+  color: var(--TC6);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.25s ease;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .addVisitModalClose:hover {
-  background: rgba(255, 255, 255, 0.38);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
@@ -116,20 +172,23 @@
   padding: 24px 28px;
   overflow-y: auto;
   flex: 1;
+  background: var(--TC6);
+  color: var(--TC9);
 }
 
 .addVisitAppointmentInfo {
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.05), rgba(48, 178, 181, 0.05));
-  border: 2px solid rgba(34, 43, 108, 0.1);
+  background: linear-gradient(135deg, var(--TC16), var(--TC18));
+  border: 2px solid var(--TC16);
   border-radius: 12px;
   padding: 18px;
   margin-bottom: 25px;
+  box-shadow: inset 0 1px 4px var(--TC16);
 }
 
 .addVisitAppointmentInfo h3 {
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--primary-start, #222b6c);
+  color: var(--TC1);
   margin: 0 0 12px 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -149,25 +208,68 @@
 
 .infoLabel {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 600;
 }
 
 .infoValue {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--text-dark);
+  color: var(--TC9);
+}
+
+/* clinicName style — matches WorkShift pattern */
+.addVisitPatientName {
+  font-weight: 700;
+  color: var(--TC9);
+  opacity: 0.9;
+  font-size: 0.87rem;
+}
+
+.addVisitPatientSub {
+  font-size: 0.72rem;
+  color: var(--TC12);
+  margin-top: 2px;
+}
+
+/* statusBadge style — matches WorkShift pattern */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.statusBadge.active {
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
+}
+
+.statusBadge.inactive {
+  background: var(--TC15);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+.statusBadge.large {
+  padding: 9px 17px;
+  font-size: 0.77rem;
 }
 
 .addVisitErrorMessage {
-  padding: 12px 16px;
-  background: rgba(239, 68, 68, 0.14);
-  color: #991b1b;
-  border-radius: 10px;
-  border: 1px solid rgba(239, 68, 68, 0.32);
-  margin-bottom: 20px;
-  font-size: 0.92rem;
+  padding: 9px 12px;
   text-align: center;
+  border-radius: 9px;
+  margin-bottom: 20px;
+  border: 2px solid var(--TC16);
+  font-size: 0.65rem;
+  font-weight: 600;
+  box-shadow: 0 3px 9px var(--TC16);
+  background: var(--TC16);
+  color: var(--TC14);
 }
 
 .addVisitForm {
@@ -184,39 +286,46 @@
 
 .addVisitLabel {
   font-size: 0.86rem;
-  font-weight: 600;
-  color: var(--primary-start);
+  font-weight: 700;
+  color: var(--TC1);
   display: flex;
   align-items: center;
   gap: 6px;
   margin-bottom: 16px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.25);
+  border-bottom: 2px solid var(--TC5);
 }
 
-.required::after {
-  content: '*';
-  color: var(--danger-color);
-  margin-left: 4px;
+.required {
+  color: var(--TC5);
   font-weight: 700;
 }
 
 .addVisitTextarea {
   width: 100%;
-  padding: 11px 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  font-size: 0.92rem;
-  background: white;
+  padding: 9px 12px;
+  border: 2px solid var(--TC16);
+  border-radius: 9px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--TC6);
+  color: var(--TC9);
   resize: vertical;
   min-height: 86px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  box-shadow: inset 0 1px 3px var(--TC16);
+}
+
+.addVisitTextarea::placeholder {
+  color: var(--TC12);
 }
 
 .addVisitTextarea:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18), inset 0 1px 3px var(--TC16);
+  background: var(--TC6);
 }
 
 /* ────────────────────────────────────────────────
@@ -228,47 +337,80 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 18px 28px;
-  border-top: 1px solid rgba(34, 43, 108, 0.1);
-  background: #f8fafc;
-}
-
-.addVisitCancelBtn,
-.addVisitSubmitBtn {
-  padding: 11px 26px;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 0.94rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  border-top: 2px solid var(--TC16);
+  background: linear-gradient(to bottom, var(--TC6), var(--TC13));
 }
 
 .addVisitCancelBtn {
-  background: #e2e8f0;
-  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  background: var(--TC13);
+  color: var(--TC15);
 }
 
 .addVisitCancelBtn:hover {
-  background: #cbd5e1;
+  background: var(--TC8);
   transform: translateY(-2px);
 }
 
 .addVisitSubmitBtn {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.28);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
+  z-index: 1;
+}
+
+.addVisitSubmitBtn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: var(--TC18);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.addVisitSubmitBtn:hover::before {
+  width: 170px;
+  height: 170px;
 }
 
 .addVisitSubmitBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 9px 22px rgba(32, 125, 156, 0.42);
+  box-shadow: 0 8px 20px var(--TC17);
+}
+
+.addVisitSubmitBtn:active {
+  transform: translateY(-1px);
 }
 
 .addVisitSubmitBtn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
@@ -277,8 +419,8 @@
 .addVisitSpinner {
   width: 18px;
   height: 18px;
-  border: 3px solid rgba(255,255,255,0.3);
-  border-top-color: white;
+  border: 3px solid var(--TC18);
+  border-top-color: var(--TC6);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -304,6 +446,7 @@
   .addVisitCancelBtn,
   .addVisitSubmitBtn {
     width: 100%;
+    justify-content: center;
   }
 }
 
@@ -321,75 +464,105 @@
 
 /* Modal shell */
 :global(.dark-mode) .addVisitModal {
-  background: rgba(30, 41, 59, 0.95);
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+  background: var(--TC9);
+  box-shadow: 0 25px 70px var(--TC16);
+}
+
+/* Header */
+:global(.dark-mode) .addVisitModalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+/* addVisitHeaderCard — matches WorkShift addModalHeaderCard dark mode */
+:global(.dark-mode) .addVisitHeaderCard {
+  background: var(--TC12);
 }
 
 /* Body */
 :global(.dark-mode) .addVisitModalBody {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+  background: var(--TC9);
+  color: var(--TC13);
 }
 
 /* Appointment info card */
 :global(.dark-mode) .addVisitAppointmentInfo {
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.2), rgba(48, 178, 181, 0.1));
-  border-color: #475569;
+  background: linear-gradient(135deg, var(--TC16), var(--TC18));
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .addVisitAppointmentInfo h3 {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
 /* Info grid labels & values */
 :global(.dark-mode) .infoLabel {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .infoValue {
-  color: #e2e8f0;
+  color: var(--TC13);
+}
+
+/* clinicName dark mode — matches WorkShift */
+:global(.dark-mode) .addVisitPatientName {
+  font-weight: 500;
+  color: var(--TC6);
+  font-size: 0.87rem;
+}
+
+:global(.dark-mode) .addVisitPatientSub {
+  font-size: 0.72rem;
+  color: var(--TC8);
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+/* statusBadge dark mode — matches WorkShift */
+:global(.dark-mode) .statusBadge.active {
+  color: var(--TC5);
 }
 
 /* Error message */
 :global(.dark-mode) .addVisitErrorMessage {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
+  background: var(--TC16);
+  border-color: var(--TC16);
+  color: var(--TC14);
 }
 
 /* Form labels (section-style) */
 :global(.dark-mode) .addVisitLabel {
-  color: var(--accent-end);
-  border-bottom-color: rgba(48, 178, 181, 0.25);
+  color: var(--TC5);
+  border-bottom-color: var(--TC5);
 }
 
 /* Textareas */
 :global(.dark-mode) .addVisitTextarea {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .addVisitTextarea::placeholder {
-  color: rgba(148, 163, 184, 0.5);
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .addVisitTextarea:focus {
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
-  background: #1e293b;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18), inset 0 1px 3px var(--TC16);
+  background: var(--TC9);
 }
 
 /* Footer */
 :global(.dark-mode) .addVisitModalFooter {
-  background: #0f172a;
-  border-top-color: rgba(71, 85, 105, 0.5);
+  background: linear-gradient(135deg, var(--TC9), var(--TC7));
+  border-top-color: var(--TC15);
 }
 
 :global(.dark-mode) .addVisitCancelBtn {
-  background: #334155;
-  color: #e2e8f0;
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .addVisitCancelBtn:hover {
-  background: #475569;
+  background: var(--TC14);
 }

@@ -1,16 +1,28 @@
+/* src/components/AddAppointment.module.css */
+
+/* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end:   #225ca0;
-  --accent-start:  #207d9c;
-  --accent-end:    #30b2b5;
-  --text-light:    #ffffff;
-  --text-dark:     #1e293b;
-  --glass-bg:      rgba(255, 255, 255, 0.92);
-  --glass-border:  rgba(255, 255, 255, 0.4);
-  --danger-color:  #ef4444;
-  --success-color: #10b981;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
+/* ==================== ANIMATIONS ==================== */
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -21,6 +33,9 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ==================== OVERLAY ==================== */
 .overlay {
   position: fixed;
   inset: 0;
@@ -34,8 +49,9 @@
   animation: fadeIn 0.25s ease;
 }
 
+/* ==================== MODAL ==================== */
 .modal {
-  background: var(--glass-bg);
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-width: min(96vw, 1100px);
@@ -43,19 +59,19 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 68px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 24px 68px var(--TC16);
   animation: slideUp 0.35s ease;
 }
 
-/* ── Header ── */
+/* ==================== HEADER (mirrors WorkShift detailModalHeader) ==================== */
 .header {
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.18);
+  border-bottom: 1px solid var(--TC18);
   gap: 20px;
 }
 
@@ -73,29 +89,32 @@
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: -0.01em;
+  color: var(--TC6);
 }
 
+/* ==================== ADD MODAL HEADER CARD (mirrors WorkShift) ==================== */
 .addModalHeaderCard {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
 }
 
+/* ==================== CLINIC INFO (mirrors WorkShift clinicName) ==================== */
 .clinicInfoName {
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -106,15 +125,29 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
 
+.clinicInfoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC6);
+  opacity: 0.9;
+}
+
+.clinicInfoText {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== CLOSE BUTTON ==================== */
 .closeBtn {
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--TC18);
   border: none;
-  color: white;
+  color: var(--TC6);
   width: 42px;
   height: 42px;
   border-radius: 12px;
@@ -127,11 +160,11 @@
   transition: all 0.25s ease;
 }
 .closeBtn:hover {
-  background: rgba(255, 255, 255, 0.38);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
-/* ── Body ── */
+/* ==================== BODY ==================== */
 .form {
   display: flex;
   flex-direction: column;
@@ -145,6 +178,7 @@
   flex: 1;
 }
 
+/* ==================== SECTIONS ==================== */
 .section {
   margin-bottom: 20px;
 }
@@ -157,24 +191,23 @@
   margin: 0 0 16px 0;
   font-size: 1.08rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.25);
+  border-bottom: 2px solid var(--TC18);
 }
-.sectionTitle svg { color: var(--accent-start); }
+.sectionTitle svg { color: var(--TC4); }
 
-/* Push Add Patient button to the far right of the title row */
 .sectionTitle .addPatientBtn {
   margin-left: auto;
 }
 
 .sectionTitleSub {
   font-size: 0.88rem;
-  color: #64748b;
+  color: var(--TC12);
   margin-left: 8px;
 }
 
-/* ── Form elements ── */
+/* ==================== FORM ELEMENTS ==================== */
 .formGroup { margin-bottom: 14px; }
 
 .formLabel {
@@ -182,28 +215,33 @@
   margin-bottom: 6px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
-.required { color: var(--danger-color); font-weight: 700; }
+.required { color: var(--TC14); font-weight: 700; }
 
 .formInput,
 .formTextarea {
   width: 100%;
   padding: 10px 13px;
-  border: 1px solid #cbd5e1;
+  border: 2px solid var(--TC16);
   border-radius: 10px;
   font-size: 0.9rem;
-  background: white;
+  background: var(--TC6);
+  color: var(--TC9);
   font-family: inherit;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: inset 0 1px 3px var(--TC16);
 }
 .formInput:focus,
 .formTextarea:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18), inset 0 1px 3px var(--TC16);
 }
+
+.formInput::placeholder,
+.formTextarea::placeholder { color: var(--TC12); }
 
 .formTextarea {
   resize: vertical;
@@ -213,7 +251,7 @@
 
 .validationMsg {
   font-size: 0.75rem;
-  color: red;
+  color: var(--TC14);
   margin-top: 2px;
 }
 
@@ -223,7 +261,7 @@
   gap: 20px 28px;
 }
 
-/* ── Generic SearchableDropdown (doctors) ── */
+/* ==================== SEARCHABLE DROPDOWN (doctors) ==================== */
 .searchableWrapper { position: relative; }
 
 .searchableInput {
@@ -231,24 +269,25 @@
   align-items: center;
   padding: 0 14px;
   height: 42px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: inset 0 1px 3px var(--TC16);
 }
 .searchableInputOpen,
 .searchableInput:focus-within {
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 .searchableInputDisabled {
-  background: #f1f5f9;
+  background: var(--TC13);
   cursor: not-allowed;
   opacity: 0.7;
 }
 
-.searchIcon { color: #64748b; margin-right: 10px; flex-shrink: 0; }
+.searchIcon { color: var(--TC12); margin-right: 10px; flex-shrink: 0; }
 
 .searchableInnerInput {
   flex: 1;
@@ -256,27 +295,28 @@
   outline: none;
   font-size: 0.9rem;
   background: transparent;
+  color: var(--TC9);
 }
 
 .searchableSelected,
 .searchablePlaceholder {
   flex: 1;
   font-size: 0.9rem;
-  color: var(--text-dark);
+  color: var(--TC9);
 }
-.searchablePlaceholder { color: #94a3b8; }
+.searchablePlaceholder { color: var(--TC12); }
 
 .searchableActions { display: flex; align-items: center; gap: 6px; }
 
 .clearBtn {
   background: none;
   border: none;
-  color: #64748b;
+  color: var(--TC12);
   cursor: pointer;
   padding: 4px;
 }
 
-.chevron { color: #64748b; transition: transform 0.2s ease; }
+.chevron { color: var(--TC12); transition: transform 0.2s ease; }
 .chevronOpen { transform: rotate(180deg); }
 
 .searchableDropdown {
@@ -285,10 +325,10 @@
   left: 0;
   right: 0;
   margin-top: 4px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 10px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+  box-shadow: 0 10px 25px var(--TC16);
   max-height: 260px;
   overflow-y: auto;
   z-index: 10;
@@ -296,7 +336,7 @@
 
 .searchableNoResults {
   padding: 12px;
-  color: #64748b;
+  color: var(--TC12);
   text-align: center;
   font-size: 0.88rem;
 }
@@ -311,15 +351,15 @@
 }
 .searchableOption:hover,
 .searchableOptionSelected {
-  background: rgba(48, 178, 181, 0.08);
+  background: var(--TC18);
 }
 
 .optionAvatar {
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-weight: bold;
   font-size: 1rem;
   display: flex;
@@ -333,7 +373,7 @@
 .optionLabel {
   font-size: 0.92rem;
   font-weight: 600;
-  color: var(--text-dark);
+  color: var(--TC9);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -341,20 +381,20 @@
 
 .optionSub {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--TC12);
   display: block;
   margin-top: 1px;
 }
 
-.optionCheck { color: var(--accent-end); flex-shrink: 0; }
+.optionCheck { color: var(--TC5); flex-shrink: 0; }
 
-/* ── Patient Info Card ── */
+/* ==================== PATIENT INFO CARD ==================== */
 .infoCard {
-  background: white;
+  background: var(--TC6);
   border-radius: 12px;
   padding: 14px 18px;
-  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.06);
-  border: 1px solid rgba(34, 43, 108, 0.08);
+  box-shadow: 0 4px 14px var(--TC16);
+  border: 1px solid var(--TC16);
   margin-top: 12px;
 }
 
@@ -368,7 +408,7 @@
 
 .infoCardKey {
   font-size: 0.76rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 600;
   margin-bottom: 3px;
 }
@@ -376,35 +416,33 @@
 .infoCardValue {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--text-dark);
+  color: var(--TC9);
 }
 
-/* ── Slots ── */
+/* ==================== SLOTS ==================== */
 .slotsLoading {
   text-align: center;
   padding: 32px 0;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 .spinner {
   width: 26px;
   height: 26px;
-  border: 4px solid rgba(34, 43, 108, 0.1);
-  border-top-color: var(--accent-end);
+  border: 4px solid var(--TC18);
+  border-top-color: var(--TC5);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 10px;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
-
 .noSlots {
   text-align: center;
   padding: 28px 20px;
-  background: rgba(239, 68, 68, 0.06);
+  background: var(--TC16);
   border-radius: 12px;
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #991b1b;
+  border: 1px solid var(--TC16);
+  color: var(--TC11);
 }
 .noSlots p { margin: 6px 0; font-size: 0.9rem; }
 
@@ -417,21 +455,21 @@
 
 .slotBtn {
   padding: 9px 10px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--TC8);
   border-radius: 10px;
-  background: white;
+  background: var(--TC6);
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-dark);
+  color: var(--TC9);
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
 }
 .slotBtnSelected {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   border-color: transparent;
-  box-shadow: 0 4px 12px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 4px 12px var(--TC17);
 }
 
 .slotSelectedBadge {
@@ -440,22 +478,22 @@
   gap: 8px;
   margin-top: 14px;
   padding: 9px 13px;
-  background: rgba(16, 185, 129, 0.12);
+  background: var(--TC18);
   border-radius: 10px;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: #065f46;
+  border: 1px solid var(--TC17);
+  color: var(--TC10);
   font-size: 0.88rem;
   font-weight: 600;
 }
 
-/* ── Footer ── */
+/* ==================== FOOTER ==================== */
 .footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 28px;
-  border-top: 1px solid rgba(34, 43, 108, 0.1);
-  background: #f8fafc;
+  border-top: 2px solid var(--TC16);
+  background: linear-gradient(to bottom, var(--TC6), var(--TC13));
 }
 
 .btnCancel,
@@ -469,17 +507,17 @@
   border: none;
 }
 
-.btnCancel { background: #e2e8f0; color: #475569; }
-.btnCancel:hover { background: #cbd5e1; transform: translateY(-2px); }
+.btnCancel { background: var(--TC13); color: var(--TC15); }
+.btnCancel:hover { background: var(--TC8); transform: translateY(-2px); }
 
 .btnSubmit {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.28);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 .btnSubmit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 9px 22px rgba(32, 125, 156, 0.42);
+  box-shadow: 0 9px 22px var(--TC17);
 }
 .btnSubmit:disabled,
 .btnCancel:disabled {
@@ -489,10 +527,7 @@
   box-shadow: none;
 }
 
-/* ────────────────────────────────────────────────
-   PATIENT SEARCH DROPDOWN
-   ──────────────────────────────────────────────── */
-
+/* ==================== PATIENT SEARCH DROPDOWN ==================== */
 .patientSearchOuter {
   position: relative;
 }
@@ -502,23 +537,24 @@
   align-items: center;
   gap: 8px;
   height: 42px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
   border-radius: 10px;
   padding: 0 6px 0 0;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: inset 0 1px 3px var(--TC16);
 }
 
 .patientSearchRow:focus-within {
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .patientSearchTabs {
   display: flex;
   align-items: center;
   height: 100%;
-  border-right: 1px solid #e2e8f0;
+  border-right: 1px solid var(--TC13);
   flex-shrink: 0;
 }
 
@@ -529,18 +565,18 @@
   background: transparent;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--TC12);
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease;
   border-radius: 0;
 }
 .patientSearchTab:first-child { border-radius: 9px 0 0 9px; }
-.patientSearchTab:hover { background: rgba(48,178,181,0.07); color: var(--accent-start); }
+.patientSearchTab:hover { background: var(--TC18); color: var(--TC4); }
 
 .patientSearchTabActive {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end)) !important;
-  color: white !important;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5)) !important;
+  color: var(--TC6) !important;
 }
 
 .patientSearchInputWrap {
@@ -559,6 +595,7 @@
   background: transparent;
   padding: 0 8px;
   min-width: 0;
+  color: var(--TC9);
 }
 
 .patientSearchIconBtn {
@@ -569,8 +606,8 @@
   height: 30px;
   border: none;
   border-radius: 8px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   cursor: pointer;
   flex-shrink: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -585,7 +622,7 @@
   transform: none;
 }
 
-/* ── Add Patient Button ── */
+/* ==================== ADD PATIENT BUTTON ==================== */
 .addPatientBtn {
   display: flex;
   align-items: center;
@@ -595,49 +632,25 @@
   padding: 0 16px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC1), var(--TC5));
+  color: var(--TC6);
   font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
   flex-shrink: 0;
   white-space: nowrap;
   transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 4px 12px rgba(34, 43, 108, 0.28);
+  box-shadow: 0 4px 12px var(--TC16);
   letter-spacing: 0.01em;
 }
 .addPatientBtn:hover {
   opacity: 0.92;
-  background: linear-gradient(135deg, var(--primary-end), var(--primary-start));
+  background: linear-gradient(135deg, var(--TC2), var(--TC1));
   transform: translateY(-2px);
-  box-shadow: 0 7px 18px rgba(34, 43, 108, 0.38);
+  box-shadow: 0 7px 18px var(--TC16);
 }
 
-/* ── Responsive ── */
-@media (max-width: 1024px) {
-  .modal { max-width: 92%; }
-}
-
-@media (max-width: 768px) {
-  .modal { max-width: 96%; }
-  .formRow { grid-template-columns: 1fr; gap: 16px; }
-  .body { padding: 18px 24px; }
-  .footer { flex-direction: column; gap: 10px; }
-  .btnCancel, .btnSubmit { width: 100%; }
-  .slotsGrid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
-  .patientSearchTab { padding: 0 8px; font-size: 0.75rem; }
-}
-
-@media (max-width: 480px) {
-  .body { padding: 16px 20px; }
-  .header { padding: 16px 20px; }
-  .footer { padding: 14px 20px; }
-}
-
-/* ────────────────────────────────────────────────
-   FAMILY SEARCH — inline button + popup
-   ──────────────────────────────────────────────── */
-
+/* ==================== FAMILY SEARCH ==================== */
 .familySearchBtn {
   display: flex;
   align-items: center;
@@ -645,8 +658,8 @@
   padding: 4px 10px;
   border: none;
   border-radius: 7px;
-  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC1), var(--TC2));
+  color: var(--TC6);
   font-size: 0.74rem;
   font-weight: 700;
   cursor: pointer;
@@ -654,12 +667,12 @@
   white-space: nowrap;
   letter-spacing: 0.01em;
   transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(34, 43, 108, 0.22);
+  box-shadow: 0 2px 8px var(--TC16);
 }
 .familySearchBtn:hover:not(:disabled) {
   opacity: 0.88;
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(34, 43, 108, 0.32);
+  box-shadow: 0 4px 12px var(--TC16);
 }
 .familySearchBtn:disabled {
   opacity: 0.5;
@@ -681,13 +694,13 @@
 }
 
 .familyCard {
-  background: white;
+  background: var(--TC6);
   border-radius: 16px;
   width: min(440px, 92vw);
   max-height: 68vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 20px 55px var(--TC16);
   animation: slideUp 0.28s ease;
   overflow: hidden;
 }
@@ -697,8 +710,8 @@
   align-items: center;
   gap: 10px;
   padding: 13px 18px;
-  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC1), var(--TC2));
+  color: var(--TC6);
   flex-shrink: 0;
 }
 
@@ -707,12 +720,13 @@
   font-size: 1rem;
   font-weight: 700;
   flex: 1;
+  color: var(--TC6);
 }
 
 .familyCardCloseBtn {
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--TC18);
   border: none;
-  color: white;
+  color: var(--TC6);
   width: 34px;
   height: 34px;
   border-radius: 9px;
@@ -724,7 +738,7 @@
   transition: background 0.2s ease, transform 0.2s ease;
 }
 .familyCardCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.38);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
@@ -737,7 +751,7 @@
 .familyEmptyMsg {
   padding: 28px 20px;
   text-align: center;
-  color: #64748b;
+  color: var(--TC12);
   font-size: 0.9rem;
 }
 
@@ -745,50 +759,71 @@
 
 /* Modal shell */
 :global(.dark-mode) .modal {
-  background: rgba(30, 41, 59, 0.95);
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+  background: var(--TC9);
+  box-shadow: 0 25px 70px var(--TC16);
+}
+
+/* Header mirrors WorkShift dark detailModalHeader */
+:global(.dark-mode) .header {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+/* addModalHeaderCard dark mirrors WorkShift */
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+}
+
+/* clinicInfoName dark mirrors WorkShift clinicName */
+:global(.dark-mode) .clinicInfoName {
+  font-weight: 500;
+  color: var(--TC6);
+}
+
+:global(.dark-mode) .clinicInfoBranch {
+  color: var(--TC8);
+  opacity: 0.8;
 }
 
 /* Body */
 :global(.dark-mode) .body {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+  background: linear-gradient(135deg, var(--TC9), var(--TC7));
 }
 
 /* Section divider */
 :global(.dark-mode) .section {
-  border-bottom-color: rgba(71, 85, 105, 0.3);
+  border-bottom-color: var(--TC15);
 }
 
 /* Section titles */
 :global(.dark-mode) .sectionTitle {
-  color: var(--accent-end);
-  border-bottom-color: rgba(48, 178, 181, 0.25);
+  color: var(--TC5);
+  border-bottom-color: var(--TC18);
 }
 
 :global(.dark-mode) .sectionTitle svg {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
 :global(.dark-mode) .sectionTitleSub {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 /* Form labels */
 :global(.dark-mode) .formLabel {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
 /* Inputs & textareas */
 :global(.dark-mode) .formInput,
 :global(.dark-mode) .formTextarea {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .formInput::placeholder,
 :global(.dark-mode) .formTextarea::placeholder {
-  color: rgba(148, 163, 184, 0.5);
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .formInput::-webkit-calendar-picker-indicator {
@@ -798,181 +833,202 @@
 
 :global(.dark-mode) .formInput:focus,
 :global(.dark-mode) .formTextarea:focus {
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
-  background: #1e293b;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
+  background: var(--TC9);
 }
 
 /* Footer */
 :global(.dark-mode) .footer {
-  background: #0f172a;
-  border-top-color: rgba(71, 85, 105, 0.5);
+  background: linear-gradient(to bottom, var(--TC9), var(--TC7));
+  border-top-color: var(--TC15);
 }
 
 :global(.dark-mode) .btnCancel {
-  background: #334155;
-  color: #e2e8f0;
+   background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC13);
 }
 :global(.dark-mode) .btnCancel:hover {
-  background: #475569;
+  background: var(--TC14);
 }
 
 /* Searchable dropdown — doctor picker */
 :global(.dark-mode) .searchableInput {
-  background: #0f172a;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .searchableInput:focus-within,
 :global(.dark-mode) .searchableInputOpen {
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 :global(.dark-mode) .searchableInputDisabled {
-  background: #1e293b;
+  background: var(--TC9);
   opacity: 0.6;
 }
 
 :global(.dark-mode) .searchableInnerInput {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .searchableSelected {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .searchablePlaceholder {
-  color: rgba(148, 163, 184, 0.6);
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .searchIcon,
 :global(.dark-mode) .chevron,
 :global(.dark-mode) .clearBtn {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .searchableDropdown {
-  background: #1e293b;
-  border-color: #475569;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  background: var(--TC9);
+  border-color: var(--TC15);
+  box-shadow: 0 10px 25px var(--TC16);
 }
 
 :global(.dark-mode) .searchableNoResults {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .searchableOption:hover,
 :global(.dark-mode) .searchableOptionSelected {
-  background: rgba(48, 178, 181, 0.12);
+  background: var(--TC18);
 }
 
 :global(.dark-mode) .optionLabel {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .optionSub {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 /* Patient info card */
 :global(.dark-mode) .infoCard {
-  background: #1e293b;
-  border-color: #475569;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  background: var(--TC9);
+  border-color: var(--TC15);
+  box-shadow: 0 4px 14px var(--TC16);
 }
 
 :global(.dark-mode) .infoCardKey {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .infoCardValue {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 /* Slots */
 :global(.dark-mode) .slotsLoading {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
 :global(.dark-mode) .spinner {
-  border-color: rgba(48, 178, 181, 0.15);
-  border-top-color: var(--accent-end);
+  border-color: var(--TC18);
+  border-top-color: var(--TC5);
 }
 
 :global(.dark-mode) .noSlots {
-  background: rgba(239, 68, 68, 0.08);
-  border-color: rgba(239, 68, 68, 0.25);
-  color: #fca5a5;
+  background: var(--TC16);
+  border-color: var(--TC16);
+  color: var(--TC14);
 }
 
 :global(.dark-mode) .slotBtn {
-  background: #1e293b;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .slotBtn:hover {
-  background: #334155;
+  background: var(--TC7);
 }
 
 :global(.dark-mode) .slotBtnSelected {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   border-color: transparent;
 }
 
 :global(.dark-mode) .slotSelectedBadge {
-  background: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.3);
-  color: #6ee7b7;
+  background: var(--TC18);
+  border-color: var(--TC17);
+  color: var(--TC5);
 }
 
 /* Patient search row */
 :global(.dark-mode) .patientSearchRow {
-  background: #0f172a;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .patientSearchRow:focus-within {
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 :global(.dark-mode) .patientSearchTabs {
-  border-right-color: #334155;
+  border-right-color: var(--TC7);
 }
 
 :global(.dark-mode) .patientSearchTab {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .patientSearchTab:hover {
-  background: rgba(48, 178, 181, 0.1);
-  color: var(--accent-end);
+  background: var(--TC18);
+  color: var(--TC5);
 }
 
 :global(.dark-mode) .patientSearchInput {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .patientSearchInput::placeholder {
-  color: rgba(148, 163, 184, 0.5);
+  color: var(--TC12);
 }
 
 /* searchableDropdown inside patient search */
 :global(.dark-mode) .patientSearchOuter .searchableDropdown {
-  background: #1e293b;
-  border-color: #475569;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  background: var(--TC9);
+  border-color: var(--TC15);
+  box-shadow: 0 10px 25px var(--TC16);
 }
 
 /* Family card popup */
 :global(.dark-mode) .familyCard {
-  background: #1e293b;
-  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.5);
+  background: var(--TC9);
+  box-shadow: 0 20px 55px var(--TC16);
 }
 
 :global(.dark-mode) .familyEmptyMsg {
-  color: #94a3b8;
+  color: var(--TC12);
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 1024px) {
+  .modal { max-width: 92%; }
+}
+
+@media (max-width: 768px) {
+  .modal { max-width: 96%; }
+  .formRow { grid-template-columns: 1fr; gap: 16px; }
+  .body { padding: 18px 24px; }
+  .footer { flex-direction: column; gap: 10px; }
+  .btnCancel, .btnSubmit { width: 100%; }
+  .slotsGrid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+  .patientSearchTab { padding: 0 8px; font-size: 0.75rem; }
+}
+
+@media (max-width: 480px) {
+  .body { padding: 16px 20px; }
+  .header { padding: 16px 20px; }
+  .footer { padding: 14px 20px; }
 }

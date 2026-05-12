@@ -72,6 +72,15 @@ export const loginUser = async (username, password) => {
       localStorage.setItem("sessionRef", sessionRef);
       localStorage.setItem("isLoggedIn", "true");
 
+      // ── KEY LOGIC ──
+      // If MUST_CHANGE_PASSWORD is 1, store a flag in sessionStorage so the
+      // Dashboard can pick it up and show the forced change-password modal.
+      if (result?.MUST_CHANGE_PASSWORD === 1) {
+        sessionStorage.setItem("must_change_password", "1");
+      } else {
+        sessionStorage.removeItem("must_change_password");
+      }
+
       // Encrypted sensitive fields
       await setEncrypted("clinicID", result.CLINIC_ID);
       await setEncrypted("branchID", result.BRANCH_ID);
@@ -115,12 +124,12 @@ export const loginUser = async (username, password) => {
   } catch (err) {
     throw new Error(
       extractBackendError(err) ||
-      err.response?.data?.error ||   
+      err.response?.data?.error ||
       err.response?.data?.message ||
       err.message ||
       "Network error"
     );
-  } 
+  }
 };
 
 export const getTextTableList = async (tableId = 0) => {
@@ -202,20 +211,23 @@ export const forgetPassword = async (username, email) => {
 
     const result = response.data.result;
 
+    checkDbError(result);
+
     if (result?.status === "Success") {
       localStorage.setItem("sessionRef", sessionRef);
-
       console.log("Forget Password Result:", result);
       return {
         success: true,
         message: result.message || "Mail Sent Successfully"
       };
     } else {
-      throw new Error(result?.message || "Failed to send reset email");
+      // Pick up OUT_ERROR from the backend result object
+      throw new Error(result?.OUT_ERROR || result?.message || "Failed to send reset email");
     }
-  } catch (err) {
+  } catch (err) {  // <-- was referencing undefined `error`
     throw new Error(
-      err.response?.data?.message ||
+      err?.response?.data?.result?.OUT_ERROR ||
+      err?.response?.data?.message ||
       err.message ||
       "Network error - please try again later"
     );
@@ -467,9 +479,9 @@ export const checkClinicAllowLogin = async () => {
 
     const response = await API.post(
       "/CheckAllowLogin",
-      {}, 
+      {},
       {
-        withCredentials: true, 
+        withCredentials: true,
         headers: {
           "Content-Type": "application/json"
         }
@@ -491,7 +503,7 @@ export const checkClinicAllowLogin = async () => {
   } catch (error) {
     console.error("checkClinicAllowLogin failed:", error);
 
-    
+
     if (error.response?.status === 403) {
       return {
         clinicId: error.response.data?.clinicId,
@@ -906,6 +918,11 @@ export const addBranch = async (branchData) => {
     console.log("AddBranch response:", response.data);
 
     const result = response.data?.result;
+
+    // Handle DB errors
+    if (result?.name === "DB_ERROR") {
+      throw new Error(result.Description || "Database error");
+    }
 
     // Validate expected response structure
     if (!result || typeof result.OUT_OK === "undefined") {
@@ -4907,8 +4924,17 @@ export const updatePassword = async (passwordData) => {
     throw validationError;
   }
 
-  const finalClinicId = PRODUCTION_MODE ? getClinicId() : (passwordData.ClinicID ?? 0);
-  const finalTargetUserId = PRODUCTION_MODE ? parseInt(userId) : parseInt(passwordData.UserID);
+  if (passwordData?.IsAdmin !== 1) {
+    if (!passwordData?.OldPassword || typeof passwordData.OldPassword !== "string" || passwordData.OldPassword.trim() === "") {
+      const validationError = new Error("Old password is required and cannot be empty.");
+      validationError.status = 400;
+      validationError.code = 400;
+      throw validationError;
+    }
+  }
+
+  const finalClinicId = passwordData.ClinicID;
+  const finalTargetUserId = parseInt(passwordData.UserID);
 
   const payload = {
     CHANNEL_ID,
@@ -4917,7 +4943,9 @@ export const updatePassword = async (passwordData) => {
     USER_ID: parseInt(userId),
     ClinicID: finalClinicId,
     UserID: finalTargetUserId,
+    OldPassword: passwordData?.IsAdmin === 1 ? null : passwordData.OldPassword.trim(),
     Password: passwordData.Password.trim(),
+    IsAdmin: passwordData?.IsAdmin === 1 ? 1 : 0,
   };
 
   console.log("update Password payload:", payload);
@@ -5022,7 +5050,7 @@ export const getUserList = async (clinicId = 0, options = {}) => {
       isLocked: user.is_locked,
       employeeName: user.employee_name,
       employeeCode: user.employee_code,
-      status: user.status,  
+      status: user.status,
       statusDesc: user.status_desc || "Unknown",
       dateCreated: user.date_created,
       dateModified: user.date_modified

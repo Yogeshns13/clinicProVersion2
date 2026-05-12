@@ -20,7 +20,7 @@ import styles from './AddEmployee.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
-import { useTableOptions } from '../Hooks/useTableOptions.js'; // ← NEW
+import { useTableOptions } from '../Hooks/UseTableOptions.js'; // ← NEW
 
 // ────────────────────────────────────────────────
 // TABLE IDs

@@ -1,6 +1,6 @@
 // src/components/AddSlotConfig.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { addSlotConfig, getSlotConfigList } from '../Api/Api.js';
+import { addSlotConfig } from '../Api/Api.js';
 import styles from './AddSlotConfig.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
@@ -75,12 +75,6 @@ const filterInput = (fieldName, value) => {
 
 // ── Required fields that must pass validation for the submit button to enable ──
 const REQUIRED_FIELDS = ['doctorId', 'shiftId', 'duration', 'slotInterval'];
-
-// ── Normalize a date string to YYYY-MM-DD for comparison ──────────────────────
-const normalizeDate = (dateStr) => {
-  if (!dateStr) return '';
-  return dateStr.split('T')[0];
-};
 
 // ─────────────────────────────────────────────────────────────────────────────
 const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSuccess }) => {
@@ -199,50 +193,6 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
     return Object.keys(errors).length === 0;
   };
 
-  // ── Duplicate check: only block if an ACTIVE matching record exists ────────
-  const checkDuplicate = async (clinicId, branchId) => {
-    try {
-      const existing = await getSlotConfigList(clinicId, {
-        BranchID:  Number(branchId),
-        DoctorID:  Number(formData.doctorId),
-        ShiftID:   0,
-        Duration:  Number(formData.duration),
-        Status:    -1,        // fetch ALL statuses
-        Page:      1,
-        PageSize:  100,
-      });
-
-      const duration = Number(formData.duration);
-      const selectedDate = normalizeDate(formData.slotDate);
-
-      for (const config of existing) {
-        const sameDoctor   = config.doctorId  === Number(formData.doctorId);
-        const sameShift    = config.shiftId   === Number(formData.shiftId);
-        const sameDuration = config.duration  === duration;
-
-        if (!sameDoctor || !sameShift || !sameDuration) continue;
-
-        // For Specific Date (duration === 3), also compare the date
-        if (duration === 3) {
-          const existingDate = normalizeDate(config.slotDate || config.slotSpecificDate);
-          if (existingDate !== selectedDate) continue;
-        }
-
-        // Only block if the existing matching record is ACTIVE
-        // If it is inactive, allow the new record to be created
-        if (config.status?.toLowerCase() === 'active') {
-          return { isDuplicate: true };
-        }
-      }
-
-      return { isDuplicate: false };
-    } catch (err) {
-      console.error('Duplicate check failed:', err);
-      // If the check itself fails, let the backend enforce its own constraints
-      return { isDuplicate: false };
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -265,19 +215,6 @@ const AddSlotConfig = ({ isOpen, onClose, doctors, shifts, doctorShifts, onSucce
     try {
       const clinicId = await getStoredClinicId();
       const branchId = await getStoredBranchId();
-
-      // ── Duplicate detection ──────────────────────────────────────────────
-      const { isDuplicate } = await checkDuplicate(clinicId, branchId);
-
-      if (isDuplicate) {
-        showPopup(
-          'A slot configuration with the same Doctor, Shift, and Duration already exists and is Active. Duplicate entries are not allowed.',
-          'error'
-        );
-        setLoading(false);
-        return;
-      }
-      // ────────────────────────────────────────────────────────────────────
 
       const payload = {
         clinicId:       Number(clinicId),

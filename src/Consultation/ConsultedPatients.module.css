@@ -2,16 +2,24 @@
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
-  --cl-primary-start: #222b6c;
-  --cl-primary-end: #225ca0;
-  --cl-accent-start: #207d9c;
-  --cl-accent-end: #30b2b5;
-  --cl-text-light: #ffffff;
-  --cl-text-dark: #1e293b;
-  --cl-vital-bp: #dc2626;
-  --cl-vital-temp: #ea580c;
-  --cl-vital-weight: #16a34a;
-  --cl-followup-color: #8b5cf6;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -23,10 +31,10 @@
 /* ==================== MAIN WRAPPER ==================== */
 .wrapper {
   padding: 20px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  background: linear-gradient(135deg, var(--TC6) 0%, var(--TC13) 100%);
   height: 100vh;
   overflow: hidden;
-  color: var(--cl-text-dark);
+  color: var(--TC9);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   display: flex;
   flex-direction: column;
@@ -35,12 +43,12 @@
 
 /* ==================== FILTER BAR ==================== */
 .filtersContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   padding: 16px 20px;
   margin-bottom: 20px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC16);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -65,11 +73,11 @@
   min-width: 148px;
   height: 40px;
   padding: 0 12px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-right: none;
   border-radius: 10px 0 0 10px;
-  color: var(--cl-text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -78,29 +86,29 @@
 
 .searchTypeSelect:focus {
   outline: none;
-  border-color: var(--cl-accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .searchInput {
   flex: 1;
   height: 40px;
   padding: 0 15px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 0 10px 10px 0;
-  color: var(--cl-text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   transition: all 0.3s ease;
 }
 
-.searchInput::placeholder { color: #94a3b8; }
+.searchInput::placeholder { color: var(--TC12); }
 
 .searchInput:focus {
   outline: none;
-  border-color: var(--cl-accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
-  border-left: 1px solid var(--cl-accent-end);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
+  border-left: 1px solid var(--TC5);
 }
 
 /* ── Date inputs ── */
@@ -113,10 +121,10 @@
   width: 100%;
   height: 40px;
   padding: 0 12px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 10px;
-  color: var(--cl-text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -125,8 +133,8 @@
 
 .filterInput:focus {
   outline: none;
-  border-color: var(--cl-accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .dateWrapper {
@@ -136,7 +144,7 @@
 
 .dateWrapper .filterInput {
   width: 100%;
-  color: var(--cl-text-dark);
+  color: var(--TC9);
 }
 
 .dateEmpty::-webkit-datetime-edit-text,
@@ -152,7 +160,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--TC12);
   pointer-events: none;
   z-index: 1;
 }
@@ -180,23 +188,23 @@
 }
 
 .searchButton {
-  background: linear-gradient(135deg, #016183, var(--cl-primary-end));
-  color: var(--cl-text-light);
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .searchButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 .clearButton {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--TC13);
+  color: var(--TC15);
 }
 
 .clearButton:hover {
-  background: #cbd5e1;
+  background: var(--TC8);
   transform: translateY(-2px);
 }
 
@@ -210,13 +218,13 @@
 
 /* ==================== TABLE CONTAINER ==================== */
 .tableContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 13px 38px var(--TC16);
+  border: 1px solid var(--TC16);
 }
 
 /* ==================== TABLE ==================== */
@@ -229,8 +237,8 @@
 .table th {
   text-align: left;
   padding: 12px 17px;
-  background: linear-gradient(135deg, var(--cl-primary-end), var(--cl-accent-end));
-  color: var(--cl-text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   font-weight: 600;
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -244,8 +252,8 @@
 
 .table td {
   padding: 6px 17px;
-  border-bottom: 1px solid #e2e8f0;
-  color: var(--cl-text-dark);
+  border-bottom: 1px solid var(--TC13);
+  color: var(--TC9);
   font-size: 0.85rem;
   vertical-align: middle;
 }
@@ -257,11 +265,11 @@
 }
 
 .table tbody tr:nth-child(even) {
-  background-color: #d5e6ec;
+  background-color: var(--TC18);
 }
 
 .table tbody tr:hover {
-  background-color: rgba(48, 178, 181, 0.08) !important;
+  background-color: var(--TC18) !important;
   transition: background-color 0.25s ease;
 }
 
@@ -276,26 +284,28 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--cl-accent-start), var(--cl-accent-end));
-  color: var(--cl-text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-weight: bold;
   font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 3px 12px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 3px 12px var(--TC17);
   flex-shrink: 0;
 }
 
+/* Matching WorkShift .clinicName pattern */
 .name {
   font-weight: 700;
-  color: var(--cl-text-dark);
-  font-size: 0.9rem;
+  color: var(--TC9);
+  opacity: 0.9;
+  font-size: 0.87rem;
 }
 
 .subText {
-  font-size: 0.75rem;
-  color: #64748b;
+  font-size: 0.72rem;
+  color: var(--TC12);
   margin-top: 2px;
 }
 
@@ -304,24 +314,24 @@
 .reasonBadge {
   display: inline-block;
   padding: 4px 10px;
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  background: var(--TC18);
+  color: var(--TC4);
   font-weight: 600;
   font-size: 0.75rem;
   border-radius: 6px;
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  border: 1px solid var(--TC17);
   margin-bottom: 4px;
 }
 
 .followupBadge {
   display: inline-block;
   padding: 4px 10px;
-  background: rgba(139, 92, 246, 0.1);
-  color: var(--cl-followup-color);
+  background: var(--TC16);
+  color: var(--TC1);
   font-weight: 600;
   font-size: 0.75rem;
   border-radius: 6px;
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  border: 1px solid var(--TC16);
 }
 
 /* ==================== VITALS BADGES ==================== */
@@ -331,18 +341,20 @@
   gap: 6px;
 }
 
+/* Matching WorkShift .statusBadge pattern */
 .vitalBadge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.72rem;
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
   font-weight: 700;
-  border: 1px solid;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  border: 1px solid var(--TC16);
 }
 
-.bp     { background: rgba(220,  38,  38, 0.1); color: var(--cl-vital-bp);     border-color: rgba(220,  38,  38, 0.3); }
-.temp   { background: rgba(234,  88,  12, 0.1); color: var(--cl-vital-temp);   border-color: rgba(234,  88,  12, 0.3); }
-.weight { background: rgba( 22, 163,  74, 0.1); color: var(--cl-vital-weight); border-color: rgba( 22, 163,  74, 0.3); }
+.bp     { background: var(--TC16); color: var(--TC11); border-color: var(--TC16); }
+.temp   { background: var(--TC16); color: var(--TC9);  border-color: var(--TC16); }
+.weight { background: var(--TC18); color: var(--TC10); border-color: var(--TC16); }
 
 /* ==================== ACTION BUTTONS ==================== */
 .actionsCell {
@@ -360,22 +372,42 @@
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-  background: linear-gradient(135deg, #016183, var(--cl-primary-end));
-  color: var(--cl-text-light);
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
+  box-shadow: 0 3px 10px var(--TC17);
   letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
 }
+
+.viewBtn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: var(--TC18);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.viewBtn:hover::before { width: 170px; height: 170px; }
 
 .viewBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+  box-shadow: 0 5px 17px var(--TC18);
 }
 
 /* ==================== UTILITY STATES ==================== */
 .noData {
   text-align: center;
   padding: 68px 17px;
-  color: #64748b;
+  color: var(--TC12);
   font-size: 1.1rem;
 }
 
@@ -386,10 +418,10 @@
   justify-content: center;
   min-height: 70vh;
   font-size: 1.3rem;
-  color: #64748b;
+  color: var(--TC12);
 }
 
-.error { color: #ef4444; }
+.error { color: var(--TC14); }
 
 /* ==================== PAGINATION BAR ==================== */
 .paginationBar {
@@ -397,18 +429,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: white;
+  background: var(--TC6);
   border-radius: 14px;
   padding: 10px 20px;
   margin-top: 14px;
-  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 4px 14px var(--TC16);
+  border: 1px solid var(--TC16);
   gap: 16px;
 }
 
 .paginationInfo {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -422,7 +454,7 @@
 .paginationLabel {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--cl-primary-start);
+  color: var(--TC1);
   margin-right: 4px;
   white-space: nowrap;
 }
@@ -433,10 +465,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 8px;
-  color: var(--cl-primary-start);
+  color: var(--TC1);
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
@@ -445,11 +477,11 @@
 }
 
 .pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--cl-accent-start), var(--cl-accent-end));
-  border-color: var(--cl-accent-end);
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 3px 8px var(--TC17);
 }
 
 .pageBtn:disabled {
@@ -463,110 +495,134 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--cl-primary-end), var(--cl-accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   font-size: 0.82rem;
   font-weight: 700;
   border-radius: 8px;
   padding: 0 8px;
-  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
+  box-shadow: 0 3px 8px var(--TC17);
 }
 
 .pageSizeInfo {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 500;
   white-space: nowrap;
 }
 
 .pageSizeInfo strong {
-  color: var(--cl-primary-start);
+  color: var(--TC1);
   font-weight: 700;
 }
 
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .wrapper {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #e2e8f0;
+  background: linear-gradient(135deg, var(--TC9) 0%, var(--TC7) 100%);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .filtersContainer {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .searchTypeSelect,
 :global(.dark-mode) .searchInput,
 :global(.dark-mode) .filterInput {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .datePlaceholder {
-  color: #64748b;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .searchInput:focus {
-  border-left: 1px solid var(--cl-accent-end);
+  border-left: 1px solid var(--TC5);
 }
 
 :global(.dark-mode) .clearButton {
-  background: #334155;
-  color: #e2e8f0;
+  background: var(--TC7);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .clearButton:hover { background: #475569; }
+:global(.dark-mode) .clearButton:hover { background: var(--TC15); }
 
 :global(.dark-mode) .tableContainer {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .table th {
-  background: linear-gradient(135deg, #334155, #475569);
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
 }
 
 :global(.dark-mode) .table td {
-  border-bottom-color: #475569;
-  color: #e2e8f0;
+  border-bottom-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .table tbody tr:nth-child(even) {
-  background-color: #334155;
+  background-color: var(--TC7);
 }
 
 :global(.dark-mode) .table tbody tr:hover {
-  background-color: rgba(48, 178, 181, 0.12) !important;
+  background-color: var(--TC18) !important;
 }
 
-:global(.dark-mode) .name    { color: #e2e8f0; }
-:global(.dark-mode) .subText { color: #94a3b8; }
+/* dark mode: name cell — matching WorkShift */
+:global(.dark-mode) .name {
+  font-weight: 500;
+  color: var(--TC6);
+  font-size: 0.87rem;
+}
+
+:global(.dark-mode) .subText { color: var(--TC8); }
+
+/* dark mode: statusBadge — matching WorkShift */
+:global(.dark-mode) .vitalBadge.weight,
+:global(.dark-mode) .weight { color: var(--TC5); }
+
+:global(.dark-mode) .vitalBadge.bp,
+:global(.dark-mode) .bp {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+:global(.dark-mode) .vitalBadge.temp,
+:global(.dark-mode) .temp {
+  background: var(--TC18);
+  color: var(--TC9);
+  border: 1px solid var(--TC16);
+}
 
 :global(.dark-mode) .paginationBar {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .paginationInfo,
 :global(.dark-mode) .pageSizeInfo {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .paginationLabel {
-  color: var(--cl-accent-end);
+  color: var(--TC5);
 }
 
 :global(.dark-mode) .pageBtn {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--cl-accent-start), var(--cl-accent-end));
-  border-color: var(--cl-accent-end);
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
 }
 
 /* ==================== RESPONSIVE ==================== */
@@ -601,12 +657,12 @@
 
   .searchTypeSelect {
     border-radius: 10px;
-    border-right: 1px solid #cbd5e1;
+    border-right: 1px solid var(--TC8);
   }
 
   .searchInput {
     border-radius: 10px;
-    border-left: 1px solid #cbd5e1;
+    border-left: 1px solid var(--TC8);
   }
 
   .filterActions {

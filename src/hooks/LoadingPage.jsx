@@ -1,3 +1,17 @@
+import { useState, useEffect } from 'react';
+
+const getIsDark = () => {
+  const stored = localStorage.getItem('darkMode') || localStorage.getItem('theme') || localStorage.getItem('color-theme');
+  if (stored !== null) {
+    return stored === 'true' || stored === 'dark';
+  }
+  return (
+    document.documentElement.classList.contains('dark') ||
+    document.documentElement.getAttribute('data-theme') === 'dark' ||
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+};
+
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700&display=swap');
 
@@ -114,7 +128,31 @@ const pts = [
   ...C.map(([x,y]) => `${x+340},${y}`),
 ].join(" ");
 
-export default function LoadingPage({ bg = "#ffffff", sidebarWidth = "240px" }) {
+export default function LoadingPage({ sidebarWidth = "240px" }) {
+  const [isDark, setIsDark] = useState(getIsDark);
+
+  useEffect(() => {
+    const update = () => setIsDark(getIsDark());
+
+    window.addEventListener('storage', update);
+
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    mq.addEventListener('change', update);
+
+    update();
+
+    return () => {
+      window.removeEventListener('storage', update);
+      observer.disconnect();
+      mq.removeEventListener('change', update);
+    };
+  }, []);
+
+  const bg = isDark ? '#0f172a' : '#ffffff';
+
   return (
     <>
       <style>{css}</style>

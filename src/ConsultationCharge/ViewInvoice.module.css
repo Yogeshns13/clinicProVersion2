@@ -1,18 +1,24 @@
 /* ViewInvoice.module.css - Exact match to View Clinic popup style */
 
 :root {
-  --primary-start: #222b6c;
-  --primary-end:   #225ca0;
-  --accent-start:  #207d9c;
-  --accent-end:    #30b2b5;
-  --text-light:    #ffffff;
-  --text-dark:     #1e293b;
-  --card-bg:       #ffffff;
-  --border-light:  #e2e8f0;
-  --danger-color:  #ef4444;
-  --amount-highlight: #166534;
-  --paid-color: #059669;
-  --balance-color: #dc2626;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
 /* Animations */
@@ -24,6 +30,10 @@
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ────────────────────────────────────────────────
@@ -44,7 +54,7 @@
 }
 
 .invoiceModal {
-  background: #ffffff;
+  background: var(--TC6);
   border-radius: 16px;
   width: 100%;
   max-width: 1100px;
@@ -52,18 +62,19 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 20px 60px var(--TC16);
   animation: slideUp 0.35s ease;
 }
 
 /* ────────────────────────────────────────────────
    HEADER
+   Styled like WorkShift .detailModalHeader
    ──────────────────────────────────────────────── */
 
 .invoiceModalHeader {
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -86,19 +97,29 @@
   font-weight: 700;
 }
 
+/* ────────────────────────────────────────────────
+   ADD MODAL HEADER CARD
+   Styled like WorkShift .addModalHeaderCard
+   ──────────────────────────────────────────────── */
+
 .addModalHeaderCard {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
 }
+
+/* ────────────────────────────────────────────────
+   CLINIC NAME
+   Styled like WorkShift .clinicInfoName / .clinicInfoBranch
+   ──────────────────────────────────────────────── */
 
 .clinicInfoName {
   display: flex;
@@ -106,7 +127,7 @@
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -117,15 +138,15 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
 
 .invoiceModalClose {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--TC18);
   border: none;
-  color: white;
+  color: var(--TC6);
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -135,7 +156,7 @@
 }
 
 .invoiceModalClose:hover {
-  background: rgba(255, 255, 255, 0.45);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
@@ -147,16 +168,16 @@
   padding: 20px 28px;
   overflow-y: auto;
   flex: 1;
-  background: #f9fafb;
+  background: var(--TC13);
 }
 
 .invoiceDetailsSection {
   margin-bottom: 16px;
-  background: var(--card-bg);
+  background: var(--TC6);
   border-radius: 12px;
   padding: 16px 20px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid var(--TC16);
+  box-shadow: 0 2px 8px var(--TC16);
 }
 
 .invoiceDetailsSection:last-child {
@@ -170,13 +191,13 @@
   margin: 0 0 12px 0;
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
+  border-bottom: 2px solid var(--TC18);
 }
 
 .invoiceSectionTitle svg {
-  color: var(--accent-start);
+  color: var(--TC4);
 }
 
 .invoiceDetailsGrid {
@@ -193,28 +214,28 @@
 
 .invoiceDetailLabel {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 600;
 }
 
 .invoiceDetailValue {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--text-dark);
+  color: var(--TC9);
   line-height: 1.4;
 }
 
 .invoiceAmountHighlight {
-  color: var(--amount-highlight);
+  color: var(--TC10);
   font-size: 1rem;
 }
 
 .invoicePaidAmount {
-  color: var(--paid-color);
+  color: var(--TC10);
 }
 
 .invoiceBalanceAmount {
-  color: var(--balance-color);
+  color: var(--TC14);
 }
 
 /* ────────────────────────────────────────────────
@@ -230,19 +251,15 @@
 .invoiceSpinner {
   width: 36px;
   height: 36px;
-  border: 4px solid #e2e8f0;
-  border-top-color: var(--accent-end);
+  border: 4px solid var(--TC13);
+  border-top-color: var(--TC5);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 12px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 .invoiceError p {
-  color: var(--danger-color);
+  color: var(--TC14);
   font-size: 1rem;
 }
 
@@ -256,11 +273,11 @@
   align-items: center;
   gap: 12px;
   padding: 16px 28px;
-  border-top: 1px solid #e5e7eb;
-  background: #ffffff;
+  border-top: 1px solid var(--TC16);
+  background: linear-gradient(to bottom, var(--TC6), var(--TC13));
 }
 
-/* Cancel Invoice button — left-aligned, red/danger style */
+/* Cancel Invoice button — danger style */
 .invoiceCancelBtn {
   display: inline-flex;
   align-items: center;
@@ -270,17 +287,17 @@
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.25s ease;
-  border: 1.5px solid rgba(220, 38, 38, 0.4);
-  background: #dc2626;
-  color: white;
+  border: 1px solid var(--TC16);
+  background: var(--TC14);
+  color: var(--TC6);
 }
 
 .invoiceCancelBtn:hover {
-  background: #dc2626;
-  color: #ffffff;
-  border-color: rgba(220, 38, 38, 0.7);
+  background: var(--TC11);
+  color: var(--TC6);
+  border-color: var(--TC16);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.18);
+  box-shadow: 0 4px 12px var(--TC16);
 }
 
 .invoiceCancelBtn:disabled {
@@ -299,12 +316,12 @@
   cursor: pointer;
   transition: all 0.25s ease;
   border: none;
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--TC13);
+  color: var(--TC15);
 }
 
 .invoiceCloseBtn:hover {
-  background: #d1d5db;
+  background: var(--TC8);
   transform: translateY(-1px);
 }
 
@@ -314,91 +331,113 @@
 
 /* Modal shell */
 :global(.dark-mode) .invoiceModal {
-  background: rgba(30, 41, 59, 0.95);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  background: var(--TC9);
+  box-shadow: 0 20px 60px var(--TC16);
+}
+
+/* Header — mirrors WorkShift .detailModalHeader dark */
+:global(.dark-mode) .invoiceModalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+/* addModalHeaderCard — mirrors WorkShift dark */
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+}
+
+/* clinicInfoName — mirrors WorkShift dark */
+:global(.dark-mode) .clinicInfoName {
+  font-weight: 500;
+  color: var(--TC6);
+}
+
+/* clinicInfoBranch — mirrors WorkShift dark */
+:global(.dark-mode) .clinicInfoBranch {
+  color: var(--TC8);
+  opacity: 0.8;
 }
 
 /* Body */
 :global(.dark-mode) .invoiceModalBody {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+  background: var(--TC7);
 }
 
 /* Detail sections */
 :global(.dark-mode) .invoiceDetailsSection {
-  background: #1e293b;
-  border-color: #475569;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  background: var(--TC9);
+  border-color: var(--TC15);
+  box-shadow: 0 2px 8px var(--TC16);
 }
 
 /* Section title */
 :global(.dark-mode) .invoiceSectionTitle {
-  color: var(--accent-end);
-  border-bottom-color: rgba(48, 178, 181, 0.25);
+  color: var(--TC5);
+  border-bottom-color: var(--TC18);
 }
 
 :global(.dark-mode) .invoiceSectionTitle svg {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
 /* Detail labels & values */
 :global(.dark-mode) .invoiceDetailLabel {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .invoiceDetailValue {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .invoiceAmountHighlight {
-  color: #4ade80;
+  color: var(--TC5);
 }
 
 :global(.dark-mode) .invoicePaidAmount {
-  color: #34d399;
+  color: var(--TC5);
 }
 
 :global(.dark-mode) .invoiceBalanceAmount {
-  color: #f87171;
+  color: var(--TC14);
 }
 
 /* Loading spinner */
 :global(.dark-mode) .invoiceSpinner {
-  border-color: #334155;
-  border-top-color: var(--accent-end);
+  border-color: var(--TC7);
+  border-top-color: var(--TC5);
 }
 
 /* Error text */
 :global(.dark-mode) .invoiceError p {
-  color: #f87171;
+  color: var(--TC14);
 }
 
 /* Footer */
 :global(.dark-mode) .invoiceModalFooter {
-  background: #0f172a;
-  border-top-color: rgba(71, 85, 105, 0.5);
+  background: var(--TC9);
+  border-top-color: var(--TC15);
 }
 
 /* Close button */
 :global(.dark-mode) .invoiceCloseBtn {
-  background: #334155;
-  color: #e2e8f0;
+  background: var(--TC2);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .invoiceCloseBtn:hover {
-  background: #475569;
+  background: var(--TC2);
 }
 
-/* Cancel Invoice button — keep red, slight dark-mode tweak */
+/* Cancel Invoice button */
 :global(.dark-mode) .invoiceCancelBtn {
-  background: #dc2626;
-  border-color: rgba(220, 38, 38, 0.6);
-  color: #ffffff;
+  background: var(--TC14);
+  border-color: var(--TC16);
+  color: var(--TC6);
 }
 
 :global(.dark-mode) .invoiceCancelBtn:hover {
-  background: #b91c1c;
-  border-color: rgba(185, 28, 28, 0.8);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  background: var(--TC11);
+  border-color: var(--TC16);
+  box-shadow: 0 4px 12px var(--TC16);
 }
 
 /* ────────────────────────────────────────────────

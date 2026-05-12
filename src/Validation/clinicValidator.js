@@ -2,6 +2,10 @@ const { body } = require('express-validator');
 
 
 const allowedCharactersRegex = /^[A-Za-z0-9 ]+$/;
+
+
+
+
 exports.addClinicValidatorRules = [
   
 

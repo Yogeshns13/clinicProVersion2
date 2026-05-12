@@ -16,6 +16,10 @@ export const AuthProvider = ({ children }) => {
     return localStorage.getItem("profileName") || null;
   });
 
+  const [mustChangePassword, setMustChangePassword] = useState(() => {
+    return sessionStorage.getItem("must_change_password") === "1";
+  });
+
   const login = (data) => {
     const profile =
       data?.PROFILE_NAME ||
@@ -30,6 +34,14 @@ export const AuthProvider = ({ children }) => {
     if (profile) {
       localStorage.setItem("profileName", profile);
     }
+
+    // Sync mustChangePassword into context on every login
+    setMustChangePassword(sessionStorage.getItem("must_change_password") === "1");
+  };
+
+  const clearMustChangePassword = () => {
+    sessionStorage.removeItem("must_change_password");
+    setMustChangePassword(false);
   };
 
   const logout = async () => {
@@ -38,10 +50,16 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.warn("Backend logout failed, still clearing local state", err);
     } finally {
-      // Clear all session keys so no stale data persists into the next login
+      const darkMode = localStorage.getItem("darkMode");
       localStorage.clear();
+
+      if (darkMode !== null) {
+      localStorage.setItem("darkMode", darkMode);
+    }
+      sessionStorage.removeItem("must_change_password");
       setIsAuthenticated(false);
       setProfileName(null);
+      setMustChangePassword(false);
     }
   };
 
@@ -50,15 +68,19 @@ export const AuthProvider = ({ children }) => {
     setProfileName(profileName);
   };
 
-  // Wire the axios interceptor to React auth state.
-  // When the interceptor exhausts renewal retries it calls this to trigger logout
-  // without needing access to React context itself.
   useEffect(() => {
     setLogoutHandler(() => {
+      const darkMode = localStorage.getItem("darkMode");
+
       localStorage.clear();
+
+      if (darkMode !== null) {
+      localStorage.setItem("darkMode", darkMode);
+    }
+      sessionStorage.removeItem("must_change_password");
       setIsAuthenticated(false);
       setProfileName(null);
-      // Navigation is handled by PrivateRoute reacting to isAuthenticated = false
+      setMustChangePassword(false);
     });
     return () => setLogoutHandler(null);
   }, []);
@@ -74,7 +96,17 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, profileName, login, logout, setAuth }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        profileName,
+        mustChangePassword,
+        login,
+        logout,
+        setAuth,
+        clearMustChangePassword,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

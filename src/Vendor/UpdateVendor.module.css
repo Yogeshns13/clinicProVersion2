@@ -2,13 +2,24 @@
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
-  --glass-bg: rgba(255, 255, 255, 0.92);
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 
   /* Reduced header/footer heights after compression */
   --modal-header-h: 90px;
@@ -36,36 +47,36 @@
   align-items: center;
   justify-content: center;
   z-index: 1100;
-  padding: 20px 20px 20px 260px;              /* slightly reduced */
+  padding: 20px 20px 20px 260px;
   animation: fadeIn 0.3s ease;
 }
 
 /* ==================== MODAL SHELL ==================== */
 .updateModalContent {
-  background: var(--glass-bg);
-  border-radius: 18px;        /* slightly smaller radius */
+  background: var(--TC6);
+  border-radius: 18px;
   width: 100%;
   max-width: 860px;
-  max-height: 92vh;           /* increased slightly to show more content */
+  max-height: 92vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 25px 70px var(--TC16);
   animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .validationMsg {
   font-size: 0.75rem;
-  color: red;
+  color: var(--TC14);
   margin-top: 2px;
 }
 
 /* ==================== GRADIENT HEADER (compressed) ==================== */
 .updateModalHeader {
   flex-shrink: 0;
-  padding: 12px 16px;         /* reduced padding */
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -76,24 +87,38 @@
 .updateHeaderContent { flex: 1; }
 
 .updateHeaderContent h2 {
-  font-size: 1.2rem;         /* smaller title */
+  font-size: 1.2rem;
   font-weight: 700;
   margin: 0 0 2px;
+  color: var(--TC6);
 }
 
-
+/* ==================== ADD MODAL HEADER CARD ==================== */
 .addModalHeaderCard {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
+}
+
+.clinicInfoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC6);
+  opacity: 0.9;
+}
+
+.clinicInfoText {
+  display: flex;
+  flex-direction: column;
 }
 
 .clinicInfoName {
@@ -102,7 +127,7 @@
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -113,23 +138,22 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
 
-
 .updateHeaderSub {
-  font-size: 0.82rem;         /* smaller subtitle */
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.82rem;
+  color: var(--TC13);
   font-weight: 500;
 }
 
 .updateCloseBtn {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border: none;
-  color: var(--text-light);
-  width: 36px;                /* smaller close button */
+  color: var(--TC6);
+  width: 36px;
   height: 36px;
   border-radius: 10px;
   cursor: pointer;
@@ -141,7 +165,7 @@
 }
 
 .updateCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
@@ -152,25 +176,25 @@
   overflow-y: auto;
   overflow-x: hidden;
   max-height: calc(92vh - var(--modal-header-h) - var(--modal-footer-h));
-  padding: 0 24px 16px;       /* reduced side/bottom padding */
+  padding: 0 24px 16px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(48, 178, 181, 0.4) transparent;
+  scrollbar-color: var(--TC18) transparent;
 }
 
 .updateModalBody::-webkit-scrollbar { width: 6px; }
 .updateModalBody::-webkit-scrollbar-track { background: transparent; }
 .updateModalBody::-webkit-scrollbar-thumb {
-  background: rgba(48, 178, 181, 0.4);
+  background: var(--TC18);
   border-radius: 10px;
 }
 .updateModalBody::-webkit-scrollbar-thumb:hover {
-  background: rgba(48, 178, 181, 0.7);
+  background: var(--TC17);
 }
 
 /* ==================== FORM SECTIONS (tighter) ==================== */
 .formSection {
-  padding: 12px 0;            /* reduced vertical padding */
-  border-bottom: 1px solid rgba(34, 43, 108, 0.08);
+  padding: 12px 0;
+  border-bottom: 1px solid var(--TC16);
 }
 
 .formSection:last-child {
@@ -178,29 +202,29 @@
 }
 
 .formSectionHeader {
-  margin-bottom: 10px;        /* reduced */
+  margin-bottom: 10px;
   padding-bottom: 6px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.25);
+  border-bottom: 2px solid var(--TC18);
 }
 
 .formSectionHeader h3 {
   margin: 0;
-  font-size: 0.92rem;         /* smaller section titles */
+  font-size: 0.92rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 /* ── Form grid – tighter gaps ── */
 .formGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;                  /* reduced gap (was 14px) */
+  gap: 12px;
 }
 
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 4px;                   /* reduced gap between label & input */
+  gap: 4px;
 }
 
 .formGroup.fullWidth,
@@ -209,47 +233,48 @@
 }
 
 .formGroup label {
-  font-size: 0.78rem;         /* smaller labels */
+  font-size: 0.78rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
-.required { color: #dc2626; font-weight: 700; }
+.required { color: var(--TC14); font-weight: 700; }
 
 .formGroup input,
 .formGroup textarea,
 .formGroup select {
   width: 100%;
-  padding: 9px 13px;          /* slightly smaller padding */
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid rgba(34, 43, 108, 0.15);
-  border-radius: 9px;         /* slightly smaller radius */
-  color: var(--text-dark);
-  font-size: 0.82rem;         /* smaller input text */
+  padding: 9px 13px;
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
+  border-radius: 9px;
+  color: var(--TC9);
+  font-size: 0.82rem;
   font-weight: 500;
   transition: all 0.3s ease;
   font-family: inherit;
   box-sizing: border-box;
+  box-shadow: inset 0 1px 3px var(--TC16);
 }
 
 .formGroup textarea {
   resize: vertical;
-  min-height: 68px;           /* reduced from 80px */
+  min-height: 68px;
   line-height: 1.4;
 }
 
 .formGroup input::placeholder,
 .formGroup textarea::placeholder {
-  color: rgba(30, 41, 59, 0.35);
+  color: var(--TC12);
 }
 
 .formGroup input:focus,
 .formGroup textarea:focus,
 .formGroup select:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
-  background: white;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 4px var(--TC18);
+  background: var(--TC6);
 }
 
 .formGroup input:disabled,
@@ -271,15 +296,146 @@
 }
 
 .formError {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
-  color: #dc2626;
-  border-color: rgba(239, 68, 68, 0.3);
+  background: var(--TC16);
+  color: var(--TC14);
+  border-color: var(--TC16);
 }
 
 .formSuccess {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.2));
-  color: #059669;
-  border-color: rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC10);
+  border-color: var(--TC18);
+}
+
+/* ==================== STATUS BADGE ==================== */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.statusBadge.active {
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
+}
+
+.statusBadge.inactive {
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
+}
+
+.statusBadge.large {
+  padding: 9px 17px;
+  font-size: 0.77rem;
+}
+
+/* ==================== DETAIL MODAL HEADER ==================== */
+.detailModalHeader {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.detailHeaderContent { flex: 1; }
+.detailHeaderContent h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--TC6);
+}
+
+.detailHeaderMeta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.workIdBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--TC18);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  color: var(--TC6);
+}
+
+.stepBadge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: var(--TC16);
+  border: 1px solid var(--TC18);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--TC6);
+  letter-spacing: 0.3px;
+}
+
+.detailCloseBtn {
+  background: var(--TC18);
+  border: none;
+  color: var(--TC6);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+.detailCloseBtn:hover {
+  background: var(--TC17);
+  transform: scale(1.08);
+}
+
+/* ==================== CLINIC NAME CELL ==================== */
+.clinicNameCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.clinicAvatar {
+  width: 33px;
+  height: 33px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  font-weight: bold;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 12px var(--TC17);
+  flex-shrink: 0;
+}
+
+.clinicName {
+  font-weight: 700;
+  color: var(--TC9);
+  opacity: 0.9;
+  font-size: 0.87rem;
+}
+
+.clinicType {
+  font-size: 0.72rem;
+  color: var(--TC12);
+  margin-top: 2px;
 }
 
 /* ==================== MODAL FOOTER (compressed) ==================== */
@@ -288,19 +444,19 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 10px;                  /* reduced gap */
-  padding: 14px 24px;         /* reduced padding */
-  border-top: 2px solid rgba(34, 43, 108, 0.1);
-  background: #f8fafc;
+  gap: 10px;
+  padding: 14px 24px;
+  border-top: 2px solid var(--TC16);
+  background: var(--TC13);
 }
 
 /* ==================== FOOTER BUTTONS (slightly smaller) ==================== */
 .btnCancel,
 .btnSubmit {
-  height: 38px;               /* reduced from 40px */
+  height: 38px;
   padding: 0 20px;
   font-weight: 700;
-  font-size: 0.86rem;         /* slightly smaller */
+  font-size: 0.86rem;
   cursor: pointer;
   border: none;
   border-radius: 12px;
@@ -309,25 +465,25 @@
 }
 
 .btnCancel {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
-  box-shadow: 0 6px 20px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
+  box-shadow: 0 6px 20px var(--TC17);
 }
 
 .btnCancel:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 12px 30px var(--TC17);
 }
 
 .btnSubmit {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .btnSubmit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 10px 25px var(--TC17);
 }
 
 .btnCancel:disabled,
@@ -339,32 +495,117 @@
 
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .updateModalContent {
-  background: rgba(30, 41, 59, 0.95);
+  background: var(--TC9);
+  border-color: var(--TC15);
+  box-shadow: 0 25px 70px var(--TC16);
 }
 
-:global(.dark-mode) .formSectionHeader h3 { color: var(--accent-end); }
+:global(.dark-mode) .updateModalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
 
-:global(.dark-mode) .formGroup label { color: var(--accent-end); }
+:global(.dark-mode) .updateModalBody {
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .formSectionHeader {
+  border-bottom-color: var(--TC18);
+}
+
+:global(.dark-mode) .formSectionHeader h3 { color: var(--TC5); }
+
+:global(.dark-mode) .formGroup label { color: var(--TC5); }
 
 :global(.dark-mode) .formGroup input,
 :global(.dark-mode) .formGroup textarea,
 :global(.dark-mode) .formGroup select {
-  background: #1e293b;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
+  box-shadow: inset 0 1px 3px var(--TC16);
+}
+
+:global(.dark-mode) .formGroup input::placeholder,
+:global(.dark-mode) .formGroup textarea::placeholder {
+  color: var(--TC12);
+}
+
+:global(.dark-mode) .formGroup input:focus,
+:global(.dark-mode) .formGroup textarea:focus,
+:global(.dark-mode) .formGroup select:focus {
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 4px var(--TC18);
+  background: var(--TC9);
+}
+
+:global(.dark-mode) .formGroup select option {
+  background: var(--TC9);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .formSection {
-  border-bottom-color: rgba(71, 85, 105, 0.3);
+  border-bottom-color: var(--TC15);
 }
 
 :global(.dark-mode) .updateModalFooter {
-  background: #0f172a;
-  border-top-color: rgba(71, 85, 105, 0.5);
+  background: var(--TC9);
+  border-top-color: var(--TC15);
 }
 
 :global(.dark-mode) .updateModalBody::-webkit-scrollbar-thumb {
-  background: rgba(48, 178, 181, 0.5);
+  background: var(--TC18);
+}
+
+:global(.dark-mode) .updateModalBody::-webkit-scrollbar-thumb:hover {
+  background: var(--TC17);
+}
+
+/* Status badges */
+:global(.dark-mode) .statusBadge.active {
+  background: var(--TC18);
+  color: var(--TC5);
+  border: 1px solid var(--TC16);
+}
+
+:global(.dark-mode) .statusBadge.inactive {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+/* Detail modal header */
+:global(.dark-mode) .detailModalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+/* Clinic name cell */
+:global(.dark-mode) .clinicName {
+  font-weight: 500;
+  color: var(--TC6);
+  font-size: 0.87rem;
+}
+
+:global(.dark-mode) .clinicType {
+  font-size: 0.72rem;
+  color: var(--TC8);
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+/* Add modal header card */
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+}
+
+/* Buttons */
+:global(.dark-mode) .btnCancel {
+  background: linear-gradient(135deg, var(--TC2));
+  color: var(--TC6);
+  border-color: var(--TC2);
+}
+:global(.dark-mode) .btnCancel:hover {
+  background: var(--TC14);
+  transform: translateY(-2px);
 }
 
 /* ==================== RESPONSIVE ==================== */

@@ -2,16 +2,24 @@
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
-  --vital-bp: #dc2626;
-  --vital-temp: #ea580c;
-  --vital-weight: #16a34a;
-  --followup-color: #8b5cf6;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -34,9 +42,9 @@
 /* ==================== MAIN WRAPPER ==================== */
 .wrapper {
   padding: 20px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  background: linear-gradient(135deg, var(--TC6) 0%, var(--TC13) 100%);
   min-height: 100vh;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   animation: fadeIn 0.3s ease;
 }
@@ -44,12 +52,10 @@
 /* ==================== HEADER SECTION ==================== */
 .headerSection {
   margin-bottom: 24px;
- 
 }
 
-.statCard .medicineCard{
+.statCard .medicineCard {
   justify-content: center;
-
 }
 
 .backBtn {
@@ -57,54 +63,59 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: white;
-  color: var(--primary-start);
+  background: var(--TC6);
+  color: var(--TC1);
   font-weight: 600;
   font-size: 0.94rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--TC8);
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
   margin-bottom: 16px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  box-shadow: 0 5px 17px var(--TC16);
 }
 
 .backBtn:hover {
-  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC1), var(--TC2));
+  color: var(--TC6);
   border-color: transparent;
   transform: translateX(-4px);
-  box-shadow: 0 7px 24px rgba(34, 43, 108, 0.15);
+  box-shadow: 0 7px 24px var(--TC16);
 }
 
+/* mirrors WorkShift .detailModalContent / infoCard */
 .medicineCard {
-  background: white;
-  padding: 10px, 24px;
+  background: var(--TC6);
+  padding: 10px 24px;
   border-radius: 14px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC16);
   animation: slideUp 0.4s ease;
 }
 
+/* mirrors WorkShift .detailModalHeader */
 .medicineHeader {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 10px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  border-radius: 12px;
+  color: var(--TC6);
 }
 
 .avatarLarge {
   width: 40px;
   height: 40px;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-weight: bold;
   font-size: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 5px 20px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 5px 20px var(--TC17);
   flex-shrink: 0;
 }
 
@@ -112,27 +123,30 @@
   flex: 1;
 }
 
+/* mirrors WorkShift .clinicName */
 .medicineName {
   font-size: 1.3rem;
   font-weight: 800;
-  color: var(--primary-start);
+  color: var(--TC6);
   margin: 10px 10px 8px 20px;
+  opacity: 0.9;
 }
 
+/* mirrors WorkShift .clinicType */
 .genericName {
   font-size: 1rem;
-  color: #64748b;
+  color: var(--TC13);
   margin: 0 0 6px 0;
 }
 
 .manufacturer {
   font-size: 0.9rem;
-  color: #94a3b8;
+  color: var(--TC8);
   margin: 0;
 }
 
 .manufacturer strong {
-  color: var(--primary-start);
+  color: var(--TC6);
 }
 
 /* ==================== STATISTICS CARDS ==================== */
@@ -145,29 +159,28 @@
 }
 
 .statCard {
-  background: white;
+  background: var(--TC6);
   padding: 10px;
   border-radius: 14px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC16);
   transition: all 0.3s ease;
 }
 
 .statCard:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.15);
+  box-shadow: 0 8px 24px var(--TC16);
 }
 
 .statCardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  
 }
 
 .statCardTitle {
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1px;
@@ -177,35 +190,35 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .iconGreen {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
+  background: linear-gradient(135deg, var(--TC10), var(--TC5));
 }
 
 .iconWarning {
-  background: linear-gradient(135deg, #ea580c, #f97316);
+  background: linear-gradient(135deg, var(--TC3), var(--TC4));
 }
 
 .iconDanger {
-  background: linear-gradient(135deg, #dc2626, #ef4444);
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
 }
 
 .statCardValue {
   font-size: 1.3rem;
   font-weight: 800;
-  color: var(--primary-start);
+  color: var(--TC1);
   margin: 0;
 }
 
 .statCardLabel {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--TC8);
   margin-top: 4px;
 }
 
@@ -222,22 +235,22 @@
 .tableSectionHeader h3 {
   font-size: 1.4rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
   margin: 0 0 6px 0;
 }
 
 .subtitle {
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--TC12);
   margin: 0;
 }
 
 .tableContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   overflow: hidden;
-  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 13px 38px var(--TC16);
+  border: 1px solid var(--TC16);
 }
 
 .table {
@@ -245,11 +258,12 @@
   border-collapse: collapse;
 }
 
+/* mirrors WorkShift .clinicTable th */
 .table th {
   text-align: left;
   padding: 14px 17px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   font-weight: 600;
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -259,8 +273,8 @@
 
 .table td {
   padding: 14px 17px;
-  border-bottom: 1px solid #e2e8f0;
-  color: var(--text-dark);
+  border-bottom: 1px solid var(--TC13);
+  color: var(--TC9);
   font-size: 0.85rem;
   vertical-align: middle;
 }
@@ -275,25 +289,25 @@
 }
 
 .table tbody tr:nth-child(even) {
-  background-color: #d5e6ec;
+  background-color: var(--TC18);
 }
 
 .table tbody tr:hover {
-  background-color: rgba(48, 178, 181, 0.08) !important;
+  background-color: var(--TC18) !important;
 }
 
 /* Row color indicators based on status */
 .table tbody tr.nearExpiry {
-  border-left: 4px solid #ea580c;
+  border-left: 4px solid var(--TC3);
 }
 
 .table tbody tr.zeroStock {
-  border-left: 4px solid #dc2626;
+  border-left: 4px solid var(--TC14);
   opacity: 0.7;
 }
 
 .table tbody tr.negativeStock {
-  border-left: 4px solid #7c3aed;
+  border-left: 4px solid var(--TC1);
   opacity: 0.7;
 }
 
@@ -305,12 +319,12 @@
 }
 
 .batchIcon {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
 .batchNo {
   font-weight: 600;
-  color: var(--text-dark);
+  color: var(--TC9);
 }
 
 .dateCell {
@@ -320,7 +334,7 @@
 }
 
 .dateIcon {
-  color: #64748b;
+  color: var(--TC12);
 }
 
 .daysToExpiry {
@@ -328,12 +342,12 @@
 }
 
 .daysRemaining {
-  color: #16a34a;
+  color: var(--TC10);
   font-weight: 600;
 }
 
 .daysExpired {
-  color: var(--vital-bp);
+  color: var(--TC14);
   font-weight: 600;
 }
 
@@ -352,21 +366,21 @@
 }
 
 .goodBalance {
-  background: rgba(34, 197, 94, 0.1);
-  color: #16a34a;
-  border-color: rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC10);
+  border-color: var(--TC17);
 }
 
 .mediumBalance {
-  background: rgba(234, 88, 12, 0.1);
-  color: var(--vital-temp);
-  border-color: rgba(234, 88, 12, 0.3);
+  background: var(--TC16);
+  color: var(--TC3);
+  border-color: var(--TC17);
 }
 
 .lowBalance {
-  background: rgba(220, 38, 38, 0.1);
-  color: var(--vital-bp);
-  border-color: rgba(220, 38, 38, 0.3);
+  background: var(--TC16);
+  color: var(--TC14);
+  border-color: var(--TC16);
 }
 
 .priceCell {
@@ -376,41 +390,42 @@
 }
 
 .priceIcon {
-  color: #16a34a;
+  color: var(--TC10);
 }
 
+/* mirrors WorkShift .statusBadge */
 .statusBadge {
   display: inline-block;
   padding: 5px 12px;
-  font-weight: 600;
-  font-size: 0.72rem;
-  border-radius: 6px;
-  border: 1px solid;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.7px;
 }
 
 .statusBadge.nearExpiry {
-  background: rgba(234, 88, 12, 0.1);
-  color: var(--vital-temp);
-  border-color: rgba(234, 88, 12, 0.3);
+  background: var(--TC18);
+  color: var(--TC3);
+  border: 1px solid var(--TC16);
 }
 
 .statusBadge.zeroStock {
-  background: rgba(220, 38, 38, 0.1);
-  color: var(--vital-bp);
-  border-color: rgba(220, 38, 38, 0.3);
+  background: var(--TC16);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
 }
 
 .statusBadge.negativeStock {
-  background: rgba(124, 58, 237, 0.1);
-  color: #7c3aed;
-  border-color: rgba(124, 58, 237, 0.3);
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
 }
 
 .statusBadge.normal {
-  background: rgba(34, 197, 94, 0.1);
-  color: #16a34a;
-  border-color: rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
 }
 
 .updateBtn {
@@ -421,23 +436,23 @@
   border-radius: 9px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
+  box-shadow: 0 3px 10px var(--TC17);
 }
 
 .updateBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+  box-shadow: 0 5px 17px var(--TC18);
 }
 
 /* ==================== SUMMARY FOOTER ==================== */
 .summaryFooter {
-  background: white;
+  background: var(--TC6);
   padding: 20px 24px;
   border-radius: 14px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC16);
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -455,7 +470,7 @@
 
 .summaryLabel {
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -464,14 +479,14 @@
 .summaryValue {
   font-size: 1.8rem;
   font-weight: 800;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 /* ==================== UTILITY STATES ==================== */
 .noData {
   text-align: center;
   padding: 68px 17px;
-  color: #64748b;
+  color: var(--TC12);
   font-size: 1.1rem;
 }
 
@@ -482,88 +497,186 @@
   justify-content: center;
   min-height: 70vh;
   font-size: 1.3rem;
-  color: #64748b;
+  color: var(--TC12);
 }
 
 .error {
-  color: #ef4444;
+  color: var(--TC14);
 }
 
 /* ==================== DARK MODE ==================== */
-.darkMode {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+:global(.dark-mode) .wrapper {
+  background: linear-gradient(135deg, var(--TC9) 0%, var(--TC7) 100%);
+  color: var(--TC13);
 }
 
-.darkMode .backBtn {
-  background: #1e293b;
-  border-color: #475569;
-  color: #e2e8f0;
+:global(.dark-mode) .backBtn {
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
-.darkMode .backBtn:hover {
-  background: linear-gradient(135deg, #334155, #475569);
+:global(.dark-mode) .backBtn:hover {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+  color: var(--TC6);
 }
 
-.darkMode .medicineCard {
-  background: #1e293b;
-  border-color: #475569;
+:global(.dark-mode) .medicineCard {
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
-.darkMode .medicineName {
-  color: var(--accent-end);
+/* mirrors WorkShift dark mode .detailModalHeader */
+:global(.dark-mode) .medicineHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
 }
 
-.darkMode .genericName,
-.darkMode .manufacturer {
-  color: #94a3b8;
+/* mirrors WorkShift dark mode .clinicName */
+:global(.dark-mode) .medicineName {
+  font-weight: 500;
+  color: var(--TC6);
+  font-size: 1.3rem;
 }
 
-.darkMode .manufacturer strong {
-  color: #cbd5e1;
+/* mirrors WorkShift dark mode .clinicType */
+:global(.dark-mode) .genericName {
+  color: var(--TC8);
+  opacity: 0.8;
 }
 
-.darkMode .statCard {
-  background: #1e293b;
-  border-color: #475569;
+:global(.dark-mode) .manufacturer {
+  color: var(--TC8);
 }
 
-.darkMode .statCardValue {
-  color: var(--accent-end);
+:global(.dark-mode) .manufacturer strong {
+  color: var(--TC13);
 }
 
-.darkMode .tableSectionHeader h3 {
-  color: var(--accent-end);
+:global(.dark-mode) .statCard {
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
-.darkMode .tableContainer {
-  background: #1e293b;
-  border-color: #475569;
+:global(.dark-mode) .statCardValue {
+  color: var(--TC5);
 }
 
-.darkMode .table th {
-  background: linear-gradient(135deg, #334155, #475569);
+:global(.dark-mode) .statCardTitle {
+  color: var(--TC12);
 }
 
-.darkMode .table td {
-  border-bottom-color: #475569;
-  color: #e2e8f0;
+:global(.dark-mode) .statCardLabel {
+  color: var(--TC12);
 }
 
-.darkMode .table tbody tr:nth-child(even) {
-  background-color: #334155;
+:global(.dark-mode) .tableSectionHeader h3 {
+  color: var(--TC5);
 }
 
-.darkMode .batchNo {
-  color: #e2e8f0;
+:global(.dark-mode) .subtitle {
+  color: var(--TC12);
 }
 
-.darkMode .summaryFooter {
-  background: #1e293b;
-  border-color: #475569;
+:global(.dark-mode) .tableContainer {
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
-.darkMode .summaryValue {
-  color: var(--accent-end);
+:global(.dark-mode) .table th {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+:global(.dark-mode) .table td {
+  border-bottom-color: var(--TC15);
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .table tbody tr:nth-child(even) {
+  background-color: var(--TC7);
+}
+
+:global(.dark-mode) .batchNo {
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .batchIcon {
+  color: var(--TC5);
+}
+
+:global(.dark-mode) .dateIcon {
+  color: var(--TC12);
+}
+
+:global(.dark-mode) .daysRemaining {
+  color: var(--TC5);
+}
+
+:global(.dark-mode) .daysExpired {
+  color: var(--TC14);
+}
+
+/* mirrors WorkShift dark mode .statusBadge.active / .inactive */
+:global(.dark-mode) .statusBadge.normal {
+  background: var(--TC18);
+  color: var(--TC5);
+  border-color: var(--TC16);
+}
+
+:global(.dark-mode) .statusBadge.nearExpiry {
+  background: var(--TC18);
+  color: var(--TC5);
+  border-color: var(--TC16);
+}
+
+:global(.dark-mode) .statusBadge.zeroStock {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+:global(.dark-mode) .statusBadge.negativeStock {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+:global(.dark-mode) .goodBalance {
+  background: var(--TC18);
+  color: var(--TC5);
+  border-color: var(--TC17);
+}
+
+:global(.dark-mode) .mediumBalance {
+  background: var(--TC16);
+  color: var(--TC5);
+  border-color: var(--TC17);
+}
+
+:global(.dark-mode) .lowBalance {
+  background: var(--TC16);
+  color: var(--TC14);
+  border-color: var(--TC16);
+}
+
+:global(.dark-mode) .priceIcon {
+  color: var(--TC5);
+}
+
+:global(.dark-mode) .summaryFooter {
+  background: var(--TC9);
+  border-color: var(--TC15);
+}
+
+:global(.dark-mode) .summaryValue {
+  color: var(--TC5);
+}
+
+:global(.dark-mode) .summaryLabel {
+  color: var(--TC12);
+}
+
+:global(.dark-mode) .noData {
+  color: var(--TC12);
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */
@@ -603,7 +716,7 @@
     flex-direction: row;
     justify-content: space-between;
     padding: 12px;
-    background: rgba(48, 178, 181, 0.05);
+    background: var(--TC18);
     border-radius: 8px;
   }
 

@@ -3,61 +3,58 @@
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
-  --glass-bg: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(255, 255, 255, 0.4);
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
 /* ==================== ANIMATIONS ==================== */
 @keyframes fadeIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(22px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ==================== MAIN WRAPPER ==================== */
-/*
-  KEY CHANGE (mirrors ClinicList):
-  height: 100vh + overflow: hidden clamps wrapper to viewport.
-  display: flex + flex-direction: column lets children fill remaining space.
-  The tableSection gets flex:1 + min-height:0 so only the table scrolls.
-  The paginationBar is flex-shrink:0, always pinned to the bottom.
-*/
 .chargeListWrapper {
   padding: 20px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  background: linear-gradient(135deg, var(--TC6) 0%, var(--TC13) 100%);
   height: 100vh;
   overflow: hidden;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
 }
 
-/* ==================== FILTERS (LabReportList style) ==================== */
+/* ==================== FILTERS ==================== */
 .filtersContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   padding: 16px 20px;
   margin-bottom: 20px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC16);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -80,11 +77,11 @@
   min-width: 140px;
   height: 40px;
   padding: 0 12px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-right: none;
   border-radius: 10px 0 0 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -93,29 +90,29 @@
 
 .searchTypeSelect:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .searchInput {
   flex: 1;
   height: 40px;
   padding: 0 15px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 0 10px 10px 0;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   transition: all 0.3s ease;
 }
 
-.searchInput::placeholder { color: #94a3b8; }
+.searchInput::placeholder { color: var(--TC12); }
 
 .searchInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
-  border-left: 1px solid var(--accent-end);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
+  border-left: 1px solid var(--TC5);
 }
 
 .filterGroup {
@@ -127,20 +124,20 @@
   width: 100%;
   height: 40px;
   padding: 10px 15px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   transition: all 0.3s ease;
 }
 
-.filterInput::placeholder { color: #94a3b8; }
+.filterInput::placeholder { color: var(--TC12); }
 
 .filterInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 /* ── Date placeholder overlay ── */
@@ -151,7 +148,7 @@
 
 .dateWrapper .filterInput {
   width: 100%;
-  color: var(--text-dark);
+  color: var(--TC9);
 }
 
 .dateEmpty::-webkit-datetime-edit-text,
@@ -167,7 +164,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--TC12);
   pointer-events: none;
   z-index: 1;
 }
@@ -194,32 +191,27 @@
 }
 
 .searchButton {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .searchButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 .clearButton {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--TC13);
+  color: var(--TC15);
 }
 
 .clearButton:hover {
-  background: #cbd5e1;
+  background: var(--TC8);
   transform: translateY(-2px);
 }
 
 /* ==================== TABLE SECTION ==================== */
-/*
-  flex: 1        → fills ALL remaining height after the filter bar
-  min-height: 0  → allows shrinking below content (required for nested scroll)
-  display: flex + flex-direction: column → so chargeListTableContainer can flex:1 inside it
-*/
 .tableSection {
   flex: 1;
   min-height: 0;
@@ -228,19 +220,14 @@
 }
 
 /* ==================== TABLE CONTAINER ==================== */
-/*
-  flex: 1        → fills all space between filter bar and pagination bar
-  min-height: 0  → allows shrinking (critical for scroll to work)
-  overflow-y: auto → table scrolls here, not the page
-*/
 .chargeListTableContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 13px 38px var(--TC16);
+  border: 1px solid var(--TC16);
 }
 
 .chargeListTable {
@@ -252,8 +239,8 @@
 .chargeListTable th {
   text-align: left;
   padding: 12px 17px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   font-weight: 600;
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -266,8 +253,8 @@
 
 .chargeListTable td {
   padding: 12px 17px;
-  border-bottom: 1px solid #e2e8f0;
-  color: var(--text-dark);
+  border-bottom: 1px solid var(--TC13);
+  color: var(--TC9);
   font-size: 0.85rem;
   vertical-align: middle;
 }
@@ -279,24 +266,25 @@
 }
 
 .chargeListTable tbody tr:nth-child(even) {
-  background-color: #d5e6ec;
+  background-color: var(--TC18);
 }
 
 .chargeListTable tbody tr:hover {
-  background-color: rgba(48, 178, 181, 0.08) !important;
+  background-color: var(--TC18) !important;
   transition: background-color 0.25s ease;
 }
 
+/* addModalHeaderCard — same style as WorkShift */
 .addModalHeaderCard {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
 }
@@ -307,7 +295,7 @@
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -318,7 +306,7 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -330,42 +318,44 @@
   gap: 4px;
 }
 
+/* patientName — same style as WorkShift .clinicName */
 .patientName {
   font-weight: 700;
-  color: var(--text-dark);
-  font-size: 0.9rem;
+  color: var(--TC9);
+  opacity: 0.9;
+  font-size: 0.87rem;
 }
 
 .patientInfo {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--TC12);
 }
 
 .doctorName {
   font-weight: 600;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
 }
 
 .chargeCode {
   font-size: 0.72rem;
-  color: #64748b;
+  color: var(--TC12);
   margin-top: 2px;
 }
 
 .dateText {
   font-weight: 500;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
 }
 
 .reasonText {
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
 }
 
 .symptomsText {
-  color: #64748b;
+  color: var(--TC12);
   font-size: 0.85rem;
 }
 
@@ -375,12 +365,34 @@
 
 .vitalItem {
   font-size: 0.75rem;
-  color: var(--text-dark);
+  color: var(--TC9);
   padding: 2px 8px;
-  background: rgba(32, 125, 156, 0.1);
+  background: var(--TC17);
   border-radius: 4px;
   display: inline-block;
   width: fit-content;
+}
+
+/* ==================== STATUS BADGE — same style as WorkShift ==================== */
+.statusBadge {
+  padding: 5px 12px;
+  border-radius: 26px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.statusBadge.active {
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
+}
+
+.statusBadge.inactive {
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
 }
 
 /* ==================== ACTIONS CELL ==================== */
@@ -396,21 +408,21 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   border: none;
   font-weight: 600;
   font-size: 0.8rem;
   border-radius: 9px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 3px 10px var(--TC17);
   white-space: nowrap;
 }
 
 .invoiceBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+  box-shadow: 0 5px 17px var(--TC18);
 }
 
 /* ==================== MODAL OVERLAY ==================== */
@@ -423,28 +435,29 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 12px;
-  animation: fadeIn 0.3s ease;
   padding: 20px 20px 20px 60px;
+  animation: fadeIn 0.3s ease;
 }
 
 /* ==================== MODAL ==================== */
 .chargeListModal {
-  background: var(--glass-bg);
+  background: var(--TC6);
   border-radius: 15px;
+  border: 2px solid var(--TC16);
   width: 100%;
   max-width: 860px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 17px 43px var(--TC16), inset 0 1px 2px var(--TC6);
   backdrop-filter: blur(14px);
   animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* detailModalHeader — same style as WorkShift */
 .chargeListModalHeader {
-  padding: 20px 28px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -453,30 +466,34 @@
 
 .chargeListModalHeader h2 {
   margin: 0;
-  font-size: 1.45rem;
+  font-size: 1.4rem;
   font-weight: 700;
+  color: var(--TC6);
 }
 
 .chargeListModalClose {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--TC18);
   border: none;
-  color: white;
+  color: var(--TC6);
   width: 40px;
   height: 40px;
   border-radius: 10px;
   font-size: 1.3rem;
   cursor: pointer;
   transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .chargeListModalClose:hover {
-  background: rgba(255, 255, 255, 0.45);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
 .chargeListModalBody {
   padding: 0 29px 23px;
-  color: var(--text-dark);
+  color: var(--TC9);
 }
 
 .chargeListModalFooter {
@@ -484,8 +501,8 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 17px 23px;
-  border-top: 2px solid rgba(34, 43, 108, 0.15);
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+  border-top: 2px solid var(--TC16);
+  background: linear-gradient(to bottom, var(--TC6), var(--TC13));
 }
 
 /* ==================== FORMS ==================== */
@@ -504,77 +521,111 @@
 .formGroup label {
   display: block;
   margin-bottom: 6px;
-  color: var(--primary-start);
+  color: var(--TC1);
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.17px;
 }
 
-.formGroup .required {
-  color: #dc2626;
-  font-weight: 700;
-}
+.formGroup .required { color: var(--TC14); font-weight: 700; }
 
-.required {
-  color: #dc2626;
-  font-weight: 700;
-}
+.required { color: var(--TC14); font-weight: 700; }
 
 .formGroup input,
 .formGroup textarea,
 .formGroup select {
   width: 100%;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 2px solid rgba(34, 43, 108, 0.2);
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
   border-radius: 9px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.9rem;
   font-weight: 500;
   transition: all 0.3s ease;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 3px var(--TC16);
 }
 
 .formGroup input::placeholder,
-.formGroup textarea::placeholder {
-  color: rgba(30, 41, 59, 0.4);
-}
+.formGroup textarea::placeholder { color: var(--TC12); }
 
 .formGroup input:focus,
 .formGroup textarea:focus,
 .formGroup select:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15), inset 0 1px 3px rgba(0, 0, 0, 0.05);
-  background: rgba(255, 255, 255, 0.9);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18), inset 0 1px 3px var(--TC16);
+  background: var(--TC6);
 }
 
 .formError {
   padding: 9px 12px;
   border-radius: 9px;
   margin-bottom: 14px;
-  border: 2px solid rgba(239, 68, 68, 0.3);
+  border: 2px solid var(--TC16);
   font-size: 0.85rem;
   font-weight: 600;
-  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.1);
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
-  color: #dc2626;
+  box-shadow: 0 3px 9px var(--TC16);
+  background: var(--TC16);
+  color: var(--TC14);
 }
 
 .formSuccess {
   padding: 9px 12px;
   border-radius: 9px;
   margin-bottom: 14px;
-  border: 2px solid rgba(34, 197, 94, 0.3);
+  border: 2px solid var(--TC18);
   font-size: 0.85rem;
   font-weight: 600;
-  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.1);
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.2));
-  color: #059669;
+  box-shadow: 0 3px 9px var(--TC16);
+  background: var(--TC18);
+  color: var(--TC10);
 }
 
 /* ==================== BUTTONS ==================== */
-.btnCancel,
+.btnCancel {
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
+  border: none;
+  border-radius: 14px;
+  height: 40px;
+  padding: 0 20px;
+  font-weight: 700;
+  font-size: 0.94rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  box-shadow: 0 7px 24px var(--TC17);
+  white-space: nowrap;
+  z-index: 0;
+}
+
+.btnCancel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+}
+
+.btnCancel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, var(--TC18) 50%, transparent 60%);
+  background-size: 200% 100%;
+  background-position: -100% 0;
+  transition: background-position 0.5s ease;
+  z-index: -1;
+}
+
+.btnCancel:hover { transform: translateY(-3px); box-shadow: 0 14px 34px var(--TC17); }
+.btnCancel:hover::before { opacity: 1; }
+.btnCancel:hover::after  { background-position: 200% 0; }
+
 .btnSubmit {
   padding: 10px 24px;
   border-radius: 10px;
@@ -582,22 +633,12 @@
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
-}
-
-.btnCancel { background: linear-gradient(135deg, var(--primary-start), var(--primary-end)); color: var(--text-light); border: none; border-radius: 14px; height: 40px; padding: 0 20px; font-weight: 700; font-size: 0.94rem; cursor: pointer; position: relative; overflow: hidden; transition: all 0.4s ease; box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35); white-space: nowrap; z-index: 0; }
-.btnCancel::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, #c0392b, #e74c3c); opacity: 0; transition: opacity 0.4s ease; z-index: -1; }
-.btnCancel::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%); background-size: 200% 100%; background-position: -100% 0; transition: background-position 0.5s ease; z-index: -1; }
-.btnCancel:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45); }
-.btnCancel:hover::before { opacity: 1; }
-.btnCancel:hover::after { background-position: 200% 0; }
-
-.btnSubmit {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   border: none;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 5px 15px var(--TC17);
   z-index: 1;
 }
 
@@ -608,7 +649,7 @@
   left: 50%;
   width: 0;
   height: 0;
-  background: rgba(48, 178, 181, 0.35);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -616,14 +657,11 @@
   pointer-events: none;
 }
 
-.btnSubmit:hover::before {
-  width: 170px;
-  height: 170px;
-}
+.btnSubmit:hover::before { width: 170px; height: 170px; }
 
 .btnSubmit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+  box-shadow: 0 5px 17px var(--TC18);
 }
 
 .btnSubmit:disabled {
@@ -636,7 +674,7 @@
 .chargeListNoData {
   text-align: center;
   padding: 68px 17px;
-  color: #64748b;
+  color: var(--TC12);
   font-size: 1.1rem;
 }
 
@@ -647,33 +685,29 @@
   justify-content: center;
   min-height: 70vh;
   font-size: 1.3rem;
-  color: #64748b;
+  color: var(--TC12);
 }
 
-.chargeListError { color: #ef4444; }
+.chargeListError { color: var(--TC14); }
 
 /* ==================== PAGINATION BAR ==================== */
-/*
-  flex-shrink: 0  → never compressed, always pinned to the bottom of tableSection
-  margin-top: 14px → gap between scrollable table and this bar
-*/
 .paginationBar {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: white;
+  background: var(--TC6);
   border-radius: 14px;
   padding: 10px 20px;
   margin-top: 14px;
-  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 4px 14px var(--TC16);
+  border: 1px solid var(--TC16);
   gap: 16px;
 }
 
 .paginationInfo {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -687,7 +721,7 @@
 .paginationLabel {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
   margin-right: 4px;
   white-space: nowrap;
 }
@@ -698,10 +732,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 8px;
-  color: var(--primary-start);
+  color: var(--TC1);
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
@@ -710,11 +744,11 @@
 }
 
 .pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  border-color: var(--accent-end);
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 3px 8px var(--TC17);
 }
 
 .pageBtn:disabled {
@@ -728,44 +762,42 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   font-size: 0.82rem;
   font-weight: 700;
   border-radius: 8px;
   padding: 0 8px;
-  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
+  box-shadow: 0 3px 8px var(--TC17);
 }
 
 .pageSizeInfo {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 500;
   white-space: nowrap;
 }
 
 .pageSizeInfo strong {
-  color: var(--primary-start);
+  color: var(--TC1);
   font-weight: 700;
 }
 
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .chargeListWrapper {
-  --glass-bg: rgba(30, 41, 59, 0.92);
-  --text-dark: #e2e8f0;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #e2e8f0;
+  background: linear-gradient(135deg, var(--TC9) 0%, var(--TC7) 100%);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .filtersContainer {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .filterInput {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .filterInput::-webkit-calendar-picker-indicator {
@@ -774,119 +806,161 @@
 }
 
 :global(.dark-mode) .searchTypeSelect {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .searchInput {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .searchInput:focus {
-  border-left: 1px solid var(--accent-end);
+  border-left: 1px solid var(--TC5);
 }
 
-:global(.dark-mode) .datePlaceholder { color: #64748b; }
+:global(.dark-mode) .datePlaceholder { color: var(--TC12); }
 
 :global(.dark-mode) .clearButton {
-  background: #334155;
-  color: #e2e8f0;
+  background: var(--TC7);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .clearButton:hover { background: #475569; }
+:global(.dark-mode) .clearButton:hover { background: var(--TC15); }
 
 :global(.dark-mode) .chargeListTableContainer {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .chargeListTable th {
-  background: linear-gradient(135deg, #334155, #475569);
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
 }
 
 :global(.dark-mode) .chargeListTable td {
-  border-bottom-color: #475569;
-  color: #e2e8f0;
+  border-bottom-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .chargeListTable tbody tr:nth-child(even) {
-  background-color: #334155;
+  background-color: var(--TC7);
 }
 
-:global(.dark-mode) .patientName,
+/* patientName dark — same as WorkShift .clinicName dark */
+:global(.dark-mode) .patientName {
+  font-weight: 500;
+  color: var(--TC6);
+  font-size: 0.87rem;
+}
+
 :global(.dark-mode) .doctorName,
 :global(.dark-mode) .dateText,
 :global(.dark-mode) .reasonText {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .patientInfo,
 :global(.dark-mode) .chargeCode,
 :global(.dark-mode) .symptomsText {
-  color: #94a3b8;
+  color: var(--TC8);
 }
 
 :global(.dark-mode) .vitalItem {
-  background: rgba(32, 125, 156, 0.2);
-  color: #e2e8f0;
+  background: var(--TC17);
+  color: var(--TC13);
+}
+
+/* statusBadge dark — same as WorkShift */
+:global(.dark-mode) .statusBadge.active {
+  background: var(--TC18);
+  color: var(--TC5);
+  border: 1px solid var(--TC16);
+}
+
+:global(.dark-mode) .statusBadge.inactive {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
+}
+
+/* addModalHeaderCard dark — same as WorkShift */
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
 }
 
 :global(.dark-mode) .chargeListModal {
-  background: rgba(30, 41, 59, 0.94);
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
+}
+
+/* chargeListModalHeader dark — same as WorkShift */
+:global(.dark-mode) .chargeListModalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
 }
 
 :global(.dark-mode) .chargeListModalHeader h2 {
-  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
+  background: var(--TC6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-:global(.dark-mode) .chargeListModalFooter {
-  background: linear-gradient(to bottom, rgba(30, 41, 59, 0.5), rgba(30, 41, 59, 0.7));
+:global(.dark-mode) .formGroup Input::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
 }
 
-:global(.dark-mode) .formGroup label {
-  color: var(--accent-end);
-}
+:global(.dark-mode) .chargeListModalFooter 
+ { background: var(--TC9); border-top-color: var(--TC15); }
+
+:global(.dark-mode) .chargeListModalBody { color: var(--TC13); }
+
+:global(.dark-mode) .formGroup label { color: var(--TC5); }
 
 :global(.dark-mode) .formGroup input,
 :global(.dark-mode) .formGroup textarea,
 :global(.dark-mode) .formGroup select {
-  background: #1e293b;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .paginationBar {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .paginationInfo,
-:global(.dark-mode) .pageSizeInfo {
-  color: #94a3b8;
-}
+:global(.dark-mode) .pageSizeInfo { color: var(--TC12); }
 
-:global(.dark-mode) .paginationLabel {
-  color: var(--accent-end);
-}
+:global(.dark-mode) .paginationLabel { color: var(--TC5); }
 
 :global(.dark-mode) .pageBtn {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  border-color: var(--accent-end);
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
+}
+
+:global(.dark-mode) .pageSizeInfo strong { color: var(--TC5); }
+
+:global(.dark-mode) .btnCancel {
+  background: linear-gradient(135deg, var(--TC2));
+  color: var(--TC6);
+  border-color: var(--TC2);
+}
+
+:global(.dark-mode) .btnCancel:hover {
+  background: var(--TC14);
+  transform: translateY(-2px);
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */
@@ -895,13 +969,9 @@
     grid-template-columns: 1fr 1fr auto;
   }
 
-  .searchGroup {
-    grid-column: 1 / -1;
-  }
+  .searchGroup { grid-column: 1 / -1; }
 
-  .filterActions {
-    grid-column: 1 / -1;
-  }
+  .filterActions { grid-column: 1 / -1; }
 }
 
 @media (max-width: 768px) {
@@ -911,17 +981,15 @@
 
   .searchTypeSelect {
     border-radius: 10px;
-    border-right: 1px solid #cbd5e1;
+    border-right: 1px solid var(--TC8);
   }
 
   .searchInput {
     border-radius: 10px;
-    border-left: 1px solid #cbd5e1;
+    border-left: 1px solid var(--TC8);
   }
 
-  .filterActions {
-    flex-direction: column;
-  }
+  .filterActions { flex-direction: column; }
 
   .searchButton,
   .clearButton {
@@ -935,13 +1003,9 @@
     font-size: 0.8rem;
   }
 
-  .chargeListModal {
-    max-width: 95%;
-  }
+  .chargeListModal { max-width: 95%; }
 
-  .formGrid {
-    grid-template-columns: 1fr;
-  }
+  .formGrid { grid-template-columns: 1fr; }
 
   .chargeListModalFooter {
     flex-direction: column;
@@ -949,9 +1013,7 @@
   }
 
   .btnCancel,
-  .btnSubmit {
-    width: 100%;
-  }
+  .btnSubmit { width: 100%; }
 
   .paginationBar {
     flex-direction: column;
@@ -959,9 +1021,7 @@
     gap: 10px;
   }
 
-  .paginationControls {
-    align-self: center;
-  }
+  .paginationControls { align-self: center; }
 }
 
 @media (max-width: 480px) {

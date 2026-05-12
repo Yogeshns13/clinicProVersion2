@@ -8,7 +8,7 @@ import ViewEmployee from './ViewEmployee.jsx';
 import styles from './EmployeeList.module.css';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
 import LoadingPage from '../Hooks/LoadingPage.jsx';
-import { useTableOptions } from '../Hooks/useTableOptions.js'; // ← NEW
+import { useTableOptions } from '../Hooks/UseTableOptions.js'; // ← NEW
 
 // ────────────────────────────────────────────────
 // TABLE IDs

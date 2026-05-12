@@ -2,36 +2,46 @@
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
-  --glass-bg: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(255, 255, 255, 0.4);
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
 /* ==================== ANIMATIONS ==================== */
 @keyframes fadeIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(22px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ==================== MAIN WRAPPER ==================== */
 .chargeConfigWrapper {
   padding: 20px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  background: linear-gradient(135deg, var(--TC6) 0%, var(--TC13) 100%);
   height: 100vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   box-sizing: border-box;
 }
@@ -42,17 +52,17 @@
   justify-content: center;
   min-height: 70vh;
   font-size: 1.2rem;
-  color: #64748b;
+  color: var(--TC12);
 }
 
 /* ==================== FILTERS CONTAINER ==================== */
 .filtersContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC16);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -75,11 +85,11 @@
   min-width: 150px;
   height: 40px;
   padding: 0 12px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-right: none;
   border-radius: 10px 0 0 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -89,32 +99,32 @@
 
 .searchTypeSelect:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .searchInput {
   flex: 1;
   height: 40px;
   padding: 0 15px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 0 10px 10px 0;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   transition: all 0.3s ease;
   min-width: 0;
 }
 
 .searchInput::placeholder {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 .searchInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
-  border-left: 1px solid var(--accent-end);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
+  border-left: 1px solid var(--TC5);
 }
 
 /* ── Status filter group ── */
@@ -127,10 +137,10 @@
   width: 100%;
   height: 40px;
   padding: 10px 15px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   transition: all 0.3s ease;
   cursor: pointer;
@@ -138,8 +148,8 @@
 
 .filterInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .filterActions {
@@ -155,8 +165,8 @@
   gap: 8px;
   height: 40px;
   padding: 0 20px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   font-weight: 600;
   font-size: 0.85rem;
   border: none;
@@ -164,12 +174,12 @@
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .searchButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 .clearButton {
@@ -178,8 +188,8 @@
   gap: 8px;
   height: 40px;
   padding: 0 20px;
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--TC13);
+  color: var(--TC15);
   font-weight: 600;
   font-size: 0.85rem;
   border: none;
@@ -190,7 +200,7 @@
 }
 
 .clearButton:hover {
-  background: #cbd5e1;
+  background: var(--TC8);
   transform: translateY(-2px);
 }
 
@@ -200,8 +210,8 @@
   gap: 8px;
   height: 40px;
   padding: 0 20px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-weight: 700;
   font-size: 0.85rem;
   border: none;
@@ -209,12 +219,12 @@
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .addConfigBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 /* ==================== TABLE SECTION ==================== */
@@ -227,13 +237,13 @@
 
 /* ==================== TABLE CONTAINER ==================== */
 .chargeConfigTableContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 13px 38px var(--TC16);
+  border: 1px solid var(--TC16);
 }
 
 .chargeConfigTable {
@@ -245,8 +255,8 @@
 .chargeConfigTable th {
   text-align: left;
   padding: 12px 17px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   font-weight: 600;
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -259,8 +269,8 @@
 
 .chargeConfigTable td {
   padding: 6px 17px;
-  border-bottom: 1px solid #e2e8f0;
-  color: var(--text-dark);
+  border-bottom: 1px solid var(--TC13);
+  color: var(--TC9);
   font-size: 0.87rem;
   vertical-align: middle;
 }
@@ -272,18 +282,18 @@
 }
 
 .chargeConfigTable tbody tr:nth-child(even) {
-  background-color: #d5e6ec;
+  background-color: var(--TC18);
 }
 
 .chargeConfigTable tbody tr:hover {
-  background-color: rgba(48, 178, 181, 0.08) !important;
+  background-color: var(--TC18) !important;
   transition: background-color 0.25s ease;
 }
 
 .chargeConfigNoData {
   text-align: center;
   padding: 60px 20px;
-  color: #64748b;
+  color: var(--TC12);
   font-size: 1rem;
 }
 
@@ -291,12 +301,12 @@
 .chargeCodeBadge {
   display: inline-block;
   padding: 4px 12px;
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.1), rgba(48, 178, 181, 0.1));
-  border: 1px solid rgba(34, 43, 108, 0.2);
+  background: linear-gradient(135deg, var(--TC16), var(--TC18));
+  border: 1px solid var(--TC16);
   border-radius: 6px;
   font-weight: 700;
   font-size: 0.75rem;
-  color: var(--primary-start);
+  color: var(--TC1);
   letter-spacing: 0.5px;
 }
 
@@ -307,46 +317,45 @@
 }
 
 .chargeIcon {
-  color: var(--accent-start);
+  color: var(--TC4);
   flex-shrink: 0;
 }
 
+/* chargeName — same style as WorkShift .clinicName */
 .chargeName {
-  font-weight: 600;
-  color: var(--text-dark);
+  font-weight: 700;
+  color: var(--TC9);
+  opacity: 0.9;
+  font-size: 0.87rem;
 }
 
 .amountText {
   font-weight: 700;
-  color: #059669;
+  color: var(--TC10);
   font-size: 0.9rem;
 }
 
 .amountText.total {
-  color: var(--primary-start);
+  color: var(--TC1);
   font-size: 0.95rem;
 }
 
+/* taxBadge → plain text, no badge styling */
 .taxBadge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 6px;
+  font-size: 0.82rem;
   font-weight: 600;
-  font-size: 0.75rem;
+  color: var(--TC9);
 }
 
 .taxBadge.cgst {
-  background: rgba(234, 179, 8, 0.15);
-  color: #854d0e;
-  border: 1px solid rgba(234, 179, 8, 0.3);
+  color: var(--TC9);
 }
 
 .taxBadge.sgst {
-  background: rgba(249, 115, 22, 0.15);
-  color: #9a3412;
-  border: 1px solid rgba(249, 115, 22, 0.3);
+  color: var(--TC9);
 }
 
+/* statusBadge — same pattern as WorkShift */
 .statusBadge {
   padding: 5px 12px;
   border-radius: 26px;
@@ -357,21 +366,21 @@
 }
 
 .statusBadge.active {
-  background: rgba(34, 197, 94, 0.15);
-  color: #166534;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
 }
 
 .statusBadge.deleted {
-  background: rgba(239, 68, 68, 0.15);
-  color: #991b1b;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
 }
 
 /* ==================== VIEW DETAILS BUTTON ==================== */
 .chargeConfigDetailsBtn {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   border: none;
   padding: 7px 15px;
   font-size: 0.75rem;
@@ -380,7 +389,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 3px 10px var(--TC17);
   position: relative;
   overflow: hidden;
   z-index: 1;
@@ -393,7 +402,7 @@
   left: 50%;
   width: 0;
   height: 0;
-  background: rgba(48, 178, 181, 0.35);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -408,7 +417,7 @@
 
 .chargeConfigDetailsBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+  box-shadow: 0 5px 17px var(--TC18);
 }
 
 .chargeConfigDetailsBtn:active {
@@ -419,7 +428,7 @@
 .detailModalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--TC16);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -430,7 +439,7 @@
 }
 
 .detailModalContent {
-  background: white;
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-width: 860px;
@@ -438,14 +447,15 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 70px var(--TC16);
   animation: slideUp 0.4s ease;
 }
 
+/* detailModalHeader — same style as WorkShift */
 .detailModalHeader {
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -455,23 +465,37 @@
 .detailHeaderContent { flex: 1; }
 
 .detailHeaderContent h2 {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
 }
 
+/* addModalHeaderCard — same style as WorkShift */
 .addModalHeaderCard {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
+}
+
+.clinicInfoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC6);
+  opacity: 0.9;
+}
+
+.clinicInfoText {
+  display: flex;
+  flex-direction: column;
 }
 
 .clinicInfoName {
@@ -480,7 +504,7 @@
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -491,15 +515,15 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC13);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
 
 .detailCloseBtn {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border: none;
-  color: white;
+  color: var(--TC6);
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -514,7 +538,7 @@
 }
 
 .detailCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
@@ -530,28 +554,28 @@
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
   padding: 24px 28px;
-  background: linear-gradient(135deg, rgba(240, 247, 255, 0.5), rgba(230, 242, 255, 0.5));
+  background-color: var(--TC16);
   flex: 1;
 }
 
 .infoCard {
-  background: white;
+  background: var(--TC6);
   border-radius: 12px;
   padding: 18px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  box-shadow: 0 5px 17px var(--TC16);
 }
 
 .infoHeader {
   margin-bottom: 14px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
+  border-bottom: 2px solid var(--TC18);
 }
 
 .infoHeader h3 {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 .infoContent {
@@ -565,14 +589,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(34, 43, 108, 0.06);
+  border-bottom: 1px solid var(--TC16);
 }
 
 .infoRow:last-child { border-bottom: none; }
 
 .infoLabel {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 600;
   flex-shrink: 0;
   margin-right: 12px;
@@ -580,19 +604,19 @@
 
 .infoValue {
   font-size: 0.85rem;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-weight: 600;
   text-align: right;
   word-break: break-word;
 }
 
 .infoAmountGreen {
-  color: #059669;
+  color: var(--TC10);
   font-size: 0.95rem;
 }
 
 .infoAmountTotal {
-  color: var(--primary-start);
+  color: var(--TC1);
   font-size: 0.95rem;
 }
 
@@ -602,8 +626,8 @@
   align-items: center;
   gap: 12px;
   padding: 18px 28px;
-  border-top: 2px solid rgba(34, 43, 108, 0.1);
-  background: #f8fafc;
+  border-top: 2px solid var(--TC16);
+  background: var(--TC6);
 }
 
 /* ==================== PAGINATION BAR ==================== */
@@ -612,18 +636,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: white;
+  background: var(--TC6);
   border-radius: 14px;
   padding: 10px 20px;
   margin-top: 14px;
-  box-shadow: 0 4px 14px rgba(34,43,108,0.08);
-  border: 1px solid rgba(34,43,108,0.1);
+  box-shadow: 0 4px 14px var(--TC16);
+  border: 1px solid var(--TC16);
   gap: 16px;
 }
 
 .paginationInfo {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -637,7 +661,7 @@
 .paginationLabel {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
   margin-right: 4px;
   white-space: nowrap;
 }
@@ -648,10 +672,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 8px;
-  color: var(--primary-start);
+  color: var(--TC1);
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
@@ -660,11 +684,11 @@
 }
 
 .pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  border-color: var(--accent-end);
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(32,125,156,0.3);
+  box-shadow: 0 3px 8px var(--TC17);
 }
 
 .pageBtn:disabled {
@@ -678,24 +702,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   font-size: 0.82rem;
   font-weight: 700;
   border-radius: 8px;
   padding: 0 8px;
-  box-shadow: 0 3px 8px rgba(32,125,156,0.25);
+  box-shadow: 0 3px 8px var(--TC17);
 }
 
 .pageSizeInfo {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 500;
   white-space: nowrap;
 }
 
 .pageSizeInfo strong {
-  color: var(--primary-start);
+  color: var(--TC1);
   font-weight: 700;
 }
 
@@ -714,24 +738,26 @@
 }
 
 .chargeConfigModal {
-  background: var(--glass-bg);
+  background: var(--TC6);
   border-radius: 15px;
+  border: 2px solid var(--TC16);
   width: 100%;
   max-width: 680px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 17px 43px var(--TC16), inset 0 1px 2px var(--TC6);
+  backdrop-filter: blur(14px);
   animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .chargeConfigModalHeader {
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid var(--TC16);
   gap: 20px;
 }
 
@@ -740,7 +766,7 @@
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--text-light);
+  color: var(--TC6);
 }
 
 .headerRight {
@@ -750,9 +776,9 @@
 }
 
 .chargeConfigModalClose {
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--TC18);
   border: none;
-  color: white;
+  color: var(--TC6);
   width: 42px;
   height: 42px;
   border-radius: 12px;
@@ -766,7 +792,7 @@
 }
 
 .chargeConfigModalClose:hover {
-  background: rgba(255, 255, 255, 0.38);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
@@ -783,40 +809,41 @@
 .formGroup label {
   display: block;
   margin-bottom: 6px;
-  color: var(--primary-start);
+  color: var(--TC1);
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.3px;
 }
 
-.required { color: #dc2626; font-weight: 700; }
+.required { color: var(--TC14); font-weight: 700; }
 
 .formGroup input,
 .formGroup select,
 .formGroup textarea {
   width: 100%;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 2px solid rgba(34, 43, 108, 0.2);
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
   border-radius: 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.9rem;
   font-weight: 500;
   transition: all 0.3s ease;
   font-family: inherit;
   box-sizing: border-box;
+  box-shadow: inset 0 1px 3px var(--TC16);
 }
 
 .formGroup input::placeholder,
-.formGroup textarea::placeholder { color: rgba(30, 41, 59, 0.4); }
+.formGroup textarea::placeholder { color: var(--TC12); }
 
 .formGroup input:focus,
 .formGroup select:focus,
 .formGroup textarea:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15);
-  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18), inset 0 1px 3px var(--TC16);
+  background: var(--TC6);
 }
 
 .formGroup input:disabled,
@@ -828,12 +855,12 @@
 
 .validationMsg {
   font-size: 0.75rem;
-  color: red;
+  color: var(--TC14);
   margin-top: 2px;
 }
 
 .inputHint {
-  color: #9ca3af;
+  color: var(--TC12);
   font-size: 0.72rem;
   margin-top: 2px;
   display: block;
@@ -843,31 +870,31 @@
   padding: 12px 16px;
   border-radius: 10px;
   margin-bottom: 16px;
-  border: 2px solid rgba(239, 68, 68, 0.3);
+  border: 2px solid var(--TC16);
   font-size: 0.85rem;
   font-weight: 600;
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
-  color: #dc2626;
+  background: var(--TC16);
+  color: var(--TC14);
 }
 
 .formSuccess {
   padding: 12px 16px;
   border-radius: 10px;
   margin-bottom: 16px;
-  border: 2px solid rgba(34, 197, 94, 0.3);
+  border: 2px solid var(--TC18);
   font-size: 0.85rem;
   font-weight: 600;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.2));
-  color: #059669;
+  background: var(--TC18);
+  color: var(--TC10);
 }
 
 .formIncompleteHint {
   margin-top: 12px;
   padding: 10px 14px;
   border-radius: 8px;
-  background: rgba(234, 179, 8, 0.12);
-  border: 1px solid rgba(234, 179, 8, 0.35);
-  color: #92400e;
+  background: var(--TC16);
+  border: 1px solid var(--TC17);
+  color: var(--TC9);
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -877,13 +904,13 @@
   justify-content: flex-end;
   gap: 14px;
   padding: 20px 27px;
-  border-top: 2px solid rgba(34, 43, 108, 0.15);
+  border-top: 2px solid var(--TC16);
 }
 
 /* ==================== BUTTONS ==================== */
 .btnCancel {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   border: none;
   border-radius: 14px;
   height: 40px;
@@ -894,7 +921,7 @@
   position: relative;
   overflow: hidden;
   transition: all 0.4s ease;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 7px 24px var(--TC17);
   white-space: nowrap;
   z-index: 0;
 }
@@ -903,18 +930,30 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
   opacity: 0;
   transition: opacity 0.4s ease;
   z-index: -1;
 }
 
+.btnCancel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, var(--TC18) 50%, transparent 60%);
+  background-size: 200% 100%;
+  background-position: -100% 0;
+  transition: background-position 0.5s ease;
+  z-index: -1;
+}
+
 .btnCancel:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
+  box-shadow: 0 14px 34px var(--TC17);
 }
 
 .btnCancel:hover::before { opacity: 1; }
+.btnCancel:hover::after  { background-position: 200% 0; }
 
 .btnCancel:active { transform: translateY(-1px); }
 
@@ -934,9 +973,9 @@
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: linear-gradient(135deg, #dc2626, #ef4444);
-  color: var(--text-light);
-  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC16);
   white-space: nowrap;
   position: relative;
   overflow: hidden;
@@ -950,7 +989,7 @@
   left: 50%;
   width: 0;
   height: 0;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -965,12 +1004,12 @@
 
 .btnDelete:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.45);
+  box-shadow: 0 8px 20px var(--TC16);
 }
 
 .btnDelete:active { transform: translateY(-1px); }
 
-/* Update (from view popup) */
+/* Update */
 .btnUpdate {
   height: 40px;
   padding: 0 20px;
@@ -980,9 +1019,9 @@
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
   white-space: nowrap;
   position: relative;
   overflow: hidden;
@@ -996,7 +1035,7 @@
   left: 50%;
   width: 0;
   height: 0;
-  background: rgba(48, 178, 181, 0.35);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -1011,12 +1050,12 @@
 
 .btnUpdate:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 .btnUpdate:active { transform: translateY(-1px); }
 
-/* Submit (Add / Edit form) */
+/* Submit */
 .btnSubmit {
   height: 40px;
   padding: 0 28px;
@@ -1026,14 +1065,14 @@
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.35);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .btnSubmit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(32, 125, 156, 0.45);
+  box-shadow: 0 8px 24px var(--TC17);
 }
 
 .btnSubmit:active { transform: translateY(-1px); }
@@ -1046,147 +1085,232 @@
 
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .chargeConfigWrapper {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  background: linear-gradient(135deg, var(--TC9) 0%, var(--TC7) 100%);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .filtersContainer {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .searchTypeSelect {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .searchInput {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .searchInput:focus {
-  border-left: 1px solid var(--accent-end);
+  border-left: 1px solid var(--TC5);
 }
 
 :global(.dark-mode) .filterInput {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .clearButton {
-  background: #334155;
-  color: #e2e8f0;
+  background: var(--TC7);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .clearButton:hover { background: #475569; }
+:global(.dark-mode) .clearButton:hover { background: var(--TC15); }
 
 :global(.dark-mode) .chargeConfigTableContainer {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .chargeConfigTable th {
-  background: linear-gradient(135deg, #334155, #475569);
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
 }
 
 :global(.dark-mode) .chargeConfigTable td {
-  border-bottom-color: #475569;
-  color: #e2e8f0;
+  border-bottom-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .chargeConfigTable tbody tr:nth-child(even) {
-  background-color: #334155;
+  background-color: var(--TC7);
+}
+
+:global(.dark-mode) .chargeCodeBadge {
+  background: linear-gradient(135deg, var(--TC16), var(--TC18));
+  border: 1px solid var(--TC16);
+  color: var(--TC6);
+}
+
+/* chargeName dark mode — same as WorkShift .clinicName dark */
+:global(.dark-mode) .chargeName {
+  font-weight: 500;
+  color: var(--TC6);
+  font-size: 0.87rem;
+}
+
+/* taxBadge dark — plain text */
+:global(.dark-mode) .taxBadge {
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .taxBadge.cgst {
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .taxBadge.sgst {
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .amountText {
+  font-weight: 700;
+  color: var(--TC8);
+  font-size: 0.9rem;
+}
+
+/* statusBadge dark — same as WorkShift */
+:global(.dark-mode) .statusBadge.active {
+  background: var(--TC18);
+  color: var(--TC5);
+  border: 1px solid var(--TC16);
+}
+
+:global(.dark-mode) .statusBadge.deleted {
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
 }
 
 :global(.dark-mode) .chargeConfigModal {
-  background: rgba(30, 41, 59, 0.95);
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
+
+:global(.dark-mode) .chargeConfigModalHeader { background: linear-gradient(135deg, var(--TC7), var(--TC15)); }
+
 
 :global(.dark-mode) .chargeConfigModalHeader h2 {
-  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
+  background:var(--TC6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-:global(.dark-mode) .formGroup label { color: var(--accent-end); }
+:global(.dark-mode) .formGroup label { color: var(--TC5); }
 
 :global(.dark-mode) .formGroup input,
 :global(.dark-mode) .formGroup select,
 :global(.dark-mode) .formGroup textarea {
-  background: #1e293b;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .chargeName { color: #e2e8f0; }
+:global(.dark-mode) .formGroup input::placeholder,
+:global(.dark-mode) .formGroup textarea::placeholder { color: var(--TC12); }
 
-:global(.dark-mode) .statusBadge.active { color: #9cc14d; }
-
-:global(.dark-mode) .detailModalContent  { background: #1e293b; }
-
-:global(.dark-mode) .detailModalFooter {
-  background: #0f172a;
-  border-top-color: rgba(71, 85, 105, 0.5);
+:global(.dark-mode) .formGroup input:focus,
+:global(.dark-mode) .formGroup select:focus,
+:global(.dark-mode) .formGroup textarea:focus {
+  border-color: var(--TC5);
+  background: var(--TC9);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
+
+:global(.dark-mode) .formGroup select option {
+  background: var(--TC9);
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .chargeConfigModalFooter {
+  border-top-color: var(--TC15);
+}
+
+/* detailModalContent dark */
+:global(.dark-mode) .detailModalContent {
+  background: var(--TC9);
+  box-shadow: 0 25px 70px var(--TC16);
+}
+
+:global(.dark-mode) .detailModalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
+}
+
+/* addModalHeaderCard dark — same as WorkShift */
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+}
+
+:global(.dark-mode) .detailModalBody { background: var(--TC9); }
 
 :global(.dark-mode) .infoSection {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(30, 41, 59, 0.5));
+  background-color: var(--TC7);
+  opacity: 0.7;
 }
 
 :global(.dark-mode) .infoCard {
-  background: #1e293b;
-  box-shadow: 0 5px 17px rgba(0, 0, 0, 0.25);
+  background: var(--TC9);
+  box-shadow: 0 5px 17px var(--TC16);
 }
 
-:global(.dark-mode) .infoHeader h3 { color: var(--accent-end); }
+:global(.dark-mode) .infoHeader { border-bottom-color: var(--TC18); }
 
-:global(.dark-mode) .infoLabel { color: #94a3b8; }
+:global(.dark-mode) .infoHeader h3 { color: var(--TC5); }
 
-:global(.dark-mode) .infoValue { color: #e2e8f0; }
+:global(.dark-mode) .infoLabel { color: var(--TC12); }
 
-:global(.dark-mode) .infoRow { border-bottom-color: rgba(71, 85, 105, 0.4); }
+:global(.dark-mode) .infoValue { color: var(--TC13); }
 
-:global(.dark-mode) .chargeConfigModalFooter {
-  border-top-color: rgba(71, 85, 105, 0.5);
+:global(.dark-mode) .infoRow { border-bottom-color: var(--TC15); }
+
+:global(.dark-mode) .detailModalFooter {
+  background: var(--TC9);
+  border-top-color: var(--TC15);
 }
 
 /* ==================== DARK MODE — PAGINATION BAR ==================== */
 :global(.dark-mode) .paginationBar {
-  background: #1e293b;
-  border-color: rgba(71, 85, 105, 0.4);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
-:global(.dark-mode) .paginationInfo {
-  color: #94a3b8;
-}
+:global(.dark-mode) .paginationInfo { color: var(--TC12); }
 
-:global(.dark-mode) .paginationLabel {
-  color: var(--accent-end);
-}
+:global(.dark-mode) .paginationLabel { color: var(--TC5); }
 
 :global(.dark-mode) .pageBtn {
-  background: #0f172a;
-  border-color: #475569;
-  color: var(--accent-end);
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  border-color: var(--accent-end);
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
 }
 
-:global(.dark-mode) .pageSizeInfo {
-  color: #94a3b8;
+:global(.dark-mode) .pageSizeInfo { color: var(--TC12); }
+
+:global(.dark-mode) .pageSizeInfo strong { color: var(--TC5); }
+
+:global(.dark-mode) .btnCancel,
+:global(.dark-mode) .btnDelete {
+  background: linear-gradient(135deg, var(--TC2));
+  color: var(--TC6);
+  border-color: var(--TC2);
 }
 
-:global(.dark-mode) .pageSizeInfo strong {
-  color: var(--accent-end);
+:global(.dark-mode) .btnCancel:hover,
+:global(.dark-mode) .btnDelete:hover {
+  background: var(--TC14);
+  transform: translateY(-2px);
 }
 
 /* ==================== RESPONSIVE ==================== */
@@ -1195,24 +1319,22 @@
 }
 
 @media (max-width: 768px) {
-  .filtersGrid {
-    grid-template-columns: 1fr;
-  }
+  .filtersGrid { grid-template-columns: 1fr; }
 
   .searchGroup { flex-direction: column; }
 
   .searchTypeSelect {
     border-radius: 10px;
-    border-right: 1px solid #cbd5e1;
+    border-right: 1px solid var(--TC8);
   }
 
   .searchInput {
     border-radius: 10px;
-    border-left: 1px solid #cbd5e1;
+    border-left: 1px solid var(--TC8);
   }
 
   .searchInput:focus {
-    border-left: 1px solid var(--accent-end);
+    border-left: 1px solid var(--TC5);
   }
 
   .filterActions { flex-direction: column; }
@@ -1255,9 +1377,7 @@
     padding: 12px 16px;
   }
 
-  .paginationControls {
-    align-self: center;
-  }
+  .paginationControls { align-self: center; }
 }
 
 @media (max-width: 480px) {
@@ -1298,9 +1418,7 @@
   }
 
   .paginationInfo,
-  .pageSizeInfo {
-    font-size: 0.75rem;
-  }
+  .pageSizeInfo { font-size: 0.75rem; }
 
   .pageBtn {
     width: 30px;

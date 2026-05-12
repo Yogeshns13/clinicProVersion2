@@ -1,15 +1,25 @@
-/* src/components/ClinicList.module.css */
+/* src/components/DepartmentList.module.css */
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
-  --glass-bg: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(255, 255, 255, 0.4);
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -32,10 +42,10 @@
 /* ==================== MAIN WRAPPER ==================== */
 .clinicListWrapper {
   padding: 20px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  background: linear-gradient(135deg, var(--TC6) 0%, var(--TC13)100%);
   height: 100vh;
   overflow: hidden;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   display: flex;
   flex-direction: column;
@@ -44,12 +54,12 @@
 
 /* ==================== FILTERS CONTAINER ==================== */
 .filtersContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC16);
   overflow: visible;
   display: flex;
   flex-direction: column;
@@ -78,10 +88,10 @@
   min-width: 140px;
   height: 40px;
   padding: 0 12px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 10px 0 0 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -91,33 +101,33 @@
 
 .searchTypeSelect:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .searchInput {
   flex: 1;
   height: 40px;
   padding: 0 15px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-left: none;
   border-radius: 0 10px 10px 0;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   transition: all 0.3s ease;
   min-width: 0;
 }
 
 .searchInput::placeholder {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 .searchInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
-  border-left: 1px solid var(--accent-end);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
+  border-left: 1px solid var(--TC5);
 }
 
 .filterActions {
@@ -132,10 +142,10 @@
   width: 200px;
   height: 40px;
   padding: 0 12px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -143,8 +153,8 @@
 
 .statusFilterSelect:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .searchButton {
@@ -153,8 +163,8 @@
   gap: 8px;
   height: 40px;
   padding: 0 20px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   font-weight: 600;
   font-size: 0.85rem;
   border: none;
@@ -162,12 +172,12 @@
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .searchButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 .clearButton {
@@ -176,8 +186,8 @@
   gap: 8px;
   height: 40px;
   padding: 0 20px;
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--TC13);
+  color: var(--TC15);
   font-weight: 600;
   font-size: 0.85rem;
   border: none;
@@ -188,7 +198,7 @@
 }
 
 .clearButton:hover {
-  background: #cbd5e1;
+  background: var(--TC8);
   transform: translateY(-2px);
 }
 
@@ -198,8 +208,8 @@
   gap: 8px;
   height: 40px;
   padding: 0 20px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-weight: 700;
   font-size: 0.85rem;
   border: none;
@@ -207,12 +217,12 @@
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .addClinicBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 /* ==================== TABLE SECTION ==================== */
@@ -225,13 +235,13 @@
 
 /* ==================== TABLE CONTAINER ==================== */
 .clinicTableContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 13px 38px var(--TC16);
+  border: 1px solid var(--TC16);
 }
 
 .updateEmployeeContainer {
@@ -248,11 +258,11 @@
 .clinicTable th {
   text-align: left;
   padding: 12px 17px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
   position: sticky;
   top: 0;
   z-index: 2;
-  color: var(--text-light);
+  color: var(--TC6);
   font-weight: 600;
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -262,8 +272,8 @@
 
 .clinicTable td {
   padding: 6px 17px;
-  border-bottom: 1px solid #e2e8f0;
-  color: var(--text-dark);
+  border-bottom: 1px solid var(--TC13);
+  color: var(--TC9);
   font-size: 0.75rem;
   vertical-align: middle;
 }
@@ -275,11 +285,11 @@
 }
 
 .clinicTable tbody tr:nth-child(even) {
-  background-color: #d5e6ec;
+  background-color: var(--TC18);
 }
 
 .clinicTable tbody tr:hover {
-  background-color: rgba(48, 178, 181, 0.08) !important;
+  background-color: var(--TC18) !important;
   transition: background-color 0.25s ease;
 }
 
@@ -294,26 +304,26 @@
   width: 33px;
   height: 33px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-weight: bold;
   font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 3px 12px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 3px 12px var(--TC17);
   flex-shrink: 0;
 }
 
 .clinicName {
   font-weight: 700;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.87rem;
 }
 
 .clinicType {
   font-size: 0.72rem;
-  color: #64748b;
+  color: var(--TC12);
   margin-top: 2px;
 }
 
@@ -327,10 +337,10 @@
   letter-spacing: 0.7px;
 }
 
-.statusBadge.active { color: #166534; }
+.statusBadge.active { color: var(--TC10); }
 
 .statusBadge.inactive {
-  color: #991b1b;
+  color: var(--TC11);
 }
 
 .statusBadge.large {
@@ -339,15 +349,15 @@
 }
 
 .active {
-  background: rgba(34, 197, 94, 0.15);
-  color: #166534;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC10);
+  border: 1px solid var(--TC16);
 }
 
 .inactive {
-  background: rgba(239, 68, 68, 0.15);  
-  color: #991b1b;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--TC16);
+  color: var(--TC11);
+  border: 1px solid var(--TC16);
 }
 
 .large {
@@ -361,18 +371,18 @@
 .btnSubmit {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   border: none;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 3px 10px var(--TC17);
   z-index: 1;
 }
 
 .clinicDetailsBtn {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
   padding: 7px 15px;
   font-size: 0.75rem;
   border-radius: 9px;
@@ -384,7 +394,7 @@
   padding: 10px 24px;
   font-size: 0.85rem;
   border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .clinicModalFooter .btnUpdate {
@@ -401,7 +411,7 @@
   left: 50%;
   width: 0;
   height: 0;
-  background: rgba(48, 178, 181, 0.35);
+  background: var(--TC18);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.6s ease, height 0.6s ease;
@@ -420,7 +430,7 @@
 .btnUpdate:hover,
 .btnSubmit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(48, 178, 181, 0.45);
+  box-shadow: 0 5px 17px var(--TC18);
 }
 
 .clinicDetailsBtn:active,
@@ -429,8 +439,15 @@
   transform: translateY(-1px);
 }
 
+.btnSubmit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .btnSubmitDisabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -445,20 +462,20 @@
 
 .btnHold {
   padding: 10px 31px;
-  background: linear-gradient(135deg, var(--primary-start));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC1));
+  color: var(--TC6);
   border: none;
   border-radius: 26px;
 }
 
 .btnHold:hover {
-  background: rgba(239, 68, 68);
+  background: var(--TC14);
   transform: translateY(-2px);
 }
 
 .btnCancel {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   border: none;
   border-radius: 14px;
   height: 40px;
@@ -469,7 +486,7 @@
   position: relative;
   overflow: hidden;
   transition: all 0.4s ease;
-  box-shadow: 0 7px 24px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 7px 24px var(--TC17);
   white-space: nowrap;
   z-index: 0;
 }
@@ -478,7 +495,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  background: linear-gradient(135deg, var(--TC11), var(--TC14));
   opacity: 0;
   transition: opacity 0.4s ease;
   z-index: -1;
@@ -488,7 +505,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
+  background: linear-gradient(105deg, transparent 40%, var(--TC18) 50%, transparent 60%);
   background-size: 200% 100%;
   background-position: -100% 0;
   transition: background-position 0.5s ease;
@@ -497,12 +514,18 @@
 
 .btnCancel:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 34px rgba(231, 76, 60, 0.45);
+  box-shadow: 0 14px 34px var(--TC17);
 }
 
 .btnCancel:hover::before { opacity: 1; }
 
 .btnCancel:hover::after { background-position: 200% 0; }
+
+.btnCancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
 
 .btnIcon { margin-right: 5px; }
 
@@ -529,7 +552,7 @@
   max-width: 578px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 17px 43px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 17px 43px var(--TC16), inset 0 1px 2px var(--TC6);
   backdrop-filter: blur(14px);
   animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -559,22 +582,22 @@
 .clinicModalHeader h2 {
   font-size: 1.23rem;
   font-weight: 800;
-  color: var(--text-dark);
+  color: var(--TC9);
   margin: 0;
   letter-spacing: -0.3px;
-  background: linear-gradient(135deg, var(--primary-start), var(--accent-end));
+  background: linear-gradient(135deg, var(--TC1), var(--TC5));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .clinicModalClose {
-  background: rgba(100, 116, 139, 0.15);
-  border: 2px solid rgba(100, 116, 139, 0.2);
+  background: var(--TC16);
+  border: 2px solid var(--TC16);
   width: 29px;
   height: 29px;
   border-radius: 50%;
-  color: #64748b;
+  color: var(--TC12);
   font-size: 17px;
   cursor: pointer;
   display: flex;
@@ -584,16 +607,16 @@
 }
 
 .clinicModalClose:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #dc2626;
+  background: var(--TC18);
+  border-color: var(--TC18);
+  color: var(--TC14);
   transform: rotate(90deg);
 }
 
 .clinicModalBody {
   padding: 0 29px 23px;
-  background-color: #f8fafc;
-  color: var(--text-dark);
+  background-color: var(--TC6);
+  color: var(--TC9);
 }
 
 .clinicModalFooter {
@@ -601,8 +624,8 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 17px 23px;
-  border-top: 2px solid rgba(34, 43, 108, 0.15);
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+  border-top: 2px solid var(--TC16);
+  background: linear-gradient(to bottom, var(--TC6), var(--TC13));
 }
 
 .updateEmployeeFooter {
@@ -610,8 +633,8 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 17px 23px;
-  border-top: 2px solid rgba(34, 43, 108, 0.15);
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.5));
+  border-top: 2px solid var(--TC16);
+  background: linear-gradient(to bottom, var(--TC6), var(--TC13));
 }
 
 /* ==================== CLINIC INFO GRID ==================== */
@@ -624,7 +647,8 @@
 
 .infoItem label {
   display: block;
-  color: rgba(34, 43, 108, 0.7);
+  color: var(--TC1);
+  opacity: 0.7;
   font-size: 0.6rem;
   margin-bottom: 4px;
   font-weight: 600;
@@ -633,7 +657,7 @@
 }
 
 .infoItem p {
-  color: var(--text-dark);
+  color: var(--TC9);
   font-weight: 700;
   margin: 0;
   font-size: 0.76rem;
@@ -645,14 +669,14 @@
   grid-template-columns: repeat(auto-fit, minmax(159px, 1fr));
   gap: 12px;
   padding: 14px;
-  background: linear-gradient(135deg, rgba(34, 43, 108, 0.08), rgba(48, 178, 181, 0.08));
+  background: linear-gradient(135deg, var(--TC16), var(--TC18));
   border-radius: 13px;
-  border: 2px solid rgba(34, 43, 108, 0.15);
+  border: 2px solid var(--TC16);
   font-size: 0.66rem;
-  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 4px var(--TC16);
 }
 
-.clinicExtraInfo strong { color: var(--accent-end); font-weight: 700; }
+.clinicExtraInfo strong { color: var(--TC5); font-weight: 700; }
 
 /* ==================== FORMS ==================== */
 .formGrid {
@@ -667,8 +691,8 @@
   margin: 14px 0 8px;
   font-size: 0.9rem;
   font-weight: 700;
-  color: var(--primary-start);
-  border-bottom: 2px solid var(--accent-end);
+  color: var(--TC1);
+  border-bottom: 2px solid var(--TC5);
   padding-bottom: 5px;
 }
 
@@ -680,41 +704,41 @@
 .formGroup label {
   display: block;
   margin-bottom: 4px;
-  color: var(--primary-start);
+  color: var(--TC1);
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.17px;
 }
 
-.formGroup .required { color: #dc2626; font-weight: 700; }
+.formGroup .required { color: var(--TC14); font-weight: 700; }
 
 .formGroup input,
 .formGroup textarea,
 .formGroup select {
   width: 100%;
   padding: 9px 12px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 2px solid rgba(34, 43, 108, 0.2);
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
   border-radius: 9px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.8rem;
   font-weight: 500;
   transition: all 0.3s ease;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 3px var(--TC16);
 }
 
 .fullWidth { grid-column: 1 / -1; }
 
 .formGroup input::placeholder,
-.formGroup textarea::placeholder { color: rgba(30, 41, 59, 0.4); }
+.formGroup textarea::placeholder { color: var(--TC12); }
 
 .formGroup input:focus,
 .formGroup textarea:focus,
 .formGroup select:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.15), inset 0 1px 3px rgba(0, 0, 0, 0.05);
-  background: rgba(255, 255, 255, 0.9);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18), inset 0 1px 3px var(--TC16);
+  background: var(--TC6);
 }
 
 .formError,
@@ -726,28 +750,28 @@
   border: 2px solid;
   font-size: 0.65rem;
   font-weight: 600;
-  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 9px var(--TC16);
 }
 
 .formError {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.2));
-  color: #dc2626;
-  border-color: rgba(239, 68, 68, 0.3);
+  background: var(--TC16);
+  color: var(--TC14);
+  border-color: var(--TC16);
 }
 
 .formSuccess {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.2));
-  color: #059669;
-  border-color: rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC10);
+  border-color: var(--TC18);
 }
 
-.required { color: #dc2626; font-weight: 700; }
+.required { color: var(--TC14); font-weight: 700; }
 
 /* ==================== DETAILS MODAL ==================== */
 .detailModalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--TC16);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -758,22 +782,22 @@
 }
 
 .detailModalContent {
-  background: white;
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
-  max-width: 860px;
-  max-height: 90vh;
+  max-width: 580px;
+  max-height: 75vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 70px var(--TC16);
   animation: slideUp 0.4s ease;
 }
 
 .detailModalHeader {
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -791,33 +815,46 @@
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  margin-top: 4px;
 }
 
 .workIdBadge {
   display: inline-block;
   padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--TC18);
   border-radius: 6px;
   font-size: 0.8rem;
   font-weight: 600;
   backdrop-filter: blur(10px);
-  color: var(--text-light);
+  color: var(--TC6);
+}
+
+.stepBadge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: var(--TC16);
+  border: 1px solid var(--TC18);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--TC6);
+  letter-spacing: 0.3px;
 }
 
 .activeBadge {
-  background: rgba(22, 163, 74, 0.35) !important;
-  border: 1px solid rgba(22, 163, 74, 0.5);
+  background: var(--TC18) !important;
+  border: 1px solid var(--TC16);
 }
 
 .inactiveBadge {
-  background: rgba(220, 38, 38, 0.35) !important;
-  border: 1px solid rgba(220, 38, 38, 0.5);
+  background: var(--TC16) !important;
+  border: 1px solid var(--TC16);
 }
 
 .detailCloseBtn {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--TC18);
   border: none;
-  color: var(--text-light);
+  color: var(--TC6);
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -832,7 +869,7 @@
 }
 
 .detailCloseBtn:hover {
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--TC17);
   transform: scale(1.08);
 }
 
@@ -848,28 +885,28 @@
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
   padding: 24px 28px;
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--TC16);
   flex: 1;
 }
 
 .infoCard {
-  background: white;
+  background: var(--TC6);
   border-radius: 12px;
   padding: 18px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
+  box-shadow: 0 5px 17px var(--TC16);
 }
 
 .infoHeader {
   margin-bottom: 14px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.2);
+  border-bottom: 2px solid var(--TC18);
 }
 
 .infoHeader h3 {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 .infoContent { display: flex; flex-direction: column; gap: 2px; }
@@ -879,14 +916,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(34, 43, 108, 0.06);
+  border-bottom: 1px solid var(--TC16);
 }
 
 .infoRow:last-child { border-bottom: none; }
 
 .infoLabel {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 600;
   flex-shrink: 0;
   margin-right: 12px;
@@ -894,7 +931,7 @@
 
 .infoValue {
   font-size: 0.85rem;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-weight: 600;
   text-align: right;
   word-break: break-word;
@@ -905,13 +942,13 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 18px 28px;
-  border-top: 2px solid rgba(34, 43, 108, 0.1);
-  background: #f8fafc;
+  border-top: 2px solid var(--TC16);
+  background: var(--TC6);
 }
 
 /* ==================== ADD CLINIC MODAL ==================== */
 .addModalContent {
-  background: white;
+  background: var(--TC6);
   border-radius: 20px;
   width: 100%;
   max-width: 860px;
@@ -919,7 +956,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 70px var(--TC16);
   animation: slideUp 0.4s ease;
 }
 
@@ -928,13 +965,13 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--TC16);
   gap: 0;
 }
 
 .addSection {
   padding: 20px 28px;
-  border-bottom: 1px solid rgba(34, 43, 108, 0.08);
+  border-bottom: 1px solid var(--TC16);
 }
 
 .addSection:last-of-type {
@@ -944,14 +981,14 @@
 .addSectionHeader {
   margin-bottom: 16px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(48, 178, 181, 0.25);
+  border-bottom: 2px solid var(--TC18);
 }
 
 .addSectionHeader h3 {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 .addFormGrid {
@@ -980,7 +1017,7 @@
 .addFormGroup label {
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
 }
 
 .addFormGroup input,
@@ -988,10 +1025,10 @@
 .addFormGroup select {
   width: 100%;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid rgba(34, 43, 108, 0.15);
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
   border-radius: 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -1007,16 +1044,16 @@
 
 .addFormGroup input::placeholder,
 .addFormGroup textarea::placeholder {
-  color: rgba(30, 41, 59, 0.35);
+  color: var(--TC12);
 }
 
 .addFormGroup input:focus,
 .addFormGroup textarea:focus,
 .addFormGroup select:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
-  background: white;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 4px var(--TC18);
+  background: var(--TC6);
 }
 
 .addFormClinicDropdown {
@@ -1029,7 +1066,7 @@
 
 .validationMsg {
   font-size: 0.75rem;
-  color: red;
+  color: var(--TC14);
   margin-top: 2px;
 }
 
@@ -1048,10 +1085,10 @@
 .coordField input {
   width: 100%;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid rgba(34, 43, 108, 0.15);
+  background: var(--TC6);
+  border: 2px solid var(--TC16);
   border-radius: 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -1061,18 +1098,18 @@
 
 .coordField input:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
-  background: white;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 4px var(--TC18);
+  background: var(--TC6);
 }
 
 .coordField input::placeholder {
-  color: rgba(30, 41, 59, 0.35);
+  color: var(--TC12);
 }
 
 .coordHint {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--TC12);
   margin-top: 6px;
   display: block;
 }
@@ -1083,18 +1120,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: white;
+  background: var(--TC6);
   border-radius: 14px;
   padding: 10px 20px;
   margin-top: 14px;
-  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 4px 14px var(--TC16);
+  border: 1px solid var(--TC16);
   gap: 16px;
 }
 
 .paginationInfo {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -1108,7 +1145,7 @@
 .paginationLabel {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
   margin-right: 4px;
   white-space: nowrap;
 }
@@ -1119,10 +1156,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 8px;
-  color: var(--primary-start);
+  color: var(--TC1);
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
@@ -1131,11 +1168,11 @@
 }
 
 .pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  border-color: var(--accent-end);
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 3px 8px var(--TC17);
 }
 
 .pageBtn:disabled {
@@ -1149,24 +1186,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   font-size: 0.82rem;
   font-weight: 700;
   border-radius: 8px;
   padding: 0 8px;
-  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
+  box-shadow: 0 3px 8px var(--TC17);
 }
 
 .pageSizeInfo {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 500;
   white-space: nowrap;
 }
 
 .pageSizeInfo strong {
-  color: var(--primary-start);
+  color: var(--TC12);
   font-weight: 700;
 }
 
@@ -1175,11 +1212,11 @@
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: var(--TC18);
+  border: 1.5px solid var(--TC16);
   border-radius: 14px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 10px var(--TC16);
   transition: background 0.2s ease;
   white-space: nowrap;
 }
@@ -1188,7 +1225,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-light);
+  color: var(--TC6);
   opacity: 0.9;
 }
 
@@ -1203,7 +1240,7 @@
   gap: 12px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
 }
@@ -1214,9 +1251,10 @@
   gap: 8px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--TC6);
   line-height: 1.2;
   letter-spacing: 0.1px;
+  opacity: 0.82;
 }
 
 /* ==================== PROFILE HEADER ==================== */
@@ -1229,15 +1267,15 @@
   padding: 3px;
   border-radius: 50px;
   cursor: pointer;
-  color: white;
+  color: var(--TC6);
   font-size: 0.9rem;
   font-weight: 500;
-  background-color: var(--accent-start);
+  background-color: var(--TC4);
   transition: all 0.2s ease;
 }
 
 .headerProfile:hover {
-  background: var(--accent-end);
+  background: var(--TC5);
   transform: translateY(-1px);
 }
 
@@ -1249,23 +1287,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent-start);
+  background: var(--TC4);
 }
 
-.userIconWrapper svg { color: #ffffff; stroke-width: 2; }
+.userIconWrapper svg { color: var(--TC6); stroke-width: 2; }
 
 .profileDropdown {
   position: absolute;
   top: 100%;
   right: 0;
   margin-top: 8px;
-  background: white;
+  background: var(--TC6);
   border-radius: 10px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 10px 25px var(--TC16);
   min-width: 180px;
   z-index: 100;
   overflow: hidden;
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  border: 1px solid var(--TC16);
 }
 
 .profileDropdownItem {
@@ -1273,17 +1311,17 @@
   align-items: center;
   gap: 10px;
   padding: 10px 16px;
-  color: #1e293b;
+  color: var(--TC9);
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.profileDropdownItem:hover { background: #f1f5f9; }
-.profileDropdownItem svg  { color: #64748b; }
+.profileDropdownItem:hover { background: var(--TC13); }
+.profileDropdownItem svg  { color: var(--TC12); }
 
 .usernameItem {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--TC13);
   font-weight: 600;
 }
 
@@ -1295,18 +1333,18 @@
   height: 80px;
   margin: 0 auto 16px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-size: 2.2rem;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 20px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 6px 20px var(--TC17);
 }
 
-.profileDetailsBody h3 { margin: 0 0 6px; font-size: 1.4rem; color: var(--primary-start); }
-.profileRole           { color: #64748b; font-size: 0.95rem; margin-bottom: 24px; }
+.profileDetailsBody h3 { margin: 0 0 6px; font-size: 1.4rem; color: var(--TC1); }
+.profileRole           { color: var(--TC12); font-size: 0.95rem; margin-bottom: 24px; }
 
 .profileInfoGrid {
   display: grid;
@@ -1318,18 +1356,18 @@
 .profileInfoItem label {
   display: block;
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--TC12);
   margin-bottom: 4px;
   font-weight: 600;
 }
 
-.profileInfoItem p { margin: 0; font-weight: 500; color: #1e293b; }
+.profileInfoItem p { margin: 0; font-weight: 500; color: var(--TC9); }
 
 /* ==================== UTILITY STATES ==================== */
 .clinicNoData {
   text-align: center;
   padding: 68px 17px;
-  color: #64748b;
+  color: var(--TC12);
   font-size: 1.1rem;
 }
 
@@ -1340,10 +1378,10 @@
   justify-content: center;
   min-height: 70vh;
   font-size: 1.3rem;
-  color: #64748b;
+  color: var(--TC12);
 }
 
-.clinicError { color: #ef4444; }
+.clinicError { color: var(--TC14); }
 
 .clinicAddSection { /* keep for compatibility */ }
 
@@ -1359,8 +1397,8 @@
   gap: 6px;
   height: 40px;
   padding: 0 10px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1371,16 +1409,16 @@
 }
 
 .clinicDropdownTrigger:hover {
-  border-color: var(--accent-end);
+  border-color: var(--TC5);
 }
 
 .clinicDropdownTriggerOpen {
-  border-color: var(--accent-end) !important;
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5) !important;
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .clinicDropdownSearchIcon {
-  color: #94a3b8;
+  color: var(--TC12);
   flex-shrink: 0;
 }
 
@@ -1389,7 +1427,7 @@
   border: none;
   outline: none;
   font-size: 0.85rem;
-  color: var(--text-dark);
+  color: var(--TC9);
   background: transparent;
   min-width: 0;
   font-family: inherit;
@@ -1398,7 +1436,7 @@
 .clinicDropdownSelected {
   flex: 1;
   font-size: 0.85rem;
-  color: var(--text-dark);
+  color: var(--TC9);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1408,7 +1446,7 @@
 .clinicDropdownPlaceholder {
   flex: 1;
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--TC12);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1426,7 +1464,7 @@
   border: none;
   padding: 2px;
   cursor: pointer;
-  color: #94a3b8;
+  color: var(--TC12);
   display: flex;
   align-items: center;
   border-radius: 4px;
@@ -1434,11 +1472,11 @@
 }
 
 .clinicDropdownClearBtn:hover {
-  color: #ef4444;
+  color: var(--TC14);
 }
 
 .clinicDropdownChevron {
-  color: #94a3b8;
+  color: var(--TC12);
   transition: transform 0.25s ease;
   flex-shrink: 0;
 }
@@ -1452,10 +1490,10 @@
   top: calc(100% + 6px);
   left: 0;
   right: 0;
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--TC6);
+  border: 1px solid var(--TC13);
   border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(34, 43, 108, 0.12);
+  box-shadow: 0 8px 24px var(--TC16);
   z-index: 9999;
   max-height: 220px;
   overflow-y: auto;
@@ -1474,19 +1512,19 @@
 }
 
 .clinicDropdownOption:hover {
-  background: rgba(48, 178, 181, 0.08);
+  background: var(--TC18);
 }
 
 .clinicDropdownOptionSelected {
-  background: rgba(48, 178, 181, 0.12);
+  background: var(--TC18);
 }
 
 .clinicDropdownAvatar {
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-size: 0.72rem;
   font-weight: 700;
   display: flex;
@@ -1498,7 +1536,7 @@
 .clinicDropdownOptionLabel {
   flex: 1;
   font-size: 0.82rem;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -1506,7 +1544,7 @@
 }
 
 .clinicDropdownCheck {
-  color: var(--accent-end);
+  color: var(--TC5);
   flex-shrink: 0;
 }
 
@@ -1514,286 +1552,336 @@
   padding: 10px;
   text-align: center;
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .clinicListWrapper {
-  --glass-bg: rgba(30, 41, 59, 0.92);
-  --text-dark: #e2e8f0;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #e2e8f0;
+  --glass-bg: var(--TC9);
+  --text-dark: var(--TC13);
+  background: linear-gradient(135deg, var(--TC9) 0%, var(--TC7) 100%);
+  color: var(--TC13);
 }
 
+:global(.dark-mode) .detailModalHeader  { background: linear-gradient(135deg, var(--TC7), var(--TC15)); }
+
+
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
+}
+
+:global(.dark-mode) .detailCloseBtn { background: var(--TC12);}
+
+
 :global(.dark-mode) .filtersContainer {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .searchTypeSelect {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .searchInput {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .searchInput:focus {
-  border-left: 1px solid var(--accent-end);
+  border-left: 1px solid var(--TC5);
 }
 
 :global(.dark-mode) .statusFilterSelect {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .clearButton {
-  background: #334155;
-  color: #e2e8f0;
+  background: var(--TC7);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .clearButton:hover { background: #475569; }
+:global(.dark-mode) .clearButton:hover { background: var(--TC15); }
 
 :global(.dark-mode) .clinicModalFooter {
-  background: linear-gradient(135deg, #1e293b, #334155);
+  background: linear-gradient(to bottom, var(--TC9), var(--TC7));
 }
 
 :global(.dark-mode) .clinicTableContainer {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .clinicTable th {
-  background: linear-gradient(135deg, #334155, #475569);
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
 }
 
 :global(.dark-mode) .clinicTable td {
-  border-bottom-color: #475569;
-  color: #e2e8f0;
+  border-bottom-color: var(--TC15);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .clinicTable tbody tr:nth-child(even) { background-color: #334155; }
+:global(.dark-mode) .clinicTable tbody tr:nth-child(even) { background-color: var(--TC7); }
 
-:global(.dark-mode) .formGroup label { color: var(--accent-end); }
+:global(.dark-mode) .clinicName {
+  font-weight: 500;
+  color: var(--TC6);
+  font-size: 0.87rem;
+}
+
+:global(.dark-mode) .clinicType {
+  font-size: 0.72rem;
+  color: var(--TC8);
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+:global(.dark-mode) .formGroup label { color: var(--TC5); }
 
 :global(.dark-mode) .btnCancel,
 :global(.dark-mode) .btnHold {
-  background: linear-gradient(135deg, var(--primary-end));
-  color: var(--text-light);
-  border-color: var(--primary-end);
+  background: linear-gradient(135deg, var(--TC2));
+  color: var(--TC6);
+  border-color: var(--TC2);
 }
 
 :global(.dark-mode) .btnCancel:hover,
 :global(.dark-mode) .btnHold:hover {
-  background: rgba(239, 68, 68);
+  background: var(--TC14);
   transform: translateY(-2px);
 }
 
 :global(.dark-mode) .detailsTable td.label,
 :global(.dark-mode) .label {
-  color: var(--accent-end);
-  background-color: #1e293b;
+  color: var(--TC5);
+  background-color: var(--TC9);
 }
 
 :global(.dark-mode) .detailsTable td.value,
-:global(.dark-mode) .value { background-color: #1e293b; }
+:global(.dark-mode) .value { background-color: var(--TC9); }
 
 :global(.dark-mode) .clinicModalHeader h2,
 :global(.dark-mode) .detailsModalHeader h2 {
-  background: linear-gradient(135deg, var(--text-light), var(--accent-end));
+  background: linear-gradient(135deg, var(--TC6), var(--TC5));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 :global(.dark-mode) .statusBadge.active,
-:global(.dark-mode) .active { color: #9cc14d; }
+:global(.dark-mode) .active { color: var(--TC5); }
+  
 
-:global(.dark-mode) .profileDetailsBody h3 { color: var(--accent-end); }
-:global(.dark-mode) .profileRole            { color: var(--text-light); }
-:global(.dark-mode) .profileInfoItem p      { color: var(--text-light); }
-:global(.dark-mode) .profileInfoItem label  { color: var(--accent-end); }
+:global(.dark-mode) .profileDetailsBody h3 { color: var(--TC5); }
+:global(.dark-mode) .profileRole            { color: var(--TC6); }
+:global(.dark-mode) .profileInfoItem p      { color: var(--TC6); }
+:global(.dark-mode) .profileInfoItem label  { color: var(--TC5); }
 
 :global(.dark-mode) .profileDropdown {
-  background: rgba(30, 41, 59, 0.9);
-  border: #ffffff 0.5px solid;
+  background: var(--TC9);
+  border: var(--TC6) 0.5px solid;
 }
 
-:global(.dark-mode) .profileDropdownItem { color: var(--text-light); }
+:global(.dark-mode) .profileDropdownItem { color: var(--TC6); }
 
 :global(.dark-mode) .clinicModal {
-  background: rgba(30, 41, 59, 0.94);
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
-:global(.dark-mode) .profileDropdownItem:hover { background: #000000; }
-:global(.dark-mode) .profileDropdownItem svg   { color: var(--accent-end); }
+:global(.dark-mode) .profileDropdownItem:hover { background: var(--TC7); }
+:global(.dark-mode) .profileDropdownItem svg   { color: var(--TC5); }
 
 :global(.dark-mode) .formGroup input,
 :global(.dark-mode) .formGroup textarea,
 :global(.dark-mode) .formGroup select {
-  background: #1e293b;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .paginationBar {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .paginationInfo,
-:global(.dark-mode) .pageSizeInfo { color: #94a3b8; }
+:global(.dark-mode) .pageSizeInfo { color: var(--TC12); }
 
-:global(.dark-mode) .paginationLabel { color: var(--accent-end); }
+:global(.dark-mode) .paginationLabel { color: var(--TC5); }
 
 :global(.dark-mode) .pageBtn {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  border-color: var(--accent-end);
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
 }
 
 /* Dark mode for clinic dropdown */
 :global(.dark-mode) .clinicDropdownTrigger {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .clinicDropdownInput {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .clinicDropdownMenu {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .clinicDropdownOption:hover {
-  background: rgba(48, 178, 181, 0.15);
+  background: var(--TC18);
 }
 
 :global(.dark-mode) .clinicDropdownOptionSelected {
-  background: rgba(48, 178, 181, 0.2);
+  background: var(--TC18);
 }
 
 :global(.dark-mode) .clinicDropdownOptionLabel {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 /* ==================== DARK MODE — VIEW DETAILS MODAL ==================== */
 :global(.dark-mode) .detailModalContent {
-  background: #1e293b;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+  background: var(--TC9);
+  box-shadow: 0 25px 70px var(--TC16);
 }
 
 :global(.dark-mode) .detailModalBody {
-  background: #1e293b;
+  background: var(--TC9);
 }
 
 :global(.dark-mode) .infoSection {
-  background-color: rgba(0, 0, 0, 0.25);
+  background-color: var(--TC7);
+  opacity: 0.7;
 }
 
 :global(.dark-mode) .infoCard {
-  background: #0f172a;
-  box-shadow: 0 5px 17px rgba(0, 0, 0, 0.3);
-  border: 1px solid #334155;
+  background: var(--TC9);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC7);
 }
 
 :global(.dark-mode) .infoHeader {
-  border-bottom-color: rgba(48, 178, 181, 0.25);
+  border-bottom-color: var(--TC18);
 }
 
 :global(.dark-mode) .infoHeader h3 {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
 :global(.dark-mode) .infoRow {
-  border-bottom-color: rgba(71, 85, 105, 0.3);
+  border-bottom-color: var(--TC15);
 }
 
 :global(.dark-mode) .infoLabel {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .infoValue {
-  color: #e2e8f0;
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .detailModalFooter {
-  background: #0f172a;
-  border-top-color: #334155;
+  background: var(--TC9);
+  border-top-color: var(--TC15);
 }
 
 /* ==================== DARK MODE — ADD DEPARTMENT MODAL ==================== */
 :global(.dark-mode) .addModalContent {
-  background: #1e293b;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+  background: var(--TC9);
+  box-shadow: 0 25px 70px var(--TC16);
 }
 
 :global(.dark-mode) .addModalBody {
-  background-color: rgba(0, 0, 0, 0.25);
+  background-color: var(--TC7);
 }
 
 :global(.dark-mode) .addSection {
-  border-bottom-color: rgba(71, 85, 105, 0.3);
+  border-bottom-color: var(--TC15);
+  background: var(--TC9);
 }
 
 :global(.dark-mode) .addSectionHeader {
-  border-bottom-color: rgba(48, 178, 181, 0.25);
+  border-bottom-color: var(--TC18);
 }
 
 :global(.dark-mode) .addSectionHeader h3 {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
 :global(.dark-mode) .addFormGroup label {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
-:global(.dark-mode) .addFormGroup input,
+:global(.dark-mode) .addFormGroup input 
+{
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
+}
+
+
+
 :global(.dark-mode) .addFormGroup textarea,
 :global(.dark-mode) .addFormGroup select {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .addFormGroup input::placeholder,
 :global(.dark-mode) .addFormGroup textarea::placeholder {
-  color: rgba(148, 163, 184, 0.5);
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .addFormGroup input:focus,
 :global(.dark-mode) .addFormGroup textarea:focus,
 :global(.dark-mode) .addFormGroup select:focus {
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 4px rgba(48, 178, 181, 0.15);
-  background: #1e293b;
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 4px var(--TC18);
+  background: var(--TC9);
 }
 
 :global(.dark-mode) .addFormGroup select option {
-  background: #1e293b;
-  color: #e2e8f0;
+  background: var(--TC9);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .addFormGroup select:disabled {
-  background: #0f172a;
-  color: #475569;
+  background: var(--TC9);
+  color: var(--TC15);
 }
+
+:global(.dark-mode) .coordField input {
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .coordField input::placeholder { color: var(--TC12); }
+
+:global(.dark-mode) .coordField input:focus {
+  border-color: var(--TC5);
+  background: var(--TC9);
+  box-shadow: 0 0 0 4px var(--TC18);
+}
+
+:global(.dark-mode) .coordHint { color: var(--TC12); }
 
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {
@@ -1813,13 +1901,13 @@
 
   .searchInput {
     border-radius: 0 0 10px 10px;
-    border-left: 1px solid #cbd5e1;
+    border-left: 1px solid var(--TC8);
     border-top: none;
   }
 
   .searchInput:focus {
-    border-left: 1px solid var(--accent-end);
-    border-top: 1px solid var(--accent-end);
+    border-left: 1px solid var(--TC5);
+    border-top: 1px solid var(--TC5);
   }
 
   .filterActions {

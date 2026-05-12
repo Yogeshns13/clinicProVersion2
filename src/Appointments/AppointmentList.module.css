@@ -2,19 +2,24 @@
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
-  --primary-start: #222b6c;
-  --primary-end: #225ca0;
-  --accent-start: #207d9c;
-  --accent-end: #30b2b5;
-  --text-light: #ffffff;
-  --text-dark: #1e293b;
-  --glass-bg: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(255, 255, 255, 0.4);
-  --success-color: #22c55e;
-  --warning-color: #f59e0b;
-  --danger-color: #ef4444;
-  --info-color: #3b82f6;
-  --purple-color: #a855f7;
+  --TC1: #222b6c;
+  --TC2: #225ca0;
+  --TC3: #016183;
+  --TC4: #207d9c;
+  --TC5: #30b2b5;
+  --TC6: #ffffff;
+  --TC7: #334155;
+  --TC8: #cbd5e1;
+  --TC9: #1e293b;
+  --TC10:#166534;
+  --TC11:#991b1b;
+  --TC12:#64748b;
+  --TC13:#e2e8f0;
+  --TC14:#ef4444;
+  --TC15:#475569;
+  --TC16:rgba(34,43,108,0.10);
+  --TC17:rgba(32,125,156,0.30);
+  --TC18:rgba(48,178,181,0.15);
 }
 
 /* ==================== ANIMATIONS ==================== */
@@ -29,19 +34,12 @@
 }
 
 /* ==================== MAIN CONTAINER ==================== */
-/*
-  KEY CHANGE (mirrors ClinicList):
-  height: 100vh + overflow: hidden clamps wrapper to viewport.
-  display: flex + flex-direction: column lets children fill remaining space.
-  The tableSection gets flex:1 + min-height:0 so only the table scrolls.
-  The paginationBar is flex-shrink:0, always pinned to the bottom.
-*/
 .clinicContainer {
   padding: 20px;
-  background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+  background: linear-gradient(135deg, var(--TC6) 0%, var(--TC13) 100%);
   height: 100vh;
   overflow: hidden;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   display: flex;
   flex-direction: column;
@@ -50,19 +48,18 @@
 
 /* ==================== FILTERS ==================== */
 .filtersContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   padding: 16px 20px;
   margin-bottom: 20px;
-  box-shadow: 0 5px 17px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 5px 17px var(--TC16);
+  border: 1px solid var(--TC16);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
 }
 
-/* Search | Status | ApptDate | FromDate | ToDate | Actions */
 .filtersGrid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
@@ -70,7 +67,6 @@
   align-items: center;
 }
 
-/* Search type + value joined input */
 .searchGroup {
   display: flex;
   align-items: stretch;
@@ -80,11 +76,11 @@
   min-width: 140px;
   height: 40px;
   padding: 0 12px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-right: none;
   border-radius: 10px 0 0 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -93,32 +89,31 @@
 
 .searchTypeSelect:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 .searchInput {
   flex: 1;
   height: 40px;
   padding: 0 15px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 0 10px 10px 0;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   transition: all 0.3s ease;
 }
 
-.searchInput::placeholder { color: #94a3b8; }
+.searchInput::placeholder { color: var(--TC12); }
 
 .searchInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
-  border-left: 1px solid var(--accent-end);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
+  border-left: 1px solid var(--TC5);
 }
 
-/* Status / date filter groups */
 .filterGroup {
   display: flex;
   flex-direction: column;
@@ -128,10 +123,10 @@
   width: 100%;
   height: 40px;
   padding: 0 12px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 10px;
-  color: var(--text-dark);
+  color: var(--TC9);
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -139,8 +134,8 @@
 
 .filterInput:focus {
   outline: none;
-  border-color: var(--accent-end);
-  box-shadow: 0 0 0 3px rgba(48, 178, 181, 0.18);
+  border-color: var(--TC5);
+  box-shadow: 0 0 0 3px var(--TC18);
 }
 
 /* ── Date placeholder overlay ── */
@@ -151,7 +146,7 @@
 
 .dateWrapper .filterInput {
   width: 100%;
-  color: var(--text-dark);
+  color: var(--TC9);
 }
 
 .dateEmpty::-webkit-datetime-edit-text,
@@ -161,20 +156,17 @@
   color: transparent;
 }
 
-
-
 .datePlaceholder {
   position: absolute;
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--TC12);
   pointer-events: none;
   z-index: 1;
 }
 
-/* Action buttons row */
 .filterActions {
   display: flex;
   align-items: center;
@@ -199,43 +191,38 @@
 }
 
 .searchButton {
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .searchButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 .clearButton {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--TC13);
+  color: var(--TC15);
 }
 
 .clearButton:hover {
-  background: #cbd5e1;
+  background: var(--TC8);
   transform: translateY(-2px);
 }
 
 .addBtn {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
-  box-shadow: 0 5px 15px rgba(32, 125, 156, 0.3);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
+  box-shadow: 0 5px 15px var(--TC17);
 }
 
 .addBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(32, 125, 156, 0.4);
+  box-shadow: 0 8px 20px var(--TC17);
 }
 
 /* ==================== TABLE SECTION ==================== */
-/*
-  flex: 1        → fills ALL remaining height after the filter bar
-  min-height: 0  → allows shrinking below content (required for nested scroll)
-  display: flex + flex-direction: column → so clinicTableContainer can flex:1 inside it
-*/
 .tableSection {
   flex: 1;
   min-height: 0;
@@ -244,19 +231,14 @@
 }
 
 /* ==================== TABLE CONTAINER ==================== */
-/*
-  flex: 1        → fills all space between filter bar and pagination bar
-  min-height: 0  → allows shrinking (critical for scroll to work)
-  overflow-y: auto → table scrolls here, not the page
-*/
 .clinicTableContainer {
-  background: white;
+  background: var(--TC6);
   border-radius: 17px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  box-shadow: 0 13px 38px rgba(34, 43, 108, 0.12);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 13px 38px var(--TC16);
+  border: 1px solid var(--TC16);
 }
 
 /* ==================== TABLE ==================== */
@@ -270,8 +252,8 @@
 .clinicTable th {
   text-align: left;
   padding: 12px 17px;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   font-weight: 600;
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -284,8 +266,8 @@
 
 .clinicTable td {
   padding: 6px 17px;
-  border-bottom: 1px solid #e2e8f0;
-  color: var(--text-dark);
+  border-bottom: 1px solid var(--TC13);
+  color: var(--TC9);
   font-size: 0.85rem;
   vertical-align: middle;
 }
@@ -297,11 +279,11 @@
 }
 
 .clinicTable tbody tr:nth-child(even) {
-  background-color: #d5e6ec;
+  background-color: var(--TC18);
 }
 
 .clinicTable tbody tr:hover {
-  background-color: rgba(48, 178, 181, 0.08) !important;
+  background-color: var(--TC18) !important;
   transition: background-color 0.25s ease;
 }
 
@@ -316,45 +298,48 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  color: var(--TC6);
   font-weight: bold;
   font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 3px 12px rgba(32, 125, 156, 0.35);
+  box-shadow: 0 3px 12px var(--TC17);
   flex-shrink: 0;
 }
 
 .clinicPatientName {
   font-weight: 700;
-  color: var(--text-dark);
-  font-size: 0.95rem;
-  margin-bottom: 3px;
+  color: var(--TC9);
+  opacity: 0.9;
+  font-size: 0.87rem;
 }
 
 .clinicPatientDetails {
-  font-size: 0.8rem;
-  color: #64748b;
+  font-size: 0.72rem;
+  color: var(--TC12);
+  margin-top: 2px;
 }
 
 .clinicDoctorName {
-  font-weight: 600;
-  color: var(--text-dark);
-  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--TC9);
+  opacity: 0.9;
+  font-size: 0.87rem;
   margin-bottom: 3px;
 }
 
 .clinicDoctorCode {
-  font-size: 0.8rem;
-  color: #64748b;
+  font-size: 0.72rem;
+  color: var(--TC12);
 }
 
 .clinicDate {
-  font-weight: 600;
-  color: var(--text-dark);
-  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--TC9);
+  opacity: 0.9;
+  font-size: 0.87rem;
   margin-bottom: 3px;
 }
 
@@ -362,8 +347,8 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.8rem;
-  color: #64748b;
+  font-size: 0.72rem;
+  color: var(--TC12);
 }
 
 .clinicTime svg {
@@ -373,7 +358,7 @@
 
 .clinicReason {
   font-size: 0.85rem;
-  color: var(--text-dark);
+  color: var(--TC9);
   max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -381,6 +366,7 @@
 }
 
 /* ==================== STATUS BADGES ==================== */
+/* Mirrors WorkShift statusBadge pattern */
 .clinicStatusBadge {
   display: inline-block;
   padding: 5px 12px;
@@ -390,42 +376,43 @@
   text-transform: uppercase;
   letter-spacing: 0.7px;
   white-space: nowrap;
+  border: 1px solid var(--TC16);
 }
 
 .clinicStatusBadge.scheduled {
-  background: rgba(59, 130, 246, 0.15);
-  color: #1e40af;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+ background: var(--TC18);
+  color: var(--TC5);
+  border: 1px solid var(--TC16);
 }
 
 .clinicStatusBadge.confirmed {
-  background: rgba(168, 85, 247, 0.15);
-  color: #7c3aed;
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: var(--TC18);
+  color: var(--TC5);
+  border: 1px solid var(--TC16);
 }
 
 .clinicStatusBadge.inprogress {
-  background: rgba(245, 158, 11, 0.15);
-  color: #d97706;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: var(--TC18);
+  color: var(--TC5);
+  border: 1px solid var(--TC16);
 }
 
 .clinicStatusBadge.completed {
-  background: rgba(34, 197, 94, 0.15);
-  color: #166534;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: var(--TC18);
+  color: var(--TC5);
+  border: 1px solid var(--TC16);
 }
 
 .clinicStatusBadge.cancelled {
-  background: rgba(239, 68, 68, 0.15);
-  color: #991b1b;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
 }
 
 .clinicStatusBadge.noshow {
-  background: rgba(100, 116, 139, 0.15);
-  color: #334155;
-  border: 1px solid rgba(100, 116, 139, 0.3);
+  background: var(--TC15);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
 }
 
 /* ==================== ACTION BUTTONS ==================== */
@@ -442,26 +429,43 @@
   padding: 7px 15px;
   font-size: 0.75rem;
   border-radius: 9px;
-  background: linear-gradient(135deg, #016183, var(--primary-end));
-  color: var(--text-light);
+  background: linear-gradient(135deg, var(--TC3), var(--TC2));
+  color: var(--TC6);
   border: none;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 3px 10px var(--TC17);
   white-space: nowrap;
   z-index: 1;
 }
 
+.clinicDetailsBtn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: var(--TC18);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.clinicDetailsBtn:hover::before { width: 170px; height: 170px; }
+
 .clinicDetailsBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 17px rgba(32, 125, 156, 0.45);
+  box-shadow: 0 5px 17px var(--TC17);
 }
 
 .clinicDetailsBtn:active { transform: translateY(-1px); }
 
 .clinicDetailsBtn.addVisitBtn {
-  background: linear-gradient(135deg, var(--success-color), #16a34a);
+  background:  var(--TC5);
   box-shadow: 0 3px 10px rgba(34, 197, 94, 0.3);
   display: flex;
   align-items: center;
@@ -469,19 +473,19 @@
 }
 
 .clinicDetailsBtn.addVisitBtn:hover {
-  box-shadow: 0 5px 17px rgba(34, 197, 94, 0.45);
+  box-shadow: var(--TC17);
 }
 
 .clinicDetailsBtn.addVisitBtn.disabled {
-  background: linear-gradient(135deg, #94a3b8, #64748b);
-  box-shadow: 0 3px 10px rgba(100, 116, 139, 0.2);
+  background: linear-gradient(135deg, var(--TC8), var(--TC12));
+  box-shadow: 0 3px 10px var(--TC16);
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 .clinicDetailsBtn.addVisitBtn.disabled:hover {
   transform: none;
-  box-shadow: 0 3px 10px rgba(100, 116, 139, 0.2);
+  box-shadow: 0 3px 10px var(--TC16);
 }
 
 .clinicDetailsBtn:disabled {
@@ -489,11 +493,109 @@
   opacity: 0.6;
 }
 
+/* ==================== DETAIL MODAL HEADER (mirrors WorkShift) ==================== */
+.detailModalHeader {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.detailHeaderContent { flex: 1; }
+.detailHeaderContent h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--TC6);
+}
+
+.detailHeaderMeta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.workIdBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--TC18);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  color: var(--TC6);
+}
+
+.stepBadge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: var(--TC16);
+  border: 1px solid var(--TC18);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--TC6);
+  letter-spacing: 0.3px;
+}
+
+/* ==================== ADD MODAL HEADER CARD (mirrors WorkShift) ==================== */
+.addModalHeaderCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 12px;
+  background: var(--TC18);
+  border: 1px solid var(--TC16);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px var(--TC16);
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.clinicInfoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TC6);
+  opacity: 0.9;
+}
+
+.clinicInfoText {
+  display: flex;
+  flex-direction: column;
+}
+
+.clinicInfoName {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--TC6);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
+}
+
+.clinicInfoBranch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--TC13);
+  line-height: 1.2;
+  letter-spacing: 0.1px;
+}
+
 /* ==================== EMPTY / LOADING / ERROR ==================== */
 .clinicEmptyMessage {
   text-align: center;
   padding: 68px 17px;
-  color: #64748b;
+  color: var(--TC12);
   font-size: 1.1rem;
 }
 
@@ -504,33 +606,29 @@
   justify-content: center;
   min-height: 70vh;
   font-size: 1.3rem;
-  color: #64748b;
+  color: var(--TC12);
 }
 
-.clinicError { color: #ef4444; }
+.clinicError { color: var(--TC14); }
 
 /* ==================== PAGINATION BAR ==================== */
-/*
-  flex-shrink: 0  → never compressed, always pinned to the bottom of tableSection
-  margin-top: 14px → gap between scrollable table and this bar
-*/
 .paginationBar {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: white;
+  background: var(--TC6);
   border-radius: 14px;
   padding: 10px 20px;
   margin-top: 14px;
-  box-shadow: 0 4px 14px rgba(34, 43, 108, 0.08);
-  border: 1px solid rgba(34, 43, 108, 0.1);
+  box-shadow: 0 4px 14px var(--TC16);
+  border: 1px solid var(--TC16);
   gap: 16px;
 }
 
 .paginationInfo {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -544,7 +642,7 @@
 .paginationLabel {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--primary-start);
+  color: var(--TC1);
   margin-right: 4px;
   white-space: nowrap;
 }
@@ -555,10 +653,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--TC6);
+  border: 1px solid var(--TC8);
   border-radius: 8px;
-  color: var(--primary-start);
+  color: var(--TC1);
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
@@ -567,11 +665,11 @@
 }
 
 .pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  border-color: var(--accent-end);
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.3);
+  box-shadow: 0 3px 8px var(--TC17);
 }
 
 .pageBtn:disabled {
@@ -585,44 +683,50 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--primary-end), var(--accent-end));
-  color: white;
+  background: linear-gradient(135deg, var(--TC2), var(--TC5));
+  color: var(--TC6);
   font-size: 0.82rem;
   font-weight: 700;
   border-radius: 8px;
   padding: 0 8px;
-  box-shadow: 0 3px 8px rgba(32, 125, 156, 0.25);
+  box-shadow: 0 3px 8px var(--TC17);
 }
 
 .pageSizeInfo {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--TC12);
   font-weight: 500;
   white-space: nowrap;
 }
 
 .pageSizeInfo strong {
-  color: var(--primary-start);
+  color: var(--TC1);
   font-weight: 700;
 }
 
 /* ==================== DARK MODE ==================== */
 :global(.dark-mode) .clinicContainer {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #e2e8f0;
+  background: linear-gradient(135deg, var(--TC9) 0%, var(--TC7) 100%);
+  color: var(--TC13);
+}
+
+:global(.dark-mode) .clinicStatusBadge.cancelled {
+background: var(--TC18);
+  color: var(--TC14);
+  border: 1px solid var(--TC16);
 }
 
 :global(.dark-mode) .filtersContainer {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .searchTypeSelect,
 :global(.dark-mode) .searchInput,
 :global(.dark-mode) .filterInput {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .dateEmpty::-webkit-calendar-picker-indicator {
@@ -630,114 +734,101 @@
   cursor: pointer;
 }
 
+:global(.dark-mode) .filterInput::-webkit-calendar-picker-indicator {
+  filter: invert(0.6) sepia(0.1) saturate(0.5) brightness(0.85);
+  cursor: pointer;
+}
+
 :global(.dark-mode) .searchInput:focus {
-  border-left: 1px solid var(--accent-end);
+  border-left: 1px solid var(--TC5);
 }
 
 :global(.dark-mode) .datePlaceholder {
-  color: #64748b;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .clearButton {
-  background: #334155;
-  color: #e2e8f0;
+  background: var(--TC7);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .clearButton:hover {
-  background: #475569;
+  background: var(--TC15);
 }
 
 :global(.dark-mode) .clinicTableContainer {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .clinicTable th {
-  background: linear-gradient(135deg, #334155, #475569);
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
 }
 
 :global(.dark-mode) .clinicTable td {
-  border-bottom-color: #475569;
-  color: #e2e8f0;
+  border-bottom-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .clinicTable tbody tr:nth-child(even) {
-  background-color: #334155;
+  background-color: var(--TC7);
 }
 
 :global(.dark-mode) .clinicTable tbody tr:hover {
-  background-color: rgba(48, 178, 181, 0.12) !important;
+  background-color: var(--TC18) !important;
 }
 
+/* clinicName mirrors WorkShift dark mode */
 :global(.dark-mode) .clinicPatientName,
 :global(.dark-mode) .clinicDoctorName,
-:global(.dark-mode) .clinicDate,
-:global(.dark-mode) .clinicReason { color: #e2e8f0; }
+:global(.dark-mode) .clinicDate {
+  font-weight: 500;
+  color: var(--TC6);
+}
 
 :global(.dark-mode) .clinicPatientDetails,
 :global(.dark-mode) .clinicDoctorCode,
-:global(.dark-mode) .clinicTime { color: #94a3b8; }
-
-:global(.dark-mode) .clinicStatusBadge.scheduled {
-  background: rgba(59, 130, 246, 0.2);
-  color: #93c5fd;
-  border-color: rgba(59, 130, 246, 0.4);
+:global(.dark-mode) .clinicTime {
+  color: var(--TC8);
+  opacity: 0.8;
 }
 
-:global(.dark-mode) .clinicStatusBadge.confirmed {
-  background: rgba(168, 85, 247, 0.2);
-  color: #d8b4fe;
-  border-color: rgba(168, 85, 247, 0.4);
+:global(.dark-mode) .clinicReason { color: var(--TC13); }
+
+/* detailModalHeader dark mode mirrors WorkShift */
+:global(.dark-mode) .detailModalHeader {
+  background: linear-gradient(135deg, var(--TC7), var(--TC15));
 }
 
-:global(.dark-mode) .clinicStatusBadge.inprogress {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fcd34d;
-  border-color: rgba(245, 158, 11, 0.4);
-}
-
-:global(.dark-mode) .clinicStatusBadge.completed {
-  background: rgba(34, 197, 94, 0.2);
-  color: #86efac;
-  border-color: rgba(34, 197, 94, 0.4);
-}
-
-:global(.dark-mode) .clinicStatusBadge.cancelled {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.4);
-}
-
-:global(.dark-mode) .clinicStatusBadge.noshow {
-  background: rgba(148, 163, 184, 0.15);
-  color: #cbd5e1;
-  border-color: rgba(148, 163, 184, 0.3);
+/* addModalHeaderCard dark mode mirrors WorkShift */
+:global(.dark-mode) .addModalHeaderCard {
+  background: var(--TC12);
 }
 
 :global(.dark-mode) .paginationBar {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--TC9);
+  border-color: var(--TC15);
 }
 
 :global(.dark-mode) .paginationInfo,
 :global(.dark-mode) .pageSizeInfo {
-  color: #94a3b8;
+  color: var(--TC12);
 }
 
 :global(.dark-mode) .paginationLabel {
-  color: var(--accent-end);
+  color: var(--TC5);
 }
 
 :global(.dark-mode) .pageBtn {
-  background: #0f172a;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: var(--TC9);
+  border-color: var(--TC15);
+  color: var(--TC13);
 }
 
 :global(.dark-mode) .pageBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
-  border-color: var(--accent-end);
-  color: white;
+  background: linear-gradient(135deg, var(--TC4), var(--TC5));
+  border-color: var(--TC5);
+  color: var(--TC6);
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */
@@ -752,7 +843,6 @@
     grid-template-columns: 2fr 1fr 1fr auto;
   }
 
-  /* Stack appointment date / from / to in a second row */
   .filtersGrid .filterGroup:nth-child(4),
   .filtersGrid .filterGroup:nth-child(5) {
     grid-column: span 1;
@@ -784,12 +874,12 @@
 
   .searchTypeSelect {
     border-radius: 10px;
-    border-right: 1px solid #cbd5e1;
+    border-right: 1px solid var(--TC8);
   }
 
   .searchInput {
     border-radius: 10px;
-    border-left: 1px solid #cbd5e1;
+    border-left: 1px solid var(--TC8);
   }
 
   .filterActions {

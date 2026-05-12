@@ -1,7 +1,6 @@
-// src/components/PatientList.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiPlus, FiX } from 'react-icons/fi';
+import { FiSearch, FiPlus, FiX, FiPrinter } from 'react-icons/fi';
 import { getPatientsList, deletePatient } from '../Api/Api.js';
 import ErrorHandler from '../Hooks/ErrorHandler.jsx';
 import Header from '../Header/Header.jsx';
@@ -9,6 +8,8 @@ import AddPatient from './AddPatient.jsx';
 import UpdatePatient from './UpdatePatient.jsx';
 import MessagePopup from '../Hooks/MessagePopup.jsx';
 import ConfirmPopup from '../Hooks/ConfirmPopup.jsx';
+import ReportPopup from '../ReportPopup/ReportPopup.jsx';
+import PdfViewerPopup from '../ReportPopup/PdfViewerPopup.jsx';
 import styles from './PatientList.module.css';
 import { FaClinicMedical } from 'react-icons/fa';
 import { getStoredClinicId, getStoredBranchId } from '../Utils/Cryptoutils.js';
@@ -53,6 +54,64 @@ const SEARCH_TYPE_OPTIONS = [
   { value: 'Mobile', label: 'Mobile' },
   { value: 'FileNo', label: 'File No' },
 ];
+
+// ────────────────────────────────────────────────
+// REPORT FILTER CONFIG  (PatientList)
+//  Gender     TableID → 1
+//  BloodGroup TableID → 2
+//  Status     TableID → 10
+// ────────────────────────────────────────────────
+const PATIENT_REPORT_FILTER_CONFIG = [
+  {
+    name: 'FromDate',
+    apiKey: 'FromDate',
+    label: 'From Date',
+    type: 'date',
+    default: '2025-01-01',
+  },
+  {
+    name: 'ToDate',
+    apiKey: 'ToDate',
+    label: 'To Date',
+    type: 'date',
+    default: new Date().toISOString().split('T')[0],
+  },
+  {
+    name: 'Gender',
+    apiKey: 'Gender',
+    label: 'Gender',
+    type: 'select-table',
+    tableId: 1,
+    allLabel: 'All Genders',
+    default: 0,
+  },
+  {
+    name: 'BloodGroup',
+    apiKey: 'BloodGroup',
+    label: 'Blood Group',
+    type: 'select-table',
+    tableId: 2,
+    allLabel: 'All Blood Groups',
+    default: 0,
+  },
+  {
+    name: 'Status',
+    apiKey: 'Status',
+    label: 'Status',
+    type: 'select-table',
+    tableId: 10,
+    allLabel: 'All Status',
+    default: -1,
+  },
+];
+
+const PATIENT_REPORT_DEFAULT_FILTERS = {
+  FromDate: new Date().toISOString().split('T')[0],
+  ToDate: new Date().toISOString().split('T')[0],
+  Gender: 0,
+  BloodGroup: 0,
+  Status: -1,
+};
 
 // ────────────────────────────────────────────────
 // SHARED HELPERS
@@ -120,6 +179,10 @@ const PatientList = () => {
 
   // ── Delete loading state ──────────────────────────────────────────────────
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // ── Report popup state ────────────────────────────────────────────────────
+  const [reportPopupOpen, setReportPopupOpen] = useState(false);
+  const [pdfViewer, setPdfViewer]             = useState({ open: false, url: null, title: '' });
 
   // ────────────────────────────────────────────────
   // Derived: pagination display values
@@ -320,7 +383,6 @@ const PatientList = () => {
   const handleDelete = () => {
     if (deleteCooldown || deleteLoading) return;
     startCooldown(setDeleteCooldown);
-    // Open custom confirm popup — actual deletion only happens in performDelete
     setConfirmPopup({ visible: true });
   };
 
@@ -342,6 +404,16 @@ const PatientList = () => {
     } finally {
       setDeleteLoading(false);
     }
+  };
+
+  // ── Report handlers ────────────────────────────────────────────────────────
+  const handlePdfReady = ({ url, blob, label }) => {
+    setPdfViewer({ open: true, url, title: label });
+  };
+
+  const handleClosePdfViewer = () => {
+    if (pdfViewer.url) URL.revokeObjectURL(pdfViewer.url);
+    setPdfViewer({ open: false, url: null, title: '' });
   };
 
   // ────────────────────────────────────────────────
@@ -444,6 +516,14 @@ const PatientList = () => {
                 <FiX size={16} /> Clear
               </button>
             )}
+            {/* ── PRINT REPORT BUTTON ── */}
+            <button
+              onClick={() => setReportPopupOpen(true)}
+              className={styles.reportBtn}
+              title="Generate Patient Report"
+            >
+              <FiPrinter size={16} /> Print Report
+            </button>
             <button
               onClick={openAddForm}
               disabled={addCooldown}
@@ -597,14 +677,14 @@ const PatientList = () => {
                 </div>
               </div>
               <div className={styles.addModalHeaderCard}>
-                          <div className={styles.clinicInfoIcon}>
-                            <FaClinicMedical size={18} />
-                          </div>
-                          <div className={styles.clinicInfoText}>
-                            <span className={styles.clinicInfoName}>{clinicName}</span>
-                            <span className={styles.clinicInfoBranch}>{branchName}</span>
-                          </div>
-                          </div>
+                <div className={styles.clinicInfoIcon}>
+                  <FaClinicMedical size={18} />
+                </div>
+                <div className={styles.clinicInfoText}>
+                  <span className={styles.clinicInfoName}>{clinicName}</span>
+                  <span className={styles.clinicInfoBranch}>{branchName}</span>
+                </div>
+              </div>
 
               <button onClick={closeDetailModal} className={styles.detailCloseBtn}>✕</button>
             </div>
@@ -777,6 +857,26 @@ const PatientList = () => {
           </div>
         </div>
       )}
+
+      {/* ── Report Filter Popup ── */}
+      <ReportPopup
+        isOpen={reportPopupOpen}
+        onClose={() => setReportPopupOpen(false)}
+        onPdfReady={handlePdfReady}
+        reportType="PatientList"
+        title="Patient List Report"
+        filterConfig={PATIENT_REPORT_FILTER_CONFIG}
+        defaultFilters={PATIENT_REPORT_DEFAULT_FILTERS}
+      />
+
+      {/* ── PDF Viewer Popup ── */}
+      <PdfViewerPopup
+        isOpen={pdfViewer.open}
+        onClose={handleClosePdfViewer}
+        pdfUrl={pdfViewer.url}
+        title={pdfViewer.title}
+        fileName="PatientList_Report"
+      />
     </div>
   );
 };
